@@ -1,11 +1,14 @@
 
 # Setup rpath for modules
-set(CMAKE_INSTALL_RPATH "$ORIGIN/modules")
+set(CMAKE_INSTALL_RPATH "$ORIGIN/modules" "$ORIGIN")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH false)
 
 # Build main program
 add_executable(haka main.c module.c)
-target_link_libraries(haka dl)
+target_link_libraries(haka libhaka)
+
+find_package(DL REQUIRED)
+target_link_libraries(haka ${DL_LIBRARIES})
 
 install(TARGETS haka RUNTIME DESTINATION bin)
 

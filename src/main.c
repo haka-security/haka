@@ -3,17 +3,20 @@
 #include <stdio.h>
 
 #include "module.h"
+#include <haka/filter_module.h>
+#include <haka/packet_module.h>
 
 
 static const char *modules[] = {
 	"test",
+	"lua",
 	NULL
 };
 
 
-struct module *packet_module = NULL;
+struct packet_module *packet_module = NULL;
 struct module *log_module = NULL;
-struct module *vm_module = NULL;
+struct filter_module *filter_module = NULL;
 
 
 int main(int argc, char *argv[])
@@ -25,14 +28,14 @@ int main(int argc, char *argv[])
 			struct module *handle = load_module(*(module++));
 			if (handle) {
 				switch (handle->type) {
-				case PACKET:
-					packet_module = handle;
+				case MODULE_PACKET:
+					packet_module = (struct packet_module *)handle;
 					break;
-				case LOG:
+				case MODULE_LOG:
 					log_module = handle;
 					break;
-				case VM:
-					vm_module = handle;
+				case MODULE_FILTER:
+					filter_module = (struct filter_module *)handle;
 					break;
 				default:
 					unload_module(handle);
@@ -52,17 +55,25 @@ int main(int argc, char *argv[])
 		}
 
 		if (!log_module) {
-			fprintf(stderr, "error: no log module found\n");
-			err = 1;
+			fprintf(stderr, "warning: no log module found\n");
 		}
 
-		if (!vm_module) {
-			fprintf(stderr, "error: no vm module found\n");
+		if (!filter_module) {
+			fprintf(stderr, "error: no filter module found\n");
 			err = 1;
 		}
 
 		if (err) {
 			return 1;
+		}
+	}
+
+	/* Main loop */
+	{
+		void *pkt = NULL;
+		while (pkt = packet_module->receive()) {
+			filter_result result = filter_module->filter(pkt);
+			packet_module->verdict(pkt, result);
 		}
 	}
 

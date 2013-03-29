@@ -1,4 +1,6 @@
 
+set(CMAKE_INSTALL_RPATH "$ORIGIN/..")
+
 # Setup module file names
 set(CMAKE_SHARED_MODULE_PREFIX "")
 set(CMAKE_SHARED_MODULE_SUFFIX ".ho")
