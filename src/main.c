@@ -2,50 +2,33 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "module.h"
-#include <haka/filter_module.h>
+#include <lua.h>
+
 #include <haka/packet_module.h>
-
-
-static const char *modules[] = {
-	"test",
-	"lua",
-	NULL
-};
-
-
-struct packet_module *packet_module = NULL;
-struct module *log_module = NULL;
-struct filter_module *filter_module = NULL;
+#include "app.h"
+#include "lua/state.h"
 
 
 int main(int argc, char *argv[])
 {
-	/* Load all registered modules */
-	{
-		const char **module = modules;
-		while (*module) {
-			struct module *handle = load_module(*(module++));
-			if (handle) {
-				switch (handle->type) {
-				case MODULE_PACKET:
-					packet_module = (struct packet_module *)handle;
-					break;
-				case MODULE_LOG:
-					log_module = handle;
-					break;
-				case MODULE_FILTER:
-					filter_module = (struct filter_module *)handle;
-					break;
-				default:
-					unload_module(handle);
-					break;
-				}
-			}
-		}
+	/* Init lua vm */
+	lua_State *lua_state = init_state();
+
+	/* Execute configuration file */
+	if (luaL_loadfile(lua_state, argv[1])) {
+		print_error("configuration failed", lua_state);
+		return 1;
+	}
+
+	if (lua_pcall(lua_state, 0, 0, 0)) {
+		print_error("configuration failed", lua_state);
+		return 1;
 	}
 
 	/* Check module status */
+	struct packet_module *packet_module = get_packet_module();
+	struct log_module *log_module = get_log_module();
+
 	{
 		int err = 0;
 
@@ -54,13 +37,13 @@ int main(int argc, char *argv[])
 			err = 1;
 		}
 
-		if (!log_module) {
-			fprintf(stderr, "warning: no log module found\n");
+		if (!has_filter()) {
+			fprintf(stderr, "error: no filter function set\n");
+			err = 1;
 		}
 
-		if (!filter_module) {
-			fprintf(stderr, "error: no filter module found\n");
-			err = 1;
+		if (!log_module) {
+			fprintf(stderr, "warning: no log module found\n");
 		}
 
 		if (err) {
@@ -72,7 +55,7 @@ int main(int argc, char *argv[])
 	{
 		void *pkt = NULL;
 		while (pkt = packet_module->receive()) {
-			filter_result result = filter_module->filter(pkt);
+			filter_result result = call_filter(lua_state, pkt);
 			packet_module->verdict(pkt, result);
 		}
 	}

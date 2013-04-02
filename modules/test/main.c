@@ -15,11 +15,13 @@ static void cleanup()
 
 static void *packet_receive()
 {
-	return NULL;
+    sleep(1);
+	return "test";
 }
 
 static void packet_verdict(void *pkt, filter_result result)
 {
+    printf("verdict: %d\n", result);
 }
 
 

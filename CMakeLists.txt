@@ -2,7 +2,7 @@
 # Initialize
 cmake_minimum_required(VERSION 2.6)
 project(haka)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/build)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CMAKE_MODULE_PATH})
 
 # Setup globals
 set(CMAKE_INSTALL_PREFIX out)

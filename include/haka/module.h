@@ -5,12 +5,13 @@
 
 struct module {
 	void       *handle;
+	int         ref;
 
 	enum {
 		MODULE_UNKNOWN,
 		MODULE_PACKET,
 		MODULE_LOG,
-		MODULE_FILTER,
+		MODULE_EXTENSION,
 	} type;
 
 	const char *name;

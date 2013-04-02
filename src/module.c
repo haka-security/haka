@@ -9,7 +9,7 @@
 
 #define MODULE_EXT  ".ho"
 
-struct module *load_module(const char *module_name)
+struct module *module_load(const char *module_name)
 {
 	void *module_handle = NULL;
 	struct module *module = NULL;
@@ -40,22 +40,31 @@ struct module *load_module(const char *module_name)
 
 	module->handle = module_handle;
 
-	/* Initialize the module */
-	if (module->init(0, NULL)) {
-		fprintf(stderr, "%s: unable to initialize module\n", full_module_name);
-		dlclose(module);
-		free(full_module_name);
-		return NULL;
+	if (module->ref++ == 0) {
+		/* Initialize the module */
+		if (module->init(0, NULL)) {
+			fprintf(stderr, "%s: unable to initialize module\n", full_module_name);
+			dlclose(module);
+			free(full_module_name);
+			return NULL;
+		}
 	}
 
 	free(full_module_name);
 	return module;
 }
 
-void unload_module(struct module *module)
+void module_addref(struct module *module)
 {
-	/* Cleanup the module */
-	module->cleanup();
+    ++module->ref;
+}
+
+void module_release(struct module *module)
+{
+	if (--module->ref == 0) {
+		/* Cleanup the module */
+		module->cleanup();
+	}
 
 	dlclose(module->handle);
 }
