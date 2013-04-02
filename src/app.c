@@ -66,7 +66,7 @@ int has_filter()
     return filter_function != NULL;
 }
 
-filter_result call_filter(lua_State *L, void *pkt)
+filter_result call_filter(lua_State *L, struct packet *pkt)
 {
     return filter_function(L, filter_data, pkt);
 }

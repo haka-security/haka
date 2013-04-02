@@ -1,4 +1,6 @@
 %module app
+%import "packet.i"
+
 %{
 #include <stdint.h>
 
@@ -27,12 +29,14 @@ static int install_impl(const char *type, struct module *module)
         } \
     } while(0)
 
-static filter_result lua_filter_wrapper(lua_State *L, void *data, void *pkt)
+extern void lua_pushppacket(lua_State *L, struct packet *pkt);
+
+static filter_result lua_filter_wrapper(lua_State *L, void *data, struct packet *pkt)
 {
     lua_rawgeti(L, LUA_REGISTRYINDEX, (intptr_t)data);
-    lua_pushnil(L);
+    lua_pushppacket(L, pkt);
     if (lua_pcall(L, 1, 1, 0)) {
-        print_error(L, "");
+        print_error("filter function", L);
         return FILTER_DROP;
     }
 

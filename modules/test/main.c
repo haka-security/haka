@@ -2,6 +2,14 @@
 #include <haka/packet_module.h>
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+
+
+struct packet {
+	size_t    length;
+	char     *data;
+};
 
 
 static int init(int argc, char *argv[])
@@ -13,15 +21,38 @@ static void cleanup()
 {
 }
 
-static void *packet_receive()
+static int packet_receive(struct packet **pkt)
 {
+	struct packet *packet = NULL;
+
     sleep(1);
-	return "test";
+
+	packet = malloc(sizeof(struct packet));
+	if (!packet) {
+		return ENOMEM;
+	}
+
+	packet->length = 4;
+	packet->data = "test";
+	*pkt = packet;
+
+	return 0;
 }
 
-static void packet_verdict(void *pkt, filter_result result)
+static void packet_verdict(struct packet *pkt, filter_result result)
 {
     printf("verdict: %d\n", result);
+	free(pkt);
+}
+
+static size_t packet_length(struct packet *pkt)
+{
+	return pkt->length;
+}
+
+static const char *packet_data(struct packet *pkt)
+{
+	return pkt->data;
 }
 
 
@@ -35,6 +66,8 @@ struct packet_module HAKA_MODULE = {
 		cleanup:     cleanup
 	},
 	receive:         packet_receive,
-	verdict:         packet_verdict
+	verdict:         packet_verdict,
+	get_length:      packet_length,
+	get_data:        packet_data
 };
 

@@ -53,8 +53,10 @@ int main(int argc, char *argv[])
 
 	/* Main loop */
 	{
-		void *pkt = NULL;
-		while (pkt = packet_module->receive()) {
+		struct packet *pkt = NULL;
+		int error = 0;
+
+		while ((error = packet_module->receive(&pkt)) == 0) {
 			filter_result result = call_filter(lua_state, pkt);
 			packet_module->verdict(pkt, result);
 		}
