@@ -21,6 +21,7 @@ include(UseSWIG)
 swig_add_module(haka-lua lua STATIC
 	lua/app.i
 	lua/module.i
+    lua/log.i
     lua/packet.i)
 #set_target_properties(libhaka-lua PROPERTIES COMPILE_FLAGS -fPIC)
 target_link_libraries(haka haka-lua)

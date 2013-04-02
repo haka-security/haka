@@ -1,10 +1,12 @@
-print("Configuring haka...")
+log.message(log.INFO, "config", "Configuring haka...")
 
 app.install("packet", module.load("test"))
+app.install("log", module.load("log-stdout"))
 
 app.install_filter(function (pkt)
-	print(string.format("filtering packet [len=%d]", pkt.length))
+	log.messagef(log.DEBUG, "filter", "filtering packet [len=%d]", pkt.length)
 	return packet.ACCEPT
 end)
 
-print("Done")
+log.message(log.INFO, "config", "Done\n")
+

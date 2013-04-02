@@ -1,6 +1,4 @@
 %module app
-%import "packet.i"
-
 %{
 #include <stdint.h>
 

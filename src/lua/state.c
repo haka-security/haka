@@ -2,16 +2,18 @@
 #include <lua.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "../app.h"
 
 
 extern int openlua_app(lua_State *L);
 extern int openlua_module(lua_State *L);
 extern int openlua_packet(lua_State *L);
+extern int openlua_log(lua_State *L);
 
 
 static int panic(lua_State *L)
 {
-	return 0;
+	message(LOG_FATAL, "lua", "lua panic");
 }
 
 static void *alloc(void *up, void *ptr, size_t osize, size_t nsize) {
@@ -38,6 +40,7 @@ lua_State *init_state()
 	luaopen_app(L);
 	luaopen_module(L);
     luaopen_packet(L);
+    luaopen_log(L);
 
 	return L;
 }
@@ -49,6 +52,6 @@ void cleanup_state(lua_State *L)
 
 void print_error(const char *msg, lua_State *L)
 {
-	fprintf(stderr, "%s: %s\n", msg, lua_tostring(L, -1));
+    messagef(LOG_FATAL, "lua", "%s: %s", msg, lua_tostring(L, -1));
 }
 

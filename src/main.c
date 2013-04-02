@@ -27,23 +27,22 @@ int main(int argc, char *argv[])
 
 	/* Check module status */
 	struct packet_module *packet_module = get_packet_module();
-	struct log_module *log_module = get_log_module();
 
 	{
 		int err = 0;
 
 		if (!packet_module) {
-			fprintf(stderr, "error: no packet module found\n");
+			message(LOG_FATAL, "core", "no packet module found");
 			err = 1;
 		}
 
 		if (!has_filter()) {
-			fprintf(stderr, "error: no filter function set\n");
+			message(LOG_FATAL, "core", "no filter function set");
 			err = 1;
 		}
 
-		if (!log_module) {
-			fprintf(stderr, "warning: no log module found\n");
+		if (!has_log_module()) {
+			message(LOG_WARNING, "core", "no log module found");
 		}
 
 		if (err) {

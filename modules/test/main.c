@@ -1,5 +1,6 @@
 
 #include <haka/packet_module.h>
+#include <haka/log.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +42,7 @@ static int packet_receive(struct packet **pkt)
 
 static void packet_verdict(struct packet *pkt, filter_result result)
 {
-    printf("verdict: %d\n", result);
+    messagef(LOG_DEBUG, "test", "verdict: %d", result);
 	free(pkt);
 }
 

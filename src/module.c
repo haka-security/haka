@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <haka/log.h>
+
 
 #define MODULE_EXT  ".ho"
 
@@ -22,17 +24,17 @@ struct module *module_load(const char *module_name)
 
 	strcpy(full_module_name, module_name);
 	strcpy(full_module_name+strlen(module_name), MODULE_EXT);
-	module_handle = dlopen(full_module_name, RTLD_LAZY);
+	module_handle = dlopen(full_module_name, RTLD_NOW);
 
 	if (!module_handle) {
-		fprintf(stderr, "%s\n", dlerror());
+		message(LOG_ERROR, "core", dlerror());
 		free(full_module_name);
 		return NULL;
 	}
 
 	module = (struct module*)dlsym(module_handle, "HAKA_MODULE");
 	if (!module) {
-		fprintf(stderr, "%s\n", dlerror());
+		message(LOG_ERROR, "core", dlerror());
 		dlclose(module);
 		free(full_module_name);
 		return NULL;
@@ -42,8 +44,11 @@ struct module *module_load(const char *module_name)
 
 	if (module->ref++ == 0) {
 		/* Initialize the module */
+        messagef(LOG_INFO, "core", "load module '%s'\n\t%s, %s", full_module_name,
+                module->name, module->author);
+
 		if (module->init(0, NULL)) {
-			fprintf(stderr, "%s: unable to initialize module\n", full_module_name);
+			messagef(LOG_ERROR, "core", "%s: unable to initialize module", full_module_name);
 			dlclose(module);
 			free(full_module_name);
 			return NULL;
