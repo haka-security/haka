@@ -46,12 +46,12 @@ static void packet_verdict(struct packet *pkt, filter_result result)
 	free(pkt);
 }
 
-static size_t packet_length(struct packet *pkt)
+static size_t packet_get_length(struct packet *pkt)
 {
 	return pkt->length;
 }
 
-static const char *packet_data(struct packet *pkt)
+static const char *packet_get_data(struct packet *pkt)
 {
 	return pkt->data;
 }
@@ -68,7 +68,7 @@ struct packet_module HAKA_MODULE = {
 	},
 	receive:         packet_receive,
 	verdict:         packet_verdict,
-	get_length:      packet_length,
-	get_data:        packet_data
+	get_length:      packet_get_length,
+	get_data:        packet_get_data
 };
 

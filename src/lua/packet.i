@@ -1,7 +1,7 @@
 %module packet
 %{
+#include <haka/packet.h>
 #include <haka/packet_module.h>
-#include "../app.h"
 
 void lua_pushppacket(lua_State *L, struct packet *pkt)
 {
@@ -25,7 +25,7 @@ struct packet {
 
 %{
 size_t packet_length_get(struct packet *pkt) {
-   return get_packet_module()->get_length(pkt);
+   return packet_length(pkt);
 }
 %}
 

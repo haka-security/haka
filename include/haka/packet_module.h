@@ -3,10 +3,8 @@
 #define _HAKA_PACKET_MODULE_H
 
 #include <haka/module.h>
-#include <stddef.h>
+#include <haka/packet.h>
 
-
-struct packet;
 
 typedef enum {
 	FILTER_ACCEPT,
