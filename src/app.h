@@ -10,9 +10,8 @@
 struct module;
 typedef filter_result (*filter_callback)(lua_State *L, void *data, struct packet *pkt);
 
-int set_packet_module(struct module *module);
-struct packet_module *get_packet_module();
-
+extern int set_packet_module(struct module *module);
+extern struct packet_module *get_packet_module();
 extern int set_log_module(struct module *module);
 extern int has_log_module();
 

@@ -8,31 +8,9 @@
 #include "app.h"
 
 
-static struct packet_module *packet_module = NULL;
 static filter_callback filter_function;
 static void *filter_data;
 
-
-int set_packet_module(struct module *module)
-{
-	if (module) {
-		if (module->type == MODULE_PACKET) {
-			packet_module = (struct packet_module *)module;
-			return 0;
-        }
-		else
-			return 1;
-	}
-	else {
-		packet_module = NULL;
-		return 0;
-	}
-}
-
-struct packet_module *get_packet_module()
-{
-	return packet_module;
-}
 
 int set_filter(filter_callback filter, void *data)
 {
