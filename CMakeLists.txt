@@ -36,3 +36,6 @@ if(DOXYGEN_FOUND)
 	)
 endif(DOXYGEN_FOUND)
 
+# Packaging
+include(CPack)
+

@@ -8,3 +8,6 @@ install_manifest.txt
 out
 Doxyfile
 Documentation
+CPackConfig.cmake
+CPackSourceConfig.cmake
+_CPack_Packages
