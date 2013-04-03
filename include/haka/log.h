@@ -2,6 +2,8 @@
 #ifndef _HAKA_LOG_H
 #define _HAKA_LOG_H
 
+#include <wchar.h>
+
 
 typedef enum {
     LOG_FATAL,
@@ -14,8 +16,8 @@ typedef enum {
 } log_level;
 
 const char *level_to_str(log_level level);
-void message(log_level level, const char *module, const char *message);
-void messagef(log_level level, const char *module, const char *fmt, ...);
+void message(log_level level, const wchar_t *module, const wchar_t *message);
+void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...);
 
 #endif /* _HAKA_LOG_H */
 

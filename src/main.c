@@ -16,12 +16,12 @@ int main(int argc, char *argv[])
 
 	/* Execute configuration file */
 	if (luaL_loadfile(lua_state, argv[1])) {
-		print_error("configuration failed", lua_state);
+		print_error(L"configuration failed", lua_state);
 		return 1;
 	}
 
 	if (lua_pcall(lua_state, 0, 0, 0)) {
-		print_error("configuration failed", lua_state);
+		print_error(L"configuration failed", lua_state);
 		return 1;
 	}
 
@@ -32,17 +32,17 @@ int main(int argc, char *argv[])
 		int err = 0;
 
 		if (!packet_module) {
-			message(LOG_FATAL, "core", "no packet module found");
+			message(LOG_FATAL, L"core", L"no packet module found");
 			err = 1;
 		}
 
 		if (!has_filter()) {
-			message(LOG_FATAL, "core", "no filter function set");
+			message(LOG_FATAL, L"core", L"no filter function set");
 			err = 1;
 		}
 
 		if (!has_log_module()) {
-			message(LOG_WARNING, "core", "no log module found");
+			message(LOG_WARNING, L"core", L"no log module found");
 		}
 
 		if (err) {

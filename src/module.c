@@ -27,14 +27,14 @@ struct module *module_load(const char *module_name)
 	module_handle = dlopen(full_module_name, RTLD_NOW);
 
 	if (!module_handle) {
-		message(LOG_ERROR, "core", dlerror());
+		messagef(LOG_ERROR, L"core", L"%s", dlerror());
 		free(full_module_name);
 		return NULL;
 	}
 
 	module = (struct module*)dlsym(module_handle, "HAKA_MODULE");
 	if (!module) {
-		message(LOG_ERROR, "core", dlerror());
+		messagef(LOG_ERROR, L"core", L"%s", dlerror());
 		dlclose(module);
 		free(full_module_name);
 		return NULL;
@@ -44,11 +44,11 @@ struct module *module_load(const char *module_name)
 
 	if (module->ref++ == 0) {
 		/* Initialize the module */
-        messagef(LOG_INFO, "core", "load module '%s'\n\t%s, %s", full_module_name,
+        messagef(LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
                 module->name, module->author);
 
 		if (module->init(0, NULL)) {
-			messagef(LOG_ERROR, "core", "%s: unable to initialize module", full_module_name);
+			messagef(LOG_ERROR, L"core", L"%s: unable to initialize module", full_module_name);
 			dlclose(module);
 			free(full_module_name);
 			return NULL;

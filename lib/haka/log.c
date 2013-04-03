@@ -45,24 +45,24 @@ const char *level_to_str(log_level level)
     return str_level[level];
 }
 
-void message(log_level level, const char *module, const char *message)
+void message(log_level level, const wchar_t *module, const wchar_t *message)
 {
     if (log_module) {
         log_module->message(level, module, message);
     }
     else {
-        fprintf(stderr, "%s: %s: %s\n", level_to_str(level), module, message);
+        fwprintf(stderr, L"%s: %ls: %ls\n", level_to_str(level), module, message);
     }
 }
 
 #define MESSAGE_BUFSIZE   4096
-static char message_buffer[MESSAGE_BUFSIZE];
+static wchar_t message_buffer[MESSAGE_BUFSIZE];
 
-void messagef(log_level level, const char *module, const char *fmt, ...)
+void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    vsnprintf(message_buffer, MESSAGE_BUFSIZE, fmt, ap);
+    vswprintf(message_buffer, MESSAGE_BUFSIZE, fmt, ap);
     message(level, module, message_buffer);
     va_end(ap);
 }

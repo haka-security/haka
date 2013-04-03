@@ -15,9 +15,9 @@ static void cleanup()
 {
 }
 
-static int log_message(log_level lvl, const char *module, const char *message)
+static int log_message(log_level lvl, const wchar_t *module, const wchar_t *message)
 {
-    fprintf(stderr, "%s: %s: %s\n", level_to_str(lvl), module, message);
+    fwprintf(stderr, L"%s: %ls: %ls\n", level_to_str(lvl), module, message);
     return 0;
 }
 
@@ -25,9 +25,9 @@ static int log_message(log_level lvl, const char *module, const char *message)
 struct log_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_LOG,
-		name:        "Stdout logger",
-		description: "Basic logger to stdout",
-		author:      "Arkoon Network Security",
+		name:        L"Stdout logger",
+		description: L"Basic logger to stdout",
+		author:      L"Arkoon Network Security",
 		init:        init,
 		cleanup:     cleanup
 	},

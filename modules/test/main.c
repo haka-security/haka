@@ -42,7 +42,7 @@ static int packet_receive(struct packet **pkt)
 
 static void packet_verdict(struct packet *pkt, filter_result result)
 {
-    messagef(LOG_DEBUG, "test", "verdict: %d", result);
+    messagef(LOG_DEBUG, L"test", L"verdict: %d", result);
 	free(pkt);
 }
 
@@ -60,9 +60,9 @@ static const char *packet_data(struct packet *pkt)
 struct packet_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_PACKET,
-		name:        "Test",
-		description: "Template packet module",
-		author:      "Arkoon Network Security",
+		name:        L"Test",
+		description: L"Template packet module",
+		author:      L"Arkoon Network Security",
 		init:        init,
 		cleanup:     cleanup
 	},

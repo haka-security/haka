@@ -13,7 +13,7 @@ extern int openlua_log(lua_State *L);
 
 static int panic(lua_State *L)
 {
-	message(LOG_FATAL, "lua", "lua panic");
+	message(LOG_FATAL, L"lua", L"lua panic");
 }
 
 static void *alloc(void *up, void *ptr, size_t osize, size_t nsize) {
@@ -50,8 +50,8 @@ void cleanup_state(lua_State *L)
 	lua_close(L);
 }
 
-void print_error(const char *msg, lua_State *L)
+void print_error(const wchar_t *msg, lua_State *L)
 {
-    messagef(LOG_FATAL, "lua", "%s: %s", msg, lua_tostring(L, -1));
+    messagef(LOG_FATAL, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
 }
 
