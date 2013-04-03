@@ -1,6 +1,6 @@
 log.message(log.INFO, "config", "Configuring haka...")
 
-app.install("packet", module.load("test"))
+app.install("packet", module.load("packet-test"))
 app.install("log", module.load("log-stdout"))
 
 app.install_filter(function (pkt)
