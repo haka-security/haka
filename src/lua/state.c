@@ -39,8 +39,8 @@ lua_State *init_state()
 	luaL_openlibs(L);
 	luaopen_app(L);
 	luaopen_module(L);
-    luaopen_packet(L);
-    luaopen_log(L);
+	luaopen_packet(L);
+	luaopen_log(L);
 
 	return L;
 }
@@ -52,6 +52,6 @@ void cleanup_state(lua_State *L)
 
 void print_error(const wchar_t *msg, lua_State *L)
 {
-    messagef(LOG_FATAL, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
+	messagef(LOG_FATAL, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
 }
 

@@ -6,13 +6,13 @@
 
 
 typedef enum {
-    LOG_FATAL,
+	LOG_FATAL,
 	LOG_ERROR,
 	LOG_WARNING,
-    LOG_INFO,
-    LOG_DEBUG,
+	LOG_INFO,
+	LOG_DEBUG,
 
-    LOG_LEVEL_LAST
+	LOG_LEVEL_LAST
 } log_level;
 
 const char *level_to_str(log_level level);

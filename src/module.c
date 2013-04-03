@@ -5,17 +5,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <assert.h>
 
 #include <haka/log.h>
 
 
-#define MODULE_EXT  ".ho"
+#define MODULE_EXT	".ho"
 
-struct module *module_load(const char *module_name)
+struct module *module_load(const char *module_name, char **error)
 {
 	void *module_handle = NULL;
 	struct module *module = NULL;
 	char *full_module_name;
+
+	assert(module_name);
+
+	if (error) *error = NULL;
 
 	full_module_name = malloc(strlen(module_name) + strlen(MODULE_EXT) + 1);
 	if (!full_module_name) {
@@ -27,14 +33,14 @@ struct module *module_load(const char *module_name)
 	module_handle = dlopen(full_module_name, RTLD_NOW);
 
 	if (!module_handle) {
-		messagef(LOG_ERROR, L"core", L"%s", dlerror());
 		free(full_module_name);
+		if (error) *error = strdup(dlerror());
 		return NULL;
 	}
 
 	module = (struct module*)dlsym(module_handle, "HAKA_MODULE");
 	if (!module) {
-		messagef(LOG_ERROR, L"core", L"%s", dlerror());
+		if (error) *error = strdup(dlerror());
 		dlclose(module);
 		free(full_module_name);
 		return NULL;
@@ -44,11 +50,13 @@ struct module *module_load(const char *module_name)
 
 	if (module->ref++ == 0) {
 		/* Initialize the module */
-        messagef(LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
-                module->name, module->author);
+		messagef(LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
+		         module->name, module->author);
 
 		if (module->init(0, NULL)) {
-			messagef(LOG_ERROR, L"core", L"%s: unable to initialize module", full_module_name);
+			if (error) {
+				*error = strdup("unable to initialize module");
+			}
 			dlclose(module);
 			free(full_module_name);
 			return NULL;
@@ -61,7 +69,7 @@ struct module *module_load(const char *module_name)
 
 void module_addref(struct module *module)
 {
-    ++module->ref;
+	++module->ref;
 }
 
 void module_release(struct module *module)

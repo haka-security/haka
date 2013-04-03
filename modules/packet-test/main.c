@@ -26,7 +26,7 @@ static int packet_receive(struct packet **pkt)
 {
 	struct packet *packet = NULL;
 
-    sleep(1);
+	sleep(1);
 
 	packet = malloc(sizeof(struct packet));
 	if (!packet) {
@@ -42,7 +42,7 @@ static int packet_receive(struct packet **pkt)
 
 static void packet_verdict(struct packet *pkt, filter_result result)
 {
-    messagef(LOG_DEBUG, L"test", L"verdict: %d", result);
+	messagef(LOG_DEBUG, L"test", L"verdict: %d", result);
 	free(pkt);
 }
 

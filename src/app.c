@@ -14,17 +14,17 @@ static void *filter_data;
 
 int set_filter(filter_callback filter, void *data)
 {
-    filter_function = filter;
-    filter_data = data;
+	filter_function = filter;
+	filter_data = data;
 }
 
 int has_filter()
 {
-    return filter_function != NULL;
+	return filter_function != NULL;
 }
 
 filter_result call_filter(lua_State *L, struct packet *pkt)
 {
-    return filter_function(L, filter_data, pkt);
+	return filter_function(L, filter_data, pkt);
 }
 

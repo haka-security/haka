@@ -17,8 +17,8 @@ static void cleanup()
 
 static int log_message(log_level lvl, const wchar_t *module, const wchar_t *message)
 {
-    fwprintf(stderr, L"%s: %ls: %ls\n", level_to_str(lvl), module, message);
-    return 0;
+	fwprintf(stderr, L"%s: %ls: %ls\n", level_to_str(lvl), module, message);
+	return 0;
 }
 
 
