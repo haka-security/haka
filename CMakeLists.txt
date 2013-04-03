@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 project(haka)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CMAKE_MODULE_PATH})
+set(CTEST_MODULE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
 
 if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_C_FLAGS "-Werror")
@@ -15,6 +16,8 @@ set(CMAKE_INSTALL_PREFIX out)
 include(DistClean)
 
 include_directories(include)
+
+enable_testing()
 
 # Add sub directories
 add_subdirectory(lib)
