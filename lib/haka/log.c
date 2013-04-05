@@ -34,7 +34,7 @@ int has_log_module()
 static const char *str_level[] = {
 	"fatal",
 	"error",
-	"warning",
+	"warn",
 	"info",
 	"debug",
 };
@@ -51,7 +51,7 @@ void message(log_level level, const wchar_t *module, const wchar_t *message)
 		log_module->message(level, module, message);
 	}
 	else {
-		fwprintf(stderr, L"%s: %ls: %ls\n", level_to_str(level), module, message);
+		fwprintf(stdout, L"%-5s: %ls: %ls\n", level_to_str(level), module, message);
 	}
 }
 
