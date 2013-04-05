@@ -13,8 +13,6 @@ endif()
 # Setup globals
 set(CMAKE_INSTALL_PREFIX out)
 
-include(DistClean)
-
 include_directories(include)
 
 enable_testing()
