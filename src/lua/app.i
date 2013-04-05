@@ -1,8 +1,10 @@
 %module app
 %{
 #include <stdint.h>
+#include <wchar.h>
 
-#include "../app.h"
+#include "app.h"
+#include "state.h"
 #include <haka/packet_module.h>
 
 static int install_impl(const char *type, struct module *module)
@@ -29,12 +31,12 @@ static int install_impl(const char *type, struct module *module)
 
 extern void lua_pushppacket(lua_State *L, struct packet *pkt);
 
-static filter_result lua_filter_wrapper(lua_State *L, void *data, struct packet *pkt)
+static filter_result lua_filter_wrapper(lua_state *L, void *data, struct packet *pkt)
 {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, (intptr_t)data);
 	lua_pushppacket(L, pkt);
 	if (lua_pcall(L, 1, 1, 0)) {
-		print_error("filter function", L);
+		print_error(L, L"filter function");
 		return FILTER_DROP;
 	}
 

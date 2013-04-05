@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <lua.h>
-
 #include <haka/packet_module.h>
 #include "app.h"
 #include "lua/state.h"
@@ -12,16 +10,11 @@
 int main(int argc, char *argv[])
 {
 	/* Init lua vm */
-	lua_State *lua_state = init_state();
+	lua_state *lua_state = init_state();
 
 	/* Execute configuration file */
-	if (luaL_loadfile(lua_state, argv[1])) {
-		print_error(L"configuration failed", lua_state);
-		return 1;
-	}
-
-	if (lua_pcall(lua_state, 0, 0, 0)) {
-		print_error(L"configuration failed", lua_state);
+	if (run_file(lua_state, argv[1])) {
+		message(LOG_FATAL, L"core", L"configuration error");
 		return 1;
 	}
 

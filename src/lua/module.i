@@ -1,7 +1,7 @@
 %module module
 %{
 #include <haka/module.h>
-#include "../module.h"
+#include "module.h"
 
 static struct module *load_impl(lua_State *L, const char *name) {
 	char *err;

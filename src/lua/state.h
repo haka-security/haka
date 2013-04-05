@@ -4,10 +4,12 @@
 
 #include <wchar.h>
 
+typedef struct lua_State lua_state;
 
-struct lua_State *init_state();
-void cleanup_state(struct lua_State *L);
-void print_error(const wchar_t *msg, struct lua_State *L);
+lua_state *init_state();
+void cleanup_state(lua_state *L);
+void print_error(lua_state *L, const wchar_t *msg);
+int run_file(lua_state *L, const char *filename);
 
 #endif /* _STATE_H */
 

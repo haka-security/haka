@@ -27,7 +27,7 @@ static void *alloc(void *up, void *ptr, size_t osize, size_t nsize) {
 }
 
 
-lua_State *init_state()
+lua_state *init_state()
 {
 	lua_State *L = lua_newstate(alloc, NULL);
 	if (!L) {
@@ -45,13 +45,30 @@ lua_State *init_state()
 	return L;
 }
 
-void cleanup_state(lua_State *L)
+void cleanup_state(lua_state *L)
 {
 	lua_close(L);
 }
 
-void print_error(const wchar_t *msg, lua_State *L)
+void print_error(lua_state *L, const wchar_t *msg)
 {
-	messagef(LOG_FATAL, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
+	if (msg)
+		messagef(LOG_ERROR, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
+	else
+		messagef(LOG_ERROR, L"lua", L"%s", lua_tostring(L, -1));
 }
 
+int run_file(lua_state *L, const char *filename)
+{
+	if (luaL_loadfile(L, filename)) {
+		print_error(L, NULL);
+		return 1;
+	}
+
+	if (lua_pcall(L, 0, 0, 0)) {
+		print_error(L, NULL);
+		return 1;
+	}
+
+	return 0;
+}

@@ -1,13 +1,1 @@
-CMakeFiles
-Testing
-CMakeCache.txt
-CTestTestfile.cmake
-Makefile
-cmake_install.cmake
-install_manifest.txt
-out
-Doxyfile
-Documentation
-CPackConfig.cmake
-CPackSourceConfig.cmake
-_CPack_Packages
+make
