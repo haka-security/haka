@@ -1,6 +1,12 @@
 
 # Initialize
 cmake_minimum_required(VERSION 2.6)
+
+# Forbid in source build
+if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
+	message(FATAL_ERROR "In-source builds are not allowed.")
+endif()
+
 project(haka)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CMAKE_MODULE_PATH})
