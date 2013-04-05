@@ -65,7 +65,7 @@ struct packet_module {
 	 * @param pkt The received opaque packet.
 	 * @return The address of the beginning of the packet data.
 	 */
-	const char *   (*get_data)(struct packet *pkt);
+	const char    *(*get_data)(struct packet *pkt);
 };
 
 #endif /* _HAKA_PACKET_MODULE_H */
