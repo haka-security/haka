@@ -13,7 +13,7 @@
 
 #define MODULE_EXT	".ho"
 
-struct module *module_load(const char *module_name, char **error)
+struct module *module_load(const char *module_name, char **error, int argc, char *argv[])
 {
 	void *module_handle = NULL;
 	struct module *module = NULL;
@@ -53,7 +53,7 @@ struct module *module_load(const char *module_name, char **error)
 		messagef(LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
 		         module->name, module->author);
 
-		if (module->init(0, NULL)) {
+		if (module->init(argc, argv)) {
 			if (error) {
 				*error = strdup("unable to initialize module");
 			}

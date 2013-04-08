@@ -9,7 +9,7 @@
  * Load a module given its name. It is not needed to call
  * module_addref on the result as this is done before returning.
  */
-struct module *module_load(const char *module_name, char **error);
+struct module *module_load(const char *module_name, char **error, int argc, char *argv[]);
 
 /**
  * Keep the module. Must match with a call to module_release

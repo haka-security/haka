@@ -1,11 +1,13 @@
 %module module
+%include "args.i"
+
 %{
 #include <haka/module.h>
 #include "module.h"
 
-static struct module *load_impl(lua_State *L, const char *name) {
+static struct module *load_impl(lua_State *L, const char *name, int ARGC, char **ARGV) {
 	char *err;
-	struct module *ret = module_load(name, &err);
+	struct module *ret = module_load(name, &err, ARGC, ARGV);
 	if (!ret) {
 		if (err) {
 			lua_pushfstring(L, "%s", err);
@@ -22,8 +24,12 @@ static struct module *load_impl(lua_State *L, const char *name) {
 	}
 }
 
-#define load(name) \
-	load_impl(L, name); if (!result) SWIG_fail
+#define load1(name, ARGC, ARGV) \
+	load_impl(L, name, ARGC, ARGV); if (!result) SWIG_fail
+
+#define load2(name) \
+	load_impl(L, name, 0, NULL); if (!result) SWIG_fail
+
 %}
 
 %nodefaultctor;
@@ -35,5 +41,8 @@ struct module {
 	const wchar_t *description;
 };
 
-struct module *load(const char *name);
+%rename(load) load1;
+%rename(load) load2;
 
+struct module *load2(const char *name);
+struct module *load1(const char *name, int ARGC, char **ARGV);
