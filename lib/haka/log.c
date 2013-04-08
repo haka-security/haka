@@ -51,7 +51,7 @@ void message(log_level level, const wchar_t *module, const wchar_t *message)
 		log_module->message(level, module, message);
 	}
 	else {
-		fwprintf(stdout, L"%-5s: %ls: %ls\n", level_to_str(level), module, message);
+		fwprintf(stdout, L"%s: %ls: %ls\n", level_to_str(level), module, message);
 	}
 }
 
