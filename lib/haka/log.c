@@ -31,7 +31,7 @@ int has_log_module()
 	return log_module != NULL;
 }
 
-static const char *str_level[] = {
+static const char *str_level[HAKA_LOG_LEVEL_LAST] = {
 	"fatal",
 	"error",
 	"warn",
@@ -41,7 +41,7 @@ static const char *str_level[] = {
 
 const char *level_to_str(log_level level)
 {
-	assert(level >= 0 && level < LOG_LEVEL_LAST);
+	assert(level >= 0 && level < HAKA_LOG_LEVEL_LAST);
 	return str_level[level];
 }
 

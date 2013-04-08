@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
 	/* Execute configuration file */
 	if (run_file(lua_state, argv[1], argc-2, argv+2)) {
-		message(LOG_FATAL, L"core", L"configuration error");
+		message(HAKA_LOG_FATAL, L"core", L"configuration error");
 		return 1;
 	}
 
@@ -31,17 +31,17 @@ int main(int argc, char *argv[])
 		int err = 0;
 
 		if (!packet_module) {
-			message(LOG_FATAL, L"core", L"no packet module found");
+			message(HAKA_LOG_FATAL, L"core", L"no packet module found");
 			err = 1;
 		}
 
 		if (!has_filter()) {
-			message(LOG_FATAL, L"core", L"no filter function set");
+			message(HAKA_LOG_FATAL, L"core", L"no filter function set");
 			err = 1;
 		}
 
 		if (!has_log_module()) {
-			message(LOG_WARNING, L"core", L"no log module found");
+			message(HAKA_LOG_WARNING, L"core", L"no log module found");
 		}
 
 		if (err) {

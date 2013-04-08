@@ -50,7 +50,7 @@ struct module *module_load(const char *module_name, char **error, int argc, char
 
 	if (module->ref++ == 0) {
 		/* Initialize the module */
-		messagef(LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
+		messagef(HAKA_LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
 		         module->name, module->author);
 
 		if (module->init(argc, argv)) {

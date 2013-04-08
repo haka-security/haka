@@ -43,7 +43,7 @@ static int packet_receive(struct packet **pkt)
 
 static void packet_verdict(struct packet *pkt, filter_result result)
 {
-	messagef(LOG_DEBUG, L"test", L"verdict: %d", result);
+	messagef(HAKA_LOG_DEBUG, L"test", L"verdict=%d", result);
 	free(pkt);
 }
 

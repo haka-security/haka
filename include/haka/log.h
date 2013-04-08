@@ -22,13 +22,13 @@
  * @ingroup Logging
  */
 typedef enum {
-	LOG_FATAL,   /**< Fatal error */
-	LOG_ERROR,   /**< Error */
-	LOG_WARNING, /**< Warning */
-	LOG_INFO,    /**< Information */
-	LOG_DEBUG,   /**< Debugging */
+	HAKA_LOG_FATAL,   /**< Fatal error */
+	HAKA_LOG_ERROR,   /**< Error */
+	HAKA_LOG_WARNING, /**< Warning */
+	HAKA_LOG_INFO,    /**< Information */
+	HAKA_LOG_DEBUG,   /**< Debugging */
 
-	LOG_LEVEL_LAST
+	HAKA_LOG_LEVEL_LAST
 } log_level;
 
 /**

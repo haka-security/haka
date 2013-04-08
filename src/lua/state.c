@@ -15,7 +15,7 @@ extern int luaopen_log(lua_State *L);
 
 static int panic(lua_State *L)
 {
-	message(LOG_FATAL, L"lua", L"lua panic");
+	message(HAKA_LOG_FATAL, L"lua", L"lua panic");
 	return 0;
 }
 
@@ -56,9 +56,9 @@ void cleanup_state(lua_state *L)
 void print_error(lua_state *L, const wchar_t *msg)
 {
 	if (msg)
-		messagef(LOG_ERROR, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
+		messagef(HAKA_LOG_ERROR, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
 	else
-		messagef(LOG_ERROR, L"lua", L"%s", lua_tostring(L, -1));
+		messagef(HAKA_LOG_ERROR, L"lua", L"%s", lua_tostring(L, -1));
 }
 
 int run_file(lua_state *L, const char *filename, int argc, char *argv[])

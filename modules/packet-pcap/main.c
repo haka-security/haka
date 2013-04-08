@@ -31,7 +31,7 @@ static int init(int argc, char *argv[])
 		if (strcmp(argv[0], "-i") == 0) {
 			pd = pcap_open_live(argv[1], SNAPLEN, 1, 0, errbuf);
 			if (pd && (strlen(errbuf) > 0)) {
-				 messagef(LOG_WARNING, L"pcap", L"%s", errbuf);
+				 messagef(HAKA_LOG_WARNING, L"pcap", L"%s", errbuf);
 			}
 		}
 		/* get a pcap descriptor from a pcap file */
@@ -40,12 +40,12 @@ static int init(int argc, char *argv[])
 		}
 		/* unkonwn options */
 		else  {
-			messagef(LOG_ERROR, L"pcap", L"unkown options");
+			messagef(HAKA_LOG_ERROR, L"pcap", L"unkown options");
 			return 1;
 		}
 
 		if (!pd) {
-			messagef(LOG_ERROR, L"pcap", L"%s", errbuf);
+			messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errbuf);
 			return 1;
 		}
 
@@ -55,19 +55,19 @@ static int init(int argc, char *argv[])
 				pf = pcap_dump_open(pd, argv[3]);
 				if (!pf) {
 					pcap_close(pd);
-					messagef(LOG_ERROR, L"pcap", L"unable to dump on %s", argv[3]);
+					messagef(HAKA_LOG_ERROR, L"pcap", L"unable to dump on %s", argv[3]);
 					return 1;
 				}
 			}
 			else {
 				pcap_close(pd);
-				messagef(LOG_ERROR, L"pcap", L"output option should be -o");
+				messagef(HAKA_LOG_ERROR, L"pcap", L"output option should be -o");
 				return 1;
 			}
 		}
 	}
 	else {
-		messagef(LOG_ERROR, L"pcap", L"specify a device (-i) or a pcap filename (-f)");
+		messagef(HAKA_LOG_ERROR, L"pcap", L"specify a device (-i) or a pcap filename (-f)");
 		return 1;
 	}
 	return 0;
@@ -101,7 +101,7 @@ static int packet_receive(struct packet **pkt)
 		packet->header = header;
 
 		if (packet->header.caplen < packet->header.len)
-			messagef(LOG_WARNING, L"pcap", L"packet truncated");
+			messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
 
 		*pkt = packet;
 		return 0;

@@ -12,7 +12,7 @@
 #ifdef USE_COLORS
 	#define CLEAR_COLOR    "\033[0m"
 
-	static const char *level_color[LOG_LEVEL_LAST] = {
+	static const char *level_color[HAKA_LOG_LEVEL_LAST] = {
 		"\033[1;31m", // LOG_FATAL
 		"\033[1;31m", // LOG_ERROR
 		"\033[1;33m", // LOG_WARNING
