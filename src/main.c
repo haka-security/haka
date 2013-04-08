@@ -9,11 +9,17 @@
 
 int main(int argc, char *argv[])
 {
+	/* Check arguments */
+	if (argc < 2) {
+		fprintf(stderr, "usage: %s script_file [...]\n", argv[0]);
+		return 2;
+	}
+
 	/* Init lua vm */
 	lua_state *lua_state = init_state();
 
 	/* Execute configuration file */
-	if (run_file(lua_state, argv[1])) {
+	if (run_file(lua_state, argv[1], argc-2, argv+2)) {
 		message(LOG_FATAL, L"core", L"configuration error");
 		return 1;
 	}

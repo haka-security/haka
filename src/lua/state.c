@@ -58,8 +58,19 @@ void print_error(lua_state *L, const wchar_t *msg)
 		messagef(LOG_ERROR, L"lua", L"%s", lua_tostring(L, -1));
 }
 
-int run_file(lua_state *L, const char *filename)
+int run_file(lua_state *L, const char *filename, int argc, char *argv[])
 {
+	int i;
+
+	/* Create arg table containing command line arguments */
+	lua_createtable(L, argc, 0);
+	for (i = 1; i <= argc; i++) {
+		lua_pushnumber(L, i);
+		lua_pushstring(L, argv[i-1]);
+		lua_rawset(L, -3);      /* Stores the pair in the table */
+	}
+	lua_setglobal(L, "arg");
+
 	if (luaL_loadfile(L, filename)) {
 		print_error(L, NULL);
 		return 1;
