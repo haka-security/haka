@@ -57,7 +57,7 @@ struct module *module_load(const char *module_name, char **error, int argc, char
 			if (error) {
 				*error = strdup("unable to initialize module");
 			}
-			dlclose(module);
+			dlclose(module->handle);
 			free(full_module_name);
 			return NULL;
 		}
