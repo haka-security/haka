@@ -8,6 +8,8 @@
 #include <pcap.h>
 #include <string.h>
 
+/* snapshot length - a value of 65535 is sufficient to get all of the packet's data on most netwroks (from pcap man page) */
+#define SNAPLEN 65535
 
 struct packet {
 	struct pcap_pkthdr header;
@@ -18,30 +20,32 @@ static pcap_t *pd;
 
 static int init(int argc, char *argv[])
 {
-	if(argc == 2) {
-	    char errbuf[PCAP_ERRBUF_SIZE];
+	if (argc == 2) {
+		char errbuf[PCAP_ERRBUF_SIZE];
 
 		/* get a pcap descriptor from device */
-		if(strcmp(argv[0], "-i") == 0) {
-			pd = pcap_open_live(argv[1], 1518, 1, 0, errbuf);
-			if(!pd) {
+		if (strcmp(argv[0], "-i") == 0) {
+			pd = pcap_open_live(argv[1], SNAPLEN, 1, 0, errbuf);
+			if (!pd) {
 				messagef(LOG_ERROR, L"pcap", L"%s", errbuf);
 				return 1;
 			}
-		}	
-		else if(strcmp(argv[0], "-f") == 0) {
+		}
 		/* get a pcap descriptor from a pcap file */
-            pd = pcap_open_offline(argv[1], errbuf);
-            if(!pd) {
-                messagef(LOG_ERROR, L"pcap", L"%s", errbuf);
+		else if (strcmp(argv[0], "-f") == 0) {
+			pd = pcap_open_offline(argv[1], errbuf);
+			if (!pd) {
+				messagef(LOG_ERROR, L"pcap", L"%s", errbuf);
 				return 1;
 			}
 		}
-		else
-			messagef(LOG_ERROR, L"pcap", L"Unkown options");
+		else {
+			messagef(LOG_ERROR, L"pcap", L"unkown options");
+			return 1;
+		}
 	}
 	else {
-		messagef(LOG_ERROR, L"pcap", L"Specify a device (-i) or a pcap filename (-f)");
+		messagef(LOG_ERROR, L"pcap", L"specify a device (-i) or a pcap filename (-f)");
 		return 1;
 	}
 	return 0;
@@ -60,13 +64,16 @@ static int packet_receive(struct packet **pkt)
 	if (!packet) {
 		return ENOMEM;
 	}
-	
+
 	/* read packet */
-	if(!(packet->data = pcap_next(pd, &packet->header)))
+	if (!(packet->data = pcap_next(pd, &packet->header)))
 	{
 		free(packet);
 		return 1;
 	}
+
+	if (packet->header.caplen < packet->header.len)
+		messagef(LOG_WARNING, L"pcap", L"packet truncated");
 
 	*pkt = packet;
 	return 0;
