@@ -10,7 +10,7 @@ if(PCAP_FOUND)
 	install(TARGETS packet-pcap LIBRARY DESTINATION bin/modules)
 
 	# Test
-	include(TestModuleLoad)
-	TEST_MODULE_LOAD(packet-pcap)
+	# include(TestModuleLoad)
+	# TEST_MODULE_LOAD(packet-pcap)
 endif()
 
