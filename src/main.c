@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <locale.h>
 
 #include <haka/packet_module.h>
 #include "app.h"
@@ -9,6 +10,9 @@
 
 int main(int argc, char *argv[])
 {
+	/* Set locale */
+	setlocale(LC_ALL, "");
+
 	/* Check arguments */
 	if (argc < 2) {
 		fprintf(stderr, "usage: %s script_file [...]\n", argv[0]);
