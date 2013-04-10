@@ -11,6 +11,7 @@
 
 static lua_state *global_lua_state;
 
+/* Clean up lua state and loaded modules */
 static void clean_exit()
 {
 	set_filter(NULL, NULL);
@@ -100,8 +101,12 @@ int main(int argc, char *argv[])
 		int error = 0;
 
 		while ((error = packet_module->receive(&pkt)) == 0) {
-			filter_result result = call_filter(global_lua_state, pkt);
-			packet_module->verdict(pkt, result);
+			/* The packet can be NULL in case of failure in packet receive */
+			if (pkt) {
+				filter_result result = call_filter(global_lua_state, pkt);
+				packet_module->verdict(pkt, result);
+				pkt = NULL;
+			}
 		}
 	}
 
