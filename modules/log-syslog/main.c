@@ -13,6 +13,9 @@
  * to syslog. It's the concatenation of module + ": " + message
  */
 #define MSG_BUF_SIZE 1024
+/* Reserve EXTRA_BYTES bytes to write '...' if MSG_BUF_SIZE too small
+ * EXTRA_BYTES = 12 in case of each '.' use 4 bytes in any given locale
+ */
 #define EXTRA_BYTES 12
 #define HAKA_LOG_FACILITY LOG_LOCAL0
 
@@ -51,9 +54,6 @@ static int convert_concat(char *buffer, int *position, const wchar_t *message)
 static int log_message(log_level lvl, const wchar_t *module, const wchar_t *message)
 {
 	int buffer_position = 0;
-	/* Reserve EXTRA_BYTES bytes to write '...' if MSG_BUF_SIZE too small
-	 * EXTRA_BYTES bytes in case of each '.' use 4 bytes in a given locale
-	 * */
 	char buffer[MSG_BUF_SIZE+EXTRA_BYTES];
 
 	/* Convert to UTF-8 and concat module and message for syslog */
@@ -68,6 +68,9 @@ static int log_message(log_level lvl, const wchar_t *module, const wchar_t *mess
 		 */
 		if (buffer_position == (MSG_BUF_SIZE-1))
 		{
+			/* buffer_position + EXTRA_BYTES will always be
+			 * shorter than buffer by definition
+			 */
 			wcstombs(buffer+buffer_position, L"...", EXTRA_BYTES);
 		}
 		/* Send log to syslog */
