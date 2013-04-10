@@ -1,19 +1,22 @@
 
 #include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "../app.h"
 
 
-extern int openlua_app(lua_State *L);
-extern int openlua_module(lua_State *L);
-extern int openlua_packet(lua_State *L);
-extern int openlua_log(lua_State *L);
+extern int luaopen_app(lua_State *L);
+extern int luaopen_module(lua_State *L);
+extern int luaopen_packet(lua_State *L);
+extern int luaopen_log(lua_State *L);
 
 
 static int panic(lua_State *L)
 {
 	message(LOG_FATAL, L"lua", L"lua panic");
+	return 0;
 }
 
 static void *alloc(void *up, void *ptr, size_t osize, size_t nsize) {

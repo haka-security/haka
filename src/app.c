@@ -16,6 +16,7 @@ int set_filter(filter_callback filter, void *data)
 {
 	filter_function = filter;
 	filter_data = data;
+	return 0;
 }
 
 int has_filter()

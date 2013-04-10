@@ -13,7 +13,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CMAKE_MODULE_PATH})
 set(CTEST_MODULE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
 
 if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_C_FLAGS "-Werror")
+	set(CMAKE_C_FLAGS "-Wall -Werror")
 endif()
 
 # Setup globals
