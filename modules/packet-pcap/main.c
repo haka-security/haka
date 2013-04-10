@@ -8,12 +8,14 @@
 #include <pcap.h>
 #include <string.h>
 
-/* snapshot length - a value of 65535 is sufficient to get all of the packet's data on most netwroks (from pcap man page) */
+/* snapshot length - a value of 65535 is sufficient to get all
+ * of the packet's data on most netwroks (from pcap man page)
+ */
 #define SNAPLEN 65535
 
 struct packet {
 	struct pcap_pkthdr header;
-	const char *data;
+	char data[0];
 };
 
 static pcap_t *pd;
@@ -21,7 +23,7 @@ static pcap_t *pd;
 static int init(int argc, char *argv[])
 {
 	if (argc == 2) {
-		char errbuf[PCAP_ERRBUF_SIZE];
+		char errbuf[PCAP_ERRBUF_SIZE] = {'0'};
 
 		/* get a pcap descriptor from device */
 		if (strcmp(argv[0], "-i") == 0) {
@@ -29,6 +31,9 @@ static int init(int argc, char *argv[])
 			if (!pd) {
 				messagef(LOG_ERROR, L"pcap", L"%s", errbuf);
 				return 1;
+			}
+			if(strlen(errbuf) != 0 ) {
+				 messagef(LOG_WARNING, L"pcap", L"%s", errbuf);
 			}
 		}
 		/* get a pcap descriptor from a pcap file */
@@ -58,24 +63,30 @@ static void cleanup()
 
 static int packet_receive(struct packet **pkt)
 {
+	struct pcap_pkthdr header;
 	struct packet *packet = NULL;
-
-	packet = malloc(sizeof(struct packet));
-	if (!packet) {
-		return ENOMEM;
-	}
-
+	const u_char *p;	
+	
 	/* read packet */
-	if (!(packet->data = pcap_next(pd, &packet->header)))
+	p = pcap_next(pd, &header);
+
+	if (p)
 	{
-		free(packet);
-		return 1;
+		packet = malloc(sizeof(struct packet) + header.caplen);
+		if (!packet) {
+			return ENOMEM;
+		}
+
+		/* fill packet data structure */
+		memcpy(packet->data, p, header.caplen);
+		packet->header = header;
+
+		if (packet->header.caplen < packet->header.len)
+			messagef(LOG_WARNING, L"pcap", L"packet truncated");
+
+		*pkt = packet;
 	}
 
-	if (packet->header.caplen < packet->header.len)
-		messagef(LOG_WARNING, L"pcap", L"packet truncated");
-
-	*pkt = packet;
 	return 0;
 }
 
