@@ -52,4 +52,30 @@ struct module {
 	void         (*cleanup)();
 };
 
+/**
+ * Load a module given its name. It is not needed to call
+ * module_addref on the result as this is done before returning.
+ * @param module_name The name of the module to load.
+ * @param error String to store an error message if the return value is NULL.
+ * @param argc Extra arguments count.
+ * @param argv Argument list.
+ * @return The loaded module structure or NULL in case of an error.
+ */
+struct module *module_load(const char *module_name, char **error, int argc, char *argv[]);
+
+/**
+ * Keep the module. Must match with a call to module_release
+ * otherwise the module will not be able to be removed correctly
+ * when unused.
+ * @param module Module to keep.
+ */
+void           module_addref(struct module *module);
+
+/**
+ * Release a module.
+ * @param module Module to release.
+ */
+void           module_release(struct module *module);
+
+
 #endif /* _HAKA_MODULE_H */

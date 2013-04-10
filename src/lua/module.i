@@ -3,7 +3,6 @@
 
 %{
 #include <haka/module.h>
-#include "module.h"
 
 static struct module *load_impl(lua_State *L, const char *name, int ARGC, char **ARGV) {
 	char *err;
@@ -39,10 +38,20 @@ struct module {
 	const wchar_t *name;
 	const wchar_t *author;
 	const wchar_t *description;
+
+	%extend {
+		~module()
+		{
+			module_release($self);
+		}
+	}
 };
 
 %rename(load) load1;
 %rename(load) load2;
 
+%newobject load2;
 struct module *load2(const char *name);
+
+%newobject load1;
 struct module *load1(const char *name, int ARGC, char **ARGV);

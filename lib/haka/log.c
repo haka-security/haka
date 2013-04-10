@@ -12,18 +12,25 @@ static struct log_module *log_module = NULL;
 
 int set_log_module(struct module *module)
 {
+	struct log_module *prev_log_module = log_module;
+
+	if (module && module->type != MODULE_LOG) {
+		return 1;
+	}
+
 	if (module) {
-		if (module->type == MODULE_LOG) {
-			log_module = (struct log_module *)module;
-			return 0;
-		}
-		else
-			return 1;
+		log_module = (struct log_module *)module;
+		module_addref(&log_module->module);
 	}
 	else {
 		log_module = NULL;
-		return 0;
 	}
+
+	if (prev_log_module) {
+		module_release(&prev_log_module->module);
+	}
+
+	return 0;
 }
 
 int has_log_module()
@@ -55,15 +62,15 @@ void message(log_level level, const wchar_t *module, const wchar_t *message)
 	}
 }
 
-#define MESSAGE_BUFSIZE   4096
-static wchar_t message_buffer[MESSAGE_BUFSIZE];
+#define MESSAGE_BUFSIZE   1024
 
 void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...)
 {
+	wchar_t message_buffer[MESSAGE_BUFSIZE];
+
 	va_list ap;
 	va_start(ap, fmt);
 	vswprintf(message_buffer, MESSAGE_BUFSIZE, fmt, ap);
 	message(level, module, message_buffer);
 	va_end(ap);
 }
-

@@ -1,6 +1,4 @@
 
-#include "module.h"
-
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +6,7 @@
 #include <errno.h>
 #include <assert.h>
 
+#include <haka/module.h>
 #include <haka/log.h>
 
 
@@ -48,7 +47,7 @@ struct module *module_load(const char *module_name, char **error, int argc, char
 
 	module->handle = module_handle;
 
-	if (module->ref++ == 0) {
+	if (module->ref == 0) {
 		/* Initialize the module */
 		messagef(HAKA_LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
 		         module->name, module->author);
@@ -64,6 +63,8 @@ struct module *module_load(const char *module_name, char **error, int argc, char
 	}
 
 	free(full_module_name);
+
+	module_addref(module);
 	return module;
 }
 
@@ -76,9 +77,8 @@ void module_release(struct module *module)
 {
 	if (--module->ref == 0) {
 		/* Cleanup the module */
+		messagef(HAKA_LOG_INFO, L"core", L"unload module '%ls'", module->name);
 		module->cleanup();
+		dlclose(module->handle);
 	}
-
-	dlclose(module->handle);
 }
-

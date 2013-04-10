@@ -9,18 +9,25 @@ static struct packet_module *packet_module = NULL;
 
 int set_packet_module(struct module *module)
 {
+	struct packet_module *prev_packet_module = packet_module;
+
+	if (module && module->type != MODULE_PACKET) {
+		return 1;
+	}
+
 	if (module) {
-		if (module->type == MODULE_PACKET) {
-			packet_module = (struct packet_module *)module;
-			return 0;
-		}
-		else
-			return 1;
+		packet_module = (struct packet_module *)module;
+		module_addref(&packet_module->module);
 	}
 	else {
 		packet_module = NULL;
-		return 0;
 	}
+
+	if (prev_packet_module) {
+		module_release(&prev_packet_module->module);
+	}
+
+	return 0;
 }
 
 int has_packet_module()

@@ -2,29 +2,69 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <locale.h>
+#include <signal.h>
 
 #include <haka/packet_module.h>
 #include "app.h"
 #include "lua/state.h"
 
 
+static lua_state *global_lua_state;
+
+static void clean_exit()
+{
+	set_filter(NULL, NULL);
+
+	if (global_lua_state) {
+		cleanup_state(global_lua_state);
+		global_lua_state = NULL;
+	}
+
+	set_packet_module(NULL);
+	set_log_module(NULL);
+}
+
+static void fatal_error_signal(int sig)
+{
+	static volatile sig_atomic_t fatal_error_in_progress = 0;
+
+	if (fatal_error_in_progress)
+		raise(sig);
+	fatal_error_in_progress = 1;
+
+	/* Cleanup */
+	message(HAKA_LOG_FATAL, L"core", L"fatal signal received");
+	clean_exit();
+
+	signal(sig, SIG_DFL);
+	raise(sig);
+}
+
 int main(int argc, char *argv[])
 {
 	/* Set locale */
 	setlocale(LC_ALL, "");
 
+	/* Install signal handler */
+	signal(SIGTERM, fatal_error_signal);
+	signal(SIGINT, fatal_error_signal);
+	signal(SIGQUIT, fatal_error_signal);
+	signal(SIGHUP, fatal_error_signal);
+
 	/* Check arguments */
 	if (argc < 2) {
 		fprintf(stderr, "usage: %s script_file [...]\n", argv[0]);
+		clean_exit();
 		return 2;
 	}
 
 	/* Init lua vm */
-	lua_state *lua_state = init_state();
+	global_lua_state = init_state();
 
 	/* Execute configuration file */
-	if (run_file(lua_state, argv[1], argc-2, argv+2)) {
+	if (run_file(global_lua_state, argv[1], argc-2, argv+2)) {
 		message(HAKA_LOG_FATAL, L"core", L"configuration error");
+		clean_exit();
 		return 1;
 	}
 
@@ -49,6 +89,7 @@ int main(int argc, char *argv[])
 		}
 
 		if (err) {
+			clean_exit();
 			return 1;
 		}
 	}
@@ -59,11 +100,12 @@ int main(int argc, char *argv[])
 		int error = 0;
 
 		while ((error = packet_module->receive(&pkt)) == 0) {
-			filter_result result = call_filter(lua_state, pkt);
+			filter_result result = call_filter(global_lua_state, pkt);
 			packet_module->verdict(pkt, result);
 		}
 	}
 
+	clean_exit();
 	return 0;
 }
 

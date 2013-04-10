@@ -6,13 +6,9 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH false)
 # Build main program
 add_executable(haka
 	main.c
-	module.c
 	app.c)
 
 target_link_libraries(haka libhaka)
-
-find_package(DL REQUIRED)
-target_link_libraries(haka ${DL_LIBRARIES})
 
 include_directories(.)
 
