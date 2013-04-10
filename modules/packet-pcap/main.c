@@ -15,49 +15,63 @@
 
 struct packet {
 	struct pcap_pkthdr header;
-	char data[0];
+	u_char data[0];
 };
 
 static pcap_t *pd;
+static pcap_dumper_t * pf;
 
 static int init(int argc, char *argv[])
 {
-	if (argc == 2) {
-		char errbuf[PCAP_ERRBUF_SIZE] = {'0'};
+	if (argc >= 2) {
+		char errbuf[PCAP_ERRBUF_SIZE];
+		bzero(errbuf, PCAP_ERRBUF_SIZE);
 
 		/* get a pcap descriptor from device */
 		if (strcmp(argv[0], "-i") == 0) {
 			pd = pcap_open_live(argv[1], SNAPLEN, 1, 0, errbuf);
-			if (!pd) {
-				messagef(LOG_ERROR, L"pcap", L"%s", errbuf);
-				return 1;
-			}
-			if(strlen(errbuf) != 0 ) {
+			if (strlen(errbuf) > 0 ) {
 				 messagef(LOG_WARNING, L"pcap", L"%s", errbuf);
 			}
 		}
 		/* get a pcap descriptor from a pcap file */
 		else if (strcmp(argv[0], "-f") == 0) {
 			pd = pcap_open_offline(argv[1], errbuf);
-			if (!pd) {
-				messagef(LOG_ERROR, L"pcap", L"%s", errbuf);
-				return 1;
-			}
 		}
-		else {
+		/* unkonwn options */
+		else  {
 			messagef(LOG_ERROR, L"pcap", L"unkown options");
 			return 1;
 		}
+
+		if (!pd) {
+			messagef(LOG_ERROR, L"pcap", L"%s", errbuf);
+			return 1;
+		}
+
+		if (argc == 4) {
+			/* open pcap savefile */  
+			if (strcmp(argv[2], "-o") == 0) {
+				pf = pcap_dump_open(pd, argv[3]);
+			}
+			else
+				 messagef(LOG_WARNING, L"pcap", L"ignoring dump option (should be -o)");
+		}
+
+		return 0;
 	}
+
 	else {
 		messagef(LOG_ERROR, L"pcap", L"specify a device (-i) or a pcap filename (-f)");
 		return 1;
-	}
+	}	
 	return 0;
 }
 
 static void cleanup()
 {
+	/* close pcap descritpors */
+	pcap_dump_close(pf);
 	pcap_close(pd);
 }
 
@@ -69,7 +83,6 @@ static int packet_receive(struct packet **pkt)
 	
 	/* read packet */
 	p = pcap_next(pd, &header);
-
 	if (p)
 	{
 		packet = malloc(sizeof(struct packet) + header.caplen);
@@ -86,12 +99,17 @@ static int packet_receive(struct packet **pkt)
 
 		*pkt = packet;
 	}
+	else
+		return 1;
 
 	return 0;
 }
 
 static void packet_verdict(struct packet *pkt, filter_result result)
-{
+{	
+	/* dump capture in pcap file */
+	if (pf)
+		pcap_dump((u_char *)pf, &(pkt->header), pkt->data);
 	free(pkt);
 }
 
@@ -102,7 +120,7 @@ static size_t packet_get_length(struct packet *pkt)
 
 static const char *packet_get_data(struct packet *pkt)
 {
-	return pkt->data;
+	return (char *)pkt->data;
 }
 
 
