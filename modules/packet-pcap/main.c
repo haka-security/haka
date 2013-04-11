@@ -19,18 +19,18 @@ struct packet {
 };
 
 static pcap_t *pd;
-static pcap_dumper_t * pf;
+static pcap_dumper_t *pf;
 
 static int init(int argc, char *argv[])
 {
-	if (argc >= 2) {
+	if (argc == 2 || argc == 4) {
 		char errbuf[PCAP_ERRBUF_SIZE];
 		bzero(errbuf, PCAP_ERRBUF_SIZE);
 
 		/* get a pcap descriptor from device */
 		if (strcmp(argv[0], "-i") == 0) {
 			pd = pcap_open_live(argv[1], SNAPLEN, 1, 0, errbuf);
-			if (strlen(errbuf) > 0 ) {
+			if (pd && (strlen(errbuf) > 0)) {
 				 messagef(LOG_WARNING, L"pcap", L"%s", errbuf);
 			}
 		}
@@ -50,28 +50,34 @@ static int init(int argc, char *argv[])
 		}
 
 		if (argc == 4) {
-			/* open pcap savefile */  
+			/* open pcap savefile */
 			if (strcmp(argv[2], "-o") == 0) {
 				pf = pcap_dump_open(pd, argv[3]);
+				if (!pf) {
+					pcap_close(pd);
+					messagef(LOG_ERROR, L"pcap", L"unable to dump on %s", argv[3]);
+					return 1;
+				}
 			}
-			else
-				 messagef(LOG_WARNING, L"pcap", L"ignoring dump option (should be -o)");
+			else {
+				pcap_close(pd);
+				messagef(LOG_ERROR, L"pcap", L"output option should be -o");
+				return 1;
+			}
 		}
-
-		return 0;
 	}
-
 	else {
 		messagef(LOG_ERROR, L"pcap", L"specify a device (-i) or a pcap filename (-f)");
 		return 1;
-	}	
+	}
 	return 0;
 }
 
 static void cleanup()
 {
 	/* close pcap descritpors */
-	pcap_dump_close(pf);
+	if (pf)
+		pcap_dump_close(pf);
 	pcap_close(pd);
 }
 
@@ -79,8 +85,8 @@ static int packet_receive(struct packet **pkt)
 {
 	struct pcap_pkthdr header;
 	struct packet *packet = NULL;
-	const u_char *p;	
-	
+	const u_char *p;
+
 	/* read packet */
 	p = pcap_next(pd, &header);
 	if (p)
@@ -98,17 +104,16 @@ static int packet_receive(struct packet **pkt)
 			messagef(LOG_WARNING, L"pcap", L"packet truncated");
 
 		*pkt = packet;
+		return 0;
 	}
 	else
 		return 1;
-
-	return 0;
 }
 
 static void packet_verdict(struct packet *pkt, filter_result result)
-{	
+{
 	/* dump capture in pcap file */
-	if (pf)
+	if (pf && result == FILTER_ACCEPT)
 		pcap_dump((u_char *)pf, &(pkt->header), pkt->data);
 	free(pkt);
 }
