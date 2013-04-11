@@ -40,9 +40,9 @@ static const int syslog_level[HAKA_LOG_LEVEL_LAST] = {
 
 static int convert_concat(char *buffer, int *position, const wchar_t *message)
 {
-	const int return_value = wcstombs(buffer+*position,
+	const size_t return_value = wcstombs(buffer+*position,
 					message, MSG_BUF_SIZE-1-*position);
-	if ( return_value < 0 ) {
+	if (return_value == (size_t)-1) {
 		return -1;
 	}
 	else {
