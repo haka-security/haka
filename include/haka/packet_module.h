@@ -12,6 +12,12 @@
 #include <haka/module.h>
 #include <haka/packet.h>
 
+/**
+ * @defgroup ExternPacketModule Packet
+ * @brief External packet module documentation.
+ * @ingroup ExternModule
+ */
+
 
 /**
  * Constant value to be used to communicate with the module in order

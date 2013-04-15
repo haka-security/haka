@@ -136,6 +136,43 @@ static int log_message(log_level lvl, const wchar_t *module, const wchar_t *mess
 }
 
 
+/**
+ * @defgroup Syslog Syslog
+ * @brief Logging to syslog.
+ * @author Arkoon Network Security
+ * @ingroup ExternLogModule
+ *
+ * # Description
+ *
+ * Module that output log messages using syslog.
+ *
+ * By default, the message are send to the facility local0. You can adjust your
+ * syslogd.conf accordingly.
+ *
+ * For instance :
+ * ~~~~~~~~~
+ * # HAKA syslog en Facility log level local0
+ * local0.*   /var/log/haka
+ * ~~~~~~~~~
+ *
+ * # Initialization arguments
+ *
+ * This module does not take any initialization parameters.
+ *
+ * # Usage
+ *
+ * Module usage.
+ *
+ * ### Lua
+ * ~~~~~~~~{.lua}
+ * app.install("log", module.load("log-syslog"))
+ * ~~~~~~~~
+ *
+ * ### C/C++
+ * ~~~~~~~~{.c}
+ * module_load("log-syslog", 0, NULL);
+ * ~~~~~~~~
+ */
 struct log_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_LOG,

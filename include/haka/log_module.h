@@ -6,6 +6,12 @@
  * The file contains the description of a haka logging module.
  */
 
+/**
+ * @defgroup ExternLogModule Log
+ * @brief External log module documentation.
+ * @ingroup ExternModule
+ */
+
 #ifndef _HAKA_LOG_MODULE_H
 #define _HAKA_LOG_MODULE_H
 

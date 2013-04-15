@@ -7,8 +7,19 @@
  */
 
 /**
- * @defgroup Module Module API
+ * @defgroup API
+ * @brief API functions and structures.
+ */
+
+/**
+ * @defgroup Module
  * @brief Module API functions and structures.
+ * @ingroup API
+ */
+
+/**
+ * @defgroup ExternModule External Modules
+ * @brief External module documentation.
  */
 
 #ifndef _HAKA_MODULE_H
@@ -60,6 +71,7 @@ struct module {
  * @param argc Extra arguments count.
  * @param argv Argument list.
  * @return The loaded module structure or NULL in case of an error.
+ * @ingroup Module
  */
 struct module *module_load(const char *module_name, char **error, int argc, char *argv[]);
 
@@ -68,12 +80,14 @@ struct module *module_load(const char *module_name, char **error, int argc, char
  * otherwise the module will not be able to be removed correctly
  * when unused.
  * @param module Module to keep.
+ * @ingroup Module
  */
 void           module_addref(struct module *module);
 
 /**
  * Release a module.
  * @param module Module to release.
+ * @ingroup Module
  */
 void           module_release(struct module *module);
 

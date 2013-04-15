@@ -7,8 +7,9 @@
  */
 
 /**
- * @defgroup Packet Packet API
+ * @defgroup Packet
  * @brief Packet API functions and structures.
+ * @ingroup API
  */
 
 #ifndef _HAKA_PACKET_H

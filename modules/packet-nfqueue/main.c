@@ -231,6 +231,40 @@ static const char *packet_get_data(struct packet *pkt)
 }
 
 
+/**
+ * @defgroup NetfilterQueue Netfilter Queue
+ * @brief Packet filtering using Netfilter Queue to interface with the Linux Kernel.
+ * @author Arkoon Network Security
+ * @ingroup ExternPacketModule
+ *
+ * # Description
+ *
+ * The module uses the library netfilter queue to intercept all packets.
+ *
+ * At initialization, the module will install some iptables rules for the _raw_ table.
+ * The table will be cleared when the application is closed.
+ *
+ * To operate correctly, the process need to be launched with the proper access
+ * rights.
+ *
+ * # Initialization arguments
+ *
+ * This module does not take any initialization parameters.
+ *
+ * # Usage
+ *
+ * Module usage.
+ *
+ * ### Lua
+ * ~~~~~~~~{.lua}
+ * app.install("packet", module.load("packet-nfqueue"))
+ * ~~~~~~~~
+ *
+ * ### C/C++
+ * ~~~~~~~~{.c}
+ * module_load("packet-nfqueue", 0, NULL);
+ * ~~~~~~~~
+ */
 struct packet_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_PACKET,
