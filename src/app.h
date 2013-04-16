@@ -19,5 +19,9 @@ int set_filter(filter_callback filter, void *data);
 int has_filter();
 filter_result call_filter(lua_state *L, struct packet *pkt);
 
+extern char directory[1024];
+
+const char *get_app_directory();
+
 #endif /* _APP_H */
 

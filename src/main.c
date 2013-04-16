@@ -1,8 +1,11 @@
 
+#include <sys/types.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <locale.h>
 #include <signal.h>
+#include <unistd.h>
+#include <string.h>
 
 #include <haka/packet_module.h>
 #include "app.h"
@@ -51,6 +54,30 @@ int main(int argc, char *argv[])
 	signal(SIGINT, fatal_error_signal);
 	signal(SIGQUIT, fatal_error_signal);
 	signal(SIGHUP, fatal_error_signal);
+
+	/* Get the program directory */
+	{
+		char szTmp[32];
+		int bytes;
+		char *sep;
+
+		sprintf(szTmp, "/proc/%d/exe", getpid());
+		bytes = readlink(szTmp, directory, sizeof(directory)-1);
+		if (bytes < 0) {
+			message(HAKA_LOG_FATAL, L"core", L"failed to retrieve application directory");
+			clean_exit();
+			return 3;
+		}
+		directory[bytes] = '\0';
+
+		sep = strrchr(directory, '/');
+		if (!sep) {
+			message(HAKA_LOG_FATAL, L"core", L"failed to retrieve application directory");
+			clean_exit();
+			return 3;
+		}
+		*sep = '\0';
+	}
 
 	/* Check arguments */
 	if (argc < 2) {

@@ -71,3 +71,10 @@ void install(const char *type, struct module *module);
 %native(install_filter) void install_filter_native(lua_State *L);
 void exit(int);
 
+%rename(directory) get_app_directory;
+const char *get_app_directory();
+
+%luacode {
+	package.cpath = package.cpath .. ";" .. app.directory() .. "/modules/?.ho"
+	package.path = package.path .. ";" .. app.directory() .. "/modules/?.lua"
+}
