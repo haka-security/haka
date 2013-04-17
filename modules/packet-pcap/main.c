@@ -83,31 +83,38 @@ static void cleanup()
 
 static int packet_receive(struct packet **pkt)
 {
-	struct pcap_pkthdr header;
+	struct pcap_pkthdr *header;
 	struct packet *packet = NULL;
 	const u_char *p;
+	int ret;
 
 	/* read packet */
-	p = pcap_next(pd, &header);
-	if (p)
-	{
-		packet = malloc(sizeof(struct packet) + header.caplen);
+	ret = pcap_next_ex(pd, &header, &p);
+
+	if(ret == -1) {
+		/* error while reading packet */
+		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(pd));
+		return 1;
+	}
+	else if (ret == -2) {
+		/* end of pcap file */
+		return 1;
+	}
+	else {
+		packet = malloc(sizeof(struct packet) + header->caplen);
 		if (!packet) {
 			return ENOMEM;
 		}
-
 		/* fill packet data structure */
-		memcpy(packet->data, p, header.caplen);
-		packet->header = header;
+		memcpy(packet->data, p, header->caplen);
+		packet->header = *header;
 
 		if (packet->header.caplen < packet->header.len)
-			messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
+		    messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
 
 		*pkt = packet;
 		return 0;
 	}
-	else
-		return 1;
 }
 
 static void packet_verdict(struct packet *pkt, filter_result result)
