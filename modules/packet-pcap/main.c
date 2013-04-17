@@ -125,14 +125,17 @@ static void packet_verdict(struct packet *pkt, filter_result result)
 	free(pkt);
 }
 
+/* Skip the ethernet header */
+#define ETHERNET_SIZE    14
+
 static size_t packet_get_length(struct packet *pkt)
 {
-	return pkt->header.caplen;
+	return pkt->header.caplen - ETHERNET_SIZE;
 }
 
 static const char *packet_get_data(struct packet *pkt)
 {
-	return (char *)pkt->data;
+	return (char *)(pkt->data + ETHERNET_SIZE);
 }
 
 
