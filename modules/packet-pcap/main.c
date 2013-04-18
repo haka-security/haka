@@ -133,9 +133,14 @@ static size_t packet_get_length(struct packet *pkt)
 	return pkt->header.caplen - ETHERNET_SIZE;
 }
 
-static const char *packet_get_data(struct packet *pkt)
+static const uint8 *packet_get_data(struct packet *pkt)
 {
-	return (char *)(pkt->data + ETHERNET_SIZE);
+	return (pkt->data + ETHERNET_SIZE);
+}
+
+static uint8 *packet_make_modifiable(struct packet *pkt)
+{
+	return (pkt->data + ETHERNET_SIZE);
 }
 
 
@@ -180,6 +185,7 @@ struct packet_module HAKA_MODULE = {
 	receive:         packet_receive,
 	verdict:         packet_verdict,
 	get_length:      packet_get_length,
+	make_modifiable: packet_make_modifiable,
 	get_data:        packet_get_data
 };
 

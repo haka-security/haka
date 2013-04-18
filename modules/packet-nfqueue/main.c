@@ -25,7 +25,8 @@
 struct packet {
 	int         id; /* nfq identifier */
 	size_t      length;
-	char        data[0];
+	int         modified:1;
+	uint8       data[0];
 };
 
 /*
@@ -202,6 +203,8 @@ static int packet_receive(struct packet **pkt)
 
 static void packet_verdict(struct packet *pkt, filter_result result)
 {
+	int ret;
+
 	/* Convert verdict to netfilter */
 	int verdict;
 	switch (result) {
@@ -213,7 +216,12 @@ static void packet_verdict(struct packet *pkt, filter_result result)
 		break;
 	}
 
-	if (nfq_set_verdict(global_state.queue, pkt->id, verdict, 0, NULL) == -1) {
+	if (pkt->modified)
+		ret = nfq_set_verdict(global_state.queue, pkt->id, verdict, pkt->length, pkt->data);
+	else
+		ret = nfq_set_verdict(global_state.queue, pkt->id, verdict, 0, NULL);
+
+	if (ret == -1) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"packet verdict failed");
 	}
 
@@ -225,8 +233,14 @@ static size_t packet_get_length(struct packet *pkt)
 	return pkt->length;
 }
 
-static const char *packet_get_data(struct packet *pkt)
+static const uint8 *packet_get_data(struct packet *pkt)
 {
+	return pkt->data;
+}
+
+static uint8 *packet_make_modifiable(struct packet *pkt)
+{
+	pkt->modified = 1;
 	return pkt->data;
 }
 
@@ -277,5 +291,6 @@ struct packet_module HAKA_MODULE = {
 	receive:         packet_receive,
 	verdict:         packet_verdict,
 	get_length:      packet_get_length,
+	make_modifiable: packet_make_modifiable,
 	get_data:        packet_get_data
 };

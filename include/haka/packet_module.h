@@ -67,11 +67,18 @@ struct packet_module {
 	size_t         (*get_length)(struct packet *pkt);
 
 	/**
+	 * Make the packet modifiable.
+	 * @param pkt The received opaque packet.
+	 * @return 0 if success.
+	 */
+	uint8         *(*make_modifiable)(struct packet *pkt);
+
+	/**
 	 * Get the data of a packet
 	 * @param pkt The received opaque packet.
 	 * @return The address of the beginning of the packet data.
 	 */
-	const char    *(*get_data)(struct packet *pkt);
+	const uint8   *(*get_data)(struct packet *pkt);
 };
 
 #endif /* _HAKA_PACKET_MODULE_H */

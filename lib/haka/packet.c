@@ -47,10 +47,16 @@ size_t packet_length(struct packet *pkt)
 	return packet_module->get_length(pkt);
 }
 
-const char *packet_data(struct packet *pkt)
+const uint8 *packet_data(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
 	return packet_module->get_data(pkt);
 }
 
+uint8* packet_modify(struct packet *pkt)
+{
+	assert(packet_module);
+	assert(pkt);
+	return packet_module->make_modifiable(pkt);
+}

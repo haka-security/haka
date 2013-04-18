@@ -16,6 +16,7 @@
 #define _HAKA_PACKET_H
 
 #include <stddef.h>
+#include <haka/types.h>
 
 
 /**
@@ -30,15 +31,23 @@ struct packet;
  * @return Length of the packet data.
  * @ingroup Packet
  */
-size_t      packet_length(struct packet *pkt);
+size_t       packet_length(struct packet *pkt);
 
 /**
  * Get the data of a packet
  * @param pkt Opaque packet.
- * @return Address of the beginning og the packlet data.
+ * @return Address of the beginning of the packet data.
  * @ingroup Packet
  */
-const char *packet_data(struct packet *pkt);
+const uint8 *packet_data(struct packet *pkt);
+
+/**
+ * Make a packet modifiable.
+ * @param pkt Opaque packet.
+ * @return Address of the beginning of the packet data.
+ * @ingroup Packet
+ */
+uint8       *packet_modify(struct packet *pkt);
 
 #endif /* _HAKA_PACKET_H */
 
