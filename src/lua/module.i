@@ -4,32 +4,16 @@
 %{
 #include <haka/module.h>
 
-static struct module *load_impl(lua_State *L, const char *name, int ARGC, char **ARGV) {
-	char *err;
-	struct module *ret = module_load(name, &err, ARGC, ARGV);
-	if (!ret) {
-		if (err) {
-			lua_pushfstring(L, "%s", err);
-			free(err);
-		}
-		else {
-			lua_pushfstring(L, "unknown error");
-		}
-		lua_error(L);
-		return NULL;
-	}
-	else {
-		return ret;
-	}
-}
 
 #define load1(name, ARGC, ARGV) \
-	load_impl(L, name, ARGC, ARGV); if (!result) SWIG_fail
+	module_load(name, ARGC, ARGV)
 
 #define load2(name) \
-	load_impl(L, name, 0, NULL); if (!result) SWIG_fail
+	module_load(name, 0, NULL)
 
 %}
+
+%include haka/swig.i
 
 %nodefaultctor;
 

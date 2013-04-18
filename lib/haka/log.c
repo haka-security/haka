@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include <haka/log.h>
+#include <haka/error.h>
 #include <haka/log_module.h>
 
 
@@ -15,6 +16,7 @@ int set_log_module(struct module *module)
 	struct log_module *prev_log_module = log_module;
 
 	if (module && module->type != MODULE_LOG) {
+		error(L"'%ls' is not a log module", module->name);
 		return 1;
 	}
 

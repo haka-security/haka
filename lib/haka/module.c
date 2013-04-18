@@ -8,19 +8,18 @@
 
 #include <haka/module.h>
 #include <haka/log.h>
+#include <haka/error.h>
 
 
 #define MODULE_EXT	".ho"
 
-struct module *module_load(const char *module_name, char **error, int argc, char *argv[])
+struct module *module_load(const char *module_name, int argc, char *argv[])
 {
 	void *module_handle = NULL;
 	struct module *module = NULL;
 	char *full_module_name;
 
 	assert(module_name);
-
-	if (error) *error = NULL;
 
 	full_module_name = malloc(strlen(module_name) + strlen(MODULE_EXT) + 1);
 	if (!full_module_name) {
@@ -33,13 +32,13 @@ struct module *module_load(const char *module_name, char **error, int argc, char
 
 	if (!module_handle) {
 		free(full_module_name);
-		if (error) *error = strdup(dlerror());
+		error(L"%s", strdup(dlerror()));
 		return NULL;
 	}
 
 	module = (struct module*)dlsym(module_handle, "HAKA_MODULE");
 	if (!module) {
-		if (error) *error = strdup(dlerror());
+		error(L"%s", strdup(dlerror()));
 		dlclose(module);
 		free(full_module_name);
 		return NULL;
@@ -53,9 +52,7 @@ struct module *module_load(const char *module_name, char **error, int argc, char
 		         module->name, module->author);
 
 		if (module->init(argc, argv)) {
-			if (error) {
-				*error = strdup("unable to initialize module");
-			}
+			error(L"unable to initialize module");
 			dlclose(module->handle);
 			free(full_module_name);
 			return NULL;

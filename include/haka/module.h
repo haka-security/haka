@@ -67,13 +67,12 @@ struct module {
  * Load a module given its name. It is not needed to call
  * module_addref on the result as this is done before returning.
  * @param module_name The name of the module to load.
- * @param error String to store an error message if the return value is NULL.
  * @param argc Extra arguments count.
  * @param argv Argument list.
  * @return The loaded module structure or NULL in case of an error.
  * @ingroup Module
  */
-struct module *module_load(const char *module_name, char **error, int argc, char *argv[]);
+struct module *module_load(const char *module_name, int argc, char *argv[]);
 
 /**
  * Keep the module. Must match with a call to module_release

@@ -3,7 +3,8 @@
 add_library(libhaka SHARED
 	packet.c
 	log.c
-	module.c)
+	module.c
+	error.c)
 
 find_package(DL REQUIRED)
 target_link_libraries(libhaka ${DL_LIBRARIES})

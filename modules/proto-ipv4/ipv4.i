@@ -3,6 +3,8 @@
 #include "ipv4.h"
 %}
 
+%include haka/swig.i
+
 struct addr {
 	%extend {
 		addr(const char *str) {

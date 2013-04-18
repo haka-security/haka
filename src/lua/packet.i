@@ -9,6 +9,8 @@ void lua_pushppacket(lua_State *L, struct packet *pkt)
 }
 %}
 
+%include haka/swig.i
+
 %rename(ACCEPT) FILTER_ACCEPT;
 %rename(DROP) FILTER_DROP;
 

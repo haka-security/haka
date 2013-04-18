@@ -2,6 +2,7 @@
 #include <assert.h>
 
 #include <haka/packet.h>
+#include <haka/error.h>
 #include <haka/packet_module.h>
 
 
@@ -12,6 +13,7 @@ int set_packet_module(struct module *module)
 	struct packet_module *prev_packet_module = packet_module;
 
 	if (module && module->type != MODULE_PACKET) {
+		error(L"'%ls' is not a packet module", module->name);
 		return 1;
 	}
 

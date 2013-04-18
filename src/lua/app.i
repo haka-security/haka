@@ -7,7 +7,7 @@
 #include "state.h"
 #include <haka/packet_module.h>
 
-static int install_impl(const char *type, struct module *module)
+static int install(const char *type, struct module *module)
 {
 	if (strcmp(type, "packet") == 0) {
 		return set_packet_module(module);
@@ -19,15 +19,6 @@ static int install_impl(const char *type, struct module *module)
 		return 2;
 	}
 }
-
-#define install(type, module) \
-	do { \
-		const int ret = install_impl(type, module); \
-		switch (ret) { \
-		case 1: lua_pushfstring(L, "(arg %d) must implement module type '%s'", 2, type); SWIG_fail; \
-		case 2: lua_pushfstring(L, "unknown module type '%s'", type); SWIG_fail; \
-		} \
-	} while(0)
 
 extern void lua_pushppacket(lua_State *L, struct packet *pkt);
 
@@ -66,6 +57,8 @@ fail:
 }
 
 %}
+
+%include haka/swig.i
 
 void install(const char *type, struct module *module);
 %native(install_filter) void install_filter_native(lua_State *L);

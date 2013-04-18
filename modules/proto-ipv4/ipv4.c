@@ -5,11 +5,16 @@
 #include <stdio.h>
 
 #include <haka/log.h>
+#include <haka/error.h>
 
 
 struct ipv4 *ipv4_dissect(struct packet* packet)
 {
 	struct ipv4 *ip = NULL;
+
+	if (packet_length(packet) < sizeof(struct ipv4_header)) {
+		return NULL;
+	}
 
 	ip = malloc(sizeof(struct ipv4));
 	if (!ip) {
