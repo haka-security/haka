@@ -7,7 +7,7 @@
 #include <haka/log.h>
 
 
-struct ipv4 *create(struct packet* packet)
+struct ipv4 *ipv4_dissect(struct packet* packet)
 {
 	struct ipv4 *ip = NULL;
 
@@ -19,13 +19,30 @@ struct ipv4 *create(struct packet* packet)
 	ip->packet = packet;
 	ip->header = (struct ipv4_header*)(packet_data(packet));
 	ip->modified = false;
+	ip->invalid_checksum = false;
 
 	return ip;
 }
 
-void release(struct ipv4 *ip)
+void ipv4_release(struct ipv4 *ip)
 {
 	free(ip);
+}
+
+void ipv4_forge(struct ipv4 *ip)
+{
+	if (ip->invalid_checksum)
+		ipv4_compute_checksum(ip);
+}
+
+void ipv4_modified(struct ipv4 *ip)
+{
+	if (!ip->modified) {
+		ip->header = (struct ipv4_header*)(packet_modify(ip->packet));
+	}
+
+	ip->modified = true;
+	ip->invalid_checksum = true;
 }
 
 bool ipv4_verify_checksum(const struct ipv4 *ip)

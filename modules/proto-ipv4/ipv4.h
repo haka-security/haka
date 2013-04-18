@@ -44,14 +44,17 @@ struct ipv4 {
 	struct packet       *packet;
 	struct ipv4_header  *header;
 	bool                 modified:1;
+	bool                 invalid_checksum:1;
 };
 
-struct ipv4 *create(struct packet* packet);
-void release(struct ipv4 *ip);
+struct ipv4 *ipv4_dissect(struct packet *packet);
+void ipv4_forge(struct ipv4 *ip);
+void ipv4_release(struct ipv4 *ip);
+void ipv4_modified(struct ipv4 *ip);
 
 #define IPV4_GETSET_FIELD(type, field) \
 		static inline type ipv4_get_##field(const struct ipv4 *ip) { return SWAP_FROM_IPV4(type, ip->header->field); } \
-		static inline void ipv4_set_##field(struct ipv4 *ip, type v) { ip->modified = true; ip->header->field = SWAP_TO_IPV4(type, v); }
+		static inline void ipv4_set_##field(struct ipv4 *ip, type v) { ipv4_modified(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
 
 IPV4_GETSET_FIELD(uint8, hdr_len);
 IPV4_GETSET_FIELD(uint8, version);
@@ -71,7 +74,7 @@ static inline uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
 
 static inline void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
 {
-	ip->modified = true;
+	ipv4_modified(ip);
 	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS, v);
 }
 
@@ -82,13 +85,13 @@ static inline uint16 ipv4_get_flags(const struct ipv4 *ip)
 
 static inline void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 {
-	ip->modified = true;
+	ipv4_modified(ip);
 	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FLAG_BITS, v);
 }
 
 #define IPV4_GETSET_FLAG(name, flag) \
 		static inline bool ipv4_get_flags_##name(const struct ipv4 *ip) { return IPV4_GET_BIT(uint16, ip->header->fragment, flag); } \
-		static inline void ipv4_set_flags_##name(struct ipv4 *ip, bool value) { ip->modified = true; ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, value); }
+		static inline void ipv4_set_flags_##name(struct ipv4 *ip, bool value) { ipv4_modified(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, value); }
 
 IPV4_GETSET_FLAG(df, IPV4_FLAG_DF);
 IPV4_GETSET_FLAG(mf, IPV4_FLAG_MF);

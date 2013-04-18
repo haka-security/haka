@@ -59,7 +59,7 @@ struct ipv4 {
 	%extend {
 		~ipv4()
 		{
-			release($self);
+			ipv4_release($self);
 		}
 
 		unsigned int hdr_len;
@@ -86,12 +86,18 @@ struct ipv4 {
 		{
 			ipv4_compute_checksum($self);
 		}
+
+		%rename(forge) _forge;
+		void _forge()
+		{
+			ipv4_forge($self);
+		}
 	}
 };
 
-%rename(_create) create;
-%newobject create;
-struct ipv4 *create(struct packet *packet);
+%rename(dissect) ipv4_dissect;
+%newobject ipv4_dissect;
+struct ipv4 *ipv4_dissect(struct packet *packet);
 
 %{
 
@@ -131,6 +137,6 @@ void ipv4_flags_all_set(struct ipv4_flags *flags, unsigned int v) { return ipv4_
 
 %luacode {
 	getmetatable(ipv4).__call = function (_, pkt)
-		return ipv4._create(pkt)
+		return ipv4.dissect(pkt)
 	end
 }
