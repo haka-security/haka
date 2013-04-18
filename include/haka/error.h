@@ -7,7 +7,7 @@
  */
 
 /**
- * @defgroup Utilities
+ * @defgroup Utilities Utilities
  * @brief Utilities functions and structures.
  * @ingroup API
  */

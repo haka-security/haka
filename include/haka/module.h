@@ -7,12 +7,12 @@
  */
 
 /**
- * @defgroup API
+ * @defgroup API API
  * @brief API functions and structures.
  */
 
 /**
- * @defgroup Module
+ * @defgroup Module Module
  * @brief Module API functions and structures.
  * @ingroup API
  */

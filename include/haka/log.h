@@ -7,7 +7,7 @@
  */
 
 /**
- * @defgroup Logging
+ * @defgroup Logging Logging
  * @brief Logging API functions and structures.
  * @ingroup API
  */

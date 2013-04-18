@@ -7,7 +7,7 @@
  */
 
 /**
- * @defgroup Packet
+ * @defgroup Packet Packet
  * @brief Packet API functions and structures.
  * @ingroup API
  */
