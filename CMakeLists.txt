@@ -27,6 +27,7 @@ enable_testing()
 add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(modules)
+add_subdirectory(tests)
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
