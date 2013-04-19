@@ -1,6 +1,8 @@
 
 set(ENV{LD_LIBRARY_PATH} ${LDDIR})
 set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
+set(ENV{DIFF} ${DIFF})
+set(ENV{TSHARK} ${TSHARK})
 
 execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapCompare.lua ${CONF} ${SRC} ${DST}
 	RESULT_VARIABLE HAD_ERROR)

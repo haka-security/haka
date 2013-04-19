@@ -21,6 +21,7 @@ set(CMAKE_INSTALL_PREFIX out)
 
 include_directories(include)
 
+# Tests
 enable_testing()
 
 # Add sub directories

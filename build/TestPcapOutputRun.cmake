@@ -9,7 +9,7 @@ if(HAD_ERROR)
 	message(FATAL_ERROR "Haka script failed")
 endif(HAD_ERROR)
 
-execute_process(COMMAND diff ${DST} ${REF}
+execute_process(COMMAND ${DIFF} ${DST} ${REF}
 	RESULT_VARIABLE HAD_ERROR)
 
 if(HAD_ERROR)
