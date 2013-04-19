@@ -99,6 +99,7 @@ IPV4_GETSET_FLAG(rb, IPV4_FLAG_RB);
 
 bool ipv4_verify_checksum(const struct ipv4 *ip);
 void ipv4_compute_checksum(struct ipv4 *ip);
+int16 checksum(const struct ipv4 *ip);
 
 void ipv4_addr_to_string(ipv4addr addr, char *string, size_t size);
 ipv4addr ipv4_addr_from_string(const char *string);

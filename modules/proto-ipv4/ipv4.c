@@ -50,15 +50,39 @@ void ipv4_modified(struct ipv4 *ip)
 	ip->invalid_checksum = true;
 }
 
+/* compute checksum RFC #1071 */
+int16 checksum(const struct ipv4 *ip)
+{
+	register long sum = 0;
+	uint16 size = ip->header->hdr_len * 4;
+	uint16 *ptr = (uint16 *)ip->header;
+
+	while (size > 1) {
+		sum += *ptr++;
+		size -= 2;
+	}
+
+	if (size > 0)
+		sum += *(uint8 *)ptr;
+
+	while (sum >> 16)
+		sum = (sum & 0xffff) + (sum >> 16);
+
+	return ~sum;
+}
+
 bool ipv4_verify_checksum(const struct ipv4 *ip)
 {
-	//TODO
-	return true;
+	return checksum(ip) == 0;
 }
 
 void ipv4_compute_checksum(struct ipv4 *ip)
 {
-	//TODO
+	ipv4_modified(ip);
+
+	ip->header->checksum = 0;
+	ip->header->checksum = checksum(ip);
+	ip->invalid_checksum = false;
 }
 
 void ipv4_addr_to_string(ipv4addr addr, char *string, size_t size)
