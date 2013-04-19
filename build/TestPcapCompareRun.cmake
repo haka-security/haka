@@ -4,7 +4,7 @@ set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
 set(ENV{DIFF} ${DIFF})
 set(ENV{TSHARK} ${TSHARK})
 
-execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapCompare.lua ${CONF} ${SRC} ${DST}
+execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapCompare.lua ${CONF} ${SRC} ${DST} ${LDDIR}
 	RESULT_VARIABLE HAD_ERROR)
 
 if(HAD_ERROR)

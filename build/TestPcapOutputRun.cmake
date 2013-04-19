@@ -2,7 +2,7 @@
 set(ENV{LD_LIBRARY_PATH} ${LDDIR})
 set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
 
-execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapOutput.lua ${CONF} ${SRC} ${DST}
+execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapOutput.lua ${CONF} ${SRC} ${DST} ${LDDIR}
 	RESULT_VARIABLE HAD_ERROR)
 
 if(HAD_ERROR)

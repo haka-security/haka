@@ -1,3 +1,4 @@
+package.cpath = package.cpath .. ";" .. string.gsub(arg[4], ':', '/?.ho;')
 
 app.install("packet", module.load("packet-pcap", {"-f", arg[2]}))
 
