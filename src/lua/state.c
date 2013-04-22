@@ -19,16 +19,6 @@ static int panic(lua_State *L)
 	return 0;
 }
 
-static void *alloc(void *up, void *ptr, size_t osize, size_t nsize) {
-	if (nsize == 0) {
-		free(ptr);
-		return NULL;
-	}
-	else {
-		return realloc(ptr, nsize);
-	}
-}
-
 /*
  * We need to override the print function to print using wprintf otherwise
  * nothing is visible in the output on Linux.
@@ -69,7 +59,7 @@ static const struct luaL_reg builtin_lib [] = {
 
 lua_state *init_state()
 {
-	lua_State *L = lua_newstate(alloc, NULL);
+	lua_State *L = luaL_newstate();
 	if (!L) {
 		return NULL;
 	}
