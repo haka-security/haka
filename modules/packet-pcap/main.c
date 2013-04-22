@@ -9,7 +9,7 @@
 #include <string.h>
 
 /* snapshot length - a value of 65535 is sufficient to get all
- * of the packet's data on most netwroks (from pcap man page)
+ * of the packet's data on most networks (from pcap man page)
  */
 #define SNAPLEN 65535
 
@@ -18,25 +18,43 @@ struct packet {
 	u_char data[0];
 };
 
-static pcap_t *pd;
-static pcap_dumper_t *pf;
+struct pcap_t {
+	pcap_t        *pd;
+	pcap_dumper_t *pf;
+	size_t         link_hdr_len;
+};
+
+static struct pcap_t pcap;
+
+
+static void cleanup()
+{
+	/* close pcap descriptors */
+	if (pcap.pf) {
+		pcap_dump_close(pcap.pf);
+		pcap.pf = NULL;
+	}
+	pcap_close(pcap.pd);
+	pcap.pd = NULL;
+}
 
 static int init(int argc, char *argv[])
 {
 	if (argc == 2 || argc == 4) {
+		int linktype;
 		char errbuf[PCAP_ERRBUF_SIZE];
 		bzero(errbuf, PCAP_ERRBUF_SIZE);
 
 		/* get a pcap descriptor from device */
 		if (strcmp(argv[0], "-i") == 0) {
-			pd = pcap_open_live(argv[1], SNAPLEN, 1, 0, errbuf);
-			if (pd && (strlen(errbuf) > 0)) {
+			pcap.pd = pcap_open_live(argv[1], SNAPLEN, 1, 0, errbuf);
+			if (pcap.pd && (strlen(errbuf) > 0)) {
 				 messagef(HAKA_LOG_WARNING, L"pcap", L"%s", errbuf);
 			}
 		}
 		/* get a pcap descriptor from a pcap file */
 		else if (strcmp(argv[0], "-f") == 0) {
-			pd = pcap_open_offline(argv[1], errbuf);
+			pcap.pd = pcap_open_offline(argv[1], errbuf);
 		}
 		/* unkonwn options */
 		else  {
@@ -44,7 +62,7 @@ static int init(int argc, char *argv[])
 			return 1;
 		}
 
-		if (!pd) {
+		if (!pcap.pd) {
 			messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errbuf);
 			return 1;
 		}
@@ -52,18 +70,52 @@ static int init(int argc, char *argv[])
 		if (argc == 4) {
 			/* open pcap savefile */
 			if (strcmp(argv[2], "-o") == 0) {
-				pf = pcap_dump_open(pd, argv[3]);
-				if (!pf) {
-					pcap_close(pd);
+				pcap.pf = pcap_dump_open(pcap.pd, argv[3]);
+				if (!pcap.pf) {
+					pcap_close(pcap.pd);
 					messagef(HAKA_LOG_ERROR, L"pcap", L"unable to dump on %s", argv[3]);
 					return 1;
 				}
 			}
 			else {
-				pcap_close(pd);
+				pcap_close(pcap.pd);
 				messagef(HAKA_LOG_ERROR, L"pcap", L"output option should be -o");
 				return 1;
 			}
+		}
+
+		// Determine the datalink layer type.
+		if ((linktype = pcap_datalink(pcap.pd)) < 0)
+		{
+			messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(pcap.pd));
+			cleanup();
+			return 1;
+		}
+
+		// Set the datalink layer header size.
+		switch (linktype)
+		{
+		case DLT_NULL:
+			pcap.link_hdr_len = 4;
+			break;
+
+		case DLT_LINUX_SLL:
+			pcap.link_hdr_len = 16;
+			break;
+
+		case DLT_EN10MB:
+			pcap.link_hdr_len = 14;
+			break;
+
+		case DLT_SLIP:
+		case DLT_PPP:
+			pcap.link_hdr_len = 24;
+			break;
+
+		default:
+			messagef(HAKA_LOG_ERROR, L"pcap", L"%s", "unsupported data link");
+			cleanup();
+			return 1;
 		}
 	}
 	else {
@@ -71,14 +123,6 @@ static int init(int argc, char *argv[])
 		return 1;
 	}
 	return 0;
-}
-
-static void cleanup()
-{
-	/* close pcap descritpors */
-	if (pf)
-		pcap_dump_close(pf);
-	pcap_close(pd);
 }
 
 static int packet_receive(struct packet **pkt)
@@ -89,11 +133,11 @@ static int packet_receive(struct packet **pkt)
 	int ret;
 
 	/* read packet */
-	ret = pcap_next_ex(pd, &header, &p);
+	ret = pcap_next_ex(pcap.pd, &header, &p);
 
 	if(ret == -1) {
 		/* error while reading packet */
-		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(pd));
+		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(pcap.pd));
 		return 1;
 	}
 	else if (ret == -2) {
@@ -120,27 +164,24 @@ static int packet_receive(struct packet **pkt)
 static void packet_verdict(struct packet *pkt, filter_result result)
 {
 	/* dump capture in pcap file */
-	if (pf && result == FILTER_ACCEPT)
-		pcap_dump((u_char *)pf, &(pkt->header), pkt->data);
+	if (pcap.pf && result == FILTER_ACCEPT)
+		pcap_dump((u_char *)pcap.pf, &(pkt->header), pkt->data);
 	free(pkt);
 }
 
-/* Skip the ethernet header */
-#define ETHERNET_SIZE    14
-
 static size_t packet_get_length(struct packet *pkt)
 {
-	return pkt->header.caplen - ETHERNET_SIZE;
+	return pkt->header.caplen - pcap.link_hdr_len;
 }
 
 static const uint8 *packet_get_data(struct packet *pkt)
 {
-	return (pkt->data + ETHERNET_SIZE);
+	return (pkt->data + pcap.link_hdr_len);
 }
 
 static uint8 *packet_make_modifiable(struct packet *pkt)
 {
-	return (pkt->data + ETHERNET_SIZE);
+	return (pkt->data + pcap.link_hdr_len);
 }
 
 
