@@ -98,11 +98,12 @@ void ipv4_release(struct ipv4 *ip);
  * @param ip IPv4 structure
  * @ingroup IPv4
  */
-void ipv4_modified(struct ipv4 *ip);
+void ipv4_pre_modify(struct ipv4 *ip);
+void ipv4_pre_modify_header(struct ipv4 *ip);
 
 #define IPV4_GETSET_FIELD(type, field) \
 		INLINE type ipv4_get_##field(const struct ipv4 *ip) { return SWAP_FROM_IPV4(type, ip->header->field); } \
-		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { ipv4_modified(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
+		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { ipv4_pre_modify_header(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
 
 /**
  * @fn uint8 ipv4_get_version(const struct ipv4 *ip)
@@ -269,7 +270,7 @@ INLINE uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
  */
 INLINE void ipv4_set_hdr_len(struct ipv4 *ip, uint8 v)
 {
-	ipv4_modified(ip);
+	ipv4_pre_modify_header(ip);
 	ip->header->hdr_len = v >> IPV4_HDR_LEN_OFFSET;
 }
 
@@ -292,7 +293,7 @@ INLINE uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
  */
 INLINE void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
 {
-	ipv4_modified(ip);
+	ipv4_pre_modify_header(ip);
 	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS, v >> IPV4_FRAGMENTOFFSET_OFFSET);
 }
 
@@ -315,13 +316,13 @@ INLINE uint16 ipv4_get_flags(const struct ipv4 *ip)
  */
 INLINE void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 {
-	ipv4_modified(ip);
+	ipv4_pre_modify_header(ip);
 	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FLAG_BITS, v);
 }
 
 #define IPV4_GETSET_FLAG(name, flag) \
 		INLINE bool ipv4_get_flags_##name(const struct ipv4 *ip) { return IPV4_GET_BIT(uint16, ip->header->fragment, flag); } \
-		INLINE void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { ipv4_modified(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, v); }
+		INLINE void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { ipv4_pre_modify_header(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, v); }
 
 /**
  * @fn bool ipv4_get_flags_df(const struct ipv4 *ip)
@@ -415,6 +416,9 @@ ipv4addr ipv4_addr_from_string(const char *string);
  * @ingroup IPv4
  */
 ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d);
+
+const uint8 *ipv4_get_payload(struct ipv4 *ip);
+uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip);
 
 
 #endif /* _HAKA_PROTO_IPV4_IPV4_H */

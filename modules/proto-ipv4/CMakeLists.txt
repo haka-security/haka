@@ -13,8 +13,7 @@ target_link_libraries(proto-ipv4 libhaka)
 # Lua dependency
 LUA_LINK(proto-ipv4)
 
-# Install
-install(TARGETS proto-ipv4 LIBRARY DESTINATION bin/modules)
+INSTALL_MODULE(proto-ipv4)
 
 # Tests
 include(TestModuleLoad)

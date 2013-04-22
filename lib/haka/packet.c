@@ -56,7 +56,7 @@ const uint8 *packet_data(struct packet *pkt)
 	return packet_module->get_data(pkt);
 }
 
-uint8* packet_modify(struct packet *pkt)
+uint8* packet_make_modifiable(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);

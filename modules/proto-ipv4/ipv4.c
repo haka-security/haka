@@ -1,5 +1,5 @@
 
-#include "ipv4.h"
+#include "haka/ipv4.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,13 +43,18 @@ void ipv4_forge(struct ipv4 *ip)
 		ipv4_compute_checksum(ip);
 }
 
-void ipv4_modified(struct ipv4 *ip)
+void ipv4_pre_modify(struct ipv4 *ip)
 {
 	if (!ip->modified) {
-		ip->header = (struct ipv4_header*)(packet_modify(ip->packet));
+		ip->header = (struct ipv4_header*)(packet_make_modifiable(ip->packet));
 	}
 
 	ip->modified = true;
+}
+
+void ipv4_pre_modify_header(struct ipv4 *ip)
+{
+	ipv4_pre_modify(ip);
 	ip->invalid_checksum = true;
 }
 
@@ -81,7 +86,7 @@ bool ipv4_verify_checksum(const struct ipv4 *ip)
 
 void ipv4_compute_checksum(struct ipv4 *ip)
 {
-	ipv4_modified(ip);
+	ipv4_pre_modify_header(ip);
 
 	ip->header->checksum = 0;
 	ip->header->checksum = checksum(ip);
@@ -126,4 +131,15 @@ ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d)
 #endif
 
 	return addr;
+}
+
+const uint8 *ipv4_get_payload(struct ipv4 *ip)
+{
+	return ((const uint8 *)ip->header) + ipv4_get_hdr_len(ip)*4;
+}
+
+uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip)
+{
+	ipv4_pre_modify(ip);
+	return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip)*4;
 }

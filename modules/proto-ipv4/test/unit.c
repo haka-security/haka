@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 #include <check.h>
-#include <ipv4.h>
+#include <haka/ipv4.h>
 
 
 START_TEST(ipv4_addr_check)

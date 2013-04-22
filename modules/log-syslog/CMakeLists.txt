@@ -1,9 +1,6 @@
 
 add_library(log-syslog MODULE main.c)
-target_link_libraries(log-syslog libhaka)
-
-# Install
-install(TARGETS log-syslog LIBRARY DESTINATION bin/modules)
+INSTALL_MODULE(log-syslog)
 
 # Tests
 include(TestModuleLoad)

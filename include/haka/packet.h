@@ -47,7 +47,7 @@ const uint8 *packet_data(struct packet *pkt);
  * @return Address of the beginning of the packet data.
  * @ingroup Packet
  */
-uint8       *packet_modify(struct packet *pkt);
+uint8       *packet_make_modifiable(struct packet *pkt);
 
 #endif /* _HAKA_PACKET_H */
 

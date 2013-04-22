@@ -7,6 +7,17 @@ set(CMAKE_SHARED_MODULE_SUFFIX "${HAKA_MODULE_SUFFIX}")
 set(CMAKE_SHARED_LIBRARY_PREFIX "${HAKA_MODULE_PREFIX}")
 set(CMAKE_SHARED_LIBRARY_SUFFIX "${HAKA_MODULE_SUFFIX}")
 
+macro(DEPENDS_MODULE target name)
+	include_directories(${CMAKE_SOURCE_DIR}/modules/${name})
+	target_link_libraries(${target} ${name})
+endmacro(DEPENDS_MODULE)
+
+macro(INSTALL_MODULE target)
+	include_directories(.)
+	target_link_libraries(${target} libhaka)
+	install(TARGETS ${target} LIBRARY DESTINATION bin/modules)
+endmacro(INSTALL_MODULE)
+
 # Find all modules. We need a separated loop in case one of the sub make adds
 # some tests
 set(MODULES_BINARY_DIRS "")

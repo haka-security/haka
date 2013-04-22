@@ -278,7 +278,7 @@ static const uint8 *packet_get_data(struct packet *pkt)
 	return pkt->data;
 }
 
-static uint8 *packet_make_modifiable(struct packet *pkt)
+static uint8 *packet_modifiable(struct packet *pkt)
 {
 	pkt->modified = 1;
 	return pkt->data;
@@ -334,6 +334,6 @@ struct packet_module HAKA_MODULE = {
 	receive:         packet_receive,
 	verdict:         packet_verdict,
 	get_length:      packet_get_length,
-	make_modifiable: packet_make_modifiable,
+	make_modifiable: packet_modifiable,
 	get_data:        packet_get_data
 };

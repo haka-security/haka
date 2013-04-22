@@ -1,6 +1,6 @@
 %module ipv4
 %{
-#include "ipv4.h"
+#include "haka/ipv4.h"
 
 struct addr {
 	ipv4addr   addr;
@@ -16,7 +16,6 @@ struct addr *new_addr(ipv4addr a)
 	ret->addr = a;
 	return ret;
 }
-
 %}
 
 %include "haka/swig.i"
