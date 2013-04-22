@@ -14,30 +14,14 @@
  *
  * ------------------------------------------------------------ */
 
-%{
-	SWIGINTERN int SWIG_argv_size(lua_State* L, int index) {
-		int n=0;
-		while(1) {
-			lua_rawgeti(L,index,n+1);
-			if (lua_isnil(L,-1))
-			break;
-			++n;
-			lua_pop(L,1);
-		}
-		lua_pop(L,1);
-		return n;
-	}
-%}
 
 %typemap(in) (int ARGC, char **ARGV) {
 	if (lua_istable(L,$input)) {
-		int i, size = SWIG_argv_size(L,$input);
+		int i, size = lua_objlen(L,$input);
 		$1 = ($1_ltype) size;
 		$2 = (char **) malloc((size+1)*sizeof(char *));
 		for (i = 0; i < size; i++) {
 			lua_rawgeti(L,$input,i+1);
-			if (lua_isnil(L,-1))
-			break;
 			$2[i] = (char *)lua_tostring(L, -1);
 			lua_pop(L,1);
 		}
