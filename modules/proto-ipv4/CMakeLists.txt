@@ -21,3 +21,4 @@ install(TARGETS proto-ipv4 LIBRARY DESTINATION bin/modules)
 # Tests
 include(TestModuleLoad)
 TEST_MODULE_LOAD(proto-ipv4)
+add_subdirectory(test)
