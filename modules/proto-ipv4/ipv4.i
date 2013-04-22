@@ -1,6 +1,22 @@
 %module ipv4
 %{
 #include "ipv4.h"
+
+struct addr {
+	ipv4addr   addr;
+};
+
+struct addr *new_addr(ipv4addr a)
+{
+	struct addr *ret = malloc(sizeof(struct addr));
+	if (!ret) {
+		return NULL;
+	}
+
+	ret->addr = a;
+	return ret;
+}
+
 %}
 
 %include haka/swig.i
@@ -8,39 +24,53 @@
 struct addr {
 	%extend {
 		addr(const char *str) {
-			return (struct addr*)(ptrdiff_t)ipv4_addr_from_string(str);
+			struct addr *ret = malloc(sizeof(struct addr));
+			if (!ret) {
+				return NULL;
+			}
+
+			ret->addr = ipv4_addr_from_string(str);
+			return ret;
 		}
 
 		addr(unsigned int addr) {
-			return (struct addr*)(ptrdiff_t)addr;
+			return new_addr(addr);
 		}
 
 		addr(unsigned int a, unsigned int b, unsigned int c, unsigned int d) {
-			return (struct addr*)(ptrdiff_t)ipv4_addr_from_bytes(a, b, c, d);
+			struct addr *ret = malloc(sizeof(struct addr));
+			if (!ret) {
+				return NULL;
+			}
+
+			ret->addr = ipv4_addr_from_bytes(a, b, c, d);
+			return ret;
 		}
 
 		~addr() {
+			if ($self)
+				free($self);
 		}
 
 		bool __eq(struct addr *addr) const
 		{
-			return (uint32)(ptrdiff_t)$self == (uint32)(ptrdiff_t)addr;
+			return $self->addr == addr->addr;
 		}
 
 		bool __lt(struct addr *addr) const
 		{
-			return (uint32)(ptrdiff_t)$self < (uint32)(ptrdiff_t)addr;
+			return $self->addr < addr->addr;
 		}
 
 		bool __le(struct addr *addr) const
 		{
-			return (uint32)(ptrdiff_t)$self <= (uint32)(ptrdiff_t)addr;
+			return $self->addr <= addr->addr;
 		}
 
 		const char *__tostring()
 		{
 			static char buffer[16];
-			ipv4_addr_to_string((uint32)(ptrdiff_t)$self, buffer, sizeof(buffer));
+			ipv4_addr_to_string($self->addr, buffer, sizeof(buffer));
 			return buffer;
 		}
 	}
@@ -123,10 +153,10 @@ IPV4_INT_GETSET(checksum);
 IPV4_INT_GETSET_MULT(hdr_len, 2);
 IPV4_INT_GETSET_MULT(frag_offset, 3);
 
-struct addr *ipv4_src_get(struct ipv4 *ip) { return (struct addr*)(ptrdiff_t)ipv4_get_src(ip); }
-void ipv4_src_set(struct ipv4 *ip, struct addr *v) { ipv4_set_src(ip, (uint32)(ptrdiff_t)v); }
-struct addr *ipv4_dst_get(struct ipv4 *ip) { return (struct addr*)(ptrdiff_t)ipv4_get_dst(ip); }
-void ipv4_dst_set(struct ipv4 *ip, struct addr *v) { ipv4_set_dst(ip, (uint32)(ptrdiff_t)v); }
+struct addr *ipv4_src_get(struct ipv4 *ip) { return new_addr(ipv4_get_src(ip)); }
+void ipv4_src_set(struct ipv4 *ip, struct addr *v) { ipv4_set_src(ip, v->addr); }
+struct addr *ipv4_dst_get(struct ipv4 *ip) { return new_addr(ipv4_get_dst(ip)); }
+void ipv4_dst_set(struct ipv4 *ip, struct addr *v) { ipv4_set_dst(ip, v->addr); }
 
 struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
 

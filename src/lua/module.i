@@ -5,10 +5,10 @@
 #include <haka/module.h>
 
 
-#define load1(name, ARGC, ARGV) \
+#define load_args(name, ARGC, ARGV) \
 	module_load(name, ARGC, ARGV)
 
-#define load2(name) \
+#define load_no_args(name) \
 	module_load(name, 0, NULL)
 
 %}
@@ -31,11 +31,11 @@ struct module {
 	}
 };
 
-%rename(load) load1;
-%rename(load) load2;
+%rename(load) load_args;
+%rename(load) load_no_args;
 
-%newobject load2;
-struct module *load2(const char *name);
+%newobject load_no_args;
+struct module *load_no_args(const char *name);
 
-%newobject load1;
-struct module *load1(const char *name, int ARGC, char **ARGV);
+%newobject load_args;
+struct module *load_args(const char *name, int ARGC, char **ARGV);

@@ -16,7 +16,7 @@ return function(pkt)
 	ip.ttl = 33
 	ip.proto = 17
 	ip.src = ipv4.addr(192, 168, 0, 1)
-	ip.dst = ipv4.addr(192, 168, 0, 2)
+	ip.dst = ipv4.addr("192.168.0.2")
 	ip:forge()
 
 	return packet.ACCEPT

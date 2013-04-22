@@ -27,7 +27,7 @@
 void error(const wchar_t *error, ...);
 
 /**
- * Checks if an error as occurred. This function does not clear
+ * Checks if an error has occurred. This function does not clear
  * the error flag.
  * @return true if an error has occurred.
  * @ingroup Utilities

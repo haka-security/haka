@@ -14,7 +14,7 @@
 
 
 /**
- * boolean basic type. Its value are true or false.
+ * boolean basic type. Its value is true or false.
  * @ingroup Utilities
  */
 typedef unsigned char              bool;
