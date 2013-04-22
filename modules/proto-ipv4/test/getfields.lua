@@ -1,18 +1,15 @@
 -- Basic test that will output some basic information about the
 -- received packets.
 
-local set = ""
-
-function bool (val)
-    if(val) then
-        set = "Set"
-        return 1
-    end
-    set = "Not set"
-    return 0
+function bool(val)
+    if val then
+        return 1, "Set"
+    else
+		return 0, "Not set"
+	end
 end
 
-function protocol (val)
+function protocol(val)
     if val == 1 then
         return "ICMP"
     end
@@ -26,7 +23,7 @@ function protocol (val)
     end
 end
 
-function checks (ip)
+function checks(ip)
     if ip:verifyChecksum() then
         good = "[Good: True]"
         bad = "[Bad: False]"
@@ -39,7 +36,7 @@ function checks (ip)
     return good, bad, msg
 end
 
-function frags (df, mf)
+function frags(df, mf)
 	dont = ""
 	more = ""
 	if df == 1 then
@@ -60,14 +57,14 @@ return function(pkt)
 
 	output:write(string.format("Internet Protocol Version %d, Src: %s (%s), Dst: %s (%s)\n", ip.version, tostring(ip.src), tostring(ip.src), tostring(ip.dst), tostring(ip.dst)))
 	output:write(string.format("    Version: %d\n", ip.version))
-	output:write(string.format("    Header length: %d bytes\n", ip.hdr_len*4))
+	output:write(string.format("    Header length: %d bytes\n", ip.hdr_len))
     output:write(string.format("    Total Length: %d\n", ip.len))
     output:write(string.format("    Identification: 0x%.04x (%d)\n", ip.id, ip.id))
     output:write(string.format("    Flags: 0x%.02x%s%s\n", ip.flags.all, dont, more))
-    output:write(string.format("        %d... .... = Reserved bit: %s\n", bool(ip.flags.rb), set))
-    output:write(string.format("        .%d.. .... = Don't fragment: %s\n", bool(ip.flags.df), set))
-    output:write(string.format("        ..%d. .... = More fragments: %s\n", bool(ip.flags.mf), set))
-	output:write(string.format("    Fragment offset: %d\n", ip.frag_offset*8))
+    output:write(string.format("        %d... .... = Reserved bit: %s\n", bool(ip.flags.rb)))
+    output:write(string.format("        .%d.. .... = Don't fragment: %s\n", bool(ip.flags.df)))
+    output:write(string.format("        ..%d. .... = More fragments: %s\n", bool(ip.flags.mf)))
+	output:write(string.format("    Fragment offset: %d\n", ip.frag_offset))
 	output:write(string.format("    Time to live: %d\n", ip.ttl))
 	output:write(string.format("    Protocol: %s (%d)\n", protocol(ip.proto), ip.proto))
 	output:write(string.format("    Header checksum: 0x%04x %s\n", ip.checksum, msg))

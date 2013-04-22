@@ -107,15 +107,21 @@ struct ipv4 *ipv4_dissect(struct packet *packet);
 	unsigned int ipv4_##field##_get(struct ipv4 *ip) { return ipv4_get_##field(ip); } \
 	void ipv4_##field##_set(struct ipv4 *ip, unsigned int v) { ipv4_set_##field(ip, v); }
 
-IPV4_INT_GETSET(hdr_len);
 IPV4_INT_GETSET(version);
 IPV4_INT_GETSET(tos);
 IPV4_INT_GETSET(len);
 IPV4_INT_GETSET(id);
-IPV4_INT_GETSET(frag_offset);
 IPV4_INT_GETSET(ttl);
 IPV4_INT_GETSET(proto);
 IPV4_INT_GETSET(checksum);
+
+
+#define IPV4_INT_GETSET_MULT(field, factor) \
+    unsigned int ipv4_##field##_get(struct ipv4 *ip) { return ipv4_get_##field(ip) << (factor); } \
+    void ipv4_##field##_set(struct ipv4 *ip, unsigned int v) { ipv4_set_##field(ip, (v) >> (factor)); }
+
+IPV4_INT_GETSET_MULT(hdr_len, 2);
+IPV4_INT_GETSET_MULT(frag_offset, 3);
 
 struct addr *ipv4_src_get(struct ipv4 *ip) { return (struct addr*)(ptrdiff_t)ipv4_get_src(ip); }
 void ipv4_src_set(struct ipv4 *ip, struct addr *v) { ipv4_set_src(ip, (uint32)(ptrdiff_t)v); }
