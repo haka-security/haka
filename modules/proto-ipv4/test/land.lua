@@ -9,5 +9,4 @@ return function(pkt)
 	else
 		return packet.ACCEPT
     end
-	
 end
