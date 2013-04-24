@@ -7,6 +7,8 @@ set(ENV{TSHARK} ${TSHARK})
 execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapCompare.lua ${CONF} ${SRC} ${DST} ${LDDIR}
 	RESULT_VARIABLE HAD_ERROR)
 
+execute_process(COMMAND bash ${CTEST_MODULE_DIR}/PrintEnviron.sh)
+
 if(HAD_ERROR)
 	message(FATAL_ERROR "Haka script failed")
 endif(HAD_ERROR)

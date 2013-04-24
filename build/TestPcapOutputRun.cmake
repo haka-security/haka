@@ -5,6 +5,8 @@ set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
 execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapOutput.lua ${CONF} ${SRC} ${DST} ${LDDIR}
 	RESULT_VARIABLE HAD_ERROR)
 
+execute_process(COMMAND bash ${CTEST_MODULE_DIR}/PrintEnviron.sh)
+
 if(HAD_ERROR)
 	message(FATAL_ERROR "Haka script failed")
 endif(HAD_ERROR)
