@@ -1,7 +1,7 @@
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/TestModuleLoad.lua.cmake ${CMAKE_TEMP_DIR}/TestModuleLoad.lua)
 
-execute_process(COMMAND bash ${CTEST_MODULE_DIR}/PrintEnviron.sh)
+message(STATUS "All outputs and commands for this test are located in ${CMAKE_CURRENT_SOURCE_DIR}")
 
 execute_process(COMMAND ${EXE} ${CMAKE_TEMP_DIR}/TestModuleLoad.lua
     RESULT_VARIABLE HAD_ERROR)
