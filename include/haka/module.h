@@ -22,6 +22,13 @@
  * @brief External module documentation.
  */
 
+/**
+ * @defgroup ExternProtocolModule Protocol
+ * @brief External protocol module.
+ * @ingroup ExternModule
+ */
+
+
 #ifndef _HAKA_MODULE_H
 #define _HAKA_MODULE_H
 
