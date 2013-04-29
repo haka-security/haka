@@ -25,14 +25,16 @@
 #define IPV4_GET_BITS(type, v, r)        GET_BITS(SWAP_FROM_BE(type, v), r)
 #define IPV4_SET_BITS(type, v, r, x)     SWAP_TO_BE(type, SET_BITS(SWAP_FROM_BE(type, v), r, x))
 
-#define IPV4_FLAG_RB              15
-#define IPV4_FLAG_DF              15-1
-#define IPV4_FLAG_MF              15-2
-#define IPV4_FLAG_BITS            16-3, 16
-#define IPV4_FRAGMENTOFFSET_BITS  0, 16-3
+#define IPV4_FLAG_RB               15
+#define IPV4_FLAG_DF               15-1
+#define IPV4_FLAG_MF               15-2
+#define IPV4_FLAG_BITS             16-3, 16
+#define IPV4_FRAGMENTOFFSET_BITS   0, 16-3
+#define IPV4_FRAGMENTOFFSET_OFFSET 3 /* Fragment offset is a multiple of 8 bytes */
+#define IPV4_HDR_LEN_OFFSET        2 /* Header length is a multiple of 4 bytes */
 
 /*
- * Define a type for IPv4 addresses 
+ * Define a type for IPv4 addresses
  * @ingroup IPv4
  */
 typedef uint32 ipv4addr;
@@ -61,7 +63,7 @@ struct ipv4_header {
 	ipv4addr dst;
 };
 
-/** 
+/**
  * IPv4 structure
  * @ingroup IPv4
  */
@@ -106,23 +108,6 @@ void ipv4_modified(struct ipv4 *ip);
 		static inline void ipv4_set_##field(struct ipv4 *ip, type v) { ipv4_modified(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
 
 /**
- * @fn uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
- * @brief Get IPv4 header length
- * @param ip IPv4 structure
- * @return IPv4 header length value
- * @ingroup IPv4
- */
-
-/**
- * @fn void ipv4_set_hdr_len(struct ipv4 *ip, type v)
- * @brief Set IPv4 header length to value v
- * @param ip IPv4 structure
- * @param v value to set 
- * @ingroup IPv4
- */
-IPV4_GETSET_FIELD(uint8, hdr_len);
-
-/**
  * @fn uint8 ipv4_get_version(const struct ipv4 *ip)
  * @brief Get IPv4 version
  * @param ip IPv4 structure
@@ -130,7 +115,6 @@ IPV4_GETSET_FIELD(uint8, hdr_len);
  * @ingroup IPv4
  */
 IPV4_GETSET_FIELD(uint8, version);
-
 
 /**
  * @fn uint8 ipv4_get_tos(const struct ipv4 *ip)
@@ -204,6 +188,30 @@ IPV4_GETSET_FIELD(ipv4addr, src);
  */
 IPV4_GETSET_FIELD(ipv4addr, dst);
 
+/**
+ * @fn uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
+ * @brief Get IPv4 header length
+ * @param ip IPv4 structure
+ * @return IPv4 header length value
+ * @ingroup IPv4
+ */
+static inline uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
+{
+	return ip->header->hdr_len << IPV4_HDR_LEN_OFFSET;
+}
+
+/**
+ * @fn void ipv4_set_hdr_len(struct ipv4 *ip, type v)
+ * @brief Set IPv4 header length to value v
+ * @param ip IPv4 structure
+ * @param v value to set
+ * @ingroup IPv4
+ */
+static inline void ipv4_set_hdr_len(struct ipv4 *ip, uint8 v)
+{
+	ipv4_modified(ip);
+	ip->header->hdr_len = v >> IPV4_HDR_LEN_OFFSET;
+}
 
 /**
  * @brief Get IPv4 fragment offset
@@ -213,7 +221,7 @@ IPV4_GETSET_FIELD(ipv4addr, dst);
  */
 static inline uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
 {
-	return IPV4_GET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS);
+	return (IPV4_GET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS)) << IPV4_FRAGMENTOFFSET_OFFSET;
 }
 
 /**
@@ -226,7 +234,7 @@ static inline uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
 static inline void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
 {
 	ipv4_modified(ip);
-	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS, v);
+	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS, v >> IPV4_FRAGMENTOFFSET_OFFSET);
 }
 
 static inline uint16 ipv4_get_flags(const struct ipv4 *ip)
@@ -290,7 +298,7 @@ void ipv4_compute_checksum(struct ipv4 *ip);
  * @brief Convert IP from ipv4addr to string
  * @param addr address to be converted
  * @param string converted address
- * @param size string size 
+ * @param size string size
  * @ingroup IPv4
  */
 void ipv4_addr_to_string(ipv4addr addr, char *string, size_t size);
@@ -298,7 +306,7 @@ void ipv4_addr_to_string(ipv4addr addr, char *string, size_t size);
 /**
  * @brief Convert IP from string to ipv4addr structure
  * @param string address to be converted
- * @return ipv4addr converted address 
+ * @return ipv4addr converted address
  * @ingroup IPv4
  */
 ipv4addr ipv4_addr_from_string(const char *string);
@@ -308,7 +316,7 @@ ipv4addr ipv4_addr_from_string(const char *string);
  * @param a first IP address byte (starting from left)
  * @param b second IP address byte
  * @param c third IP address byte
- * @param d forth IP address byte 
+ * @param d forth IP address byte
  * @return ipv4addr converted address
  * @ingroup IPv4
  */

@@ -54,7 +54,7 @@ void ipv4_modified(struct ipv4 *ip)
 int16 checksum(const struct ipv4 *ip)
 {
 	register long sum = 0;
-	uint16 size = ip->header->hdr_len * 4;
+	uint16 size = ipv4_get_hdr_len(ip);
 	uint16 *ptr = (uint16 *)ip->header;
 
 	while (size > 1) {
