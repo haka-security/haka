@@ -209,7 +209,7 @@ IPV4_GETSET_FIELD(uint8, proto);
  * @ingroup IPv4
  */
 /**
- * @fn void ipv4_get_checksum(struct ipv4 *ip, uint16 v)
+ * @fn void ipv4_set_checksum(struct ipv4 *ip, uint16 v)
  * @brief Set IPv4 cheksum
  * @param ip IPv4 structure
  * @param v Checksum value

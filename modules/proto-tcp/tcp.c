@@ -49,7 +49,7 @@ void tcp_release(struct tcp *tcp)
 void tcp_pre_modify(struct tcp *tcp)
 {
 	if (!tcp->modified) {
-		tcp->header = (struct tcp_header *)(packet_make_modifiable(tcp->packet->packet) + ipv4_get_hdr_len(tcp->packet) * 4);
+		tcp->header = (struct tcp_header *)(packet_make_modifiable(tcp->packet->packet) + ipv4_get_hdr_len(tcp->packet));
 	}
     tcp->modified = true;
 }
@@ -132,7 +132,7 @@ void tcp_compute_checksum(struct tcp *tcp)
 
 uint16 tcp_get_length(struct ipv4 *packet)
 {
-    uint8 hdr_len = ipv4_get_hdr_len(packet) * 4; //remove mult
+    uint8 hdr_len = ipv4_get_hdr_len(packet);
     uint16 total_len = ipv4_get_len(packet);
     return total_len - hdr_len;
 }

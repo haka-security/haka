@@ -135,11 +135,11 @@ ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d)
 
 const uint8 *ipv4_get_payload(struct ipv4 *ip)
 {
-	return ((const uint8 *)ip->header) + ipv4_get_hdr_len(ip)*4;
+	return ((const uint8 *)ip->header) + ipv4_get_hdr_len(ip);
 }
 
 uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip)
 {
 	ipv4_pre_modify(ip);
-	return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip)*4;
+	return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip);
 }
