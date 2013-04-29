@@ -40,10 +40,6 @@
 typedef uint32 ipv4addr;
 #define SWAP_ipv4addr(x) SWAP_uint32(x)
 
-/**
- * IPv4 header structure.
- * @ingroup IPv4
- */
 struct ipv4_header {
 #ifdef HAKA_LITTLEENDIAN
 	uint8    hdr_len:4;
@@ -64,7 +60,7 @@ struct ipv4_header {
 };
 
 /**
- * IPv4 structure
+ * IPv4 opaque structure
  * @ingroup IPv4
  */
 struct ipv4 {
@@ -114,6 +110,13 @@ void ipv4_modified(struct ipv4 *ip);
  * @return IPv4 version value
  * @ingroup IPv4
  */
+/**
+ * @fn void ipv4_set_version(struct ipv4 *ip, uint8 v)
+ * @brief Set IPv4 version
+ * @param ip IPv4 structure
+ * @param v Version value
+ * @ingroup IPv4
+ */
 IPV4_GETSET_FIELD(uint8, version);
 
 /**
@@ -121,6 +124,13 @@ IPV4_GETSET_FIELD(uint8, version);
  * @brief Get IPv4 type of service (tos)
  * @param ip IPv4 structure
  * @return IPv4 type of service value
+ * @ingroup IPv4
+ */
+/**
+ * @fn void ipv4_set_tos(struct ipv4 *ip, uint8 v)
+ * @brief Set IPv4 type of service (tos)
+ * @param ip IPv4 structure
+ * @param v Type of service value
  * @ingroup IPv4
  */
 IPV4_GETSET_FIELD(uint8, tos);
@@ -132,6 +142,13 @@ IPV4_GETSET_FIELD(uint8, tos);
  * @return IPv4 total length value
  * @ingroup IPv4
  */
+/**
+ * @fn void ipv4_set_len(struct ipv4 *ip, uint16 v)
+ * @brief Set IPv4 total length
+ * @param ip IPv4 structure
+ * @param v Total length value
+ * @ingroup IPv4
+ */
 IPV4_GETSET_FIELD(uint16, len);
 
 /**
@@ -139,6 +156,13 @@ IPV4_GETSET_FIELD(uint16, len);
  * @brief Get IPv4 identification (id)
  * @param ip IPv4 structure
  * @return IPv4 identification value
+ * @ingroup IPv4
+ */
+/**
+ * @fn void ipv4_set_id(struct ipv4 *ip, uint16 v)
+ * @brief Set IPv4 identification (id)
+ * @param ip IPv4 structure
+ * @param v Identification value
  * @ingroup IPv4
  */
 IPV4_GETSET_FIELD(uint16, id);
@@ -150,6 +174,13 @@ IPV4_GETSET_FIELD(uint16, id);
  * @return IPv4 time to live value
  * @ingroup IPv4
  */
+/**
+ * @fn void ipv4_get_ttl(struct ipv4 *ip, uint8 v)
+ * @brief Set IPv4 time to live (ttl)
+ * @param ip IPv4 structure
+ * @param v Time to live value
+ * @ingroup IPv4
+ */
 IPV4_GETSET_FIELD(uint8, ttl);
 
 /**
@@ -157,6 +188,13 @@ IPV4_GETSET_FIELD(uint8, ttl);
  * @brief Get IPv4 protocol
  * @param ip IPv4 structure
  * @return IPv4 protocol value
+ * @ingroup IPv4
+ */
+/**
+ * @fn void ipv4_set_proto(struct ipv4 *ip, uint8 v)
+ * @brief Set IPv4 protocol
+ * @param ip IPv4 structure
+ * @param v Protocol value
  * @ingroup IPv4
  */
 IPV4_GETSET_FIELD(uint8, proto);
@@ -168,6 +206,13 @@ IPV4_GETSET_FIELD(uint8, proto);
  * @return IPv4 checksum value
  * @ingroup IPv4
  */
+/**
+ * @fn void ipv4_get_checksum(struct ipv4 *ip, uint16 v)
+ * @brief Set IPv4 cheksum
+ * @param ip IPv4 structure
+ * @param v Checksum value
+ * @ingroup IPv4
+ */
 IPV4_GETSET_FIELD(uint16, checksum);
 
 /**
@@ -177,6 +222,13 @@ IPV4_GETSET_FIELD(uint16, checksum);
  * @return IPv4 source address value
  * @ingroup IPv4
  */
+/**
+ * @fn void ipv4_set_src(struct ipv4 *ip, ipv4addr v)
+ * @brief Set IPv4 source address
+ * @param ip IPv4 structure
+ * @param v Source address value
+ * @ingroup IPv4
+ */
 IPV4_GETSET_FIELD(ipv4addr, src);
 
 /**
@@ -184,6 +236,13 @@ IPV4_GETSET_FIELD(ipv4addr, src);
  * @brief Get IPv4 destination address
  * @param ip IPv4 structure
  * @return IPv4 destination address value
+ * @ingroup IPv4
+ */
+/**
+ * @fn void ipv4_set_dst(struct ipv4 *ip, ipv4addr v)
+ * @brief Set IPv4 destination address
+ * @param ip IPv4 structure
+ * @param v Destination address value
  * @ingroup IPv4
  */
 IPV4_GETSET_FIELD(ipv4addr, dst);
@@ -225,10 +284,9 @@ static inline uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
 }
 
 /**
- * @brief Set IPv4 fragment offset to provided value
+ * @brief Set IPv4 fragment offset
  * @param ip IPv4 structure
  * @param v value to set
- * @return IPv4 fragment offset value
  * @ingroup IPv4
  */
 static inline void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
@@ -237,11 +295,23 @@ static inline void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
 	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS, v >> IPV4_FRAGMENTOFFSET_OFFSET);
 }
 
+/**
+ * @brief Get IPv4 flags
+ * @param ip IPv4 structure
+ * @return IPv4 flags value
+ * @ingroup IPv4
+ */
 static inline uint16 ipv4_get_flags(const struct ipv4 *ip)
 {
 	return IPV4_GET_BITS(uint16, ip->header->fragment, IPV4_FLAG_BITS);
 }
 
+/**
+ * @brief Set IPv4 flags
+ * @param ip IPv4 structure
+ * @param v New value of the flags
+ * @ingroup IPv4
+ */
 static inline void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 {
 	ipv4_modified(ip);
@@ -250,13 +320,20 @@ static inline void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 
 #define IPV4_GETSET_FLAG(name, flag) \
 		static inline bool ipv4_get_flags_##name(const struct ipv4 *ip) { return IPV4_GET_BIT(uint16, ip->header->fragment, flag); } \
-		static inline void ipv4_set_flags_##name(struct ipv4 *ip, bool value) { ipv4_modified(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, value); }
+		static inline void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { ipv4_modified(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, v); }
 
 /**
  * @fn bool ipv4_get_flags_df(const struct ipv4 *ip)
  * @brief Get IPv4 don't fragment bit
  * @param ip IPv4 structure
  * @return IPv4 don't fragment bit value
+ * @ingroup IPv4
+ */
+/**
+ * @fn void ipv4_set_flags_df(struct ipv4 *ip, bool v)
+ * @brief Set IPv4 don't fragment bit
+ * @param ip IPv4 structure
+ * @param v IPv4 don't fragment bit value
  * @ingroup IPv4
  */
 IPV4_GETSET_FLAG(df, IPV4_FLAG_DF);
@@ -268,6 +345,13 @@ IPV4_GETSET_FLAG(df, IPV4_FLAG_DF);
  * @return IPv4 more fragments bit value
  * @ingroup IPv4
  */
+/**
+ * @fn void ipv4_set_flags_mf(struct ipv4 *ip, bool v)
+ * @brief Set IPv4 more fragments bit
+ * @param ip IPv4 structure
+ * @param v IPv4 more fragments bit value
+ * @ingroup IPv4
+ */
 IPV4_GETSET_FLAG(mf, IPV4_FLAG_MF);
 
 /**
@@ -275,6 +359,13 @@ IPV4_GETSET_FLAG(mf, IPV4_FLAG_MF);
  * @brief Get IPv4 reserved bit
  * @param ip IPv4 structure
  * @return IPv4 reserved bit value
+ * @ingroup IPv4
+ */
+/**
+ * @fn void ipv4_set_flags_rb(struct ipv4 *ip, bool v)
+ * @brief Set IPv4 reserved bit
+ * @param ip IPv4 structure
+ * @param v IPv4 reserved bit value
  * @ingroup IPv4
  */
 IPV4_GETSET_FLAG(rb, IPV4_FLAG_RB);
