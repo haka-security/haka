@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include <haka/log.h>
 #include <haka/error.h>
@@ -11,6 +12,8 @@
 struct ipv4 *ipv4_dissect(struct packet* packet)
 {
 	struct ipv4 *ip = NULL;
+
+	assert(packet);
 
 	if (packet_length(packet) < sizeof(struct ipv4_header)) {
 		return NULL;

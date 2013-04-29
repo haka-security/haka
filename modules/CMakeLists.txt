@@ -4,6 +4,8 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN/..")
 # Setup module file names
 set(CMAKE_SHARED_MODULE_PREFIX "")
 set(CMAKE_SHARED_MODULE_SUFFIX ".ho")
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_SHARED_LIBRARY_SUFFIX ".ho")
 
 # Find all modules. We need a separated loop in case one of the sub make adds
 # some tests

@@ -5,7 +5,7 @@ include_directories(${LUA_INCLUDE_DIR})
 
 find_package(SWIG REQUIRED)
 include(UseSWIG)
-swig_add_module(proto-ipv4 lua MODULE
+swig_add_module(proto-ipv4 lua SHARED
 	ipv4.i
 	main.c
 	ipv4.c)
