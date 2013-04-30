@@ -18,3 +18,5 @@ INSTALL_MODULE(proto-tcp)
 # Tests
 include(TestModuleLoad)
 TEST_MODULE_LOAD(proto-tcp)
+add_subdirectory(test)
+
