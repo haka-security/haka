@@ -11,7 +11,8 @@
 #include <haka/error.h>
 
 
-#define MODULE_EXT	".ho"
+#define MODULE_PREFIX	"lib"
+#define MODULE_EXT	".so"
 
 struct module *module_load(const char *module_name, int argc, char *argv[])
 {
@@ -21,13 +22,14 @@ struct module *module_load(const char *module_name, int argc, char *argv[])
 
 	assert(module_name);
 
-	full_module_name = malloc(strlen(module_name) + strlen(MODULE_EXT) + 1);
+	full_module_name = malloc(strlen(MODULE_PREFIX) + strlen(module_name) + strlen(MODULE_EXT) + 1);
 	if (!full_module_name) {
 		return NULL;
 	}
 
-	strcpy(full_module_name, module_name);
-	strcpy(full_module_name+strlen(module_name), MODULE_EXT);
+	strcpy(full_module_name, MODULE_PREFIX);
+	strcpy(full_module_name+strlen(MODULE_PREFIX), module_name);
+	strcpy(full_module_name+strlen(MODULE_PREFIX)+strlen(module_name), MODULE_EXT);
 	module_handle = dlopen(full_module_name, RTLD_NOW);
 
 	if (!module_handle) {

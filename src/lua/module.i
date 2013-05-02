@@ -47,6 +47,6 @@ const char *module_get_path();
 void module_set_path(const char *path);
 
 %luacode {
-	package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', '?.ho')
+	package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', 'lib?.so')
 	package.path = package.path .. ";" .. string.gsub(module.path(), '*', '?.lua')
 }
