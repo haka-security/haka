@@ -11,6 +11,7 @@
 
 #include <haka/module.h>
 #include <haka/packet.h>
+#include <haka/types.h>
 
 /**
  * @defgroup ExternPacketModule Packet
@@ -29,6 +30,10 @@ typedef enum {
 	FILTER_DROP /**< Deny the packet. The packet will be lost. */
 } filter_result;
 
+/**
+ * Opaque state structure.
+ */
+struct packet_module_state;
 
 /**
  * @brief Packet module structure
@@ -42,16 +47,34 @@ struct packet_module {
 	struct module    module; /**< Module definition */
 
 	/**
+	 * Does this module supports multi-threading.
+	 */
+	bool           (*multi_threaded)();
+
+	/**
+	 * Initialize the packet module state. This function will be called to create
+	 * multiple states if the module supports multi-threading.
+	 */
+	struct packet_module_state *(*init_state)(int thread_id);
+
+	/**
+	 * Cleanup the packet module state.
+	 */
+	void           (*cleanup_state)(struct packet_module_state *state);
+
+	/**
 	 * Callback used to receive a new packet. This function should block until
 	 * a packet is received.
+	 * @param state Packet module state.
 	 * @param pkt Pointer filled with the received packet.
 	 * @return Non zero in case of error.
 	 */
-	int            (*receive)(struct packet **pkt);
+	int            (*receive)(struct packet_module_state *state, struct packet **pkt);
 
 	/**
 	 * Apply a verdict on a received packet. The module should then apply this
 	 * verdict on the underlying packet.
+	 * @param state Packet module state.
 	 * @param pkt The received packet. After calling this funciton the packet
 	 * address is never used again by the application allow the module to free
 	 * it if needed.

@@ -46,13 +46,17 @@ struct module *module_load(const char *module_name, int argc, char *argv[])
 
 	module->handle = module_handle;
 
-	if (module->ref == 0) {
+	if (atomic_get(&module->ref) == 0) {
 		/* Initialize the module */
 		messagef(HAKA_LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
 		         module->name, module->author);
 
-		if (module->init(argc, argv)) {
-			error(L"unable to initialize module");
+		if (module->init(argc, argv) || check_error()) {
+			if (check_error())
+				error(L"unable to initialize module: %ls", clear_error());
+			else
+				error(L"unable to initialize module");
+
 			dlclose(module->handle);
 			free(full_module_name);
 			return NULL;
@@ -67,15 +71,35 @@ struct module *module_load(const char *module_name, int argc, char *argv[])
 
 void module_addref(struct module *module)
 {
-	++module->ref;
+	atomic_inc(&module->ref);
 }
 
 void module_release(struct module *module)
 {
-	if (--module->ref == 0) {
+	if (atomic_dec(&module->ref) == 0) {
 		/* Cleanup the module */
 		messagef(HAKA_LOG_INFO, L"core", L"unload module '%ls'", module->name);
 		module->cleanup();
 		dlclose(module->handle);
 	}
+}
+
+static char *modules_path;
+
+void module_set_path(const char *path)
+{
+	if (!strchr(path, '*')) {
+		error(L"invalid module path");
+		return;
+	}
+
+	free(modules_path);
+	modules_path = NULL;
+
+	modules_path = strdup(path);
+}
+
+const char *module_get_path()
+{
+	return modules_path;
 }

@@ -33,6 +33,7 @@
 #define _HAKA_MODULE_H
 
 #include <wchar.h>
+#include <haka/thread.h>
 
 
 /**
@@ -43,7 +44,7 @@
  */
 struct module {
 	void          *handle;
-	int            ref;
+	atomic_t       ref;
 
 	enum {
 		MODULE_UNKNOWN,    /**< Unknown module */
@@ -96,6 +97,21 @@ void           module_addref(struct module *module);
  * @ingroup Module
  */
 void           module_release(struct module *module);
+
+/**
+ * Sets the path used to load haka modules. This path must be in the form :
+ * ~~~~~~~~
+ * path/to/modules/\*;another/path/\*
+ * ~~~~~~~~
+ * @param path The path that will replace the current one.
+ */
+void           module_set_path(const char *path);
+
+/**
+ * Gets the modules path.
+ * @return The path.
+ */
+const char    *module_get_path();
 
 
 #endif /* _HAKA_MODULE_H */

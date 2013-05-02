@@ -29,6 +29,43 @@ static void *alloc(void *up, void *ptr, size_t osize, size_t nsize) {
 	}
 }
 
+/*
+ * We need to override the print function to print using wprintf otherwise
+ * nothing is visible in the output on Linux.
+ */
+static int lua_print(lua_State* L)
+{
+	int i;
+	int nargs = lua_gettop(L);
+
+	for (i=1; i<=nargs; i++) {
+		if (i > 1)
+			wprintf(L" ");
+
+		if (lua_isstring(L, i)) {
+			wprintf(L"%s", lua_tostring(L, i));
+		}
+		else {
+			lua_getglobal(L, "tostring");
+			lua_pushvalue(L, i);
+			lua_call(L, 1, 1);
+			if (lua_isstring(L, -1))
+				wprintf(L"%s", lua_tostring(L, -1));
+			else
+				wprintf(L"(error)");
+			lua_pop(L, 1);
+		}
+	}
+
+	wprintf(L"\n");
+
+	return 0;
+}
+
+static const struct luaL_reg builtin_lib [] = {
+	{ "print", lua_print },
+	{ NULL, NULL }
+};
 
 lua_state *init_state()
 {
@@ -40,6 +77,11 @@ lua_state *init_state()
 	lua_atpanic(L, panic);
 
 	luaL_openlibs(L);
+
+	lua_getglobal(L, "_G");
+	luaL_register(L, NULL, builtin_lib);
+	lua_pop(L, 1);
+
 	luaopen_app(L);
 	luaopen_module(L);
 	luaopen_packet(L);
@@ -85,4 +127,24 @@ int run_file(lua_state *L, const char *filename, int argc, char *argv[])
 	}
 
 	return 0;
+}
+
+int do_file_as_function(lua_state *L, const char *filename)
+{
+	if (luaL_loadfile(L, filename)) {
+		print_error(L, NULL);
+		return -1;
+	}
+
+	if (lua_pcall(L, 0, 1, 0)) {
+		print_error(L, NULL);
+		return -1;
+	}
+
+	if (!lua_isfunction(L, -1)) {
+		message(HAKA_LOG_ERROR, L"lua", L"script does not return a function");
+		return -1;
+	}
+
+	return luaL_ref(L, LUA_REGISTRYINDEX);
 }

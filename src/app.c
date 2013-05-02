@@ -4,29 +4,33 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "app.h"
 
 
-static filter_callback filter_function;
-static void *filter_data;
+static char *filter_script;
 
 
-int set_filter(filter_callback filter, void *data)
+int set_filter_script(const char *file)
 {
-	filter_function = filter;
-	filter_data = data;
+	free(filter_script);
+	filter_script = NULL;
+
+	if (file)
+		filter_script = strdup(file);
+
 	return 0;
 }
 
-int has_filter()
+int has_filter_script()
 {
-	return filter_function != NULL;
+	return (filter_script != NULL);
 }
-filter_result call_filter(lua_state *L, struct packet *pkt)
 
+const char *get_filter_script()
 {
-	return filter_function(L, filter_data, pkt);
+	return filter_script;
 }
 
 char directory[1024];

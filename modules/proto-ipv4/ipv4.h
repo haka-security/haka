@@ -17,6 +17,7 @@
 
 #include <haka/packet.h>
 #include <haka/types.h>
+#include <haka/compiler.h>
 
 #define SWAP_TO_IPV4(type, x)            SWAP_TO_BE(type, x)
 #define SWAP_FROM_IPV4(type, x)          SWAP_FROM_BE(type, x)
@@ -100,8 +101,8 @@ void ipv4_release(struct ipv4 *ip);
 void ipv4_modified(struct ipv4 *ip);
 
 #define IPV4_GETSET_FIELD(type, field) \
-		static inline type ipv4_get_##field(const struct ipv4 *ip) { return SWAP_FROM_IPV4(type, ip->header->field); } \
-		static inline void ipv4_set_##field(struct ipv4 *ip, type v) { ipv4_modified(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
+		INLINE type ipv4_get_##field(const struct ipv4 *ip) { return SWAP_FROM_IPV4(type, ip->header->field); } \
+		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { ipv4_modified(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
 
 /**
  * @fn uint8 ipv4_get_version(const struct ipv4 *ip)
@@ -254,7 +255,7 @@ IPV4_GETSET_FIELD(ipv4addr, dst);
  * @return IPv4 header length value
  * @ingroup IPv4
  */
-static inline uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
+INLINE uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
 {
 	return ip->header->hdr_len << IPV4_HDR_LEN_OFFSET;
 }
@@ -266,7 +267,7 @@ static inline uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
  * @param v value to set
  * @ingroup IPv4
  */
-static inline void ipv4_set_hdr_len(struct ipv4 *ip, uint8 v)
+INLINE void ipv4_set_hdr_len(struct ipv4 *ip, uint8 v)
 {
 	ipv4_modified(ip);
 	ip->header->hdr_len = v >> IPV4_HDR_LEN_OFFSET;
@@ -278,7 +279,7 @@ static inline void ipv4_set_hdr_len(struct ipv4 *ip, uint8 v)
  * @return IPv4 fragment offset value
  * @ingroup IPv4
  */
-static inline uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
+INLINE uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
 {
 	return (IPV4_GET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS)) << IPV4_FRAGMENTOFFSET_OFFSET;
 }
@@ -289,7 +290,7 @@ static inline uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
  * @param v value to set
  * @ingroup IPv4
  */
-static inline void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
+INLINE void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
 {
 	ipv4_modified(ip);
 	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS, v >> IPV4_FRAGMENTOFFSET_OFFSET);
@@ -301,7 +302,7 @@ static inline void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
  * @return IPv4 flags value
  * @ingroup IPv4
  */
-static inline uint16 ipv4_get_flags(const struct ipv4 *ip)
+INLINE uint16 ipv4_get_flags(const struct ipv4 *ip)
 {
 	return IPV4_GET_BITS(uint16, ip->header->fragment, IPV4_FLAG_BITS);
 }
@@ -312,15 +313,15 @@ static inline uint16 ipv4_get_flags(const struct ipv4 *ip)
  * @param v New value of the flags
  * @ingroup IPv4
  */
-static inline void ipv4_set_flags(struct ipv4 *ip, uint16 v)
+INLINE void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 {
 	ipv4_modified(ip);
 	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FLAG_BITS, v);
 }
 
 #define IPV4_GETSET_FLAG(name, flag) \
-		static inline bool ipv4_get_flags_##name(const struct ipv4 *ip) { return IPV4_GET_BIT(uint16, ip->header->fragment, flag); } \
-		static inline void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { ipv4_modified(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, v); }
+		INLINE bool ipv4_get_flags_##name(const struct ipv4 *ip) { return IPV4_GET_BIT(uint16, ip->header->fragment, flag); } \
+		INLINE void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { ipv4_modified(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, v); }
 
 /**
  * @fn bool ipv4_get_flags_df(const struct ipv4 *ip)

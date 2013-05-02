@@ -1,6 +1,7 @@
 
 #include <haka/packet_module.h>
 #include <haka/log.h>
+#include <haka/error.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,18 +22,7 @@
 /* Should be enough to receive the packet and the extra headers */
 #define PACKET_RECV_SIZE      70000
 
-
-struct packet {
-	int         id; /* nfq identifier */
-	size_t      length;
-	int         modified:1;
-	uint8       data[0];
-};
-
-/*
- * nfqueue state
- */
-struct nfq_state {
+struct packet_module_state {
 	struct nfq_handle   *handle;
 	struct nfq_q_handle *queue;
 	int                  fd;
@@ -42,16 +32,21 @@ struct nfq_state {
 	char                 receive_buffer[PACKET_RECV_SIZE];
 };
 
-/* Only one state for now */
-static struct nfq_state   global_state;
+struct packet {
+	struct packet_module_state *state;
+	int         id; /* nfq identifier */
+	size_t      length;
+	int         modified:1;
+	uint8       data[0];
+};
 
 /* Iptables rules to add (iptables-restore format) */
-static const char iptables_config[] =
+static const char iptables_config_template[] =
 "*raw\n"
 ":PREROUTING DROP [0:0]\n"
 ":OUTPUT DROP [0:0]\n"
-"-A PREROUTING -j NFQUEUE --queue-num 0\n"
-"-A OUTPUT -j NFQUEUE --queue-num 0\n"
+"-A PREROUTING -j NFQUEUE --queue-balance 0:%i\n"
+"-A OUTPUT -j NFQUEUE --queue-balance 0:%i\n"
 "COMMIT\n"
 ;
 
@@ -62,7 +57,7 @@ static char *iptables_saved;
 static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 		struct nfq_data *nfad, void *data)
 {
-	struct nfq_state *state = data;
+	struct packet_module_state *state = data;
 	struct nfqnl_msg_packet_hdr* packet_hdr;
 	char *packet_data;
 	int packet_len;
@@ -102,13 +97,70 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 	return 0;
 }
 
+static void cleanup_state(struct packet_module_state *state)
+{
+	if (state->queue)
+		nfq_destroy_queue(state->queue);
+	if (state->handle)
+		nfq_close(state->handle);
+
+	free(state);
+}
+
+static struct packet_module_state *init_state(int thread_id)
+{
+	static const u_int16_t proto_family[] = { AF_INET, AF_INET6 };
+	int i;
+
+	struct packet_module_state *state = malloc(sizeof(struct packet_module_state));
+	if (!state) {
+		return NULL;
+	}
+
+	/* Setup nfqueue connection */
+	state->handle = nfq_open();
+	if (!state->handle) {
+		message(HAKA_LOG_ERROR, MODULE_NAME, L"unable to open nfqueue handle");
+		cleanup_state(state);
+		return NULL;
+	}
+
+	for (i=0; i<sizeof(proto_family)/sizeof(proto_family[0]); ++i) {
+		if (nfq_unbind_pf(state->handle, proto_family[i]) < 0) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot unbind queue");
+			cleanup_state(state);
+			return NULL;
+		}
+
+		if (nfq_bind_pf(state->handle, proto_family[i]) < 0) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot bind queue");
+			cleanup_state(state);
+			return NULL;
+		}
+	}
+
+	state->queue = nfq_create_queue(state->handle, thread_id,
+			&packet_callback, state);
+	if (!state->queue) {
+		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot create queue");
+		cleanup_state(state);
+		return NULL;
+	}
+
+	if (nfq_set_mode(state->queue, NFQNL_COPY_PACKET,
+			PACKET_BUFFER_SIZE) < 0) {
+		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot set mode to copy packet");
+		cleanup_state(state);
+		return NULL;
+	}
+
+	state->fd = nfq_fd(state->handle);
+
+	return state;
+}
+
 static void cleanup()
 {
-	if (global_state.queue)
-		nfq_destroy_queue(global_state.queue);
-	if (global_state.handle)
-		nfq_close(global_state.handle);
-
 	if (iptables_saved) {
 		if (apply_iptables(iptables_saved) != 0) {
 			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot restore iptables rules");
@@ -119,46 +171,8 @@ static void cleanup()
 
 static int init(int argc, char *argv[])
 {
-	static const u_int16_t proto_family[] = { AF_INET, AF_INET6 };
-	int i;
-
-	/* Setup nfqueue connection */
-	global_state.handle = nfq_open();
-	if (!global_state.handle) {
-		message(HAKA_LOG_ERROR, MODULE_NAME, L"unable to open nfqueue handle");
-		return 1;
-	}
-
-	for (i=0; i<sizeof(proto_family)/sizeof(proto_family[0]); ++i) {
-		if (nfq_unbind_pf(global_state.handle, proto_family[i]) < 0) {
-			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot unbind queue");
-			cleanup();
-			return 1;
-		}
-
-		if (nfq_bind_pf(global_state.handle, proto_family[i]) < 0) {
-			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot bind queue");
-			cleanup();
-			return 1;
-		}
-	}
-
-	global_state.queue = nfq_create_queue(global_state.handle, 0,
-			&packet_callback, &global_state);
-	if (!global_state.queue) {
-		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot create queue");
-		cleanup();
-		return 1;
-	}
-
-	if (nfq_set_mode(global_state.queue, NFQNL_COPY_PACKET,
-			PACKET_BUFFER_SIZE) < 0) {
-		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot set mode to copy packet");
-		cleanup();
-		return 1;
-	}
-
-	global_state.fd = nfq_fd(global_state.handle);
+	char *new_iptables_config = NULL;
+	const int thread_count = thread_get_packet_capture_cpu_count();
 
 	/* Setup iptables rules */
 	if (save_iptables("raw", &iptables_saved)) {
@@ -167,32 +181,58 @@ static int init(int argc, char *argv[])
 		return 1;
 	}
 
-	if (apply_iptables(iptables_config)) {
+	{
+		const int size = snprintf(NULL, 0, iptables_config_template, thread_count, thread_count);
+		if (size <= 0) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot generate iptables rules");
+			cleanup();
+			return 1;
+		}
+
+		new_iptables_config = malloc(sizeof(char) * (size+1));
+		if (!new_iptables_config) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot generate iptables rules");
+			cleanup();
+			return 1;
+		}
+
+		assert(snprintf(new_iptables_config, size+1, iptables_config_template, thread_count, thread_count) == size);
+	}
+
+	if (apply_iptables(new_iptables_config)) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup iptables rules");
+		free(new_iptables_config);
 		cleanup();
 		return 1;
 	}
 
+	free(new_iptables_config);
 	return 0;
 }
 
-static int packet_receive(struct packet **pkt)
+static bool multi_threaded()
 {
-	const int rv = recv(global_state.fd, global_state.receive_buffer,
-			sizeof(global_state.receive_buffer), 0);
+	return true;
+}
+
+static int packet_receive(struct packet_module_state *state, struct packet **pkt)
+{
+	const int rv = recv(state->fd, state->receive_buffer,
+			sizeof(state->receive_buffer), 0);
 	if (rv < 0) {
-		messagef(HAKA_LOG_ERROR, MODULE_NAME, L"packet reception failed, %s", strerror(errno));
+		messagef(HAKA_LOG_ERROR, MODULE_NAME, L"packet reception failed, %s", errno_error(errno));
 		return 0;
 	}
 
-	if (nfq_handle_packet(global_state.handle, global_state.receive_buffer, rv) == 0) {
-		if (global_state.current_packet) {
-			*pkt = global_state.current_packet;
-			global_state.current_packet = NULL;
+	if (nfq_handle_packet(state->handle, state->receive_buffer, rv) == 0) {
+		if (state->current_packet) {
+			state->current_packet->state = state;
+			*pkt = state->current_packet;
+			state->current_packet = NULL;
 			return 0;
 		}
 		else {
-			return global_state.error;
+			return state->error;
 		}
 	}
 	else {
@@ -217,9 +257,9 @@ static void packet_verdict(struct packet *pkt, filter_result result)
 	}
 
 	if (pkt->modified)
-		ret = nfq_set_verdict(global_state.queue, pkt->id, verdict, pkt->length, pkt->data);
+		ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, pkt->length, pkt->data);
 	else
-		ret = nfq_set_verdict(global_state.queue, pkt->id, verdict, 0, NULL);
+		ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, 0, NULL);
 
 	if (ret == -1) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"packet verdict failed");
@@ -288,6 +328,9 @@ struct packet_module HAKA_MODULE = {
 		init:        init,
 		cleanup:     cleanup
 	},
+	multi_threaded:  multi_threaded,
+	init_state:      init_state,
+	cleanup_state:   cleanup_state,
 	receive:         packet_receive,
 	verdict:         packet_verdict,
 	get_length:      packet_get_length,

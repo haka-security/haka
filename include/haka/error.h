@@ -27,6 +27,14 @@
 void error(const wchar_t *error, ...);
 
 /**
+ * Convert the errno value to a human readable error message.
+ * @param err The errno value to convert.
+ * @return The matching string. Note that this string will be
+ * erased by the next call to this function.
+ */
+const char *errno_error(int err);
+
+/**
  * Checks if an error has occurred. This function does not clear
  * the error flag.
  * @return true if an error has occurred.

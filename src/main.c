@@ -6,18 +6,42 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <assert.h>
 
 #include <haka/packet_module.h>
+#include <haka/thread.h>
+#include <haka/error.h>
+
 #include "app.h"
+#include "thread.h"
 #include "lua/state.h"
 
 
 static lua_state *global_lua_state;
 
+struct thread_states {
+	int                   count;
+	struct thread_state **states;
+};
+static struct thread_states thread_states;
+
+
 /* Clean up lua state and loaded modules */
 static void clean_exit()
 {
-	set_filter(NULL, NULL);
+	struct packet_module *packet_module = get_packet_module();
+
+	set_filter_script(NULL);
+
+	if (thread_states.count > 0 && packet_module) {
+		int i;
+		for (i=0; i<thread_states.count; ++i) {
+			if (thread_states.states[i]) {
+				cleanup_thread_state(packet_module, thread_states.states[i]);
+				thread_states.states[i] = NULL;
+			}
+		}
+	}
 
 	if (global_lua_state) {
 		cleanup_state(global_lua_state);
@@ -79,6 +103,21 @@ int main(int argc, char *argv[])
 		*sep = '\0';
 	}
 
+	/* Default module path */
+	{
+		static const char append[] = "/directory/*";
+		char *path = malloc(strlen(directory) + strlen(append) + 1);
+		if (!path) {
+			clean_exit();
+			return 1;
+		}
+
+		strcpy(path, directory);
+		strcpy(path + strlen(directory), append);
+		module_set_path(path);
+		free(path);
+	}
+
 	/* Check arguments */
 	if (argc < 2) {
 		fprintf(stderr, "usage: %s script_file [...]\n", argv[0]);
@@ -107,8 +146,8 @@ int main(int argc, char *argv[])
 			err = 1;
 		}
 
-		if (!has_filter()) {
-			message(HAKA_LOG_FATAL, L"core", L"no filter function set");
+		if (!has_filter_script()) {
+			message(HAKA_LOG_FATAL, L"core", L"no filter script set");
 			err = 1;
 		}
 
@@ -124,20 +163,51 @@ int main(int argc, char *argv[])
 
 	/* Main loop */
 	{
-		struct packet *pkt = NULL;
-		int error = 0;
+		int i;
 
-		while ((error = packet_module->receive(&pkt)) == 0) {
-			/* The packet can be NULL in case of failure in packet receive */
-			if (pkt) {
-				filter_result result = call_filter(global_lua_state, pkt);
-				packet_module->verdict(pkt, result);
-				pkt = NULL;
+		thread_states.count = thread_get_packet_capture_cpu_count();
+		if (!packet_module->multi_threaded())
+			thread_states.count = 1;
+
+		assert(thread_states.count > 0);
+
+		thread_states.states = malloc(sizeof(struct packet_module_state *) * thread_states.count);
+		if (!thread_states.states) {
+			message(HAKA_LOG_FATAL, L"core", L"memory error");
+			clean_exit();
+			return 1;
+		}
+
+		memset(thread_states.states, 0, sizeof(struct packet_module_state *) * thread_states.count);
+
+		for (i=0; i<thread_states.count; ++i) {
+			thread_states.states[i] = init_thread_state(packet_module, i);
+			if (!thread_states.states[i]) {
+				clean_exit();
+				return 1;
 			}
+		}
+
+		if (thread_states.count > 1) {
+			messagef(HAKA_LOG_INFO, L"core", L"starting multi-threaded processing on %i threads", thread_states.count);
+
+			for (i=0; i<thread_states.count; ++i) {
+				start_thread(thread_states.states[i]);
+				if (check_error()) {
+					message(HAKA_LOG_FATAL, L"core", clear_error());
+					clean_exit();
+					return 1;
+				}
+			}
+
+			wait_threads();
+		}
+		else {
+			message(HAKA_LOG_INFO, L"core", L"starting single threaded processing");
+			start_single(thread_states.states[0]);
 		}
 	}
 
 	clean_exit();
 	return 0;
 }
-

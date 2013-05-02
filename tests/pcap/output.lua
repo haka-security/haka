@@ -2,6 +2,6 @@
 -- received packets.
 
 return function(pkt)
-	output:write(string.format("Received packet of %d bytes\n", pkt.length))
+	print(string.format("Received packet of %d bytes", pkt.length))
 	return packet.ACCEPT
 end

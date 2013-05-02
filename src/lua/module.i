@@ -39,3 +39,14 @@ struct module *load_no_args(const char *name);
 
 %newobject load_args;
 struct module *load_args(const char *name, int ARGC, char **ARGV);
+
+%rename(path) module_get_path;
+const char *module_get_path();
+
+%rename(setPath) module_set_path;
+void module_set_path(const char *path);
+
+%luacode {
+	package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', '?.ho')
+	package.path = package.path .. ";" .. string.gsub(module.path(), '*', '?.lua')
+}

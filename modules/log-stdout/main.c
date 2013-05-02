@@ -22,15 +22,20 @@
 #endif /* USE_COLORS */
 
 static int _max_module_size = 0;
+static mutex_t mutex;
 
 
 static int init(int argc, char *argv[])
 {
+	if (!mutex_init(&mutex)) {
+		return 1;
+	}
 	return 0;
 }
 
 static void cleanup()
 {
+	mutex_destroy(&mutex);
 }
 
 static int log_message(log_level lvl, const wchar_t *module, const wchar_t *message)
@@ -38,6 +43,8 @@ static int log_message(log_level lvl, const wchar_t *module, const wchar_t *mess
 	const char *level_str = level_to_str(lvl);
 	const int level_size = strlen(level_str);
 	const int module_size = wcslen(module);
+
+	mutex_lock(&mutex);
 
 	if (wcslen(module) > _max_module_size) {
 		_max_module_size = module_size;
@@ -51,6 +58,8 @@ static int log_message(log_level lvl, const wchar_t *module, const wchar_t *mess
 	fwprintf(stdout, L"%s:%*s %ls:%*s %ls\n", level_str, level_size-5, "",
 			module, _max_module_size-module_size, "", message);
 #endif /* USES_COLORS */
+
+	mutex_unlock(&mutex);
 
 	return 0;
 }

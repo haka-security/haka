@@ -4,10 +4,12 @@ add_library(libhaka SHARED
 	packet.c
 	log.c
 	module.c
-	error.c)
+	error.c
+	thread.c)
 
 find_package(DL REQUIRED)
 target_link_libraries(libhaka ${DL_LIBRARIES})
+target_link_libraries(libhaka ${CMAKE_THREAD_LIBS_INIT})
 
 set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 
