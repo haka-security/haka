@@ -20,9 +20,9 @@ static void cleanup()
  * # Description
  *
  * The module dissects IPv4 Header
- * 
- * The modules allows to access and modify all IP header field values 
- * 
+ *
+ * The modules allows to access and modify all IP header field values
+ *
  * # Usage
  *
  * ### Lua
