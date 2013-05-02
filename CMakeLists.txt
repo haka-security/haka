@@ -79,6 +79,15 @@ enable_testing()
 find_package(Check REQUIRED)
 include_directories(${CHECK_INCLUDE_DIRS})
 
+#luajit
+add_custom_target(luajit
+   COMMAND rsync  -rt ${CMAKE_CURRENT_SOURCE_DIR}/luajit-2.0 ${CMAKE_CURRENT_BINARY_DIR}
+   COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/luajit-2.0 PREFIX=${CMAKE_CURRENT_BINARY_DIR} XCFLAGS=-DLUAJIT_ENABLE_LUA52COMPAT
+   COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/luajit-2.0 LDCONFIG='/sbin/ldconfig -n' PREFIX=${CMAKE_CURRENT_BINARY_DIR} XCFLAGS=-DLUAJIT_ENABLE_LUA52COMPAT install
+)
+set(LUA_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include/luajit-2.0)
+set(LUA_LIBRARY  ${CMAKE_CURRENT_BINARY_DIR}/lib/libluajit-5.1.so) 
+
 # Add sub directories
 add_subdirectory(lib)
 add_subdirectory(src)
