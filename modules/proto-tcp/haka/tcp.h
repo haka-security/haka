@@ -36,27 +36,27 @@ struct tcp_header {
 	uint32	  seq;
 	uint32	  ack_seq;
 #ifdef HAKA_LITTLEENDIAN
-	uint16	  res:4,
-			  hdr_len:4,
-			  fin:1,
-		  	  syn:1,
-			  rst:1,
-			  psh:1,
-		      ack:1,
-			  urg:1,
-			  ecn:1,
-			  cwr:1;
+	uint16    res:4,
+	          hdr_len:4,
+	          fin:1,
+	          syn:1,
+	          rst:1,
+	          psh:1,
+	          ack:1,
+	          urg:1,
+	          ecn:1,
+	          cwr:1;
 #else
 	unint16	  hdr_len:4,
-			  res:4,
-			  cwr:1,
-			  ece:1,
-			  urg:1,
-			  ack:1,
-			  psh:1,
-			  rst:1,
-			  syn:1,
-			  fin:1;
+	          res:4,
+	          cwr:1,
+	          ece:1,
+	          urg:1,
+	          ack:1,
+	          psh:1,
+	          rst:1,
+	          syn:1,
+	          fin:1;
 #endif
 	uint16	  window_size;
 	uint16	  checksum;

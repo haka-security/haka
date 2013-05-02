@@ -8,7 +8,6 @@
 #include <haka/log.h>
 #include <haka/error.h>
 
-
 struct tcp *tcp_dissect(struct ipv4 *packet)
 {
 	struct tcp *tcp = NULL;
@@ -123,7 +122,6 @@ bool tcp_verify_checksum(const struct tcp *tcp)
 
 void tcp_compute_checksum(struct tcp *tcp)
 {
-	   
 	tcp_pre_modify_header(tcp);
     tcp->header->checksum = 0;
     tcp->header->checksum = tcp_checksum(tcp);
@@ -136,4 +134,5 @@ uint16 tcp_get_length(struct ipv4 *packet)
     uint16 total_len = ipv4_get_len(packet);
     return total_len - hdr_len;
 }
+
 

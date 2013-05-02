@@ -1,6 +1,7 @@
 %module tcp
 %{
 #include "haka/tcp.h"
+#include "haka/tcp-connection.h"
 %}
 
 %include haka/swig.i
@@ -50,10 +51,31 @@ struct tcp {
             tcp_compute_checksum($self);
         }
 
+        struct tcp_connection *newConnection()
+        {
+            return tcp_connection_new($self);
+        }
+
+        struct tcp_connection *getConnection()
+        {
+            return tcp_connection_get($self);
+        }
+
         %rename(forge) _forge;
         void _forge()
         {
             tcp_forge($self);
+        }
+    }
+};
+
+
+struct tcp_connection {
+    %extend {
+        %rename(close) _close;
+        void _close()
+        {
+            tcp_connection_close($self);
         }
     }
 };

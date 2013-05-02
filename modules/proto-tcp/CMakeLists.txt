@@ -8,7 +8,8 @@ include(UseSWIG)
 swig_add_module(proto-tcp lua SHARED
 	tcp.i
 	main.c
-	tcp.c)
+	tcp.c
+	tcp-connection.c)
 
 LUA_LINK(proto-tcp)
 
