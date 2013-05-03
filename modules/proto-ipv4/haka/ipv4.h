@@ -418,7 +418,11 @@ ipv4addr ipv4_addr_from_string(const char *string);
 ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d);
 
 const uint8 *ipv4_get_payload(struct ipv4 *ip);
+
 uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip);
 
+uint16 ipv4_get_payload_length(struct ipv4 *ip);
+
+int16 inet_checksum(uint16 *ptr, uint16 size);
 
 #endif /* _HAKA_PROTO_IPV4_IPV4_H */

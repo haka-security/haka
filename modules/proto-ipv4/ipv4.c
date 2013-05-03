@@ -58,12 +58,11 @@ void ipv4_pre_modify_header(struct ipv4 *ip)
 	ip->invalid_checksum = true;
 }
 
-/* compute checksum RFC #1071 */
-int16 checksum(const struct ipv4 *ip)
+
+/* compute tcp checksum RFC #1071 */
+int16 inet_checksum(uint16 *ptr, uint16 size)
 {
 	register long sum = 0;
-	uint16 size = ipv4_get_hdr_len(ip);
-	uint16 *ptr = (uint16 *)ip->header;
 
 	while (size > 1) {
 		sum += *ptr++;
@@ -79,9 +78,10 @@ int16 checksum(const struct ipv4 *ip)
 	return ~sum;
 }
 
+
 bool ipv4_verify_checksum(const struct ipv4 *ip)
 {
-	return checksum(ip) == 0;
+	return inet_checksum((uint16 *)ip->header, ipv4_get_hdr_len(ip)) == 0;
 }
 
 void ipv4_compute_checksum(struct ipv4 *ip)
@@ -89,7 +89,7 @@ void ipv4_compute_checksum(struct ipv4 *ip)
 	ipv4_pre_modify_header(ip);
 
 	ip->header->checksum = 0;
-	ip->header->checksum = checksum(ip);
+	ip->header->checksum = inet_checksum((uint16 *)ip->header, ipv4_get_hdr_len(ip));
 	ip->invalid_checksum = false;
 }
 
@@ -143,3 +143,11 @@ uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip)
 	ipv4_pre_modify(ip);
 	return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip);
 }
+
+uint16 ipv4_get_payload_length(struct ipv4 *ip)
+{
+	const uint8 hdr_len = ipv4_get_hdr_len(ip);
+	const int16 total_len = ipv4_get_len(ip);
+	return total_len - hdr_len;
+}
+

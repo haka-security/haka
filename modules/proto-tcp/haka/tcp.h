@@ -29,6 +29,7 @@
 #define TCP_FLAGS_START                 13
 #define TCP_HDR_LEN                     2 /* Header length is a multiple of 4 bytes */
 
+#define TCP_PROTO 6
 
 struct tcp_header {
 	uint16    srcport;
@@ -61,14 +62,6 @@ struct tcp_header {
 	uint16	  window_size;
 	uint16	  checksum;
 	uint16	  urgent_pointer;
-};
-
-struct tcp_pseudo_header {
-	ipv4addr       src;
-	ipv4addr       dst;
-	uint8          reserved;
-	uint8          proto;
-	uint16         len;
 };
 
 
@@ -114,13 +107,6 @@ void tcp_release(struct tcp *packet);
 void tcp_pre_modify(struct tcp *packet);
 
 /**
- * @brief Make TCP header field values modifiable
- * @param packet TCP structure
- * @ingroup TCP
- */
-void tcp_pre_modify_header(struct tcp *packet);
-
-/**
  * @brief Compute TCP checksum according to RFC #1071
  * @param packet TCP structure
  * @ingroup TCP
@@ -139,7 +125,7 @@ uint16 tcp_get_length(struct ipv4 *packet);
 
 #define TCP_GETSET_FIELD(type, field) \
         static inline type tcp_get_##field(const struct tcp *tcp) { return SWAP_FROM_TCP(type, tcp->header->field); } \
-        static inline void tcp_set_##field(struct tcp *tcp, type v) { tcp_pre_modify_header(tcp); tcp->header->field = SWAP_TO_TCP(type, v); }
+        static inline void tcp_set_##field(struct tcp *tcp, type v) { tcp_pre_modify(tcp); tcp->header->field = SWAP_TO_TCP(type, v); }
 
 /**
  * @fn uint16 tcp_get_srcport(const struct tcp *tcp)
@@ -282,7 +268,7 @@ TCP_GETSET_FIELD(uint16, checksum);
  */
 static inline uint8 tcp_get_hdr_len(const struct tcp *tcp)
 {
-    return tcp->header->hdr_len << TCP_HDR_LEN;
+	return tcp->header->hdr_len << TCP_HDR_LEN;
 }
 
 /**
@@ -294,8 +280,8 @@ static inline uint8 tcp_get_hdr_len(const struct tcp *tcp)
  */
 static inline void tcp_set_hdr_len(struct tcp *tcp, uint8 v)
 {
-    tcp_pre_modify_header(tcp);
-    tcp->header->hdr_len = v >> TCP_HDR_LEN;
+	tcp_pre_modify(tcp);
+	tcp->header->hdr_len = v >> TCP_HDR_LEN;
 }
 
 /**
@@ -319,14 +305,14 @@ static inline uint16 tcp_get_flags(const struct tcp *tcp)
  */
 static inline void tcp_set_flags(struct tcp *tcp, uint8 v)
 {
-	tcp_pre_modify_header(tcp);
-	tcp->header->fin = TCP_SET_BITS(uint8, *(((uint8 *)tcp->header) + TCP_FLAGS_START), TCP_FLAGS_BITS, v);
+	tcp_pre_modify(tcp);
+	*(((uint8 *)tcp->header) + TCP_FLAGS_START) = TCP_SET_BITS(uint8, *(((uint8 *)tcp->header) + TCP_FLAGS_START), TCP_FLAGS_BITS, v);
 }
 
 
 #define TCP_GETSET_FLAG(name) \
         static inline bool tcp_get_flags_##name(const struct tcp *tcp) { return tcp->header->name; } \
-        static inline void tcp_set_flags_##name(struct tcp *tcp, bool v) { tcp_pre_modify_header(tcp); tcp->header->name = v; }
+        static inline void tcp_set_flags_##name(struct tcp *tcp, bool v) { tcp_pre_modify(tcp); tcp->header->name = v; }
 
 /**
  * @fn uint8 tcp_get_flags_fin(const struct tcp *tcp)

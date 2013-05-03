@@ -23,11 +23,11 @@ struct tcp_flags {
 };
 
 struct tcp {
-	%extend {
-		~tcp()
-		{
-			tcp_release($self);
-		}
+    %extend {
+        ~tcp()
+        {
+            tcp_release($self);
+        }
         unsigned int srcport;
         unsigned int dstport;
         unsigned int seq;
@@ -72,6 +72,12 @@ struct tcp {
 
 struct tcp_connection {
     %extend {
+        %immutable;
+        unsigned int srcip;
+        unsigned int dstip;
+        unsigned int srcport;
+        unsigned int dstport;
+        
         %rename(close) _close;
         void _close()
         {
@@ -85,6 +91,14 @@ struct tcp_connection {
 struct tcp *tcp_dissect(struct ipv4 *packet);
 
 %{
+
+#define TCP_CONN_INT_GET(field) \
+    unsigned int tcp_connection_##field##_get(struct tcp_connection *tcp_conn) { return tcp_connection_get_##field(tcp_conn); }
+
+TCP_CONN_INT_GET(srcport);
+TCP_CONN_INT_GET(dstport);
+TCP_CONN_INT_GET(srcip);
+TCP_CONN_INT_GET(dstip);
 
 #define TCP_INT_GETSET(field) \
     unsigned int tcp_##field##_get(struct tcp *tcp) { return tcp_get_##field(tcp); } \
@@ -123,6 +137,6 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 
 %luacode {
     getmetatable(tcp).__call = function (_, ipv4)
-        return tcp.dissect(ipv4)
+    return tcp.dissect(ipv4)
     end
 }
