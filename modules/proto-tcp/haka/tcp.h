@@ -121,8 +121,28 @@ void tcp_compute_checksum(struct tcp *packet);
  */
 bool tcp_verify_checksum(const struct tcp *packet);
 
+/**
+ * Get TCP payload data.
+ * @param packet TCP structure
+ * @return Pointer to the tcp payload data.
+ * @ingroup TCP
+ */
 const uint8 *tcp_get_payload(const struct tcp *packet);
+
+/**
+ * Get TCP modifiable payload data.
+ * @param packet TCP structure
+ * @return Pointer to the tcp payload data.
+ * @ingroup TCP
+ */
 uint8 *tcp_get_payload_modifiable(struct tcp *packet);
+
+/**
+ * Get TCP payload length.
+ * @param packet TCP structure
+ * @return The TCP payload size.
+ * @ingroup TCP
+ */
 size_t tcp_get_payload_length(const struct tcp *packet);
 
 #define TCP_GETSET_FIELD(type, field) \

@@ -1,5 +1,5 @@
 
-app.install("packet", module.load("packet-pcap", {"-f", "ct.pcap"}))
+app.install("packet", module.load("packet-pcap", {"-i", "lo"}))
 app.install("log", module.load("log-stdout"))
 
 require("proto-ipv4")
@@ -17,7 +17,7 @@ app.install_filter(function (pkt)
 			-- new connection
 			if (tcp_h.flags.syn) then
 				conn = tcp_h:newConnection()
-				log.debug("filter", "new connection %s (%d) --> %s (%d)", tostring(ipv4.addr(conn.srcip)), conn.srcport, tostring(ipv4.addr(conn.dstip)), conn.dstport)
+				log.debug("filter", "new connection %s (%d) --> %s (%d)", tostring(conn.srcip), conn.srcport, tostring(conn.dstip), conn.dstport)
 			-- packet do not belong to existing connection
 			else
 				return packet.DROP
@@ -26,7 +26,7 @@ app.install_filter(function (pkt)
 		else
 			-- end existing connection	
 			if (tcp_h.flags.fin) or (tcp_h.flags.rst) then
-				log.debug("filter", "ending connection %s (%d) --> %s (%d)", tostring(ipv4.addr(conn.srcip)), conn.srcport, tostring(ipv4.addr(conn.dstip)), conn.dstport)
+				log.debug("filter", "ending connection %s (%d) --> %s (%d)", tostring(conn.srcip), conn.srcport, tostring(conn.dstip), conn.dstport)
 
 				conn:close()	
 			end

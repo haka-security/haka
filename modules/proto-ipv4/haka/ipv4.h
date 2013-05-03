@@ -94,11 +94,20 @@ void ipv4_forge(struct ipv4 *ip);
 void ipv4_release(struct ipv4 *ip);
 
 /**
- * @brief Make IPv4 header field values modifiable
+ * Function that need to be called before modifying fields not part if
+ * the header.
+ * It is automatically called if you use the standard accessors.
  * @param ip IPv4 structure
  * @ingroup IPv4
  */
 void ipv4_pre_modify(struct ipv4 *ip);
+
+/**
+ * Function that need to be called before modifying fields of the header.
+ * It is automatically called if you use the standard header accessors.
+ * @param ip IPv4 structure
+ * @ingroup IPv4
+ */
 void ipv4_pre_modify_header(struct ipv4 *ip);
 
 #define IPV4_GETSET_FIELD(type, field) \
@@ -417,12 +426,36 @@ ipv4addr ipv4_addr_from_string(const char *string);
  */
 ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d);
 
+/**
+ * Get IPv4 payload data.
+ * @param ip IPv4 structure
+ * @return Pointer to the IPv4 payload data.
+ * @ingroup IPv4
+ */
 const uint8 *ipv4_get_payload(struct ipv4 *ip);
 
+/**
+ * Get IPv4 modifiable payload data.
+ * @param ip IPv4 structure
+ * @return Pointer to the IPv4 payload data.
+ * @ingroup IPv4
+ */
 uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip);
 
-uint16 ipv4_get_payload_length(struct ipv4 *ip);
+/**
+ * Get IPv4 payload length.
+ * @param ip IPv4 structure
+ * @return The IPv4 payload size.
+ * @ingroup IPv4
+ */
+size_t ipv4_get_payload_length(struct ipv4 *ip);
 
+/**
+ * Compute standard checksum on the provided data (RFC #107).
+ * @param ptr Pointer to the data
+ * @param size Size of input data
+ * @return The computed checksum.
+ */
 int16 inet_checksum(uint16 *ptr, uint16 size);
 
 #endif /* _HAKA_PROTO_IPV4_IPV4_H */

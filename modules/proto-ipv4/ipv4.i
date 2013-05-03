@@ -1,14 +1,18 @@
 %module ipv4
+
 %{
 #include "haka/ipv4.h"
 
-struct addr {
+struct ipv4_flags;
+struct ipv4_payload;
+
+struct ipv4_addr {
 	ipv4addr   addr;
 };
 
-struct addr *new_addr(ipv4addr a)
+struct ipv4_addr *ipv4_addr_new(ipv4addr a)
 {
-	struct addr *ret = malloc(sizeof(struct addr));
+	struct ipv4_addr *ret = malloc(sizeof(struct ipv4_addr));
 	if (!ret) {
 		return NULL;
 	}
@@ -16,18 +20,15 @@ struct addr *new_addr(ipv4addr a)
 	ret->addr = a;
 	return ret;
 }
-
-struct ipv4_flags;
-struct ipv4_payload;
-
 %}
 
 %include "haka/swig.i"
 
-struct addr {
+%rename(addr) ipv4_addr;
+struct ipv4_addr {
 	%extend {
-		addr(const char *str) {
-			struct addr *ret = malloc(sizeof(struct addr));
+		ipv4_addr(const char *str) {
+			struct ipv4_addr *ret = malloc(sizeof(struct ipv4_addr));
 			if (!ret) {
 				return NULL;
 			}
@@ -36,12 +37,12 @@ struct addr {
 			return ret;
 		}
 
-		addr(unsigned int addr) {
-			return new_addr(addr);
+		ipv4_addr(unsigned int addr) {
+			return ipv4_addr_new(addr);
 		}
 
-		addr(unsigned int a, unsigned int b, unsigned int c, unsigned int d) {
-			struct addr *ret = malloc(sizeof(struct addr));
+		ipv4_addr(unsigned int a, unsigned int b, unsigned int c, unsigned int d) {
+			struct ipv4_addr *ret = malloc(sizeof(struct ipv4_addr));
 			if (!ret) {
 				return NULL;
 			}
@@ -50,22 +51,22 @@ struct addr {
 			return ret;
 		}
 
-		~addr() {
+		~ipv4_addr() {
 			if ($self)
 				free($self);
 		}
 
-		bool __eq(struct addr *addr) const
+		bool __eq(struct ipv4_addr *addr) const
 		{
 			return $self->addr == addr->addr;
 		}
 
-		bool __lt(struct addr *addr) const
+		bool __lt(struct ipv4_addr *addr) const
 		{
 			return $self->addr < addr->addr;
 		}
 
-		bool __le(struct addr *addr) const
+		bool __le(struct ipv4_addr *addr) const
 		{
 			return $self->addr <= addr->addr;
 		}
@@ -143,8 +144,8 @@ struct ipv4 {
 		unsigned int ttl;
 		unsigned int proto;
 		unsigned int checksum;
-		struct addr *src;
-		struct addr *dst;
+		struct ipv4_addr *src;
+		struct ipv4_addr *dst;
 
 		%immutable;
 		struct ipv4_flags *flags;
@@ -188,10 +189,10 @@ IPV4_INT_GETSET(ttl);
 IPV4_INT_GETSET(proto);
 IPV4_INT_GETSET(checksum);
 
-struct addr *ipv4_src_get(struct ipv4 *ip) { return new_addr(ipv4_get_src(ip)); }
-void ipv4_src_set(struct ipv4 *ip, struct addr *v) { ipv4_set_src(ip, v->addr); }
-struct addr *ipv4_dst_get(struct ipv4 *ip) { return new_addr(ipv4_get_dst(ip)); }
-void ipv4_dst_set(struct ipv4 *ip, struct addr *v) { ipv4_set_dst(ip, v->addr); }
+struct ipv4_addr *ipv4_src_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_src(ip)); }
+void ipv4_src_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_src(ip, v->addr); }
+struct ipv4_addr *ipv4_dst_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_dst(ip)); }
+void ipv4_dst_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_dst(ip, v->addr); }
 
 struct ipv4_payload *ipv4_payload_get(struct ipv4 *ip) { return (struct ipv4_payload *)ip; }
 

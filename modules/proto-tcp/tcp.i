@@ -4,6 +4,9 @@
 #include "haka/tcp-connection.h"
 
 struct tcp_payload;
+
+#include <haka/ipv4-addr.i>
+
 %}
 
 %include haka/swig.i
@@ -109,8 +112,8 @@ struct tcp {
 struct tcp_connection {
 	%extend {
 		%immutable;
-		unsigned int srcip;
-		unsigned int dstip;
+		struct ipv4_addr *srcip;
+		struct ipv4_addr *dstip;
 		unsigned int srcport;
 		unsigned int dstport;
 
@@ -128,13 +131,14 @@ struct tcp *tcp_dissect(struct ipv4 *packet);
 
 %{
 
+struct ipv4_addr *tcp_connection_srcip_get(struct tcp_connection *tcp_conn) { return ipv4_addr_new(tcp_conn->srcip); }
+struct ipv4_addr *tcp_connection_dstip_get(struct tcp_connection *tcp_conn) { return ipv4_addr_new(tcp_conn->dstip); }
+
 #define TCP_CONN_INT_GET(field) \
 	unsigned int tcp_connection_##field##_get(struct tcp_connection *tcp_conn) { return tcp_connection_get_##field(tcp_conn); }
 
 TCP_CONN_INT_GET(srcport);
 TCP_CONN_INT_GET(dstport);
-TCP_CONN_INT_GET(srcip);
-TCP_CONN_INT_GET(dstip);
 
 #define TCP_INT_GETSET(field) \
 	unsigned int tcp_##field##_get(struct tcp *tcp) { return tcp_get_##field(tcp); } \

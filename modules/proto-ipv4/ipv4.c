@@ -144,10 +144,10 @@ uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip)
 	return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip);
 }
 
-uint16 ipv4_get_payload_length(struct ipv4 *ip)
+size_t ipv4_get_payload_length(struct ipv4 *ip)
 {
 	const uint8 hdr_len = ipv4_get_hdr_len(ip);
-	const int16 total_len = ipv4_get_len(ip);
+	const size_t total_len = ipv4_get_len(ip);
 	return total_len - hdr_len;
 }
 
