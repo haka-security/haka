@@ -57,7 +57,7 @@ void tcp_release(struct tcp *tcp)
 void tcp_pre_modify(struct tcp *tcp)
 {
 	if (!tcp->modified) {
-		tcp->header = (struct tcp_header *)(packet_make_modifiable(tcp->packet->packet) + ipv4_get_hdr_len(tcp->packet));
+		tcp->header = (struct tcp_header *)(packet_data_modifiable(tcp->packet->packet) + ipv4_get_hdr_len(tcp->packet));
 	}
 	tcp->modified = true;
 	tcp->invalid_checksum = true;
@@ -105,3 +105,18 @@ void tcp_compute_checksum(struct tcp *tcp)
 	tcp->invalid_checksum = false;
 }
 
+const uint8 *tcp_get_payload(const struct tcp *tcp)
+{
+	return ((const uint8 *)tcp->header) + tcp_get_hdr_len(tcp);
+}
+
+uint8 *tcp_get_payload_modifiable(struct tcp *tcp)
+{
+	tcp_pre_modify(tcp);
+	return (uint8 *)tcp_get_payload(tcp);
+}
+
+size_t tcp_get_payload_length(const struct tcp *tcp)
+{
+	return ipv4_get_payload_length(tcp->packet) - tcp_get_hdr_len(tcp);
+}

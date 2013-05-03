@@ -12,8 +12,8 @@
  * @ingroup ExternProtocolModule
  */
 
-#ifndef _HAKA_PROTO_TCP_IPV4_H
-#define _HAKA_PROTO_TCP_IPV4_H
+#ifndef _HAKA_PROTO_TCP_H
+#define _HAKA_PROTO_TCP_H
 
 #include <haka/types.h>
 #include <haka/ipv4.h>
@@ -121,11 +121,13 @@ void tcp_compute_checksum(struct tcp *packet);
  */
 bool tcp_verify_checksum(const struct tcp *packet);
 
-uint16 tcp_get_length(struct ipv4 *packet);
+const uint8 *tcp_get_payload(const struct tcp *packet);
+uint8 *tcp_get_payload_modifiable(struct tcp *packet);
+size_t tcp_get_payload_length(const struct tcp *packet);
 
 #define TCP_GETSET_FIELD(type, field) \
-        static inline type tcp_get_##field(const struct tcp *tcp) { return SWAP_FROM_TCP(type, tcp->header->field); } \
-        static inline void tcp_set_##field(struct tcp *tcp, type v) { tcp_pre_modify(tcp); tcp->header->field = SWAP_TO_TCP(type, v); }
+	static inline type tcp_get_##field(const struct tcp *tcp) { return SWAP_FROM_TCP(type, tcp->header->field); } \
+	static inline void tcp_set_##field(struct tcp *tcp, type v) { tcp_pre_modify(tcp); tcp->header->field = SWAP_TO_TCP(type, v); }
 
 /**
  * @fn uint16 tcp_get_srcport(const struct tcp *tcp)
@@ -311,8 +313,8 @@ static inline void tcp_set_flags(struct tcp *tcp, uint8 v)
 
 
 #define TCP_GETSET_FLAG(name) \
-        static inline bool tcp_get_flags_##name(const struct tcp *tcp) { return tcp->header->name; } \
-        static inline void tcp_set_flags_##name(struct tcp *tcp, bool v) { tcp_pre_modify(tcp); tcp->header->name = v; }
+	static inline bool tcp_get_flags_##name(const struct tcp *tcp) { return tcp->header->name; } \
+	static inline void tcp_set_flags_##name(struct tcp *tcp, bool v) { tcp_pre_modify(tcp); tcp->header->name = v; }
 
 /**
  * @fn uint8 tcp_get_flags_fin(const struct tcp *tcp)
@@ -442,4 +444,4 @@ TCP_GETSET_FLAG(ecn);
  */
 TCP_GETSET_FLAG(cwr);
 
-#endif /* _HAKA_PROTO_TCP_IPV4_H */
+#endif /* _HAKA_PROTO_TCP_H */

@@ -9,6 +9,7 @@ swig_add_module(proto-tcp lua SHARED
 	tcp.i
 	main.c
 	tcp.c
+	tcp-stream.c
 	tcp-connection.c)
 
 LUA_LINK(proto-tcp)
@@ -20,4 +21,3 @@ INSTALL_MODULE(proto-tcp)
 include(TestModuleLoad)
 TEST_MODULE_LOAD(proto-tcp)
 add_subdirectory(test)
-

@@ -26,6 +26,26 @@ struct packet {
 		size_t __len(void *dummy)
 		{
 			return packet_length($self);
+        }
+
+		int __getitem(int index)
+		{
+			--index;
+			if (index < 0 || index >= packet_length($self)) {
+				error(L"out-of-bound index");
+				return 0;
+			}
+			return packet_data($self)[index];
+		}
+
+		void __setitem(int index, int value)
+		{
+			--index;
+			if (index < 0 || index >= packet_length($self)) {
+				error(L"out-of-bound index");
+				return;
+			}
+			packet_data_modifiable($self)[index] = value;
 		}
 	}
 };

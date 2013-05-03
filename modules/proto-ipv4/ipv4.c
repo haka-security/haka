@@ -46,7 +46,7 @@ void ipv4_forge(struct ipv4 *ip)
 void ipv4_pre_modify(struct ipv4 *ip)
 {
 	if (!ip->modified) {
-		ip->header = (struct ipv4_header*)(packet_make_modifiable(ip->packet));
+		ip->header = (struct ipv4_header*)(packet_data_modifiable(ip->packet));
 	}
 
 	ip->modified = true;

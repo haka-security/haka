@@ -1,2 +1,4 @@
 make
 *.swp
+.project
+.externalToolBuilders

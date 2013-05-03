@@ -16,6 +16,10 @@ struct addr *new_addr(ipv4addr a)
 	ret->addr = a;
 	return ret;
 }
+
+struct ipv4_flags;
+struct ipv4_payload;
+
 %}
 
 %include "haka/swig.i"
@@ -90,6 +94,39 @@ struct ipv4_flags {
 	}
 };
 
+struct ipv4_payload {
+	%extend {
+		size_t __len(void *dummy)
+		{
+			return ipv4_get_payload_length((struct ipv4 *)$self);
+		}
+
+		int __getitem(int index)
+		{
+			const size_t size = ipv4_get_payload_length((struct ipv4 *)$self);
+
+			--index;
+			if (index < 0 || index >= size) {
+				error(L"out-of-bound index");
+				return 0;
+			}
+			return ipv4_get_payload((struct ipv4 *)$self)[index];
+		}
+
+		void __setitem(int index, int value)
+		{
+			const size_t size = ipv4_get_payload_length((struct ipv4 *)$self);
+
+			--index;
+			if (index < 0 || index >= size) {
+				error(L"out-of-bound index");
+				return;
+			}
+			ipv4_get_payload_modifiable((struct ipv4 *)$self)[index] = value;
+		}
+	}
+};
+
 struct ipv4 {
 	%extend {
 		~ipv4()
@@ -111,6 +148,7 @@ struct ipv4 {
 
 		%immutable;
 		struct ipv4_flags *flags;
+		struct ipv4_payload *payload;
 
 		bool verifyChecksum()
 		{
@@ -154,6 +192,8 @@ struct addr *ipv4_src_get(struct ipv4 *ip) { return new_addr(ipv4_get_src(ip)); 
 void ipv4_src_set(struct ipv4 *ip, struct addr *v) { ipv4_set_src(ip, v->addr); }
 struct addr *ipv4_dst_get(struct ipv4 *ip) { return new_addr(ipv4_get_dst(ip)); }
 void ipv4_dst_set(struct ipv4 *ip, struct addr *v) { ipv4_set_dst(ip, v->addr); }
+
+struct ipv4_payload *ipv4_payload_get(struct ipv4 *ip) { return (struct ipv4_payload *)ip; }
 
 struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
 

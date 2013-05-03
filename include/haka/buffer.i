@@ -1,0 +1,90 @@
+%{
+#include <haka/types.h>
+
+struct buffer {
+	size_t    allocated_size;
+	size_t    size;
+	bool      own;
+	uint8*    data;
+};
+
+struct buffer *allocate_buffer(size_t size)
+{
+	struct buffer *buf = malloc(sizeof(struct buffer) + size);
+	if (!buf) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	buf->allocated_size = size;
+	buf->size = size;
+	buf->own = false;
+	buf->data = ((uint8 *)buf) + size;
+	return buf;
+}
+
+struct buffer *create_buffer(uint8 *data, size_t size, bool own)
+{
+	struct buffer *buf = malloc(sizeof(struct buffer) + size);
+	if (!buf) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	buf->allocated_size = size;
+	buf->size = size;
+	buf->own = own;
+	buf->data = data;
+	return buf;
+}
+
+void free_buffer(struct buffer *buf)
+{
+	if (buf->own) {
+		free(buf->data);
+	}
+	free(buf);
+}
+
+%}
+
+%include haka/swig.i
+
+struct buffer {
+	%extend {
+		buffer(size_t size)
+		{
+			return allocate_buffer(size);
+		}
+
+		~buffer()
+		{
+			free_buffer($self);
+		}
+
+		size_t __len(void *dummy)
+		{
+			return $self->size;
+		}
+
+		int __getitem(int index)
+		{
+			--index;
+			if (index < 0 || index >= $self->size) {
+				error(L"out-of-bound index");
+				return 0;
+			}
+			return $self->data[index];
+		}
+
+		void __setitem(int index, int value)
+		{
+			--index;
+			if (index < 0 || index >= $self->size) {
+				error(L"out-of-bound index");
+				return;
+			}
+			$self->data[index] = value;
+		}
+	}
+};
