@@ -22,6 +22,11 @@ struct packet {
 	%extend {
 		%immutable;
 		size_t length;
+
+		size_t __len(void *dummy)
+		{
+			return packet_length($self);
+		}
 	}
 };
 
@@ -30,4 +35,3 @@ size_t packet_length_get(struct packet *pkt) {
 	return packet_length(pkt);
 }
 %}
-
