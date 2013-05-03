@@ -4,9 +4,9 @@ cmake_minimum_required(VERSION 2.6)
 include(TestBigEndian)
 include(CheckTypeSize)
 
-# Forbid in source build
+# Warn in source build
 if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
-	message(FATAL_ERROR "In-source builds are not allowed.")
+	message(WARNING "In-source builds are not recommanded.")
 endif()
 
 project(haka)

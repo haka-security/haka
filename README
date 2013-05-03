@@ -2,7 +2,7 @@ HAKA Runtime
 ============
 
 Haka-Runtime is a tool that allows to capture TCP/IP packet and filter
-them based on Lua policy files in a wireshrk fashion.
+them based on Lua policy files in a wireshark fashion.
 
 Major features:
 
@@ -44,6 +44,14 @@ Dependencies
     - Lua
 
     $ sudo apt-get install liblua5.1
+ 
+    - tshark
+
+    $ sudo apt-get install tshark
+ 
+    - libpcap
+
+    $ sudo apt-get install libpcap-dev
 
 Build
 -----
@@ -53,7 +61,7 @@ all the files generated during the build using cmake
 
     $ mkdir make
     $ cd make
-    $ cmake -DCMAKE_BUILD_TYPE=[build type]
+    $ cmake -DCMAKE_BUILD_TYPE=[build type] ..
 
 	where build type can take one of the following values:
 
