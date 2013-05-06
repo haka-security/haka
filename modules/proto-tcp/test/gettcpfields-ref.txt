@@ -1,3 +1,7 @@
+info: core: load module 'packet-pcap.ho'
+	Pcap Module, Arkoon Network Security
+warn: core: no log module found
+info: core: starting single threaded processing
 ----------TCP HEADER ---------
 TCP Source Port: 80
 TCP Destination Port: 55409
@@ -19,3 +23,5 @@ TCP Checksum: 0x1511
     [Good: True]
     [Bad: False]
 TCP Urgent Pointer: 0x0000
+
+info: core: unload module 'Pcap Module'
