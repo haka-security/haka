@@ -1,6 +1,6 @@
 
 -- Set the path to be able to find the modules in their build folder
-package.cpath = package.cpath .. ";" .. string.gsub(arg[4], ':', '/lib?.so;')
+package.cpath = package.cpath .. ";" .. string.gsub(arg[4], ':', '/?.ho;')
 
 local path = string.gsub(arg[4], ':', '/*;')
 module.setPath(path);

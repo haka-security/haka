@@ -22,6 +22,8 @@ endif()
 find_package(Threads REQUIRED)
 
 option(USE_LUAJIT "Use LuaJit library instead of Lua 5.1" YES)
+set(HAKA_MODULE_PREFIX "" CACHE STRING "Haka module prefix")
+set(HAKA_MODULE_SUFFIX ".ho" CACHE STRING "Haka module suffix")
 
 TEST_BIG_ENDIAN(BIGENDIAN)
 set(HAKA_BIGENDIAN ${BIGENDIAN})

@@ -3,6 +3,7 @@
 
 %{
 #include <haka/module.h>
+#include <haka/config.h>
 
 
 #define load_args(name, ARGC, ARGV) \
@@ -10,6 +11,9 @@
 
 #define load_no_args(name) \
 	module_load(name, 0, NULL)
+
+char *prefix = HAKA_MODULE_PREFIX;
+char *suffix = HAKA_MODULE_SUFFIX;
 
 %}
 
@@ -46,7 +50,11 @@ const char *module_get_path();
 %rename(setPath) module_set_path;
 void module_set_path(const char *path);
 
+%immutable;
+char *prefix;
+char *suffix;
+
 %luacode {
-	package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', 'lib?.so')
+	package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', module.prefix .. '?' .. module.suffix)
 	package.path = package.path .. ";" .. string.gsub(module.path(), '*', '?.lua')
 }

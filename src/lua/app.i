@@ -7,6 +7,7 @@
 #include "state.h"
 #include <haka/packet_module.h>
 #include <haka/thread.h>
+#include <haka/config.h>
 
 static int install(const char *type, struct module *module)
 {
