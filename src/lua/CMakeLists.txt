@@ -10,9 +10,6 @@ swig_add_module(haka-lua lua STATIC
 	state.c)
 
 # Lua dependency
-add_dependencies(haka-lua luajit)
-include_directories(${LUA_INCLUDE_DIR})
-target_link_libraries(haka-lua ${LUA_LIBRARY})
-
+LUA_LINK(haka-lua)
 
 include_directories(.)

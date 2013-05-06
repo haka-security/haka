@@ -11,10 +11,7 @@ include_directories(.)
 target_link_libraries(proto-ipv4 libhaka)
 
 # Lua dependency
-add_dependencies(proto-ipv4 luajit)
-include_directories(${LUA_INCLUDE_DIR})
-target_link_libraries(proto-ipv4 ${LUA_LIBRARY})
-
+LUA_LINK(proto-ipv4)
 
 # Install
 install(TARGETS proto-ipv4 LIBRARY DESTINATION bin/modules)

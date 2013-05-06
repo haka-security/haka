@@ -1,3 +1,3 @@
-[submodule "luajit-2.0"]
-	path = luajit-2.0
-	url = http://luajit.org/git/luajit-2.0.git
+[submodule "external/luajit"]
+	path = external/luajit
+	url = git://repo.or.cz/luajit-2.0.git

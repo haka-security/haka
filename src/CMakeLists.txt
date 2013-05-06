@@ -1,6 +1,6 @@
 
 # Setup rpath for modules
-set(CMAKE_INSTALL_RPATH "$ORIGIN/modules" "$ORIGIN")
+set(CMAKE_INSTALL_RPATH "$ORIGIN/modules" "$ORIGIN" "$ORIGIN/../lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH false)
 
 # Lua dependency
