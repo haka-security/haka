@@ -22,13 +22,13 @@ app.install_filter(function (pkt)
 			else
 				return packet.DROP
 			end
-		
+
 		else
-			-- end existing connection	
+			-- end existing connection
 			if (tcp_h.flags.fin) or (tcp_h.flags.rst) then
 				log.debug("filter", "ending connection %s (%d) --> %s (%d)", tostring(conn.srcip), conn.srcport, tostring(conn.dstip), conn.dstport)
 
-				conn:close()	
+				conn:close()
 			end
 		end
 	end
