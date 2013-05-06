@@ -14,5 +14,4 @@ target_link_libraries(libhaka ${CMAKE_THREAD_LIBS_INIT})
 set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 
 # Install
-install(TARGETS libhaka LIBRARY DESTINATION bin)
-
+install(TARGETS libhaka LIBRARY DESTINATION lib)

@@ -1,5 +1,5 @@
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN/..")
+set(CMAKE_INSTALL_RPATH "$ORIGIN/../../lib")
 
 # Setup module file names
 set(CMAKE_SHARED_MODULE_PREFIX "${HAKA_MODULE_PREFIX}")
