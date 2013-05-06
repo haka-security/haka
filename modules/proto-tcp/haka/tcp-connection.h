@@ -29,6 +29,7 @@ struct tcp_connection *tcp_connection_get(const struct tcp *tcp);
 
 /**
  * Close the TCP connection.
+ * @param tcp_conn TCP connection.
  */
 void tcp_connection_close(struct tcp_connection *tcp_conn);
 
