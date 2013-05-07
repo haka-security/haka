@@ -22,7 +22,7 @@ int thread_get_cpu_count()
 
 static local_storage_t thread_id_key;
 
-__attribute__((constructor)) static void thread_id_init()
+INIT static void thread_id_init()
 {
 	assert(local_storage_init(&thread_id_key, NULL));
 }

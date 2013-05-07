@@ -24,7 +24,7 @@ static void error_delete(void *value)
 	free(value);
 }
 
-__attribute__((constructor)) static void error_init()
+INIT static void error_init()
 {
 	assert(local_storage_init(&local_error_key, error_delete));
 }
