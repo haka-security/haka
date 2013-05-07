@@ -3,10 +3,6 @@
 set(CMAKE_INSTALL_RPATH "$ORIGIN/modules" "$ORIGIN" "$ORIGIN/../lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH false)
 
-# Lua dependency
-find_package(Lua51 REQUIRED)
-include_directories(${LUA_INCLUDE_DIR})
-
 # Build main program
 add_executable(haka
 	main.c
@@ -14,8 +10,8 @@ add_executable(haka
 	thread.c)
 
 target_link_libraries(haka libhaka)
-target_link_libraries(haka ${LUA_LIBRARY})
 target_link_libraries(haka ${CMAKE_THREAD_LIBS_INIT})
+LUA_LINK(haka)
 
 include_directories(.)
 
