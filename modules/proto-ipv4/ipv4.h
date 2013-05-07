@@ -386,6 +386,8 @@ bool ipv4_verify_checksum(const struct ipv4 *ip);
  */
 void ipv4_compute_checksum(struct ipv4 *ip);
 
+#define IPV4_ADDR_STRING_MAXLEN   15
+
 /**
  * @brief Convert IP from ipv4addr to string
  * @param addr address to be converted

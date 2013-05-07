@@ -19,7 +19,7 @@ struct addr *new_addr(ipv4addr a)
 
 %}
 
-%include haka/swig.i
+%include "haka/swig.i"
 
 struct addr {
 	%extend {
@@ -67,10 +67,14 @@ struct addr {
 			return $self->addr <= addr->addr;
 		}
 
-		const char *__tostring()
+		temporary_string __tostring()
 		{
-			static char buffer[16];
-			ipv4_addr_to_string($self->addr, buffer, sizeof(buffer));
+			char *buffer = malloc(IPV4_ADDR_STRING_MAXLEN+1);
+			if (!buffer) {
+				error(L"memory error");
+				return NULL;
+			}
+			ipv4_addr_to_string($self->addr, buffer, IPV4_ADDR_STRING_MAXLEN+1);
 			return buffer;
 		}
 	}

@@ -2,6 +2,8 @@
 	#include <haka/error.h>
 
 	#include <stdlib.h>
+
+	typedef const char *temporary_string;
 %}
 
 %exception {
@@ -29,4 +31,9 @@
 
 		SWIG_fail;
 	}
+}
+
+%typemap(out) temporary_string {
+	lua_pushstring(L, (const char *)$result); SWIG_arg++;
+	free((void*)$result);
 }
