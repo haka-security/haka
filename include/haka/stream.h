@@ -86,7 +86,7 @@ static inline size_t stream_read(struct stream *stream, uint8 *data, size_t leng
  * Get the number of contiguous bytes available from a stream.
  * @param stream Opaque stream.
  */
-static inline size_t available(struct stream *stream)
+static inline size_t stream_available(struct stream *stream)
 {
 	return stream->ftable->available(stream);
 }

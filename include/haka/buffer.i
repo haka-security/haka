@@ -19,13 +19,13 @@ struct buffer *allocate_buffer(size_t size)
 	buf->allocated_size = size;
 	buf->size = size;
 	buf->own = false;
-	buf->data = ((uint8 *)buf) + size;
+	buf->data = ((uint8 *)buf) + sizeof(struct buffer);
 	return buf;
 }
 
 struct buffer *create_buffer(uint8 *data, size_t size, bool own)
 {
-	struct buffer *buf = malloc(sizeof(struct buffer) + size);
+	struct buffer *buf = malloc(sizeof(struct buffer));
 	if (!buf) {
 		error(L"memory error");
 		return NULL;

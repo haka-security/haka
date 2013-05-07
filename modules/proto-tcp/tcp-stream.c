@@ -75,6 +75,21 @@ static bool tcp_stream_destroy(struct stream *s)
 	return true;
 }
 
+static struct tcp_stream_chunck *tcp_stream_current(struct tcp_stream *tcp_s)
+{
+	struct tcp_stream_chunck *iter;
+
+	iter = tcp_s->current;
+	if (!iter) iter = tcp_s->first;
+
+	while (iter && iter->end_seq < tcp_s->current_seq) {
+		iter = iter->next;
+	}
+
+	tcp_s->current = iter;
+	return iter;
+}
+
 bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 {
 	struct tcp_stream_chunck *chunk;
@@ -104,13 +119,29 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 		chunk->next = NULL;
 	}
 	else {
-		struct tcp_stream_chunck **iter = &tcp_s->last;
-		while (*iter && (*iter)->start_seq < chunk->start_seq) {
-			iter = &((*iter)->next);
+		struct tcp_stream_chunck **iter;
+
+		if (tcp_s->last->start_seq < chunk->start_seq) {
+			iter = &tcp_s->last;
+			do {
+				iter = &((*iter)->next);
+			}
+			while (*iter && (*iter)->start_seq < chunk->start_seq);
+		}
+		else {
+			tcp_stream_current(tcp_s); /* Validate tcp_s->current field */
+			iter = &tcp_s->current;
+			do {
+				iter = &((*iter)->next);
+			}
+			while (*iter && (*iter)->start_seq < chunk->start_seq);
 		}
 
-		chunk->next = *iter;
+		if (*iter) chunk->next = (*iter)->next;
+		else chunk->next = NULL;
 		*iter = chunk;
+
+		tcp_s->last = chunk;
 	}
 
 	return true;
@@ -123,9 +154,15 @@ struct tcp *tcp_stream_pop(struct stream *s)
 	TCP_STREAM(s);
 
 	chunk = tcp_s->first;
-	if (chunk && chunk->start_seq > tcp_s->current_seq) {
+	if (chunk && chunk->end_seq <= tcp_s->current_seq) {
 		tcp = chunk->tcp;
 		tcp_s->first = tcp_s->first->next;
+
+		if (tcp_s->current == chunk) tcp_s->current = NULL;
+		if (tcp_s->last == chunk) {
+			assert(chunk->next == NULL);
+			tcp_s->last = NULL;
+		}
 
 		free(chunk);
 		return tcp;
@@ -134,45 +171,40 @@ struct tcp *tcp_stream_pop(struct stream *s)
 	return NULL;
 }
 
-static struct tcp_stream_chunck *tcp_stream_current(struct tcp_stream *tcp_s)
-{
-	struct tcp_stream_chunck *iter;
-
-	iter = tcp_s->current;
-	while (iter && iter->end_seq < tcp_s->current_seq) {
-		iter = iter->next;
-	}
-
-	tcp_s->current = iter;
-	return iter;
-}
-
 static size_t tcp_stream_read(struct stream *s, uint8 *data, size_t length)
 {
 	struct tcp_stream_chunck *iter;
-	size_t offset;
+	size_t offset, last_seq;
 	size_t left_len = length;
 	TCP_STREAM(s);
 
 	offset = tcp_s->current_seq;
 	iter = tcp_stream_current(tcp_s);
 
-	while (iter && left_len > 0) {
-		if (offset < iter->start_seq || offset >= iter->end_seq)
+	if (!iter || tcp_s->current_seq < iter->start_seq)
+		return 0;
+
+	offset = tcp_s->current_seq;
+	last_seq = iter->start_seq;
+
+	do {
+		if (last_seq != iter->start_seq)
 			break;
 
 		const size_t local_offset = offset - iter->start_seq;
 		const uint8 *src = tcp_get_payload(iter->tcp) + local_offset;
-		size_t len = offset - iter->end_seq;
+		size_t len = iter->end_seq - offset;
 		if (len > left_len) len = left_len;
-
 		memcpy(data, src, len);
-
+		offset = iter->end_seq;
 		left_len -= len;
-		data += len;
-		offset += len;
+
+		last_seq = iter->end_seq;
 		iter = iter->next;
 	}
+	while (iter && left_len > 0);
+
+	tcp_s->current_seq += length - left_len;
 
 	return length - left_len;
 }
@@ -180,25 +212,25 @@ static size_t tcp_stream_read(struct stream *s, uint8 *data, size_t length)
 static size_t tcp_stream_available(struct stream *s)
 {
 	struct tcp_stream_chunck *iter;
-	size_t offset;
-	size_t available_len = 0;
+	size_t last_seq = 0;
 	TCP_STREAM(s);
 
-	offset = tcp_s->current_seq;
 	iter = tcp_stream_current(tcp_s);
+	if (!iter || tcp_s->current_seq < iter->start_seq)
+		return 0;
 
-	while (iter) {
-		if (offset < iter->start_seq || offset >= iter->end_seq)
+	last_seq = iter->start_seq;
+
+	do {
+		if (last_seq != iter->start_seq)
 			break;
 
-		size_t len = offset - iter->end_seq;
-
-		available_len += len;
-		offset += len;
+		last_seq = iter->end_seq;
 		iter = iter->next;
 	}
+	while (iter);
 
-	return available_len;
+	return last_seq - tcp_s->current_seq;
 }
 
 static size_t tcp_stream_insert(struct stream *s, uint8 *data, size_t length)

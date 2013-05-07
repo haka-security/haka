@@ -16,8 +16,10 @@
 
 /**
  * Create a new tcp stream.
+ * @param start_seq Start TCP sequence number for this stream.
+ * @return New allocated TCP stream.
  */
-struct stream *tcp_stream_create();
+struct stream *tcp_stream_create(size_t start_seq);
 
 /**
  * Push data into a tcp stream.

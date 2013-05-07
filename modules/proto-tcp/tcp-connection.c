@@ -1,5 +1,6 @@
 #include "haka/tcp.h"
 #include "haka/tcp-connection.h"
+#include <haka/tcp-stream.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +30,9 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 	ptr->tcp_conn.dstip = ipv4_get_dst(tcp->packet);
 	ptr->tcp_conn.srcport = tcp_get_srcport(tcp);
 	ptr->tcp_conn.dstport = tcp_get_dstport(tcp);
+	ptr->tcp_conn.stream_input = tcp_stream_create(tcp_get_seq(tcp)+1);
+	ptr->tcp_conn.stream_output = NULL;
+
 	ptr->prev = NULL;
 	ptr->next = ct_head;
 
@@ -41,7 +45,7 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 	return &ct_head->tcp_conn;
 }
 
-struct tcp_connection *tcp_connection_get(const struct tcp *tcp)
+struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction_in)
 {
 	struct ctable *ptr = ct_head;
 	uint16 srcport, dstport;
@@ -53,10 +57,14 @@ struct tcp_connection *tcp_connection_get(const struct tcp *tcp)
 	dstport = tcp_get_dstport(tcp);
 
 	while (ptr) {
-		if (((ptr->tcp_conn.srcip == srcip) && (ptr->tcp_conn.srcport == srcport) &&
-			(ptr->tcp_conn.dstip == dstip) && (ptr->tcp_conn.dstport == dstport)) ||
-		   ((ptr->tcp_conn.srcip == dstip) && (ptr->tcp_conn.srcport == dstport) &&
-            (ptr->tcp_conn.dstip == srcip) && (ptr->tcp_conn.dstport == srcport))) {
+		if ((ptr->tcp_conn.srcip == srcip) && (ptr->tcp_conn.srcport == srcport) &&
+		    (ptr->tcp_conn.dstip == dstip) && (ptr->tcp_conn.dstport == dstport)) {
+			if (direction_in) *direction_in = true;
+			return &ptr->tcp_conn;
+		}
+		if ((ptr->tcp_conn.srcip == dstip) && (ptr->tcp_conn.srcport == dstport) &&
+		    (ptr->tcp_conn.dstip == srcip) && (ptr->tcp_conn.dstport == srcport)) {
+			if (direction_in) *direction_in = false;
 			return &ptr->tcp_conn;
 		}
 		ptr = ptr->next;

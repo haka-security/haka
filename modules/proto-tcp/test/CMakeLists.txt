@@ -9,3 +9,6 @@ TEST_PCAP_COMPARE(settcpfields)
 
 TEST_PCAP_OUTPUT(oneconnection)
 TEST_PCAP_OUTPUT(interleavedconnection)
+
+TEST_UNIT(tcp-unit unit.c)
+target_link_libraries(tcp-unit proto-tcp)

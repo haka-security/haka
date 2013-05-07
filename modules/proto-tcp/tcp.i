@@ -1,7 +1,9 @@
 %module tcp
 %{
-#include "haka/tcp.h"
-#include "haka/tcp-connection.h"
+#include <haka/stream.h>
+#include <haka/tcp.h>
+#include <haka/tcp-connection.h>
+#include <haka/tcp-stream.h>
 
 struct tcp_payload;
 
@@ -9,7 +11,9 @@ struct tcp_payload;
 
 %}
 
-%include haka/swig.i
+%include "haka/swig.i"
+%include "haka/stream.i"
+%include "typemaps.i"
 
 %nodefaultctor;
 
@@ -60,6 +64,25 @@ struct tcp_payload {
 	}
 };
 
+struct stream
+{
+	%extend {
+		%rename(push) _push;
+		void _push(struct tcp *tcp)
+		{
+			tcp_stream_push($self, tcp);
+		}
+
+		%rename(pop) _pop;
+		struct tcp *_pop()
+		{
+			return tcp_stream_pop($self);
+		}
+	}
+};
+
+BASIC_STREAM(stream)
+
 struct tcp {
 	%extend {
 		~tcp()
@@ -95,9 +118,9 @@ struct tcp {
 			return tcp_connection_new($self);
 		}
 
-		struct tcp_connection *getConnection()
+		struct tcp_connection *getConnection(bool *OUTPUT)
 		{
-			return tcp_connection_get($self);
+			return tcp_connection_get($self, OUTPUT);
 		}
 
 		%rename(forge) _forge;
@@ -121,6 +144,11 @@ struct tcp_connection {
 		void _close()
 		{
 			tcp_connection_close($self);
+		}
+
+		struct stream *stream(bool direction_in)
+		{
+			return tcp_connection_get_stream($self, direction_in);
 		}
 	}
 };
