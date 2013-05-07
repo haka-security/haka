@@ -163,7 +163,7 @@ static bool init_unique_state()
 	bzero(unique_state, sizeof(struct packet_module_state));
 	bzero(errbuf, PCAP_ERRBUF_SIZE);
 
-	mutex_init(&unique_state->mutex);
+	mutex_init(&unique_state->mutex, false);
 
 	/* get a pcap descriptor from device */
 	if (input_iface) {

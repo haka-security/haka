@@ -42,9 +42,29 @@ void thread_set_id(int id)
  * Mutex
  */
 
-bool mutex_init(mutex_t *mutex)
+bool mutex_init(mutex_t *mutex, bool recursive)
 {
-	const int err = pthread_mutex_init(mutex, NULL);
+	int err;
+	pthread_mutexattr_t attr;
+
+	err = pthread_mutexattr_init(&attr);
+	if (err) {
+		error(L"mutex error: %s", errno_error(err));
+		return false;
+	}
+
+	if (recursive)
+		err = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	else
+		err = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+
+	if (err) {
+		error(L"mutex error: %s", errno_error(err));
+		return false;
+	}
+
+	err = pthread_mutex_init(mutex, &attr);
+	pthread_mutexattr_destroy(&attr);
 	if (err) {
 		error(L"mutex error: %s", errno_error(err));
 		return false;

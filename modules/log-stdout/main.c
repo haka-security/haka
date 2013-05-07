@@ -27,7 +27,7 @@ static mutex_t mutex;
 
 static int init(int argc, char *argv[])
 {
-	if (!mutex_init(&mutex)) {
+	if (!mutex_init(&mutex, true)) {
 		return 1;
 	}
 	return 0;

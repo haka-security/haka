@@ -114,10 +114,12 @@ typedef pthread_mutex_t mutex_t;
 /**
  * Initializes a mutex.
  * @param mutex The mutex to initialize.
+ * @param recursive True if the mutex should be recursive (ie. an be re-entered
+ * by the same thread).
  * @return true on success. Use clear_error to get details about the error.
  * @ingroup Multithread
  */
-bool mutex_init(mutex_t *mutex);
+bool mutex_init(mutex_t *mutex, bool recursive);
 
 /**
  * Destroy a mutex.
