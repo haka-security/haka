@@ -7,7 +7,7 @@
 static wchar_t* str2wstr(const char *str, int len)
 {
 	wchar_t *p;
-	if (str == 0 || len < 1)
+	if (str == 0 || len < 0)
 		return 0;
 
 	p = (wchar_t *)malloc((len+1)*sizeof(wchar_t));
