@@ -52,11 +52,6 @@ static int lua_print(lua_State* L)
 	return 0;
 }
 
-static const struct luaL_reg builtin_lib [] = {
-	{ "print", lua_print },
-	{ NULL, NULL }
-};
-
 lua_state *init_state()
 {
 	lua_State *L = luaL_newstate();
@@ -68,9 +63,8 @@ lua_state *init_state()
 
 	luaL_openlibs(L);
 
-	lua_getglobal(L, "_G");
-	luaL_register(L, NULL, builtin_lib);
-	lua_pop(L, 1);
+	lua_pushcfunction(L,lua_print);
+	lua_setglobal(L,"print");
 
 	luaopen_app(L);
 	luaopen_module(L);
