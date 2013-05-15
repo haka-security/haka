@@ -57,6 +57,10 @@ Dependencies
 
     $ sudo apt-get install check
 
+    - Netfilter Queue (optional)
+
+    $ sudo apt-get install libnetfilter-queue-dev
+
 Build
 -----
 
