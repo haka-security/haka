@@ -53,6 +53,10 @@ Dependencies
 
     $ sudo apt-get install libpcap-dev
 
+    - check
+
+    $ sudo apt-get install check
+
 Build
 -----
 
