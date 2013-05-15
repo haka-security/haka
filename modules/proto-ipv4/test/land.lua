@@ -5,8 +5,8 @@ return function(pkt)
     ip = ipv4(pkt)
 
     if ip.src == ip.dst then
-        return packet.DENY
+        return haka.packet.DENY
 	else
-		return packet.ACCEPT
+		return haka.packet.ACCEPT
     end
 end

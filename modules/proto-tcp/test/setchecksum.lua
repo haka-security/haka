@@ -34,6 +34,6 @@ return function(pkt)
 	--output:write(string.format( "%d\n", tcp_h:computeChecksum()))
 	--output:write(string.format( "%d\n", tcp_h.checksum))
 
-	return packet.ACCEPT
+	return haka.packet.ACCEPT
 
 end

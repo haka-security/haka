@@ -3,5 +3,5 @@
 
 return function(pkt)
 	print(string.format("Received packet of %d bytes", pkt.length))
-	return packet.ACCEPT
+	return haka.packet.ACCEPT
 end

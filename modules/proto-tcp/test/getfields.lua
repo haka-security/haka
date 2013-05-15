@@ -54,6 +54,6 @@ return function(pkt)
 	print()
 	--tcp_h:computeChecksum()
 
-	return packet.ACCEPT
+	return haka.packet.ACCEPT
 
 end

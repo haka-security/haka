@@ -21,7 +21,7 @@ return function(pkt)
 				else
 					-- packet do not belong to existing connection
 					print(string.format("unknown connection %s (%d) --> %s (%d)", tostring(ip_h.src), tcp_h.srcport, tostring(ip_h.dst), tcp_h.dstport))
-					return packet.DROP
+					return haka.packet.DROP
 				end
 																																	
 			else
@@ -33,6 +33,6 @@ return function(pkt)
 			end
 		end
 	end
-	return packet.ACCEPT
+	return haka.packet.ACCEPT
 
 end

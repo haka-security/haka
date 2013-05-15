@@ -49,6 +49,6 @@ return function(pkt)
 
 	tcp_h:computeChecksum()
 
-	return packet.ACCEPT
+	return haka.packet.ACCEPT
 
 end

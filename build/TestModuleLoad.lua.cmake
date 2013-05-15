@@ -1,4 +1,4 @@
 
-module.load('@MODULE@')
-app.exit(0)
+haka.module.load('@MODULE@')
+haka.app.exit(0)
 

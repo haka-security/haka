@@ -74,6 +74,6 @@ return function(pkt)
 	print(string.format("    Destination: %s (%s)", tostring(ip.dst), tostring(ip.dst)))
 	print()
 
-	return packet.ACCEPT
+	return haka.packet.ACCEPT
 
 end

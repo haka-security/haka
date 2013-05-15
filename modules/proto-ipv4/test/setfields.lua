@@ -19,6 +19,6 @@ return function(pkt)
 	ip.dst = ipv4.addr("192.168.0.2")
 	ip:forge()
 
-	return packet.ACCEPT
+	return haka.packet.ACCEPT
 end
 

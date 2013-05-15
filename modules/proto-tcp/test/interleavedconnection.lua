@@ -20,7 +20,7 @@ return function(pkt)
 					print(string.format("new connection %s (%d) --> %s (%d)", tostring(conn.srcip), conn.srcport, tostring(conn.dstip), conn.dstport))
 				else
 					-- packet do not belong to existing connection
-					return packet.DROP
+					return haka.packet.DROP
 				end
 																																	
 			else
@@ -32,6 +32,6 @@ return function(pkt)
 			end
 		end
 	end
-	return packet.ACCEPT
+	return haka.packet.ACCEPT
 
 end

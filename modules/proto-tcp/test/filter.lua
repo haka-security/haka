@@ -10,9 +10,9 @@ return function(pkt)
 	local tcp_h = tcp(ip_h)
 
 	if tcp_h.dstport == 80 then
-		return packet.ACCEPT
+		return haka.packet.ACCEPT
 	else
-		return packet.DENY
+		return haka.packet.DENY
 	end
 
 end

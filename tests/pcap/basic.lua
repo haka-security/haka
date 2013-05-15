@@ -2,5 +2,5 @@
 -- The output should be the same as the input.
 
 return function(pkt)
-	return packet.ACCEPT
+	return haka.packet.ACCEPT
 end

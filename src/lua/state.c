@@ -12,6 +12,19 @@ extern int luaopen_module(lua_State *L);
 extern int luaopen_packet(lua_State *L);
 extern int luaopen_log(lua_State *L);
 
+typedef struct {
+	lua_CFunction open;
+	const char * name;
+} swig_module;
+
+swig_module swig_builtins[] = {
+	{ luaopen_app, "app" },
+	{ luaopen_module, "module" },
+	{ luaopen_packet, "packet" },
+	{ luaopen_log, "log" },
+	{NULL, NULL}
+};
+
 
 static int panic(lua_State *L)
 {
@@ -66,10 +79,23 @@ lua_state *init_state()
 	lua_pushcfunction(L,lua_print);
 	lua_setglobal(L,"print");
 
-	luaopen_app(L);
-	luaopen_module(L);
-	luaopen_packet(L);
-	luaopen_log(L);
+	lua_newtable(L);
+	lua_setglobal(L,"haka");
+	lua_getglobal(L,"haka");
+
+	swig_module * cur_module = swig_builtins;
+	while(cur_module->open) {
+		lua_getglobal(L,cur_module->name); /* save old value of global <name> */
+		lua_setfield(L,LUA_REGISTRYINDEX,"swig_tmp");
+		lua_pushcfunction(L,cur_module->open);
+		lua_call(L,0,1);
+		lua_setfield(L,-2,cur_module->name); /* haka.<name> = <module */
+		lua_getfield(L,LUA_REGISTRYINDEX,"swig_tmp"); /* restore old value of global <name> */
+		lua_setglobal(L,cur_module->name);
+		cur_module++;
+	}
+	lua_pushnil(L);
+	lua_setfield(L,LUA_REGISTRYINDEX,"swig_tmp");
 
 	return L;
 }
