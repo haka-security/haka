@@ -17,8 +17,8 @@ if(NOT TSHARK_COMMAND)
 	message(FATAL_ERROR "Cannot find tshark command")
 endif(NOT TSHARK_COMMAND)
 
-macro(TEST_PCAP_COMPARE name)
-	add_test(NAME pcap-compare-${name}
+macro(TEST_PCAP_COMPARE module name)
+	add_test(NAME ${module}-${name}-pcap-compare
 		COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
 		-DLDDIR=${MODULES_BINARY_DIRS}

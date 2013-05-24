@@ -3,5 +3,5 @@
 include(TestPcapCompare)
 include(TestPcapOutput)
 
-TEST_PCAP_COMPARE(basic)
-TEST_PCAP_OUTPUT(output)
+TEST_PCAP_COMPARE(pcap basic)
+TEST_PCAP_OUTPUT(pcap output)

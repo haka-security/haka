@@ -12,8 +12,8 @@ if(NOT DIFF_COMMAND)
 	message(FATAL_ERROR "Cannot find diff command")
 endif(NOT DIFF_COMMAND)
 
-macro(TEST_PCAP_OUTPUT name)
-	add_test(NAME pcap-output-${name}
+macro(TEST_PCAP_OUTPUT module name)
+	add_test(NAME ${module}-${name}-pcap-output
 		COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
 		-DLDDIR=${MODULES_BINARY_DIRS}
