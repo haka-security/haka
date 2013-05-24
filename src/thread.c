@@ -107,14 +107,13 @@ void *thread_main_loop(void *_state)
 {
 	struct thread_state *state = (struct thread_state *)_state;
 	struct packet *pkt = NULL;
-	int error = 0;
 
 	struct packet_module *packet_module = get_packet_module();
 	assert(packet_module);
 
 	thread_set_id(state->thread_id);
 
-	while ((error = packet_module->receive(state->capture, &pkt)) == 0) {
+	while (packet_module->receive(state->capture, &pkt) == 0) {
 		/* The packet can be NULL in case of failure in packet receive */
 		if (pkt) {
 			filter_result result = filter_wrapper(state, pkt);

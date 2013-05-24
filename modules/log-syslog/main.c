@@ -58,12 +58,13 @@ static int convert(char *buffer, const size_t len, const wchar_t *message, int *
 	*trunc = 0;
 
 	while (*message) {
-		size_t clen;
 		wchar_t c = *message;
 
 		if (c == L'\n' || c == L'\r' || c == L'\t') c = ' ';
 
 		if (c != 0) {
+			size_t clen;
+
 			/* Test if the next character might not fit */
 			if (len-1-cur < MB_CUR_MAX) {
 				clen = wcrtomb(char_buffer, c, &state);
