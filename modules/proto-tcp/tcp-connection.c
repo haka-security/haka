@@ -1,6 +1,7 @@
 #include "haka/tcp.h"
 #include "haka/tcp-connection.h"
 #include <haka/tcp-stream.h>
+#include <haka/thread.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -17,6 +18,7 @@ struct ctable {
 };
 
 static struct ctable *ct_head = NULL;
+mutex_t ct_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 {
@@ -34,6 +36,9 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 	ptr->tcp_conn.stream_output = NULL;
 
 	ptr->prev = NULL;
+
+	mutex_lock(&ct_mutex);
+
 	ptr->next = ct_head;
 
 	if (ct_head) {
@@ -42,12 +47,14 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 
 	ct_head = ptr;
 
-	return &ct_head->tcp_conn;
+	mutex_unlock(&ct_mutex);
+
+	return &ptr->tcp_conn;
 }
 
 struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction_in)
 {
-	struct ctable *ptr = ct_head;
+	struct ctable *ptr;
 	uint16 srcport, dstport;
 	ipv4addr srcip, dstip;
 
@@ -56,19 +63,26 @@ struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction
 	srcport = tcp_get_srcport(tcp);
 	dstport = tcp_get_dstport(tcp);
 
+	mutex_lock(&ct_mutex);
+
+	ptr = ct_head;
 	while (ptr) {
 		if ((ptr->tcp_conn.srcip == srcip) && (ptr->tcp_conn.srcport == srcport) &&
 		    (ptr->tcp_conn.dstip == dstip) && (ptr->tcp_conn.dstport == dstport)) {
+			mutex_unlock(&ct_mutex);
 			if (direction_in) *direction_in = true;
 			return &ptr->tcp_conn;
 		}
 		if ((ptr->tcp_conn.srcip == dstip) && (ptr->tcp_conn.srcport == dstport) &&
 		    (ptr->tcp_conn.dstip == srcip) && (ptr->tcp_conn.dstport == srcport)) {
+			mutex_unlock(&ct_mutex);
 			if (direction_in) *direction_in = false;
 			return &ptr->tcp_conn;
 		}
 		ptr = ptr->next;
 	}
+
+	mutex_unlock(&ct_mutex);
 
 	return NULL;
 }
@@ -78,6 +92,9 @@ void tcp_connection_close(struct tcp_connection* tcp_conn)
 	struct ctable *current, *next, *prev;
 
 	current = (struct ctable *)((uint8 *)tcp_conn - offsetof(struct ctable, tcp_conn));
+
+	mutex_lock(&ct_mutex);
+
 	prev = current->prev;
 	next = current->next;
 
@@ -95,5 +112,8 @@ void tcp_connection_close(struct tcp_connection* tcp_conn)
 		prev->next = next;
 		next->prev = prev;
 	}
+
+	mutex_unlock(&ct_mutex);
+
 	free(current);
 }
