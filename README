@@ -57,6 +57,10 @@ Dependencies
 
     $ sudo apt-get install check
 
+    - Libpcap (recommended)
+
+    $ sudo apt-get install libpcap-dev
+
     - Netfilter Queue (optional)
 
     $ sudo apt-get install libnetfilter-queue-dev
@@ -78,7 +82,12 @@ all the files generated during the build using cmake
    - RelWithDebInfo
    - MinSizeRel
 
-then use make like usual to compile (`make`) and install (`make install`) or
+The repository uses submodules that need to be initialized and updated :
+
+    $ git submodule init
+    $ git submodule update
+
+Then use make like usual to compile (`make`) and install (`make install`) or
 clean (`make clean`)
 
 Usage
@@ -100,26 +109,27 @@ Usage
 Tests
 -----
 
-run `make test` to play some unit tests. 
+Run `make test` to play some unit tests.
 
 Documentation
 -------------
 
-run `make doc` to generate doxygen documentation in `html` and `latex` format.
-Documenation is available in $HAKA\_HOME\_DIR/make/Documentation
+Run `make doc` to generate doxygen documentation in `html` and `latex` format.
+The documentation is available in $HAKA\_HOME\_DIR/make/Documentation
 
 Packaging
 ---------
 
-run `make package` to get a tar.gz archive of the whole project
+Run `make package` to get a tar.gz archive of the whole project
 
 Files
 -----
 
-  - src: haka app. source files
+  - src: haka application source files
   - include: header files shared between haka app. and haka modules
   - modules: module source files (these modules will be loaded by haka app.)
   - lib: shared libraries
+  - external: external dependencies
   - build: cmake scripts for the build
 
 Bugs/Patches/Contact
