@@ -1,6 +1,7 @@
 # Tests
 include(TestPcapCompare)
 include(TestPcapOutput)
+include(TestUnit)
 
 TEST_PCAP_OUTPUT(gettcpfields)
 TEST_PCAP_COMPARE(tcpfilter)
