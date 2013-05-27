@@ -4,6 +4,6 @@ package.cpath = package.cpath .. ";" .. string.gsub(arg[4], ':', '/?.ho;')
 
 local path = string.gsub(arg[4], ':', '/*;')
 module.setPath(path);
-app.install("packet", module.load("packet-pcap", {"-f", arg[2], "-o", arg[3], "-m"}))
+app.install("packet", module.load("packet-pcap", "-f", arg[2], "-o", arg[3], "-m"))
 
 app.install_filter(arg[1])

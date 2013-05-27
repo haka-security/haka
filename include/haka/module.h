@@ -35,7 +35,7 @@
 #include <wchar.h>
 #include <haka/thread.h>
 
-
+#define MAX_EXTRA_MODULE_PARAMETERS 10
 /**
  * @brief Module structure
  *
@@ -75,12 +75,11 @@ struct module {
  * Load a module given its name. It is not needed to call
  * module_addref on the result as this is done before returning.
  * @param module_name The name of the module to load.
- * @param argc Extra arguments count.
- * @param argv Argument list.
+ * @param .. Extra arguments.
  * @return The loaded module structure or NULL in case of an error.
  * @ingroup Module
  */
-struct module *module_load(const char *module_name, int argc, char *argv[]);
+struct module *module_load(const char *module_name,...);
 
 /**
  * Keep the module. Must match with a call to module_release

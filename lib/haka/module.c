@@ -5,17 +5,29 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include <haka/module.h>
 #include <haka/log.h>
 #include <haka/error.h>
 
 
-struct module *module_load(const char *module_name, int argc, char *argv[])
+struct module *module_load(const char *module_name,... )
 {
 	void *module_handle = NULL;
 	struct module *module = NULL;
 	char *full_module_name;
+        int argc = 0;
+        char* argv[MAX_EXTRA_MODULE_PARAMETERS];
+        va_list params;
+        va_start(params,module_name);
+        char * arg = va_arg(params,char *);
+        while(arg) {
+                argv[argc] = arg;
+                arg = va_arg(params,char *);
+                argc++;
+        }
+        va_end(params);
 
 	assert(module_name);
 

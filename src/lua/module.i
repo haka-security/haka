@@ -1,16 +1,8 @@
 %module module
-%include "args.i"
 
 %{
 #include <haka/module.h>
 #include <haka/config.h>
-
-
-#define load_args(name, ARGC, ARGV) \
-	module_load(name, ARGC, ARGV)
-
-#define load_no_args(name) \
-	module_load(name, 0, NULL)
 
 char *prefix = HAKA_MODULE_PREFIX;
 char *suffix = HAKA_MODULE_SUFFIX;
@@ -35,14 +27,11 @@ struct module {
 	}
 };
 
-%rename(load) load_args;
-%rename(load) load_no_args;
+%rename(load) module_load;
 
-%newobject load_no_args;
-struct module *load_no_args(const char *name);
-
-%newobject load_args;
-struct module *load_args(const char *name, int ARGC, char **ARGV);
+%varargs(10,char *arg = NULL) module_load;
+%newobject module_load;
+struct module *module_load(const char *name, ...);
 
 %rename(path) module_get_path;
 const char *module_get_path();
@@ -58,3 +47,4 @@ char *suffix;
 	package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', module.prefix .. '?' .. module.suffix)
 	package.path = package.path .. ";" .. string.gsub(module.path(), '*', '?.lua')
 }
+
