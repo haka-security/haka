@@ -29,6 +29,10 @@ Authors / Contributors
 Dependencies
 ------------
 
+    - Toolchain (GCC, Make, ...)
+
+    $ sudo apt-get install build-essential
+
     - Cmake
 
     $ sudo apt-get install cmake
@@ -49,7 +53,7 @@ Dependencies
 
     $ sudo apt-get install tshark
  
-    - libpcap
+    - libpcap (recommended)
 
     $ sudo apt-get install libpcap-dev
 
@@ -57,13 +61,14 @@ Dependencies
 
     $ sudo apt-get install check
 
-    - Libpcap (recommended)
-
-    $ sudo apt-get install libpcap-dev
-
     - Netfilter Queue (optional)
 
     $ sudo apt-get install libnetfilter-queue-dev
+
+    - rsync
+
+    $ sudo apt-get install rsync
+
 
 Build
 -----
