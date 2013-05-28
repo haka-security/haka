@@ -21,31 +21,31 @@ void message(log_level level, const wchar_t *module, const wchar_t *message);
 
 %luacode {
 	function log.message(level, module, fmt, ...)
-		log._message(level, module, string.format(fmt, unpack(arg)))
+		log._message(level, module, string.format(fmt, ...))
 	end
 
 	function log.fatal(module, fmt, ...)
-		log.message(log.FATAL, module, fmt, unpack(arg))
+		log.message(log.FATAL, module, fmt, ...)
 	end
 
 	function log.error(module, fmt, ...)
-		log.message(log.ERROR, module, fmt, unpack(arg))
+		log.message(log.ERROR, module, fmt, ...)
 	end
 
 	function log.warning(module, fmt, ...)
-		log.message(log.WARNING, module, fmt, unpack(arg))
+		log.message(log.WARNING, module, fmt, ...)
 	end
 
 	function log.info(module, fmt, ...)
-		log.message(log.INFO, module, fmt, unpack(arg))
+		log.message(log.INFO, module, fmt, ...)
 	end
 
 	function log.debug(module, fmt, ...)
-		log.message(log.DEBUG, module, fmt, unpack(arg))
+		log.message(log.DEBUG, module, fmt, ...)
 	end
 
 	getmetatable(log).__call = function (_, module, fmt, ...)
-		log.info(module, fmt, unpack(arg))
+		log.info(module, fmt, ...)
 	end
 }
 
