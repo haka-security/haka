@@ -1,12 +1,8 @@
--- loading pcap module
-app.install("packet", module.load("packet-pcap", {"-f", "http.pcap", "-o", "out.pcap"}))
--- loading log module
-app.install("log", module.load("log-stdout"))
-    
+ 
 require("proto-ipv4")
 require("proto-tcp")
     
-app.install_filter(function (pkt)
+return function (pkt)
 
 	local ip_h = ipv4(pkt)
 	local tcp_h = tcp(ip_h)
@@ -27,5 +23,5 @@ app.install_filter(function (pkt)
     tcp_h.dstport = 8080
     
     return packet.ACCEPT
-end)
+end
 

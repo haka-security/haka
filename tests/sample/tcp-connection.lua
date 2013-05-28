@@ -1,11 +1,8 @@
 
-app.install("packet", module.load("packet-pcap", {"-i", "lo"}))
-app.install("log", module.load("log-stdout"))
-
 require("proto-ipv4")
 require("proto-tcp")
 
-app.install_filter(function (pkt)
+return function (pkt)
 
 	local ip_h = ipv4(pkt)
 	local tcp_h = tcp(ip_h)
@@ -33,6 +30,4 @@ app.install_filter(function (pkt)
 		end
 	end
 	return packet.ACCEPT
-end)
-
-log.info("config", "Done\n")
+end
