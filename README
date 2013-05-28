@@ -69,6 +69,11 @@ Dependencies
 
     $ sudo apt-get install rsync
 
+    - Cppcheck (optional)
+
+    $ sudo apt-get install cppcheck
+
+
 
 Build
 -----
@@ -77,7 +82,7 @@ It is highly recommanded to create a separate directory (`mkdir make`) to store
 all the files generated during the build using cmake
 
     $ mkdir make
-    $ cd make
+    $ cd make ..
     $ cmake -DCMAKE_BUILD_TYPE=[build type] ..
 
 	where build type can take one of the following values:
