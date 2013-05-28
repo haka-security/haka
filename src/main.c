@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 
 	/* Default module path */
 	{
-		static const char append[] = "/directory/*";
+		static const char append[] = "/modules/*";
 		char *path = malloc(strlen(directory) + strlen(append) + 1);
 		if (!path) {
 			clean_exit();
