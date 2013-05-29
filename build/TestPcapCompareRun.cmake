@@ -9,8 +9,6 @@ message(STATUS "Executing ${EXE} ${CTEST_MODULE_DIR}/TestPcapCompare.lua ${CONF}
 execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapCompare.lua ${CONF} ${SRC} ${DST} ${LDDIR}
 	RESULT_VARIABLE HAD_ERROR)
 
-message(STATUS "All outputs and commands for this test are located in ${CMAKE_CURRENT_SOURCE_DIR}")
-
 if(HAD_ERROR)
 	message(FATAL_ERROR "Haka script failed")
 endif(HAD_ERROR)
