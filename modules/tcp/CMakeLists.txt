@@ -1,24 +1,20 @@
 
-# Lua dependency
-find_package(Lua51 REQUIRED)
-include_directories(${LUA_INCLUDE_DIR})
-
 find_package(SWIG REQUIRED)
 include(UseSWIG)
-swig_add_module(proto-tcp lua SHARED
+swig_add_module(tcp lua SHARED
 	tcp.i
 	main.c
 	tcp.c
 	tcp-stream.c
 	tcp-connection.c)
 
-LUA_LINK(proto-tcp)
+LUA_LINK(tcp)
 
-DEPENDS_MODULE(proto-tcp proto-ipv4)
-INSTALL_MODULE(proto-tcp)
+DEPENDS_MODULE(tcp ipv4)
+INSTALL_MODULE(tcp)
 install(FILES tcp-connection.lua DESTINATION bin/modules)
 
 # Tests
 include(TestModuleLoad)
-TEST_MODULE_LOAD(proto-tcp)
+TEST_MODULE_LOAD(tcp)
 add_subdirectory(test)
