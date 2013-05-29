@@ -12,7 +12,7 @@ haka2.dissector {
 		newpkt.valid = function (self)
 			return newpkt.connection ~= nil
 		end
-		newpkt.reset = function (self)
+		newpkt.drop = function (self)
 			newpkt.connection:close()
 			newpkt.connection = nil
 		end
@@ -25,6 +25,11 @@ haka2.dissector {
 		if not newpkt.connection then
 			-- new connection
 			if pkt.flags.syn then
+				haka2.rule_hook("tcp-connection-new", pkt)
+				if not pkt:valid() then
+					return nil
+				end
+
 				newpkt.connection = pkt:newConnection()
 				haka.log.debug("tcp-connection", "new connection %s (%d) -> %s (%d)", newpkt.connection.srcip,
 					newpkt.connection.srcport, newpkt.connection.dstip, newpkt.connection.dstport)

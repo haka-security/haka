@@ -73,6 +73,10 @@ local function get_dissector(name)
 	return __dissectors[name]
 end
 
+function rule_hook(name, pkt)
+	eval_rules(name, pkt)
+end
+
 function filter(pkt)
 	local dissect = get_dissector(pkt.nextDissector)
 	while dissect do
@@ -96,6 +100,7 @@ function filter(pkt)
 			dissect = get_dissector(pkt.nextDissector)
 			if not dissect then
 				haka.log.error("core", "cannot create dissector '%s': not registered", pkt.nextDissector)
+				pkt:drop()
 			end
 		end
 	end
