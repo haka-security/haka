@@ -55,7 +55,7 @@ haka2.rule {
 	eval = function (self, pkt)
 		local good, bad, msg = checks(pkt)
 		local dont, more = frags(bool(pkt.flags.df), bool(pkt.flags.mf))
-	
+
 		print(string.format("Internet Protocol Version %d, Src: %s (%s), Dst: %s (%s)", pkt.version, pkt.src, pkt.src, pkt.dst, pkt.dst))
 		print(string.format("    Version: %d", pkt.version))
 		print(string.format("    Header length: %d bytes", pkt.hdr_len))

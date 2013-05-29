@@ -16,8 +16,8 @@ function checks(proto)
 		good = "[Good: False]"
 		bad = "[Bad: True]"
 	end
-return good, bad
-end 
+	return good, bad
+end
 
 require("ipv4")
 require("tcp")
@@ -48,7 +48,7 @@ haka2.rule {
 		print(string.format( "    %s", bad))
 		print(string.format( "TCP Urgent Pointer: 0x%04x", pkt.urgent_pointer))
 		print()
-		
+
 		-- We should drop it to avoid error detected by tcp-connection
 		pkt:drop()
 	end

@@ -16,8 +16,8 @@ function checks(proto)
 		good = "[Good: False]"
 		bad = "[Bad: True]"
 	end
-return good, bad
-end 
+	return good, bad
+end
 
 require("ipv4")
 require("tcp")
