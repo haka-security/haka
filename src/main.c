@@ -18,29 +18,19 @@
 
 
 static lua_state *global_lua_state;
-
-struct thread_states {
-	int                   count;
-	struct thread_state **states;
-};
-static struct thread_states thread_states;
+static struct thread_pool *thread_states;
 
 
 /* Clean up lua state and loaded modules */
 static void clean_exit()
 {
-	struct packet_module *packet_module = get_packet_module();
-
 	set_configuration_script(NULL);
 
-	if (thread_states.count > 0 && packet_module) {
-		int i;
-		for (i=0; i<thread_states.count; ++i) {
-			if (thread_states.states[i]) {
-				cleanup_thread_state(packet_module, thread_states.states[i]);
-				thread_states.states[i] = NULL;
-			}
-		}
+	if (thread_states) {
+		thread_pool_cancel(thread_states);
+
+		thread_pool_cleanup(thread_states);
+		thread_states = NULL;
 	}
 
 	if (global_lua_state) {
@@ -163,48 +153,28 @@ int main(int argc, char *argv[])
 
 	/* Main loop */
 	{
-		int i;
+		int count = thread_get_packet_capture_cpu_count();
+		if (!packet_module->multi_threaded()) {
+			count = 1;
+		}
 
-		thread_states.count = thread_get_packet_capture_cpu_count();
-		if (!packet_module->multi_threaded())
-			thread_states.count = 1;
-
-		assert(thread_states.count > 0);
-
-		thread_states.states = malloc(sizeof(struct packet_module_state *) * thread_states.count);
-		if (!thread_states.states) {
-			message(HAKA_LOG_FATAL, L"core", L"memory error");
-			clean_exit();
+		thread_states = thread_pool_create(count, packet_module);
+		if (check_error()) {
+			message(HAKA_LOG_FATAL, L"core", clear_error());
 			return 1;
 		}
 
-		memset(thread_states.states, 0, sizeof(struct packet_module_state *) * thread_states.count);
-
-		for (i=0; i<thread_states.count; ++i) {
-			thread_states.states[i] = init_thread_state(packet_module, i);
-			if (!thread_states.states[i]) {
-				clean_exit();
-				return 1;
-			}
-		}
-
-		if (thread_states.count > 1) {
-			messagef(HAKA_LOG_INFO, L"core", L"starting multi-threaded processing on %i threads", thread_states.count);
-
-			for (i=0; i<thread_states.count; ++i) {
-				start_thread(thread_states.states[i]);
-				if (check_error()) {
-					message(HAKA_LOG_FATAL, L"core", clear_error());
-					clean_exit();
-					return 1;
-				}
-			}
-
-			wait_threads();
+		if (count > 1) {
+			messagef(HAKA_LOG_INFO, L"core", L"starting multi-threaded processing on %i threads", count);
 		}
 		else {
 			message(HAKA_LOG_INFO, L"core", L"starting single threaded processing");
-			start_single(thread_states.states[0]);
+		}
+
+		thread_pool_start(thread_states);
+		if (check_error()) {
+			message(HAKA_LOG_FATAL, L"core", clear_error());
+			return 1;
 		}
 	}
 

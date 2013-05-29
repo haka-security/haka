@@ -227,7 +227,7 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 		dissect = tcp.dissect
 	}
 
-	ipv4.register_proto(6, "tcp")
-
 	require("tcp-connection")
+
+	ipv4.register_proto(6, "tcp")
 }

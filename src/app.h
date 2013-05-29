@@ -9,7 +9,6 @@
 
 
 struct module;
-typedef filter_result (*filter_function)(struct thread_state *state, struct packet *pkt);
 
 extern int set_packet_module(struct module *module);
 extern struct packet_module *get_packet_module();

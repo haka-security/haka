@@ -12,5 +12,6 @@
 #define INLINE static inline
 
 #define INIT __attribute__((constructor))
+#define FINI __attribute__((destructor))
 
 #endif /* _HAKA_COMPILER_H */

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include <haka/log.h>
 #include <haka/error.h>
@@ -175,22 +176,36 @@ size_t ipv4_get_payload_length(struct ipv4 *ip)
 	return total_len - hdr_len;
 }
 
-static const char *ipv4_proto_dissector[256];
+static char *ipv4_proto_dissector[256];
 
 void ipv4_register_proto_dissector(uint8 proto, const char *dissector)
 {
 	if (ipv4_proto_dissector[proto] != NULL) {
-		error(L"IPv4 protocol %d dissector already registered", proto);
-		return;
+		if (strcmp(ipv4_proto_dissector[proto], dissector) == 0) {
+			return;
+		}
+		else {
+			error(L"IPv4 protocol %d dissector already registered", proto);
+			return;
+		}
 	}
 
-	ipv4_proto_dissector[proto] = dissector;
+	ipv4_proto_dissector[proto] = strdup(dissector);
 }
 
 const char *ipv4_get_proto_dissector(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip, NULL);
 	return ipv4_proto_dissector[ipv4_get_proto(ip)];
+}
+
+static FINI void ipv4_dissector_cleanup()
+{
+	int i;
+	for (i = 0; i < 256; ++i) {
+		free(ipv4_proto_dissector[i]);
+		ipv4_proto_dissector[i] = NULL;
+	}
 }
 
 void ipv4_action_drop(struct ipv4 *ip)

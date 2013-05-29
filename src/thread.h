@@ -6,13 +6,13 @@
 #include "lua/state.h"
 
 
-struct thread_state;
+struct thread_pool;
 
-struct thread_state *init_thread_state(struct packet_module *packet_module, int thread_id);
-void cleanup_thread_state(struct packet_module *packet_module, struct thread_state *state);
-void start_thread(struct thread_state *state);
-void start_single(struct thread_state *state);
-void wait_threads();
+struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module);
+void thread_pool_cleanup(struct thread_pool *pool);
+void thread_pool_wait(struct thread_pool *pool);
+void thread_pool_cancel(struct thread_pool *pool);
+void thread_pool_start(struct thread_pool *pool);
 
 #endif /* _THREAD_H */
 
