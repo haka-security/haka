@@ -17,22 +17,10 @@
  */
 #define SNAPLEN 65535
 
-struct packet_module_state;
-
-struct packet_module_unique_state {
+struct packet_module_state {
 	pcap_t                     *pd;
 	pcap_dumper_t              *pf;
 	size_t                      link_hdr_len;
-	atomic_t                    count;
-	mutex_t                     mutex;
-	struct packet_module_state *first;
-};
-
-struct packet_module_state {
-	struct packet_module_unique_state *unique_state;
-	semaphore_t                        wait;
-	struct packet_module_state        *next;
-	struct packet_module_state        *prev;
 };
 
 struct packet {
@@ -46,15 +34,6 @@ struct packet {
 static char *input_file;
 static char *input_iface;
 static char *output_file;
-
-/*
- * The pcap module supports multi-threading for testing purposes. In this mode
- * the threads are not running concurrently but only one is active at a time
- * and will receive a packet. The next packet will then be handled by another
- * thread.
- */
-static bool multi_threaded_pcap = false;
-static struct packet_module_unique_state *unique_state = NULL;
 
 
 static void cleanup()
@@ -102,9 +81,6 @@ static int init(int argc, char *argv[])
 				return 1;
 			}
 		}
-		else if (strcmp(argv[index], "-m") == 0) {
-			multi_threaded_pcap = true;
-		}
 		else {
 			messagef(HAKA_LOG_ERROR, L"pcap", L"unknown option '%s'", argv[index]);
 			cleanup();
@@ -119,200 +95,105 @@ static int init(int argc, char *argv[])
 
 static bool multi_threaded()
 {
-	return multi_threaded_pcap;
-}
-
-static void cleanup_unique_state()
-{
-	if (unique_state->pf) {
-		pcap_dump_close(unique_state->pf);
-		unique_state->pf = NULL;
-	}
-
-	if (unique_state->pd) {
-		pcap_close(unique_state->pd);
-		unique_state->pd = NULL;
-	}
-
-	mutex_destroy(&unique_state->mutex);
-
-	free(unique_state);
-	unique_state = NULL;
+	return false;
 }
 
 static void cleanup_state(struct packet_module_state *state)
 {
-	if (atomic_dec(&state->unique_state->count) == 0) {
-		cleanup_unique_state();
+	if (state->pf) {
+		pcap_dump_close(state->pf);
+		state->pf = NULL;
 	}
 
-	semaphore_destroy(&state->wait);
+	if (state->pd) {
+		pcap_close(state->pd);
+		state->pd = NULL;
+	}
+
 	free(state);
-}
-
-static bool init_unique_state()
-{
-	int linktype;
-	char errbuf[PCAP_ERRBUF_SIZE];
-
-	unique_state = malloc(sizeof(struct packet_module_unique_state));
-	if (!unique_state) {
-		return false;
-	}
-
-	bzero(unique_state, sizeof(struct packet_module_state));
-	bzero(errbuf, PCAP_ERRBUF_SIZE);
-
-	mutex_init(&unique_state->mutex, false);
-
-	/* get a pcap descriptor from device */
-	if (input_iface) {
-		unique_state->pd = pcap_open_live(input_iface, SNAPLEN, 1, 0, errbuf);
-		if (unique_state->pd && (strlen(errbuf) > 0)) {
-			messagef(HAKA_LOG_WARNING, L"pcap", L"%s", errbuf);
-		}
-	}
-	/* get a pcap descriptor from a pcap file */
-	else if (input_file) {
-		unique_state->pd = pcap_open_offline(input_file, errbuf);
-	}
-	else {
-		/* This case should never be reached */
-		assert(0);
-	}
-
-	if (!unique_state->pd) {
-		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errbuf);
-		cleanup_unique_state(unique_state);
-		return false;
-	}
-
-	if (output_file) {
-		/* open pcap savefile */
-		unique_state->pf = pcap_dump_open(unique_state->pd, output_file);
-		if (!unique_state->pf) {
-			cleanup_unique_state(unique_state);
-			messagef(HAKA_LOG_ERROR, L"pcap", L"unable to dump on %s", output_file);
-			return false;
-		}
-	}
-
-	/* Determine the datalink layer type. */
-	if ((linktype = pcap_datalink(unique_state->pd)) < 0)
-	{
-		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(unique_state->pd));
-		cleanup_unique_state(unique_state);
-		return false;
-	}
-
-	/* Set the datalink layer header size. */
-	switch (linktype)
-	{
-	case DLT_NULL:
-		unique_state->link_hdr_len = 4;
-		break;
-
-	case DLT_LINUX_SLL:
-		unique_state->link_hdr_len = 16;
-		break;
-
-	case DLT_EN10MB:
-		unique_state->link_hdr_len = 14;
-		break;
-
-	case DLT_SLIP:
-	case DLT_PPP:
-		unique_state->link_hdr_len = 24;
-		break;
-
-	default:
-		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", "unsupported data link");
-		cleanup_unique_state(unique_state);
-		return false;
-	}
-
-	return true;
 }
 
 static struct packet_module_state *init_state(int thread_id)
 {
+	int linktype;
 	struct packet_module_state *state;
-
-	if (!unique_state) {
-		if (!init_unique_state()) {
-			return NULL;
-		}
-	}
+	char errbuf[PCAP_ERRBUF_SIZE];
 
 	state = malloc(sizeof(struct packet_module_state));
 	if (!state) {
 		return NULL;
 	}
 
-	memset(state, 0, sizeof(struct packet_module_state));
+	bzero(state, sizeof(struct packet_module_state));
+	bzero(errbuf, PCAP_ERRBUF_SIZE);
 
-	state->unique_state = unique_state;
-	atomic_inc(&unique_state->count);
-	semaphore_init(&state->wait, 0);
+	/* get a pcap descriptor from device */
+	if (input_iface) {
+		state->pd = pcap_open_live(input_iface, SNAPLEN, 1, 0, errbuf);
+		if (state->pd && (strlen(errbuf) > 0)) {
+			messagef(HAKA_LOG_WARNING, L"pcap", L"%s", errbuf);
+		}
+	}
+	/* get a pcap descriptor from a pcap file */
+	else if (state) {
+		state->pd = pcap_open_offline(input_file, errbuf);
+	}
+	else {
+		/* This case should never be reached */
+		assert(0);
+	}
+
+	if (!state->pd) {
+		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errbuf);
+		cleanup_state(state);
+		return NULL;
+	}
+
+	if (output_file) {
+		/* open pcap savefile */
+		state->pf = pcap_dump_open(state->pd, output_file);
+		if (!state->pf) {
+			cleanup_state(state);
+			messagef(HAKA_LOG_ERROR, L"pcap", L"unable to dump on %s", output_file);
+			return NULL;
+		}
+	}
+
+	/* Determine the datalink layer type. */
+	if ((linktype = pcap_datalink(state->pd)) < 0)
+	{
+		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(state->pd));
+		cleanup_state(state);
+		return NULL;
+	}
+
+	/* Set the datalink layer header size. */
+	switch (linktype)
+	{
+	case DLT_NULL:
+		state->link_hdr_len = 4;
+		break;
+
+	case DLT_LINUX_SLL:
+		state->link_hdr_len = 16;
+		break;
+
+	case DLT_EN10MB:
+		state->link_hdr_len = 14;
+		break;
+
+	case DLT_SLIP:
+	case DLT_PPP:
+		state->link_hdr_len = 24;
+		break;
+
+	default:
+		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", "unsupported data link");
+		cleanup_state(state);
+		return NULL;
+	}
 
 	return state;
-}
-
-/*
- * The semaphore does not schedule the waiting thread the way we want it. It
- * is not FIFO. We then have to redo the scheduling ourself to make sure each
- * packet will be handled by a different thread.
- */
-static void wait(struct packet_module_state *state)
-{
-	if (multi_threaded_pcap) {
-		bool should_wait;
-
-		mutex_lock(&state->unique_state->mutex);
-
-		should_wait = (state->unique_state->first != NULL);
-
-		assert(state->next == NULL);
-		assert(state->prev == NULL);
-
-		state->next = state->unique_state->first;
-		if (state->next) {
-			state->prev = state->next->prev;
-			state->next->prev = state;
-		}
-		state->unique_state->first = state;
-
-		mutex_unlock(&state->unique_state->mutex);
-
-		if (should_wait)
-			semaphore_wait(&state->wait);
-	}
-}
-
-static void post(struct packet_module_state *state)
-{
-	if (multi_threaded_pcap) {
-		struct packet_module_state *next = NULL;
-
-		mutex_lock(&state->unique_state->mutex);
-
-		next = state->prev;
-
-		if (state->unique_state->first == state) {
-			state->unique_state->first = state->next;
-		}
-
-		if (state->next) state->next->prev = state->prev;
-		if (state->prev) state->prev->next = state->next;
-		state->next = NULL;
-		state->prev = NULL;
-
-		mutex_unlock(&state->unique_state->mutex);
-
-		if (next) {
-			semaphore_post(&next->wait);
-		}
-	}
 }
 
 static int packet_receive(struct packet_module_state *state, struct packet **pkt)
@@ -322,31 +203,25 @@ static int packet_receive(struct packet_module_state *state, struct packet **pkt
 	const u_char *p;
 	int ret;
 
-	wait(state);
-
 	/* read packet */
-	ret = pcap_next_ex(state->unique_state->pd, &header, &p);
+	ret = pcap_next_ex(state->pd, &header, &p);
 
 	if(ret == -1) {
 		/* error while reading packet */
-		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(state->unique_state->pd));
-		post(state);
+		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(state->pd));
 		return 1;
 	}
 	else if (ret == -2) {
 		/* end of pcap file */
-		post(state);
 		return 1;
 	}
 	else if (ret == 0) {
 		/* Timeout expired. */
-		post(state);
 		return 0;
 	}
 	else {
 		packet = malloc(sizeof(struct packet) + header->caplen);
 		if (!packet) {
-			post(state);
 			return ENOMEM;
 		}
 
@@ -366,26 +241,25 @@ static int packet_receive(struct packet_module_state *state, struct packet **pkt
 static void packet_verdict(struct packet *pkt, filter_result result)
 {
 	/* dump capture in pcap file */
-	if (pkt->state->unique_state->pf && result == FILTER_ACCEPT)
-		pcap_dump((u_char *)pkt->state->unique_state->pf, &(pkt->header), pkt->data);
+	if (pkt->state->pf && result == FILTER_ACCEPT)
+		pcap_dump((u_char *)pkt->state->pf, &(pkt->header), pkt->data);
 
-	post(pkt->state);
 	free(pkt);
 }
 
 static size_t packet_get_length(struct packet *pkt)
 {
-	return pkt->header.caplen - pkt->state->unique_state->link_hdr_len;
+	return pkt->header.caplen - pkt->state->link_hdr_len;
 }
 
 static const uint8 *packet_get_data(struct packet *pkt)
 {
-	return (pkt->data + pkt->state->unique_state->link_hdr_len);
+	return (pkt->data + pkt->state->link_hdr_len);
 }
 
 static uint8 *packet_modifiable(struct packet *pkt)
 {
-	return (pkt->data + pkt->state->unique_state->link_hdr_len);
+	return (pkt->data + pkt->state->link_hdr_len);
 }
 
 static const char *packet_get_dissector(struct packet *pkt)
