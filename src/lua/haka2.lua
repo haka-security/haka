@@ -2,7 +2,7 @@
 module("haka2", package.seeall)
 
 local __dissectors = {}
-local __rules = {}
+local __rule_groups = {}
 
 function dissector(d)
 	if d.name == nil or d.dissect == nil then
@@ -19,39 +19,91 @@ function dissector(d)
 	end
 end
 
+function rule_group(group)
+	group.rule = function (g, r)
+		for _, h in pairs(r.hooks) do
+			if not g.__hooks[h] then
+				g.__hooks[h] = {}
+			end
+
+			table.insert(g.__hooks[h], r)
+		end
+	end
+
+	group.__hooks = {}
+
+	__rule_groups[group.name] = group
+	return group
+end
+
+local __default_rule_group = rule_group {
+	name = "default"
+}
+
 function rule(r)
-	for _, h in pairs(r.hooks) do
-		if not __rules[h] then
-			__rules[h] = {}
+	return __default_rule_group:rule(r)
+end
+
+local function _rule_group_eval(hook, group, pkt)
+	local rules = group.__hooks[hook]
+	if rules then
+		if group.init then
+			group:init(pkt)
 		end
 
-		table.insert(__rules[h], r)
+		for _, r in pairs(rules) do
+			local ret = r.eval(nil, pkt)
+			if group.continue then
+				if not group:continue(ret) then
+					return true
+				end
+			end
+
+			if not pkt:valid() then
+				return false
+			end
+		end
+
+		if group.fini then
+			group:fini(pkt)
+		end
 	end
+	return true
 end
 
 function rule_summary()
-	if next(__rules) == nil then
+	local total = 0
+	local rule_count = {}
+
+	for _, group in pairs(__rule_groups) do
+		for hook, rules in pairs(group.__hooks) do
+			if not rule_count[hook] then
+				rule_count[hook] = 0
+			end
+
+			rule_count[hook] = rule_count[hook] + #rules
+			total = total + #rules
+		end
+	end
+
+	if total == 0 then
 		haka.log.warning("core", "no registered rule\n")
 	else
-		local total = 0
-		for hook, rules in pairs(__rules) do
-			haka.log.info("core", "%d rule(s) on hook '%s'", #rules, hook)
-			total = total + #rules;
+		for hook, count in pairs(rule_count) do
+			haka.log.info("core", "%d rule(s) on hook '%s'", count, hook)
 		end
+
 		haka.log.info("core", "%d rule(s) registered\n", total)
 	end
 end
 
 local function eval_rules(hook, pkt)
-	local rules = __rules[hook]
-	if rules then
-		for _, r in pairs(rules) do
-			r.eval(nil, pkt)
-			if not pkt:valid() then
-				return
-			end
+	for _, group in pairs(__rule_groups) do
+		if not _rule_group_eval(hook, group, pkt) then
+			return false
 		end
 	end
+	return true
 end
 
 local function filter_down(pkt)
@@ -75,6 +127,7 @@ end
 
 function rule_hook(name, pkt)
 	eval_rules(name, pkt)
+	return not pkt:valid()
 end
 
 function filter(pkt)

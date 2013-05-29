@@ -25,8 +25,7 @@ haka2.dissector {
 		if not newpkt.connection then
 			-- new connection
 			if pkt.flags.syn then
-				haka2.rule_hook("tcp-connection-new", pkt)
-				if not pkt:valid() then
+				if haka2.rule_hook("tcp-connection-new", pkt) then
 					return nil
 				end
 
