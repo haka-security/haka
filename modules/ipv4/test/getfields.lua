@@ -48,7 +48,7 @@ function frags(df, mf)
 	return dont, more
 end
 
-require("proto-ipv4")
+require("ipv4")
 
 haka2.rule {
 	hooks = { "ipv4-up" },

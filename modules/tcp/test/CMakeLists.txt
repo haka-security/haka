@@ -12,4 +12,4 @@ TEST_PCAP_OUTPUT(tcp oneconnection)
 TEST_PCAP_OUTPUT(tcp interleavedconnection)
 
 TEST_UNIT(tcp unit unit.c)
-target_link_libraries(tcp-unit proto-tcp)
+target_link_libraries(tcp-unit tcp)

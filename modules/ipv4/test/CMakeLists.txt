@@ -10,4 +10,4 @@ TEST_PCAP_OUTPUT(ipv4 getfields)
 TEST_PCAP_COMPARE(ipv4 setfields)
 
 TEST_UNIT(ipv4 unit unit.c)
-target_link_libraries(ipv4-unit proto-ipv4)
+target_link_libraries(ipv4-unit ipv4)

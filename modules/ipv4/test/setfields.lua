@@ -1,7 +1,7 @@
 -- Basic test that will output some basic information about the
 -- received packets.
 
-require("proto-ipv4")
+require("ipv4")
 
 haka2.rule {
 	hooks = { "ipv4-up" },
