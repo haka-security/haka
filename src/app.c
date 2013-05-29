@@ -9,28 +9,28 @@
 #include "app.h"
 
 
-static char *filter_script;
+static char *configuration_file;
 
 
-int set_filter_script(const char *file)
+int set_configuration_script(const char *file)
 {
-	free(filter_script);
-	filter_script = NULL;
+	free(configuration_file);
+	configuration_file = NULL;
 
 	if (file)
-		filter_script = strdup(file);
+		configuration_file = strdup(file);
 
 	return 0;
 }
 
-int has_filter_script()
+int has_configuration_script()
 {
-	return (filter_script != NULL);
+	return (configuration_file != NULL);
 }
 
-const char *get_filter_script()
+const char *get_configuration_script()
 {
-	return filter_script;
+	return configuration_file;
 }
 
 char directory[1024];

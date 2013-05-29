@@ -102,6 +102,9 @@ struct tcp {
 		%immutable;
 		struct tcp_flags *flags;
 		struct tcp_payload *payload;
+		struct ipv4 *ip;
+		const char *dissector;
+		const char *nextDissector;
 
 		bool verifyChecksum()
 		{
@@ -123,11 +126,14 @@ struct tcp {
 			return tcp_connection_get($self, OUTPUT);
 		}
 
-		%rename(forge) _forge;
-		void _forge()
+		struct ipv4 *forge();
+
+		void drop()
 		{
-			tcp_forge($self);
+			tcp_action_drop($self);
 		}
+
+		bool valid();
 	}
 };
 
@@ -186,6 +192,12 @@ struct tcp_payload *tcp_payload_get(struct tcp *tcp) { return (struct tcp_payloa
 
 struct tcp_flags *tcp_flags_get(struct tcp *tcp) { return (struct tcp_flags *)tcp; }
 
+const char *tcp_dissector_get(struct tcp *tcp) { return "tcp"; }
+
+const char *tcp_nextDissector_get(struct tcp *tcp) { return "tcp-connection"; }
+
+struct ipv4 *tcp_ip_get(struct tcp *tcp) { return tcp->packet; }
+
 #define TCP_FLAGS_GETSET(field) \
 	bool tcp_flags_##field##_get(struct tcp_flags *flags) { return tcp_get_flags_##field((struct tcp *)flags); } \
 	void tcp_flags_##field##_set(struct tcp_flags *flags, bool v) { return tcp_set_flags_##field((struct tcp *)flags, v); }
@@ -209,4 +221,13 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 	getmetatable(tcp).__call = function (_, ipv4)
 		return tcp.dissect(ipv4)
 	end
+
+	haka2.dissector {
+		name = "tcp",
+		dissect = tcp.dissect
+	}
+
+	ipv4.register_proto(6, "tcp")
+
+	require("tcp-connection")
 }

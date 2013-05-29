@@ -1,24 +1,22 @@
 -- Basic test that will output some basic information about the
 -- received packets.
 
-ipv4 = require("proto-ipv4")
+require("proto-ipv4")
 
-return function(pkt)
-	ip = ipv4(pkt)
-	ip.version = 4
-	ip.hdr_len = 20
-	ip.len = 84
-	ip.id = 0xbeef
-	ip.flags.rb = true
-	ip.flags.df = false
-	ip.flags.mf = true
-	ip.frag_offset = 80
-	ip.ttl = 33
-	ip.proto = 17
-	ip.src = ipv4.addr(192, 168, 0, 1)
-	ip.dst = ipv4.addr("192.168.0.2")
-	ip:forge()
-
-	return haka.packet.ACCEPT
-end
-
+haka2.rule {
+	hooks = { "ipv4-up" },
+	eval = function (self, pkt)
+		pkt.version = 4
+		pkt.hdr_len = 20
+		pkt.len = 84
+		pkt.id = 0xbeef
+		pkt.flags.rb = true
+		pkt.flags.df = false
+		pkt.flags.mf = true
+		pkt.frag_offset = 80
+		pkt.ttl = 33
+		pkt.proto = 17
+		pkt.src = ipv4.addr(192, 168, 0, 1)
+		pkt.dst = ipv4.addr("192.168.0.2")
+	end
+}

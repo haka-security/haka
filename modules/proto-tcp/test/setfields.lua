@@ -19,36 +19,27 @@ function checks(proto)
 return good, bad
 end 
 
-ipv4 = require("proto-ipv4")
-tcp = require("proto-tcp")
+require("proto-ipv4")
+require("proto-tcp")
 
-return function(pkt)
-
-	local ip_h = ipv4(pkt)
-	local tcp_h = tcp(ip_h)
-
-	local good, bad = checks(ip_h)
-
-	tcp_h.srcport = 3
-    tcp_h.dstport = 65535
-	tcp_h.seq = 123456
-	tcp_h.ack_seq = 654321
-    tcp_h.res = 0
-    tcp_h.hdr_len = 20
-	--tcp_h.flags.all))
-    tcp_h.flags.fin = true
-	tcp_h.flags.syn = true
-    tcp_h.flags.rst = true
-    tcp_h.flags.psh = true
-    tcp_h.flags.ack = true
-    tcp_h.flags.urg = true
-    tcp_h.flags.ecn = true
-    tcp_h.flags.cwr = true
-    tcp_h.window_size = 32
-    tcp_h.urgent_pointer = 15
-
-	tcp_h:computeChecksum()
-
-	return haka.packet.ACCEPT
-
-end
+haka2.rule {
+	hooks = { "tcp-up" },
+	eval = function (self, pkt)
+		pkt.srcport = 3
+		pkt.dstport = 65535
+		pkt.seq = 123456
+		pkt.ack_seq = 654321
+		pkt.res = 0
+		pkt.hdr_len = 20
+		pkt.flags.fin = true
+		pkt.flags.syn = true
+		pkt.flags.rst = true
+		pkt.flags.psh = true
+		pkt.flags.ack = true
+		pkt.flags.urg = true
+		pkt.flags.ecn = true
+		pkt.flags.cwr = true
+		pkt.window_size = 32
+		pkt.urgent_pointer = 15
+	end
+}

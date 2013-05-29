@@ -42,12 +42,34 @@ size_t       packet_length(struct packet *pkt);
 const uint8 *packet_data(struct packet *pkt);
 
 /**
+ * Get packet dissector to use.
+ * @param pkt Opaque packet.
+ * @return The dissector name.
+ * @ingroup Packet
+ */
+const char *packet_dissector(struct packet *pkt);
+
+/**
  * Make a packet modifiable.
  * @param pkt Opaque packet.
  * @return Address of the beginning of the packet data.
  * @ingroup Packet
  */
 uint8       *packet_data_modifiable(struct packet *pkt);
+
+/**
+ * Drop a packet. The packet will be released and should not be used anymore
+ * after this call.
+ * @param pkt Opaque packet.
+ */
+void         packet_drop(struct packet *pkt);
+
+/**
+ * Accept a packet. The packet will be released and should not be used anymore
+ * after this call.
+ * @param pkt Opaque packet.
+ */
+void         packet_accept(struct packet *pkt);
 
 #endif /* _HAKA_PACKET_H */
 

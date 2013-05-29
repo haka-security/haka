@@ -48,32 +48,31 @@ function frags(df, mf)
 	return dont, more
 end
 
-ipv4 = require("proto-ipv4")
+require("proto-ipv4")
 
-return function(pkt)
-	ip = ipv4(pkt)
-	local good, bad, msg = checks(ip)
-	local dont, more = frags(bool(ip.flags.df), bool(ip.flags.mf))
-
-	print(string.format("Internet Protocol Version %d, Src: %s (%s), Dst: %s (%s)", ip.version, tostring(ip.src), tostring(ip.src), tostring(ip.dst), tostring(ip.dst)))
-	print(string.format("    Version: %d", ip.version))
-	print(string.format("    Header length: %d bytes", ip.hdr_len))
-	print(string.format("    Total Length: %d", ip.len))
-	print(string.format("    Identification: 0x%.04x (%d)", ip.id, ip.id))
-	print(string.format("    Flags: 0x%.02x%s%s", ip.flags.all, dont, more))
-	print(string.format("        %d... .... = Reserved bit: %s", bool(ip.flags.rb)))
-	print(string.format("        .%d.. .... = Don't fragment: %s", bool(ip.flags.df)))
-	print(string.format("        ..%d. .... = More fragments: %s", bool(ip.flags.mf)))
-	print(string.format("    Fragment offset: %d", ip.frag_offset))
-	print(string.format("    Time to live: %d", ip.ttl))
-	print(string.format("    Protocol: %s (%d)", protocol(ip.proto), ip.proto))
-	print(string.format("    Header checksum: 0x%04x %s", ip.checksum, msg))
-	print(string.format("        %s", good))
-	print(string.format("        %s", bad))
-	print(string.format("    Source: %s (%s)", tostring(ip.src), tostring(ip.src)))
-	print(string.format("    Destination: %s (%s)", tostring(ip.dst), tostring(ip.dst)))
-	print()
-
-	return haka.packet.ACCEPT
-
-end
+haka2.rule {
+	hooks = { "ipv4-up" },
+	eval = function (self, pkt)
+		local good, bad, msg = checks(pkt)
+		local dont, more = frags(bool(pkt.flags.df), bool(pkt.flags.mf))
+	
+		print(string.format("Internet Protocol Version %d, Src: %s (%s), Dst: %s (%s)", pkt.version, pkt.src, pkt.src, pkt.dst, pkt.dst))
+		print(string.format("    Version: %d", pkt.version))
+		print(string.format("    Header length: %d bytes", pkt.hdr_len))
+		print(string.format("    Total Length: %d", pkt.len))
+		print(string.format("    Identification: 0x%.04x (%d)", pkt.id, pkt.id))
+		print(string.format("    Flags: 0x%.02x%s%s", pkt.flags.all, dont, more))
+		print(string.format("        %d... .... = Reserved bit: %s", bool(pkt.flags.rb)))
+		print(string.format("        .%d.. .... = Don't fragment: %s", bool(pkt.flags.df)))
+		print(string.format("        ..%d. .... = More fragments: %s", bool(pkt.flags.mf)))
+		print(string.format("    Fragment offset: %d", pkt.frag_offset))
+		print(string.format("    Time to live: %d", pkt.ttl))
+		print(string.format("    Protocol: %s (%d)", protocol(pkt.proto), pkt.proto))
+		print(string.format("    Header checksum: 0x%04x %s", pkt.checksum, msg))
+		print(string.format("        %s", good))
+		print(string.format("        %s", bad))
+		print(string.format("    Source: %s (%s)", pkt.src, pkt.src))
+		print(string.format("    Destination: %s (%s)", pkt.dst, pkt.dst))
+		print()
+	end
+}

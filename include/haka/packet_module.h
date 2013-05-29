@@ -102,6 +102,13 @@ struct packet_module {
 	 * @return The address of the beginning of the packet data.
 	 */
 	const uint8   *(*get_data)(struct packet *pkt);
+
+	/**
+	 * Get the packet dissector.
+	 * @param pkt The received opaque packet.
+	 * @return The name of the dissector to use on the packet.
+	 */
+	const char    *(*get_dissector)(struct packet *pkt);
 };
 
 #endif /* _HAKA_PACKET_MODULE_H */

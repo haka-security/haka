@@ -19,41 +19,37 @@ function checks(proto)
 return good, bad
 end 
 
-ipv4 = require("proto-ipv4")
-tcp = require("proto-tcp")
+require("proto-ipv4")
+require("proto-tcp")
 
-return function(pkt)
-
-	local ip_h = ipv4(pkt)
-	local tcp_h = tcp(ip_h)
-
-	local good, bad = checks(ip_h)
-
-	good, bad = checks(tcp_h)
-	print(string.format( "----------TCP HEADER ---------"))
-	print(string.format( "TCP Source Port: %d", tcp_h.srcport))
-    print(string.format( "TCP Destination Port: %d", tcp_h.dstport))
-    print(string.format( "TCP Sequence No: 0x%08x", tcp_h.seq))
-	print(string.format( "TCP Ack Sequence No: 0x%08x", tcp_h.ack_seq))
-    print(string.format( "TCP Reserved: 0x%1x", tcp_h.res))
-    print(string.format( "TCP Header Length: %d bytes", tcp_h.hdr_len))
-	print(string.format( "TCP Flags: 0x%02x", tcp_h.flags.all))
-    print(string.format( "    %d... .... = FIN Flag: %s", bool(tcp_h.flags.fin)))
-	print(string.format( "    .%d.. .... = SYN Flag: %s", bool(tcp_h.flags.syn)))
-    print(string.format( "    ..%d. .... = RST Flag: %s", bool(tcp_h.flags.rst)))
-    print(string.format( "    ...%d .... = PSH Flag: %s", bool(tcp_h.flags.psh)))
-    print(string.format( "    .... %d... = ACK Flag: %s", bool(tcp_h.flags.ack)))
-    print(string.format( "    .... .%d.. = URG Flag: %s", bool(tcp_h.flags.urg)))
-    print(string.format( "    .... ..%d. = ECN Flag: %s", bool(tcp_h.flags.ecn)))
-    print(string.format( "    .... ...%d = CWR Flag: %s", bool(tcp_h.flags.cwr)))
-    print(string.format( "TCP Window Size: 0x%04x", tcp_h.window_size))
-    print(string.format( "TCP Checksum: 0x%04x", tcp_h.checksum))
-	print(string.format( "    %s", good))
-	print(string.format( "    %s", bad))
-    print(string.format( "TCP Urgent Pointer: 0x%04x", tcp_h.urgent_pointer))
-	print()
-	--tcp_h:computeChecksum()
-
-	return haka.packet.ACCEPT
-
-end
+haka2.rule {
+	hooks = { "tcp-up" },
+	eval = function (self, pkt)
+		local good, bad = checks(pkt)
+		print(string.format( "----------TCP HEADER ---------"))
+		print(string.format( "TCP Source Port: %d", pkt.srcport))
+		print(string.format( "TCP Destination Port: %d", pkt.dstport))
+		print(string.format( "TCP Sequence No: 0x%08x", pkt.seq))
+		print(string.format( "TCP Ack Sequence No: 0x%08x", pkt.ack_seq))
+		print(string.format( "TCP Reserved: 0x%1x", pkt.res))
+		print(string.format( "TCP Header Length: %d bytes", pkt.hdr_len))
+		print(string.format( "TCP Flags: 0x%02x", pkt.flags.all))
+		print(string.format( "    %d... .... = FIN Flag: %s", bool(pkt.flags.fin)))
+		print(string.format( "    .%d.. .... = SYN Flag: %s", bool(pkt.flags.syn)))
+		print(string.format( "    ..%d. .... = RST Flag: %s", bool(pkt.flags.rst)))
+		print(string.format( "    ...%d .... = PSH Flag: %s", bool(pkt.flags.psh)))
+		print(string.format( "    .... %d... = ACK Flag: %s", bool(pkt.flags.ack)))
+		print(string.format( "    .... .%d.. = URG Flag: %s", bool(pkt.flags.urg)))
+		print(string.format( "    .... ..%d. = ECN Flag: %s", bool(pkt.flags.ecn)))
+		print(string.format( "    .... ...%d = CWR Flag: %s", bool(pkt.flags.cwr)))
+		print(string.format( "TCP Window Size: 0x%04x", pkt.window_size))
+		print(string.format( "TCP Checksum: 0x%04x", pkt.checksum))
+		print(string.format( "    %s", good))
+		print(string.format( "    %s", bad))
+		print(string.format( "TCP Urgent Pointer: 0x%04x", pkt.urgent_pointer))
+		print()
+		
+		-- We should drop it to avoid error detected by tcp-connection
+		pkt:drop()
+	end
+}

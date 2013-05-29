@@ -26,24 +26,15 @@ struct thread_state {
 
 extern void lua_pushppacket(lua_State *L, struct packet *pkt);
 
-static filter_result filter_wrapper(struct thread_state *state, struct packet *pkt)
+static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 {
-	lua_rawgeti(state->lua, LUA_REGISTRYINDEX, state->lua_function);
+	lua_getglobal(state->lua, "haka2");
+	lua_getfield(state->lua, -1, "filter");
 	lua_pushppacket(state->lua, pkt);
-	if (lua_pcall(state->lua, 1, 1, 0)) {
+	if (lua_pcall(state->lua, 1, 0, 0)) {
 		print_error(state->lua, L"filter function");
-		return FILTER_DROP;
+		packet_drop(pkt);
 	}
-
-	if (!lua_isnumber(state->lua, -1)) {
-		lua_pop(state->lua, 1);
-		return FILTER_DROP;
-	}
-
-	const int ret = lua_tonumber(state->lua, -1);
-	lua_remove(state->lua, -1);
-
-	return (filter_result)ret;
 }
 
 struct thread_state *init_thread_state(struct packet_module *packet_module, int thread_id)
@@ -73,10 +64,28 @@ struct thread_state *init_thread_state(struct packet_module *packet_module, int 
 		return NULL;
 	}
 
-	state->lua_function = do_file_as_function(state->lua, get_filter_script());
-	if (state->lua_function == -1) {
+	lua_getglobal(state->lua, "require");
+	lua_pushstring(state->lua, "haka2");
+	if (lua_pcall(state->lua, 1, 0, 0)) {
+		print_error(state->lua, NULL);
 		cleanup_thread_state(packet_module, state);
 		return NULL;
+	}
+
+	if (run_file(state->lua, get_configuration_script(), 0, NULL)) {
+		cleanup_thread_state(packet_module, state);
+		return NULL;
+	}
+
+	if (thread_id == 0) {
+		lua_getglobal(state->lua, "haka2");
+		lua_getfield(state->lua, -1, "rule_summary");
+		if (lua_pcall(state->lua, 0, 0, 0)) {
+			print_error(state->lua, NULL);
+			cleanup_thread_state(packet_module, state);
+			return NULL;
+		}
+		lua_pop(state->lua, 2);
 	}
 
 	return state;
@@ -116,8 +125,7 @@ void *thread_main_loop(void *_state)
 	while (packet_module->receive(state->capture, &pkt) == 0) {
 		/* The packet can be NULL in case of failure in packet receive */
 		if (pkt) {
-			filter_result result = filter_wrapper(state, pkt);
-			packet_module->verdict(pkt, result);
+			filter_wrapper(state, pkt);
 			pkt = NULL;
 		}
 	}

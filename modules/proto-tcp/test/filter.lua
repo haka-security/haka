@@ -1,18 +1,14 @@
 -- Basic test that will output some basic information about the
 -- received packets.
 
-ipv4 = require("proto-ipv4")
-tcp = require("proto-tcp")
+require("proto-ipv4")
+require("proto-tcp")
 
-return function(pkt)
-
-	local ip_h = ipv4(pkt)
-	local tcp_h = tcp(ip_h)
-
-	if tcp_h.dstport == 80 then
-		return haka.packet.ACCEPT
-	else
-		return haka.packet.DENY
+haka2.rule {
+	hooks = { "tcp-up" },
+	eval = function (self, pkt)
+		if pkt.dstport ~= 80 then
+			pkt:drop()
+		end
 	end
-
-end
+}

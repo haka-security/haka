@@ -16,9 +16,9 @@ extern struct packet_module *get_packet_module();
 extern int set_log_module(struct module *module);
 extern int has_log_module();
 
-int set_filter_script(const char *file);
-int has_filter_script();
-const char *get_filter_script();
+int set_configuration_script(const char *file);
+int has_configuration_script();
+const char *get_configuration_script();
 
 extern char directory[1024];
 

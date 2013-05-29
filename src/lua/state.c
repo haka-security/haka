@@ -4,6 +4,7 @@
 #include <lauxlib.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <signal.h>
 #include "../app.h"
 
 
@@ -28,7 +29,8 @@ swig_module swig_builtins[] = {
 
 static int panic(lua_State *L)
 {
-	message(HAKA_LOG_FATAL, L"lua", L"lua panic");
+	messagef(HAKA_LOG_FATAL, L"lua", L"lua panic: %s", lua_tostring(L, -1));
+	raise(SIGTERM);
 	return 0;
 }
 

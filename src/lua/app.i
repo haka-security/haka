@@ -22,9 +22,9 @@ static int install(const char *type, struct module *module)
 	}
 }
 
-void install_filter(const char *file)
+void load_configuration(const char *file)
 {
-	set_filter_script(file);
+	set_configuration_script(file);
 }
 
 %}
@@ -32,7 +32,7 @@ void install_filter(const char *file)
 %include haka/swig.i
 
 void install(const char *type, struct module *module);
-void install_filter(const char *file);
+void load_configuration(const char *file);
 void exit(int);
 
 %rename(currentThread) thread_get_id;

@@ -16,6 +16,7 @@ LUA_LINK(proto-tcp)
 
 DEPENDS_MODULE(proto-tcp proto-ipv4)
 INSTALL_MODULE(proto-tcp)
+install(FILES tcp-connection.lua DESTINATION bin/modules)
 
 # Tests
 include(TestModuleLoad)

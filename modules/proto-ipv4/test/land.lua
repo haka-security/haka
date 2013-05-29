@@ -1,12 +1,11 @@
 
-ipv4 = require('proto-ipv4')
+require('proto-ipv4')
 
-return function(pkt)
-    ip = ipv4(pkt)
-
-    if ip.src == ip.dst then
-        return haka.packet.DENY
-	else
-		return haka.packet.ACCEPT
-    end
-end
+haka2.rule {
+	hooks = { "ipv4-up" },
+	eval = function (self, pkt)
+		if pkt.src == pkt.dst then
+			pkt:drop()
+		end
+	end
+}

@@ -150,6 +150,8 @@ struct ipv4 {
 		%immutable;
 		struct ipv4_flags *flags;
 		struct ipv4_payload *payload;
+		const char *dissector;
+		const char *nextDissector;
 
 		bool verifyChecksum()
 		{
@@ -161,17 +163,22 @@ struct ipv4 {
 			ipv4_compute_checksum($self);
 		}
 
-		%rename(forge) _forge;
-		void _forge()
+		void drop()
 		{
-			ipv4_forge($self);
+			ipv4_action_drop($self);
 		}
+
+		bool valid();
+		struct packet *forge();
 	}
 };
 
 %rename(dissect) ipv4_dissect;
 %newobject ipv4_dissect;
 struct ipv4 *ipv4_dissect(struct packet *packet);
+
+%rename(register_proto) ipv4_register_proto_dissector;
+void ipv4_register_proto_dissector(int proto, const char *dissector);
 
 %{
 
@@ -196,6 +203,10 @@ void ipv4_dst_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_dst(ip, v->ad
 
 struct ipv4_payload *ipv4_payload_get(struct ipv4 *ip) { return (struct ipv4_payload *)ip; }
 
+const char *ipv4_dissector_get(struct ipv4 *ip) { return "ipv4"; }
+
+const char *ipv4_nextDissector_get(struct ipv4 *ip) { return ipv4_get_proto_dissector(ip); }
+
 struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
 
 #define IPV4_FLAGS_GETSET(field) \
@@ -215,4 +226,9 @@ void ipv4_flags_all_set(struct ipv4_flags *flags, unsigned int v) { return ipv4_
 	getmetatable(ipv4).__call = function (_, pkt)
 		return ipv4.dissect(pkt)
 	end
+
+	haka2.dissector {
+		name = "ipv4",
+		dissect = ipv4.dissect
+	}
 }

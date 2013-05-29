@@ -13,4 +13,6 @@ swig_add_module(haka-lua lua STATIC
 # Lua dependency
 LUA_LINK(haka-lua)
 
+install(FILES haka2.lua DESTINATION bin/modules)
+
 include_directories(.)

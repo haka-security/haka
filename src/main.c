@@ -31,7 +31,7 @@ static void clean_exit()
 {
 	struct packet_module *packet_module = get_packet_module();
 
-	set_filter_script(NULL);
+	set_configuration_script(NULL);
 
 	if (thread_states.count > 0 && packet_module) {
 		int i;
@@ -146,8 +146,8 @@ int main(int argc, char *argv[])
 			err = 1;
 		}
 
-		if (!has_filter_script()) {
-			message(HAKA_LOG_FATAL, L"core", L"no filter script set");
+		if (!has_configuration_script()) {
+			message(HAKA_LOG_FATAL, L"core", L"no configuration script set");
 			err = 1;
 		}
 

@@ -19,21 +19,12 @@ function checks(proto)
 return good, bad
 end 
 
-ipv4 = require("proto-ipv4")
-tcp = require("proto-tcp")
+require("proto-ipv4")
+require("proto-tcp")
 
-return function(pkt)
-
-	local ip_h = ipv4(pkt)
-	local tcp_h = tcp(ip_h)
-
-	--local good, bad = checks(ip_h)
-
-	--output:write(string.format( "%d\n", tcp_h.checksum))
-	tcp_h:computeChecksum()
-	--output:write(string.format( "%d\n", tcp_h:computeChecksum()))
-	--output:write(string.format( "%d\n", tcp_h.checksum))
-
-	return haka.packet.ACCEPT
-
-end
+haka2.rule {
+	hooks = { "tcp-up" },
+	eval = function (self, pkt)
+		pkt:computeChecksum()
+	end
+}

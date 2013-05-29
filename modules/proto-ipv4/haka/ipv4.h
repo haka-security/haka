@@ -18,6 +18,7 @@
 #include <haka/packet.h>
 #include <haka/types.h>
 #include <haka/compiler.h>
+#include <haka/error.h>
 
 #define SWAP_TO_IPV4(type, x)            SWAP_TO_BE(type, x)
 #define SWAP_FROM_IPV4(type, x)          SWAP_FROM_BE(type, x)
@@ -25,6 +26,8 @@
 #define IPV4_SET_BIT(type, v, i, x)      SWAP_TO_BE(type, SET_BIT(SWAP_FROM_BE(type, v), i, x))
 #define IPV4_GET_BITS(type, v, r)        GET_BITS(SWAP_FROM_BE(type, v), r)
 #define IPV4_SET_BITS(type, v, r, x)     SWAP_TO_BE(type, SET_BITS(SWAP_FROM_BE(type, v), r, x))
+
+#define IPV4_CHECK(ip, ...)              if (!(ip) || !(ip)->packet) { error(L"invalid ipv4 packet"); return __VA_ARGS__; }
 
 #define IPV4_FLAG_RB               15
 #define IPV4_FLAG_DF               15-1
@@ -69,6 +72,7 @@ struct ipv4 {
 	struct ipv4_header  *header;
 	bool                 modified:1;
 	bool                 invalid_checksum:1;
+	bool                 drop:1;
 };
 
 /**
@@ -80,11 +84,11 @@ struct ipv4 {
 struct ipv4 *ipv4_dissect(struct packet *packet);
 
 /**
- * @brief Forge IPv4 header
+ * @brief Forge IPv4 packet
  * @param ip IPv4 structure
  * @ingroup IPv4
  */
-void ipv4_forge(struct ipv4 *ip);
+struct packet *ipv4_forge(struct ipv4 *ip);
 
 /**
  * @brief Release IPv4 structure memory allocation
@@ -111,8 +115,8 @@ void ipv4_pre_modify(struct ipv4 *ip);
 void ipv4_pre_modify_header(struct ipv4 *ip);
 
 #define IPV4_GETSET_FIELD(type, field) \
-		INLINE type ipv4_get_##field(const struct ipv4 *ip) { return SWAP_FROM_IPV4(type, ip->header->field); } \
-		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { ipv4_pre_modify_header(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
+		INLINE type ipv4_get_##field(const struct ipv4 *ip) { IPV4_CHECK(ip, 0); return SWAP_FROM_IPV4(type, ip->header->field); } \
+		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { IPV4_CHECK(ip); ipv4_pre_modify_header(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
 
 /**
  * @fn uint8 ipv4_get_version(const struct ipv4 *ip)
@@ -267,6 +271,7 @@ IPV4_GETSET_FIELD(ipv4addr, dst);
  */
 INLINE uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
 {
+	IPV4_CHECK(ip, 0);
 	return ip->header->hdr_len << IPV4_HDR_LEN_OFFSET;
 }
 
@@ -279,6 +284,7 @@ INLINE uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
  */
 INLINE void ipv4_set_hdr_len(struct ipv4 *ip, uint8 v)
 {
+	IPV4_CHECK(ip);
 	ipv4_pre_modify_header(ip);
 	ip->header->hdr_len = v >> IPV4_HDR_LEN_OFFSET;
 }
@@ -291,6 +297,7 @@ INLINE void ipv4_set_hdr_len(struct ipv4 *ip, uint8 v)
  */
 INLINE uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
 {
+	IPV4_CHECK(ip, 0);
 	return (IPV4_GET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS)) << IPV4_FRAGMENTOFFSET_OFFSET;
 }
 
@@ -302,6 +309,7 @@ INLINE uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
  */
 INLINE void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
 {
+	IPV4_CHECK(ip);
 	ipv4_pre_modify_header(ip);
 	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS, v >> IPV4_FRAGMENTOFFSET_OFFSET);
 }
@@ -314,6 +322,7 @@ INLINE void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
  */
 INLINE uint16 ipv4_get_flags(const struct ipv4 *ip)
 {
+	IPV4_CHECK(ip, 0);
 	return IPV4_GET_BITS(uint16, ip->header->fragment, IPV4_FLAG_BITS);
 }
 
@@ -325,13 +334,14 @@ INLINE uint16 ipv4_get_flags(const struct ipv4 *ip)
  */
 INLINE void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 {
+	IPV4_CHECK(ip);
 	ipv4_pre_modify_header(ip);
 	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FLAG_BITS, v);
 }
 
 #define IPV4_GETSET_FLAG(name, flag) \
-		INLINE bool ipv4_get_flags_##name(const struct ipv4 *ip) { return IPV4_GET_BIT(uint16, ip->header->fragment, flag); } \
-		INLINE void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { ipv4_pre_modify_header(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, v); }
+		INLINE bool ipv4_get_flags_##name(const struct ipv4 *ip) { IPV4_CHECK(ip, 0); return IPV4_GET_BIT(uint16, ip->header->fragment, flag); } \
+		INLINE void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { IPV4_CHECK(ip); ipv4_pre_modify_header(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, v); }
 
 /**
  * @fn bool ipv4_get_flags_df(const struct ipv4 *ip)
@@ -449,6 +459,37 @@ uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip);
  * @ingroup IPv4
  */
 size_t ipv4_get_payload_length(struct ipv4 *ip);
+
+/**
+ * Get the protocol dissector name to use for this packet.
+ * @param ip IPv4 structure
+ * @return The dissector name.
+ * @ingroup IPv4
+ */
+const char *ipv4_get_proto_dissector(struct ipv4 *ip);
+
+/**
+ * Register the dissector for a given IP protocoal number
+ * @param proto Protocol number
+ * @param dissector Dissector
+ * @ingroup IPv4
+ */
+void ipv4_register_proto_dissector(uint8 proto, const char *dissector);
+
+/**
+ * Drop the IP packet
+ * @param ip IPv4 structure
+ * @ingroup IPv4
+ */
+void ipv4_action_drop(struct ipv4 *ip);
+
+/**
+ * Get if the packet is valid and can continue to be processed.
+ * @param ip IPv4 structure
+ * @return True if the packet is valid.
+ * @ingroup IPv4
+ */
+bool ipv4_valid(struct ipv4 *ip);
 
 /**
  * Compute standard checksum on the provided data (RFC #107).

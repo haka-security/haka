@@ -1,8 +1,10 @@
-log.info("config", "Configuring haka...")
+local arg = {...}
 
-app.install("packet", module.load("packet-pcap", {"-i", "any", "-m"}))
-app.install("log", module.load("log-stdout"))
+haka.log.info("config", "configuring haka...")
 
-app.install_filter(arg[1])
+haka.app.install("packet", haka.module.load("packet-pcap", "-i", arg[1]))
+haka.app.install("log", haka.module.load("log-stdout"))
 
-log.info("config", "Done\n")
+haka.app.load_configuration(arg[2])
+
+haka.log.info("config", "done\n")

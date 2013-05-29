@@ -388,6 +388,11 @@ static uint8 *packet_modifiable(struct packet *pkt)
 	return (pkt->data + pkt->state->unique_state->link_hdr_len);
 }
 
+static const char *packet_get_dissector(struct packet *pkt)
+{
+	return "ipv4";
+}
+
 
 /**
  * @defgroup Pcap Pcap
@@ -434,6 +439,7 @@ struct packet_module HAKA_MODULE = {
 	verdict:         packet_verdict,
 	get_length:      packet_get_length,
 	make_modifiable: packet_modifiable,
-	get_data:        packet_get_data
+	get_data:        packet_get_data,
+	get_dissector:   packet_get_dissector
 };
 

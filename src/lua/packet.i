@@ -22,11 +22,13 @@ struct packet {
 	%extend {
 		%immutable;
 		size_t length;
+		const char *dissector;
+		const char *nextDissector;
 
 		size_t __len(void *dummy)
 		{
 			return packet_length($self);
-        }
+		}
 
 		int __getitem(int index)
 		{
@@ -47,11 +49,37 @@ struct packet {
 			}
 			packet_data_modifiable($self)[index] = value;
 		}
+
+		%rename(drop) _drop;
+		void _drop()
+		{
+			packet_drop($self);
+		}
+
+		%rename(accept) _accept;
+		void _accept()
+		{
+			packet_accept($self);
+		}
+
+		struct packet *forge()
+		{
+			packet_accept($self);
+			return NULL;
+		}
 	}
 };
 
 %{
 size_t packet_length_get(struct packet *pkt) {
 	return packet_length(pkt);
+}
+
+const char *packet_dissector_get(struct packet *pkt) {
+	return "raw";
+}
+
+const char *packet_nextDissector_get(struct packet *pkt) {
+	return packet_dissector(pkt);
 }
 %}
