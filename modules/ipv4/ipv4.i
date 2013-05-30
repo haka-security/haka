@@ -223,11 +223,7 @@ void ipv4_flags_all_set(struct ipv4_flags *flags, unsigned int v) { return ipv4_
 %}
 
 %luacode {
-	getmetatable(ipv4).__call = function (_, pkt)
-		return ipv4.dissect(pkt)
-	end
-
-	haka2.dissector {
+	haka.dissector {
 		name = "ipv4",
 		dissect = ipv4.dissect
 	}

@@ -1,10 +1,8 @@
 
-module("haka2", package.seeall)
-
 local __dissectors = {}
 local __rule_groups = {}
 
-function dissector(d)
+function haka.dissector(d)
 	if d.name == nil or d.dissect == nil then
 		if haka.app.currentThread() == 0 then
 			haka.log.error("core", "registering invalid dissector: '%s'", d.name)
@@ -19,7 +17,7 @@ function dissector(d)
 	end
 end
 
-function rule_group(group)
+function haka.rule_group(group)
 	group.rule = function (g, r)
 		for _, h in pairs(r.hooks) do
 			if not g.__hooks[h] then
@@ -36,11 +34,11 @@ function rule_group(group)
 	return group
 end
 
-local __default_rule_group = rule_group {
+local __default_rule_group = haka.rule_group {
 	name = "default"
 }
 
-function rule(r)
+function haka.rule(r)
 	return __default_rule_group:rule(r)
 end
 
@@ -71,7 +69,7 @@ local function _rule_group_eval(hook, group, pkt)
 	return true
 end
 
-function rule_summary()
+function haka.rule_summary()
 	local total = 0
 	local rule_count = {}
 
@@ -125,12 +123,12 @@ local function get_dissector(name)
 	return __dissectors[name]
 end
 
-function rule_hook(name, pkt)
+function haka.rule_hook(name, pkt)
 	eval_rules(name, pkt)
 	return not pkt:valid()
 end
 
-function filter(pkt)
+function haka.filter(pkt)
 	local dissect = get_dissector(pkt.nextDissector)
 	while dissect do
 		local nextpkt = dissect.dissect(pkt)

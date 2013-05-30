@@ -2,7 +2,7 @@
 require("ipv4")
 require("tcp")
 
-haka2.rule {
+haka.rule {
 	hooks = { "ipv4-up" },
 	eval = function (self, pkt)
 		-- filtering packet based on ip sources
@@ -13,7 +13,7 @@ haka2.rule {
 	end
 }
 
-haka2.rule {
+haka.rule {
 	hooks = { "ipv4-up" },
 	eval = function (self, pkt)
 		-- checking IP checksum
@@ -21,7 +21,7 @@ haka2.rule {
 	end
 }
 
-haka2.rule {
+haka.rule {
 	hooks = { "tcp-up" },
 	eval = function (self, pkt)
 		-- printing TCP destination port
@@ -29,7 +29,7 @@ haka2.rule {
 	end
 }
 
-haka2.rule {
+haka.rule {
 	hooks = { "tcp-up" },
 	eval = function (self, pkt)
 		-- setting destination port to 8080 (see out.pcap for changes)

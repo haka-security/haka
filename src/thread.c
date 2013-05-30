@@ -37,7 +37,7 @@ extern void lua_pushppacket(lua_State *L, struct packet *pkt);
 
 static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 {
-	lua_getglobal(state->lua, "haka2");
+	lua_getglobal(state->lua, "haka");
 	lua_getfield(state->lua, -1, "filter");
 	lua_pushppacket(state->lua, pkt);
 	if (lua_pcall(state->lua, 1, 0, 0)) {
@@ -95,7 +95,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	}
 
 	lua_getglobal(state->lua, "require");
-	lua_pushstring(state->lua, "haka2");
+	lua_pushstring(state->lua, "rule");
 	if (lua_pcall(state->lua, 1, 0, 0)) {
 		print_error(state->lua, NULL);
 		cleanup_thread_state(state);
@@ -107,7 +107,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		return NULL;
 	}
 
-	lua_getglobal(state->lua, "haka2");
+	lua_getglobal(state->lua, "haka");
 	lua_getfield(state->lua, -1, "rule_summary");
 	if (lua_pcall(state->lua, 0, 0, 0)) {
 		print_error(state->lua, NULL);
@@ -193,6 +193,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 	for (i=0; i<count; ++i) {
 		pool->threads[i] = init_thread_state(packet_module, i);
 		if (!pool->threads[i]) {
+			error(L"thread initialization error");
 			thread_pool_cleanup(pool);
 			return NULL;
 		}

@@ -1,6 +1,6 @@
 module("tcp-connection", package.seeall)
 
-haka2.dissector {
+haka.dissector {
 	name = "tcp-connection",
 	dissect = function (pkt)
 
@@ -25,7 +25,7 @@ haka2.dissector {
 		if not newpkt.connection then
 			-- new connection
 			if pkt.flags.syn then
-				if haka2.rule_hook("tcp-connection-new", pkt) then
+				if haka.rule_hook("tcp-connection-new", pkt) then
 					return nil
 				end
 

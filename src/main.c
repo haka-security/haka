@@ -161,6 +161,7 @@ int main(int argc, char *argv[])
 		thread_states = thread_pool_create(count, packet_module);
 		if (check_error()) {
 			message(HAKA_LOG_FATAL, L"core", clear_error());
+			clean_exit();
 			return 1;
 		}
 
@@ -174,6 +175,7 @@ int main(int argc, char *argv[])
 		thread_pool_start(thread_states);
 		if (check_error()) {
 			message(HAKA_LOG_FATAL, L"core", clear_error());
+			clean_exit();
 			return 1;
 		}
 	}

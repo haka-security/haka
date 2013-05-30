@@ -218,11 +218,7 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 %}
 
 %luacode {
-	getmetatable(tcp).__call = function (_, ipv4)
-		return tcp.dissect(ipv4)
-	end
-
-	haka2.dissector {
+	haka.dissector {
 		name = "tcp",
 		dissect = tcp.dissect
 	}

@@ -22,7 +22,7 @@ end
 require("ipv4")
 require("tcp")
 
-haka2.rule {
+haka.rule {
 	hooks = { "tcp-up" },
 	eval = function (self, pkt)
 		pkt.srcport = 3

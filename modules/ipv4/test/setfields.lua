@@ -3,7 +3,7 @@
 
 require("ipv4")
 
-haka2.rule {
+haka.rule {
 	hooks = { "ipv4-up" },
 	eval = function (self, pkt)
 		pkt.version = 4

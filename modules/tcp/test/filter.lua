@@ -4,7 +4,7 @@
 require("ipv4")
 require("tcp")
 
-haka2.rule {
+haka.rule {
 	hooks = { "tcp-up" },
 	eval = function (self, pkt)
 		if pkt.dstport ~= 80 then
