@@ -20,7 +20,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 
 	/* Not a TCP packet */
 	if (ipv4_get_proto(packet) != TCP_PROTO) {
-		error(L"not a tcp packet");
+		error(L"Not a tcp packet");
 		return NULL;
 	}
 

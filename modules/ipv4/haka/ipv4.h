@@ -44,6 +44,11 @@
 typedef uint32 ipv4addr;
 #define SWAP_ipv4addr(x) SWAP_uint32(x)
 
+typedef struct {
+	ipv4addr net;
+	uint8   mask;
+}ipv4network;
+
 struct ipv4_header {
 #ifdef HAKA_LITTLEENDIAN
 	uint8    hdr_len:4;
@@ -117,6 +122,7 @@ void ipv4_pre_modify_header(struct ipv4 *ip);
 #define IPV4_GETSET_FIELD(type, field) \
 		INLINE type ipv4_get_##field(const struct ipv4 *ip) { IPV4_CHECK(ip, 0); return SWAP_FROM_IPV4(type, ip->header->field); } \
 		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { IPV4_CHECK(ip); ipv4_pre_modify_header(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
+
 
 /**
  * @fn uint8 ipv4_get_version(const struct ipv4 *ip)
@@ -407,6 +413,8 @@ bool ipv4_verify_checksum(const struct ipv4 *ip);
 void ipv4_compute_checksum(struct ipv4 *ip);
 
 #define IPV4_ADDR_STRING_MAXLEN   15
+#define IPV4_NET_STRING_MAXLEN    18
+#define IPV4_MASK_MAXVAL          32
 
 /**
  * @brief Convert IP from ipv4addr to string
@@ -435,6 +443,23 @@ ipv4addr ipv4_addr_from_string(const char *string);
  * @ingroup IPv4
  */
 ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d);
+
+/**
+ * @brief Convert network address from ipv4network to string
+ * @param net network address to be converted
+ * @param string converted network address
+ * @param size string size
+ * @ingroup IPv4
+ */
+void ipv4_network_to_string(ipv4network net, char *string, size_t size);
+
+/**
+ * @brief Convert network address from string to ipv4network structure
+ * @param string network address to be converted
+ * @return ipv4network converted network address
+ * @ingroup IPv4
+ */
+ipv4network ipv4_network_from_string(const char *string);
 
 /**
  * Get IPv4 payload data.

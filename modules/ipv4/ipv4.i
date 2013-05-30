@@ -3,23 +3,27 @@
 %{
 #include "haka/ipv4.h"
 
-struct ipv4_flags;
-struct ipv4_payload;
+	struct ipv4_flags;
+	struct ipv4_payload;
 
-struct ipv4_addr {
-	ipv4addr   addr;
-};
+	struct ipv4_addr {
+		ipv4addr   addr;
+	};
 
-struct ipv4_addr *ipv4_addr_new(ipv4addr a)
-{
-	struct ipv4_addr *ret = malloc(sizeof(struct ipv4_addr));
-	if (!ret) {
-		return NULL;
+	struct ipv4_network {
+		ipv4network  net;
+	};
+
+	struct ipv4_addr *ipv4_addr_new(ipv4addr a)
+	{
+		struct ipv4_addr *ret = malloc(sizeof(struct ipv4_addr));
+		if (!ret) {
+			return NULL;
+		}
+
+		ret->addr = a;
+		return ret;
 	}
-
-	ret->addr = a;
-	return ret;
-}
 %}
 
 %include "haka/swig.i"
@@ -73,16 +77,58 @@ struct ipv4_addr {
 
 		temporary_string __tostring()
 		{
-			char *buffer = malloc(IPV4_ADDR_STRING_MAXLEN+1);
+			char *buffer = malloc(IPV4_ADDR_STRING_MAXLEN + 1);
 			if (!buffer) {
 				error(L"memory error");
 				return NULL;
 			}
-			ipv4_addr_to_string($self->addr, buffer, IPV4_ADDR_STRING_MAXLEN+1);
+			ipv4_addr_to_string($self->addr, buffer, IPV4_ADDR_STRING_MAXLEN + 1);
 			return buffer;
 		}
 	}
 };
+
+
+%rename(network) ipv4_network;
+struct ipv4_network {
+	%extend {
+		ipv4_network(const char *str) {
+			struct ipv4_network *ret = malloc(sizeof(struct ipv4_network));
+			if (!ret) {
+				return NULL;
+			}
+
+			ret->net = ipv4_network_from_string(str);
+			return ret;
+		}
+
+		~ipv4_network() {
+			if ($self)
+				free($self);
+		}
+
+		temporary_string __tostring()
+		{
+			char *buffer = malloc(IPV4_NET_STRING_MAXLEN + 1);
+			if (!buffer) {
+				error(L"memory error");
+				return NULL;
+			}
+			ipv4_network_to_string($self->net, buffer, IPV4_NET_STRING_MAXLEN + 1);
+
+			return buffer;
+		}
+
+		bool contains(struct ipv4_addr *addr)
+		{
+			return ((addr->addr & ((1 << $self->net.mask) - 1) << (IPV4_MASK_MAXVAL - $self->net.mask))  == $self->net.net);
+		}
+		%immutable;
+		struct ipv4_addr *net;
+		unsigned char mask;
+	}
+};
+
 
 %nodefaultctor;
 
@@ -183,42 +229,47 @@ void ipv4_register_proto_dissector(int proto, const char *dissector);
 %{
 
 #define IPV4_INT_GETSET(field) \
-	unsigned int ipv4_##field##_get(struct ipv4 *ip) { return ipv4_get_##field(ip); } \
-	void ipv4_##field##_set(struct ipv4 *ip, unsigned int v) { ipv4_set_##field(ip, v); }
+		unsigned int ipv4_##field##_get(struct ipv4 *ip) { return ipv4_get_##field(ip); } \
+		void ipv4_##field##_set(struct ipv4 *ip, unsigned int v) { ipv4_set_##field(ip, v); }
 
-IPV4_INT_GETSET(version);
-IPV4_INT_GETSET(hdr_len);
-IPV4_INT_GETSET(tos);
-IPV4_INT_GETSET(len);
-IPV4_INT_GETSET(id);
-IPV4_INT_GETSET(frag_offset);
-IPV4_INT_GETSET(ttl);
-IPV4_INT_GETSET(proto);
-IPV4_INT_GETSET(checksum);
+	IPV4_INT_GETSET(version);
+	IPV4_INT_GETSET(hdr_len);
+	IPV4_INT_GETSET(tos);
+	IPV4_INT_GETSET(len);
+	IPV4_INT_GETSET(id);
+	IPV4_INT_GETSET(frag_offset);
+	IPV4_INT_GETSET(ttl);
+	IPV4_INT_GETSET(proto);
+	IPV4_INT_GETSET(checksum);
 
-struct ipv4_addr *ipv4_src_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_src(ip)); }
-void ipv4_src_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_src(ip, v->addr); }
-struct ipv4_addr *ipv4_dst_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_dst(ip)); }
-void ipv4_dst_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_dst(ip, v->addr); }
+	struct ipv4_addr *ipv4_src_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_src(ip)); }
+	void ipv4_src_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_src(ip, v->addr); }
+	struct ipv4_addr *ipv4_dst_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_dst(ip)); }
+	void ipv4_dst_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_dst(ip, v->addr); }
 
-struct ipv4_payload *ipv4_payload_get(struct ipv4 *ip) { return (struct ipv4_payload *)ip; }
+	struct ipv4_payload *ipv4_payload_get(struct ipv4 *ip) { return (struct ipv4_payload *)ip; }
 
-const char *ipv4_dissector_get(struct ipv4 *ip) { return "ipv4"; }
+	const char *ipv4_dissector_get(struct ipv4 *ip) { return "ipv4"; }
 
-const char *ipv4_nextDissector_get(struct ipv4 *ip) { return ipv4_get_proto_dissector(ip); }
+	const char *ipv4_nextDissector_get(struct ipv4 *ip) { return ipv4_get_proto_dissector(ip); }
 
-struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
+	struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
 
 #define IPV4_FLAGS_GETSET(field) \
 		bool ipv4_flags_##field##_get(struct ipv4_flags *flags) { return ipv4_get_flags_##field((struct ipv4 *)flags); } \
 		void ipv4_flags_##field##_set(struct ipv4_flags *flags, bool v) { return ipv4_set_flags_##field((struct ipv4 *)flags, v); }
 
-IPV4_FLAGS_GETSET(rb);
-IPV4_FLAGS_GETSET(df);
-IPV4_FLAGS_GETSET(mf);
+	IPV4_FLAGS_GETSET(rb);
+	IPV4_FLAGS_GETSET(df);
+	IPV4_FLAGS_GETSET(mf);
 
-unsigned int ipv4_flags_all_get(struct ipv4_flags *flags) { return ipv4_get_flags((struct ipv4 *)flags); }
-void ipv4_flags_all_set(struct ipv4_flags *flags, unsigned int v) { return ipv4_set_flags((struct ipv4 *)flags, v); }
+	unsigned int ipv4_flags_all_get(struct ipv4_flags *flags) { return ipv4_get_flags((struct ipv4 *)flags); }
+	void ipv4_flags_all_set(struct ipv4_flags *flags, unsigned int v) { return ipv4_set_flags((struct ipv4 *)flags, v); }
+
+
+	struct ipv4_addr *ipv4_network_net_get(struct ipv4_network *network) { return ipv4_addr_new(network->net.net); }
+
+	unsigned char ipv4_network_mask_get(struct ipv4_network *network) { return network->net.mask; }
 
 %}
 
