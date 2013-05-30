@@ -129,6 +129,7 @@ function haka.rule_hook(name, pkt)
 end
 
 function haka.filter(pkt)
+	local guard = {pkt} -- TODO: to be removed (need to avoid Lua to destroy some object still used)
 	local dissect = get_dissector(pkt.nextDissector)
 	while dissect do
 		local nextpkt = dissect.dissect(pkt)
@@ -140,6 +141,7 @@ function haka.filter(pkt)
 		end
 
 		pkt = nextpkt
+		table.insert(guard, pkt)
 		eval_rules(dissect.name .. '-up', pkt)
 		dissect = nil
 
