@@ -1,5 +1,5 @@
 /**
- * @file packet.h
+ * @file haka/packet.h
  * @brief Packet API
  * @author Pierre-Sylvain Desse
  *
@@ -9,7 +9,7 @@
 /**
  * @defgroup Packet Packet
  * @brief Packet API functions and structures.
- * @ingroup API
+ * @ingroup API_C
  */
 
 #ifndef _HAKA_PACKET_H

@@ -9,7 +9,7 @@
 /**
  * @defgroup Utilities Utilities
  * @brief Utilities functions and structures.
- * @ingroup API
+ * @ingroup API_C
  */
 
 #ifndef _HAKA_ERROR_H

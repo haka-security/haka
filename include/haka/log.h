@@ -9,7 +9,7 @@
 /**
  * @defgroup Logging Logging
  * @brief Logging API functions and structures.
- * @ingroup API
+ * @ingroup API_C
  */
 
 #ifndef _HAKA_LOG_H

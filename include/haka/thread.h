@@ -9,7 +9,7 @@
 /**
  * @defgroup Multithread Multi-thread
  * @brief Multi threading API functions and structures.
- * @ingroup API
+ * @ingroup API_C
  */
 
 #ifndef _HAKA_THREAD_H

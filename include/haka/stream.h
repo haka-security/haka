@@ -9,7 +9,7 @@
 /**
  * @defgroup Stream Stream
  * @brief Stream API functions and structures.
- * @ingroup API
+ * @ingroup API_C
  */
 
 #ifndef _HAKA_STREAM_H

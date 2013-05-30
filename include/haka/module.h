@@ -12,13 +12,25 @@
  */
 
 /**
- * @defgroup Module Module
- * @brief Module API functions and structures.
+ * @defgroup API_C C/C++
+ * @brief C/C++
  * @ingroup API
  */
 
 /**
- * @defgroup ExternModule External Modules
+ * @defgroup API_LUA Lua
+ * @brief Lua
+ * @ingroup API
+ */
+
+/**
+ * @defgroup Module Module
+ * @brief Module API functions and structures.
+ * @ingroup API_C
+ */
+
+/**
+ * @defgroup ExternModule Modules
  * @brief External module documentation.
  */
 
