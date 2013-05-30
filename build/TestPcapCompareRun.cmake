@@ -4,6 +4,8 @@ set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
 set(ENV{DIFF} ${DIFF})
 set(ENV{TSHARK} ${TSHARK})
 
+message(STATUS "Exporting var: export LD_LIBRARY_PATH=${LDDIR}")
+message(STATUS "Executing ${EXE} ${CTEST_MODULE_DIR}/TestPcapCompare.lua ${CONF} ${SRC} ${DST} ${LDDIR}")
 execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapCompare.lua ${CONF} ${SRC} ${DST} ${LDDIR}
 	RESULT_VARIABLE HAD_ERROR)
 
