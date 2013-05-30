@@ -1,5 +1,11 @@
 #! /bin/bash
 
-MAKEDIR=make
+export MAKEDIR=make
 
-PATH=/bin:/usr/bin:/usr/local/bin
+export PATH=/bin:/usr/bin:/usr/local/bin
+
+## Configure ARGS
+if [ x"$USE_LUAJIT" == x"no" ]
+then
+	export CMAKE_ARGS="-DUSE_LUAJIT=no"
+fi

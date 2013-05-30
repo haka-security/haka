@@ -24,7 +24,7 @@ _create_dir(){
 
 _configure(){
 	cd "$MAKEDIR"
-	cmake ../
+	cmake ../ $CMAKE_ARGS
 	if [ $? != 0 ]
 	then
 		echo "Problem during configure"
