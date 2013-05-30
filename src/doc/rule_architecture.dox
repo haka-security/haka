@@ -1,0 +1,56 @@
+
+/**
+ * @page RuleArch Rule Architecture
+ *
+ * @section Dissector Dissector
+ *
+ * The configuration will define a list of dissector. Each dissector is described by:
+ *   * Name: unique dissector name
+ *   * Dissect function: dissector main function
+ *
+ * The dissector main function should return an object that have the following properties:
+ *   * A string member _dissect_ containing the name of the dissector
+ *   * A string member _nextDissector_ containing the name of the next dissector to call. This
+ *     field can be writable or not depending on the dissector.
+ *   * An action function _drop()_
+ *   * A function named _valid()_ that returns true of the data can continue to be processed
+ *   * A function _forge()_ that will should return a data compatible with the previous dissector.
+ *     This function will be called multiple time until is returns nil. This allow for a dissector
+ *     to return more than one packet for instance.
+ *
+ * The interaction between the dissectors is described by the following image:
+ * @image html dissector.png "Dissector architecture"
+ *
+ * @section Rule Rule
+ *
+ * Along with the dissector, the configuration can define rules to apply. Those rules are
+ * assigned to some _hooks_. A rule need the following fields:
+ *   * A _hooks_ member that contains a array of hook string name. It will be used to install the rule on
+ *     them.
+ *   * A _eval(self, pkt)_ function that is called to evaluate the rule.
+ *
+ * @subsection RuleHook Hooks
+ *
+ * The hooks are the points where the user can install rules. When the system will reach a hook
+ * point, all the rules installed on it will be called. The order of the rule execution matches
+ * the declaration order.
+ *
+ * A given dissector automatically defines two hooks:
+ *   * _dissector\_name-up_. For instance, for the dissector ipv4, this hook is named _ipv4-up_.
+ *   * _dissector\_name-down_
+ * @image html dissector-hook.png "IPv4 dissector hooks"
+ *
+ * It is also possible for a dissector to define custom hooks that matches some specific conditions. It
+ * is then responsible for calling the rules when needed.
+ *
+ * @section RuleGroup Rule Group
+ *
+ * To allow for some flow control, rules can be added to a group. When the system call a hook, if some rules
+ * of the group are defined for this hook, it can then customize the execution and flow:
+ *   * The _init(self)_ function is called before executing any rule
+ *   * The _continue(self, ret)_ function is called after each rule execution. The return value from the this
+ *     execution is passed as argument to the continue function. If it returns false, then all other rules of
+ *     this group will not be executed.
+ *   * The _fini_(self, pkt) function is called when all rules has been executed.
+ *
+ */
