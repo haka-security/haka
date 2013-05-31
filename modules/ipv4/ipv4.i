@@ -1,7 +1,9 @@
 %module ipv4
 
 %{
-#include "haka/ipv4.h"
+	#include "haka/ipv4.h"
+	#include "haka/ipv4-address.h"
+	#include "haka/ipv4-network.h"
 
 	struct ipv4_flags;
 	struct ipv4_payload;
@@ -114,15 +116,17 @@ struct ipv4_network {
 				error(L"memory error");
 				return NULL;
 			}
-			ipv4_network_to_string($self->net, buffer, IPV4_NET_STRING_MAXLEN + 1);
+			ipv4_network_to_string($self->net, buffer,
+					IPV4_NET_STRING_MAXLEN + 1);
 
 			return buffer;
 		}
 
 		bool contains(struct ipv4_addr *addr)
 		{
-			return ((addr->addr & ((1 << $self->net.mask) - 1) << (IPV4_MASK_MAXVAL - $self->net.mask))  == $self->net.net);
+			return ipv4_check_addr_in_network($self->net, addr->addr);
 		}
+
 		%immutable;
 		struct ipv4_addr *net;
 		unsigned char mask;

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <check.h>
 #include <haka/ipv4.h>
+#include <haka/ipv4-address.h>
+#include <haka/ipv4-network.h>
 
 START_TEST(ipv4_addr_check_from_string)
 {
@@ -22,6 +24,7 @@ START_TEST(ipv4_addr_check_to_string)
 	ck_assert_str_eq(str, "192.12.1.9");
 }
 END_TEST
+
 
 Suite* ipv4_suite(void)
 {
