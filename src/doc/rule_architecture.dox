@@ -13,8 +13,8 @@
  *   * A string member _nextDissector_ containing the name of the next dissector to call. This
  *     field can be writable or not depending on the dissector.
  *   * An action function _drop()_
- *   * A function named _valid()_ that returns true of the data can continue to be processed
- *   * A function _forge()_ that will should return a data compatible with the previous dissector.
+ *   * A function named _valid()_ that returns true if the data can continue to be processed
+ *   * A function _forge()_ that should return a data compatible with the previous dissector.
  *     This function will be called multiple time until is returns nil. This allow for a dissector
  *     to return more than one packet for instance.
  *
