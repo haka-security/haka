@@ -1,0 +1,160 @@
+HAKA Runtime
+============
+
+Haka-Runtime is a tool that allows to capture TCP/IP packet and filter
+them based on Lua policy files in a wireshark fashion.
+
+Major features:
+
+* Capture/Drop packet using nfqueue 
+* Read packet either from a pcap file or from interface using libpcap
+* Filter packet from Lua policy files using wireshak-like expressions
+* Log using either stdout or syslog modules
+* Provide accessors to TCP and IP headers fields
+* Forge TCP and IP headers packet
+* And more features coming soon ...
+
+Authors / Contributors
+----------------------
+
+Authors
+^^^^^^^
+
+* Kevin Denis
+* Pierre Sylvain Desse
+* Mehdi Talbi
+
+Contributors
+^^^^^^^^^^^^
+
+* Remi Bauzac
+
+
+Dependencies
+------------
+
+    - Toolchain (GCC, Make, ...)
+
+    $ sudo apt-get install build-essential
+
+    - Cmake
+
+    $ sudo apt-get install cmake
+
+    - Swig
+
+    $ sudo apt-get install swig
+
+    - Doxygen
+
+    $ sudo apt-egt install doxygen
+
+    - Lua
+
+    $ sudo apt-get install liblua5.1
+ 
+    - tshark
+
+    $ sudo apt-get install tshark
+ 
+    - libpcap (recommended)
+
+    $ sudo apt-get install libpcap-dev
+
+    - check
+
+    $ sudo apt-get install check
+
+    - Netfilter Queue (optional)
+
+    $ sudo apt-get install libnetfilter-queue-dev
+
+    - rsync
+
+    $ sudo apt-get install rsync
+
+    - Cppcheck (optional)
+
+    $ sudo apt-get install cppcheck
+
+    - Perl
+
+    $ sudo apt-get install perl
+
+
+Build
+-----
+
+It is highly recommanded to create a separate directory (`mkdir make`) to store
+all the files generated during the build using cmake
+
+    $ mkdir make
+    $ cd make ..
+    $ cmake -DCMAKE_BUILD_TYPE=[build type] ..
+
+	where build type can take one of the following values:
+
+   - Debug  
+   - Release
+   - RelWithDebInfo
+   - MinSizeRel
+
+The repository uses submodules that need to be initialized and updated :
+
+    $ git submodule init
+    $ git submodule update
+
+Then use make like usual to compile (`make`) and install (`make install`) or
+clean (`make clean`)
+
+Usage
+-----
+
+Basic Usage
+^^^^^^^^^^^
+
+    $ ./haka <luafile.lua>
+	
+	where haka is a binary located at $HAKA\_HOME\_DIR/make/out/bin
+
+	Note: you should have root priviledges to run some lua files 
+    (ie. listening on interfaces)
+
+Lua sample file
+^^^^^^^^^^^^^^^
+
+    Sample lua files are given in $HAKA\_HOME\_DIR/tests/sample
+
+Tests
+-----
+
+Run `make test` to play some unit tests.
+
+Documentation
+-------------
+
+Run `make doc` to generate doxygen documentation in `html` and `latex` format.
+The documentation is available in $HAKA\_HOME\_DIR/make/Documentation
+
+Packaging
+---------
+
+Run `make package` to get a tar.gz archive of the whole project
+
+Files
+-----
+
+  - src: haka application source files
+  - include: header files shared between haka app. and haka modules
+  - modules: module source files (these modules will be loaded by haka app.)
+  - lib: shared libraries
+  - external: external dependencies
+  - build: cmake scripts for the build
+
+Bugs/Patches/Contact
+--------------------
+TODO
+
+License
+-------
+TODO

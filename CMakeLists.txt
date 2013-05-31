@@ -140,6 +140,16 @@ if(DOXYGEN_FOUND)
 	)
 endif(DOXYGEN_FOUND)
 
+find_package(Sphinx)
+if(SPHINX_FOUND)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
+	add_custom_target(doc2
+		COMMAND ${SPHINX_EXECUTABLE} -b html -c ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/doc
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "Generating API documentation with Sphinx" VERBATIM
+	)
+endif(SPHINX_FOUND)
+
 # add a target to run cppcheck on the sources
 find_package(Cppcheck)
 if(CPPCHECK_FOUND)
