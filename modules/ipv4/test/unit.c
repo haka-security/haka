@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <check.h>
+#include <wchar.h>
 #include <haka/ipv4.h>
 #include <haka/ipv4-address.h>
 #include <haka/ipv4-network.h>
@@ -25,6 +26,20 @@ START_TEST(ipv4_addr_check_to_string)
 }
 END_TEST
 
+START_TEST(ipv4_network_check)
+{
+	char str[32];
+	ipv4network network;
+	network = ipv4_network_from_string("192.168.1.0/24");
+	wprintf(L"--------- : %d\n", network.net);
+	ck_assert_int_eq(network.net, -1062731520);
+	ck_assert_int_eq(network.mask, 24);
+	network.net = -1408237568;
+	network.mask = 16;
+	ipv4_network_to_string(network, str, 32);
+	ck_assert_str_eq(str, "172.16.0.0/16");
+}
+END_TEST
 
 Suite* ipv4_suite(void)
 {
@@ -34,7 +49,7 @@ Suite* ipv4_suite(void)
 	tcase_add_test(tcase, ipv4_addr_check_from_string);
 	tcase_add_test(tcase, ipv4_addr_check_from_bytes);
 	tcase_add_test(tcase, ipv4_addr_check_to_string);
-
+	tcase_add_test(tcase, ipv4_network_check);
 	suite_add_tcase(suite, tcase);
 	return suite;
 }
