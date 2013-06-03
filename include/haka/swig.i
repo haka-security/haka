@@ -6,7 +6,8 @@
 	typedef const char *temporary_string;
 %}
 
-%exception {
+%define DEFAULT_EXCEPTION
+
 	const wchar_t *error;
 	$action
 	if ((error = clear_error())) {
@@ -31,6 +32,9 @@
 
 		SWIG_fail;
 	}
+%enddef
+%exception {
+        DEFAULT_EXCEPTION
 }
 
 %typemap(out) temporary_string {
