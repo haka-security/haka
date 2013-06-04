@@ -9,5 +9,12 @@ source autobuild/vars.sh
 source autobuild/includes.sh
 
 ### MAIN
-_make test
+echo "Testing..."
+cd "$MAKEDIR"
+ctest --output-on-failure
+if [ $? != 0 ]
+then
+	echo "Error... Exiting autobuild"
+	exit 1
+fi
 exit 0
