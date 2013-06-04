@@ -1,9 +1,19 @@
 %module tcp
+%include "haka/packet_dependant.i"
+CHECK_FOR_PACKET(struct ipv4*,ipv4)
+CHECK_FOR_PACKET(struct tcp*,tcp)
+CHECK_FOR_PACKET(struct tcp_flags*,tcp flags)
+CHECK_FOR_PACKET(struct tcp_payload*,tcp payload)
+PACKET_DEPENDANT_CONSTRUCTOR(tcp_dissect,arg1->packet,SWIGTYPE_p_tcp);
+PACKET_DEPENDANT_CONSTRUCTOR(tcp::flags,arg1->packet->packet,SWIGTYPE_p_tcp_flags);
+PACKET_DEPENDANT_CONSTRUCTOR(tcp::payload,arg1->packet->packet,SWIGTYPE_p_tcp_payload);
+PACKET_DEPENDANT_GETTER(stream::_pop,result->packet->packet,SWIGTYPE_p_tcp);
 %{
 #include <haka/stream.h>
 #include <haka/tcp.h>
 #include <haka/tcp-connection.h>
 #include <haka/tcp-stream.h>
+#include <haka/log.h>
 
 struct tcp_payload;
 
@@ -16,6 +26,7 @@ struct tcp_payload;
 %include "typemaps.i"
 
 %nodefaultctor;
+%nodefaultdtor;
 
 struct tcp_flags {
 	%extend {
@@ -160,7 +171,6 @@ struct tcp_connection {
 };
 
 %rename(dissect) tcp_dissect;
-%newobject tcp_dissect;
 struct tcp *tcp_dissect(struct ipv4 *packet);
 
 %{
