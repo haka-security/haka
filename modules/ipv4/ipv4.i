@@ -29,7 +29,6 @@
 %}
 
 %include "haka/swig.i"
-
 %rename(addr) ipv4_addr;
 struct ipv4_addr {
 	%extend {
@@ -101,6 +100,21 @@ struct ipv4_network {
 			}
 
 			ret->net = ipv4_network_from_string(str);
+			return ret;
+		}
+
+		ipv4_network(struct ipv4_addr addr, unsigned char mask) {
+			if (mask < 0 || mask > 32) {
+				error(L"Unknown network format");
+				return NULL;
+			}
+
+			struct ipv4_network *ret = malloc(sizeof(struct ipv4_network));
+			if (!ret) {
+				return NULL;
+			}
+			ret->net.net = addr.addr;
+			ret->net.mask = mask;
 			return ret;
 		}
 

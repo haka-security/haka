@@ -1,5 +1,8 @@
 #include <haka/types.h>
 
+#define IPV4_NET_STRING_MAXLEN    18
+
+
 /**
  * @brief Convert network address from ipv4network to string
  * @param net network address to be converted

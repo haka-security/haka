@@ -36,7 +36,7 @@ START_TEST(ipv4_network_check)
 	ck_assert_int_eq(network.mask, 24);
 	network.net = -1408237568;
 	network.mask = 16;
-	ipv4_network_to_string(network, str, 32);
+	ipv4_network_to_string(network, str, IPV4_NET_STRING_MAXLEN+1);
 	ck_assert_str_eq(str, "172.16.0.0/16");
 }
 END_TEST
