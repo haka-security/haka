@@ -27,7 +27,7 @@ struct pcap_packet {
 	struct packet core_packet;
 	struct packet_module_state *state;
 	struct pcap_pkthdr header;
-	u_char data[0];
+	u_char *data;
 };
 
 
@@ -200,7 +200,6 @@ static struct packet_module_state *init_state(int thread_id)
 static int packet_receive(struct packet_module_state *state, struct packet **pkt)
 {
 	struct pcap_pkthdr *header;
-	struct pcap_packet *packet = NULL;
 	const u_char *p;
 	int ret;
 
@@ -221,12 +220,18 @@ static int packet_receive(struct packet_module_state *state, struct packet **pkt
 		return 0;
 	}
 	else {
-		packet = malloc(sizeof(struct pcap_packet) + header->caplen);
+		struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
 		if (!packet) {
 			return ENOMEM;
 		}
 
 		memset(packet, 0, sizeof(struct pcap_packet));
+
+		packet->data = malloc(header->caplen);
+		if (!packet->data) {
+			free(packet);
+			return ENOMEM;
+		}
 
 		/* fill packet data structure */
 		memcpy(packet->data, p, header->caplen);
@@ -249,6 +254,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	if (pkt->state->pf && result == FILTER_ACCEPT)
 		pcap_dump((u_char *)pkt->state->pf, &(pkt->header), pkt->data);
 
+	free(pkt->data);
 	free(pkt);
 }
 
@@ -268,6 +274,27 @@ static uint8 *packet_modifiable(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 	return (pkt->data + pkt->state->link_hdr_len);
+}
+
+static int packet_do_resize(struct packet *orig_pkt, size_t size)
+{
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+	u_char *new_data;
+	const size_t new_size = size + pkt->state->link_hdr_len;
+	const size_t copy_size = MIN(new_size, pkt->header.caplen);
+
+	new_data = malloc(new_size);
+	if (!new_data) {
+		return ENOMEM;
+	}
+
+	memcpy(new_data, pkt->data, copy_size);
+
+	free(pkt->data);
+	pkt->data = new_data;
+	pkt->header.len = new_size;
+	pkt->header.caplen = new_size;
+	return 0;
 }
 
 static const char *packet_get_dissector(struct packet *pkt)
@@ -321,6 +348,7 @@ struct packet_module HAKA_MODULE = {
 	verdict:         packet_verdict,
 	get_length:      packet_get_length,
 	make_modifiable: packet_modifiable,
+	resize:          packet_do_resize,
 	get_data:        packet_get_data,
 	get_dissector:   packet_get_dissector
 };

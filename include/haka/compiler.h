@@ -14,4 +14,6 @@
 #define INIT __attribute__((constructor))
 #define FINI __attribute__((destructor))
 
+#define MIN(a, b)     ((a) < (b) ? (a) : (b))
+
 #endif /* _HAKA_COMPILER_H */

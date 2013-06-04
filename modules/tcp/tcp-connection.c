@@ -33,8 +33,8 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 	ptr->tcp_conn.srcport = tcp_get_srcport(tcp);
 	ptr->tcp_conn.dstport = tcp_get_dstport(tcp);
 	ptr->tcp_conn.state = 0;
-	ptr->tcp_conn.stream_input = tcp_stream_create(tcp_get_seq(tcp)+1);
-	ptr->tcp_conn.stream_output = NULL;
+	ptr->tcp_conn.stream_input = tcp_stream_create();
+	ptr->tcp_conn.stream_output = tcp_stream_create();
 
 	ptr->prev = NULL;
 

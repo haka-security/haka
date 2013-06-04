@@ -1,5 +1,6 @@
 
 #include <haka/tcp-stream.h>
+#include <haka/tcp.h>
 #include <haka/error.h>
 
 #include <stdlib.h>
@@ -10,8 +11,8 @@
 static bool tcp_stream_destroy(struct stream *s);
 static size_t tcp_stream_read(struct stream *s, uint8 *data, size_t length);
 static size_t tcp_stream_available(struct stream *s);
-static size_t tcp_stream_insert(struct stream *s, uint8 *data, size_t length);
-static size_t tcp_stream_replace(struct stream *s, uint8 *data, size_t length);
+static size_t tcp_stream_insert(struct stream *s, const uint8 *data, size_t length);
+static size_t tcp_stream_replace(struct stream *s, const uint8 *data, size_t length);
 static size_t tcp_stream_erase(struct stream *s, size_t length);
 
 struct stream_ftable tcp_stream_ftable = {
@@ -24,27 +25,268 @@ struct stream_ftable tcp_stream_ftable = {
 };
 
 
-struct tcp_stream_chunck {
-	struct tcp               *tcp;
-	size_t                    start_seq;
-	size_t                    end_seq;
-	struct tcp_stream_chunck *next;
+enum tcp_modif_type {
+	TCP_MODIF_INSERT,
+	TCP_MODIF_ERASE
+};
+
+struct tcp_stream_chunk_modif {
+	enum tcp_modif_type             type;
+	size_t                          position;
+	size_t                          length;
+	struct tcp_stream_chunk_modif  *prev;
+	struct tcp_stream_chunk_modif  *next;
+	uint8                           data[0];
+};
+
+struct tcp_stream_chunk {
+	struct tcp                     *tcp;
+	size_t                          start_seq;
+	size_t                          end_seq;
+	size_t                          offset_seq;
+	struct tcp_stream_chunk_modif  *modifs;
+	struct tcp_stream_chunk        *next;
+};
+
+struct tcp_stream_position {
+	size_t                          chunk_seq;         /* chunk position seq (without modifs) */
+	size_t                          chunk_seq_modif;   /* chunk position seq (with modifs) */
+	size_t                          current_seq_modif; /* current position seq (with modifs) */
+	struct tcp_stream_chunk        *chunk;             /* chunk at the current stream position */
+	size_t                          chunk_offset;      /* current offset in the current chunk (without modifs) */
+	struct tcp_stream_chunk_modif  *modif;             /* current or previous modif */
+	size_t                          modif_offset;      /* position in the modif or -1 */
 };
 
 struct tcp_stream {
-	struct stream             stream;
-	size_t                    start_seq;
-	size_t                    current_seq;
-	struct tcp_stream_chunck *first;   /* first packet in the stream */
-	struct tcp_stream_chunck *last;    /* last continuous packet */
-	struct tcp_stream_chunck *current; /* packet at the current stream position */
+	struct stream                   stream;
+	bool                            seq_initialized;
+	size_t                          start_seq;
+
+	struct tcp_stream_chunk        *first;   /* first packet in the stream */
+	size_t                          first_offset_seq;
+	struct tcp_stream_chunk        *last;    /* last inserted packet */
+	struct tcp_stream_chunk        *sent;    /* oldest sent packet not acked */
+	struct tcp_stream_chunk        *last_sent;
+	size_t                          sent_offset_seq;
+
+	struct tcp_stream_position      current_position;
 };
+
+
+static struct tcp_stream_chunk_modif *tcp_stream_position_modif(struct tcp_stream_position *pos,
+		size_t *modif_offset, struct tcp_stream_chunk_modif **prev, struct tcp_stream_chunk_modif **next)
+{
+	struct tcp_stream_chunk_modif *cur_modif = NULL;
+
+	if (next) *next = NULL;
+	if (prev) *prev = NULL;
+
+	if (pos->modif) {
+		if (pos->chunk_offset == pos->modif->position) {
+			if (pos->modif->type == TCP_MODIF_INSERT &&
+				pos->modif_offset >= pos->modif->length) {
+				if (next) *next = pos->modif->next;
+				if (prev) *prev = pos->modif;
+				*modif_offset = (size_t)-1;
+			}
+			else if (pos->modif->type == TCP_MODIF_ERASE &&
+				pos->modif_offset != 0) {
+				if (next) *next = pos->modif->next;
+				if (prev) *prev = pos->modif;
+				*modif_offset = (size_t)-1;
+			}
+			else {
+				if (next) *next = pos->modif->next;
+				*modif_offset = pos->modif_offset;
+				cur_modif = pos->modif;
+			}
+		}
+		else {
+			if (pos->modif->next && pos->chunk_offset == pos->modif->next->position) {
+				cur_modif = pos->modif->next;
+				*modif_offset = 0;
+			}
+			else {
+				if (next) *next = pos->modif->next;
+				if (prev) *prev = pos->modif;
+				*modif_offset = (size_t)-1;
+			}
+		}
+	}
+	else {
+		if (pos->chunk->modifs && pos->chunk_offset == pos->chunk->modifs->position) {
+			cur_modif = pos->chunk->modifs;
+			*modif_offset = 0;
+		}
+		else {
+			if (next) *next = pos->chunk->modifs;
+			if (prev) *prev = NULL;
+			*modif_offset = (size_t)-1;
+		}
+	}
+
+	return cur_modif;
+}
+
+static bool tcp_stream_position_chunk_at_end(struct tcp_stream_position *pos)
+{
+	if (pos->chunk) {
+		return pos->chunk_offset == (pos->chunk->end_seq - pos->chunk->start_seq) &&
+			(!pos->modif || pos->modif->position != pos->chunk_offset ||
+			pos->modif_offset >= pos->modif->length);
+	}
+	else {
+		return false;
+	}
+}
+
+static bool tcp_stream_position_next_chunk(struct tcp_stream_position *pos)
+{
+	assert(pos->chunk);
+
+	if (!pos->chunk->next || pos->chunk->next->start_seq == pos->chunk->end_seq) {
+		pos->chunk = pos->chunk->next;
+		pos->chunk_offset = 0;
+		pos->modif = NULL;
+		pos->modif_offset = (size_t)-1;
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
+		struct tcp_stream_position *pos)
+{
+	bool first = true;
+
+	if (!pos->chunk) {
+		if (!tcp_s->first || tcp_s->first->start_seq != pos->chunk_seq + pos->chunk_offset) {
+			return false;
+		}
+
+		pos->chunk = tcp_s->first;
+		pos->chunk_offset = 0;
+		pos->chunk_seq_modif = pos->chunk_seq + tcp_s->first_offset_seq;
+		assert(pos->current_seq_modif == pos->chunk_seq_modif);
+		pos->modif = NULL;
+		pos->modif_offset = (size_t)-1;
+	}
+
+	while (true) {
+		if (tcp_stream_position_chunk_at_end(pos)) {
+			if (!pos->chunk->next || !tcp_stream_position_next_chunk(pos)) {
+				return false;
+			}
+		}
+		else {
+			assert(pos->chunk_offset < (pos->chunk->end_seq - pos->chunk->start_seq));
+			if (!first) {
+				break;
+			}
+		}
+
+		/* Skip erased content */
+		while (true)
+		{
+			struct tcp_stream_chunk_modif *cur_modif, *next_modif, *prev_modif;
+			size_t modif_offset;
+			cur_modif = tcp_stream_position_modif(pos, &modif_offset, &prev_modif, &next_modif);
+			if (cur_modif) {
+				if (cur_modif->type == TCP_MODIF_ERASE) {
+					pos->chunk_offset += cur_modif->length;
+					assert(pos->chunk->start_seq+pos->chunk_offset <= pos->chunk->end_seq);
+					pos->modif = cur_modif;
+					pos->modif_offset = 1;
+				}
+				else {
+					break;
+				}
+			}
+			else if (next_modif && next_modif->position == pos->chunk_offset) {
+				pos->modif = next_modif;
+				pos->modif_offset = 0;
+			}
+			else {
+				break;
+			}
+		}
+
+		first = false;
+	}
+
+	return true;
+}
+
+static size_t tcp_stream_position_read_step(struct tcp_stream *tcp_s,
+		struct tcp_stream_position *pos, uint8 *data, size_t length)
+{
+	struct tcp_stream_chunk_modif *next_modif = NULL;
+	struct tcp_stream_chunk_modif *current_modif = NULL;
+	size_t modif_offset;
+
+	if (length == 0)
+		return 0;
+
+	if (!tcp_stream_position_advance(tcp_s, pos)) {
+		return (size_t)-1;
+	}
+
+	current_modif = tcp_stream_position_modif(pos, &modif_offset, NULL, &next_modif);
+	if (current_modif) {
+		pos->modif = current_modif;
+		pos->modif_offset = modif_offset;
+
+		assert(current_modif->type == TCP_MODIF_INSERT);
+		assert(pos->modif_offset < current_modif->length);
+
+		const size_t maxlength = MIN(length, current_modif->length - pos->modif_offset);
+		memcpy(data, current_modif->data + pos->modif_offset, maxlength);
+		pos->modif_offset += maxlength;
+		pos->current_seq_modif += maxlength;
+		return maxlength;
+	}
+	else {
+		size_t maxlength;
+
+		if (next_modif) {
+			maxlength = MIN(next_modif->position - pos->chunk_offset, length);
+		}
+		else {
+			maxlength = MIN((pos->chunk->end_seq - pos->chunk->start_seq) - pos->chunk_offset, length);
+		}
+
+		memcpy(data, tcp_get_payload(pos->chunk->tcp) + pos->chunk_offset, maxlength);
+		pos->chunk_offset += maxlength;
+		pos->current_seq_modif += maxlength;
+		return maxlength;
+	}
+}
+
+static size_t tcp_stream_position_read(struct tcp_stream *tcp_s,
+		struct tcp_stream_position *pos, uint8 *data, size_t length)
+{
+	size_t left_len = length;
+
+	while (left_len > 0) {
+		const size_t len = tcp_stream_position_read_step(tcp_s, pos, data, left_len);
+		if (len == (size_t)-1) {
+			break;
+		}
+
+		left_len -= len;
+		data += len;
+	}
+
+	return length;
+}
 
 #define TCP_STREAM(s) struct tcp_stream *tcp_s = (struct tcp_stream *)(s); \
 	assert((s)->ftable == &tcp_stream_ftable);
 
-
-struct stream *tcp_stream_create(size_t start_seq)
+struct stream *tcp_stream_create()
 {
 	struct tcp_stream *tcp_s = malloc(sizeof(struct tcp_stream));
 	if (!tcp_s) {
@@ -52,13 +294,9 @@ struct stream *tcp_stream_create(size_t start_seq)
 		return NULL;
 	}
 
-	tcp_s->stream.ftable = &tcp_stream_ftable;
-	tcp_s->start_seq = start_seq;
-	tcp_s->current_seq = 0;
-	tcp_s->first = NULL;
-	tcp_s->last = NULL;
-	tcp_s->current = NULL;
+	memset(tcp_s, 0, sizeof(struct tcp_stream));
 
+	tcp_s->stream.ftable = &tcp_stream_ftable;
 	return &tcp_s->stream;
 }
 
@@ -66,36 +304,40 @@ static bool tcp_stream_destroy(struct stream *s)
 {
 	TCP_STREAM(s);
 
-	if (tcp_s->first) {
-		error(L"tcp stream must be empty to be destroyed");
-		return false;
+	struct tcp_stream_chunk *iter = tcp_s->first;
+	while (iter) {
+		assert(iter->tcp);
+		tcp_flush(iter->tcp);
+		tcp_release(iter->tcp);
+		iter = iter->next;
 	}
 
 	free(s);
 	return true;
 }
 
-static struct tcp_stream_chunck *tcp_stream_current(struct tcp_stream *tcp_s)
-{
-	struct tcp_stream_chunck *iter;
-
-	iter = tcp_s->current;
-	if (!iter) iter = tcp_s->first;
-
-	while (iter && iter->end_seq < tcp_s->current_seq) {
-		iter = iter->next;
-	}
-
-	tcp_s->current = iter;
-	return iter;
-}
-
 bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 {
-	struct tcp_stream_chunck *chunk;
+	struct tcp_stream_chunk *chunk;
 	TCP_STREAM(s);
 
-	chunk = malloc(sizeof(struct tcp_stream_chunck));
+	if (tcp_get_flags_syn(tcp)) {
+		if (!tcp_s->seq_initialized) {
+			tcp_s->start_seq = tcp_get_seq(tcp)+1;
+			tcp_s->seq_initialized = true;
+			return true;
+		}
+		else {
+			return true;
+		}
+	}
+
+	if (!tcp_s->seq_initialized) {
+		error(L"invalid stream");
+		return false;
+	}
+
+	chunk = malloc(sizeof(struct tcp_stream_chunk));
 	if (!chunk) {
 		error(L"memory error");
 		return false;
@@ -104,13 +346,15 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	chunk->tcp = tcp;
 	chunk->start_seq = tcp_get_seq(tcp);
 	if (chunk->start_seq < tcp_s->start_seq) {
-		error(L"invalid sequence number");
+		error(L"invalid sequence number: %u < %u", chunk->start_seq, tcp_s->start_seq);
 		free(chunk);
 		return false;
 	}
 
 	chunk->start_seq -= tcp_s->start_seq;
 	chunk->end_seq = chunk->start_seq + tcp_get_payload_length(tcp);
+	chunk->offset_seq = 0;
+	chunk->modifs = NULL;
 
 	/* Search for insert point */
 	if (!tcp_s->last) {
@@ -119,23 +363,19 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 		chunk->next = NULL;
 	}
 	else {
-		struct tcp_stream_chunck **iter;
+		struct tcp_stream_chunk **iter;
 
 		if (tcp_s->last->start_seq < chunk->start_seq) {
 			iter = &tcp_s->last;
-			do {
-				iter = &((*iter)->next);
-			}
-			while (*iter && (*iter)->start_seq < chunk->start_seq);
 		}
 		else {
-			tcp_stream_current(tcp_s); /* Validate tcp_s->current field */
-			iter = &tcp_s->current;
-			do {
-				iter = &((*iter)->next);
-			}
-			while (*iter && (*iter)->start_seq < chunk->start_seq);
+			iter = &tcp_s->first;
 		}
+
+		do {
+			iter = &((*iter)->next);
+		}
+		while (*iter && (*iter)->start_seq < chunk->start_seq);
 
 		if (*iter) chunk->next = (*iter)->next;
 		else chunk->next = NULL;
@@ -147,106 +387,352 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	return true;
 }
 
+static void tcp_stream_chunk_release(struct tcp_stream_chunk *chunk)
+{
+	struct tcp_stream_chunk_modif *iter = chunk->modifs;
+	while (iter) {
+		struct tcp_stream_chunk_modif *modif = iter;
+		iter = iter->next;
+		free(modif);
+	}
+
+	chunk->modifs = NULL;
+}
+
 struct tcp *tcp_stream_pop(struct stream *s)
 {
 	struct tcp *tcp;
-	struct tcp_stream_chunck *chunk;
+	struct tcp_stream_chunk *chunk;
+	struct tcp_stream_position *pos;
 	TCP_STREAM(s);
 
+	pos = &tcp_s->current_position;
+	tcp_stream_position_advance(tcp_s, pos);
+
 	chunk = tcp_s->first;
-	if (chunk && chunk->end_seq <= tcp_s->current_seq) {
+
+	if (pos->chunk == chunk) {
+		if (tcp_stream_position_chunk_at_end(pos)) {
+			tcp_stream_position_next_chunk(pos);
+		}
+	}
+
+	if (chunk && pos->chunk != chunk) {
 		tcp = chunk->tcp;
+
+		if (chunk->modifs) {
+			/* Apply modifs to tcp packet */
+			const size_t new_size = chunk->end_seq - chunk->start_seq + chunk->offset_seq;
+			struct tcp_stream_position pos;
+			uint8 *buffer;
+
+			pos.chunk = chunk;
+			pos.chunk_offset = 0;
+			pos.modif = NULL;
+			pos.modif_offset = 0;
+			pos.chunk_seq = chunk->start_seq;
+			pos.chunk_seq_modif = chunk->start_seq + tcp_s->first_offset_seq;
+			pos.current_seq_modif = pos.chunk_seq_modif;
+
+			buffer = malloc(new_size);
+			if (!buffer) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			tcp_stream_position_read(tcp_s, &pos, buffer, new_size);
+			memcpy(tcp_resize_payload(tcp, new_size), buffer, new_size);
+			free(buffer);
+		}
+
+		tcp_set_seq(tcp, tcp_get_seq(tcp) + tcp_s->first_offset_seq);
+
+		tcp_s->first_offset_seq += tcp_s->first->offset_seq;
 		tcp_s->first = tcp_s->first->next;
 
-		if (tcp_s->current == chunk) tcp_s->current = NULL;
 		if (tcp_s->last == chunk) {
 			assert(chunk->next == NULL);
 			tcp_s->last = NULL;
 		}
 
-		free(chunk);
+		chunk->next = NULL;
+		if (tcp_s->last_sent) {
+			tcp_s->last_sent->next = chunk;
+			tcp_s->last_sent = chunk;
+		}
+		else {
+			tcp_s->last_sent = chunk;
+			tcp_s->sent = chunk;
+		}
+		chunk->tcp = NULL;
+
+		tcp_stream_chunk_release(chunk);
 		return tcp;
 	}
 
 	return NULL;
 }
 
-static size_t tcp_stream_read(struct stream *s, uint8 *data, size_t length)
+void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 {
-	struct tcp_stream_chunck *iter;
-	size_t offset, last_seq;
-	size_t left_len = length;
+	uint32 ack = tcp_get_ack_seq(tcp);
+	uint32 seq, new_seq;
+	struct tcp_stream_chunk *iter;
 	TCP_STREAM(s);
 
-	offset = tcp_s->current_seq;
-	iter = tcp_stream_current(tcp_s);
+	iter = tcp_s->sent;
+	if (!iter) {
+		return;
+	}
 
-	if (!iter || tcp_s->current_seq < iter->start_seq)
-		return 0;
+	ack -= tcp_s->start_seq;
+	seq = tcp_s->sent_offset_seq + tcp_s->sent->start_seq;
+	new_seq = tcp_s->sent->start_seq;
 
-	offset = tcp_s->current_seq;
-	last_seq = iter->start_seq;
-
-	do {
-		if (last_seq != iter->start_seq)
+	while (iter) {
+		if (iter->end_seq + iter->offset_seq > ack) {
 			break;
+		}
 
-		const size_t local_offset = offset - iter->start_seq;
-		const uint8 *src = tcp_get_payload(iter->tcp) + local_offset;
-		size_t len = iter->end_seq - offset;
-		if (len > left_len) len = left_len;
-		memcpy(data, src, len);
-		offset = iter->end_seq;
-		left_len -= len;
+		seq += (iter->end_seq - iter->start_seq) + iter->offset_seq;
+		new_seq = iter->end_seq;
+		if (ack <= seq) {
+			break;
+		}
 
-		last_seq = iter->end_seq;
+		assert(!iter->next || iter->next->start_seq == iter->end_seq);
 		iter = iter->next;
 	}
-	while (iter && left_len > 0);
 
-	tcp_s->current_seq += length - left_len;
+	tcp_set_ack_seq(tcp, new_seq + tcp_s->start_seq);
+}
 
-	return length - left_len;
+static size_t tcp_stream_read(struct stream *s, uint8 *data, size_t length)
+{
+	TCP_STREAM(s);
+	return tcp_stream_position_read(tcp_s, &tcp_s->current_position, data, length);
 }
 
 static size_t tcp_stream_available(struct stream *s)
 {
-	struct tcp_stream_chunck *iter;
-	size_t last_seq = 0;
+	struct tcp_stream_position position;
+	size_t chunk_length, length = 0;
 	TCP_STREAM(s);
 
-	iter = tcp_stream_current(tcp_s);
-	if (!iter || tcp_s->current_seq < iter->start_seq)
-		return 0;
-
-	last_seq = iter->start_seq;
-
-	do {
-		if (last_seq != iter->start_seq)
+	position = tcp_s->current_position;
+	while (true) {
+		if (!tcp_stream_position_advance(tcp_s, &position)) {
 			break;
+		}
 
-		last_seq = iter->end_seq;
-		iter = iter->next;
+		chunk_length = position.chunk->end_seq + position.chunk->start_seq + position.chunk->offset_seq;
+		length += chunk_length - (position.current_seq_modif - position.chunk_seq_modif);
+
+		/* Advance to next chunk */
+		position.chunk_offset = position.chunk->end_seq - position.chunk->start_seq;
+		position.modif_offset = (size_t)-1;
+		position.modif = NULL;
 	}
-	while (iter);
 
-	return last_seq - tcp_s->current_seq;
+	return length;
 }
 
-static size_t tcp_stream_insert(struct stream *s, uint8 *data, size_t length)
+static size_t tcp_stream_insert(struct stream *s, const uint8 *data, size_t length)
 {
-	//TCP_STREAM(s);
-	return -1;
+	struct tcp_stream_chunk_modif *prev_modif = NULL;
+	struct tcp_stream_chunk_modif *cur_modif = NULL;
+	struct tcp_stream_position *pos;
+	size_t modif_offset;
+	TCP_STREAM(s);
+
+	pos = &tcp_s->current_position;
+
+	if (!tcp_stream_position_advance(tcp_s, pos)) {
+		error(L"invalid position");
+		return 0;
+	}
+
+	cur_modif = tcp_stream_position_modif(pos, &modif_offset,
+			&prev_modif, NULL);
+	if (cur_modif) {
+		assert(cur_modif->type == TCP_MODIF_INSERT);
+		struct tcp_stream_chunk_modif *new_modif = NULL;
+
+		/* Modify an existing modif */
+		new_modif = malloc(sizeof(struct tcp_stream_chunk_modif) + length + cur_modif->length);
+		if (!new_modif) {
+			error(L"memory error");
+			return -1;
+		}
+
+		new_modif->type = TCP_MODIF_INSERT;
+		new_modif->position = cur_modif->position;
+		new_modif->length = cur_modif->length + length;
+
+		memcpy(new_modif->data, cur_modif->data, modif_offset);
+		memcpy(new_modif->data + modif_offset, data, length);
+		memcpy(new_modif->data + modif_offset + length,
+				cur_modif->data + modif_offset,
+				cur_modif->length - modif_offset);
+
+		new_modif->next = cur_modif->next;
+		new_modif->prev = cur_modif->prev;
+		if (cur_modif->next) cur_modif->next->prev = new_modif;
+		if (cur_modif->prev) cur_modif->prev->next = new_modif;
+
+		pos->chunk->offset_seq += length;
+		free(cur_modif);
+
+		tcp_s->current_position.modif = new_modif;
+		tcp_s->current_position.modif_offset = modif_offset + length;
+		tcp_s->current_position.current_seq_modif += length;
+
+		return length;
+	}
+	else {
+		/* Create a new modif */
+		cur_modif = malloc(sizeof(struct tcp_stream_chunk_modif) + length);
+		if (!cur_modif) {
+			error(L"memory error");
+			return -1;
+		}
+
+		cur_modif->type = TCP_MODIF_INSERT;
+		cur_modif->position = pos->chunk_offset;
+		cur_modif->length = length;
+		memcpy(cur_modif->data, data, length);
+
+		if (prev_modif) {
+			cur_modif->prev = prev_modif;
+			cur_modif->next = prev_modif->next;
+			if (cur_modif->next) cur_modif->next->prev = cur_modif;
+			prev_modif->next = cur_modif;
+		}
+		else {
+			cur_modif->next = NULL;
+			cur_modif->prev = NULL;
+			pos->chunk->modifs = cur_modif;
+		}
+
+		pos->chunk->offset_seq += length;
+
+		tcp_s->current_position.modif = cur_modif;
+		tcp_s->current_position.modif_offset = length;
+		tcp_s->current_position.current_seq_modif += length;
+
+		return length;
+	}
 }
 
-static size_t tcp_stream_replace(struct stream *s, uint8 *data, size_t length)
+static size_t tcp_stream_replace(struct stream *s, const uint8 *data, size_t length)
 {
-	//TCP_STREAM(s);
-	return -1;
+	const size_t ret = tcp_stream_insert(s, data, length);
+	tcp_stream_erase(s, length);
+	return ret;
 }
 
 static size_t tcp_stream_erase(struct stream *s, size_t length)
 {
-	//TCP_STREAM(s);
-	return -1;
+	struct tcp_stream_chunk_modif *prev_modif = NULL;
+	struct tcp_stream_chunk_modif *next_modif = NULL;
+	struct tcp_stream_chunk_modif *cur_modif = NULL;
+	struct tcp_stream_position *pos;
+	size_t modif_offset, erase_length;
+	TCP_STREAM(s);
+
+	pos = &tcp_s->current_position;
+
+	if (!tcp_stream_position_advance(tcp_s, pos)) {
+		return 0;
+	}
+
+	cur_modif = tcp_stream_position_modif(pos, &modif_offset,
+			&prev_modif, &next_modif);
+	if (cur_modif) {
+		assert(cur_modif->type == TCP_MODIF_INSERT);
+		struct tcp_stream_chunk_modif *new_modif = NULL;
+		size_t max_erase;
+
+		max_erase = cur_modif->length - pos->modif_offset;
+		erase_length = MIN(max_erase, length);
+
+		if (cur_modif->length == erase_length) {
+			/* Remove modif */
+			if (cur_modif->next) cur_modif->next->prev = cur_modif->prev;
+			if (cur_modif->prev) cur_modif->prev->next = cur_modif->next;
+		}
+		else {
+			/* Modify an existing modif */
+			new_modif = malloc(sizeof(struct tcp_stream_chunk_modif) + cur_modif->length - erase_length);
+			if (!new_modif) {
+				error(L"memory error");
+				return -1;
+			}
+
+			new_modif->type = TCP_MODIF_INSERT;
+			new_modif->position = cur_modif->position;
+			new_modif->length = cur_modif->length - erase_length;
+
+			memcpy(new_modif->data, cur_modif->data, modif_offset);
+			memcpy(new_modif->data + modif_offset,
+					cur_modif->data + modif_offset + erase_length,
+					cur_modif->length - modif_offset - erase_length);
+
+			new_modif->next = cur_modif->next;
+			new_modif->prev = cur_modif->prev;
+			if (cur_modif->next) cur_modif->next->prev = new_modif;
+			if (cur_modif->prev) cur_modif->prev->next = new_modif;
+		}
+
+		pos->chunk->offset_seq -= erase_length;
+		free(cur_modif);
+	}
+	else {
+		size_t max_erase;
+
+		if (next_modif) {
+			max_erase = next_modif->position - pos->chunk_offset;
+		}
+		else {
+			max_erase = (pos->chunk->end_seq - pos->chunk->start_seq) - pos->chunk_offset;
+		}
+
+		erase_length = MIN(max_erase, length);
+
+		/* Create a new modif */
+		cur_modif = malloc(sizeof(struct tcp_stream_chunk_modif));
+		if (!cur_modif) {
+			error(L"memory error");
+			return -1;
+		}
+
+		cur_modif->type = TCP_MODIF_ERASE;
+		cur_modif->position = pos->chunk_offset;
+		cur_modif->length = erase_length;
+
+		if (prev_modif) {
+			cur_modif->prev = prev_modif;
+			cur_modif->next = prev_modif->next;
+			if (cur_modif->next) cur_modif->next->prev = cur_modif;
+			prev_modif->next = cur_modif;
+		}
+		else {
+			cur_modif->next = NULL;
+			cur_modif->prev = NULL;
+			pos->chunk->modifs = cur_modif;
+		}
+
+		pos->chunk->offset_seq -= erase_length;
+
+		pos->modif = cur_modif;
+		pos->modif_offset = 1;
+		pos->chunk_offset += erase_length;
+	}
+
+	if (erase_length > 0 && erase_length < length) {
+		return erase_length + tcp_stream_erase(s, length-erase_length);
+	}
+	else {
+		return erase_length;
+	}
 }

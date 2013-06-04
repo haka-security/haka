@@ -147,12 +147,16 @@ uint8 *tcp_get_payload_modifiable(struct tcp *packet);
  */
 size_t tcp_get_payload_length(const struct tcp *packet);
 
+uint8 *tcp_resize_payload(struct tcp *packet, size_t size);
+
 /**
  * Drop the TCP packet
  * @param packet TCP structure
  * @ingroup TCP
  */
 void tcp_action_drop(struct tcp *packet);
+
+void tcp_flush(struct tcp *packet);
 
 /**
  * Get if the packet is valid and can continue to be processed.

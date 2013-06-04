@@ -18,6 +18,8 @@
 #include <stddef.h>
 
 #include <haka/types.h>
+#include <haka/compiler.h>
+#include <haka/error.h>
 
 
 struct stream;
@@ -45,12 +47,12 @@ struct stream_ftable {
 	/**
 	 * Insert data at the current stream position.
 	 */
-	size_t    (*insert)(struct stream *s, uint8 *data, size_t length);
+	size_t    (*insert)(struct stream *s, const uint8 *data, size_t length);
 
 	/**
 	 * Replace data at the current stream position.
 	 */
-	size_t    (*replace)(struct stream *s, uint8 *data, size_t length);
+	size_t    (*replace)(struct stream *s, const uint8 *data, size_t length);
 
 	/**
 	 * Erase data at the current stream position.
@@ -77,7 +79,7 @@ struct stream {
  * get details about the error).
  * @ingroup Stream
  */
-static inline size_t stream_read(struct stream *stream, uint8 *data, size_t length)
+INLINE size_t stream_read(struct stream *stream, uint8 *data, size_t length)
 {
 	return stream->ftable->read(stream, data, length);
 }
@@ -86,7 +88,7 @@ static inline size_t stream_read(struct stream *stream, uint8 *data, size_t leng
  * Get the number of contiguous bytes available from a stream.
  * @param stream Opaque stream.
  */
-static inline size_t stream_available(struct stream *stream)
+INLINE size_t stream_available(struct stream *stream)
 {
 	return stream->ftable->available(stream);
 }
@@ -97,9 +99,39 @@ static inline size_t stream_available(struct stream *stream)
  * @return True if successful (use clear_error() to get details about the error).
  * In case of an error, the stream is not freed.
  */
-static inline bool stream_destroy(struct stream *stream)
+INLINE bool stream_destroy(struct stream *stream)
 {
 	return stream->ftable->destroy(stream);
+}
+
+INLINE size_t stream_insert(struct stream *stream, const uint8 *data, size_t length)
+{
+	if (!stream->ftable->insert) {
+		error(L"usupported operation");
+		return 0;
+	}
+
+	return stream->ftable->insert(stream, data, length);
+}
+
+INLINE size_t stream_replace(struct stream *stream, const uint8 *data, size_t length)
+{
+	if (!stream->ftable->replace) {
+		error(L"usupported operation");
+		return 0;
+	}
+
+	return stream->ftable->replace(stream, data, length);
+}
+
+INLINE size_t stream_erase(struct stream *stream, size_t length)
+{
+	if (!stream->ftable->erase) {
+		error(L"usupported operation");
+		return 0;
+	}
+
+	return stream->ftable->erase(stream, length);
 }
 
 #endif /* _HAKA_STREAM_H */

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include <haka/log.h>
 #include <haka/error.h>
@@ -60,13 +61,23 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 
 void tcp_release(struct tcp *tcp)
 {
+	assert(!tcp->packet);
 	free(tcp);
+}
+
+void tcp_flush(struct tcp *tcp)
+{
+	struct ipv4 *packet;
+	while ((packet = tcp_forge(tcp))) {
+		ipv4_flush(packet);
+		ipv4_release(packet);
+	}
 }
 
 void tcp_pre_modify(struct tcp *tcp)
 {
 	if (!tcp->modified) {
-		tcp->header = (struct tcp_header *)(packet_data_modifiable(tcp->packet->packet) + ipv4_get_hdr_len(tcp->packet));
+		tcp->header = (struct tcp_header *)(ipv4_get_payload_modifiable(tcp->packet));
 	}
 	tcp->modified = true;
 	tcp->invalid_checksum = true;
@@ -135,6 +146,16 @@ size_t tcp_get_payload_length(const struct tcp *tcp)
 {
 	TCP_CHECK(tcp, 0);
 	return ipv4_get_payload_length(tcp->packet) - tcp_get_hdr_len(tcp);
+}
+
+uint8 *tcp_resize_payload(struct tcp *tcp, size_t size)
+{
+	TCP_CHECK(tcp, NULL);
+
+	tcp->header = (struct tcp_header *)(ipv4_resize_payload(tcp->packet, size + tcp_get_hdr_len(tcp)));
+	tcp->modified = true;
+	tcp->invalid_checksum = true;
+	return (uint8 *)tcp_get_payload(tcp);
 }
 
 void tcp_action_drop(struct tcp *tcp)

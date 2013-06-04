@@ -16,10 +16,9 @@
 
 /**
  * Create a new tcp stream.
- * @param start_seq Start TCP sequence number for this stream.
  * @return New allocated TCP stream.
  */
-struct stream *tcp_stream_create(size_t start_seq);
+struct stream *tcp_stream_create();
 
 /**
  * Push data into a tcp stream.
@@ -39,6 +38,8 @@ bool tcp_stream_push(struct stream *stream, struct tcp *tcp);
  * have data before the current position in the stream.
  */
 struct tcp *tcp_stream_pop(struct stream *stream);
+
+void tcp_stream_ack(struct stream *stream, struct tcp *tcp);
 
 
 #endif /* _HAKA_PROTO_TCP_STREAM_H */

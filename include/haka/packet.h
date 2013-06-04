@@ -59,6 +59,8 @@ const char  *packet_dissector(struct packet *pkt);
  */
 uint8       *packet_data_modifiable(struct packet *pkt);
 
+int          packet_resize(struct packet *pkt, size_t size);
+
 /**
  * Drop a packet. The packet will be released and should not be used anymore
  * after this call.

@@ -41,7 +41,11 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 	lua_getglobal(state->lua, "haka");
 	lua_getfield(state->lua, -1, "filter");
 	lua_pushppacket(state->lua, pkt);
+#ifdef HAKA_LUAJIT
 	if (lua_pcall(state->lua, 1, 0, 1)) {
+#else
+	if (lua_pcall(state->lua, 1, 0, 2)) {
+#endif
 		print_error(state->lua, L"filter function");
 		packet_drop(pkt);
 	}

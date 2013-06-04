@@ -94,6 +94,8 @@ struct packet *ipv4_forge(struct ipv4 *ip);
  */
 void ipv4_release(struct ipv4 *ip);
 
+void ipv4_flush(struct ipv4 *ip);
+
 /**
  * Function that need to be called before modifying fields not part if
  * the header.
@@ -427,6 +429,8 @@ uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip);
  * @ingroup IPv4
  */
 size_t ipv4_get_payload_length(struct ipv4 *ip);
+
+uint8 *ipv4_resize_payload(struct ipv4 *ip, size_t size);
 
 /**
  * Get the protocol dissector name to use for this packet.

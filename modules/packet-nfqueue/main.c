@@ -38,7 +38,7 @@ struct nfqueue_packet {
 	int         id; /* nfq identifier */
 	size_t      length;
 	int         modified:1;
-	uint8       data[0];
+	uint8      *data;
 };
 
 /* Iptables rules to add (iptables-restore format) */
@@ -150,13 +150,20 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 		return 0;
 	}
 
-	state->current_packet = malloc(sizeof(struct nfqueue_packet) + packet_len);
+	state->current_packet = malloc(sizeof(struct nfqueue_packet));
 	if (!state->current_packet) {
 		state->error = ENOMEM;
 		return 0;
 	}
 
 	memset(state->current_packet,0,sizeof(struct nfqueue_packet));
+
+	state->current_packet->data = malloc(packet_len);
+	if (!state->current_packet->data) {
+		free(state->current_packet);
+		state->error = ENOMEM;
+		return 0;
+	}
 
 	state->current_packet->length = packet_len;
 	state->current_packet->id = ntohl(packet_hdr->packet_id);
@@ -348,6 +355,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"packet verdict failed");
 	}
 
+	free(pkt->data);
 	free(pkt);
 }
 
@@ -368,6 +376,25 @@ static uint8 *packet_modifiable(struct packet *orig_pkt)
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 	pkt->modified = 1;
 	return pkt->data;
+}
+
+static int packet_do_resize(struct packet *orig_pkt, size_t size)
+{
+	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
+	uint8 *new_data;
+	const size_t copy_size = MIN(size, pkt->length);
+
+	new_data = malloc(size);
+	if (!new_data) {
+		return ENOMEM;
+	}
+
+	memcpy(new_data, pkt->data, copy_size);
+
+	free(pkt->data);
+	pkt->data = new_data;
+	pkt->length = size;
+	return 0;
 }
 
 static const char *packet_get_dissector(struct packet *pkt)
@@ -426,6 +453,7 @@ struct packet_module HAKA_MODULE = {
 	verdict:         packet_verdict,
 	get_length:      packet_get_length,
 	make_modifiable: packet_modifiable,
+	resize:          packet_do_resize,
 	get_data:        packet_get_data,
 	get_dissector:   packet_get_dissector
 };

@@ -63,6 +63,14 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 	}
 }
 
+void ipv4_flush(struct ipv4 *ip)
+{
+	struct packet *packet;
+	while ((packet = ipv4_forge(ip))) {
+		packet_drop(packet);
+	}
+}
+
 void ipv4_pre_modify(struct ipv4 *ip)
 {
 	if (!ip->modified) {
@@ -134,6 +142,21 @@ size_t ipv4_get_payload_length(struct ipv4 *ip)
 	const uint8 hdr_len = ipv4_get_hdr_len(ip);
 	const size_t total_len = ipv4_get_len(ip);
 	return total_len - hdr_len;
+}
+
+uint8 *ipv4_resize_payload(struct ipv4 *ip, size_t size)
+{
+	size_t new_size;
+
+	IPV4_CHECK(ip, NULL);
+
+	new_size = size + ipv4_get_hdr_len(ip);
+	packet_resize(ip->packet, new_size);
+	ip->header = (struct ipv4_header*)packet_data_modifiable(ip->packet);
+	ip->modified = true;
+	ip->invalid_checksum = true;
+	ipv4_set_len(ip, new_size);
+	return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip);
 }
 
 static char *ipv4_proto_dissector[256];

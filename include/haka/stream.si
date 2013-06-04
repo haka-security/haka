@@ -15,7 +15,7 @@
 		if (!buf) return NULL;
 
 		buf->size = stream_read((struct stream *)$self, buf->data, size);
-		if (check_error()) {
+		if (check_error() || buf->size == 0) {
 			free_buffer(buf);
 			return NULL;
 		}
@@ -28,16 +28,21 @@
 		if (!buf) return NULL;
 
 		buf->size = stream_read((struct stream *)$self, buf->data, size);
-		if (check_error()) {
+		if (check_error() || buf->size == 0) {
 			free_buffer(buf);
 			return NULL;
 		}
 		return buf;
 	}
 
-	%rename(available) _available;
-	unsigned int _available() {
-		return stream_available((struct stream *)$self);
+	unsigned int available();
+
+	%rename(insert) _insert;
+	unsigned int _insert(struct buffer *buf)
+	{
+		return stream_insert((struct stream *)$self, buf->data, buf->size);
 	}
+
+	unsigned int erase(int size);
 }
 %enddef

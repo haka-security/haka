@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <haka/packet.h>
 #include <haka/error.h>
@@ -69,6 +70,12 @@ uint8* packet_data_modifiable(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 	return packet_module->make_modifiable(pkt);
+}
+
+int packet_resize(struct packet *pkt, size_t size)
+{
+	assert(packet_module);
+	return packet_module->resize(pkt, size);
 }
 
 void packet_drop(struct packet *pkt)

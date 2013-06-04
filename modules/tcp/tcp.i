@@ -81,16 +81,19 @@ struct tcp_payload {
 struct stream
 {
 	%extend {
-		%rename(push) _push;
-		void _push(struct tcp *tcp)
+		void push(struct tcp *tcp)
 		{
 			tcp_stream_push($self, tcp);
 		}
 
-		%rename(pop) _pop;
-		struct tcp *_pop()
+		struct tcp *pop()
 		{
 			return tcp_stream_pop($self);
+		}
+
+		void ack(struct tcp *tcp)
+		{
+			return tcp_stream_ack($self, tcp);
 		}
 	}
 };
