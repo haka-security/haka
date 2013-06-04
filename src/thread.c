@@ -238,7 +238,7 @@ void thread_pool_cancel(struct thread_pool *pool)
 	if (!pool->single) {
 		int i;
 
-		for (i=0; i<pool->single; ++i) {
+		for (i=0; i<pool->count; ++i) {
 			pthread_cancel(pool->threads[i]->thread);
 		}
 
