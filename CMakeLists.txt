@@ -31,6 +31,12 @@ if(BIGENDIAN EQUAL 0)
 	set(HAKA_LITTLEENDIAN 1)
 endif(BIGENDIAN EQUAL 0)
 
+if(USE_LUAJIT)
+    set(HAKA_LUAJIT 1)
+else()
+    set(HAKA_LUA 1)
+endif()
+
 # Find type size
 CHECK_TYPE_SIZE("short" SIZEOF_SHORT)
 CHECK_TYPE_SIZE("int" SIZEOF_INT)
