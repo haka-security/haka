@@ -20,6 +20,9 @@
 #include <haka/compiler.h>
 #include <haka/error.h>
 
+#include "haka/ipv4-addr.h"
+#include "haka/ipv4-network.h"
+
 #define SWAP_TO_IPV4(type, x)            SWAP_TO_BE(type, x)
 #define SWAP_FROM_IPV4(type, x)          SWAP_FROM_BE(type, x)
 #define IPV4_GET_BIT(type, v, i)         GET_BIT(SWAP_FROM_BE(type, v), i)
@@ -37,19 +40,6 @@
 #define IPV4_FRAGMENTOFFSET_OFFSET 3 /* Fragment offset is a multiple of 8 bytes */
 #define IPV4_HDR_LEN_OFFSET        2 /* Header length is a multiple of 4 bytes */
 
-/*
- * Define a type for IPv4 addresses
- * @ingroup IPv4
- */
-typedef uint32 ipv4addr;
-#define SWAP_ipv4addr(x) SWAP_uint32(x)
-
-typedef struct {
-	ipv4addr net;
-	uint8    mask;
-}ipv4network;
-
-extern const ipv4network ipv4_network_zero;
 
 struct ipv4_header {
 #ifdef HAKA_LITTLEENDIAN

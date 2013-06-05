@@ -5,7 +5,7 @@ swig_add_module(ipv4 lua SHARED
 	ipv4.i
 	main.c
 	ipv4.c
-	ipv4-address.c
+	ipv4-addr.c
 	ipv4-network.c)
 
 include_directories(.)

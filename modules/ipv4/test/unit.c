@@ -3,8 +3,6 @@
 #include <check.h>
 #include <wchar.h>
 #include <haka/ipv4.h>
-#include <haka/ipv4-address.h>
-#include <haka/ipv4-network.h>
 
 START_TEST(ipv4_addr_check_from_string)
 {

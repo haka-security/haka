@@ -10,11 +10,6 @@
 #include <haka/error.h>
 
 
-const ipv4network ipv4_network_zero = {
-	net:  0,
-	mask: 0
-};
-
 struct ipv4 *ipv4_dissect(struct packet *packet)
 {
 	struct ipv4 *ip = NULL;

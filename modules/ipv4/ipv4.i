@@ -2,8 +2,6 @@
 
 %{
 	#include "haka/ipv4.h"
-	#include "haka/ipv4-address.h"
-	#include "haka/ipv4-network.h"
 
 	struct ipv4_flags;
 	struct ipv4_payload;
@@ -105,7 +103,7 @@ struct ipv4_network {
 
 		ipv4_network(struct ipv4_addr addr, unsigned char mask) {
 			if (mask < 0 || mask > 32) {
-				error(L"Unknown network format");
+				error(L"Invalid IPv4 addresss network format");
 				return NULL;
 			}
 
@@ -136,9 +134,10 @@ struct ipv4_network {
 			return buffer;
 		}
 
-		bool contains(struct ipv4_addr *addr)
+		%rename(contains) _contains;
+		bool _contains(struct ipv4_addr *addr)
 		{
-			return ipv4_check_addr_in_network($self->net, addr->addr);
+			return ipv4_network_contains($self->net, addr->addr);
 		}
 
 		%immutable;
