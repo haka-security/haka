@@ -1,21 +1,15 @@
--- Basic test that will output some basic information about the
--- received packets.
+-- How to detect Xmas attacks
 
-ipv4 = require("proto-ipv4")
-tcp = require("proto-tcp")
-
-return function(pkt)
-
-	local ip = ipv4(pkt)
-	if ip.proto == 6 then
-		local tcp_h = tcp(ip)
+require("ipv4");
+require("tcp");
+haka.rule {
+	hooks = { "tcp-up" },
+	eval = function (self, tcp_h)
 		--Xmas scan, as made by nmap -sX <IP>
 		if tcp_h.flags.psh and tcp_h.flags.fin and tcp_h.flags.urg then
-			print "Xmas attack!! Details : "
-			print(string.format("\tIP src: " .. tostring(ip.src) .. "; port src: " .. tcp_h.srcport))
-			print(string.format("\tIP dst: " .. tostring(ip.dst) .. "; port dst: " .. tcp_h.dstport))
+			haka.log.debug("filter","Xmas attack!! Details : ");
+			haka.log.debug("filter","    IP src: %s ; port src: %s",tcp_h.ip.src,tcp_h.srcport);
+			haka.log.debug("filter","    IP dst: %s ; port dst: %s",tcp_h.ip.dst,tcp_h.dstport);
 		end
 	end
-	return packet.ACCEPT
-
-end
+}
