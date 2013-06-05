@@ -1,5 +1,4 @@
 #include "haka/ipv4.h"
-#include "haka/ipv4-address.h"
 
 #include <haka/log.h>
 #include <haka/error.h>
@@ -10,24 +9,19 @@
 
 uint32 ipv4_addr_from_string(const char *string)
 {
-	ipv4addr addr;
+	struct in_addr addr;
 
-	if (inet_pton(AF_INET, string, (struct addr_in *)&addr) <= 0) {
-		error(L"Unknown IPv4 address format");
+	if (inet_pton(AF_INET, string, &addr) <= 0) {
+		error(L"Invalid IPv4 address format");
         return 0;
 	}
 
-#if HAKA_LITTLEENDIAN
-	addr = SWAP_ipv4addr(addr);
-#endif
-	return addr;
+	return SWAP_FROM_BE(ipv4addr, addr.s_addr);
 }
 
 void ipv4_addr_to_string(ipv4addr addr, char *string, size_t size)
 {
-#if HAKA_LITTLEENDIAN
-    addr = SWAP_ipv4addr(addr);
-#endif
+    addr = SWAP_TO_BE(ipv4addr, addr);
 	inet_ntop(AF_INET, &addr, string, size);
 }
 

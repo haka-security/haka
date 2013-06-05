@@ -1,6 +1,16 @@
+#ifndef _HAKA_PROTO_IPV4_ADDR_H
+#define _HAKA_PROTO_IPV4_ADDR_H
+
 #include <haka/types.h>
 
 #define IPV4_ADDR_STRING_MAXLEN   15
+
+/*
+ * Define a type for IPv4 addresses
+ * @ingroup IPv4
+ */
+typedef uint32 ipv4addr;
+#define SWAP_ipv4addr(x) SWAP_uint32(x)
 
 
 /**
@@ -30,4 +40,6 @@ ipv4addr ipv4_addr_from_string(const char *string);
  * @ingroup IPv4
  */
 ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d);
+
+#endif /* _HAKA_PROTO_IPV4_ADDR_H */
 
