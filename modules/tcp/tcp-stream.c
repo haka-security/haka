@@ -8,6 +8,10 @@
 #include <assert.h>
 
 
+/*
+ * Stream interface declaration
+ */
+
 static bool tcp_stream_destroy(struct stream *s);
 static size_t tcp_stream_read(struct stream *s, uint8 *data, size_t length);
 static size_t tcp_stream_available(struct stream *s);
@@ -24,6 +28,10 @@ struct stream_ftable tcp_stream_ftable = {
 	erase: tcp_stream_erase,
 };
 
+
+/*
+ * Stream structures
+ */
 
 enum tcp_modif_type {
 	TCP_MODIF_INSERT,
@@ -73,6 +81,10 @@ struct tcp_stream {
 	struct tcp_stream_position      current_position;
 };
 
+
+/*
+ * Stream position functions
+ */
 
 static struct tcp_stream_chunk_modif *tcp_stream_position_modif(struct tcp_stream_position *pos,
 		size_t *modif_offset, struct tcp_stream_chunk_modif **prev, struct tcp_stream_chunk_modif **next)
@@ -227,9 +239,6 @@ static size_t tcp_stream_position_read_step(struct tcp_stream *tcp_s,
 	struct tcp_stream_chunk_modif *current_modif = NULL;
 	size_t modif_offset;
 
-	if (length == 0)
-		return 0;
-
 	if (!tcp_stream_position_advance(tcp_s, pos)) {
 		return (size_t)-1;
 	}
@@ -283,6 +292,11 @@ static size_t tcp_stream_position_read(struct tcp_stream *tcp_s,
 	return length;
 }
 
+
+/*
+ * Stream functions
+ */
+
 #define TCP_STREAM(s) struct tcp_stream *tcp_s = (struct tcp_stream *)(s); \
 	assert((s)->ftable == &tcp_stream_ftable);
 
@@ -302,14 +316,24 @@ struct stream *tcp_stream_create()
 
 static bool tcp_stream_destroy(struct stream *s)
 {
+	struct tcp_stream_chunk *tmp, *iter;
 	TCP_STREAM(s);
 
-	struct tcp_stream_chunk *iter = tcp_s->first;
+	iter = tcp_s->first;
 	while (iter) {
 		assert(iter->tcp);
-		tcp_flush(iter->tcp);
 		tcp_release(iter->tcp);
+
+		tmp = iter;
 		iter = iter->next;
+		free(tmp);
+	}
+
+	iter = tcp_s->sent;
+	while (iter) {
+		tmp = iter;
+		iter = iter->next;
+		free(tmp);
 	}
 
 	free(s);
@@ -411,6 +435,10 @@ struct tcp *tcp_stream_pop(struct stream *s)
 
 	chunk = tcp_s->first;
 
+	/*
+	 * If the current position is at the end of the last chunk,
+	 * move it to free the chunk.
+	 */
 	if (pos->chunk == chunk) {
 		if (tcp_stream_position_chunk_at_end(pos)) {
 			tcp_stream_position_next_chunk(pos);
@@ -421,10 +449,13 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		tcp = chunk->tcp;
 
 		if (chunk->modifs) {
-			/* Apply modifs to tcp packet */
+			/*
+			 * Apply modifs to tcp packet
+			 */
 			const size_t new_size = chunk->end_seq - chunk->start_seq + chunk->offset_seq;
 			struct tcp_stream_position pos;
-			uint8 *buffer;
+			uint8 *buffer, *payload;
+			size_t size;
 
 			pos.chunk = chunk;
 			pos.chunk_offset = 0;
@@ -440,8 +471,17 @@ struct tcp *tcp_stream_pop(struct stream *s)
 				return NULL;
 			}
 
-			tcp_stream_position_read(tcp_s, &pos, buffer, new_size);
-			memcpy(tcp_resize_payload(tcp, new_size), buffer, new_size);
+			size = tcp_stream_position_read(tcp_s, &pos, buffer, new_size);
+			assert(size == new_size);
+
+			payload = tcp_resize_payload(tcp, new_size);
+			if (!payload) {
+				error(L"memory error");
+				free(buffer);
+				return NULL;
+			}
+
+			memcpy(payload, buffer, new_size);
 			free(buffer);
 		}
 
