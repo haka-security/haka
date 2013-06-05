@@ -50,6 +50,16 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 
 	mutex_unlock(&ct_mutex);
 
+	{
+		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
+
+		ipv4_addr_to_string(ptr->tcp_conn.srcip, srcip, IPV4_ADDR_STRING_MAXLEN);
+		ipv4_addr_to_string(ptr->tcp_conn.dstip, dstip, IPV4_ADDR_STRING_MAXLEN);
+
+		messagef(HAKA_LOG_DEBUG, L"tcp-connection", L"opening connection %s:%u -> %s:%u",
+				srcip, ptr->tcp_conn.srcport, dstip, ptr->tcp_conn.dstport);
+	}
+
 	return &ptr->tcp_conn;
 }
 
@@ -93,6 +103,16 @@ void tcp_connection_close(struct tcp_connection* tcp_conn)
 	struct ctable *current, *next, *prev;
 
 	current = (struct ctable *)((uint8 *)tcp_conn - offsetof(struct ctable, tcp_conn));
+
+	{
+		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
+
+		ipv4_addr_to_string(current->tcp_conn.srcip, srcip, IPV4_ADDR_STRING_MAXLEN);
+		ipv4_addr_to_string(current->tcp_conn.dstip, dstip, IPV4_ADDR_STRING_MAXLEN);
+
+		messagef(HAKA_LOG_DEBUG, L"tcp-connection", L"closing connection %s:%u -> %s:%u",
+				srcip, current->tcp_conn.srcport, dstip, current->tcp_conn.dstport);
+	}
 
 	mutex_lock(&ct_mutex);
 
