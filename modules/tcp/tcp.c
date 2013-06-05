@@ -47,7 +47,7 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 {
 	struct ipv4 *packet = tcp->packet;
 	if (packet) {
-		if (tcp->invalid_checksum)
+		if (tcp->invalid_checksum || packet->invalid_checksum)
 			tcp_compute_checksum(tcp);
 
 		tcp->packet = NULL;
@@ -59,19 +59,18 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 	}
 }
 
-void tcp_release(struct tcp *tcp)
-{
-	assert(!tcp->packet);
-	free(tcp);
-}
-
-void tcp_flush(struct tcp *tcp)
+static void tcp_flush(struct tcp *tcp)
 {
 	struct ipv4 *packet;
 	while ((packet = tcp_forge(tcp))) {
-		ipv4_flush(packet);
 		ipv4_release(packet);
 	}
+}
+
+void tcp_release(struct tcp *tcp)
+{
+	tcp_flush(tcp);
+	free(tcp);
 }
 
 void tcp_pre_modify(struct tcp *tcp)

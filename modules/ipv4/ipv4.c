@@ -34,11 +34,6 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	return ip;
 }
 
-void ipv4_release(struct ipv4 *ip)
-{
-	free(ip);
-}
-
 struct packet *ipv4_forge(struct ipv4 *ip)
 {
 	struct packet *packet = ip->packet;
@@ -63,12 +58,18 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 	}
 }
 
-void ipv4_flush(struct ipv4 *ip)
+static void ipv4_flush(struct ipv4 *ip)
 {
 	struct packet *packet;
 	while ((packet = ipv4_forge(ip))) {
 		packet_drop(packet);
 	}
+}
+
+void ipv4_release(struct ipv4 *ip)
+{
+	ipv4_flush(ip);
+	free(ip);
 }
 
 void ipv4_pre_modify(struct ipv4 *ip)

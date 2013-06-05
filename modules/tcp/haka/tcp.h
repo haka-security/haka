@@ -156,8 +156,6 @@ uint8 *tcp_resize_payload(struct tcp *packet, size_t size);
  */
 void tcp_action_drop(struct tcp *packet);
 
-void tcp_flush(struct tcp *packet);
-
 /**
  * Get if the packet is valid and can continue to be processed.
  * @param packet TCP structure

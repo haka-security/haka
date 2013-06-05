@@ -94,8 +94,6 @@ struct packet *ipv4_forge(struct ipv4 *ip);
  */
 void ipv4_release(struct ipv4 *ip);
 
-void ipv4_flush(struct ipv4 *ip);
-
 /**
  * Function that need to be called before modifying fields not part if
  * the header.
