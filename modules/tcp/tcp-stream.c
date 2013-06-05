@@ -144,7 +144,7 @@ static struct tcp_stream_chunk_modif *tcp_stream_position_modif(struct tcp_strea
 static bool tcp_stream_position_chunk_at_end(struct tcp_stream_position *pos)
 {
 	if (pos->chunk) {
-		return pos->chunk_offset == (pos->chunk->end_seq - pos->chunk->start_seq) &&
+		return (pos->chunk->start_seq + pos->chunk_offset == pos->chunk->end_seq) &&
 			(!pos->modif || pos->modif->position != pos->chunk_offset ||
 			pos->modif_offset >= pos->modif->length);
 	}
@@ -159,6 +159,8 @@ static bool tcp_stream_position_next_chunk(struct tcp_stream_position *pos)
 
 	if (!pos->chunk->next || pos->chunk->next->start_seq == pos->chunk->end_seq) {
 		pos->chunk = pos->chunk->next;
+		pos->chunk_seq += pos->chunk_offset;
+		assert(!pos->chunk || pos->chunk->start_seq == pos->chunk_seq);
 		pos->chunk_offset = 0;
 		pos->modif = NULL;
 		pos->modif_offset = (size_t)-1;
@@ -181,16 +183,21 @@ static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
 	bool first = true;
 
 	if (!pos->chunk) {
-		if (!tcp_s->first || tcp_s->first->start_seq != pos->chunk_seq + pos->chunk_offset) {
+		if (!tcp_s->first || tcp_s->first->start_seq != pos->chunk_seq) {
 			return false;
 		}
 
 		pos->chunk = tcp_s->first;
 		pos->chunk_offset = 0;
-		pos->chunk_seq_modif = pos->chunk_seq + tcp_s->first_offset_seq;
-		assert(pos->current_seq_modif == pos->chunk_seq_modif);
+		pos->chunk_seq_modif = pos->chunk->start_seq + tcp_s->first_offset_seq;
 		pos->modif = NULL;
 		pos->modif_offset = (size_t)-1;
+
+		assert(pos->chunk_seq == pos->chunk->start_seq);
+		if (!(pos->current_seq_modif == pos->chunk_seq_modif)) {
+			wprintf(L"%i - %i\n", pos->current_seq_modif, pos->chunk_seq_modif);
+		}
+		assert(pos->current_seq_modif == pos->chunk_seq_modif);
 	}
 
 	while (true) {
@@ -301,23 +308,26 @@ static size_t tcp_stream_position_read(struct tcp_stream *tcp_s,
 static size_t tcp_stream_position_skip_available(struct tcp_stream *tcp_s,
 		struct tcp_stream_position *pos)
 {
-	size_t chunk_length, length = 0;
+	size_t chunk_length, length, total_length  = 0;
 
 	while (true) {
 		if (!tcp_stream_position_advance(tcp_s, pos)) {
 			break;
 		}
 
-		chunk_length = pos->chunk->end_seq + pos->chunk->start_seq + pos->chunk->offset_seq;
-		length += chunk_length - (pos->current_seq_modif - pos->chunk_seq_modif);
+		chunk_length = pos->chunk->end_seq - pos->chunk->start_seq + pos->chunk->offset_seq;
+		length = chunk_length - (pos->current_seq_modif - pos->chunk_seq_modif);
 
 		/* Advance to next chunk */
+		pos->current_seq_modif += length;
 		pos->chunk_offset = pos->chunk->end_seq - pos->chunk->start_seq;
 		pos->modif_offset = (size_t)-1;
 		pos->modif = NULL;
+
+		total_length += length;
 	}
 
-	return length;
+	return total_length;
 }
 
 
