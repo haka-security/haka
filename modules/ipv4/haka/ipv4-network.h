@@ -1,10 +1,13 @@
+
 #ifndef _HAKA_PROTO_IPV4_NETWORK_H
-#define _HAKA_PROTO_IPV4_NETWORKI_H
+#define _HAKA_PROTO_IPV4_NETWORK_H
 
 #include <haka/types.h>
 
+
 #define IPV4_NET_STRING_MAXLEN    18
 #define IPV4_MASK_MAXVAL          32
+
 
 /*
 * Define a type for IPv4 network addresses
@@ -13,10 +16,7 @@
 typedef struct {
 	ipv4addr net;
 	uint8    mask;
-}ipv4network;
-
-
-#define IPV4_APPLY_NETMASK(addr, network)	((addr) & ((1 << (network).mask) - 1) << (IPV4_MASK_MAXVAL     - (network).mask))
+} ipv4network;
 
 extern const ipv4network ipv4_network_zero;
 
@@ -47,4 +47,3 @@ ipv4network ipv4_network_from_string(const char *string);
 uint8 ipv4_network_contains(ipv4network network, ipv4addr addr);
 
 #endif /* _HAKA_PROTO_IPV4_NETWORK_H */
-

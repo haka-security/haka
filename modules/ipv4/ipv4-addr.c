@@ -38,4 +38,3 @@ ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d)
 #endif
     return addr;
 }
-

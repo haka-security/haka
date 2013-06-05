@@ -8,6 +8,10 @@
 #include <string.h>
 
 
+#define IPV4_APPLY_NETMASK(addr, network)	\
+	((addr) & ((1 << (network).mask) - 1) << (IPV4_MASK_MAXVAL - (network).mask))
+
+
 const ipv4network ipv4_network_zero = {
 	net:  0,
 	mask: 0
@@ -56,4 +60,3 @@ uint8 ipv4_network_contains(ipv4network network, ipv4addr addr)
 {
 	return (IPV4_APPLY_NETMASK(addr, network) == network.net);
 }
-

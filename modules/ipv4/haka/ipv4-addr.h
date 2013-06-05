@@ -1,7 +1,9 @@
+
 #ifndef _HAKA_PROTO_IPV4_ADDR_H
 #define _HAKA_PROTO_IPV4_ADDR_H
 
 #include <haka/types.h>
+
 
 #define IPV4_ADDR_STRING_MAXLEN   15
 
@@ -42,4 +44,3 @@ ipv4addr ipv4_addr_from_string(const char *string);
 ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d);
 
 #endif /* _HAKA_PROTO_IPV4_ADDR_H */
-
