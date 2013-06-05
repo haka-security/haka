@@ -12,6 +12,11 @@ if(NOT DIFF_COMMAND)
 	message(FATAL_ERROR "Cannot find diff command")
 endif(NOT DIFF_COMMAND)
 
+find_program(GAWK_COMMAND gawk)
+if (NOT GAWK_COMMAND)
+	message(FATAL_ERROR "Cannot find gawk command")
+endif(NOT GAWK_COMMAND)
+
 macro(TEST_PCAP_OUTPUT module name)
 	add_test(NAME ${module}-${name}-pcap-output
 		COMMAND ${CMAKE_COMMAND}
