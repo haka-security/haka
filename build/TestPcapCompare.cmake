@@ -17,6 +17,11 @@ if(NOT TSHARK_COMMAND)
 	message(FATAL_ERROR "Cannot find tshark command")
 endif(NOT TSHARK_COMMAND)
 
+#find_program(GAWK_COMMAND gawk)
+#if (NOT GAWK_COMMAND)
+#	message(FATAL_ERROR "Cannot find gawk command")
+#endif(NOT GAWK_COMMAND)
+
 macro(TEST_PCAP_COMPARE module name)
 	add_test(NAME ${module}-${name}-pcap-compare
 		COMMAND ${CMAKE_COMMAND}
