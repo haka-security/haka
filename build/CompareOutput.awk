@@ -13,6 +13,10 @@ $0 ~ /info: core: unload module/ {
 	next;
 }
 
+$0 ~ /^debug: packet:/ {
+	next;
+}
+
 {
 	if (show != 0) {
 		print;

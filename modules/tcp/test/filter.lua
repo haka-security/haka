@@ -5,7 +5,7 @@ require("ipv4")
 require("tcp")
 
 haka.rule {
-	hooks = { "tcp-up" },
+	hooks = { "tcp-connexion-new" },
 	eval = function (self, pkt)
 		if pkt.dstport ~= 80 then
 			pkt:drop()
