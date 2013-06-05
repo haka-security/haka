@@ -397,8 +397,9 @@ static int packet_do_resize(struct packet *orig_pkt, size_t size)
 	return 0;
 }
 
-static uint64 packet_get_id(struct packet *pkt)
+static uint64 packet_get_id(struct packet *orig_pkt)
 {
+	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 	return pkt->id;
 }
 

@@ -297,8 +297,9 @@ static int packet_do_resize(struct packet *orig_pkt, size_t size)
 	return 0;
 }
 
-static uint64 packet_get_id(struct packet *pkt)
+static uint64 packet_get_id(struct packet *orig_pkt)
 {
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 	return (pkt->header.ts.tv_sec << 32) + pkt->header.ts.tv_usec;
 }
 
