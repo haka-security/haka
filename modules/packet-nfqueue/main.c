@@ -41,14 +41,83 @@ struct packet {
 };
 
 /* Iptables rules to add (iptables-restore format) */
-static const char iptables_config_template[] =
+static const char iptables_config_template_begin[] =
 "*raw\n"
-":PREROUTING DROP [0:0]\n"
-":OUTPUT DROP [0:0]\n"
+":PREROUTING ACCEPT [0:0]\n"
+":OUTPUT ACCEPT [0:0]\n"
+;
+
+static const char iptables_config_template_iface[] =
+"-A PREROUTING -i %s -m mark --mark 0xffff -j ACCEPT\n"
+"-A PREROUTING -i %s -j NFQUEUE --queue-balance 0:%i\n"
+"-A OUTPUT -o %s -j MARK --set-mark 0xffff\n"
+"-A OUTPUT -o %s -j NFQUEUE --queue-balance 0:%i\n"
+;
+
+static const char iptables_config_template_all[] =
+"-A PREROUTING -m mark --mark 0xffff -j ACCEPT\n"
 "-A PREROUTING -j NFQUEUE --queue-balance 0:%i\n"
+"-A OUTPUT -j MARK --set-mark 0xffff\n"
 "-A OUTPUT -j NFQUEUE --queue-balance 0:%i\n"
+;
+
+static const char iptables_config_template_end[] =
 "COMMIT\n"
 ;
+
+static int iptables_config_build(char *output, size_t outsize, char **ifaces, int threads)
+{
+	int size, total_size = 0;
+
+	size = snprintf(output, outsize, iptables_config_template_begin);
+	if (!size) return -1;
+	if (output) { output += size; outsize-=size; }
+	total_size += size;
+
+	if (ifaces) {
+		char **iface = ifaces;
+		while (*iface) {
+			size = snprintf(output, outsize, iptables_config_template_iface, *iface, *iface,
+					threads, *iface, *iface, threads);
+			if (!size) return -1;
+			if (output) { output += size; outsize-=size; }
+			total_size += size;
+
+			++iface;
+		}
+	}
+	else {
+		size = snprintf(output, outsize, iptables_config_template_all, threads, threads);
+		if (!size) return -1;
+		if (output) { output += size; outsize-=size; }
+		total_size += size;
+	}
+
+	size = snprintf(output, outsize, iptables_config_template_end);
+	if (!size) return -1;
+	if (output) { output += size; outsize-=size; }
+	total_size += size;
+
+	return total_size;
+}
+
+static char *iptables_config(char **ifaces, int threads)
+{
+	char *new_iptables_config;
+
+	const int size = iptables_config_build(NULL, 0, ifaces, threads);
+	if (size <= 0) {
+		return NULL;
+	}
+
+	new_iptables_config = malloc(sizeof(char) * (size+1));
+	if (!new_iptables_config) {
+		return NULL;
+	}
+
+	iptables_config_build(new_iptables_config, size+1, ifaces, threads);
+	return new_iptables_config;
+}
 
 /* Iptables raw table current configuration */
 static char *iptables_saved;
@@ -172,6 +241,7 @@ static void cleanup()
 static int init(int argc, char *argv[])
 {
 	char *new_iptables_config = NULL;
+	char **ifaces = NULL;
 	const int thread_count = thread_get_packet_capture_cpu_count();
 
 	/* Setup iptables rules */
@@ -181,23 +251,32 @@ static int init(int argc, char *argv[])
 		return 1;
 	}
 
-	{
-		const int size = snprintf(NULL, 0, iptables_config_template, thread_count, thread_count);
-		if (size <= 0) {
-			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot generate iptables rules");
+	if (argc > 0) {
+		int i;
+
+		ifaces = malloc((sizeof(char *) * (argc+1)));
+		if (!ifaces) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
 			cleanup();
 			return 1;
 		}
 
-		new_iptables_config = malloc(sizeof(char) * (size+1));
-		if (!new_iptables_config) {
-			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot generate iptables rules");
-			cleanup();
-			return 1;
+		for (i=0; i<argc; ++i) {
+			ifaces[i] = argv[i];
 		}
-
-		assert(snprintf(new_iptables_config, size+1, iptables_config_template, thread_count, thread_count) == size);
+		ifaces[i] = NULL;
 	}
+
+	new_iptables_config = iptables_config(ifaces, thread_count);
+	if (!new_iptables_config) {
+		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot generate iptables rules");
+		free(ifaces);
+		cleanup();
+		return 1;
+	}
+
+	free(ifaces);
+	ifaces = NULL;
 
 	if (apply_iptables(new_iptables_config)) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup iptables rules");

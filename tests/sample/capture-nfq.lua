@@ -2,9 +2,38 @@ local arg = {...}
 
 haka.log.info("config", "configuring haka...")
 
-haka.app.install("packet", haka.module.load("packet-nfqueue"))
+local function split(str, delim)
+	local ret = {}
+	local last_end = 1
+	local s, e = str:find(delim, 1)
+
+	while s do
+		if s ~= 1 then
+			cap = str:sub(last_end, e-1)
+			table.insert(ret, cap)
+		end
+
+		last_end = e+1
+		s, e = str:find(delim, last_end)
+	end
+
+	if last_end <= #str then
+		cap = str:sub(last_end)
+		table.insert(ret, cap)
+	end
+
+	return ret
+end
+
+if arg[1] == "any" then
+	haka.app.install("packet", haka.module.load("packet-nfqueue"))
+else
+	local ifaces = split(arg[1], ":")
+	haka.app.install("packet", haka.module.load("packet-nfqueue", unpack(ifaces)))
+end
+
 haka.app.install("log", haka.module.load("log-stdout"))
 
-haka.app.load_configuration(arg[1])
+haka.app.load_configuration(arg[2])
 
 haka.log.info("config", "done\n")
