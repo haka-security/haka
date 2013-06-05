@@ -4,6 +4,7 @@
 
 #include <haka/packet.h>
 #include <haka/error.h>
+#include <haka/log.h>
 #include <haka/packet_module.h>
 
 extern void lua_invalidatepacket(struct packet *pkt);
@@ -78,11 +79,24 @@ int packet_resize(struct packet *pkt, size_t size)
 	return packet_module->resize(pkt, size);
 }
 
+int packet_receive(struct packet_module_state *state, struct packet **pkt)
+{
+	int ret;
+	assert(packet_module);
+
+	ret = packet_module->receive(state, pkt);
+	if (!ret && *pkt) {
+		messagef(HAKA_LOG_DEBUG, L"core", L"received packet id=%d", packet_module->get_id(*pkt));
+	}
+	return ret;
+}
+
 void packet_drop(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
 	lua_invalidatepacket(pkt);
+	messagef(HAKA_LOG_DEBUG, L"core", L"dropping packet id=%d", packet_module->get_id(pkt));
 	packet_module->verdict(pkt, FILTER_DROP);
 }
 
@@ -91,5 +105,6 @@ void packet_accept(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 	lua_invalidatepacket(pkt);
+	messagef(HAKA_LOG_DEBUG, L"core", L"accepting packet id=%d", packet_module->get_id(pkt));
 	packet_module->verdict(pkt, FILTER_ACCEPT);
 }

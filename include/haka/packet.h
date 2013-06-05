@@ -27,6 +27,8 @@ struct packet {
 	void *lua_state;
 };
 
+struct packet_module_state;
+
 /**
  * Get the length of a packet.
  * @param pkt Opaque packet.
@@ -74,6 +76,8 @@ void         packet_drop(struct packet *pkt);
  * @param pkt Opaque packet.
  */
 void         packet_accept(struct packet *pkt);
+
+int          packet_receive(struct packet_module_state *state, struct packet **pkt);
 
 #endif /* _HAKA_PACKET_H */
 

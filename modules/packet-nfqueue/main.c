@@ -304,7 +304,7 @@ static bool multi_threaded()
 	return true;
 }
 
-static int packet_receive(struct packet_module_state *state, struct packet **pkt)
+static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
 	const int rv = recv(state->fd, state->receive_buffer,
 			sizeof(state->receive_buffer), 0);
@@ -397,6 +397,11 @@ static int packet_do_resize(struct packet *orig_pkt, size_t size)
 	return 0;
 }
 
+static uint64 packet_get_id(struct packet *pkt)
+{
+	return pkt->id;
+}
+
 static const char *packet_get_dissector(struct packet *pkt)
 {
 	return "ipv4";
@@ -449,11 +454,12 @@ struct packet_module HAKA_MODULE = {
 	multi_threaded:  multi_threaded,
 	init_state:      init_state,
 	cleanup_state:   cleanup_state,
-	receive:         packet_receive,
+	receive:         packet_do_receive,
 	verdict:         packet_verdict,
 	get_length:      packet_get_length,
 	make_modifiable: packet_modifiable,
 	resize:          packet_do_resize,
+	get_id:          packet_get_id,
 	get_data:        packet_get_data,
 	get_dissector:   packet_get_dissector
 };

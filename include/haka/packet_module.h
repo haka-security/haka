@@ -98,6 +98,8 @@ struct packet_module {
 
 	int            (*resize)(struct packet *pkt, size_t size);
 
+	uint64         (*get_id)(struct packet *pkt);
+
 	/**
 	 * Get the data of a packet
 	 * @param pkt The received opaque packet.
