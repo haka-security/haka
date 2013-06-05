@@ -103,20 +103,24 @@ local function eval_rules(hook, pkt)
 	end
 	return true
 end
-
 local function filter_down(pkt)
-	if pkt.dissector then
-		eval_rules(pkt.dissector .. '-down', pkt)
-	end
+        if pkt.dissector then
+                eval_rules(pkt.dissector .. '-down', pkt)
+        end
 
-	while true do
-		local pktdown = pkt:forge()
-		if pktdown then
-			filter_down(pktdown)
-		else
-			break
-		end
-	end
+        local pkts = {}
+        while true do
+                local pktdown = pkt:forge()
+                if pktdown then
+                        table.insert(pkts, pktdown)
+                else
+                        break
+                end
+        end
+
+        for _, pktdown in pairs(pkts) do
+                filter_down(pktdown)
+        end
 end
 
 local function get_dissector(name)
