@@ -169,6 +169,12 @@ static bool tcp_stream_position_next_chunk(struct tcp_stream_position *pos)
 	}
 }
 
+static bool tcp_stream_position_chunk_is_before(struct tcp_stream_position *pos,
+		struct tcp_stream_chunk *chunk)
+{
+	return (pos->chunk != chunk) && (pos->chunk_seq + pos->chunk_offset >= chunk->end_seq);
+}
+
 static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
 		struct tcp_stream_position *pos)
 {
@@ -470,7 +476,7 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		}
 	}
 
-	if (chunk && pos->chunk != chunk) {
+	if (chunk && tcp_stream_position_chunk_is_before(pos, chunk)) {
 		tcp = chunk->tcp;
 
 		if (chunk->modifs) {
@@ -522,6 +528,7 @@ struct tcp *tcp_stream_pop(struct stream *s)
 
 		chunk->next = NULL;
 		if (tcp_s->last_sent) {
+			assert(tcp_s->last_sent->end_seq == chunk->start_seq);
 			tcp_s->last_sent->next = chunk;
 			tcp_s->last_sent = chunk;
 		}
@@ -566,6 +573,7 @@ void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 		}
 
 		assert(!iter->next || iter->next->start_seq == iter->end_seq);
+
 		iter = iter->next;
 	}
 
