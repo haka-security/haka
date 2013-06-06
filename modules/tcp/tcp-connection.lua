@@ -38,14 +38,25 @@ haka.dissector {
 				return nil
 			end
 		else
+			-- update connection state
+
+			if pkt.flags.ack and newpkt.connection.state > 0 then
+				newpkt.connection.state =  newpkt.connection.state + 1 
+			end
+
+			if pkt.flags.fin then
+				newpkt.connection.state =  newpkt.connection.state + 1
+			end 
+
+
+
 			-- end existing connection
-			if pkt.flags.fin or pkt.flags.rst then
+			if newpkt.connection.state == 4	or pkt.flags.rst then
 				haka.log.debug("tcp-connection", "ending connection %s (%d) -> %s (%d)", newpkt.connection.srcip,
 					newpkt.connection.srcport, newpkt.connection.dstip, newpkt.connection.dstport)
-				newpkt.connection:close()
+					newpkt.connection:close()
 			end
 		end
-
 		return newpkt
 	end
 }
