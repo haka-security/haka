@@ -418,6 +418,12 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	chunk->offset_seq = 0;
 	chunk->modifs = NULL;
 
+	if (chunk->end_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset) {
+		error(L"retransmit packet (unsupported)");
+		free(chunk);
+		return false;
+	}
+
 	/* Search for insert point */
 	if (!tcp_s->last) {
 		tcp_s->first = chunk;
@@ -439,8 +445,20 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 		}
 		while (*iter && (*iter)->start_seq < chunk->start_seq);
 
-		if (*iter) chunk->next = (*iter)->next;
-		else chunk->next = NULL;
+		if (*iter) {
+			if (chunk->end_seq <= (*iter)->start_seq) {
+				chunk->next = (*iter)->next;
+			}
+			else {
+				error(L"retransmit packet (unsupported)");
+				free(chunk);
+				return false;
+			}
+		}
+		else {
+			chunk->next = NULL;
+		}
+
 		*iter = chunk;
 
 		tcp_s->last = chunk;
