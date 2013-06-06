@@ -51,7 +51,7 @@ struct tcp_stream_chunk {
 	struct tcp                     *tcp;
 	size_t                          start_seq;
 	size_t                          end_seq;
-	size_t                          offset_seq;
+	int                             offset_seq;
 	struct tcp_stream_chunk_modif  *modifs;
 	struct tcp_stream_chunk        *next;
 };
@@ -72,11 +72,11 @@ struct tcp_stream {
 	size_t                          start_seq;
 
 	struct tcp_stream_chunk        *first;   /* first packet in the stream */
-	size_t                          first_offset_seq;
+	int                             first_offset_seq;
 	struct tcp_stream_chunk        *last;    /* last inserted packet */
 	struct tcp_stream_chunk        *sent;    /* oldest sent packet not acked */
 	struct tcp_stream_chunk        *last_sent;
-	size_t                          sent_offset_seq;
+	int                             sent_offset_seq;
 
 	struct tcp_stream_position      current_position;
 };
@@ -194,9 +194,6 @@ static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
 		pos->modif_offset = (size_t)-1;
 
 		assert(pos->chunk_seq == pos->chunk->start_seq);
-		if (!(pos->current_seq_modif == pos->chunk_seq_modif)) {
-			wprintf(L"%i - %i\n", pos->current_seq_modif, pos->chunk_seq_modif);
-		}
 		assert(pos->current_seq_modif == pos->chunk_seq_modif);
 	}
 
