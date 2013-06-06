@@ -1,10 +1,11 @@
 %module tcp
-%include "haka/packet.si"
-CHECK_FOR_PACKET(struct ipv4*,ipv4)
+%include haka/ipv4.si
 CHECK_FOR_PACKET(struct tcp*,tcp)
 CHECK_FOR_PACKET(struct tcp_flags*,tcp flags)
 CHECK_FOR_PACKET(struct tcp_payload*,tcp payload)
 PACKET_DEPENDANT_CONSTRUCTOR(tcp_dissect,arg1->packet,SWIGTYPE_p_tcp);
+PACKET_DEPENDANT_GETTER(tcp::ip,result->packet,SWIGTYPE_p_ipv4);
+PACKET_DEPENDANT_GETTER(tcp::forge,result->packet,SWIGTYPE_p_ipv4);
 PACKET_DEPENDANT_CONSTRUCTOR(tcp::flags,arg1->packet->packet,SWIGTYPE_p_tcp_flags);
 PACKET_DEPENDANT_CONSTRUCTOR(tcp::payload,arg1->packet->packet,SWIGTYPE_p_tcp_payload);
 PACKET_DEPENDANT_GETTER(stream::_pop,result->packet->packet,SWIGTYPE_p_tcp);

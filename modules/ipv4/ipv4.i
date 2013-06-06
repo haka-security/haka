@@ -1,11 +1,7 @@
 %module ipv4
 
-%include "haka/packet.si"
+%include "haka/ipv4.si"
 
-%include "haka/swig.si"
-CHECK_FOR_PACKET(struct ipv4*,ipv4)
-CHECK_FOR_PACKET(struct ipv4_flags*, ipv4 flag)
-CHECK_FOR_PACKET(struct ipv4_payload*, ipv4 payload)
 PACKET_DEPENDANT_CONSTRUCTOR(ipv4_dissect,arg1,SWIGTYPE_p_ipv4);
 PACKET_DEPENDANT_GETTER(ipv4::forge,result,SWIGTYPE_p_packet);
 PACKET_DEPENDANT_CONSTRUCTOR(ipv4::flags,arg1->packet,SWIGTYPE_p_ipv4_flags);

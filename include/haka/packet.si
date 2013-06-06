@@ -39,6 +39,10 @@ extern void lua_getsingleton(lua_State *L,struct packet *pkt, swig_type_info * t
 %define PACKET_DEPENDANT_GETTER(function,pkt,type_info)
         %exception function {
                 DEFAULT_EXCEPTION;
+                if(!result) {
+                        lua_pushnil(L);
+                        return 1;
+                }
                 lua_getsingleton(L,pkt,type_info);
                 if(lua_isnil(L,-1) && pkt) {
                         lua_pushstring(L,"internal error : function returning an unknown packet (already sent ?)");

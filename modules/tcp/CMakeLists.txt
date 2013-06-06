@@ -1,6 +1,7 @@
 
 find_package(SWIG REQUIRED)
 include(UseSWIG)
+include_directories(${CMAKE_SOURCE_DIR}/modules/ipv4)
 swig_add_module(tcp lua SHARED
 	tcp.i
 	main.c
