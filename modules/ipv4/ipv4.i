@@ -123,13 +123,13 @@ struct ipv4_network {
 
 		temporary_string __tostring()
 		{
-			char *buffer = malloc(IPV4_NET_STRING_MAXLEN + 1);
+			char *buffer = malloc(IPV4_NETWORK_STRING_MAXLEN + 1);
 			if (!buffer) {
 				error(L"memory error");
 				return NULL;
 			}
 			ipv4_network_to_string($self->net, buffer,
-					IPV4_NET_STRING_MAXLEN + 1);
+					IPV4_NETWORK_STRING_MAXLEN + 1);
 
 			return buffer;
 		}

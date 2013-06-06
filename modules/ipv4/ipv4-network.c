@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 
 #define IPV4_APPLY_NETMASK(addr, network)	\
@@ -19,8 +20,11 @@ const ipv4network ipv4_network_zero = {
 
 void ipv4_network_to_string(ipv4network netaddr, char *string, size_t size)
 {
-	ipv4_addr_to_string(netaddr.net, string, IPV4_ADDR_STRING_MAXLEN);
-	snprintf(string + strlen(string), IPV4_NET_STRING_MAXLEN - IPV4_ADDR_STRING_MAXLEN + 1, "/%hhu", netaddr.mask);
+	int length;
+	ipv4_addr_to_string(netaddr.net, string, size);
+	length = strlen(string);
+	assert(length <= size);
+	snprintf(string + length, size - length, "/%hhu", netaddr.mask);
 }
 
 ipv4network ipv4_network_from_string(const char *string)
@@ -32,8 +36,13 @@ ipv4network ipv4_network_from_string(const char *string)
 	}
 
 	int32 slash_index = ptr - string;
-	char tmp[IPV4_NET_STRING_MAXLEN + 1];
-	strncpy(tmp, string, IPV4_NET_STRING_MAXLEN);
+	if (slash_index > IPV4_ADDR_STRING_MAXLEN) {
+		error(L"Invalid IPv4 network address format");
+		return ipv4_network_zero;
+	}
+
+	char tmp[IPV4_ADDR_STRING_MAXLEN + 1];
+	strncpy(tmp, string, slash_index);
 	tmp[slash_index] = '\0';
 
 	ipv4network netaddr;
@@ -50,7 +59,7 @@ ipv4network ipv4_network_from_string(const char *string)
 
 	if (maskedaddr != netaddr.net) {
 		netaddr.net = maskedaddr;
-		message(HAKA_LOG_WARNING, L"ipv4" , L"Incorrect Net/Mask values (fixed)");
+		message(HAKA_LOG_WARNING, L"ipv4" , L"Incorrect network mask");
 	}
 
 	return netaddr;

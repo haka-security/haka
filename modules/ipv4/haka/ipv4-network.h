@@ -5,8 +5,8 @@
 #include <haka/types.h>
 
 
-#define IPV4_NET_STRING_MAXLEN    18
-#define IPV4_MASK_MAXVAL          32
+#define IPV4_NETWORK_STRING_MAXLEN   18
+#define IPV4_MASK_MAXVAL             32
 
 
 /*
