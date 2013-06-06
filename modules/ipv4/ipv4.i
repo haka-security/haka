@@ -1,5 +1,11 @@
 %module ipv4
 
+%include "haka/packet_dependant.i"
+
+%include "haka/swig.i"
+CHECK_FOR_PACKET(struct ipv4*,ipv4)
+PACKET_DEPENDANT_CONSTRUCTOR(ipv4_dissect,arg1,SWIGTYPE_p_ipv4);
+PACKET_DEPENDANT_GETTER(ipv4::forge,result,SWIGTYPE_p_packet);
 %{
 	#include "haka/ipv4.h"
 
@@ -26,7 +32,6 @@
 	}
 %}
 
-%include "haka/swig.i"
 %rename(addr) ipv4_addr;
 struct ipv4_addr {
 	%extend {
@@ -152,7 +157,7 @@ struct ipv4_network {
 
 
 %nodefaultctor;
-
+%nodefaultdtor;
 struct ipv4_flags {
 	%extend {
 		bool rb;
@@ -239,9 +244,7 @@ struct ipv4 {
 		struct packet *forge();
 	}
 };
-
 %rename(dissect) ipv4_dissect;
-%newobject ipv4_dissect;
 struct ipv4 *ipv4_dissect(struct packet *packet);
 
 %rename(register_proto) ipv4_register_proto_dissector;
