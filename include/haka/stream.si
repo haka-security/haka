@@ -1,5 +1,5 @@
 
-%include haka/buffer.i
+%include haka/buffer.si
 
 %define BASIC_STREAM(type)
 %extend type {

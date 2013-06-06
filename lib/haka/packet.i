@@ -86,8 +86,8 @@ void lua_invalidatepacket(struct packet *pkt)
 
 %}
 
-%include haka/swig.i
-%include haka/packet_dependant.i
+%include haka/swig.si
+%include haka/packet.si
 PACKET_DEPENDANT_GETTER(packet::forge,result,SWIGTYPE_p_packet);
 
 %rename(ACCEPT) FILTER_ACCEPT;

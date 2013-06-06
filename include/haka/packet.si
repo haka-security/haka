@@ -1,5 +1,5 @@
 
-%include "haka/swig.i"
+%include "haka/swig.si"
 %{
 #include "haka/packet.h"
 #include "haka/log.h"

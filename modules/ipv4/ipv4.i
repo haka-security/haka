@@ -1,8 +1,8 @@
 %module ipv4
 
-%include "haka/packet_dependant.i"
+%include "haka/packet.si"
 
-%include "haka/swig.i"
+%include "haka/swig.si"
 CHECK_FOR_PACKET(struct ipv4*,ipv4)
 CHECK_FOR_PACKET(struct ipv4_flags*, ipv4 flag)
 CHECK_FOR_PACKET(struct ipv4_payload*, ipv4 payload)
