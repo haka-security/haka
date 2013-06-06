@@ -302,7 +302,7 @@ static size_t tcp_stream_position_read(struct tcp_stream *tcp_s,
 		data += len;
 	}
 
-	return length;
+	return length - left_len;
 }
 
 static size_t tcp_stream_position_skip_available(struct tcp_stream *tcp_s,
