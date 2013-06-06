@@ -166,6 +166,7 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 	}
 
 	state->current_packet->length = packet_len;
+	state->current_packet->modified = 0;
 	state->current_packet->id = ntohl(packet_hdr->packet_id);
 
 	/* The copy is needed as the packet buffer will be overridden when the next
