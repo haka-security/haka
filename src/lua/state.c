@@ -14,6 +14,7 @@ extern int luaopen_app(lua_State *L);
 extern int luaopen_module(lua_State *L);
 extern int luaopen_packet(lua_State *L);
 extern int luaopen_log(lua_State *L);
+extern int luaopen_stream(lua_State *L);
 
 typedef struct {
 	lua_CFunction open;
@@ -25,6 +26,7 @@ swig_module swig_builtins[] = {
 	{ luaopen_module, "module" },
 	{ luaopen_packet, "packet" },
 	{ luaopen_log, "log" },
+	{ luaopen_stream, "stream" },
 	{NULL, NULL}
 };
 
