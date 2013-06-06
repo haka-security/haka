@@ -17,13 +17,16 @@
 
 #include <stddef.h>
 #include <haka/types.h>
+#include "lua.h"
 
 
 /**
  * Opaque packet structure.
  * @ingroup Packet
  */
-struct packet;
+struct packet {
+        lua_State * lua_state;
+};
 
 /**
  * Get the length of a packet.

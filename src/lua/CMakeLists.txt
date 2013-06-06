@@ -6,7 +6,6 @@ swig_add_module(haka-lua lua STATIC
 	app.i
 	module.i
 	log.i
-	packet.i
 	stream.i
 	state.c)
 

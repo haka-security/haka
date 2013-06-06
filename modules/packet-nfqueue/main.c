@@ -27,12 +27,13 @@ struct packet_module_state {
 	struct nfq_q_handle *queue;
 	int                  fd;
 
-	struct packet       *current_packet; /* Packet allocated by nfq callback */
+	struct nfqueue_packet       *current_packet; /* Packet allocated by nfq callback */
 	int                  error;
 	char                 receive_buffer[PACKET_RECV_SIZE];
 };
 
-struct packet {
+struct nfqueue_packet {
+        struct packet core_packet;
 	struct packet_module_state *state;
 	int         id; /* nfq identifier */
 	size_t      length;
@@ -149,7 +150,8 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 		return 0;
 	}
 
-	state->current_packet = malloc(sizeof(struct packet) + packet_len);
+	state->current_packet = malloc(sizeof(struct nfqueue_packet) + packet_len);
+        memset(state->current_packet,0,sizeof(struct nfqueue_packet));
 	if (!state->current_packet) {
 		state->error = ENOMEM;
 		return 0;
@@ -306,7 +308,7 @@ static int packet_receive(struct packet_module_state *state, struct packet **pkt
 	if (nfq_handle_packet(state->handle, state->receive_buffer, rv) == 0) {
 		if (state->current_packet) {
 			state->current_packet->state = state;
-			*pkt = state->current_packet;
+			*pkt = (struct packet*)state->current_packet;
 			state->current_packet = NULL;
 			return 0;
 		}
@@ -320,9 +322,10 @@ static int packet_receive(struct packet_module_state *state, struct packet **pkt
 	}
 }
 
-static void packet_verdict(struct packet *pkt, filter_result result)
+static void packet_verdict(struct packet *orig_pkt, filter_result result)
 {
 	int ret;
+        struct nfqueue_packet * pkt = (struct nfqueue_packet*)orig_pkt;
 
 	/* Convert verdict to netfilter */
 	int verdict;
@@ -347,18 +350,21 @@ static void packet_verdict(struct packet *pkt, filter_result result)
 	free(pkt);
 }
 
-static size_t packet_get_length(struct packet *pkt)
+static size_t packet_get_length(struct packet *orig_pkt)
 {
+        struct nfqueue_packet * pkt = (struct nfqueue_packet*)orig_pkt;
 	return pkt->length;
 }
 
-static const uint8 *packet_get_data(struct packet *pkt)
+static const uint8 *packet_get_data(struct packet *orig_pkt)
 {
+        struct nfqueue_packet * pkt = (struct nfqueue_packet*)orig_pkt;
 	return pkt->data;
 }
 
-static uint8 *packet_modifiable(struct packet *pkt)
+static uint8 *packet_modifiable(struct packet *orig_pkt)
 {
+        struct nfqueue_packet * pkt = (struct nfqueue_packet*)orig_pkt;
 	pkt->modified = 1;
 	return pkt->data;
 }

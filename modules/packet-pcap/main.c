@@ -23,7 +23,8 @@ struct packet_module_state {
 	size_t                      link_hdr_len;
 };
 
-struct packet {
+struct pcap_packet {
+        struct packet core_packet;
 	struct packet_module_state *state;
 	struct pcap_pkthdr header;
 	u_char data[0];
@@ -199,7 +200,7 @@ static struct packet_module_state *init_state(int thread_id)
 static int packet_receive(struct packet_module_state *state, struct packet **pkt)
 {
 	struct pcap_pkthdr *header;
-	struct packet *packet = NULL;
+	struct pcap_packet *packet = NULL;
 	const u_char *p;
 	int ret;
 
@@ -220,7 +221,8 @@ static int packet_receive(struct packet_module_state *state, struct packet **pkt
 		return 0;
 	}
 	else {
-		packet = malloc(sizeof(struct packet) + header->caplen);
+		packet = malloc(sizeof(struct pcap_packet) + header->caplen);
+                memset(packet,0,sizeof(struct pcap_packet));
 		if (!packet) {
 			return ENOMEM;
 		}
@@ -233,32 +235,36 @@ static int packet_receive(struct packet_module_state *state, struct packet **pkt
 		if (packet->header.caplen < packet->header.len)
 			messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
 
-		*pkt = packet;
+		*pkt = (struct packet *)packet;
 		return 0;
 	}
 }
 
-static void packet_verdict(struct packet *pkt, filter_result result)
+static void packet_verdict(struct packet *orig_pkt, filter_result result)
 {
 	/* dump capture in pcap file */
+        struct pcap_packet * pkt = (struct pcap_packet*)orig_pkt;
 	if (pkt->state->pf && result == FILTER_ACCEPT)
 		pcap_dump((u_char *)pkt->state->pf, &(pkt->header), pkt->data);
 
 	free(pkt);
 }
 
-static size_t packet_get_length(struct packet *pkt)
+static size_t packet_get_length(struct packet *orig_pkt)
 {
+        struct pcap_packet * pkt = (struct pcap_packet*)orig_pkt;
 	return pkt->header.caplen - pkt->state->link_hdr_len;
 }
 
-static const uint8 *packet_get_data(struct packet *pkt)
+static const uint8 *packet_get_data(struct packet *orig_pkt)
 {
+        struct pcap_packet * pkt = (struct pcap_packet*)orig_pkt;
 	return (pkt->data + pkt->state->link_hdr_len);
 }
 
-static uint8 *packet_modifiable(struct packet *pkt)
+static uint8 *packet_modifiable(struct packet *orig_pkt)
 {
+        struct pcap_packet * pkt = (struct pcap_packet*)orig_pkt;
 	return (pkt->data + pkt->state->link_hdr_len);
 }
 

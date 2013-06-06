@@ -70,10 +70,12 @@ uint8* packet_data_modifiable(struct packet *pkt)
 	return packet_module->make_modifiable(pkt);
 }
 
+extern void lua_invalidatepacket(struct packet *pkt);
 void packet_drop(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
+        lua_invalidatepacket(pkt);
 	packet_module->verdict(pkt, FILTER_DROP);
 }
 
@@ -81,5 +83,6 @@ void packet_accept(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
+        lua_invalidatepacket(pkt);
 	packet_module->verdict(pkt, FILTER_ACCEPT);
 }

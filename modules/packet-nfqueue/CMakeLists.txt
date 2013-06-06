@@ -10,3 +10,4 @@ if(NETFILTERQUEUE_FOUND)
 	
 	INSTALL_MODULE(packet-nfqueue)
 endif(NETFILTERQUEUE_FOUND)
+LUA_LINK(packet-nfqueue)
