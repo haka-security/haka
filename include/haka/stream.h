@@ -58,6 +58,10 @@ struct stream_ftable {
 	 * Erase data at the current stream position.
 	 */
 	size_t    (*erase)(struct stream *s, size_t length);
+
+	bool      (*mark)(struct stream *s);
+	bool      (*unmark)(struct stream *s);
+	bool      (*rewind)(struct stream *s);
 };
 
 
@@ -132,6 +136,36 @@ INLINE size_t stream_erase(struct stream *stream, size_t length)
 	}
 
 	return stream->ftable->erase(stream, length);
+}
+
+INLINE bool stream_mark(struct stream *stream)
+{
+	if (!stream->ftable->mark) {
+		error(L"usupported operation");
+		return false;
+	}
+
+	return stream->ftable->mark(stream);
+}
+
+INLINE bool stream_unmark(struct stream *stream)
+{
+	if (!stream->ftable->unmark) {
+		error(L"usupported operation");
+		return false;
+	}
+
+	return stream->ftable->unmark(stream);
+}
+
+INLINE bool stream_rewind(struct stream *stream)
+{
+	if (!stream->ftable->rewind) {
+		error(L"usupported operation");
+		return false;
+	}
+
+	return stream->ftable->rewind(stream);
 }
 
 #endif /* _HAKA_STREAM_H */

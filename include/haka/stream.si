@@ -35,6 +35,22 @@
 		return buf;
 	}
 
+	int getchar()
+	{
+		uint8 c;
+		if (stream_read((struct stream *)$self, &c, 1) != 1) {
+			return -1;
+		}
+		else {
+			return c;
+		}
+	}
+
+	int advance(int size)
+	{
+		return stream_read((struct stream *)$self, NULL, size);
+	}
+
 	unsigned int available();
 
 	%rename(insert) _insert;
@@ -44,5 +60,9 @@
 	}
 
 	unsigned int erase(int size);
+
+	void mark();
+	void unmark();
+	void rewind();
 }
 %enddef

@@ -18,6 +18,9 @@ static size_t tcp_stream_available(struct stream *s);
 static size_t tcp_stream_insert(struct stream *s, const uint8 *data, size_t length);
 static size_t tcp_stream_replace(struct stream *s, const uint8 *data, size_t length);
 static size_t tcp_stream_erase(struct stream *s, size_t length);
+static bool tcp_stream_mark(struct stream *s);
+static bool tcp_stream_unmark(struct stream *s);
+static bool tcp_stream_rewind(struct stream *s);
 
 struct stream_ftable tcp_stream_ftable = {
 	destroy: tcp_stream_destroy,
@@ -26,6 +29,9 @@ struct stream_ftable tcp_stream_ftable = {
 	insert: tcp_stream_insert,
 	replace: tcp_stream_replace,
 	erase: tcp_stream_erase,
+	mark: tcp_stream_mark,
+	unmark: tcp_stream_unmark,
+	rewind: tcp_stream_rewind
 };
 
 
@@ -79,12 +85,26 @@ struct tcp_stream {
 	int                             sent_offset_seq;
 
 	struct tcp_stream_position      current_position;
+	struct tcp_stream_position      mark_position;
+	struct tcp_stream_chunk_modif  *pending_modif;
 };
 
 
 /*
  * Stream position functions
  */
+
+bool tcp_stream_position_isvalid(struct tcp_stream_position *pos)
+{
+	return (pos->current_seq_modif != (size_t)-1);
+}
+
+void tcp_stream_position_invalidate(struct tcp_stream_position *pos)
+{
+	pos->current_seq_modif = (size_t)-1;
+	pos->chunk = NULL;
+	pos->modif = NULL;
+}
 
 static struct tcp_stream_chunk_modif *tcp_stream_position_modif(struct tcp_stream_position *pos,
 		size_t *modif_offset, struct tcp_stream_chunk_modif **prev, struct tcp_stream_chunk_modif **next)
@@ -262,7 +282,7 @@ static size_t tcp_stream_position_read_step(struct tcp_stream *tcp_s,
 		assert(pos->modif_offset < current_modif->length);
 
 		const size_t maxlength = MIN(length, current_modif->length - pos->modif_offset);
-		memcpy(data, current_modif->data + pos->modif_offset, maxlength);
+		if (data) memcpy(data, current_modif->data + pos->modif_offset, maxlength);
 		pos->modif_offset += maxlength;
 		pos->current_seq_modif += maxlength;
 		return maxlength;
@@ -277,7 +297,7 @@ static size_t tcp_stream_position_read_step(struct tcp_stream *tcp_s,
 			maxlength = MIN((pos->chunk->end_seq - pos->chunk->start_seq) - pos->chunk_offset, length);
 		}
 
-		memcpy(data, tcp_get_payload(pos->chunk->tcp) + pos->chunk_offset, maxlength);
+		if (data) memcpy(data, tcp_get_payload(pos->chunk->tcp) + pos->chunk_offset, maxlength);
 		pos->chunk_offset += maxlength;
 		pos->current_seq_modif += maxlength;
 		return maxlength;
@@ -296,7 +316,7 @@ static size_t tcp_stream_position_read(struct tcp_stream *tcp_s,
 		}
 
 		left_len -= len;
-		data += len;
+		if (data) data += len;
 	}
 
 	return length - left_len;
@@ -327,6 +347,22 @@ static size_t tcp_stream_position_skip_available(struct tcp_stream *tcp_s,
 	return total_length;
 }
 
+static void tcp_stream_position_try_advance_chunk(struct tcp_stream_position *pos,
+		struct tcp_stream_chunk *chunk)
+{
+	if (pos->chunk == chunk) {
+		if (tcp_stream_position_chunk_at_end(pos)) {
+			tcp_stream_position_next_chunk(pos);
+		}
+	}
+}
+
+static bool tcp_stream_position_isbefore(struct tcp_stream_position *pos1,
+		struct tcp_stream_position *pos2)
+{
+	return (pos1->current_seq_modif <= pos2->current_seq_modif);
+}
+
 
 /*
  * Stream functions
@@ -344,6 +380,8 @@ struct stream *tcp_stream_create()
 	}
 
 	memset(tcp_s, 0, sizeof(struct tcp_stream));
+
+	tcp_stream_position_invalidate(&tcp_s->mark_position);
 
 	tcp_s->stream.ftable = &tcp_stream_ftable;
 	return &tcp_s->stream;
@@ -484,22 +522,25 @@ struct tcp *tcp_stream_pop(struct stream *s)
 	struct tcp_stream_position *pos;
 	TCP_STREAM(s);
 
+	chunk = tcp_s->first;
+
+	assert(!tcp_stream_position_isvalid(&tcp_s->mark_position) ||
+			tcp_stream_position_isbefore(&tcp_s->mark_position, &tcp_s->current_position));
+
 	pos = &tcp_s->current_position;
 	tcp_stream_position_advance(tcp_s, pos);
 
-	/* Force a skip of all available data */
-	tcp_stream_position_skip_available(tcp_s, pos);
+	if (tcp_stream_position_isvalid(&tcp_s->mark_position)) {
+		tcp_stream_position_try_advance_chunk(pos, chunk);
 
-	chunk = tcp_s->first;
-
-	/*
-	 * If the current position is at the end of the last chunk,
-	 * move it to free the chunk.
-	 */
-	if (pos->chunk == chunk) {
-		if (tcp_stream_position_chunk_at_end(pos)) {
-			tcp_stream_position_next_chunk(pos);
-		}
+		pos = &tcp_s->mark_position;
+		tcp_stream_position_advance(tcp_s, pos);
+		tcp_stream_position_try_advance_chunk(pos, chunk);
+	}
+	else {
+		/* Force a skip of all available data */
+		tcp_stream_position_skip_available(tcp_s, pos);
+		tcp_stream_position_try_advance_chunk(pos, chunk);
 	}
 
 	if (chunk && tcp_stream_position_chunk_is_before(pos, chunk)) {
@@ -818,5 +859,42 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 	}
 	else {
 		return erase_length;
+	}
+}
+
+static bool tcp_stream_mark(struct stream *s)
+{
+	TCP_STREAM(s);
+
+	tcp_s->mark_position = tcp_s->current_position;
+	return true;
+}
+
+static bool tcp_stream_unmark(struct stream *s)
+{
+	TCP_STREAM(s);
+
+	if (tcp_stream_position_isvalid(&tcp_s->mark_position)) {
+		tcp_stream_position_invalidate(&tcp_s->mark_position);
+		return true;
+	}
+	else {
+		error(L"stream was not marked");
+		return false;
+	}
+}
+
+static bool tcp_stream_rewind(struct stream *s)
+{
+	TCP_STREAM(s);
+
+	if (tcp_stream_position_isvalid(&tcp_s->mark_position)) {
+		tcp_s->current_position = tcp_s->mark_position;
+		tcp_stream_position_invalidate(&tcp_s->mark_position);
+		return true;
+	}
+	else {
+		error(L"stream was not marked");
+		return false;
 	}
 }
