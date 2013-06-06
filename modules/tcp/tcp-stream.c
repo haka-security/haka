@@ -418,7 +418,8 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	chunk->offset_seq = 0;
 	chunk->modifs = NULL;
 
-	if (chunk->end_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset) {
+	if (chunk->start_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset ||
+		chunk->end_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset) {
 		error(L"retransmit packet (unsupported)");
 		free(chunk);
 		return false;
