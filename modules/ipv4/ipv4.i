@@ -137,6 +137,10 @@ struct ipv4_network {
 		%rename(contains) _contains;
 		bool _contains(struct ipv4_addr *addr)
 		{
+			if (!addr) {
+				error(L"nil argument error");
+				return false;
+			}
 			return ipv4_network_contains($self->net, addr->addr);
 		}
 
