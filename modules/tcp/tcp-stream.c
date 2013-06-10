@@ -906,6 +906,16 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 			/* Remove modif */
 			if (cur_modif->next) cur_modif->next->prev = cur_modif->prev;
 			if (cur_modif->prev) cur_modif->prev->next = cur_modif->next;
+
+			if (!prev_modif) {
+				assert(pos->chunk->modifs == cur_modif);
+				pos->chunk->modifs = cur_modif->next;
+			}
+
+			if (pos->modif == cur_modif) {
+				pos->modif = prev_modif;
+				pos->modif_offset = (size_t)-1;
+			}
 		}
 		else {
 			/* Modify an existing modif */
@@ -928,6 +938,15 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 			new_modif->prev = cur_modif->prev;
 			if (cur_modif->next) cur_modif->next->prev = new_modif;
 			if (cur_modif->prev) cur_modif->prev->next = new_modif;
+
+			if (!prev_modif) {
+				assert(pos->chunk->modifs == cur_modif);
+				pos->chunk->modifs = new_modif;
+			}
+
+			if (pos->modif == cur_modif) {
+				pos->modif = new_modif;
+			}
 		}
 
 		pos->chunk->offset_seq -= erase_length;
