@@ -29,14 +29,14 @@ struct module {
 
 %rename(load) module_load;
 
-%varargs(10,char *arg = NULL) module_load;
+%varargs(10, char *arg = NULL) module_load;
 %newobject module_load;
 struct module *module_load(const char *name, ...);
 
 %rename(path) module_get_path;
 const char *module_get_path();
 
-%rename(setPath) module_set_path;
+%rename(setpath) module_set_path;
 void module_set_path(const char *path);
 
 %immutable;

@@ -17,9 +17,9 @@ local function dissect(pkt)
 	local stream_dir
 
 	local newpkt = {}
-	newpkt.connection, stream_dir = pkt:getConnection()
+	newpkt.connection, stream_dir = pkt:getconnection()
 	newpkt.dissector = "tcp-connection"
-	newpkt.nextDissector = nil
+	newpkt.next_dissector = nil
 	newpkt.valid = function (self)
 		return newpkt.connection ~= nil
 	end
@@ -33,7 +33,7 @@ local function dissect(pkt)
 				return nil
 			end
 
-			newpkt.connection = pkt:newConnection()
+			newpkt.connection = pkt:newconnection()
 			stream_dir = true
 		else
 			haka.log.error("tcp-connection", "no connection found")
@@ -61,6 +61,7 @@ local function dissect(pkt)
 
 	if newpkt.connection.state == 4 or pkt.flags.rst then
 		newpkt.connection:close()
+		newpkt.connection = nil
 		return nil
 	end
 

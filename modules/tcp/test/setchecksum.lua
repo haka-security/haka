@@ -7,6 +7,6 @@ require("tcp")
 haka.rule {
 	hooks = { "tcp-up" },
 	eval = function (self, pkt)
-		pkt:computeChecksum()
+		pkt:compute_checksum()
 	end
 }

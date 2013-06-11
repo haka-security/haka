@@ -4,7 +4,7 @@ local arg = {...}
 package.cpath = package.cpath .. ";" .. string.gsub(arg[3], ':', '/?.ho;')
 
 local path = string.gsub(arg[3], ':', '/*;')
-haka.module.setPath(path);
+haka.module.setpath(path);
 haka.app.install("packet", haka.module.load("packet-pcap", "-f", arg[2]))
 
 haka.app.load_configuration(arg[1])

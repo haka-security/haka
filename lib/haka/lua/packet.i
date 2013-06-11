@@ -107,7 +107,7 @@ struct packet {
 		%immutable;
 		size_t length;
 		const char *dissector;
-		const char *nextDissector;
+		const char *next_dissector;
 
 		size_t __len(void *dummy)
 		{
@@ -163,7 +163,7 @@ const char *packet_dissector_get(struct packet *pkt) {
 	return "raw";
 }
 
-const char *packet_nextDissector_get(struct packet *pkt) {
+const char *packet_next_dissector_get(struct packet *pkt) {
 	return packet_dissector(pkt);
 }
 %}

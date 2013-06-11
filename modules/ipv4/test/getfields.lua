@@ -24,7 +24,7 @@ function protocol(val)
 end
 
 function checks(ip)
-	if ip:verifyChecksum() then
+	if ip:verify_checksum() then
 		good = "[Good: True]"
 		bad = "[Bad: False]"
 		msg = "[correct]"

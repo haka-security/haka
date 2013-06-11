@@ -17,7 +17,7 @@ haka.rule {
 	hooks = { "ipv4-up" },
 	eval = function (self, pkt)
 		-- checking IP checksum
-		pkt:verifyChecksum()
+		pkt:verify_checksum()
 	end
 }
 

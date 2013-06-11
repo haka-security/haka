@@ -9,7 +9,7 @@ function bool(val)
 end
 
 function checks(proto)
-	if proto:verifyChecksum() then
+	if proto:verify_checksum() then
 		good = "[Good: True]"
 		bad = "[Bad: False]"
 	else

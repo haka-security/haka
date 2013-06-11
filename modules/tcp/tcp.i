@@ -121,24 +121,17 @@ struct tcp {
 		struct tcp_payload *payload;
 		struct ipv4 *ip;
 		const char *dissector;
-		const char *nextDissector;
+		const char *next_dissector;
 
-		bool verifyChecksum()
-		{
-			return tcp_verify_checksum($self);
-		}
+		bool verify_checksum();
+		void compute_checksum();
 
-		void computeChecksum()
-		{
-			tcp_compute_checksum($self);
-		}
-
-		struct tcp_connection *newConnection()
+		struct tcp_connection *newconnection()
 		{
 			return tcp_connection_new($self);
 		}
 
-		struct tcp_connection *getConnection(bool *OUTPUT)
+		struct tcp_connection *getconnection(bool *OUTPUT)
 		{
 			return tcp_connection_get($self, OUTPUT);
 		}
@@ -216,7 +209,7 @@ struct tcp_flags *tcp_flags_get(struct tcp *tcp) { return (struct tcp_flags *)tc
 
 const char *tcp_dissector_get(struct tcp *tcp) { return "tcp"; }
 
-const char *tcp_nextDissector_get(struct tcp *tcp) { return "tcp-connection"; }
+const char *tcp_next_dissector_get(struct tcp *tcp) { return "tcp-connection"; }
 
 struct ipv4 *tcp_ip_get(struct tcp *tcp) { return tcp->packet; }
 

@@ -35,7 +35,7 @@ void install(const char *type, struct module *module);
 void load_configuration(const char *file);
 void exit(int);
 
-%rename(currentThread) thread_get_id;
+%rename(current_thread) thread_get_id;
 int thread_get_id();
 
 %rename(directory) get_app_directory;

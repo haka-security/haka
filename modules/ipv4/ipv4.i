@@ -224,17 +224,10 @@ struct ipv4 {
 		struct ipv4_flags *flags;
 		struct ipv4_payload *payload;
 		const char *dissector;
-		const char *nextDissector;
+		const char *next_dissector;
 
-		bool verifyChecksum()
-		{
-			return ipv4_verify_checksum($self);
-		}
-
-		void computeChecksum()
-		{
-			ipv4_compute_checksum($self);
-		}
+		bool verify_checksum();
+		void compute_checksum();
 
 		void drop()
 		{
@@ -276,7 +269,7 @@ void ipv4_register_proto_dissector(int proto, const char *dissector);
 
 	const char *ipv4_dissector_get(struct ipv4 *ip) { return "ipv4"; }
 
-	const char *ipv4_nextDissector_get(struct ipv4 *ip) { return ipv4_get_proto_dissector(ip); }
+	const char *ipv4_next_dissector_get(struct ipv4 *ip) { return ipv4_get_proto_dissector(ip); }
 
 	struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
 
