@@ -7,8 +7,12 @@ set(CMAKE_SHARED_MODULE_SUFFIX "${HAKA_MODULE_SUFFIX}")
 set(CMAKE_SHARED_LIBRARY_PREFIX "${HAKA_MODULE_PREFIX}")
 set(CMAKE_SHARED_LIBRARY_SUFFIX "${HAKA_MODULE_SUFFIX}")
 
-macro(DEPENDS_MODULE target name)
+macro(INCLUDE_MODULE name)
 	include_directories(${CMAKE_SOURCE_DIR}/modules/${name})
+endmacro(INCLUDE_MODULE)
+
+macro(DEPENDS_MODULE target name)
+	INCLUDE_MODULE(name)
 	target_link_libraries(${target} ${name})
 endmacro(DEPENDS_MODULE)
 
