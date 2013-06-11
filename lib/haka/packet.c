@@ -5,6 +5,7 @@
 #include <haka/error.h>
 #include <haka/packet_module.h>
 
+extern void lua_invalidatepacket(struct packet *pkt);
 
 static struct packet_module *packet_module = NULL;
 
@@ -70,12 +71,11 @@ uint8* packet_data_modifiable(struct packet *pkt)
 	return packet_module->make_modifiable(pkt);
 }
 
-extern void lua_invalidatepacket(struct packet *pkt);
 void packet_drop(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-        lua_invalidatepacket(pkt);
+	lua_invalidatepacket(pkt);
 	packet_module->verdict(pkt, FILTER_DROP);
 }
 
@@ -83,6 +83,6 @@ void packet_accept(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-        lua_invalidatepacket(pkt);
+	lua_invalidatepacket(pkt);
 	packet_module->verdict(pkt, FILTER_ACCEPT);
 }

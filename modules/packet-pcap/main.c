@@ -24,7 +24,7 @@ struct packet_module_state {
 };
 
 struct pcap_packet {
-        struct packet core_packet;
+	struct packet core_packet;
 	struct packet_module_state *state;
 	struct pcap_pkthdr header;
 	u_char data[0];
@@ -222,10 +222,11 @@ static int packet_receive(struct packet_module_state *state, struct packet **pkt
 	}
 	else {
 		packet = malloc(sizeof(struct pcap_packet) + header->caplen);
-                memset(packet,0,sizeof(struct pcap_packet));
 		if (!packet) {
 			return ENOMEM;
 		}
+
+		memset(packet, 0, sizeof(struct pcap_packet));
 
 		/* fill packet data structure */
 		memcpy(packet->data, p, header->caplen);
@@ -243,7 +244,8 @@ static int packet_receive(struct packet_module_state *state, struct packet **pkt
 static void packet_verdict(struct packet *orig_pkt, filter_result result)
 {
 	/* dump capture in pcap file */
-        struct pcap_packet * pkt = (struct pcap_packet*)orig_pkt;
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+
 	if (pkt->state->pf && result == FILTER_ACCEPT)
 		pcap_dump((u_char *)pkt->state->pf, &(pkt->header), pkt->data);
 
@@ -252,19 +254,19 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 
 static size_t packet_get_length(struct packet *orig_pkt)
 {
-        struct pcap_packet * pkt = (struct pcap_packet*)orig_pkt;
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 	return pkt->header.caplen - pkt->state->link_hdr_len;
 }
 
 static const uint8 *packet_get_data(struct packet *orig_pkt)
 {
-        struct pcap_packet * pkt = (struct pcap_packet*)orig_pkt;
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 	return (pkt->data + pkt->state->link_hdr_len);
 }
 
 static uint8 *packet_modifiable(struct packet *orig_pkt)
 {
-        struct pcap_packet * pkt = (struct pcap_packet*)orig_pkt;
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 	return (pkt->data + pkt->state->link_hdr_len);
 }
 

@@ -34,7 +34,7 @@
 	}
 %enddef
 %exception {
-        DEFAULT_EXCEPTION
+	DEFAULT_EXCEPTION
 }
 
 %typemap(out) temporary_string {

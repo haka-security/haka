@@ -17,7 +17,6 @@
 
 #include <stddef.h>
 #include <haka/types.h>
-#include "lua.h"
 
 
 /**
@@ -25,7 +24,7 @@
  * @ingroup Packet
  */
 struct packet {
-        lua_State * lua_state;
+	void *lua_state;
 };
 
 /**
@@ -50,7 +49,7 @@ const uint8 *packet_data(struct packet *pkt);
  * @return The dissector name.
  * @ingroup Packet
  */
-const char *packet_dissector(struct packet *pkt);
+const char  *packet_dissector(struct packet *pkt);
 
 /**
  * Make a packet modifiable.
