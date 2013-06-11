@@ -136,14 +136,26 @@ end
 function haka.filter(pkt)
 	local dissect = get_dissector(pkt.next_dissector)
 	while dissect do
-		local nextpkt = dissect.dissect(pkt)
+		local err, nextpkt = xpcall(function () return dissect.dissect(pkt) end, debug.format_error)
+		if not err then
+			haka.log.error("core", nextpkt)
+			pkt:drop()
+			break
+		end
+
 		if not nextpkt or not nextpkt:valid() then
 			break
 		end
 
 		pkt = nextpkt
 		
-		eval_rules(dissect.name .. '-up', pkt)
+		local err, msg = xpcall(function () eval_rules(dissect.name .. '-up', pkt) end, debug.format_error)
+		if not err then
+			haka.log.error("core", msg)
+			pkt:drop()
+			break
+		end
+
 		if not pkt:valid() then
 			break
 		end
