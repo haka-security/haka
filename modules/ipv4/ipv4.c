@@ -39,9 +39,9 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 	struct packet *packet = ip->packet;
 	if (packet) {
 		if (ip->drop) {
-			packet_drop(packet);
 			ip->packet = NULL;
 			ip->header = NULL;
+			packet_drop(packet);
 			return NULL;
 		}
 		else {

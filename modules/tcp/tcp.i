@@ -104,7 +104,7 @@ struct tcp {
 	%extend {
 		~tcp()
 		{
-			//tcp_release($self);
+			tcp_release($self);
 		}
 		unsigned int srcport;
 		unsigned int dstport;

@@ -205,7 +205,7 @@ struct ipv4 {
 	%extend {
 		~ipv4()
 		{
-			//ipv4_release($self);
+			ipv4_release($self);
 		}
 
 		unsigned int hdr_len;
