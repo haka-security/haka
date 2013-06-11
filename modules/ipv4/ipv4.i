@@ -6,6 +6,7 @@ PACKET_DEPENDANT_CONSTRUCTOR(ipv4_dissect,arg1,SWIGTYPE_p_ipv4);
 PACKET_DEPENDANT_GETTER(ipv4::forge,result,SWIGTYPE_p_packet);
 PACKET_DEPENDANT_CONSTRUCTOR(ipv4::flags,arg1->packet,SWIGTYPE_p_ipv4_flags);
 PACKET_DEPENDANT_CONSTRUCTOR(ipv4::payload,arg1->packet,SWIGTYPE_p_ipv4_payload);
+
 %{
 	#include "haka/ipv4.h"
 
