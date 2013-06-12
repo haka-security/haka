@@ -144,7 +144,7 @@ struct ipv4_network {
 		bool _contains(struct ipv4_addr *addr)
 		{
 			if (!addr) {
-				error(L"nil argument error");
+				error(L"nil argument");
 				return false;
 			}
 			return ipv4_network_contains($self->net, addr->addr);
