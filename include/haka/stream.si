@@ -2,6 +2,7 @@
 %include haka/buffer.si
 
 %define BASIC_STREAM(type)
+%newobject type::read;
 %extend type {
 	~type()
 	{
