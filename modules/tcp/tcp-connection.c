@@ -32,7 +32,6 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 	ptr->tcp_conn.dstip = ipv4_get_dst(tcp->packet);
 	ptr->tcp_conn.srcport = tcp_get_srcport(tcp);
 	ptr->tcp_conn.dstport = tcp_get_dstport(tcp);
-	ptr->tcp_conn.state = 0;
 	lua_ref_init(&ptr->tcp_conn.lua_table);
 	ptr->tcp_conn.stream_input = tcp_stream_create();
 	ptr->tcp_conn.stream_output = tcp_stream_create();

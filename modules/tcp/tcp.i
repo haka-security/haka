@@ -151,7 +151,6 @@ struct tcp {
 
 struct tcp_connection {
 	%extend {
-		unsigned int state;
 		struct lua_ref data;
 
 		%immutable;
@@ -186,10 +185,6 @@ struct ipv4_addr *tcp_connection_dstip_get(struct tcp_connection *tcp_conn) { re
 
 TCP_CONN_INT_GET(srcport);
 TCP_CONN_INT_GET(dstport);
-TCP_CONN_INT_GET(state);
-
-void tcp_connection_state_set(struct tcp_connection *tcp_conn, unsigned int state) { return 
-	tcp_connection_set_state(tcp_conn, state); }
 
 struct lua_ref tcp_connection_data_get(struct tcp_connection *tcp_conn)
 {

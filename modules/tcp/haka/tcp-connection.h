@@ -22,7 +22,6 @@ struct tcp_connection {
 	ipv4addr       dstip;
 	uint16         srcport;
 	uint16         dstport;
-	uint32         state;
 	struct lua_ref lua_table;
 	struct stream *stream_input;
 	struct stream *stream_output;
@@ -63,14 +62,9 @@ static inline struct stream *tcp_connection_get_stream(struct tcp_connection *co
 void tcp_connection_close(struct tcp_connection *tcp_conn);
 
 #define TCP_CONN_GET_FIELD(type, field) \
-	static inline type tcp_connection_get_##field(const struct tcp_connection *tcp_conn) { return tcp_conn->field; }
+	INLINE type tcp_connection_get_##field(const struct tcp_connection *tcp_conn) { return tcp_conn->field; }
 
-TCP_CONN_GET_FIELD(uint32, state);
 TCP_CONN_GET_FIELD(uint16, srcport);
 TCP_CONN_GET_FIELD(uint16, dstport);
 TCP_CONN_GET_FIELD(ipv4addr, srcip);
 TCP_CONN_GET_FIELD(ipv4addr, dstip);
-
-
-INLINE void tcp_connection_set_state(struct tcp_connection *tcp_conn, uint8 state) { tcp_conn->state = state; }
-

@@ -36,6 +36,7 @@ local function dissect(pkt)
 			newpkt.connection = pkt:newconnection()
 			newpkt.connection.data = {}
 			newpkt.connection.data.next_dissector = newpkt.next_dissector
+			newpkt.connection.data.state = 0
 			newpkt.direction = true
 		else
 			haka.log.error("tcp-connection", "no connection found")
@@ -54,15 +55,15 @@ local function dissect(pkt)
 	end
 
 	-- handle ending handshake
-	if pkt.flags.ack and newpkt.connection.state > 0 then
-		newpkt.connection.state =  newpkt.connection.state + 1
+	if pkt.flags.ack and newpkt.connection.data.state > 0 then
+		newpkt.connection.data.state =  newpkt.connection.data.state + 1
 	end
 
 	if pkt.flags.fin then
-		newpkt.connection.state =  newpkt.connection.state + 1
+		newpkt.connection.data.state =  newpkt.connection.data.state + 1
 	end
 
-	if newpkt.connection.state == 4 or pkt.flags.rst then
+	if newpkt.connection.data.state == 4 or pkt.flags.rst then
 		newpkt.connection:close()
 		newpkt.connection = nil
 		return nil
