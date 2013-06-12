@@ -1,0 +1,21 @@
+
+%{
+#include <haka/lua/ref.h>
+%}
+
+%typemap(in) struct lua_ref
+%{
+	lua_pushvalue(L, $input);
+	lua_ref_get(L, &$1);
+%}
+
+%typemap(out) struct lua_ref
+%{
+	if (!lua_ref_isvalid(&$1)) {
+		lua_pushnil(L);
+	}
+	else {
+		lua_ref_push(L, &$1);
+		++SWIG_arg;
+	}
+%}

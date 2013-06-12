@@ -26,6 +26,7 @@ struct tcp_payload;
 
 %include "haka/lua/swig.si"
 %include "haka/lua/stream.si"
+%include "haka/lua/ref.si"
 %include "typemaps.i"
 
 %nodefaultctor;
@@ -151,6 +152,8 @@ struct tcp {
 struct tcp_connection {
 	%extend {
 		unsigned int state;
+		struct lua_ref data;
+
 		%immutable;
 		struct ipv4_addr *srcip;
 		struct ipv4_addr *dstip;
@@ -188,6 +191,16 @@ TCP_CONN_INT_GET(state);
 void tcp_connection_state_set(struct tcp_connection *tcp_conn, unsigned int state) { return 
 	tcp_connection_set_state(tcp_conn, state); }
 
+struct lua_ref tcp_connection_data_get(struct tcp_connection *tcp_conn)
+{
+	return tcp_conn->lua_table;
+}
+
+void tcp_connection_data_set(struct tcp_connection *tcp_conn, struct lua_ref ref)
+{
+	lua_ref_clear(&tcp_conn->lua_table);
+	tcp_conn->lua_table = ref;
+}
 
 #define TCP_INT_GETSET(field) \
 	unsigned int tcp_##field##_get(struct tcp *tcp) { return tcp_get_##field(tcp); } \

@@ -10,6 +10,7 @@
 #include <haka/stream.h>
 #include <haka/ipv4.h>
 #include <haka/tcp.h>
+#include <haka/lua/ref.h>
 
 
 /**
@@ -22,7 +23,7 @@ struct tcp_connection {
 	uint16         srcport;
 	uint16         dstport;
 	uint32         state;
-
+	struct lua_ref lua_table;
 	struct stream *stream_input;
 	struct stream *stream_output;
 };

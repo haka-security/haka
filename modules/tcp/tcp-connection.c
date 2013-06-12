@@ -33,6 +33,7 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 	ptr->tcp_conn.srcport = tcp_get_srcport(tcp);
 	ptr->tcp_conn.dstport = tcp_get_dstport(tcp);
 	ptr->tcp_conn.state = 0;
+	lua_ref_init(&ptr->tcp_conn.lua_table);
 	ptr->tcp_conn.stream_input = tcp_stream_create();
 	ptr->tcp_conn.stream_output = tcp_stream_create();
 
@@ -113,6 +114,8 @@ void tcp_connection_close(struct tcp_connection* tcp_conn)
 		messagef(HAKA_LOG_DEBUG, L"tcp-connection", L"closing connection %s:%u -> %s:%u",
 				srcip, current->tcp_conn.srcport, dstip, current->tcp_conn.dstport);
 	}
+
+	lua_ref_clear(&tcp_conn->lua_table);
 
 	mutex_lock(&ct_mutex);
 

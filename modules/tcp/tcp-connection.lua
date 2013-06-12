@@ -34,6 +34,7 @@ local function dissect(pkt)
 			end
 
 			newpkt.connection = pkt:newconnection()
+			newpkt.connection.data = {}
 
 			-- TODO: Temporary
 			--if pkt.dstport == 80 then
