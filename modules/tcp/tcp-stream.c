@@ -1006,6 +1006,11 @@ static bool tcp_stream_mark(struct stream *s)
 {
 	TCP_STREAM(s);
 
+	if (tcp_stream_position_isvalid(&tcp_s->mark_position)) {
+		error(L"mark already set");
+		return false;
+	}
+
 	tcp_s->mark_position = tcp_s->current_position;
 	return true;
 }
