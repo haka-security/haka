@@ -57,7 +57,17 @@
 	%rename(insert) _insert;
 	unsigned int _insert(struct buffer *buf)
 	{
+		if (!buf) {
+			error(L"nil argument");
+			return 0;
+		}
 		return stream_insert((struct stream *)$self, buf->data, buf->size);
+	}
+
+	%rename(insert) _insert;
+	unsigned int _insert(const char *buf)
+	{
+		return stream_insert((struct stream *)$self, (const uint8*)buf, strlen(buf));
 	}
 
 	unsigned int erase(int size);
