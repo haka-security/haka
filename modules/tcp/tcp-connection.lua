@@ -17,7 +17,7 @@ local function dissect(pkt)
 	local stream_dir
 
 	local newpkt = {}
-	newpkt.connection, stream_dir = pkt:getconnection()
+	newpkt.connection, newpkt.direction = pkt:getconnection()
 	newpkt.dissector = "tcp-connection"
 	newpkt.next_dissector = nil
 	newpkt.valid = function (self)
@@ -35,13 +35,8 @@ local function dissect(pkt)
 
 			newpkt.connection = pkt:newconnection()
 			newpkt.connection.data = {}
-
-			-- TODO: Temporary
-			--if pkt.dstport == 80 then
-				--newpkt.next_dissector = "http"
-			--end
-
-			stream_dir = true
+			newpkt.connection.data.next_dissector = newpkt.next_dissector
+			newpkt.direction = true
 		else
 			haka.log.error("tcp-connection", "no connection found")
 			pkt:drop()
@@ -49,9 +44,10 @@ local function dissect(pkt)
 		end
 	end
 
-	newpkt.stream = newpkt.connection:stream(stream_dir)
+	newpkt.stream = newpkt.connection:stream(newpkt.direction)
 	newpkt.stream:push(pkt)
-	newpkt.direction = stream_dir
+	
+	newpkt.next_dissector = newpkt.connection.data.next_dissector
 
 	if pkt.flags.syn then
 		return nil
