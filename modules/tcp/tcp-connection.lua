@@ -6,11 +6,15 @@ local function forge(self)
 		self.connection:stream(not self.direction):ack(pkt)
 		return pkt
 	end
+
+	if self.close then
+		self.connection:close()
+		self.connection = nil
+	end
 end
 
 local function drop(self)
-	self.connection:close()
-	self.connection = nil
+	self.close = true
 end
 
 local function dissect(pkt)
@@ -21,10 +25,11 @@ local function dissect(pkt)
 	newpkt.dissector = "tcp-connection"
 	newpkt.next_dissector = nil
 	newpkt.valid = function (self)
-		return newpkt.connection ~= nil
+		return not newpkt.close
 	end
 	newpkt.drop = drop
 	newpkt.forge = forge
+	newpkt.close = false
 
 	if not newpkt.connection then
 		-- new connection
@@ -49,11 +54,9 @@ local function dissect(pkt)
 	end
 
 	newpkt.stream = newpkt.connection:stream(newpkt.direction)
-	newpkt.stream:push(pkt)
-	
-	newpkt.next_dissector = newpkt.connection.data.next_dissector
 
 	if pkt.flags.syn then
+		newpkt.stream:push(pkt)
 		return nil
 	end
 
@@ -67,10 +70,11 @@ local function dissect(pkt)
 	end
 
 	if newpkt.connection.data.state == 4 or pkt.flags.rst then
-		newpkt.connection:close()
-		newpkt.connection = nil
-		return nil
+		newpkt.close = true
 	end
+
+	newpkt.stream:push(pkt)
+	newpkt.next_dissector = newpkt.connection.data.next_dissector
 
 	return newpkt
 end

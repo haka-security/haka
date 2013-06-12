@@ -729,6 +729,9 @@ void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 		iter = iter->next;
 	}
 
+	/* Need to account for offset (case of the FIN for instance) */
+	new_seq += ack-seq;
+
 	tcp_set_ack_seq(tcp, new_seq + tcp_s->start_seq);
 }
 
