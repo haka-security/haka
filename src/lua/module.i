@@ -9,7 +9,7 @@ char *suffix = HAKA_MODULE_SUFFIX;
 
 %}
 
-%include "haka/swig.si"
+%include "haka/lua/swig.si"
 
 %nodefaultctor;
 

@@ -48,7 +48,7 @@ void free_buffer(struct buffer *buf)
 
 %}
 
-%include haka/swig.si
+%include "haka/lua/swig.si"
 
 struct buffer {
 	%extend {

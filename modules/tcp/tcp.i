@@ -1,5 +1,5 @@
 %module tcp
-%include haka/ipv4.si
+%include haka/lua/ipv4.si
 
 CHECK_FOR_PACKET(struct tcp*,tcp)
 CHECK_FOR_PACKET(struct tcp_flags*,tcp flags)
@@ -20,12 +20,12 @@ PACKET_DEPENDANT_GETTER(stream::pop,result->packet->packet,SWIGTYPE_p_tcp);
 
 struct tcp_payload;
 
-#include <haka/ipv4-addr.si>
+#include <haka/lua/ipv4-addr.si>
 
 %}
 
-%include "haka/swig.si"
-%include "haka/stream.si"
+%include "haka/lua/swig.si"
+%include "haka/lua/stream.si"
 %include "typemaps.i"
 
 %nodefaultctor;

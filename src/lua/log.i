@@ -4,8 +4,8 @@
 #include <haka/log.h>
 %}
 
-%include haka/wchar.si
-%include haka/swig.si
+%include "haka/lua/wchar.si"
+%include "haka/lua/swig.si"
 
 
 %rename(FATAL) HAKA_LOG_FATAL;

@@ -4,8 +4,8 @@
 #include <haka/stream.h>
 %}
 
-%include haka/swig.si
-%include haka/stream.si
+%include "haka/lua/swig.si"
+%include "haka/lua/stream.si"
 
 %nodefaultctor;
 

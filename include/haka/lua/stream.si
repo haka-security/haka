@@ -1,5 +1,5 @@
 
-%include haka/buffer.si
+%include "haka/lua/buffer.si"
 
 %define BASIC_STREAM(type)
 %newobject type::read;

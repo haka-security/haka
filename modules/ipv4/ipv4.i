@@ -1,6 +1,6 @@
 %module ipv4
 
-%include "haka/ipv4.si"
+%include "haka/lua/ipv4.si"
 
 PACKET_DEPENDANT_CONSTRUCTOR(ipv4_dissect,arg1,SWIGTYPE_p_ipv4);
 PACKET_DEPENDANT_GETTER(ipv4::forge,result,SWIGTYPE_p_packet);

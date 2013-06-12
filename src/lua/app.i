@@ -29,7 +29,7 @@ void load_configuration(const char *file)
 
 %}
 
-%include "haka/swig.si"
+%include "haka/lua/swig.si"
 
 void install(const char *type, struct module *module);
 void load_configuration(const char *file);
