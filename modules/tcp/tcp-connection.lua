@@ -34,6 +34,12 @@ local function dissect(pkt)
 			end
 
 			newpkt.connection = pkt:newconnection()
+
+			-- TODO: Temporary
+			--if pkt.dstport == 80 then
+				--newpkt.next_dissector = "http"
+			--end
+
 			stream_dir = true
 		else
 			haka.log.error("tcp-connection", "no connection found")
