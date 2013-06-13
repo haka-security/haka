@@ -160,7 +160,7 @@ local function forge(http)
 		if http.state == 1 and tcp.direction then
 			http.state = 2
 
-			tcp.stream:rewind()
+			tcp.stream:seek(http.request.mark, true)
 			tcp.stream:erase(http.request.length)
 			tcp.stream:insert(http.request.Method)
 			tcp.stream:insert(" ")
@@ -173,7 +173,8 @@ local function forge(http)
 
 		elseif http.state == 3 and not tcp.direction then
 			http.state = 4
-			tcp.stream:rewind()
+
+			tcp.stream:seek(http.response.mark, true)
 			tcp.stream:erase(http.response.length)
 			tcp.stream:insert(http.response.Version)
 			tcp.stream:insert(" ")
@@ -216,9 +217,9 @@ haka.dissector {
 		if stream.direction then
 			if http.state == 0 then
 				if stream.stream:available() > 0 then
-					stream.stream:mark()
-
 					http.request = {}
+					http.request.mark = stream.stream:mark()
+
 					if not parse_request(stream.stream, http.request) then
 						haka.log.error("http", "invalid request")
 						stream:drop()
@@ -239,9 +240,9 @@ haka.dissector {
 		else
 			if http.state == 2 then
 				if stream.stream:available() > 0 then
-					stream.stream:mark()
-
 					http.response = {}
+					http.response.mark = stream.stream:mark()
+					
 					if not parse_response(stream.stream, http.response) then
 						haka.log.error("http", "invalid response")
 						stream:drop()

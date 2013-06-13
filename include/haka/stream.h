@@ -23,6 +23,7 @@
 
 
 struct stream;
+struct stream_mark;
 
 /**
  * Stream function definition.
@@ -59,9 +60,9 @@ struct stream_ftable {
 	 */
 	size_t    (*erase)(struct stream *s, size_t length);
 
-	bool      (*mark)(struct stream *s);
-	bool      (*unmark)(struct stream *s);
-	bool      (*rewind)(struct stream *s);
+	struct stream_mark *(*mark)(struct stream *s);
+	bool      (*unmark)(struct stream *s, struct stream_mark *mark);
+	bool      (*seek)(struct stream *s, struct stream_mark *mark, bool unmark);
 };
 
 
@@ -138,34 +139,34 @@ INLINE size_t stream_erase(struct stream *stream, size_t length)
 	return stream->ftable->erase(stream, length);
 }
 
-INLINE bool stream_mark(struct stream *stream)
+INLINE struct stream_mark *stream_mark(struct stream *stream)
 {
 	if (!stream->ftable->mark) {
 		error(L"usupported operation");
-		return false;
+		return NULL;
 	}
 
 	return stream->ftable->mark(stream);
 }
 
-INLINE bool stream_unmark(struct stream *stream)
+INLINE bool stream_unmark(struct stream *stream, struct stream_mark *mark)
 {
 	if (!stream->ftable->unmark) {
 		error(L"usupported operation");
 		return false;
 	}
 
-	return stream->ftable->unmark(stream);
+	return stream->ftable->unmark(stream, mark);
 }
 
-INLINE bool stream_rewind(struct stream *stream)
+INLINE bool stream_seek(struct stream *stream, struct stream_mark *mark, bool unmark)
 {
-	if (!stream->ftable->rewind) {
+	if (!stream->ftable->seek) {
 		error(L"usupported operation");
 		return false;
 	}
 
-	return stream->ftable->rewind(stream);
+	return stream->ftable->seek(stream, mark, unmark);
 }
 
 #endif /* _HAKA_STREAM_H */

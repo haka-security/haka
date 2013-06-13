@@ -18,9 +18,9 @@ static size_t tcp_stream_available(struct stream *s);
 static size_t tcp_stream_insert(struct stream *s, const uint8 *data, size_t length);
 static size_t tcp_stream_replace(struct stream *s, const uint8 *data, size_t length);
 static size_t tcp_stream_erase(struct stream *s, size_t length);
-static bool tcp_stream_mark(struct stream *s);
-static bool tcp_stream_unmark(struct stream *s);
-static bool tcp_stream_rewind(struct stream *s);
+static struct stream_mark *tcp_stream_mark(struct stream *s);
+static bool tcp_stream_unmark(struct stream *s, struct stream_mark *mark);
+static bool tcp_stream_seek(struct stream *s, struct stream_mark *mark, bool unmark);
 
 struct stream_ftable tcp_stream_ftable = {
 	destroy: tcp_stream_destroy,
@@ -31,7 +31,7 @@ struct stream_ftable tcp_stream_ftable = {
 	erase: tcp_stream_erase,
 	mark: tcp_stream_mark,
 	unmark: tcp_stream_unmark,
-	rewind: tcp_stream_rewind
+	seek: tcp_stream_seek
 };
 
 
@@ -72,6 +72,14 @@ struct tcp_stream_position {
 	size_t                          modif_offset;      /* position in the modif or -1 */
 };
 
+struct tcp_stream_mark {
+	struct tcp_stream_mark         *prev;
+	struct tcp_stream_mark         *next;
+	size_t                          chunk_seq;
+	size_t                          chunk_offset;
+	size_t                          modif_offset;
+};
+
 struct tcp_stream {
 	struct stream                   stream;
 	bool                            seq_initialized;
@@ -86,6 +94,7 @@ struct tcp_stream {
 
 	struct tcp_stream_position      current_position;
 	struct tcp_stream_position      mark_position;
+	struct tcp_stream_mark         *marks;
 	struct tcp_stream_chunk_modif  *pending_modif;
 };
 
@@ -159,6 +168,9 @@ static void tcp_stream_position_update_modif(struct tcp_stream_position *pos)
 	}
 	else {
 		next_modif = pos->chunk ? pos->chunk->modifs : NULL;
+		if (next_modif && next_modif->position < pos->chunk_offset) {
+			next_modif = NULL;
+		}
 	}
 
 	assert(!next_modif || next_modif->position >= pos->chunk_offset);
@@ -437,6 +449,164 @@ UNUSED static bool tcp_stream_position_isbefore(struct tcp_stream_position *pos1
 	return (pos1->current_seq_modif <= pos2->current_seq_modif);
 }
 
+static void tcp_stream_position_getmark(struct tcp_stream *tcp_s,
+		struct tcp_stream_position *pos, struct tcp_stream_mark *mark)
+{
+	struct tcp_stream_position advanced_pos = *pos;
+	struct tcp_stream_chunk_modif *modif;
+	size_t modif_offset;
+
+	mark->chunk_seq = advanced_pos.chunk_seq;
+	mark->chunk_offset = advanced_pos.chunk_offset;
+
+	modif = tcp_stream_position_modif(&advanced_pos, &modif_offset, NULL, NULL);
+	if (modif) {
+		if (modif->type == TCP_MODIF_INSERT)
+			mark->modif_offset = modif_offset;
+		else
+			mark->modif_offset = (size_t)-1;
+	}
+	else {
+		mark->modif_offset = 0;
+	}
+}
+
+static int tcp_stream_mark_compare(struct tcp_stream_mark *pos1,
+		struct tcp_stream_mark *pos2)
+{
+	if (pos1->chunk_seq < pos2->chunk_seq) {
+		return -1;
+	}
+	else if (pos1->chunk_seq == pos2->chunk_seq) {
+		if (pos1->chunk_offset < pos2->chunk_offset) {
+			return -1;
+		}
+		else if (pos1->chunk_offset == pos2->chunk_offset) {
+			if (pos1->modif_offset != (size_t)-1) {
+				if (pos2->modif_offset != (size_t)-1) {
+					if (pos1->modif_offset < pos2->modif_offset) return -1;
+					else if (pos1->modif_offset == pos2->modif_offset) return 0;
+					else return +1;
+				}
+				else {
+					return -1;
+				}
+			}
+			else {
+				if (pos2->modif_offset != (size_t)-1) {
+					return +1;
+				}
+				else {
+					return 0;
+				}
+			}
+		}
+		else {
+			return +1;
+		}
+	}
+	else {
+		return +1;
+	}
+}
+
+static bool tcp_stream_position_moveforward(struct tcp_stream *tcp_s,
+		struct tcp_stream_position *pos, struct tcp_stream_mark *mark)
+{
+	size_t chunk_length, length, total_length  = 0;
+	struct tcp_stream_mark current;
+	struct tcp_stream_chunk_modif *modif;
+	size_t modif_offset;
+
+	tcp_stream_position_getmark(tcp_s, pos, &current);
+	if (tcp_stream_mark_compare(&current, mark) > 0) {
+		error(L"invalid mark");
+		return false;
+	}
+
+	while (true) {
+		if (!tcp_stream_position_advance(tcp_s, pos)) {
+			break;
+		}
+
+		assert(!pos->chunk || pos->chunk->start_seq <= mark->chunk_seq);
+
+		if (pos->chunk) {
+			if (pos->chunk->end_seq > mark->chunk_seq) {
+				/* Correct chunk */
+				struct tcp_stream_position saved_pos = *pos;
+				while (saved_pos.chunk_offset < mark->chunk_offset) {
+					*pos = saved_pos;
+					tcp_stream_position_read_step(tcp_s, &saved_pos, NULL, (size_t)-1);
+				}
+
+				pos->chunk_offset = mark->chunk_offset;
+
+				if (!tcp_stream_position_advance(tcp_s, pos)) {
+					break;
+				}
+
+				if (pos->chunk_offset == mark->chunk_offset) {
+					modif = tcp_stream_position_modif(pos, &modif_offset, NULL, NULL);
+					if (modif) {
+						assert(modif->type == TCP_MODIF_INSERT);
+						pos->modif_offset = mark->modif_offset;
+						if (pos->modif_offset > modif->length) {
+							pos->modif_offset = modif->length;
+						}
+					}
+				}
+
+				break;
+			}
+			else {
+				/* Advance to next chunk */
+				chunk_length = pos->chunk->end_seq - pos->chunk->start_seq + pos->chunk->offset_seq;
+				length = chunk_length - (pos->current_seq_modif - pos->chunk_seq_modif);
+				pos->chunk_offset = pos->chunk->end_seq - pos->chunk->start_seq;
+
+				if (!pos->modif) pos->modif = pos->chunk->modifs;
+
+				if (pos->modif) {
+					while (pos->modif->next) {
+						pos->modif = pos->modif->next;
+
+						switch (pos->modif->type) {
+						case TCP_MODIF_INSERT:
+							pos->modif_offset = pos->modif->length;
+							break;
+
+						case TCP_MODIF_ERASE:
+							pos->modif_offset = 1;
+							break;
+
+						default:
+							assert(0);
+						}
+					}
+				}
+				else {
+					pos->modif_offset = (size_t)-1;
+				}
+			}
+		}
+		else if (pos->modif) {
+			assert(pos->modif->type == TCP_MODIF_INSERT);
+			length = pos->modif->length - pos->modif_offset;
+			pos->modif_offset = pos->modif->length;
+		}
+		else {
+			break;
+		}
+
+		pos->current_seq_modif += length;
+		total_length += length;
+	}
+
+	tcp_stream_position_getmark(tcp_s, pos, &current);
+	return tcp_stream_mark_compare(&current, mark) == 0;
+}
+
 
 /*
  * Stream functions
@@ -463,11 +633,14 @@ struct stream *tcp_stream_create()
 
 static bool tcp_stream_destroy(struct stream *s)
 {
-	struct tcp_stream_chunk *tmp, *iter;
+	struct tcp_stream_chunk *iter;
+	struct tcp_stream_mark *mark;
 	TCP_STREAM(s);
 
 	iter = tcp_s->first;
 	while (iter) {
+		struct tcp_stream_chunk *tmp;
+
 		assert(iter->tcp);
 		tcp_release(iter->tcp);
 
@@ -478,8 +651,15 @@ static bool tcp_stream_destroy(struct stream *s)
 
 	iter = tcp_s->sent;
 	while (iter) {
-		tmp = iter;
+		struct tcp_stream_chunk *tmp = iter;
 		iter = iter->next;
+		free(tmp);
+	}
+
+	mark = tcp_s->marks;
+	while (mark) {
+		struct tcp_stream_mark *tmp = mark;
+		mark = mark->next;
 		free(tmp);
 	}
 
@@ -1005,44 +1185,94 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 	}
 }
 
-static bool tcp_stream_mark(struct stream *s)
+static struct stream_mark *tcp_stream_mark(struct stream *s)
 {
+	struct tcp_stream_mark *mark = NULL;
 	TCP_STREAM(s);
 
-	if (tcp_stream_position_isvalid(&tcp_s->mark_position)) {
-		error(L"mark already set");
-		return false;
+	mark = malloc(sizeof(struct tcp_stream_mark));
+	if (!mark) {
+		error(L"memory error");
+		return NULL;
 	}
 
-	tcp_s->mark_position = tcp_s->current_position;
+	tcp_stream_position_getmark(tcp_s, &tcp_s->current_position, mark);
+	mark->prev = NULL;
+	mark->next = NULL;
+
+	{
+		struct tcp_stream_mark *iter = tcp_s->marks;
+		if (!iter) {
+			tcp_s->marks = mark;
+		}
+		else {
+			while (iter->next && tcp_stream_mark_compare(iter->next, mark) <= 0) {
+				iter = iter->next;
+			}
+
+			mark->prev = iter;
+			mark->next = iter->next;
+			iter->next = mark;
+		}
+	}
+
+	if (!tcp_stream_position_isvalid(&tcp_s->mark_position)) {
+		tcp_s->mark_position = tcp_s->current_position;
+	}
+
+	return (struct stream_mark *)mark;
+}
+
+static bool tcp_stream_unmark(struct stream *s, struct stream_mark *mark)
+{
+	struct tcp_stream_mark *tcp_mark = (struct tcp_stream_mark *)mark;
+	TCP_STREAM(s);
+
+	if (!tcp_mark->prev) {
+		if (tcp_mark->next) {
+			struct tcp_stream_mark current;
+			tcp_stream_position_getmark(tcp_s, &tcp_s->mark_position, &current);
+
+			if (tcp_stream_mark_compare(&current, tcp_mark) > 0) {
+				error(L"invalid mark");
+				return false;
+			}
+
+			tcp_stream_position_moveforward(tcp_s, &tcp_s->mark_position, tcp_mark->next);
+		}
+		else {
+			tcp_stream_position_invalidate(&tcp_s->mark_position);
+		}
+	}
+
+	if (tcp_mark->next) tcp_mark->next->prev = tcp_mark->prev;
+	if (tcp_mark->prev) tcp_mark->prev->next = tcp_mark->next;
+
+	free(tcp_mark);
 	return true;
 }
 
-static bool tcp_stream_unmark(struct stream *s)
+static bool tcp_stream_seek(struct stream *s, struct stream_mark *mark, bool unmark)
 {
+	struct tcp_stream_mark current;
+	struct tcp_stream_mark *tcp_mark = (struct tcp_stream_mark *)mark;
 	TCP_STREAM(s);
 
-	if (tcp_stream_position_isvalid(&tcp_s->mark_position)) {
-		tcp_stream_position_invalidate(&tcp_s->mark_position);
-		return true;
-	}
-	else {
-		error(L"stream was not marked");
+	if (!tcp_stream_position_isvalid(&tcp_s->mark_position)) {
+		error(L"invalid mark");
 		return false;
 	}
-}
 
-static bool tcp_stream_rewind(struct stream *s)
-{
-	TCP_STREAM(s);
-
-	if (tcp_stream_position_isvalid(&tcp_s->mark_position)) {
+	tcp_stream_position_getmark(tcp_s, &tcp_s->current_position, &current);
+	if (tcp_stream_mark_compare(&current, tcp_mark) > 0) {
 		tcp_s->current_position = tcp_s->mark_position;
-		tcp_stream_position_invalidate(&tcp_s->mark_position);
-		return true;
 	}
-	else {
-		error(L"stream was not marked");
-		return false;
+
+	tcp_stream_position_moveforward(tcp_s, &tcp_s->current_position, tcp_mark);
+
+	if (unmark) {
+		tcp_stream_unmark(s, mark);
 	}
+
+	return true;
 }

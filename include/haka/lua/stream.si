@@ -72,8 +72,8 @@
 
 	unsigned int erase(int size);
 
-	void mark();
-	void unmark();
-	void rewind();
+	struct stream_mark *mark();
+	void unmark(struct stream_mark *mark);
+	void seek(struct stream_mark *mark, bool unmark);
 }
 %enddef
