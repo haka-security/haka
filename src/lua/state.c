@@ -40,26 +40,33 @@ static int panic(lua_State *L)
 
 int lua_error_formater(lua_State *L)
 {
-	if (!lua_isstring(L, 1))
-		return 0;
+	if (getlevel(L"lua") >= HAKA_LOG_DEBUG) {
+		if (!lua_isstring(L, 1)) {
+			return 0;
+		}
 
-	lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-	if (!lua_istable(L, -1)) {
-		lua_pop(L, 1);
-		return 0;
+		lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+		if (!lua_istable(L, -1)) {
+			lua_pop(L, 1);
+			return 0;
+		}
+
+		lua_getfield(L, -1, "traceback");
+		if (!lua_isfunction(L, -1)) {
+			lua_pop(L, 2);
+			return 0;
+		}
+
+		lua_pushvalue(L, 1);
+		lua_pushinteger(L, 2);
+		lua_call(L, 2, 1);
+
+		return 1;
 	}
-
-	lua_getfield(L, -1, "traceback");
-	if (!lua_isfunction(L, -1)) {
-		lua_pop(L, 2);
-		return 0;
+	else {
+		lua_pushvalue(L, 1);
+		return 1;
 	}
-
-	lua_pushvalue(L, 1);
-	lua_pushinteger(L, 2);
-	lua_call(L, 2, 1);
-
-	return 1;
 }
 
 

@@ -59,5 +59,8 @@ void message(log_level level, const wchar_t *module, const wchar_t *message);
  */
 void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...);
 
+void setlevel(log_level level, const wchar_t *module);
+log_level getlevel(const wchar_t *module);
+
 #endif /* _HAKA_LOG_H */
 

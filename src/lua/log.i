@@ -2,6 +2,16 @@
 
 %{
 #include <haka/log.h>
+
+static void setlevel1(const wchar_t *module, log_level level)
+{
+	setlevel(level, module);
+}
+
+static void setlevel0(log_level level)
+{
+	setlevel(level, NULL);
+}
 %}
 
 %include "haka/lua/wchar.si"
@@ -18,6 +28,12 @@ enum log_level { HAKA_LOG_FATAL, HAKA_LOG_ERROR, HAKA_LOG_WARNING, HAKA_LOG_INFO
 
 %rename(_message) message;
 void message(log_level level, const wchar_t *module, const wchar_t *message);
+
+%rename(setlevel) setlevel1;
+void setlevel1(const wchar_t *module, log_level level);
+
+%rename(setlevel) setlevel0;
+void setlevel0(log_level level);
 
 %luacode {
 	function log.message(level, module, fmt, ...)
