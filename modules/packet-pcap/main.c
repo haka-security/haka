@@ -188,6 +188,10 @@ static struct packet_module_state *init_state(int thread_id)
 		state->link_hdr_len = 24;
 		break;
 
+	case DLT_IPV4:
+		state->link_hdr_len = 0;
+		break;
+
 	default:
 		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", "unsupported data link");
 		cleanup_state(state);
