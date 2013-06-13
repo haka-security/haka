@@ -161,6 +161,8 @@ local function forge(http)
 			http.state = 2
 
 			tcp.stream:seek(http.request.mark, true)
+			http.request.mark = nil
+
 			tcp.stream:erase(http.request.length)
 			tcp.stream:insert(http.request.Method)
 			tcp.stream:insert(" ")
@@ -175,6 +177,8 @@ local function forge(http)
 			http.state = 4
 
 			tcp.stream:seek(http.response.mark, true)
+			http.response.mark = nil
+
 			tcp.stream:erase(http.response.length)
 			tcp.stream:insert(http.response.Version)
 			tcp.stream:insert(" ")
