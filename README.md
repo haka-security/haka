@@ -37,11 +37,11 @@ Dependencies
   - cmake
   - swig
   - doxygen
-  - liblua51
+  - liblua5.1
   - tshark
   - check
   - rsync
-  - libpcap
+  - libpcap-dev
 
 #### Debian
 
