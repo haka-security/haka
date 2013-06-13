@@ -1,6 +1,7 @@
 
 find_package(NetfilterQueue)
 find_package(PCAP)
+
 if(NETFILTERQUEUE_FOUND AND PCAP_FOUND)
 	add_library(packet-nfqueue MODULE
 		main.c

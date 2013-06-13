@@ -24,32 +24,19 @@ mutex_t ct_mutex = PTHREAD_MUTEX_INITIALIZER;
 /* Should be enough to receive the packet and the extra headers */
 #define PACKET_RECV_SIZE	70000
 
-#define SNAPLEN 65535
 #define MAX_INTERFACE 8
 
-struct packet_pcap_dump {
-	pcap_t		  *pd_in;
-	pcap_t		  *pd_out;
-	pcap_t		  *pd_blk;
-	pcap_dumper_t *pf_in;
-	pcap_dumper_t *pf_out;
-	pcap_dumper_t *pf_blk;
+
+struct pcap_dump {
+	pcap_t        *pd;
+	pcap_dumper_t *pf;
 };
 
-/*const struct pcap_pkthdr fake_pcap_header = {
-	ts:		{tv_sec: 0, tv_usec: 0},
-	caplen: 84,
-	len:	1500
-};*/
-
-struct	pcap_pkthdr fake_pcap_header;
-
-const struct timeval fake_ts = {
-	tv_sec:  0,
-	tv_usec: 0
+struct pcap_sinks {
+	struct pcap_dump   in;
+	struct pcap_dump   out;
+	struct pcap_dump   drop;
 };
-
-int dump = 0;
 
 struct packet_module_state {
 	struct nfq_handle	*handle;
@@ -61,7 +48,7 @@ struct packet_module_state {
 	char					receive_buffer[PACKET_RECV_SIZE];
 };
 
-struct packet_pcap_dump *pcap = NULL;
+struct pcap_sinks *pcap = NULL;
 
 struct nfqueue_packet {
 	struct	packet core_packet;
@@ -71,11 +58,6 @@ struct nfqueue_packet {
 	int		modified:1;
 	uint8	*data;
 };
-
-/* Init paramteres */
-static char *file_in;
-static char *file_out;
-static char *file_blk;
 
 /* Iptables rules to add (iptables-restore format) */
 static const char iptables_config_template_begin[] =
@@ -274,6 +256,31 @@ static struct packet_module_state *init_state(int thread_id)
 	return state;
 }
 
+static int open_pcap(struct pcap_dump *pcap, const char *file)
+{
+	if (file) {
+		pcap->pd = pcap_open_dead(DLT_IPV4, PACKET_RECV_SIZE);
+		if (!pcap->pd) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup pcap sink");
+			return 1;
+		}
+
+		pcap->pf = pcap_dump_open(pcap->pd, file);
+		if (!pcap->pf) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup pcap sink");
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static void close_pcap(struct pcap_dump *pcap)
+{
+	if (pcap->pf) pcap_dump_close(pcap->pf);
+	if (pcap->pd) pcap_close(pcap->pd);
+}
+
 static void cleanup()
 {
 	if (iptables_saved) {
@@ -282,29 +289,11 @@ static void cleanup()
 		}
 		free(iptables_saved);
 	}
-	if (pcap) {
-		if (pcap->pf_in) {
-			pcap_dump_close(pcap->pf_in);
-		}
-		if (pcap->pf_out) {
-			pcap_dump_close(pcap->pf_out);
-		}
-		if (pcap->pf_blk) {
-			pcap_dump_close(pcap->pf_blk);
-		}
-		if (pcap->pd_in) {
-			pcap_close(pcap->pd_in);
-		}
-		if (pcap->pd_out) {
-			pcap_close(pcap->pd_out);
-		}
-		if (pcap->pd_blk) {
-			pcap_close(pcap->pd_blk);
-		}
 
-		/*free(file_in);
-		free(file_out);
-		free(file_blk);*/
+	if (pcap) {
+		close_pcap(&pcap->in);
+		close_pcap(&pcap->out);
+		close_pcap(&pcap->drop);
 	}
 }
 
@@ -313,6 +302,10 @@ static int init(int argc, char *argv[])
 	char *new_iptables_config = NULL;
 	char **ifaces = NULL;
 	const int thread_count = thread_get_packet_capture_cpu_count();
+	const char *file_in = NULL;
+	const char *file_out = NULL;
+	const char *file_drop = NULL;
+	int dump = 0;
 
 	/* Setup iptables rules */
 	if (save_iptables("raw", &iptables_saved)) {
@@ -321,45 +314,40 @@ static int init(int argc, char *argv[])
 		return 1;
 	}
 
-	int index = 1;
-
-	if (argc > 1) {
-		if (strcmp(argv[0], "-i") == 0) {
-			if (strcmp(argv[index], "any") == 0) {
-				index = 2;
-			}
-			else {
-				ifaces = malloc((sizeof(char *) * (MAX_INTERFACE)));
-				if (!ifaces) {
-					message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
-					cleanup();
-					return 1;
-				}
-
-				while (index < argc && strcmp(argv[index], "-p") != 0) {
-					ifaces[index-1] = argv[index];
-					index++;
-				}
-			}
-		}
-		else {
-			message(HAKA_LOG_ERROR, MODULE_NAME, L"unknown options");
-			cleanup();
-			return 1;
-		}
-
-		if (index != argc) {
-			if (argc - index > 3) {
-				dump = 1;
-				file_in = strdup(argv[index + 1]);
-				file_out = strdup(argv[index + 2]);
-				file_blk = strdup(argv[index + 3]);
-			}
-			else {
-				messagef(HAKA_LOG_ERROR, L"pcap", L"-p must be followed by input and output filenames");
+	if (argc > 0) {
+		if (strcmp(argv[0], "-p") == 0) {
+			if (argc < 4) {
+				message(HAKA_LOG_ERROR, MODULE_NAME, L"missing parameters for pcap dump");
 				cleanup();
 				return 1;
 			}
+
+			dump = 1;
+			file_in = argv[1];
+			file_out = argv[2];
+			file_drop = argv[3];
+
+			argc -= 4;
+			argv += 4;
+		}
+	}
+
+	if (argc > 0) {
+		if (strcmp(argv[0], "any") != 0) {
+			int index = 0;
+
+			ifaces = malloc((sizeof(char *) * (argc+1)));
+			if (!ifaces) {
+				message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
+				cleanup();
+				return 1;
+			}
+
+			while (index < argc) {
+				ifaces[index] = argv[index];
+				index++;
+			}
+			ifaces[index] = NULL;
 		}
 	}
 
@@ -385,30 +373,18 @@ static int init(int argc, char *argv[])
 
 	/* Setup pcap dump */
 	if (dump) {
-		pcap = malloc(sizeof(struct packet_pcap_dump));
+		pcap = malloc(sizeof(struct pcap_sinks));
 		if (!pcap) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
 			cleanup();
 			return 1;
 		}
-		if (file_in && file_out && file_blk) {
-			pcap->pd_in = pcap_open_dead(DLT_IPV4, SNAPLEN);
-			pcap->pd_out = pcap_open_dead(DLT_IPV4, SNAPLEN);
-			pcap->pd_blk = pcap_open_dead(DLT_IPV4, SNAPLEN);
-			if (!pcap->pd_in || !pcap->pd_out || !pcap->pd_blk) {
-				message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot set mode to dump packet");
-				cleanup();
-				return 1;
-			}
-			pcap->pf_in = pcap_dump_open(pcap->pd_in, file_in);
-			pcap->pf_out = pcap_dump_open(pcap->pd_out, file_out);
-			pcap->pf_blk = pcap_dump_open(pcap->pd_blk, file_blk);
-			if (!pcap->pf_in || !pcap->pf_out || !pcap->pf_blk) {
-				message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot set mode to dump packet");
-				cleanup();
-				return 1;
-			}
-			fake_pcap_header.ts = fake_ts;
-		}
+
+		memset(pcap, 0, sizeof(struct pcap_sinks));
+
+		open_pcap(&pcap->in, file_in);
+		open_pcap(&pcap->out, file_out);
+		open_pcap(&pcap->drop, file_drop);
 	}
 	return 0;
 }
@@ -418,13 +394,20 @@ static bool multi_threaded()
 	return true;
 }
 
-
-static void packet_dump_pcap(pcap_dumper_t *pf, struct nfqueue_packet *pkt)
+static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt)
 {
-	mutex_lock(&ct_mutex);
-	fake_pcap_header.caplen = fake_pcap_header.len = pkt->length;
-	pcap_dump((u_char *)pf, &fake_pcap_header, pkt->data);
-	mutex_unlock(&ct_mutex);
+	if (pcap->pf) {
+		struct pcap_pkthdr hdr;
+
+		mutex_lock(&ct_mutex);
+
+		hdr.caplen = hdr.len = pkt->length;
+		hdr.ts.tv_sec = 0;
+		hdr.ts.tv_usec = 0;
+		pcap_dump((u_char *)pcap->pf, &hdr, pkt->data);
+
+		mutex_unlock(&ct_mutex);
+	}
 }
 
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
@@ -440,10 +423,11 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		if (state->current_packet) {
 			state->current_packet->state = state;
 			*pkt = (struct packet*)state->current_packet;
-			/* dump received packet in pcap file */
-			if (pcap && file_in) {
-				packet_dump_pcap(pcap->pf_in, state->current_packet);
+
+			if (pcap) {
+				dump_pcap(&pcap->in, state->current_packet);
 			}
+
 			state->current_packet = NULL;
 			return 0;
 		}
@@ -478,13 +462,17 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	else
 		ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, 0, NULL);
 
-	/* dump accepted packet in pcap file */
-	if (pcap  && file_out && result == FILTER_ACCEPT) {
-		packet_dump_pcap(pcap->pf_out, pkt);
-	}
+	if (pcap) {
+		switch (result) {
+		case FILTER_ACCEPT:
+			dump_pcap(&pcap->out, pkt);
+			break;
 
-	else if (pcap  && file_blk && result == FILTER_DROP) {
-		packet_dump_pcap(pcap->pf_blk, pkt);
+		case FILTER_DROP:
+		default:
+			dump_pcap(&pcap->drop, pkt);
+			break;
+		}
 	}
 
 	if (ret == -1) {

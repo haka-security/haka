@@ -26,7 +26,7 @@ local function split(str, delim)
 end
 
 local ifaces = split(arg[1], ":")
-haka.app.install("packet", haka.module.load("packet-nfqueue", "-i", unpack(ifaces), "-p", "in.pcap", "out.pcap", "blk.out"))
+haka.app.install("packet", haka.module.load("packet-nfqueue", "-p", "input.pcap", "output.pcap", "drop.pcap", unpack(ifaces)))
 
 haka.app.install("log", haka.module.load("log-stdout"))
 
