@@ -75,23 +75,19 @@ local function dissect(pkt)
 		newpkt.close = true
 		table.insert(newpkt.connection.data.queue, pkt)
 		return newpkt
-	elseif newpkt.connection.data.state > 0 then
+	elseif newpkt.connection.data.state >= 2 then
 		if pkt.flags.ack then
-			newpkt.connection.data.state =  newpkt.connection.data.state + 1
+			newpkt.connection.data.state = newpkt.connection.data.state + 1
 		end
 	
-		if pkt.flags.fin then
-			newpkt.connection.data.state =  newpkt.connection.data.state + 1
-		end
-	
-		if newpkt.connection.data.state >= 4 then
+		if newpkt.connection.data.state >= 3 then
 			newpkt.close = true
 		end
 
 		table.insert(newpkt.connection.data.queue, pkt)
 		return newpkt
 	elseif pkt.flags.fin then
-		newpkt.connection.data.state = 1
+		newpkt.connection.data.state = newpkt.connection.data.state+1
 		table.insert(newpkt.connection.data.queue, pkt)
 		return newpkt
 	else
