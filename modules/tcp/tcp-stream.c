@@ -82,7 +82,6 @@ struct tcp_stream_mark {
 
 struct tcp_stream {
 	struct stream                   stream;
-	bool                            seq_initialized;
 	size_t                          start_seq;
 
 	struct tcp_stream_chunk        *first;   /* first packet in the stream */
@@ -625,6 +624,7 @@ struct stream *tcp_stream_create()
 
 	memset(tcp_s, 0, sizeof(struct tcp_stream));
 
+	tcp_s->start_seq = (size_t)-1;
 	tcp_stream_position_invalidate(&tcp_s->mark_position);
 
 	tcp_s->stream.ftable = &tcp_stream_ftable;
@@ -669,24 +669,20 @@ static bool tcp_stream_destroy(struct stream *s)
 	return true;
 }
 
+void tcp_stream_init(struct stream *s, uint32 seq)
+{
+	TCP_STREAM(s);
+
+	tcp_s->start_seq = seq;
+}
+
 bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 {
 	struct tcp_stream_chunk *chunk;
 	TCP_STREAM(s);
 
-	if (tcp_get_flags_syn(tcp)) {
-		if (!tcp_s->seq_initialized) {
-			tcp_s->start_seq = tcp_get_seq(tcp)+1;
-			tcp_s->seq_initialized = true;
-			return true;
-		}
-		else {
-			return true;
-		}
-	}
-
-	if (!tcp_s->seq_initialized) {
-		error(L"invalid stream");
+	if (!tcp_s->start_seq == (size_t)-1) {
+		error(L"uninitialized stream");
 		return false;
 	}
 
@@ -778,6 +774,13 @@ static void tcp_stream_chunk_release(struct tcp_stream_chunk *chunk)
 	}
 
 	chunk->modifs = NULL;
+}
+
+void tcp_stream_seq(struct stream *s, struct tcp *tcp)
+{
+	TCP_STREAM(s);
+
+	tcp_set_seq(tcp, tcp_get_seq(tcp) + tcp_s->first_offset_seq);
 }
 
 struct tcp *tcp_stream_pop(struct stream *s)

@@ -82,6 +82,11 @@ struct tcp_payload {
 struct stream
 {
 	%extend {
+		void init(unsigned int seq)
+		{
+			tcp_stream_init($self, seq);
+		}
+
 		void push(struct tcp *tcp)
 		{
 			tcp_stream_push($self, tcp);
@@ -92,9 +97,14 @@ struct stream
 			return tcp_stream_pop($self);
 		}
 
+		void seq(struct tcp *tcp)
+		{
+			tcp_stream_seq($self, tcp);
+		}
+
 		void ack(struct tcp *tcp)
 		{
-			return tcp_stream_ack($self, tcp);
+			tcp_stream_ack($self, tcp);
 		}
 	}
 };
