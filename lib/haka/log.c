@@ -105,7 +105,7 @@ static struct module_level *get_module_level(const wchar_t *module, bool create)
 	}
 
 	if (!iter && create) {
-		iter = malloc(sizeof(struct module_level *));
+		iter = malloc(sizeof(struct module_level));
 		if (!iter) {
 			error(L"memory error");
 			return NULL;
@@ -119,6 +119,7 @@ static struct module_level *get_module_level(const wchar_t *module, bool create)
 		}
 
 		iter->next = NULL;
+
 		if (prev) prev->next = iter;
 		else module_level = iter;
 	}
