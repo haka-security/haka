@@ -6,6 +6,7 @@
 %typemap(in) struct lua_ref
 %{
 	lua_pushvalue(L, $input);
+	lua_ref_init(&$1);
 	lua_ref_get(L, &$1);
 %}
 
