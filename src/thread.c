@@ -135,6 +135,10 @@ static void *thread_main_loop(void *_state)
 			messagef(HAKA_LOG_FATAL, L"core", L"thread initialization error: %s", errno_error(errno));
 			return NULL;
 		}
+
+		/* To make sure we can still cancel even if some thread are locked in
+		 * infinte loops */
+		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	}
 
 	thread_set_id(state->thread_id);
