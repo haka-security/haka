@@ -15,31 +15,67 @@
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
 #include "iptables.h"
+#include <pcap.h>
 #include "config.h"
 
+mutex_t ct_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-#define PACKET_BUFFER_SIZE    0xffff
+#define PACKET_BUFFER_SIZE	0xffff
 /* Should be enough to receive the packet and the extra headers */
-#define PACKET_RECV_SIZE      70000
+#define PACKET_RECV_SIZE	70000
+
+#define SNAPLEN 65535
+#define MAX_INTERFACE 8
+
+struct packet_pcap_dump {
+	pcap_t		  *pd_in;
+	pcap_t		  *pd_out;
+	pcap_t		  *pd_blk;
+	pcap_dumper_t *pf_in;
+	pcap_dumper_t *pf_out;
+	pcap_dumper_t *pf_blk;
+};
+
+/*const struct pcap_pkthdr fake_pcap_header = {
+	ts:		{tv_sec: 0, tv_usec: 0},
+	caplen: 84,
+	len:	1500
+};*/
+
+struct	pcap_pkthdr fake_pcap_header;
+
+const struct timeval fake_ts = {
+	tv_sec:  0,
+	tv_usec: 0
+};
+
+int dump = 0;
 
 struct packet_module_state {
-	struct nfq_handle     *handle;
-	struct nfq_q_handle   *queue;
-	int                    fd;
+	struct nfq_handle	*handle;
+	struct nfq_q_handle	*queue;
+	int					fd;
 
-	struct nfqueue_packet *current_packet; /* Packet allocated by nfq callback */
-	int                    error;
-	char                   receive_buffer[PACKET_RECV_SIZE];
+	struct nfqueue_packet	*current_packet; /* Packet allocated by nfq callback */
+	int						error;
+	char					receive_buffer[PACKET_RECV_SIZE];
 };
+
+struct packet_pcap_dump *pcap = NULL;
 
 struct nfqueue_packet {
-	struct packet core_packet;
-	struct packet_module_state *state;
-	int         id; /* nfq identifier */
-	size_t      length;
-	int         modified:1;
-	uint8      *data;
+	struct	packet core_packet;
+	struct	packet_module_state *state;
+	int		id; /* nfq identifier */
+	size_t	length;
+	int		modified:1;
+	uint8	*data;
 };
+
+/* Init paramteres */
+static char *file_in;
+static char *file_out;
+static char *file_blk;
 
 /* Iptables rules to add (iptables-restore format) */
 static const char iptables_config_template_begin[] =
@@ -191,7 +227,6 @@ static struct packet_module_state *init_state(int thread_id)
 {
 	static const u_int16_t proto_family[] = { AF_INET, AF_INET6 };
 	int i;
-
 	struct packet_module_state *state = malloc(sizeof(struct packet_module_state));
 	if (!state) {
 		return NULL;
@@ -247,6 +282,30 @@ static void cleanup()
 		}
 		free(iptables_saved);
 	}
+	if (pcap) {
+		if (pcap->pf_in) {
+			pcap_dump_close(pcap->pf_in);
+		}
+		if (pcap->pf_out) {
+			pcap_dump_close(pcap->pf_out);
+		}
+		if (pcap->pf_blk) {
+			pcap_dump_close(pcap->pf_blk);
+		}
+		if (pcap->pd_in) {
+			pcap_close(pcap->pd_in);
+		}
+		if (pcap->pd_out) {
+			pcap_close(pcap->pd_out);
+		}
+		if (pcap->pd_blk) {
+			pcap_close(pcap->pd_blk);
+		}
+
+		/*free(file_in);
+		free(file_out);
+		free(file_blk);*/
+	}
 }
 
 static int init(int argc, char *argv[])
@@ -262,30 +321,56 @@ static int init(int argc, char *argv[])
 		return 1;
 	}
 
-	if (argc > 0) {
-		int i;
+	int index = 1;
 
-		ifaces = malloc((sizeof(char *) * (argc+1)));
-		if (!ifaces) {
-			message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
+	if (argc > 1) {
+		if (strcmp(argv[0], "-i") == 0) {
+			if (strcmp(argv[index], "any") == 0) {
+				index = 2;
+			}
+			else {
+				ifaces = malloc((sizeof(char *) * (MAX_INTERFACE)));
+				if (!ifaces) {
+					message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
+					cleanup();
+					return 1;
+				}
+
+				while (index < argc && strcmp(argv[index], "-p") != 0) {
+					ifaces[index-1] = argv[index];
+					index++;
+				}
+			}
+		}
+		else {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"unknown options");
 			cleanup();
 			return 1;
 		}
 
-		for (i=0; i<argc; ++i) {
-			ifaces[i] = argv[i];
+		if (index != argc) {
+			if (argc - index > 3) {
+				dump = 1;
+				file_in = strdup(argv[index + 1]);
+				file_out = strdup(argv[index + 2]);
+				file_blk = strdup(argv[index + 3]);
+			}
+			else {
+				messagef(HAKA_LOG_ERROR, L"pcap", L"-p must be followed by input and output filenames");
+				cleanup();
+				return 1;
+			}
 		}
-		ifaces[i] = NULL;
 	}
 
 	new_iptables_config = iptables_config(ifaces, thread_count);
 	if (!new_iptables_config) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot generate iptables rules");
-		free(ifaces);
+		if (ifaces)
+			free(ifaces);
 		cleanup();
 		return 1;
 	}
-
 	free(ifaces);
 	ifaces = NULL;
 
@@ -297,12 +382,49 @@ static int init(int argc, char *argv[])
 	}
 
 	free(new_iptables_config);
+
+	/* Setup pcap dump */
+	if (dump) {
+		pcap = malloc(sizeof(struct packet_pcap_dump));
+		if (!pcap) {
+			cleanup();
+			return 1;
+		}
+		if (file_in && file_out && file_blk) {
+			pcap->pd_in = pcap_open_dead(DLT_IPV4, SNAPLEN);
+			pcap->pd_out = pcap_open_dead(DLT_IPV4, SNAPLEN);
+			pcap->pd_blk = pcap_open_dead(DLT_IPV4, SNAPLEN);
+			if (!pcap->pd_in || !pcap->pd_out || !pcap->pd_blk) {
+				message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot set mode to dump packet");
+				cleanup();
+				return 1;
+			}
+			pcap->pf_in = pcap_dump_open(pcap->pd_in, file_in);
+			pcap->pf_out = pcap_dump_open(pcap->pd_out, file_out);
+			pcap->pf_blk = pcap_dump_open(pcap->pd_blk, file_blk);
+			if (!pcap->pf_in || !pcap->pf_out || !pcap->pf_blk) {
+				message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot set mode to dump packet");
+				cleanup();
+				return 1;
+			}
+			fake_pcap_header.ts = fake_ts;
+		}
+	}
 	return 0;
 }
 
 static bool multi_threaded()
 {
 	return true;
+}
+
+
+static void packet_dump_pcap(pcap_dumper_t *pf, struct nfqueue_packet *pkt)
+{
+	mutex_lock(&ct_mutex);
+	fake_pcap_header.caplen = fake_pcap_header.len = pkt->length;
+	pcap_dump((u_char *)pf, &fake_pcap_header, pkt->data);
+	mutex_unlock(&ct_mutex);
 }
 
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
@@ -318,6 +440,10 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		if (state->current_packet) {
 			state->current_packet->state = state;
 			*pkt = (struct packet*)state->current_packet;
+			/* dump received packet in pcap file */
+			if (pcap && file_in) {
+				packet_dump_pcap(pcap->pf_in, state->current_packet);
+			}
 			state->current_packet = NULL;
 			return 0;
 		}
@@ -340,7 +466,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	int verdict;
 	switch (result) {
 	case FILTER_ACCEPT: verdict = NF_ACCEPT; break;
-	case FILTER_DROP:   verdict = NF_DROP; break;
+	case FILTER_DROP:	verdict = NF_DROP; break;
 	default:
 		message(HAKA_LOG_DEBUG, MODULE_NAME, L"unknown verdict");
 		verdict = NF_DROP;
@@ -351,6 +477,15 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 		ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, pkt->length, pkt->data);
 	else
 		ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, 0, NULL);
+
+	/* dump accepted packet in pcap file */
+	if (pcap  && file_out && result == FILTER_ACCEPT) {
+		packet_dump_pcap(pcap->pf_out, pkt);
+	}
+
+	else if (pcap  && file_blk && result == FILTER_DROP) {
+		packet_dump_pcap(pcap->pf_blk, pkt);
+	}
 
 	if (ret == -1) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"packet verdict failed");
@@ -446,22 +581,22 @@ static const char *packet_get_dissector(struct packet *pkt)
  */
 struct packet_module HAKA_MODULE = {
 	module: {
-		type:        MODULE_PACKET,
-		name:        MODULE_NAME,
+		type:		 MODULE_PACKET,
+		name:		 MODULE_NAME,
 		description: L"Netfilter queue packet module",
-		author:      L"Arkoon Network Security",
-		init:        init,
-		cleanup:     cleanup
+		author:		 L"Arkoon Network Security",
+		init:		 init,
+		cleanup:	 cleanup
 	},
 	multi_threaded:  multi_threaded,
-	init_state:      init_state,
-	cleanup_state:   cleanup_state,
-	receive:         packet_do_receive,
-	verdict:         packet_verdict,
-	get_length:      packet_get_length,
+	init_state:		 init_state,
+	cleanup_state:	 cleanup_state,
+	receive:		 packet_do_receive,
+	verdict:		 packet_verdict,
+	get_length:		 packet_get_length,
 	make_modifiable: packet_modifiable,
-	resize:          packet_do_resize,
-	get_id:          packet_get_id,
-	get_data:        packet_get_data,
-	get_dissector:   packet_get_dissector
+	resize:			 packet_do_resize,
+	get_id:			 packet_get_id,
+	get_data:		 packet_get_data,
+	get_dissector:	 packet_get_dissector
 };
