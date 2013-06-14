@@ -15,4 +15,6 @@
 #cmakedefine HAKA_LUAJIT @HAKA_LUAJIT@
 #cmakedefine HAKA_LUA @HAKA_LUA@
 
+#define HAKA_PREFIX   "@CMAKE_INSTALL_PREFIX@"
+
 #endif /* _HAKA_CONFIG_H */

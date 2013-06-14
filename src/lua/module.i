@@ -9,7 +9,7 @@ char *suffix = HAKA_MODULE_SUFFIX;
 
 %}
 
-%include haka/swig.si
+%include "haka/swig.si"
 
 %nodefaultctor;
 
@@ -47,4 +47,3 @@ char *suffix;
 	package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', module.prefix .. '?' .. module.suffix)
 	package.path = package.path .. ";" .. string.gsub(module.path(), '*', '?.lua')
 }
-

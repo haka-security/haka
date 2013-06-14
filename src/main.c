@@ -69,44 +69,8 @@ int main(int argc, char *argv[])
 	signal(SIGQUIT, fatal_error_signal);
 	signal(SIGHUP, fatal_error_signal);
 
-	/* Get the program directory */
-	{
-		char szTmp[32];
-		int bytes;
-		char *sep;
-
-		sprintf(szTmp, "/proc/%d/exe", getpid());
-		bytes = readlink(szTmp, directory, sizeof(directory)-1);
-		if (bytes < 0) {
-			message(HAKA_LOG_FATAL, L"core", L"failed to retrieve application directory");
-			clean_exit();
-			return 3;
-		}
-		directory[bytes] = '\0';
-
-		sep = strrchr(directory, '/');
-		if (!sep) {
-			message(HAKA_LOG_FATAL, L"core", L"failed to retrieve application directory");
-			clean_exit();
-			return 3;
-		}
-		*sep = '\0';
-	}
-
 	/* Default module path */
-	{
-		static const char append[] = "/modules/*";
-		char *path = malloc(strlen(directory) + strlen(append) + 1);
-		if (!path) {
-			clean_exit();
-			return 1;
-		}
-
-		strcpy(path, directory);
-		strcpy(path + strlen(directory), append);
-		module_set_path(path);
-		free(path);
-	}
+	module_set_path(HAKA_PREFIX "/share/haka/*;" HAKA_PREFIX "/share/haka/modules/*");
 
 	/* Check arguments */
 	if (argc < 2) {

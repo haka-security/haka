@@ -1,11 +1,9 @@
 
-set(ENV{LD_LIBRARY_PATH} ${LDDIR})
 set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
 
-message(STATUS "Exporting var: export LD_LIBRARY_PATH=${LDDIR}")
-message(STATUS "Executing ${EXE} ${CTEST_MODULE_DIR}/TestPcapOutput.lua ${CONF} ${SRC} ${LDDIR}")
+message(STATUS "Executing ${EXE} ${CTEST_MODULE_DIR}/TestPcapOutput.lua ${CONF} ${SRC}")
 
-execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapOutput.lua ${CONF} ${SRC} ${LDDIR}
+execute_process(COMMAND ${EXE} ${CTEST_MODULE_DIR}/TestPcapOutput.lua ${CONF} ${SRC}
 	RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp)
 
 execute_process(COMMAND cat ${DST}-tmp)

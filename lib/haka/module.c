@@ -12,22 +12,25 @@
 #include <haka/error.h>
 
 
+static char *modules_path;
+
 struct module *module_load(const char *module_name,... )
 {
 	void *module_handle = NULL;
 	struct module *module = NULL;
 	char *full_module_name;
-        int argc = 0;
-        char* argv[MAX_EXTRA_MODULE_PARAMETERS];
-        va_list params;
-        va_start(params,module_name);
-        char * arg = va_arg(params,char *);
-        while(arg) {
-                argv[argc] = arg;
-                arg = va_arg(params,char *);
-                argc++;
-        }
-        va_end(params);
+	int argc = 0;
+	char *argv[MAX_EXTRA_MODULE_PARAMETERS], *arg;
+
+	va_list params;
+	va_start(params,module_name);
+	arg = va_arg(params,char *);
+	while(arg) {
+		argv[argc] = arg;
+		arg = va_arg(params,char *);
+		argc++;
+	}
+	va_end(params);
 
 	assert(module_name);
 
@@ -39,7 +42,34 @@ struct module *module_load(const char *module_name,... )
 	strcpy(full_module_name, HAKA_MODULE_PREFIX);
 	strcpy(full_module_name+strlen(HAKA_MODULE_PREFIX), module_name);
 	strcpy(full_module_name+strlen(HAKA_MODULE_PREFIX)+strlen(module_name), HAKA_MODULE_SUFFIX);
-	module_handle = dlopen(full_module_name, RTLD_NOW);
+
+	{
+		char *current_path = modules_path, *iter;
+		char *full_path;
+
+		while ((iter = strchr(current_path, '*')) != NULL) {
+			const int len = iter - current_path;
+
+			full_path = malloc(len + strlen(full_module_name) + 1);
+			if (!full_path) {
+				return NULL;
+			}
+
+			strncpy(full_path, current_path, len);
+			strcat(full_path, full_module_name);
+			module_handle = dlopen(full_path, RTLD_NOW);
+
+			current_path = iter+1;
+			if (*current_path != 0) ++current_path;
+
+			free(full_path);
+			full_path = NULL;
+
+			if (module_handle) {
+				break;
+			}
+		}
+	}
 
 	if (!module_handle) {
 		free(full_module_name);
@@ -94,8 +124,6 @@ void module_release(struct module *module)
 		dlclose(module->handle);
 	}
 }
-
-static char *modules_path;
 
 void module_set_path(const char *path)
 {

@@ -15,7 +15,7 @@ LUA_LINK(tcp)
 DEPENDS_MODULE(tcp ipv4)
 INSTALL_MODULE(tcp)
 
-install(FILES tcp-connection.lua DESTINATION bin/modules)
+install(FILES tcp-connection.lua DESTINATION ${MODULE_INSTALL_PATH})
 
 # Tests
 include(TestModuleLoad)

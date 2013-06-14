@@ -1,11 +1,13 @@
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN/../../lib")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" "${CMAKE_INSTALL_PREFIX}/share/haka/modules")
 
 # Setup module file names
 set(CMAKE_SHARED_MODULE_PREFIX "${HAKA_MODULE_PREFIX}")
 set(CMAKE_SHARED_MODULE_SUFFIX "${HAKA_MODULE_SUFFIX}")
 set(CMAKE_SHARED_LIBRARY_PREFIX "${HAKA_MODULE_PREFIX}")
 set(CMAKE_SHARED_LIBRARY_SUFFIX "${HAKA_MODULE_SUFFIX}")
+
+set(MODULE_INSTALL_PATH share/haka/modules)
 
 macro(INCLUDE_MODULE name)
 	include_directories(${CMAKE_SOURCE_DIR}/modules/${name})
@@ -19,7 +21,7 @@ endmacro(DEPENDS_MODULE)
 macro(INSTALL_MODULE target)
 	include_directories(.)
 	target_link_libraries(${target} libhaka)
-	install(TARGETS ${target} LIBRARY DESTINATION bin/modules)
+	install(TARGETS ${target} LIBRARY DESTINATION ${MODULE_INSTALL_PATH})
 endmacro(INSTALL_MODULE)
 
 # Find all modules. We need a separated loop in case one of the sub make adds

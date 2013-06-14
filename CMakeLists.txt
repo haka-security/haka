@@ -11,6 +11,19 @@ endif()
 
 project(haka)
 
+# Build type
+set(BUILD "Release" CACHE STRING "Selected build type")
+set(CMAKE_BUILD_TYPE ${BUILD})
+
+# Install prefix
+set(PREFIX "out" CACHE STRING "Installation prefix")
+
+if(NOT IS_ABSOLUTE ${PREFIX})
+	set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/${PREFIX})
+else()
+	set(CMAKE_INSTALL_PREFIX ${PREFIX})
+endif()
+
 # Configure
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CMAKE_MODULE_PATH})
 set(CTEST_MODULE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
@@ -32,9 +45,9 @@ if(BIGENDIAN EQUAL 0)
 endif(BIGENDIAN EQUAL 0)
 
 if(USE_LUAJIT)
-    set(HAKA_LUAJIT 1)
+	set(HAKA_LUAJIT 1)
 else()
-    set(HAKA_LUA 1)
+	set(HAKA_LUA 1)
 endif()
 
 # Find type size
@@ -80,8 +93,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in ${CMAKE_CURRENT_BINAR
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # Setup globals
-set(CMAKE_INSTALL_PREFIX out)
-
 include_directories(include)
 
 # Tests
@@ -118,4 +129,5 @@ if(CPPCHECK_FOUND)
 endif(CPPCHECK_FOUND)
 
 # Packaging
+set(CPACK_GENERATOR "STGZ")
 include(CPack)

@@ -29,7 +29,7 @@ void load_configuration(const char *file)
 
 %}
 
-%include haka/swig.si
+%include "haka/swig.si"
 
 void install(const char *type, struct module *module);
 void load_configuration(const char *file);
@@ -37,6 +37,3 @@ void exit(int);
 
 %rename(current_thread) thread_get_id;
 int thread_get_id();
-
-%rename(directory) get_app_directory;
-const char *get_app_directory();

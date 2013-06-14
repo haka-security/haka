@@ -26,7 +26,6 @@ macro(TEST_PCAP_COMPARE module name)
 	add_test(NAME ${module}-${name}-pcap-compare
 		COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
-		-DLDDIR=${MODULES_BINARY_DIRS}:${CMAKE_BINARY_DIR}/out/bin/modules/*
 		-DEXE=$<TARGET_FILE:haka>
 		-DCONF=${CMAKE_CURRENT_SOURCE_DIR}/${name}.lua
 		-DSRC=${CMAKE_CURRENT_SOURCE_DIR}/${name}.pcap
