@@ -1249,7 +1249,13 @@ static bool tcp_stream_unmark(struct stream *s, struct stream_mark *mark)
 	}
 
 	if (tcp_mark->next) tcp_mark->next->prev = tcp_mark->prev;
-	if (tcp_mark->prev) tcp_mark->prev->next = tcp_mark->next;
+	if (tcp_mark->prev) {
+		tcp_mark->prev->next = tcp_mark->next;
+	}
+	else {
+		assert(tcp_s->marks == tcp_mark);
+		tcp_s->marks = NULL;
+	}
 
 	free(tcp_mark);
 	return true;
