@@ -219,9 +219,10 @@ haka.dissector {
 		http.tcp_stream = stream
 
 		if stream.direction then
-			if http.state == 0 then
+			if http.state == 0 or http.state == 4 then
 				if stream.stream:available() > 0 then
 					http.request = {}
+					http.response = nil
 					http.request.mark = stream.stream:mark()
 
 					if not parse_request(stream.stream, http.request) then
@@ -238,7 +239,7 @@ haka.dissector {
 	
 					http.request.next_dissector = http.next_dissector
 				end
-			elseif http.state > 0 then
+			elseif http.state > 0 and http.state < 4 then
 				http.next_dissector = http.request.next_dissector
 			end
 		else
