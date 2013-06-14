@@ -59,6 +59,8 @@ struct nfqueue_packet {
 	uint8	*data;
 };
 
+bool use_multithreading = true;
+
 /* Iptables rules to add (iptables-restore format) */
 static const char iptables_config_template_begin[] =
 "*raw\n"
@@ -66,18 +68,32 @@ static const char iptables_config_template_begin[] =
 ":OUTPUT ACCEPT [0:0]\n"
 ;
 
-static const char iptables_config_template_iface[] =
+static const char iptables_config_template_mt_iface[] =
 "-A PREROUTING -i %s -m mark --mark 0xffff -j ACCEPT\n"
 "-A PREROUTING -i %s -j NFQUEUE --queue-balance 0:%i\n"
 "-A OUTPUT -o %s -j MARK --set-mark 0xffff\n"
 "-A OUTPUT -o %s -j NFQUEUE --queue-balance 0:%i\n"
 ;
 
-static const char iptables_config_template_all[] =
+static const char iptables_config_template_iface[] =
+"-A PREROUTING -i %s -m mark --mark 0xffff -j ACCEPT\n"
+"-A PREROUTING -i %s -j NFQUEUE\n"
+"-A OUTPUT -o %s -j MARK --set-mark 0xffff\n"
+"-A OUTPUT -o %s -j NFQUEUE\n"
+;
+
+static const char iptables_config_template_mt_all[] =
 "-A PREROUTING -m mark --mark 0xffff -j ACCEPT\n"
 "-A PREROUTING -j NFQUEUE --queue-balance 0:%i\n"
 "-A OUTPUT -j MARK --set-mark 0xffff\n"
 "-A OUTPUT -j NFQUEUE --queue-balance 0:%i\n"
+;
+
+static const char iptables_config_template_all[] =
+"-A PREROUTING -m mark --mark 0xffff -j ACCEPT\n"
+"-A PREROUTING -j NFQUEUE\n"
+"-A OUTPUT -j MARK --set-mark 0xffff\n"
+"-A OUTPUT -j NFQUEUE\n"
 ;
 
 static const char iptables_config_template_end[] =
@@ -96,8 +112,15 @@ static int iptables_config_build(char *output, size_t outsize, char **ifaces, in
 	if (ifaces) {
 		char **iface = ifaces;
 		while (*iface) {
-			size = snprintf(output, outsize, iptables_config_template_iface, *iface, *iface,
-					threads, *iface, *iface, threads);
+			if (threads > 1) {
+				size = snprintf(output, outsize, iptables_config_template_mt_iface, *iface, *iface,
+						threads-1, *iface, *iface, threads-1);
+			}
+			else {
+				size = snprintf(output, outsize, iptables_config_template_iface, *iface, *iface,
+						*iface, *iface);
+			}
+
 			if (!size) return -1;
 			if (output) { output += size; outsize-=size; }
 			total_size += size;
@@ -106,7 +129,13 @@ static int iptables_config_build(char *output, size_t outsize, char **ifaces, in
 		}
 	}
 	else {
-		size = snprintf(output, outsize, iptables_config_template_all, threads, threads);
+		if (threads > 1) {
+			size = snprintf(output, outsize, iptables_config_template_mt_all, threads-1, threads-1);
+		}
+		else {
+			size = snprintf(output, outsize, iptables_config_template_all);
+		}
+
 		if (!size) return -1;
 		if (output) { output += size; outsize-=size; }
 		total_size += size;
@@ -301,7 +330,7 @@ static int init(int argc, char *argv[])
 {
 	char *new_iptables_config = NULL;
 	char **ifaces = NULL;
-	const int thread_count = thread_get_packet_capture_cpu_count();
+	int thread_count = thread_get_packet_capture_cpu_count();
 	const char *file_in = NULL;
 	const char *file_out = NULL;
 	const char *file_drop = NULL;
@@ -312,6 +341,16 @@ static int init(int argc, char *argv[])
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot save iptables rules");
 		cleanup();
 		return 1;
+	}
+
+	if (argc > 0) {
+		if (strcmp(argv[0], "--single") == 0) {
+			use_multithreading = false;
+			thread_count = 1;
+
+			argc -= 1;
+			argv += 1;
+		}
 	}
 
 	if (argc > 0) {
@@ -391,7 +430,7 @@ static int init(int argc, char *argv[])
 
 static bool multi_threaded()
 {
-	return true;
+	return use_multithreading;
 }
 
 static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt)
