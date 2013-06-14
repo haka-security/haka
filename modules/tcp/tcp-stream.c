@@ -431,7 +431,7 @@ static void tcp_stream_position_try_advance_chunk(struct tcp_stream *tcp_s,
 	}
 }
 
-static bool tcp_stream_position_isbefore(struct tcp_stream_position *pos1,
+UNUSED static bool tcp_stream_position_isbefore(struct tcp_stream_position *pos1,
 		struct tcp_stream_position *pos2)
 {
 	return (pos1->current_seq_modif <= pos2->current_seq_modif);
@@ -638,7 +638,7 @@ struct tcp *tcp_stream_pop(struct stream *s)
 			const size_t new_size = chunk->end_seq - chunk->start_seq + chunk->offset_seq;
 			struct tcp_stream_position pos;
 			uint8 *buffer, *payload;
-			size_t size;
+			UNUSED size_t size;
 
 			pos.chunk = chunk;
 			pos.chunk_offset = 0;
@@ -844,7 +844,7 @@ static size_t tcp_stream_insert(struct stream *s, const uint8 *data, size_t leng
 	if (!pos->chunk) {
 		if (tcp_s->pending_modif) {
 			return tcp_stream_update_insert_modif(tcp_s, tcp_s->pending_modif,
-					data, length, modif_offset);
+					data, length, pos->modif_offset);
 		}
 		else {
 			tcp_s->pending_modif = tcp_stream_create_insert_modif(tcp_s, NULL,

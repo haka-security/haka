@@ -16,4 +16,7 @@
 
 #define MIN(a, b)     ((a) < (b) ? (a) : (b))
 
+#define UNUSED __attribute__((unused))
+
+
 #endif /* _HAKA_COMPILER_H */

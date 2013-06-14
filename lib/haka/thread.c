@@ -24,7 +24,8 @@ static local_storage_t thread_id_key;
 
 INIT static void thread_id_init()
 {
-	assert(local_storage_init(&thread_id_key, NULL));
+	UNUSED const bool ret = local_storage_init(&thread_id_key, NULL);
+	assert(ret);
 }
 
 int thread_get_id()

@@ -26,7 +26,8 @@ static void error_delete(void *value)
 
 INIT static void error_init()
 {
-	assert(local_storage_init(&local_error_key, error_delete));
+	UNUSED const bool ret = local_storage_init(&local_error_key, error_delete);
+	assert(ret);
 }
 
 static struct local_error *error_context()
