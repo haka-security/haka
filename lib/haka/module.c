@@ -56,6 +56,7 @@ struct module *module_load(const char *module_name,... )
 			}
 
 			strncpy(full_path, current_path, len);
+			full_path[len] = 0;
 			strcat(full_path, full_module_name);
 			module_handle = dlopen(full_path, RTLD_NOW);
 
