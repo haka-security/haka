@@ -61,13 +61,13 @@ local function parse_request(stream, http)
 	local line, len = read_line(stream)
 	total_len = total_len + len
 
-	http.Method, http.Uri, http.Version = line:match("(%g+) (%g+) (%g+)")
-	if not http.Method then
+	http.method, http.uri, http.version = line:match("(%g+) (%g+) (.+)")
+	if not http.method then
 		return false
 	end
 
 	-- Headers
-	http.Headers = {}
+	http.headers = {}
 	http.headers_order = {}
 	line, len = read_line(stream)
 	total_len = total_len + len
@@ -77,7 +77,7 @@ local function parse_request(stream, http)
 			return false
 		end
 
-		http.Headers[name] = value
+		http.headers[name] = value
 		table.insert(http.headers_order, name)
 		line, len = read_line(stream)
 		total_len = total_len + len
@@ -86,7 +86,9 @@ local function parse_request(stream, http)
 	http.data = stream
 	http.length = total_len
 
-	dump(http, "")
+	http.dump = function (self)
+		dump(self, "")
+	end
 
 	return true
 end
@@ -99,13 +101,13 @@ local function parse_response(stream, http)
 	local line, len = read_line(stream)
 	total_len = total_len + len
 	
-	http.Version, http.Status, http.Reason = line:match("(%g+) (%g+) (%g+)")
-	if not http.Version then
+	http.version, http.status, http.reason = line:match("(%g+) (%g+) (.+)")
+	if not http.version then
 		return false
 	end
 
 	-- Headers
-	http.Headers = {}
+	http.headers = {}
 	http.headers_order = {}
 	line, len = read_line(stream)
 	total_len = total_len + len
@@ -115,7 +117,7 @@ local function parse_response(stream, http)
 			return false
 		end
 
-		http.Headers[name] = value
+		http.headers[name] = value
 		table.insert(http.headers_order, name)
 		line, len = read_line(stream)
 		total_len = total_len + len
@@ -124,7 +126,10 @@ local function parse_response(stream, http)
 	http.data = stream
 	http.length = total_len
 
-	dump(http, "")
+	http.dump = function (self)
+		dump(self, "")
+	end
+
 
 	return true
 end
@@ -164,13 +169,13 @@ local function forge(http)
 			http.request.mark = nil
 
 			tcp.stream:erase(http.request.length)
-			tcp.stream:insert(http.request.Method)
+			tcp.stream:insert(http.request.method)
 			tcp.stream:insert(" ")
-			tcp.stream:insert(http.request.Uri)
+			tcp.stream:insert(http.request.uri)
 			tcp.stream:insert(" ")
-			tcp.stream:insert(http.request.Version)
+			tcp.stream:insert(http.request.version)
 			tcp.stream:insert("\r\n")
-			build_headers(tcp.stream, http.request.Headers, http.request.headers_order)
+			build_headers(tcp.stream, http.request.headers, http.request.headers_order)
 			tcp.stream:insert("\r\n")
 
 		elseif http.state == 3 and not tcp.direction then
@@ -180,13 +185,13 @@ local function forge(http)
 			http.response.mark = nil
 
 			tcp.stream:erase(http.response.length)
-			tcp.stream:insert(http.response.Version)
+			tcp.stream:insert(http.response.version)
 			tcp.stream:insert(" ")
-			tcp.stream:insert(http.response.Status)
+			tcp.stream:insert(http.response.status)
 			tcp.stream:insert(" ")
-			tcp.stream:insert(http.response.Reason)
+			tcp.stream:insert(http.response.reason)
 			tcp.stream:insert("\r\n")
-			build_headers(tcp.stream, http.response.Headers, http.response.headers_order)
+			build_headers(tcp.stream, http.response.headers, http.response.headers_order)
 			tcp.stream:insert("\r\n")
 		end
 	
