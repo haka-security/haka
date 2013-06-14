@@ -74,9 +74,10 @@ all the files generated during the build using cmake.
 To add an option to cmake, add `-DOPTION=VALUE` to the command line option when calling cmake.
 The configuration with cmake supports the following options:
 
-  - `CMAKE_BUILD_TYPE`=[Debug|Release|RelWithDebInfo|MinSizeRel]: Select the build type to be
+  - `BUILD`=[Debug|Release|RelWithDebInfo|MinSizeRel]: Select the build type to be
   compiled (default: Release)
   - `USE_LUAJIT`=[YES|NO]: Compile haka with LuaJit or with the standard Lua library (default: YES)
+  - `PREFIX`=PATH: Installation prefix (default: out)
 
 ### Build
 
