@@ -1,2 +1,2 @@
 
-install(FILES http.lua DESTINATION bin/modules)
+install(FILES http.lua DESTINATION ${MODULE_INSTALL_PATH})
