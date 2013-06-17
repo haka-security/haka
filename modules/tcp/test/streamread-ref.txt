@@ -6,5 +6,4 @@ debug: filter: received stream len=41
 debug: filter: received stream len=0
 debug: filter: received stream len=0
 debug: filter: received stream len=0
-debug: filter: received stream len=0
 debug: tcp-connection: closing connection 127.0.0.1:44393 -> 127.0.0.1:4444

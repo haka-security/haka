@@ -37,7 +37,7 @@ local function dissect(pkt)
 	newpkt.dissector = "tcp-connection"
 	newpkt.next_dissector = nil
 	newpkt.valid = function (self)
-		return self.connection ~= nil
+		return not self.close
 	end
 	newpkt.drop = drop
 	newpkt.forge = forge

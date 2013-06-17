@@ -143,11 +143,14 @@ function haka.filter(pkt)
 			break
 		end
 
-		if not nextpkt or not nextpkt:valid() then
+		if not nextpkt then
 			break
 		end
 
 		pkt = nextpkt
+		if not pkt:valid() then
+			break
+		end
 		
 		local err, msg = xpcall(function () eval_rules(dissect.name .. '-up', pkt) end, debug.format_error)
 		if not err then
