@@ -4,17 +4,29 @@ local function str(char)
 	return string.char(char)
 end
 
+local function getchar(stream)
+	local char
+
+	while true do
+		char = stream:getchar()
+		if char == -1 then
+			coroutine.yield()
+		else
+			break
+		end
+	end
+
+	return char
+end
+
 local function read_line(stream)
 	local line = ""
 	local char
 	local sp = "\r\n"
 	local read = 0
-	
+
 	while true do
-		char = stream:getchar()
-		if char == -1 then
-			return line, read, false
-		end
+		char = getchar(stream)
 		read = read+1
 		char = str(char)
 
@@ -28,12 +40,11 @@ local function read_line(stream)
 			end
 
 			if i == #sp then
-				return line, read, true
+				return line, read
 			end
 
 			tmp = tmp .. c
-			char = stream:getchar()
-			assert(char ~= -1) --TODO: not yet supported
+			char = getchar(stream)
 			read = read+1
 			char = str(char)
 		end
@@ -63,7 +74,8 @@ local function parse_request(stream, http)
 
 	http.method, http.uri, http.version = line:match("(%g+) (%g+) (.+)")
 	if not http.method then
-		return false
+		http.valid = false
+		return
 	end
 
 	-- Headers
@@ -74,7 +86,8 @@ local function parse_request(stream, http)
 	while #line > 0 do
 		local name, value = line:match("(%g+): (.+)")
 		if not name then
-			return false
+			http.valid = false
+			return
 		end
 
 		http.headers[name] = value
@@ -90,6 +103,7 @@ local function parse_request(stream, http)
 		dump(self, "")
 	end
 
+	http.valid = true
 	return true
 end
 
@@ -103,7 +117,8 @@ local function parse_response(stream, http)
 	
 	http.version, http.status, http.reason = line:match("(%g+) (%g+) (.+)")
 	if not http.version then
-		return false
+		http.valid = false
+		return
 	end
 
 	-- Headers
@@ -114,7 +129,8 @@ local function parse_response(stream, http)
 	while #line > 0 do
 		local name, value = line:match("(%g+): (.+)")
 		if not name then
-			return false
+			http.valid = false
+			return
 		end
 
 		http.headers[name] = value
@@ -130,7 +146,7 @@ local function parse_response(stream, http)
 		dump(self, "")
 	end
 
-
+	http.valid = true
 	return true
 end
 
@@ -162,8 +178,8 @@ end
 local function forge(http)
 	local tcp = http.tcp_stream
 	if tcp then
-		if http.state == 1 and tcp.direction then
-			http.state = 2
+		if http.state == 2 and tcp.direction then
+			http.state = 3
 
 			tcp.stream:seek(http.request.mark, true)
 			http.request.mark = nil
@@ -178,8 +194,8 @@ local function forge(http)
 			build_headers(tcp.stream, http.request.headers, http.request.headers_order)
 			tcp.stream:insert("\r\n")
 
-		elseif http.state == 3 and not tcp.direction then
-			http.state = 4
+		elseif http.state == 5 and not tcp.direction then
+			http.state = 0
 
 			tcp.stream:seek(http.response.mark, true)
 			http.response.mark = nil
@@ -198,6 +214,30 @@ local function forge(http)
 		http.tcp_stream = nil
 	end
 	return tcp
+end
+
+local function parse(http, context, f, name, next_state)
+	if not context.co then
+		context.mark = http.tcp_stream.stream:mark()
+		context.co = coroutine.create(function () f(http.tcp_stream.stream, context) end)
+	end
+
+	coroutine.resume(context.co)
+
+	if coroutine.status(context.co) == "dead" then
+		if context.valid then
+			http.state = next_state
+			if haka.rule_hook("http-".. name, http) then
+				return nil
+			end
+	
+			context.next_dissector = http.next_dissector
+		else
+			haka.log.error("http", "invalid " .. name)
+			http.tcp_stream:drop()
+			return nil
+		end
+	end
 end
 
 haka.dissector {
@@ -224,50 +264,30 @@ haka.dissector {
 		http.tcp_stream = stream
 
 		if stream.direction then
-			if http.state == 0 or http.state == 4 then
+			if http.state == 0 or http.state == 1 then
 				if stream.stream:available() > 0 then
-					http.request = {}
-					http.response = nil
-					http.request.mark = stream.stream:mark()
-
-					if not parse_request(stream.stream, http.request) then
-						haka.log.error("http", "invalid request")
-						stream:drop()
-						return nil
+					if http.state == 0 then
+						http.request = {}
+						http.response = nil
+						http.state = 1
 					end
 
-					http.state = 1
-
-					if haka.rule_hook("http-request", http) then
-						return nil
-					end
-	
-					http.request.next_dissector = http.next_dissector
+					parse(http, http.request, parse_request, "request", 2)
 				end
-			elseif http.state > 0 and http.state < 4 then
+			elseif http.request then
 				http.next_dissector = http.request.next_dissector
 			end
 		else
-			if http.state == 2 then
+			if http.state == 3 or http.state == 4 then
 				if stream.stream:available() > 0 then
-					http.response = {}
-					http.response.mark = stream.stream:mark()
-					
-					if not parse_response(stream.stream, http.response) then
-						haka.log.error("http", "invalid response")
-						stream:drop()
-						return nil
+					if http.state == 3 then
+						http.response = {}
+						http.state = 4
 					end
 
-					http.state = 3
-
-					if haka.rule_hook("http-response", http) then
-						return nil
-					end
-	
-					http.response.next_dissector = http.next_dissector
+					parse(http, http.response, parse_response, "response", 5)
 				end
-			elseif http.state > 2 then
+			elseif http.response then
 				http.next_dissector = http.response.next_dissector
 			end
 		end
