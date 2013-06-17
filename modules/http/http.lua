@@ -29,10 +29,8 @@ local function read_line(stream)
 		read = read+1
 		char = str(c)
 
-		print(c)
 		if c == 0xd then
 			c = getchar(stream)
-			print(c)
 			read = read+1
 
 			if c == 0xa then
@@ -46,7 +44,6 @@ local function read_line(stream)
 		end
 
 		line = line .. char
-		print(line)
 	end
 end
 
