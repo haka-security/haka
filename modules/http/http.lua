@@ -21,35 +21,32 @@ end
 
 local function read_line(stream)
 	local line = ""
-	local char
-	local sp = "\r\n"
+	local char, c
 	local read = 0
 
 	while true do
-		char = getchar(stream)
+		c = getchar(stream)
 		read = read+1
-		char = str(char)
+		char = str(c)
 
-		local tmp = ""
-		for i = 1, #sp do
-			local c = sp:sub(i,i)
-			
-			if char ~= c then
-				line = line .. tmp
-				break
-			end
-
-			if i == #sp then
-				return line, read
-			end
-
-			tmp = tmp .. c
-			char = getchar(stream)
+		print(c)
+		if c == 0xd then
+			c = getchar(stream)
+			print(c)
 			read = read+1
-			char = str(char)
+
+			if c == 0xa then
+				return line, read
+			else
+				line = line .. char
+				char = str(c)
+			end
+		elseif c == 0xa then
+			return line, read
 		end
 		
 		line = line .. char
+		print(line)
 	end
 end
 
