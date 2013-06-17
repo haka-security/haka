@@ -211,8 +211,9 @@ static bool tcp_stream_position_next_chunk(struct tcp_stream *tcp_s,
 	assert(pos->chunk);
 
 	if (!pos->chunk->next || pos->chunk->next->start_seq == pos->chunk->end_seq) {
-		pos->chunk = pos->chunk->next;
 		pos->chunk_seq += pos->chunk_offset;
+		pos->chunk_seq_modif += pos->chunk_offset + pos->chunk->offset_seq;
+		pos->chunk = pos->chunk->next;
 		assert(!pos->chunk || pos->chunk->start_seq == pos->chunk_seq);
 		pos->chunk_offset = 0;
 		pos->modif = NULL;
@@ -235,7 +236,7 @@ static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
 		struct tcp_stream_position *pos)
 {
 	if (!pos->chunk) {
-		if (!tcp_s->first || tcp_s->first->start_seq != pos->chunk_seq) {
+		if (!tcp_s->first || tcp_s->first->start_seq > pos->chunk_seq) {
 			if (!pos->modif) {
 				if (tcp_s->pending_modif) {
 					pos->modif = tcp_s->pending_modif;
@@ -247,9 +248,19 @@ static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
 			}
 		}
 		else {
-			pos->chunk = tcp_s->first;
+			struct tcp_stream_chunk *chunk = tcp_s->first;
+			int seq_offset = tcp_s->first_offset_seq;
+
+			while (chunk && chunk->start_seq != pos->chunk_seq) {
+				seq_offset += chunk->offset_seq;
+				chunk = chunk->next;
+			}
+
+			assert(chunk);
+
+			pos->chunk = chunk;
 			pos->chunk_offset = 0;
-			pos->chunk_seq_modif = pos->chunk->start_seq + tcp_s->first_offset_seq;
+			pos->chunk_seq_modif = pos->chunk->start_seq + seq_offset;
 			assert(pos->chunk_seq == pos->chunk->start_seq);
 
 			if (pos->modif) {
@@ -823,32 +834,37 @@ struct tcp *tcp_stream_pop(struct stream *s)
 			uint8 *buffer, *payload;
 			UNUSED size_t size;
 
-			pos.chunk = chunk;
-			pos.chunk_offset = 0;
-			pos.modif = NULL;
-			pos.modif_offset = 0;
-			pos.chunk_seq = chunk->start_seq;
-			pos.chunk_seq_modif = chunk->start_seq + tcp_s->first_offset_seq;
-			pos.current_seq_modif = pos.chunk_seq_modif;
-
-			buffer = malloc(new_size);
-			if (!buffer) {
-				error(L"memory error");
-				return NULL;
+			if (chunk->end_seq - chunk->start_seq > 0 && new_size == 0) {
+				tcp_action_drop(tcp);
 			}
+			else {
+				pos.chunk = chunk;
+				pos.chunk_offset = 0;
+				pos.modif = NULL;
+				pos.modif_offset = 0;
+				pos.chunk_seq = chunk->start_seq;
+				pos.chunk_seq_modif = chunk->start_seq + tcp_s->first_offset_seq;
+				pos.current_seq_modif = pos.chunk_seq_modif;
 
-			size = tcp_stream_position_read(tcp_s, &pos, buffer, new_size);
-			assert(size == new_size);
+				buffer = malloc(new_size);
+				if (!buffer) {
+					error(L"memory error");
+					return NULL;
+				}
 
-			payload = tcp_resize_payload(tcp, new_size);
-			if (!payload) {
-				error(L"memory error");
+				size = tcp_stream_position_read(tcp_s, &pos, buffer, new_size);
+				assert(size == new_size);
+
+				payload = tcp_resize_payload(tcp, new_size);
+				if (!payload) {
+					error(L"memory error");
+					free(buffer);
+					return NULL;
+				}
+
+				memcpy(payload, buffer, new_size);
 				free(buffer);
-				return NULL;
 			}
-
-			memcpy(payload, buffer, new_size);
-			free(buffer);
 		}
 
 		tcp_set_seq(tcp, tcp_get_seq(tcp) + tcp_s->first_offset_seq);
@@ -897,7 +913,7 @@ void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 	new_seq = tcp_s->sent->start_seq;
 
 	while (iter) {
-		if (iter->end_seq + iter->offset_seq > ack) {
+		if (seq + (iter->end_seq - iter->start_seq) + iter->offset_seq > ack) {
 			break;
 		}
 
