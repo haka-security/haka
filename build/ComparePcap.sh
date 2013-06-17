@@ -8,10 +8,6 @@ $TSHARK $TSHARK_ARGS -Vr $2 | gawk -f $BUILD_DIR/ComparePcap.awk - > $(basename 
 $DIFF $(basename $1).txt $(basename $2).txt > $(basename $1).diff
 RET=$?
 
-echo "original pcap file is $2"
-echo "generated pcap file is $PWD/$1"
-echo "diff file is $PWD/$(basename $1).diff"
-
 cat $(basename $1).diff
 exit $RET
 
