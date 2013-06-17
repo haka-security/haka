@@ -44,7 +44,7 @@ local function read_line(stream)
 		elseif c == 0xa then
 			return line, read
 		end
-		
+
 		line = line .. char
 		print(line)
 	end
@@ -111,7 +111,7 @@ local function parse_response(stream, http)
 
 	local line, len = read_line(stream)
 	total_len = total_len + len
-	
+
 	http.version, http.status, http.reason = line:match("(%g+) (%g+) (.+)")
 	if not http.version then
 		http.valid = false
@@ -161,7 +161,7 @@ local function build_headers(stream, headers, headers_order)
 			stream:insert("\r\n")
 		end
 	end
-	
+
 	for name, value in pairs(copy) do
 		if value then
 			stream:insert(name)
@@ -207,7 +207,7 @@ local function forge(http)
 			build_headers(tcp.stream, http.response.headers, http.response.headers_order)
 			tcp.stream:insert("\r\n")
 		end
-	
+
 		http.tcp_stream = nil
 	end
 	return tcp
@@ -227,7 +227,7 @@ local function parse(http, context, f, name, next_state)
 			if haka.rule_hook("http-".. name, http) then
 				return nil
 			end
-	
+
 			context.next_dissector = http.next_dissector
 		else
 			haka.log.error("http", "invalid " .. name)
@@ -253,10 +253,10 @@ haka.dissector {
 			end
 			http.forge = forge
 			http.state = 0
-			
+
 			stream.connection.data.http = http
 		end
-		
+
 		local http = stream.connection.data.http
 		http.tcp_stream = stream
 
