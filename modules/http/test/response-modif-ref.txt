@@ -1,0 +1,50 @@
+debug: tcp-connection: opening connection 10.2.96.127:57847 -> 10.2.104.129:80
+HTTP REQUEST
+ version = HTTP/1.1
+ headers_order
+   1 = User-Agent
+   2 = Accept
+   3 = Host
+   4 = Connection
+ length = 127
+ valid = true
+ headers
+   Accept = */*
+   User-Agent = Wget/1.13.4 (linux-gnu)
+   Host = 10.2.104.129
+   Connection = Keep-Alive
+ method = GET
+ uri = /twiki/bin/view/
+HTTP RESPONSE
+ version = HTTP/1.1
+ headers_order
+   1 = Date
+   2 = Server
+   3 = Keep-Alive
+   4 = Connection
+   5 = Transfer-Encoding
+   6 = Content-Type
+ length = 223
+ valid = true
+ headers
+   Keep-Alive = timeout=15, max=100
+   Connection = Keep-Alive
+   Date = Mon, 17 Jun 2013 15:21:40 GMT
+   Content-Type = text/html; charset=ISO-8859-1
+   Transfer-Encoding = chunked
+   Server = Apache/2.2.8 (Ubuntu) DAV/2
+ reason = OK
+ status = 200
+HTTP MODIFIED RESPONSE
+ version = HTTP/1.1
+ headers_order
+   1 = User-Agent
+   2 = Accept
+   3 = Host
+   4 = Connection
+ length = 127
+ valid = true
+ headers
+ method = GET
+ uri = /twiki/bin/view/
+debug: tcp-connection: closing connection 10.2.96.127:57847 -> 10.2.104.129:80

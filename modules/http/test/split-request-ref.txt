@@ -1,0 +1,38 @@
+debug: tcp-connection: opening connection 10.2.96.127:57804 -> 10.2.104.129:80
+HTTP REQUEST
+ version = HTTP/1.1
+ headers_order
+   1 = User-Agent
+   2 = Accept
+   3 = Host
+   4 = Connection
+ length = 1457
+ valid = true
+ headers
+   Accept = */*
+   User-Agent = Wget/1.13.4 (linux-gnu)
+   Host = 10.2.104.129
+   Connection = Keep-Alive
+ method = GET
+ uri = /totototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototototo000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.html
+HTTP RESPONSE
+ version = HTTP/1.1
+ headers_order
+   1 = Date
+   2 = Server
+   3 = Content-Length
+   4 = Keep-Alive
+   5 = Connection
+   6 = Content-Type
+ length = 224
+ valid = true
+ headers
+   Content-Length = 1630
+   Keep-Alive = timeout=15, max=100
+   Connection = Keep-Alive
+   Date = Mon, 17 Jun 2013 14:49:54 GMT
+   Content-Type = text/html; charset=iso-8859-1
+   Server = Apache/2.2.8 (Ubuntu) DAV/2
+ reason = Forbidden
+ status = 403
+debug: tcp-connection: closing connection 10.2.96.127:57804 -> 10.2.104.129:80

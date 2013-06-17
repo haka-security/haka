@@ -52,7 +52,9 @@ local function dump(t, indent)
 		if type(v) == "table" then
 			print(indent, n)
 			dump(v, indent .. "  ")
-		else
+		elseif type(v) ~= "thread" and
+			type(v) ~= "userdata" and
+			type(v) ~= "function" then
 			print(indent, n, "=", v)
 		end
 	end
