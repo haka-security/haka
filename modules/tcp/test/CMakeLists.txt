@@ -11,8 +11,8 @@ TEST_PCAP(tcp oneconnection)
 TEST_PCAP(tcp interleavedconnection)
 
 TEST_PCAP(tcp streamread)
-#TEST_PCAP(tcp streamdelete)
-#TEST_PCAP(tcp streaminsert)
+TEST_PCAP(tcp streamdelete)
+TEST_PCAP(tcp streaminsert)
 
 TEST_UNIT(tcp unit unit.c)
 target_link_libraries(tcp-unit tcp)

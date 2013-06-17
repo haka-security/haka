@@ -14,21 +14,6 @@ haka.rule {
 	eval = function (self, pkt)
 		haka.log.debug("filter", "received stream len=%d", pkt.stream:available())
 
-		--while pkt.stream:available() > 0 do
-			--pkt.stream:erase(5)
-			--local buf = pkt.stream:read(1)
-			--if buf == 0xA then 
-			--	print "\\n"
-			--else
-			--	print(string.format("%c",buf));
-			--end
-			--haka.log.debug("filter", "%c", string.format(buf))
-			--haka.log.debug("filter", "read(%d)=%s", #buf, buffer_to_string(buf))
-			--pkt.stream:insert(buf)
-			--pkt.stream:insert(buf)
-			--pkt.stream:erase(5)
-		--end
-		
 		local buf2 = haka.stream.buffer(4)
 		buf2[1] = 0x48
 		buf2[2] = 0x61

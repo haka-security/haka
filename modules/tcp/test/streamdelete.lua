@@ -17,9 +17,9 @@ haka.rule {
 		while pkt.stream:available() > 0 do
 			pkt.stream:erase(10)
 			local buf = pkt.stream:read(10)
-			--if buf then
-			--	print(buffer_to_string(buf))
-			--end
+			if buf then
+				print(buffer_to_string(buf))
+			end
 		end
 	end
 }
