@@ -86,7 +86,8 @@ int packet_receive(struct packet_module_state *state, struct packet **pkt)
 
 	ret = packet_module->receive(state, pkt);
 	if (!ret && *pkt) {
-		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%d", packet_module->get_id(*pkt));
+		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%d, len=%u",
+				packet_module->get_id(*pkt), packet_length(*pkt));
 	}
 	return ret;
 }
@@ -96,7 +97,8 @@ void packet_drop(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 	lua_invalidatepacket(pkt);
-	messagef(HAKA_LOG_DEBUG, L"packet", L"dropping packet id=%d", packet_module->get_id(pkt));
+	messagef(HAKA_LOG_DEBUG, L"packet", L"dropping packet id=%d, len=%u",
+			packet_module->get_id(pkt), packet_length(pkt));
 	packet_module->verdict(pkt, FILTER_DROP);
 }
 
@@ -105,6 +107,7 @@ void packet_accept(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 	lua_invalidatepacket(pkt);
-	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%d", packet_module->get_id(pkt));
+	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%d, len=%u",
+			packet_module->get_id(pkt), packet_length(pkt));
 	packet_module->verdict(pkt, FILTER_ACCEPT);
 }
