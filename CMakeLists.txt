@@ -12,11 +12,13 @@ endif()
 project(haka)
 
 # Build type
-set(BUILD "Release" CACHE STRING "Selected build type")
+set(BUILD "None" CACHE STRING "Selected build type")
 set(CMAKE_BUILD_TYPE ${BUILD})
+message(STATUS "Building configuration (BUILD): ${CMAKE_BUILD_TYPE}")
 
 # Install prefix
 set(PREFIX "out" CACHE STRING "Installation prefix")
+message(STATUS "Installation prefix (PREFIX): ${PREFIX}")
 
 if(NOT IS_ABSOLUTE ${PREFIX})
 	set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/${PREFIX})
