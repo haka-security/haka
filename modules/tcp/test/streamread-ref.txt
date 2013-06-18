@@ -1,9 +1,9 @@
-debug: tcp-connection: opening connection 127.0.0.1:44393 -> 127.0.0.1:4444
-debug: filter: received stream len=0
-debug: filter: received stream len=41
+debug tcp-connection: opening connection 127.0.0.1:44393 -> 127.0.0.1:4444
+debug filter: received stream len=0
+debug filter: received stream len=41
 1234567890ABCDEFGHIJ1234567890abcdefghij
 
-debug: filter: received stream len=0
-debug: filter: received stream len=0
-debug: filter: received stream len=0
-debug: tcp-connection: closing connection 127.0.0.1:44393 -> 127.0.0.1:4444
+debug filter: received stream len=0
+debug filter: received stream len=0
+debug filter: received stream len=0
+debug tcp-connection: closing connection 127.0.0.1:44393 -> 127.0.0.1:4444

@@ -10,14 +10,33 @@
 
 
 #ifdef USE_COLORS
-	#define CLEAR_COLOR    "\033[0m"
+	#define CLEAR   "\e[0m"
+	#define BOLD    "\e[1m"
+	#define BLACK   "\e[30m"
+	#define RED     "\e[31m"
+	#define GREEN   "\e[32m"
+	#define YELLOW  "\e[33m"
+	#define BLUE    "\e[34m"
+	#define MAGENTA "\e[35m"
+	#define CYAN    "\e[36m"
+	#define WHITE   "\e[37m"
+
+	#define MODULE_COLOR   CYAN
 
 	static const char *level_color[HAKA_LOG_LEVEL_LAST] = {
-		"\033[1;31m", // LOG_FATAL
-		"\033[1;31m", // LOG_ERROR
-		"\033[1;33m", // LOG_WARNING
-		CLEAR_COLOR,  // LOG_INFO
-		CLEAR_COLOR,  // LOG_DEBUG
+		BOLD RED,    // LOG_FATAL
+		BOLD RED,    // LOG_ERROR
+		BOLD YELLOW, // LOG_WARNING
+		BOLD,        // LOG_INFO
+		CLEAR,       // LOG_DEBUG
+	};
+
+	static const char *message_color[HAKA_LOG_LEVEL_LAST] = {
+		CLEAR,       // LOG_FATAL
+		CLEAR,       // LOG_ERROR
+		CLEAR,       // LOG_WARNING
+		CLEAR,       // LOG_INFO
+		CLEAR,       // LOG_DEBUG
 	};
 #endif /* USE_COLORS */
 
@@ -51,11 +70,11 @@ static int log_message(log_level lvl, const wchar_t *module, const wchar_t *mess
 	}
 
 #ifdef USE_COLORS
-	fwprintf(stdout, L"%s%s:%*s %ls:%*s %ls%s\n", level_color[lvl], level_str,
-			level_size-5, "", module, _max_module_size-module_size, "", message,
-			CLEAR_COLOR);
+	fwprintf(stdout, L"%s%s%s%*s %s%ls:%s%*s %s%ls%s\n", level_color[lvl], level_str,
+			CLEAR, level_size-5, "", MODULE_COLOR, module, CLEAR,
+			_max_module_size-module_size, "", message_color[lvl], message, CLEAR);
 #else
-	fwprintf(stdout, L"%s:%*s %ls:%*s %ls\n", level_str, level_size-5, "",
+	fwprintf(stdout, L"%s%*s %ls:%*s %ls\n", level_str, level_size-5, "",
 			module, _max_module_size-module_size, "", message);
 #endif /* USES_COLORS */
 

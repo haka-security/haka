@@ -50,8 +50,9 @@ static void fatal_error_signal(int sig)
 		raise(sig);
 	fatal_error_in_progress = 1;
 
-	/* Cleanup */
+	wprintf(L"\n");
 	message(HAKA_LOG_FATAL, L"core", L"fatal signal received");
+
 	clean_exit();
 
 	signal(sig, SIG_DFL);

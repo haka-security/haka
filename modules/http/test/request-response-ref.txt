@@ -1,4 +1,4 @@
-debug: tcp-connection: opening connection 10.2.96.127:57794 -> 10.2.104.129:80
+debug tcp-connection: opening connection 10.2.96.127:57794 -> 10.2.104.129:80
 HTTP REQUEST
  version = HTTP/1.1
  headers_order
@@ -37,4 +37,4 @@ HTTP RESPONSE
    X-Powered-By = PHP/5.2.4-2ubuntu5.10
  reason = OK
  status = 200
-debug: tcp-connection: closing connection 10.2.96.127:57794 -> 10.2.104.129:80
+debug tcp-connection: closing connection 10.2.96.127:57794 -> 10.2.104.129:80

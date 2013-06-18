@@ -3,17 +3,21 @@ BEGIN {
 	show = 0
 }
 
-$0 ~ /info: core: starting single threaded processing/ {
+$0 ~ /info core: starting single threaded processing/ {
 	show = 1;
 	next;
 }
 
-$0 ~ /info: core: unload module/ {
+$0 ~ /info core: unload module/ {
 	show = 0;
 	next;
 }
 
-$0 ~ /^debug: packet:/ {
+$0 ~ /^debug packet:/ {
+	next;
+}
+
+$0 ~ /^debug rule:/ {
 	next;
 }
 
