@@ -43,7 +43,6 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 	lua_pushppacket(state->lua, pkt);
 	if (lua_pcall(state->lua, 1, 0, 2)) {
 		print_error(state->lua, L"filter function");
-		packet_drop(pkt);
 	}
 }
 
