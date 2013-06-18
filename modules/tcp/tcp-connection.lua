@@ -49,7 +49,8 @@ local function dissect(pkt)
 			newpkt.tcp = pkt
 
 			haka.rule_hook("tcp-connection-new", newpkt)
-			if not pkt:valid() then
+			if not newpkt:valid() then
+				pkt:drop()
 				return nil
 			end
 
