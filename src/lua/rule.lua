@@ -96,11 +96,14 @@ function haka.rule_summary()
 end
 
 local function eval_rules(hook, pkt)
+	haka.log.debug("rule", "entering hook '%s'", hook)
 	for _, group in pairs(__rule_groups) do
 		if not _rule_group_eval(hook, group, pkt) then
+			haka.log.debug("rule", "aborting hook '%s'", hook)
 			return false
 		end
 	end
+	haka.log.debug("rule", "leaving hook '%s'", hook)
 	return true
 end
 
