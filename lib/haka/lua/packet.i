@@ -72,7 +72,7 @@ void lua_invalidatepacket(struct packet *pkt)
 		clss=(swig_lua_class*)usr->type->clientdata;  /* get the class */
 		if (clss && clss->destructor)  /* there is a destroy fn */
 		{
-			clss->destructor(usr->ptr);  /* bye bye */
+			//clss->destructor(usr->ptr);  /* bye bye */
 		}
 		usr->ptr = NULL;
 		lua_pop(L,1);
