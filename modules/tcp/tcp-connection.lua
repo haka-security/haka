@@ -17,7 +17,10 @@ local function forge(self)
 		self.connection:stream(not self.direction):ack(pkt)
 	end
 
-	if self.close then
+	if self.__drop then
+		self.connection:drop()
+		self.connection = nil
+	elseif self.__close then
 		self.connection:close()
 		self.connection = nil
 	end
@@ -26,7 +29,7 @@ local function forge(self)
 end
 
 local function drop(self)
-	self.close = true
+	self.__drop = true
 end
 
 local function dissect(pkt)
@@ -37,31 +40,36 @@ local function dissect(pkt)
 	newpkt.dissector = "tcp-connection"
 	newpkt.next_dissector = nil
 	newpkt.valid = function (self)
-		return not self.close
+		return not self.__close and not self.__drop
 	end
 	newpkt.drop = drop
 	newpkt.forge = forge
-	newpkt.close = false
+	newpkt.__close = false
+	newpkt.__drop = false
 
 	if not newpkt.connection then
 		-- new connection
 		if pkt.flags.syn then
 			newpkt.tcp = pkt
+			newpkt.connection = pkt:newconnection()
+			newpkt.connection.data = {}
 
 			haka.rule_hook("tcp-connection-new", newpkt)
 			if not newpkt:valid() then
+				newpkt.connection:drop()
+				newpkt.connection = nil
 				pkt:drop()
 				return nil
 			end
 
-			newpkt.connection = pkt:newconnection()
-			newpkt.connection.data = {}
 			newpkt.connection.data.next_dissector = newpkt.next_dissector
 			newpkt.connection.data.state = 0
 			newpkt.connection.data.queue = {}
 			newpkt.direction = true
 		else
-			haka.log.error("tcp-connection", "no connection found")
+			if not pkt:connection_dropped() then
+				haka.log.error("tcp-connection", "no connection found")
+			end
 			pkt:drop()
 			return nil
 		end
@@ -73,7 +81,7 @@ local function dissect(pkt)
 		newpkt.stream:init(pkt.seq+1)
 		return nil
 	elseif pkt.flags.rst then
-		newpkt.close = true
+		newpkt.__close = true
 		table.insert(newpkt.connection.data.queue, pkt)
 		return newpkt
 	elseif newpkt.connection.data.state >= 2 then
@@ -82,7 +90,7 @@ local function dissect(pkt)
 		end
 	
 		if newpkt.connection.data.state >= 3 then
-			newpkt.close = true
+			newpkt.__close = true
 		end
 
 		table.insert(newpkt.connection.data.queue, pkt)

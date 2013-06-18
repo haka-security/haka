@@ -147,6 +147,11 @@ struct tcp {
 			return tcp_connection_get($self, OUTPUT);
 		}
 
+		bool connection_dropped()
+		{
+			return tcp_connection_isdropped($self);
+		}
+
 		struct ipv4 *forge();
 
 		void drop()
@@ -169,11 +174,8 @@ struct tcp_connection {
 		unsigned int srcport;
 		unsigned int dstport;
 
-		%rename(close) _close;
-		void _close()
-		{
-			tcp_connection_close($self);
-		}
+		void close();
+		void drop();
 
 		struct stream *stream(bool direction_in)
 		{

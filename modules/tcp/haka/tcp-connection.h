@@ -61,6 +61,11 @@ static inline struct stream *tcp_connection_get_stream(struct tcp_connection *co
  */
 void tcp_connection_close(struct tcp_connection *tcp_conn);
 
+void tcp_connection_drop(struct tcp_connection *tcp_conn);
+
+bool tcp_connection_isdropped(const struct tcp *tcp);
+
+
 #define TCP_CONN_GET_FIELD(type, field) \
 	INLINE type tcp_connection_get_##field(const struct tcp_connection *tcp_conn) { return tcp_conn->field; }
 
