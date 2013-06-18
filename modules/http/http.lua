@@ -47,8 +47,25 @@ local function read_line(stream)
 	end
 end
 
+function sorted_pairs(t)
+	local a = {}
+	for n in pairs(t) do
+		table.insert(a, n)
+	end
+
+	table.sort(a)
+	local i = 0
+	local iter = function ()   -- iterator function
+		i = i + 1
+		if a[i] == nil then return nil
+		else return a[i], t[a[i]]
+		end
+	end
+	return iter
+end
+
 local function dump(t, indent)
-	for n, v in pairs(t) do
+	for n, v in sorted_pairs(t) do
 		if type(v) == "table" then
 			print(indent, n)
 			dump(v, indent .. "  ")
@@ -68,7 +85,7 @@ local function parse_request(stream, http)
 	local line, len = read_line(stream)
 	total_len = total_len + len
 
-	http.method, http.uri, http.version = line:match("(%g+) (%g+) (.+)")
+	http.method, http.uri, http.version = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.method then
 		http.valid = false
 		return
@@ -80,7 +97,7 @@ local function parse_request(stream, http)
 	line, len = read_line(stream)
 	total_len = total_len + len
 	while #line > 0 do
-		local name, value = line:match("(%g+): (.+)")
+		local name, value = line:match("([^%s]+): (.+)")
 		if not name then
 			http.valid = false
 			return
@@ -111,7 +128,7 @@ local function parse_response(stream, http)
 	local line, len = read_line(stream)
 	total_len = total_len + len
 
-	http.version, http.status, http.reason = line:match("(%g+) (%g+) (.+)")
+	http.version, http.status, http.reason = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.version then
 		http.valid = false
 		return
@@ -123,7 +140,7 @@ local function parse_response(stream, http)
 	line, len = read_line(stream)
 	total_len = total_len + len
 	while #line > 0 do
-		local name, value = line:match("(%g+): (.+)")
+		local name, value = line:match("([^%s]+): (.+)")
 		if not name then
 			http.valid = false
 			return

@@ -1,22 +1,29 @@
 debug tcp-connection: opening connection 10.2.96.127:57794 -> 10.2.104.129:80
 HTTP REQUEST
- version = HTTP/1.1
+ headers
+   Accept = */*
+   Connection = Keep-Alive
+   Host = 10.2.104.129
+   User-Agent = Wget/1.13.4 (linux-gnu)
  headers_order
    1 = User-Agent
    2 = Accept
    3 = Host
    4 = Connection
  length = 112
- valid = true
- headers
-   Accept = */*
-   User-Agent = Wget/1.13.4 (linux-gnu)
-   Host = 10.2.104.129
-   Connection = Keep-Alive
  method = GET
  uri = /
-HTTP RESPONSE
+ valid = true
  version = HTTP/1.1
+HTTP RESPONSE
+ headers
+   Connection = Keep-Alive
+   Content-Type = text/html
+   Date = Mon, 17 Jun 2013 14:39:44 GMT
+   Keep-Alive = timeout=15, max=100
+   Server = Apache/2.2.8 (Ubuntu) DAV/2
+   Transfer-Encoding = chunked
+   X-Powered-By = PHP/5.2.4-2ubuntu5.10
  headers_order
    1 = Date
    2 = Server
@@ -26,15 +33,8 @@ HTTP RESPONSE
    6 = Transfer-Encoding
    7 = Content-Type
  length = 240
- valid = true
- headers
-   Transfer-Encoding = chunked
-   Keep-Alive = timeout=15, max=100
-   Connection = Keep-Alive
-   Date = Mon, 17 Jun 2013 14:39:44 GMT
-   Content-Type = text/html
-   Server = Apache/2.2.8 (Ubuntu) DAV/2
-   X-Powered-By = PHP/5.2.4-2ubuntu5.10
  reason = OK
  status = 200
+ valid = true
+ version = HTTP/1.1
 debug tcp-connection: closing connection 10.2.96.127:57794 -> 10.2.104.129:80
