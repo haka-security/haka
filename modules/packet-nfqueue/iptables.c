@@ -129,8 +129,9 @@ int save_iptables(const char *table, char **conf)
 				break;
 			}
 
-			*conf = realloc(*conf, read_size + status);
+			*conf = realloc(*conf, read_size + status + 1);
 			memcpy(*conf + read_size, buffer, status);
+			*(*conf + read_size + status) = 0;
 			read_size += status;
 			if (status < sizeof(buffer)) {
 				break;
