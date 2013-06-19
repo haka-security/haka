@@ -25,6 +25,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 		return NULL;
 	}
 
+	lua_object_init(&ip->lua_object);
 	ip->packet = packet;
 	ip->header = (struct ipv4_header*)(packet_data(packet));
 	ip->modified = false;
@@ -68,6 +69,7 @@ static void ipv4_flush(struct ipv4 *ip)
 
 void ipv4_release(struct ipv4 *ip)
 {
+	lua_object_release(ip, &ip->lua_object);
 	ipv4_flush(ip);
 	free(ip);
 }

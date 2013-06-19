@@ -11,6 +11,7 @@
 #include <haka/ipv4.h>
 #include <haka/tcp.h>
 #include <haka/lua/ref.h>
+#include <haka/lua/object.h>
 
 
 /**
@@ -18,13 +19,14 @@
  * @ingroup TCP
  */
 struct tcp_connection {
-	ipv4addr       srcip;
-	ipv4addr       dstip;
-	uint16         srcport;
-	uint16         dstport;
-	struct lua_ref lua_table;
-	struct stream *stream_input;
-	struct stream *stream_output;
+	struct lua_object    lua_object;
+	ipv4addr             srcip;
+	ipv4addr             dstip;
+	uint16               srcport;
+	uint16               dstport;
+	struct lua_ref       lua_table;
+	struct stream       *stream_input;
+	struct stream       *stream_output;
 };
 
 /**

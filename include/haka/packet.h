@@ -17,6 +17,7 @@
 
 #include <stddef.h>
 #include <haka/types.h>
+#include <haka/lua/object.h>
 
 
 /**
@@ -24,7 +25,7 @@
  * @ingroup Packet
  */
 struct packet {
-	void *lua_state;
+	struct lua_object lua_object;
 };
 
 struct packet_module_state;

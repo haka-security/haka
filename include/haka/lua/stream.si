@@ -1,12 +1,18 @@
 
 %include "haka/lua/buffer.si"
+%include "haka/lua/object.si"
+
+LUA_OBJECT(struct stream);
 
 %define BASIC_STREAM(type)
+
 %newobject type::read;
+
 %extend type {
 	~type()
 	{
-		stream_destroy((struct stream *)$self);
+		if ($self)
+			stream_destroy((struct stream *)$self);
 	}
 
 	struct buffer *read()

@@ -19,6 +19,7 @@
 #include <haka/types.h>
 #include <haka/compiler.h>
 #include <haka/error.h>
+#include <haka/lua/object.h>
 
 #include "haka/ipv4-addr.h"
 #include "haka/ipv4-network.h"
@@ -66,6 +67,7 @@ struct ipv4_header {
  */
 struct ipv4 {
 	struct packet       *packet;
+	struct lua_object    lua_object;
 	struct ipv4_header  *header;
 	bool                 modified:1;
 	bool                 invalid_checksum:1;

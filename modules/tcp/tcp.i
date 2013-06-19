@@ -1,15 +1,4 @@
 %module tcp
-%include haka/lua/ipv4.si
-
-CHECK_FOR_PACKET(struct tcp*,tcp)
-CHECK_FOR_PACKET(struct tcp_flags*,tcp flags)
-CHECK_FOR_PACKET(struct tcp_payload*,tcp payload)
-PACKET_DEPENDANT_CONSTRUCTOR(tcp_dissect,arg1->packet,SWIGTYPE_p_tcp);
-PACKET_DEPENDANT_GETTER(tcp::ip,result->packet,SWIGTYPE_p_ipv4);
-PACKET_DEPENDANT_GETTER(tcp::forge,result->packet,SWIGTYPE_p_ipv4);
-PACKET_DEPENDANT_CONSTRUCTOR(tcp::flags,arg1->packet->packet,SWIGTYPE_p_tcp_flags);
-PACKET_DEPENDANT_CONSTRUCTOR(tcp::payload,arg1->packet->packet,SWIGTYPE_p_tcp_payload);
-PACKET_DEPENDANT_GETTER(stream::pop,result->packet->packet,SWIGTYPE_p_tcp);
 
 %{
 #include <haka/stream.h>
@@ -27,10 +16,13 @@ struct tcp_payload;
 %include "haka/lua/swig.si"
 %include "haka/lua/stream.si"
 %include "haka/lua/ref.si"
+%include "haka/lua/ipv4.si"
 %include "typemaps.i"
 
 %nodefaultctor;
 %nodefaultdtor;
+
+LUA_OBJECT_CAST(struct tcp_flags, struct tcp);
 
 struct tcp_flags {
 	%extend {
@@ -45,6 +37,8 @@ struct tcp_flags {
 		unsigned char all;
 	}
 };
+
+LUA_OBJECT_CAST(struct tcp_payload, struct tcp);
 
 struct tcp_payload {
 	%extend {
@@ -79,6 +73,10 @@ struct tcp_payload {
 	}
 };
 
+LUA_OBJECT(struct stream);
+%delobject stream::push;
+%newobject stream::pop;
+
 struct stream
 {
 	%extend {
@@ -111,11 +109,15 @@ struct stream
 
 BASIC_STREAM(stream)
 
+LUA_OBJECT(struct tcp);
+%newobject tcp::forge;
+
 struct tcp {
 	%extend {
 		~tcp()
 		{
-			tcp_release($self);
+			if ($self)
+				tcp_release($self);
 		}
 		unsigned int srcport;
 		unsigned int dstport;
@@ -159,6 +161,10 @@ struct tcp {
 };
 
 
+LUA_OBJECT(struct tcp_connection);
+%delobject tcp_connection::close;
+%delobject tcp_connection::drop;
+
 struct tcp_connection {
 	%extend {
 		struct lua_ref data;
@@ -168,6 +174,12 @@ struct tcp_connection {
 		struct ipv4_addr *dstip;
 		unsigned int srcport;
 		unsigned int dstport;
+
+		~tcp_connection()
+		{
+			if ($self)
+				tcp_connection_drop($self);
+		}
 
 		void close();
 		void drop();
@@ -180,6 +192,8 @@ struct tcp_connection {
 };
 
 %rename(dissect) tcp_dissect;
+%newobject tcp_dissect;
+%delobject tcp_dissect;
 struct tcp *tcp_dissect(struct ipv4 *packet);
 
 %{

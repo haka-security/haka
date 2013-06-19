@@ -20,6 +20,7 @@
 #include <haka/types.h>
 #include <haka/compiler.h>
 #include <haka/error.h>
+#include <haka/lua/object.h>
 
 
 struct stream;
@@ -72,6 +73,7 @@ struct stream_ftable {
  */
 struct stream {
 	struct stream_ftable *ftable;
+	struct lua_object     lua_object;
 };
 
 

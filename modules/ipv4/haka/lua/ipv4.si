@@ -1,4 +1,8 @@
-%include "haka/lua/packet.si"
-CHECK_FOR_PACKET(struct ipv4*,ipv4)
-CHECK_FOR_PACKET(struct ipv4_flags*, ipv4 flag)
-CHECK_FOR_PACKET(struct ipv4_payload*, ipv4 payload)
+
+%include "haka/lua/object.si"
+
+%{
+#include "haka/ipv4.h"
+%}
+
+LUA_OBJECT(struct ipv4);

@@ -17,6 +17,7 @@
 
 #include <haka/types.h>
 #include <haka/ipv4.h>
+#include <haka/lua/object.h>
 
 #define SWAP_TO_TCP(type, x)            SWAP_TO_BE(type, x)
 #define SWAP_FROM_TCP(type, x)          SWAP_FROM_BE(type, x)
@@ -73,6 +74,7 @@ struct tcp_header {
  */
 struct tcp {
 	struct ipv4         *packet;
+	struct lua_object    lua_object;
 	struct tcp_header   *header;
 	bool                 modified:1;
 	bool                 invalid_checksum:1;

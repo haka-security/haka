@@ -1,0 +1,41 @@
+
+%{
+#include <haka/lua/object.h>
+
+extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swig_type_info *type_info, int owner);
+%}
+
+
+%define LUA_OBJECT_CAST(typeptr, casttype)
+
+%typemap(check) typeptr*
+%{
+	/* check that the object is still valid */
+	if(!$1) {
+		lua_pushstring(L,"$symname: object has been destroyed");
+		SWIG_fail;
+	}
+%}
+
+%typemap(in, checkfn="SWIG_isptrtype") typeptr*
+%{
+	if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, $disown))){
+		SWIG_fail_ptr("$symname", $argnum, $descriptor);
+	}
+%}
+
+%typemap(out) typeptr*
+%{
+	if (!lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, $owner)) {
+		SWIG_fail;
+	}
+	else {
+		SWIG_arg++;
+	}
+%}
+
+%enddef
+
+%define LUA_OBJECT(typeptr)
+	LUA_OBJECT_CAST(typeptr, typeptr)
+%enddef

@@ -35,6 +35,8 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 		error(L"Failed to allocate memory");
 		return NULL;
 	}
+
+	lua_object_init(&tcp->lua_object);
 	tcp->packet = packet;
 	tcp->header = (struct tcp_header*)(ipv4_get_payload(packet));
 	tcp->modified = false;
@@ -69,6 +71,7 @@ static void tcp_flush(struct tcp *tcp)
 
 void tcp_release(struct tcp *tcp)
 {
+	lua_object_release(tcp, &tcp->lua_object);
 	tcp_flush(tcp);
 	free(tcp);
 }

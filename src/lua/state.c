@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <string.h>
 #include <ctype.h>
+#include <haka/lua/object.h>
 #include "../app.h"
 
 
@@ -325,6 +326,8 @@ lua_state *init_state()
 	}
 	lua_pushnil(L);
 	lua_setfield(L,LUA_REGISTRYINDEX,"swig_tmp");
+
+	lua_object_initialize(L);
 
 	return L;
 }

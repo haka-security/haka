@@ -109,6 +109,7 @@ static void tcp_connection_release(struct ctable *elem, bool freemem)
 	}
 
 	if (freemem) {
+		lua_object_release(&elem->tcp_conn, &elem->tcp_conn.lua_object);
 		free(elem);
 	}
 }
@@ -137,6 +138,7 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 		return NULL;
 	}
 
+	lua_object_init(&ptr->tcp_conn.lua_object);
 	ptr->tcp_conn.srcip = ipv4_get_src(tcp->packet);
 	ptr->tcp_conn.dstip = ipv4_get_dst(tcp->packet);
 	ptr->tcp_conn.srcport = tcp_get_srcport(tcp);

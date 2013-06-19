@@ -635,6 +635,7 @@ struct stream *tcp_stream_create()
 
 	memset(tcp_s, 0, sizeof(struct tcp_stream));
 
+	lua_object_init(&tcp_s->stream.lua_object);
 	tcp_s->start_seq = (size_t)-1;
 	tcp_stream_position_invalidate(&tcp_s->mark_position);
 
@@ -647,6 +648,8 @@ static bool tcp_stream_destroy(struct stream *s)
 	struct tcp_stream_chunk *iter;
 	struct tcp_stream_mark *mark;
 	TCP_STREAM(s);
+
+	lua_object_release(&tcp_s->stream, &tcp_s->stream.lua_object);
 
 	iter = tcp_s->first;
 	while (iter) {

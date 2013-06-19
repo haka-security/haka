@@ -1,12 +1,5 @@
 %module ipv4
 
-%include "haka/lua/ipv4.si"
-
-PACKET_DEPENDANT_CONSTRUCTOR(ipv4_dissect,arg1,SWIGTYPE_p_ipv4);
-PACKET_DEPENDANT_GETTER(ipv4::forge,result,SWIGTYPE_p_packet);
-PACKET_DEPENDANT_CONSTRUCTOR(ipv4::flags,arg1->packet,SWIGTYPE_p_ipv4_flags);
-PACKET_DEPENDANT_CONSTRUCTOR(ipv4::payload,arg1->packet,SWIGTYPE_p_ipv4_payload);
-
 %{
 	#include "haka/ipv4.h"
 
@@ -32,6 +25,11 @@ PACKET_DEPENDANT_CONSTRUCTOR(ipv4::payload,arg1->packet,SWIGTYPE_p_ipv4_payload)
 		return ret;
 	}
 %}
+
+%include "haka/lua/swig.si"
+%include "haka/lua/object.si"
+%include "haka/lua/packet.si"
+%include "haka/lua/ipv4.si"
 
 %rename(addr) ipv4_addr;
 struct ipv4_addr {
@@ -157,6 +155,8 @@ struct ipv4_network {
 };
 
 
+LUA_OBJECT_CAST(struct ipv4_flags, struct ipv4);
+
 %nodefaultctor;
 %nodefaultdtor;
 struct ipv4_flags {
@@ -167,6 +167,8 @@ struct ipv4_flags {
 		unsigned int all;
 	}
 };
+
+LUA_OBJECT_CAST(struct ipv4_payload, struct ipv4);
 
 struct ipv4_payload {
 	%extend {
@@ -201,11 +203,15 @@ struct ipv4_payload {
 	}
 };
 
+LUA_OBJECT(struct ipv4);
+%newobject ipv4::forge;
+
 struct ipv4 {
 	%extend {
 		~ipv4()
 		{
-			ipv4_release($self);
+			if ($self)
+				ipv4_release($self);
 		}
 
 		unsigned int hdr_len;
@@ -238,7 +244,10 @@ struct ipv4 {
 		struct packet *forge();
 	}
 };
+
 %rename(dissect) ipv4_dissect;
+%newobject ipv4_dissect;
+%delobject ipv4_dissect;
 struct ipv4 *ipv4_dissect(struct packet *packet);
 
 %rename(register_proto) ipv4_register_proto_dissector;
