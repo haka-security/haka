@@ -77,21 +77,9 @@ local function dump(t, indent)
 	end
 end
 
-local function parse_request(stream, http)
-	local len, total_len
+local function parse_header(stream, http)
+	local total_len = 0
 
-	total_len = 0
-
-	local line, len = read_line(stream)
-	total_len = total_len + len
-
-	http.method, http.uri, http.version = line:match("([^%s]+) ([^%s]+) (.+)")
-	if not http.method then
-		http.valid = false
-		return
-	end
-
-	-- Headers
 	http.headers = {}
 	http.headers_order = {}
 	line, len = read_line(stream)
@@ -108,6 +96,23 @@ local function parse_request(stream, http)
 		line, len = read_line(stream)
 		total_len = total_len + len
 	end
+
+	return total_len
+end
+
+local function parse_request(stream, http)
+	local len, total_len
+
+	local line, len = read_line(stream)
+	total_len = len
+
+	http.method, http.uri, http.version = line:match("([^%s]+) ([^%s]+) (.+)")
+	if not http.method then
+		http.valid = false
+		return
+	end
+
+	total_len = total_len + parse_header(stream, http)
 
 	http.data = stream
 	http.length = total_len
@@ -123,10 +128,8 @@ end
 local function parse_response(stream, http)
 	local len, total_len
 
-	total_len = 0
-
 	local line, len = read_line(stream)
-	total_len = total_len + len
+	total_len = len
 
 	http.version, http.status, http.reason = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.version then
@@ -134,23 +137,7 @@ local function parse_response(stream, http)
 		return
 	end
 
-	-- Headers
-	http.headers = {}
-	http.headers_order = {}
-	line, len = read_line(stream)
-	total_len = total_len + len
-	while #line > 0 do
-		local name, value = line:match("([^%s]+): (.+)")
-		if not name then
-			http.valid = false
-			return
-		end
-
-		http.headers[name] = value
-		table.insert(http.headers_order, name)
-		line, len = read_line(stream)
-		total_len = total_len + len
-	end
+	total_len = total_len + parse_header(stream, http)
 
 	http.data = stream
 	http.length = total_len
