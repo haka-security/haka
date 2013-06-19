@@ -54,9 +54,7 @@ static void fatal_error_signal(int sig)
 	message(HAKA_LOG_FATAL, L"core", L"fatal signal received");
 
 	clean_exit();
-
-	signal(sig, SIG_DFL);
-	raise(sig);
+	exit(1);
 }
 
 int main(int argc, char *argv[])

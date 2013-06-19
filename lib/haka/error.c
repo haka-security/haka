@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <wchar.h>
 #include <string.h>
 #include <assert.h>
 
@@ -24,10 +25,25 @@ static void error_delete(void *value)
 	free(value);
 }
 
-INIT static void error_init()
+INIT static void _error_init()
 {
 	UNUSED const bool ret = local_storage_init(&local_error_key, error_delete);
 	assert(ret);
+}
+
+FINI static void _error_fini()
+{
+	{
+		struct local_error *context = (struct local_error *)local_storage_get(&local_error_key);
+		if (context) {
+			error_delete(context);
+		}
+	}
+
+	{
+		UNUSED const bool ret = local_storage_destroy(&local_error_key);
+		assert(ret);
+	}
 }
 
 static struct local_error *error_context()

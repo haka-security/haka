@@ -6,13 +6,20 @@
 #include <errno.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <wchar.h>
 
 #include <haka/module.h>
 #include <haka/log.h>
 #include <haka/error.h>
+#include <haka/compiler.h>
 
 
-static char *modules_path;
+static char *modules_path = NULL;
+
+FINI static void _module_cleanup()
+{
+	free(modules_path);
+}
 
 struct module *module_load(const char *module_name,... )
 {
