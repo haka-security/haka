@@ -129,10 +129,10 @@ int main(int argc, char *argv[])
 		}
 
 		if (count > 1) {
-			messagef(HAKA_LOG_INFO, L"core", L"starting multi-threaded processing on %i threads", count);
+			messagef(HAKA_LOG_INFO, L"core", L"starting multi-threaded processing on %i threads\n", count);
 		}
 		else {
-			message(HAKA_LOG_INFO, L"core", L"starting single threaded processing");
+			message(HAKA_LOG_INFO, L"core", L"starting single threaded processing\n");
 		}
 
 		thread_pool_start(thread_states);
