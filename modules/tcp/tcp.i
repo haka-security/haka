@@ -142,14 +142,9 @@ struct tcp {
 			return tcp_connection_new($self);
 		}
 
-		struct tcp_connection *getconnection(bool *OUTPUT)
+		struct tcp_connection *getconnection(bool *OUTPUT1, bool *OUTPUT2)
 		{
-			return tcp_connection_get($self, OUTPUT);
-		}
-
-		bool connection_dropped()
-		{
-			return tcp_connection_isdropped($self);
+			return tcp_connection_get($self, OUTPUT1, OUTPUT2);
 		}
 
 		struct ipv4 *forge();

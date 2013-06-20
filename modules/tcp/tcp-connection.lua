@@ -33,10 +33,10 @@ local function drop(self)
 end
 
 local function dissect(pkt)
-	local stream_dir
+	local stream_dir, dropped
 
 	local newpkt = {}
-	newpkt.connection, newpkt.direction = pkt:getconnection()
+	newpkt.connection, newpkt.direction, dropped = pkt:getconnection()
 	newpkt.dissector = "tcp-connection"
 	newpkt.next_dissector = nil
 	newpkt.valid = function (self)
@@ -67,7 +67,7 @@ local function dissect(pkt)
 			newpkt.connection.data.queue = {}
 			newpkt.direction = true
 		else
-			if not pkt:connection_dropped() then
+			if not dropped then
 				haka.log.error("tcp-connection", "no connection found")
 			end
 			pkt:drop()

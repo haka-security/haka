@@ -41,7 +41,7 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp);
  * is set to true if the packet follow the input direction, false otherwise.
  * @return The TCP connection or NULL if not found.
  */
-struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction_in);
+struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction_in, bool *dropped);
 
 /**
  * Get the stream associated with a TCP connection.
@@ -62,8 +62,6 @@ static inline struct stream *tcp_connection_get_stream(struct tcp_connection *co
 void tcp_connection_close(struct tcp_connection *tcp_conn);
 
 void tcp_connection_drop(struct tcp_connection *tcp_conn);
-
-bool tcp_connection_isdropped(const struct tcp *tcp);
 
 
 #define TCP_CONN_GET_FIELD(type, field) \

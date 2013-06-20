@@ -45,3 +45,11 @@
 	lua_pushstring(L, (const char *)$result); SWIG_arg++;
 	free((void*)$result);
 }
+
+%include "typemaps.i"
+
+%apply bool *OUTPUT { bool *OUTPUT1 };
+%apply bool *OUTPUT { bool *OUTPUT2 };
+%apply bool *OUTPUT { bool *OUTPUT3 };
+%apply bool *OUTPUT { bool *OUTPUT4 };
+%apply bool *OUTPUT { bool *OUTPUT5 };

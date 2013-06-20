@@ -16,10 +16,10 @@ struct ctable {
 	struct ctable         *prev;
 	struct ctable         *next;
 	struct tcp_connection tcp_conn;
+	bool                  dropped;
 };
 
 static struct ctable *ct_head = NULL;
-static struct ctable *ct_drop_head = NULL;
 
 mutex_t ct_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -35,7 +35,8 @@ void tcp_connection_insert(struct ctable **head, struct ctable *elem)
 	mutex_unlock(&ct_mutex);
 }
 
-static struct ctable *tcp_connection_find(struct ctable *head, const struct tcp *tcp, bool *direction_in)
+static struct ctable *tcp_connection_find(struct ctable *head, const struct tcp *tcp,
+		bool *direction_in, bool *dropped)
 {
 	struct ctable *ptr;
 	uint16 srcport, dstport;
@@ -54,12 +55,14 @@ static struct ctable *tcp_connection_find(struct ctable *head, const struct tcp 
 		    (ptr->tcp_conn.dstip == dstip) && (ptr->tcp_conn.dstport == dstport)) {
 			mutex_unlock(&ct_mutex);
 			if (direction_in) *direction_in = true;
+			if (dropped) *dropped = ptr->dropped;
 			return ptr;
 		}
 		if ((ptr->tcp_conn.srcip == dstip) && (ptr->tcp_conn.srcport == dstport) &&
 		    (ptr->tcp_conn.dstip == srcip) && (ptr->tcp_conn.dstport == srcport)) {
 			mutex_unlock(&ct_mutex);
 			if (direction_in) *direction_in = false;
+			if (dropped) *dropped = ptr->dropped;
 			return ptr;
 		}
 		ptr = ptr->next;
@@ -67,6 +70,7 @@ static struct ctable *tcp_connection_find(struct ctable *head, const struct tcp 
 
 	mutex_unlock(&ct_mutex);
 
+	if (dropped) *dropped = false;
 	return NULL;
 }
 
@@ -112,7 +116,22 @@ static void tcp_connection_release(struct ctable *elem, bool freemem)
 
 struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 {
-	struct ctable *ptr = malloc(sizeof(struct ctable));
+	struct ctable *ptr;
+	bool dropped;
+
+	ptr = tcp_connection_find(ct_head, tcp, NULL, &dropped);
+	if (ptr) {
+		if (dropped) {
+			tcp_connection_remove(&ct_head, ptr);
+			tcp_connection_release(ptr, true);
+		}
+		else {
+			error(L"connection already exists");
+			return NULL;
+		}
+	}
+
+	ptr = malloc(sizeof(struct ctable));
 	if (!ptr) {
 		error(L"memory error");
 		return NULL;
@@ -125,6 +144,7 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 	lua_ref_init(&ptr->tcp_conn.lua_table);
 	ptr->tcp_conn.stream_input = tcp_stream_create();
 	ptr->tcp_conn.stream_output = tcp_stream_create();
+	ptr->dropped = false;
 
 	ptr->prev = NULL;
 	ptr->next = NULL;
@@ -141,23 +161,22 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 				srcip, ptr->tcp_conn.srcport, dstip, ptr->tcp_conn.dstport);
 	}
 
-	/* Clear any drop stored connection */
-	{
-		struct ctable *dropped = tcp_connection_find(ct_drop_head, tcp, NULL);
-		if (dropped) {
-			tcp_connection_remove(&ct_drop_head, dropped);
-			tcp_connection_release(dropped, true);
-		}
-	}
-
 	return &ptr->tcp_conn;
 }
 
-struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction_in)
+struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction_in,
+		bool *_dropped)
 {
-	struct ctable *elem = tcp_connection_find(ct_head, tcp, direction_in);
+	bool dropped;
+	struct ctable *elem = tcp_connection_find(ct_head, tcp, direction_in, &dropped);
 	if (elem) {
-		return &elem->tcp_conn;
+		if (dropped) {
+			if (_dropped) *_dropped = dropped;
+			return NULL;
+		}
+		else {
+			return &elem->tcp_conn;
+		}
 	}
 	else {
 		return NULL;
@@ -196,12 +215,6 @@ void tcp_connection_drop(struct tcp_connection *tcp_conn)
 				srcip, current->tcp_conn.srcport, dstip, current->tcp_conn.dstport);
 	}
 
-	tcp_connection_remove(&ct_head, current);
 	tcp_connection_release(current, false);
-	tcp_connection_insert(&ct_drop_head, current);
-}
-
-bool tcp_connection_isdropped(const struct tcp *tcp)
-{
-	return tcp_connection_find(ct_drop_head, tcp, NULL) != NULL;
+	current->dropped = true;
 }
