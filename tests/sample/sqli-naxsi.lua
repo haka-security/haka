@@ -9,10 +9,17 @@ require("http")
 
 
 haka.rule {
+	hooks = { "ipv4-down" },
+	eval = function (self, pkt)
+		pkt.flags.df = false
+	end
+}
+
+haka.rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
 
-		if pkt.tcp.dstport == 8888 then
+		if pkt.tcp.dstport == 80 then
 			pkt.next_dissector = "http"
 		end
 	end
@@ -55,13 +62,13 @@ local delim = {'%(', '%)'}
 
 local location = {'URI', 'COOKIE'}
 
-sqli = haka.rule_group {
+local sqli = haka.rule_group {
 	name = "sqli",
 
 	init = function (self, http)
-		haka.log("filtering", "start : checking for sqli attacks")
+		haka.log.debug("filter", "start : checking for sqli attacks")
 		request = http.request
-		request:dump()
+		--request:dump()
 		request.URI = percent_decode(request.uri):lower()
 		request.COOKIE = request.headers['Cookie']
 		request.sqli = {}
@@ -70,16 +77,15 @@ sqli = haka.rule_group {
 	end,
 
 	fini = function (self, pkt)
-		haka.log("filtering", "end : checking for sqli attacks")
+		haka.log.debug("filter", "end : checking for sqli attacks")
 	end,
 
-	continue = function (self, ret)
-		if ret ~= nil then
-			for key, value in pairs(sqli.score) do
+	continue = function (self, http, ret)
+		if ret then
+			for key, value in pairs(ret.score) do
 				if value >= 8  then
-					haka.log("filter", "SQLi attack detected !!!")
-					haka.log.debug("filter", "Score = [ %s -- > %d ]", key, value)
-					haka.log("filter", "Reason = [ %s]", request.sqli.msg)
+					haka.log("filter", "SQLi attack detected !!!\n\tReason = %s\n\tScore = %s -> %d", ret.msg, key, value)
+					http:drop()
 					return nil
 				end
 			end
@@ -97,7 +103,8 @@ local function check_sqli(where, pattern, score, msg)
 				if http.request[where]:find(pattern) then
 					sqli = http.request.sqli
 					sqli.score[where] = sqli.score[where] + score
-					sqli.msg = sqli.msg .. msg .. ' : '
+					if #sqli.msg ~= 0 then sqli.msg = sqli.msg .. ', ' end
+					sqli.msg = sqli.msg .. msg
 					return sqli
 				end
 			end
@@ -109,7 +116,7 @@ end
 
 for loc = 1, #location do
 	for key = 1, #keywords do
-		check_sqli(location[loc], keywords[key], 4, 'SQL keywords in ' .. location[loc])
+		check_sqli(location[loc], keywords[key], 4, 'SQL keywords ' .. keywords[key] .. ' in ' .. location[loc])
 	end
 	for key = 1, #comments do
 		check_sqli(location[loc], comments[key], 4, 'SQL comments in ' .. location[loc])
@@ -121,7 +128,7 @@ for loc = 1, #location do
 		check_sqli(location[loc], quotes[key], 4, 'SQL probing')
 	end
 
-	check_sqli(location[loc], '0x%x%x%x%x+', 2, 'SQL hex encodings in' .. location[loc])
+	check_sqli(location[loc], '0x%x%x%x%x+', 2, 'SQL hex encodings in ' .. location[loc])
 end
 
 check_sqli('URI', ';', 4, 'SQL probing')

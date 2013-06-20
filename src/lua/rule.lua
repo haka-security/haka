@@ -52,7 +52,7 @@ local function _rule_group_eval(hook, group, pkt)
 		for _, r in pairs(rules) do
 			local ret = r.eval(nil, pkt)
 			if group.continue then
-				if not group:continue(ret) then
+				if not group:continue(pkt, ret) then
 					return true
 				end
 			end
