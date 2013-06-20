@@ -42,10 +42,11 @@ Dependencies
   - check
   - rsync
   - libpcap-dev
+  - gawk
 
 #### Debian
 
-    $ sudo apt-get install build-essential cmake swig doxygen liblua5.1 tshark check rsync libpcap-dev
+    $ sudo apt-get install build-essential cmake swig doxygen liblua5.1 tshark check rsync libpcap-dev gawk
 
 ### Optional
 
