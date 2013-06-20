@@ -42,6 +42,8 @@ static struct ctable *tcp_connection_find(struct ctable *head, const struct tcp 
 	uint16 srcport, dstport;
 	ipv4addr srcip, dstip;
 
+	assert(tcp);
+
 	srcip = ipv4_get_src(tcp->packet);
 	dstip = ipv4_get_dst(tcp->packet);
 	srcport = tcp_get_srcport(tcp);
@@ -79,7 +81,7 @@ static void tcp_connection_remove(struct ctable **head, struct ctable *elem)
 	mutex_lock(&ct_mutex);
 
 	if (elem->prev) {
-		elem->prev->next = elem->prev;
+		elem->prev->next = elem->next;
 	}
 	else {
 		assert(*head == elem);
