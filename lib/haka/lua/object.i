@@ -4,6 +4,7 @@
 #include <haka/types.h>
 #include <haka/compiler.h>
 #include <haka/lua/object.h>
+#include <haka/lua/lua.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -35,6 +36,8 @@ void lua_object_release(void *ptr, struct lua_object *obj)
 	if (obj->state) {
 		lua_State *L = obj->state;
 		obj->state = NULL;
+
+		LUA_STACK_MARK(L);
 
 		lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
 		assert(lua_istable(L, -1));
@@ -72,6 +75,8 @@ void lua_object_release(void *ptr, struct lua_object *obj)
 		lua_pushnil(L);
 		lua_settable(L, -3);
 		lua_pop(L, 1);
+
+		LUA_STACK_CHECK(L, 0);
 	}
 }
 
@@ -84,12 +89,15 @@ bool lua_object_get(lua_State *L, struct lua_object *obj, swig_type_info *type_i
 		return false;
 	}
 
+	LUA_STACK_MARK(L);
+
 	lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
 	lua_pushlightuserdata(L, obj);
 	lua_gettable(L, -2);
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 2);
 		lua_pushnil(L);
+		LUA_STACK_CHECK(L, 1);
 		return true;
 	}
 	else {
@@ -97,6 +105,7 @@ bool lua_object_get(lua_State *L, struct lua_object *obj, swig_type_info *type_i
 		lua_gettable(L, -2);
 		lua_remove(L, -2);
 		lua_remove(L, -2);
+		LUA_STACK_CHECK(L, 1);
 		return true;
 	}
 }
@@ -110,6 +119,8 @@ void lua_object_register(lua_State *L, struct lua_object *obj, swig_type_info *t
 		/* A given lua object can only belong to 1 lua state */
 		assert(obj->state == L);
 	}
+
+	LUA_STACK_MARK(L);
 
 	lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
 	lua_pushlightuserdata(L, obj);
@@ -129,6 +140,8 @@ void lua_object_register(lua_State *L, struct lua_object *obj, swig_type_info *t
 	lua_pushvalue(L, index-3);
 	lua_settable(L, -3);
 	lua_pop(L, 2);
+
+	LUA_STACK_CHECK(L, 0);
 }
 
 bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swig_type_info *type_info, int owner)

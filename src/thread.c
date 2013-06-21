@@ -12,6 +12,7 @@
 #include <haka/packet_module.h>
 #include <haka/error.h>
 #include <haka/thread.h>
+#include <haka/lua/lua.h>
 
 #include "thread.h"
 #include "app.h"
@@ -37,13 +38,20 @@ extern void lua_pushppacket(lua_State *L, struct packet *pkt);
 
 static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 {
+	LUA_STACK_MARK(state->lua);
+
 	lua_pushcfunction(state->lua, lua_error_formater);
 	lua_getglobal(state->lua, "haka");
 	lua_getfield(state->lua, -1, "filter");
 	lua_pushppacket(state->lua, pkt);
+
 	if (lua_pcall(state->lua, 1, 0, 2)) {
 		print_error(state->lua, L"filter function");
 	}
+
+	lua_pop(state->lua, 2);
+
+	LUA_STACK_CHECK(state->lua, 0);
 }
 
 static void cleanup_thread_state(struct thread_state *state)
