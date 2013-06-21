@@ -97,6 +97,7 @@ struct tcp_stream {
 	struct tcp_stream_chunk_modif  *pending_modif;
 };
 
+STATIC_ASSERT(sizeof(size_t)==8, size_t_64);
 
 /*
  * Stream position functions
@@ -690,12 +691,25 @@ void tcp_stream_init(struct stream *s, uint32 seq)
 	tcp_s->start_seq = seq;
 }
 
+static size_t tcp_remap_seq(uint32 seq, size_t ref)
+{
+	size_t ret = seq + ((ref>>32)<<32);
+
+	if (ret < ref) {
+		ret += (1UL<<32);
+	}
+
+	assert(ret >= ref);
+	return ret;
+}
+
 bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 {
 	struct tcp_stream_chunk *chunk;
+	size_t ref_seq;
 	TCP_STREAM(s);
 
-	if (!tcp_s->start_seq == (size_t)-1) {
+	if (tcp_s->start_seq == (size_t)-1) {
 		error(L"uninitialized stream");
 		return false;
 	}
@@ -707,13 +721,11 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	}
 
 	chunk->tcp = tcp;
-	chunk->start_seq = tcp_get_seq(tcp);
-	if (chunk->start_seq < tcp_s->start_seq) {
-		error(L"invalid sequence number: %u < %u", chunk->start_seq, tcp_s->start_seq);
-		free(chunk);
-		return false;
-	}
 
+	if (tcp_s->last_sent) ref_seq = tcp_s->last_sent->start_seq + tcp_s->start_seq;
+	else ref_seq = tcp_s->start_seq;
+
+	chunk->start_seq = tcp_remap_seq(tcp_get_seq(tcp), ref_seq);
 	chunk->start_seq -= tcp_s->start_seq;
 	chunk->end_seq = chunk->start_seq + tcp_get_payload_length(tcp);
 	chunk->offset_seq = 0;
@@ -901,8 +913,8 @@ struct tcp *tcp_stream_pop(struct stream *s)
 
 void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 {
-	uint32 ack = tcp_get_ack_seq(tcp);
-	uint32 seq, new_seq;
+	size_t ack = tcp_get_ack_seq(tcp);
+	size_t seq, new_seq;
 	struct tcp_stream_chunk *iter;
 	TCP_STREAM(s);
 
@@ -911,8 +923,10 @@ void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 		return;
 	}
 
-	ack -= tcp_s->start_seq;
 	seq = tcp_s->sent_offset_seq + tcp_s->sent->start_seq;
+	ack = tcp_remap_seq(ack, seq);
+	ack -= tcp_s->start_seq;
+
 	new_seq = tcp_s->sent->start_seq;
 
 	while (iter) {

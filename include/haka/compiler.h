@@ -18,5 +18,6 @@
 
 #define UNUSED __attribute__((unused))
 
+#define STATIC_ASSERT(COND, MSG) typedef char static_assertion_##MSG[(COND)?1:-1]
 
 #endif /* _HAKA_COMPILER_H */
