@@ -179,10 +179,12 @@ struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction
 			return NULL;
 		}
 		else {
+			if (_dropped) *_dropped = false;
 			return &elem->tcp_conn;
 		}
 	}
 	else {
+		if (_dropped) *_dropped = false;
 		return NULL;
 	}
 }
