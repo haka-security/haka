@@ -22,8 +22,11 @@ $0 ~ /^debug rule:/ {
 }
 
 {
-	if (show != 0) {
+	if (show == 2) {
 		print;
+	}
+	else if (show == 1) {
+		show = 2
 	}
 }
 
