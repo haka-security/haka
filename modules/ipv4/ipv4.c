@@ -91,6 +91,7 @@ void ipv4_pre_modify_header(struct ipv4 *ip)
 
 
 /* compute tcp checksum RFC #1071 */
+//TODO: To be optimized
 int16 inet_checksum(uint16 *ptr, uint16 size)
 {
 	register long sum = 0;
@@ -100,8 +101,13 @@ int16 inet_checksum(uint16 *ptr, uint16 size)
 		size -= 2;
 	}
 
-	if (size > 0)
+	if (size > 0) {
+#ifdef HAKA_LITTLEENDIAN
 		sum += *(uint8 *)ptr;
+#else
+		sum += (*(uint8 *)ptr) << 8;
+#endif
+	}
 
 	while (sum >> 16)
 		sum = (sum & 0xffff) + (sum >> 16);
