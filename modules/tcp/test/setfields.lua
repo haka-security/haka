@@ -22,6 +22,10 @@ end
 require("ipv4")
 require("tcp")
 
+-- To avoid the packet to be dropped by the tcp-connection dissector,
+-- disable it
+haka.disable_dissector("tcp-connection")
+
 haka.rule {
 	hooks = { "tcp-up" },
 	eval = function (self, pkt)

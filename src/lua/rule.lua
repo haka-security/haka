@@ -4,16 +4,20 @@ local __rule_groups = {}
 
 function haka.dissector(d)
 	if d.name == nil or d.dissect == nil then
-		if haka.app.current_thread() == 0 then
-			haka.log.error("core", "registering invalid dissector: '%s'", d.name)
-		end
+		haka.log.error("core", "registering invalid dissector: '%s'", d.name)
 	else
 		if not __dissectors[d.name] then
+			d.enable = true
 			__dissectors[d.name] = d
-			if haka.app.current_thread() == 0 then
-				haka.log.info("core", "registering new dissector: '%s'", d.name)
-			end
+			haka.log.info("core", "registering new dissector: '%s'", d.name)
 		end
+	end
+end
+
+function haka.disable_dissector(d)
+	local dissector = __dissectors[d]
+	if dissector then
+		dissector.enable = false
 	end
 end
 
@@ -139,40 +143,44 @@ end
 function haka.filter(pkt)
 	local dissect = get_dissector(pkt.next_dissector)
 	while dissect do
-		local err, nextpkt = xpcall(function () return dissect.dissect(pkt) end, debug.format_error)
-		if not err then
-			haka.log.error("core", nextpkt)
-			pkt:drop()
-			break
-		end
-
-		if not nextpkt then
-			break
-		end
-
-		pkt = nextpkt
-		if not pkt:valid() then
-			break
-		end
-		
-		local err, msg = xpcall(function () eval_rules(dissect.name .. '-up', pkt) end, debug.format_error)
-		if not err then
-			haka.log.error("core", msg)
-			pkt:drop()
-			break
-		end
-
-		if not pkt:valid() then
-			break
-		end
-
-		dissect = nil
-		if pkt.next_dissector then
-			dissect = get_dissector(pkt.next_dissector)
-			if not dissect then
-				haka.log.error("core", "cannot create dissector '%s': not registered", pkt.next_dissector)
+		if dissect.enable then
+			local err, nextpkt = xpcall(function () return dissect.dissect(pkt) end, debug.format_error)
+			if not err then
+				haka.log.error("core", nextpkt)
 				pkt:drop()
+				break
 			end
+	
+			if not nextpkt then
+				break
+			end
+	
+			pkt = nextpkt
+			if not pkt:valid() then
+				break
+			end
+			
+			local err, msg = xpcall(function () eval_rules(dissect.name .. '-up', pkt) end, debug.format_error)
+			if not err then
+				haka.log.error("core", msg)
+				pkt:drop()
+				break
+			end
+	
+			if not pkt:valid() then
+				break
+			end
+	
+			dissect = nil
+			if pkt.next_dissector then
+				dissect = get_dissector(pkt.next_dissector)
+				if not dissect then
+					haka.log.error("core", "cannot create dissector '%s': not registered", pkt.next_dissector)
+					pkt:drop()
+				end
+			end
+		else
+			break
 		end
 	end
 
