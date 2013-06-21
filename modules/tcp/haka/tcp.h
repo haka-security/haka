@@ -51,10 +51,10 @@ struct tcp_header {
 	          ecn:1,
 	          cwr:1;
 #else
-	unint16	  hdr_len:4,
+	uint16	  hdr_len:4,
 	          res:4,
 	          cwr:1,
-	          ece:1,
+	          ecn:1,
 	          urg:1,
 	          ack:1,
 	          psh:1,
