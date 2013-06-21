@@ -49,7 +49,7 @@ local function dissect(pkt)
 
 	if not newpkt.connection then
 		-- new connection
-		if pkt.flags.syn then
+		if pkt.flags.syn and not pkt.flags.ack then
 			newpkt.tcp = pkt
 			newpkt.connection = pkt:newconnection()
 			newpkt.connection.data = {}
@@ -69,6 +69,8 @@ local function dissect(pkt)
 		else
 			if not dropped then
 				haka.log.error("tcp-connection", "no connection found")
+				haka.log.debug("tcp-connection", "no connection found %s:%d -> %s:%d", pkt.ip.src,
+					pkt.srcport, pkt.ip.dst, pkt.dstport)
 			end
 			pkt:drop()
 			return nil
@@ -81,7 +83,7 @@ local function dissect(pkt)
 		newpkt.stream:init(pkt.seq+1)
 		return nil
 	elseif pkt.flags.rst then
-		newpkt.__close = true
+		newpkt.__drop = true
 		table.insert(newpkt.connection.data.queue, pkt)
 		return newpkt
 	elseif newpkt.connection.data.state >= 2 then
