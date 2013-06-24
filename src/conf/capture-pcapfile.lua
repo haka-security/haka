@@ -1,5 +1,7 @@
 local arg = {...}
 
+require("utils")
+
 haka.log.info("config", "configuring haka...")
 
 if arg[3] then
@@ -9,6 +11,8 @@ else
 end
 
 haka.app.install("log", haka.module.load("log-stdout"))
+
+addmodulepath(arg[2])
 
 haka.app.load_configuration(arg[2])
 
