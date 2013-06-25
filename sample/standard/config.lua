@@ -1,7 +1,6 @@
---Loading core rules
+
 require("core/functions")
 
--- Loading all rules
 require("proto/ipv4/dissector")
 require("proto/ipv4/security")
 require("proto/ipv4/compliance")
