@@ -13,12 +13,11 @@ Contents:
    :numbered:
 
    README.rst
-   doc/rulearch
-   src/doc/error
+   doc/api/lua/main.rst
+   doc/api/c/main.rst
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
