@@ -22,7 +22,7 @@ function split(str, delim)
 	return ret
 end
 
-function addmodulepath(str)
+function get_file_directory(str)
 	splitpath=split(str,"/")
 	local newpath = ""
 	if #splitpath > 1 then
@@ -30,7 +30,5 @@ function addmodulepath(str)
 			newpath = newpath .. splitpath[i] .. "/"
 		end
 	end
-	if newpath ~= "" then
-		haka.module.setpath(haka.module.path() .. ';' .. newpath .. '*')
-	end
+	return newpath
 end

@@ -1,5 +1,4 @@
 --Loading core rules
-require("core/dissectors")
 require("core/functions")
 
 -- Loading all rules

@@ -1,6 +1,22 @@
+------------------------------------
 -- Firewall rules
--- function akpf is defined in misc/ folder
--------------------------------------------
+------------------------------------
+
+akpf = haka.rule_group {
+	name = "akpf",
+	init = function (self, pkt)
+		haka.log.debug("filter", "entering packet filetring rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
+	end,
+	fini = function (self, pkt)
+		haka.log.error("filter", "packet dropped : drop by default")
+		pkt:drop()
+	end,
+	continue = function (self, ret)
+		return not ret
+	end
+}
+
+
 akpf:rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)

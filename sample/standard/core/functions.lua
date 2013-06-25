@@ -22,22 +22,3 @@ local function dict(table)
 	end
 	return ret
 end
-
-------------------------------------
--- Firewall rules
-------------------------------------
-
-akpf = haka.rule_group {
-	name = "akpf",
-	init = function (self, pkt)
-		haka.log.debug("filter", "entering packet filetring rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
-	end,
-	fini = function (self, pkt)
-		haka.log.error("filter", "packet dropped : drop by default")
-		pkt:drop()
-	end,
-	continue = function (self, ret)
-		return not ret
-	end
-}
-

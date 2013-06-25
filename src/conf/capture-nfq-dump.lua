@@ -9,7 +9,7 @@ haka.app.install("packet", haka.module.load("packet-nfqueue", "-p", "input.pcap"
 
 haka.app.install("log", haka.module.load("log-stdout"))
 
-addmodulepath(arg[2])
+haka.module.addpath(get_file_directory(arg[2]))
 
 haka.app.load_configuration(arg[2])
 
