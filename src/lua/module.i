@@ -14,17 +14,17 @@ char *suffix = HAKA_MODULE_SUFFIX;
 %nodefaultctor;
 
 struct module {
-    %immutable;
-    const wchar_t *name;
-    const wchar_t *author;
-    const wchar_t *description;
+	%immutable;
+	const wchar_t *name;
+	const wchar_t *author;
+	const wchar_t *description;
 
-    %extend {
-        ~module()
-        {
-            module_release($self);
-        }
-    }
+	%extend {
+		~module()
+		{
+			module_release($self);
+		}
+	}
 };
 
 %rename(load) module_load;
@@ -44,9 +44,14 @@ char *prefix;
 char *suffix;
 
 %luacode {
-    package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', module.prefix .. '?' .. module.suffix)
-    package.path = package.path .. ";" .. string.gsub(module.path(), '*', '?.lua')
-    function module.addpath(newpath)
-        haka.module.setpath(haka.module.path() .. ';' .. newpath .. '*')
-    end
+	package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', module.prefix .. '?' .. module.suffix)
+	package.path = package.path .. ";" .. string.gsub(module.path(), '*', '?.lua')
+
+	function module.addpath(newpath)
+		if haka.module.path ~= "" then
+			haka.module.setpath(haka.module.path() .. ';' .. newpath .. '*')
+		else
+			haka.module.setpath(newpath .. '*')
+		end
+	end
 }
