@@ -107,6 +107,7 @@ add_subdirectory(external)
 add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(modules)
+add_subdirectory(sample)
 add_subdirectory(tests)
 
 # add a target to generate API documentation with Doxygen
