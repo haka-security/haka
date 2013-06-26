@@ -44,7 +44,7 @@ TCP
 
 .. c:function:: void tcp_compute_checksum(struct tcp *packet)
 
-    Compute TCP checksum according to RFC #1071.
+    Compute TCP checksum according to :rfc:`1071`.
 
 .. c:function:: bool tcp_verify_checksum(const struct tcp *packet)
 

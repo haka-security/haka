@@ -91,7 +91,7 @@ IPv4
 
 .. c:function:: int16 inet_checksum(uint16 *ptr, uint16 size)
 
-    Compute standard checksum on the provided data (RFC #107).
+    Compute standard checksum on the provided data (:rfc:`107`).
 
     :param ptr: Pointer to the data.
     :param size: Size of input data.
