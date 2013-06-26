@@ -1,6 +1,4 @@
 
-require("re")
-
 require("core/functions")
 
 require("proto/ipv4/dissector")

@@ -1,4 +1,12 @@
 
+-- 
+-- lpeg should be installed to provide
+-- haka with additional regex capabilities
+-- 
+-- luarocks install lpeg
+--
+require("re")
+
 ------------------------------------
 -- Req./Resp Transform Operations
 ------------------------------------
@@ -89,16 +97,20 @@ local function rebuild_uri(norm_uri)
 	return norm_uri
 end
 
-
--- Transform uri field and check it agaisnt pattern using regex model
-function match(val, pattern, trans, regex)
+--
+-- transform uri field and check it agaisnt 
+-- pattern using regex model and update score
+-- if matches
+--
+function match(val, pattern, trans, regex, sqli, where, score, msg)
 	for t = 1, #trans do
 		val = transformations[trans[t]](val)
 	end
 	if regex.find(val, pattern) then
-		return true
+		sqli.score[where] = sqli.score[where] + score
+		if #sqli.msg ~= 0 then sqli.msg = sqli.msg .. ', ' end
+		sqli.msg = sqli.msg .. msg
 	end
-	return nil
 end
 
 
@@ -158,7 +170,7 @@ sqli = haka.rule_group {
 		if ret then
 			for key, value in pairs(sqli.score) do
 				if value >= 8  then
-					haka.log("filter", "SQLi attack detected !!!\n\tReason = %s\n\tScore = %s -> %d", ret.msg, key, value)
+					haka.log.error("filter", "SQLi attack detected !!!\n\tReason = %s\n\tScore = %s -> %d", ret.msg, key, value)
 					http:drop()
 					return nil
 				end
@@ -174,26 +186,15 @@ local function check_sqli(where, pattern, score, msg, trans, regex)
 		eval = function (self, http)
 			if http.request[where] then
 				loc = http.request[where]
+				sqli = http.request.sqli
 				if type(loc) == 'table'	then
 					for k, val in pairs(loc) do
-						if match(val, pattern, trans, regex) then
-							sqli = http.request.sqli
-							sqli.score[where] = sqli.score[where] + score
-							if #sqli.msg ~= 0 then sqli.msg = sqli.msg .. ', ' end
-							sqli.msg = sqli.msg .. msg
-							return sqli
-						end
+						match(val, pattern, trans, regex, sqli, where, score, msg)
 					end
 				else
-				--TODO should be improved
-					if match(loc, pattern, trans, regex) then
-						sqli = http.request.sqli
-						sqli.score[where] = sqli.score[where] + score
-						if #sqli.msg ~= 0 then sqli.msg = sqli.msg .. ', ' end
-						sqli.msg = sqli.msg .. msg
-						return sqli
-					end
+					match(loc, pattern, trans, regex, sqli, where, score, msg)
 				end
+				return sqli
 			end
 			return nil
 		end
@@ -222,7 +223,7 @@ for loc = 1, #location do
 	end
 
 	for key = 1, #sql_functions do
-		check_sqli(location[loc], "[%s'\"`´’‘%(%)]+" .. sql_functions[key] .. "[%s]*%(", 4, 'SQLfunction calls ' .. location[loc], {'decode', 'lower', 'uncomments', 'nospaces'}, string)
+		check_sqli(location[loc], "[%s'\"`´’‘%(%)]+" .. sql_functions[key] .. "[%s]*%(", 4, 'SQL function calls in ' .. location[loc], {'decode', 'lower', 'uncomments', 'nospaces'}, string)
 	end
 
 end

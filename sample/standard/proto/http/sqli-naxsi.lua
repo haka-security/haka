@@ -1,4 +1,12 @@
 
+--
+-- lpeg should be installed to provide
+-- haka with additional regex capabilities
+--
+-- luarocks install lpeg
+--
+require("re")
+
 ------------------------------------
 -- Req./Resp Transform Operations
 ------------------------------------
@@ -56,7 +64,7 @@ local sqli = haka.rule_group {
 		if ret then
 			for key, value in pairs(ret.score) do
 				if value >= 8  then
-					haka.log("filter", "SQLi attack detected !!!\n\tReason = %s\n\tScore = %s -> %d", ret.msg, key, value)
+					haka.log.error("filter", "SQLi attack detected !!!\n\tReason = %s\n\tScore = %s -> %d", ret.msg, key, value)
 					http:drop()
 					return nil
 				end
