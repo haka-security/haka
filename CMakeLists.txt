@@ -129,21 +129,10 @@ add_subdirectory(sample)
 configure_file(src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/haka/config.h)
 configure_file(src/lua/config.lua.in ${CMAKE_CURRENT_BINARY_DIR}/src/config.lua)
 
-# add a target to generate API documentation with Doxygen
-find_package(Doxygen)
-if(DOXYGEN_FOUND)
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-	add_custom_target(doc
-		${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-		COMMENT "Generating API documentation with Doxygen" VERBATIM
-	)
-endif(DOXYGEN_FOUND)
-
 find_package(Sphinx)
 if(SPHINX_FOUND)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
-	add_custom_target(doc2
+	add_custom_target(doc
 		COMMAND ${SPHINX_EXECUTABLE} -b html -c ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/doc
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		COMMENT "Generating API documentation with Sphinx" VERBATIM
