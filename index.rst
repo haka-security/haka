@@ -14,6 +14,7 @@ Contents:
 
    README.rst
    doc/module.rst
+   doc/rulearch.rst
    doc/api/lua/main.rst
    doc/api/c/main.rst
 
