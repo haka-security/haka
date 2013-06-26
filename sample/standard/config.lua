@@ -1,4 +1,6 @@
 
+require("re")
+
 require("core/functions")
 
 require("proto/ipv4/dissector")
@@ -18,3 +20,4 @@ require("proto/http/security")
 require("proto/http/compliance")
 require("proto/http/policy")
 require("proto/http/rules")
+require("proto/http/sqli-modsecurity")
