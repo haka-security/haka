@@ -19,8 +19,8 @@ Some scripts are available in ``share/haka``:
 
   Capture the packet on a list of interfaces using NFQUEUE. It takes two parameters:
 
-  * A list on colon separated interfaces (``any`` is also accepted)
-  * A configuration file containing the rules
+  * A list on colon separated interfaces (``any`` is also accepted).
+  * A configuration file containing the rules.
 
   Example:
 
@@ -37,16 +37,19 @@ Some scripts are available in ``share/haka``:
 
   Capture the packets using the libpcap on a network interface. It takes two or three parameters:
 
-  * An interface (``any`` is supported)
-  * A configuration file containing the rules
+  * An interface (``any`` is supported).
+  * A configuration file containing the rules.
   * An optional file name to save the processed packets.
+
+  The packets will net really be dropped or modified by the rule when using the pcap capture. This
+  could lead to various problems. It is better to use the nfqueue capture.
 
 * ``capture-pcapfile.lua``
 
   Read the packets from a pcap file using the libpcap. It takes two or three parameters:
 
   * The input pcap file.
-  * A configuration file containing the rules
+  * A configuration file containing the rules.
   * An optional file name to save the processed packets.
 
   Example:
