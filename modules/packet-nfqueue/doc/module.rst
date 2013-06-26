@@ -6,7 +6,7 @@ Netfilter NFQUEUE capture `packet-nfqueue`
 
 The module uses the library netfilter queue to intercept all packets.
 
-At initialization, the module will install some iptables rules for the _raw_ table.
+At initialization, the module will install some iptables rules for the `raw` table.
 The table will be cleared when the application is closed.
 
 To operate correctly, the process need to be launched with the proper access
