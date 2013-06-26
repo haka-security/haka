@@ -106,6 +106,28 @@ Log :lua:mod:`haka.log`
     Set the logging level to display. It can be set globally and also manually for
     each module.
 
+Packet :lua:mod:`haka.packet`
+-----------------------------
+
+.. lua:module:: haka.packet
+
+.. lua:class:: packet
+
+    Object representing a packet.  The data can be accessed using the standard Lua
+    operators `#` to get the length and `[]` to access the bytes.
+
+    .. lua:method:: drop()
+
+        Drop the packet.
+
+        .. note:: The object will be unusable after calling this function.
+
+    .. lua:method:: accept()
+
+        Accept the packet.
+
+        .. note:: The object will be unusable after calling this function.
+
 Dissector
 ---------
 
