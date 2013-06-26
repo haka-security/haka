@@ -1,3 +1,6 @@
 [submodule "external/luajit"]
 	path = external/luajit
 	url = git://repo.or.cz/luajit-2.0.git
+[submodule "external/sphinx-lua"]
+	path = external/sphinx-lua
+	url = git://github.com/redjack/sphinx-lua
