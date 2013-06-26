@@ -137,6 +137,11 @@ if(SPHINX_FOUND)
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		COMMENT "Generating API documentation with Sphinx" VERBATIM
 	)
+
+	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION share/haka/doc)
+
+	# It is not possible to add a dependency on the install target which would be way better
+	add_dependencies(haka doc)
 endif(SPHINX_FOUND)
 
 # add a target to run cppcheck on the sources
