@@ -12,7 +12,9 @@ Contents:
    :maxdepth: 3
    :numbered:
 
-   README.rst
+   doc/intro.rst
+   doc/build.rst
+   doc/getting_started.rst
    doc/module.rst
    doc/rulearch.rst
    doc/api/lua/main.rst
