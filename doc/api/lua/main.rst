@@ -5,7 +5,7 @@ Lua API :lua:mod:`haka`
 =======================
 
 Application :lua:mod:`haka.app`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 .. lua:module:: haka.app
 
@@ -31,7 +31,7 @@ Application :lua:mod:`haka.app`
     Set the configuration file containing the rules to load.
 
 Module :lua:mod:`haka.module`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 .. lua:module:: haka.module
 
@@ -68,7 +68,7 @@ Module :lua:mod:`haka.module`
     Module suffix.
 
 Log :lua:mod:`haka.log`
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 .. lua:module:: haka.log
 
@@ -100,8 +100,14 @@ Log :lua:mod:`haka.log`
 
     Alias to :lua:func:`haka.log.info`.
 
+.. lua:function:: setlevel(level)
+                  setlevel(module, level)
+
+    Set the logging level to display. It can be set globally and also manually for
+    each module.
+
 Dissector
-^^^^^^^^^
+---------
 
 .. lua:module:: haka
 
@@ -144,7 +150,7 @@ Dissector
       and should return a :lua:class:`dissector_data`.
 
 Rule
-^^^^
+----
 
 .. lua:class:: rule
 
@@ -176,7 +182,7 @@ Example: ::
     }
 
 Rule group
-^^^^^^^^^^
+----------
 
 Rule group allow to customize the rule evaluation.
 
@@ -235,3 +241,11 @@ Example: ::
             return nil
         end
     }
+
+External modules
+----------------
+
+.. toctree::
+    :glob:
+
+    ../../../modules/*/doc/lua*

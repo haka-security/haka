@@ -190,3 +190,12 @@ Thread local storage :c:type:`local_storage_t`
     Sets the value of the thread local storage.
 
     :returns: True on success. Use :c:func:`clear_error` to get details about the error.
+
+External modules
+----------------
+
+.. toctree::
+    :glob:
+
+    ../../../modules/*/doc/c*
+    
