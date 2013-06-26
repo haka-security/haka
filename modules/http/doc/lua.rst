@@ -12,7 +12,11 @@ Dissector
 
 .. lua:class:: http
 
-    Dissector data for HTTP.
+    Dissector data for HTTP. In addition to the usuall `http-up` and  `http-down`, HTTP register two additional
+    hooks:
+
+    * `http-request`: called when a request is fully parsed.
+    * `http-response`: called when a response is fully parsed.
 
     .. seealso:: :lua:class:`haka.dissector_data`.
 
@@ -47,16 +51,6 @@ Dissector
         .. lua:data:: data
 
             Stream of HTTP data.
-
-
-Hooks
-^^^^^
-
-In addition to the usuall `http-up` and  `http-down`, HTTP register two additional
-hooks:
-
-* `http-request`
-* `http-response`
 
 Example
 -------
