@@ -41,7 +41,6 @@ local sqli = haka.rule_group {
 	init = function (self, http)
 		haka.log.debug("filter", "start : checking for sqli attacks")
 		request = http.request
-		--request:dump()
 		request.URI = percent_decode(request.uri):lower()
 		request.COOKIE = request.headers['Cookie']
 		request.sqli = {}
