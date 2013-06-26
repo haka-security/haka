@@ -313,35 +313,6 @@ static const char *packet_get_dissector(struct packet *pkt)
 }
 
 
-/**
- * @defgroup Pcap Pcap
- * @brief Packet capturing using the libpcap.
- * @author Arkoon Network Security
- * @ingroup ExternPacketModule
- *
- * # Description
- *
- * The module uses the library pcap to read packets from a file or from an real network
- * device.
- *
- * To be able to capture packets on a real interface, the process need to be launched
- * with the proper access rights.
- *
- * # Initialization arguments
- *
- * ~~~~~~~~
- * ( -f <pcap file> | -i <interface name> ̀| -i any ) [ -o <pcap file> ] [-m]
- * ~~~~~~~~
- *
- * # Usage
- *
- * Module usage.
- *
- * ### Lua
- * ~~~~~~~~{.lua}
- * app.install("packet", module.load("packet-pcap", {"-f", "dump.pcap", "-o", "output.pcap"}))
- * ~~~~~~~~
- */
 struct packet_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_PACKET,

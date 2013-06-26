@@ -9,10 +9,11 @@ Welcome to Haka's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :numbered:
 
    README.rst
+   doc/module.rst
    doc/api/lua/main.rst
    doc/api/c/main.rst
 

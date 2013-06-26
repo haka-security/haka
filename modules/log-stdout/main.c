@@ -84,34 +84,6 @@ static int log_message(log_level lvl, const wchar_t *module, const wchar_t *mess
 }
 
 
-/**
- * @defgroup Stdout Stdout
- * @brief Logging to stdout.
- * @author Arkoon Network Security
- * @ingroup ExternLogModule
- *
- * # Description
- *
- * Module that send log messages to stdout. It uses color to achieve a clear visibility
- * of the important messages.
- *
- * # Initialization arguments
- *
- * This module does not take any initialization parameters.
- *
- * # Usage
- * Module usage.
- *
- * ### Lua
- * ~~~~~~~~{.lua}
- * app.install("log", module.load("log-stdout"))
- * ~~~~~~~~
- *
- * ### C/C++
- * ~~~~~~~~{.c}
- * module_load("log-stdout", 0, NULL);
- * ~~~~~~~~
- */
 struct log_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_LOG,
