@@ -28,6 +28,24 @@ Types
 
     Integer basic type.
 
+.. c:macro:: SWAP(type, x)
+             SWAP_TO_BE(type, x)
+             SWAP_FROM_BE(type, x)
+             SWAP_TO_LE(type, x)
+             SWAP_FROM_LE(type, x)
+
+    Byte swapping utility macro. The `type` should be the c type of the value `x`
+    (ie. :c:type:`int32`, :c:type:`uint64`...)
+
+.. c:macro:: GET_BIT(v, i)
+             SET_BIT(v, i, x)
+
+    Gets and sets the bit `i` from an integer `v`.
+
+.. c:macro:: GET_BITS(v, i, j)
+             SET_BITS(v, i, j, x)
+
+    Gets and sets the bits in range [`i` ; `j`] from an integer `v`.
 
 Utilities
 ---------
