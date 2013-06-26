@@ -47,6 +47,20 @@ Types
         ipv4.network(ipv4.addr(127, 0, 0, 1), 8)
 
 
+Functions
+---------
+
+.. lua:function:: register_proto(proto, name)
+
+   Register the dissector to associate with the given protocol `proto`.
+
+
+Dissector
+---------
+
+This module register the `ipv4` dissector.
+
+
 .. lua:class:: ipv4
 
     Dissector data for an ipv4 packet.
@@ -72,11 +86,23 @@ Types
 
     .. lua:data:: flags
 
-        IPv4 flags as :lua:class:`ipv4.ipv4_flags`.
+        IPv4 flags.
+
+        .. lua:data:: rb
+                      df
+                      mf
+
+            Individual flags as boolean.
+
+        .. lua:data:: all
+
+            Flags value as number.
 
     .. lua:data:: payload
 
-        Payload of the packet as :lua:class:`ipv4.ipv4_payload`.
+        Payload of the packet. Class that contains the ipv4 data payload. The data can be
+        accessed using the standard Lua operators `#` to get the length and `[]` to access
+        the bytes.
 
     .. lua:method:: verify_checksum()
 
@@ -86,43 +112,10 @@ Types
 
         Recompute the checksum and set the resulting value in the packet.
 
-
-.. lua:class:: ipv4_flags
-
-    Describe the IPv4 flags of the protocol.
-
-    .. lua:data:: rb
-                  df
-                  mf
-
-        Individual flags as boolean.
-
-    .. lua:data:: all
-
-        Flags value as number.
-
-
-.. lua:class:: ipv4_payload
-
-    Class that contains the ipv4 data payload. The data can be accessed using the
-    standard Lua operators `#` to get the length and `[]` to access the bytes.
-
-Functions
----------
-
-.. lua:function:: register_proto(proto, name)
-
-   Register the dissector to associate with the given protocol `proto`.
-
-Dissector
----------
-
-This module register the `ipv4` dissector.
-
 Example
 -------
 
-::
+.. code-block:: lua
 
     haka.rule {
         hooks = { "ipv4-up" },
