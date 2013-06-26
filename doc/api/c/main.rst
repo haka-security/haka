@@ -17,6 +17,17 @@ Types
 
     Boolean. Its value can be :c:data:`true` or  :c:data:`false`.
 
+.. c:type:: int8
+            int16
+            int32
+            int64
+            uint8
+            uint16
+            uint32
+            uint64
+
+    Integer basic type.
+
 
 Utilities
 ---------
@@ -190,6 +201,233 @@ Thread local storage :c:type:`local_storage_t`
     Sets the value of the thread local storage.
 
     :returns: True on success. Use :c:func:`clear_error` to get details about the error.
+
+Log
+---
+
+.. c:type:: log_level
+
+    Logging level constants.
+
+    .. c:var:: HAKA_LOG_FATAL
+               HAKA_LOG_ERROR
+               HAKA_LOG_WARNING
+               HAKA_LOG_INFO
+               HAKA_LOG_DEBUG
+
+.. c:function:: const char *level_to_str(log_level level)
+
+    Convert a logging level to a human readable string.
+
+    :returns: A string representing the logging level. This string is constant and should
+        not be freed.
+
+.. c:function:: void message(log_level level, const wchar_t *module, const wchar_t *message)
+
+    Log a message without string formating.
+
+.. c:function:: void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...)
+
+    Log a message with string formating.
+
+.. c:function:: void setlevel(log_level level, const wchar_t *module)
+
+    Sets the logging level to display for a given module name. The `module` parameter can be
+    `NULL` in which case it will set the default level.
+
+.. c:function:: log_level getlevel(const wchar_t *module)
+
+    Gets the logging level for a given module name.
+
+
+Packet
+------
+
+.. c:type:: struct packet
+
+    Opaque packet structure.
+
+.. c:type:: filter_result
+
+    .. c:var:: FILTER_ACCEPT
+               FILTER_DROP
+
+.. c:function:: size_t packet_length(struct packet *pkt)
+
+    Gets the length of a packet.
+
+.. c:function:: const uint8 *packet_data(struct packet *pkt)
+
+    Gets the data of a packet.
+
+.. c:function:: const char *packet_dissector(struct packet *pkt)
+
+    Gets packet dissector to use.
+
+.. c:function:: uint8 *packet_data_modifiable(struct packet *pkt)
+
+    Make a packet modifiable.
+
+.. c:function:: int packet_resize(struct packet *pkt, size_t size)
+
+    Resize a packet.
+
+.. c:function:: void packet_drop(struct packet *pkt)
+
+    Drop a packet. The packet will be released and should not be used anymore
+    after this call.
+
+.. c:function:: void packet_accept(struct packet *pkt);
+
+    Accept a packet. The packet will be released and should not be used anymore
+    after this call.
+
+.. c:function:: int packet_receive(struct packet_module_state *state, struct packet **pkt)
+
+    Receive a packet from the capture module. This function will wait if no packet is
+    available.
+
+
+Modules
+-------
+
+.. c:type:: struct module
+
+    Module structure.
+
+    .. c:type:: type
+
+        Module type.
+
+        .. c:var:: MODULE_UNKNOWN
+                   MODULE_PACKET
+                   MODULE_LOG
+                   MODULE_EXTENSION
+
+    .. c:var:: const wchar_t *name
+    .. c:var:: const wchar_t *description
+    .. c:var:: const wchar_t *author
+
+    .. c:function:: int (*init)(int argc, char *argv[])
+
+        Initialize the module. This function is called by the application.
+
+        :returns: Non zero in case of an error. In this case the module will be
+            unloaded but cleanup is not going to be called.
+
+    .. c:function:: void (*cleanup)()
+
+        Cleanup the module. This function is called by the application when the
+        module is unloaded.
+
+.. c:type:: struct log_module
+
+    Logging module structure.
+
+    .. c:var:: struct module module
+
+    .. c:function:: int (*message)(log_level level, const wchar_t *module, const wchar_t *message)
+
+        Messaging function called by the application.
+
+        :returns: Non-zero in case of error.
+
+
+.. c:type:: struct packet_module_state
+
+    Opaque state structure.
+
+
+.. c:type:: struct packet_module
+
+    Packet module used to interact with the low-level packets. The module
+    will be used to receive packets and set a verdict on them. It also define
+    an interface to access the packet fields.
+
+    .. c:var:: struct module module
+
+    .. c:function:: bool (*multi_threaded)()
+
+        Does this module supports multi-threading.
+
+    .. c:function:: struct packet_module_state *(*init_state)(int thread_id)
+
+        Initialize the packet module state. This function will be called to create
+        multiple states if the module supports multi-threading.
+
+    .. c:function:: void (*cleanup_state)(struct packet_module_state *state)
+
+        Cleanup the packet module state.
+
+    .. c:function:: int (*receive)(struct packet_module_state *state, struct packet **pkt)
+
+        Callback used to receive a new packet. This function should block until
+        a packet is received.
+
+        :returns:Non zero in case of error.
+
+    .. c:function:: void (*verdict)(struct packet *pkt, filter_result result)
+
+        Apply a verdict on a received packet. The module should then apply this
+        verdict on the underlying packet.
+
+        :param pkt: The received packet. After calling this funciton the packet address
+            is never used again by the application allow the module to free it if needed.
+        :param result: The verdict to apply to this packet.
+
+    .. c:function:: size_t (*get_length)(struct packet *pkt)
+
+        Get the length of a packet.
+
+    .. c:function:: uint8 *(*make_modifiable)(struct packet *pkt)
+
+        Make the packet modifiable.
+
+    .. c:function:: int (*resize)(struct packet *pkt, size_t size)
+
+        Resize the packet to a new size.
+
+    .. c:function:: uint64 (*get_id)(struct packet *pkt)
+
+        Gets the id fo the packet.
+
+    .. c:function:: const uint8 *(*get_data)(struct packet *pkt)
+
+        Get the data of a packet.
+
+    .. c:function:: const char *(*get_dissector)(struct packet *pkt)
+
+        Get the packet dissector.
+
+
+.. c:function:: struct module *module_load(const char *module_name,...)
+
+    Load a module given its name. It is not needed to call module_addref on the result
+    as this is done before returning.
+
+    :returns: The loaded module structure or NULL in case of an error.
+
+.. c:function:: void module_addref(struct module *module)
+
+    Keep the module. Must match with a call to module_release
+    otherwise the module will not be able to be removed correctly
+    when unused.
+
+.. c:function:: void module_release(struct module *module)
+
+    Release a module.
+
+.. c:function:: void module_set_path(const char *path)
+
+    Sets the path used to load haka modules. This path must be in the form:
+
+    .. code-block:: bash
+
+        path/to/modules/*;another/path/*
+
+.. c:function:: const char *module_get_path()
+
+    Gets the modules path.
 
 External modules
 ----------------

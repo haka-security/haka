@@ -1,10 +1,3 @@
-/**
- * @file types.h
- * @brief Basic types
- * @author Pierre-Sylvain Desse
- *
- * The file contains the basic types for Haka.
- */
 
 #ifndef _HAKA_TYPES_H
 #define _HAKA_TYPES_H
@@ -13,61 +6,19 @@
 #include <byteswap.h>
 
 
-/**
- * boolean basic type. Its value is true or false.
- * @ingroup Utilities
- */
 typedef unsigned char              bool;
 
 #define true                       1
 #define false                      0
 
-/**
- * 8 bit integer basic type.
- * @ingroup Utilities
- */
 typedef char                       int8;
-
-/**
- * 16 bit integer basic type.
- * @ingroup Utilities
- */
 typedef HAKA_16BIT_TYPE            int16;
-
-/**
- * 32 bit integer basic type.
- * @ingroup Utilities
- */
 typedef HAKA_32BIT_TYPE            int32;
-
-/**
- * 64 bit integer basic type.
- * @ingroup Utilities
- */
 typedef HAKA_64BIT_TYPE            int64;
 
-/**
- * 8 bit unsigned integer basic type.
- * @ingroup Utilities
- */
 typedef unsigned char              uint8;
-
-/**
- * 16 bit unsigned integer basic type.
- * @ingroup Utilities
- */
 typedef unsigned HAKA_16BIT_TYPE   uint16;
-
-/**
- * 32 bit unsigned integer basic type.
- * @ingroup Utilities
- */
 typedef unsigned HAKA_32BIT_TYPE   uint32;
-
-/**
- * 64 bit unsigned integer basic type.
- * @ingroup Utilities
- */
 typedef unsigned HAKA_64BIT_TYPE   uint64;
 
 
