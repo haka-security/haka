@@ -1,8 +1,8 @@
 
 .. program:: packet-pcap
 
-Pcap packet capture :program:`packet-pcap`
-==========================================
+Pcap packet capture `packet-pcap`
+=================================
 
 The module uses the library pcap to read packets from a file or from an real network
 device.

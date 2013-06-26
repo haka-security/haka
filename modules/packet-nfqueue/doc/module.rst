@@ -1,8 +1,8 @@
 
 .. program:: packet-nfqueue
 
-Netfilter NFQUEUE capture :program:`packet-nfqueue`
-===================================================
+Netfilter NFQUEUE capture `packet-nfqueue`
+==========================================
 
 The module uses the library netfilter queue to intercept all packets.
 

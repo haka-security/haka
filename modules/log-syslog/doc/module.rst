@@ -1,8 +1,8 @@
 
 .. program:: log-syslog
 
-Syslog logging :program:`log-syslog`
-====================================
+Syslog logging `log-syslog`
+===========================
 
 Module that output log messages using syslog.
 
