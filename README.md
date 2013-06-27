@@ -9,7 +9,7 @@ Dependencies
 * Toolchain (GCC, Make, ...)
 * cmake
 * swig
-* sphinx
+* python-sphinx
 * liblua5.1
 * tshark
 * check

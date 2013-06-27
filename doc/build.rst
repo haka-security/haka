@@ -11,7 +11,7 @@ Required
 * Toolchain (GCC, Make, ...)
 * cmake
 * swig
-* sphinx
+* python-sphinx
 * liblua5.1
 * tshark
 * check
@@ -21,7 +21,7 @@ Required
 
 Debian: ::
 
-    sudo apt-get install build-essential cmake swig sphinx liblua5.1 tshark check rsync libpcap-dev gawk
+    sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 tshark check rsync libpcap-dev gawk
 
 Optional
 ^^^^^^^^
@@ -64,8 +64,8 @@ The configuration with cmake supports the following options:
 
     Installation prefix (default: *out*)
 
-Build
-^^^^^
+Compile
+^^^^^^^
 
 The repository uses submodules that need to be initialized and updated: ::
 

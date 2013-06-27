@@ -225,7 +225,7 @@ Rule group allow to customize the rule evaluation.
         called at the end. `d` is the dissector data for the current hook
         (:lua:class:`dissector_data`).
 
-    .. lua:method:: continue(self, ret, d)
+    .. lua:method:: continue(self, d, ret)
 
         After each rule evaluation, the function is called to know if the evaluation
         of the other rules should continue. If not, the other rules will be skipped.
