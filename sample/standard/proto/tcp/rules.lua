@@ -11,7 +11,7 @@ akpf = haka.rule_group {
 		haka.log.error("filter", "packet dropped : drop by default")
 		pkt:drop()
 	end,
-	continue = function (self, ret)
+	continue = function (self, pkt, ret)
 		return not ret
 	end
 }
