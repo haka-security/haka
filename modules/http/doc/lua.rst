@@ -55,14 +55,5 @@ Dissector
 Example
 -------
 
-.. code-block:: lua
-
-    haka.rule {
-        hooks = {"http-request"},
-        eval = function (self, http)
-            local method = http.request.method:lower()
-            if method ~= 'get' and method ~= 'post' then
-                haka.log.warning("filter", "forbidden http method '%s'", method)
-            end
-        end
-    }
+.. literalinclude:: ../../../sample/standard/proto/http/policy.lua
+    :language: lua

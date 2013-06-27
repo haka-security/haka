@@ -115,14 +115,5 @@ This module register the `ipv4` dissector.
 Example
 -------
 
-.. code-block:: lua
-
-    haka.rule {
-        hooks = { "ipv4-up" },
-        eval = function (self, pkt)
-            if pkt.src == pkt.dst then
-                haka.log.error("filter", "Land attack detected")
-                pkt:drop()
-            end
-        end
-    }
+.. literalinclude:: ../../../sample/standard/proto/ipv4/security.lua
+    :language: lua

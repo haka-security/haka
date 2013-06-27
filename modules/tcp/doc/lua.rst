@@ -155,23 +155,5 @@ TCP connection
 Example
 ^^^^^^^
 
-::
-
-    haka.rule {
-        hooks = {"tcp-connection-new"},
-        eval = function (self, pkt)
-            local netsrc = ipv4.network("10.2.96.0/22")
-            local netdst = ipv4.network("10.2.104.0/22")
-
-            local tcp = pkt.tcp
-
-            if netsrc:contains(tcp.ip.src) and
-               netdst:contains(tcp.ip.dst) and
-               tcp.dstport == 80 then
-
-                haka.log.warning("filter", "authorizing http traffic")
-                pkt.next_dissector = "http"
-                return true
-            end
-        end
-    }
+.. literalinclude:: ../../../sample/standard/proto/tcp/rules.lua
+    :language: lua
