@@ -46,7 +46,7 @@ enum tcp_modif_type {
 
 struct tcp_stream_chunk_modif {
 	enum tcp_modif_type             type;
-	size_t                          position;
+	uint64                          position;
 	size_t                          length;
 	struct tcp_stream_chunk_modif  *prev;
 	struct tcp_stream_chunk_modif  *next;
@@ -55,17 +55,17 @@ struct tcp_stream_chunk_modif {
 
 struct tcp_stream_chunk {
 	struct tcp                     *tcp;
-	size_t                          start_seq;
-	size_t                          end_seq;
-	int                             offset_seq;
+	uint64                          start_seq;
+	uint64                          end_seq;
+	int64                           offset_seq;
 	struct tcp_stream_chunk_modif  *modifs;
 	struct tcp_stream_chunk        *next;
 };
 
 struct tcp_stream_position {
-	size_t                          chunk_seq;         /* chunk position seq (without modifs) */
-	size_t                          chunk_seq_modif;   /* chunk position seq (with modifs) */
-	size_t                          current_seq_modif; /* current position seq (with modifs) */
+	uint64                          chunk_seq;         /* chunk position seq (without modifs) */
+	uint64                          chunk_seq_modif;   /* chunk position seq (with modifs) */
+	uint64                          current_seq_modif; /* current position seq (with modifs) */
 	struct tcp_stream_chunk        *chunk;             /* chunk at the current stream position */
 	size_t                          chunk_offset;      /* current offset in the current chunk (without modifs) */
 	struct tcp_stream_chunk_modif  *modif;             /* current or previous modif */
@@ -75,14 +75,14 @@ struct tcp_stream_position {
 struct tcp_stream_mark {
 	struct tcp_stream_mark         *prev;
 	struct tcp_stream_mark         *next;
-	size_t                          chunk_seq;
+	uint64                          chunk_seq;
 	size_t                          chunk_offset;
 	size_t                          modif_offset;
 };
 
 struct tcp_stream {
 	struct stream                   stream;
-	size_t                          start_seq;
+	uint32                          start_seq;
 
 	struct tcp_stream_chunk        *first;   /* first packet in the stream */
 	int                             first_offset_seq;
@@ -97,7 +97,6 @@ struct tcp_stream {
 	struct tcp_stream_chunk_modif  *pending_modif;
 };
 
-STATIC_ASSERT(sizeof(size_t)==8, size_t_64);
 
 /*
  * Stream position functions
@@ -105,12 +104,12 @@ STATIC_ASSERT(sizeof(size_t)==8, size_t_64);
 
 bool tcp_stream_position_isvalid(struct tcp_stream_position *pos)
 {
-	return (pos->current_seq_modif != (size_t)-1);
+	return (pos->current_seq_modif != (uint64)-1);
 }
 
 void tcp_stream_position_invalidate(struct tcp_stream_position *pos)
 {
-	pos->current_seq_modif = (size_t)-1;
+	pos->current_seq_modif = (uint64)-1;
 	pos->chunk = NULL;
 	pos->modif = NULL;
 }
@@ -637,7 +636,7 @@ struct stream *tcp_stream_create()
 	memset(tcp_s, 0, sizeof(struct tcp_stream));
 
 	lua_object_init(&tcp_s->stream.lua_object);
-	tcp_s->start_seq = (size_t)-1;
+	tcp_s->start_seq = (uint32)-1;
 	tcp_stream_position_invalidate(&tcp_s->mark_position);
 
 	tcp_s->stream.ftable = &tcp_stream_ftable;
@@ -691,12 +690,12 @@ void tcp_stream_init(struct stream *s, uint32 seq)
 	tcp_s->start_seq = seq;
 }
 
-static size_t tcp_remap_seq(uint32 seq, size_t ref)
+static uint64 tcp_remap_seq(uint32 seq, uint64 ref)
 {
-	size_t ret = seq + ((ref>>32)<<32);
+	uint64 ret = seq + ((ref>>32)<<32);
 
 	if (ret < ref) {
-		ret += (1UL<<32);
+		ret += (1ULL<<32);
 	}
 
 	assert(ret >= ref);
@@ -913,8 +912,8 @@ struct tcp *tcp_stream_pop(struct stream *s)
 
 void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 {
-	size_t ack = tcp_get_ack_seq(tcp);
-	size_t seq, new_seq;
+	uint64 ack = tcp_get_ack_seq(tcp);
+	uint64 seq, new_seq;
 	struct tcp_stream_chunk *iter;
 	TCP_STREAM(s);
 
