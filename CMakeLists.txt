@@ -17,7 +17,7 @@ set(CMAKE_BUILD_TYPE ${BUILD})
 message(STATUS "Building configuration (BUILD): ${CMAKE_BUILD_TYPE}")
 
 # Install prefix
-set(PREFIX "out" CACHE STRING "Installation prefix")
+set(PREFIX "/usr/local" CACHE STRING "Installation prefix")
 message(STATUS "Installation prefix (PREFIX): ${PREFIX}")
 
 if(NOT IS_ABSOLUTE ${PREFIX})
