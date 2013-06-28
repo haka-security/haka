@@ -7,10 +7,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include <getopt.h>
 
 #include <haka/packet_module.h>
 #include <haka/thread.h>
 #include <haka/error.h>
+#include <haka/version.h>
 
 #include "app.h"
 #include "thread.h"
@@ -57,8 +59,76 @@ static void fatal_error_signal(int sig)
 	exit(1);
 }
 
+static void usage(FILE *output, const char *program)
+{
+	fprintf(stdout, "Usage: %s [options] script_file [...]\n", program);
+}
+
+static void help(const char *program)
+{
+	usage(stdout, program);
+
+	fprintf(stdout, "Options:\n");
+	fprintf(stdout, "\t-h,--help:     Display this information\n");
+	fprintf(stdout, "\t--version:     Display version information\n");
+	fprintf(stdout, "\t-d,--debug:    Display debug output\n");
+	fprintf(stdout, "\t--daemon:      Run in the background\n");
+}
+
+static bool daemonize = false;
+
+static int parse_cmdline(int *argc, char ***argv)
+{
+	int c;
+	int index = 0;
+
+	static struct option long_options[] = {
+		{"version", no_argument,       0,  'v' },
+		{"help",    no_argument,       0,  'h' },
+		{"debug",   no_argument,       0,  'd' },
+		{"daemon",  no_argument,       0,  'D' },
+		{0,         0,                 0,  0 }
+	};
+
+	while ((c = getopt_long(*argc, *argv, "dh", long_options, &index)) != -1) {
+		switch (c) {
+		case 'd':
+			setlevel(HAKA_LOG_DEBUG, NULL);
+			break;
+
+		case 'h':
+			help((*argv)[0]);
+			return 0;
+
+		case 'v':
+			printf("version %s, arch %s\n", HAKA_VERSION, HAKA_ARCH);
+			printf("API version %d\n", HAKA_API_VERSION);
+			return 0;
+
+		case 'D':
+			daemonize = true;
+			break;
+
+		default:
+			usage(stderr, (*argv)[0]);
+			return 2;
+		}
+	}
+
+	if (optind >= *argc) {
+		usage(stderr, (*argv)[0]);
+		return 2;
+	}
+
+	*argc += optind;
+	*argv += optind;
+	return -1;
+}
+
 int main(int argc, char *argv[])
 {
+	int ret;
+
 	/* Set locale */
 	setlocale(LC_ALL, "");
 
@@ -72,17 +142,17 @@ int main(int argc, char *argv[])
 	module_set_path(HAKA_PREFIX "/share/haka/core/*;" HAKA_PREFIX "/share/haka/modules/*");
 
 	/* Check arguments */
-	if (argc < 2) {
-		fprintf(stderr, "usage: %s script_file [...]\n", argv[0]);
+	ret = parse_cmdline(&argc, &argv);
+	if (ret >= 0) {
 		clean_exit();
-		return 2;
+		return ret;
 	}
 
 	/* Init lua vm */
 	global_lua_state = init_state();
 
 	/* Execute configuration file */
-	if (run_file(global_lua_state, argv[1], argc-2, argv+2)) {
+	if (run_file(global_lua_state, argv[0], argc-1, argv+1)) {
 		message(HAKA_LOG_FATAL, L"core", L"configuration error");
 		clean_exit();
 		return 1;
@@ -133,6 +203,15 @@ int main(int argc, char *argv[])
 		}
 		else {
 			message(HAKA_LOG_INFO, L"core", L"starting single threaded processing\n");
+		}
+
+		/* Deamonize if needed */
+		if (daemonize) {
+			if (daemon(1, 0)) {
+				message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
+				clean_exit();
+				return 1;
+			}
 		}
 
 		thread_pool_start(thread_states);

@@ -3,8 +3,8 @@ set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
 set(ENV{DIFF} ${DIFF})
 set(ENV{TSHARK} ${TSHARK})
 
-message(STATUS "Executing ${EXE} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap")
-execute_process(COMMAND ${EXE} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap
+message(STATUS "Executing ${EXE} -d ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap")
+execute_process(COMMAND ${EXE} -d ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap
 	RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)
 
 execute_process(COMMAND cat ${DST}-tmp.txt)
