@@ -11,17 +11,20 @@ if(USE_LUAJIT)
 	)
 
 	set(LUA_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/luajit/${INSTALL_DIR}/include/luajit-2.0 PARENT_SCOPE)
+	set(LUA_LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/luajit/${INSTALL_DIR}/lib/ PARENT_SCOPE)
 	set(LUA_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/luajit/${INSTALL_DIR}/lib/libluajit-5.1.so PARENT_SCOPE)
 
 	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/luajit/${INSTALL_DIR}/ DESTINATION .)
 
 	macro(LUA_LINK target)
 		add_dependencies(${target} luajit)
-		#link_directories(${INSTALL_DIR}/lib)
 		include_directories(${LUA_INCLUDE_DIR})
+		link_directories(${LUA_LIBRARY_DIR})
 		target_link_libraries(${target} ${LUA_LIBRARY})
 	endmacro(LUA_LINK)
 else(USE_LUAJIT)
+	set(LUA_LIBRARY_DIR "" PARENT_SCOPE)
+
 	macro(LUA_LINK target)
 		find_package(Lua51 REQUIRED)
 		include_directories(${LUA_INCLUDE_DIR})

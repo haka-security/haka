@@ -1,0 +1,8 @@
+
+local function convert(paths)
+	return paths:gsub(":", "/*;")
+end
+
+haka.module.addpath("@PROJECT_SOURCE_DIR@/src/lua/")
+haka.module.setpath(haka.module.path() .. ";" .. convert("@MODULES_BINARY_DIRS@"))
+haka.module.setpath(haka.module.path() .. ";" .. convert("@MODULES_SOURCE_DIRS@"))

@@ -1,5 +1,8 @@
 local arg = {...}
 
+package.path = package.path .. ";@PROJECT_BINARY_DIR@/?.lua"
+require("src/config")
+
 haka.app.install("packet", haka.module.load("packet-pcap", "-f", arg[2], "-o", arg[3]))
 
 haka.log.setlevel(haka.log.DEBUG)

@@ -28,6 +28,7 @@ macro(TEST_PCAP module name)
 	add_test(NAME ${module}-${name}-pcap
 		COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
+		-DCTEST_MODULE_BINARY_DIR=${CTEST_MODULE_BINARY_DIR}
 		-DEXE=$<TARGET_FILE:haka>
 		-DCONF=${CMAKE_CURRENT_SOURCE_DIR}/${name}.lua
 		-DSRC=${CMAKE_CURRENT_SOURCE_DIR}/${name}.pcap
@@ -37,3 +38,5 @@ macro(TEST_PCAP module name)
 		-DTSHARK=${TSHARK_COMMAND}
 		-P ${CTEST_MODULE_DIR}/TestPcapRun.cmake)
 endmacro(TEST_PCAP)
+
+configure_file(${CTEST_MODULE_DIR}/TestPcap.lua.in ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua)

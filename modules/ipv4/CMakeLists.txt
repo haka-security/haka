@@ -10,10 +10,9 @@ swig_add_module(ipv4 lua SHARED
 
 include_directories(.)
 
-target_link_libraries(ipv4 libhaka)
-
 # Lua dependency
 LUA_LINK(ipv4)
+target_link_libraries(ipv4 libhaka)
 
 INSTALL_MODULE(ipv4)
 

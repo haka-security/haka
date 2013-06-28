@@ -27,8 +27,9 @@ else()
 endif()
 
 # Configure
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CMAKE_MODULE_PATH})
 set(CTEST_MODULE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
+set(CTEST_MODULE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CTEST_MODULE_BINARY_DIR} ${CMAKE_MODULE_PATH})
 
 if(CMAKE_COMPILER_IS_GNUCC)
 	set(CMAKE_C_FLAGS "-Wall -Werror")
@@ -91,7 +92,6 @@ else(SIZEOF_INT EQUAL 8)
 	endif(SIZEOF_LONG_LONG EQUAL 8)
 endif(SIZEOF_INT EQUAL 8)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/haka/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # Setup globals
@@ -108,6 +108,10 @@ add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(modules)
 add_subdirectory(sample)
+
+# Configuration files
+configure_file(src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/haka/config.h)
+configure_file(src/lua/config.lua.in ${CMAKE_CURRENT_BINARY_DIR}/src/config.lua)
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)

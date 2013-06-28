@@ -27,13 +27,16 @@ endmacro(INSTALL_MODULE)
 # Find all modules. We need a separated loop in case one of the sub make adds
 # some tests
 set(MODULES_BINARY_DIRS "")
+set(MODULES_SOURCE_DIRS "")
 file(GLOB SUBDIRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/*")
 foreach(subdir ${SUBDIRS})
 	if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
 		set(MODULES_BINARY_DIRS "${CMAKE_CURRENT_BINARY_DIR}/${subdir}:${MODULES_BINARY_DIRS}")
+		set(MODULES_SOURCE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}:${MODULES_SOURCE_DIRS}")
 	endif()
 endforeach(subdir)
-set(MODULES_BINARY_DIRS "${MODULES_BINARY_DIRS}" CACHE INTERNAL "list of directories containing modules")
+set(MODULES_BINARY_DIRS "${MODULES_BINARY_DIRS}" CACHE INTERNAL "list of build directories for the modules")
+set(MODULES_SOURCE_DIRS "${MODULES_SOURCE_DIRS}" CACHE INTERNAL "list of source directories for the modules")
 
 # Add all sub directories
 file(GLOB SUBDIRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/*")
