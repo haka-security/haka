@@ -85,7 +85,7 @@ local function parse_header(stream, http)
 	line, len = read_line(stream)
 	total_len = total_len + len
 	while #line > 0 do
-		local name, value = line:match("([^%s]+): (.+)")
+		local name, value = line:match("([^%s]+):%s*(.+)")
 		if not name then
 			http.valid = false
 			return
