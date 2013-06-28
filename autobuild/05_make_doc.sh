@@ -9,5 +9,5 @@ source autobuild/vars.sh
 source autobuild/includes.sh
 
 ### MAIN
-_make doc
+#_make doc
 exit 0
