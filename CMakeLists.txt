@@ -11,6 +11,22 @@ endif()
 
 project(haka)
 
+# Version
+include(version.cmake)
+
+if(DEFINED BUILDTAG)
+	set(HAKA_VERSION_BUILD ${BUILDTAG})
+else()
+	execute_process(COMMAND "date" "+%Y%m%d_%H%M" OUTPUT_VARIABLE BUILDTAG RESULT_VARIABLE HAD_ERROR)
+	if(HAD_ERROR)
+		message(FATAL_ERROR "failed to get current date")
+	endif(HAD_ERROR)
+
+	string(REGEX REPLACE "([^\n]+).*" "\\1" HAKA_VERSION_BUILD ${BUILDTAG})
+endif()
+
+message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_BUILD}")
+
 # Build type
 set(BUILD "None" CACHE STRING "Selected build type")
 set(CMAKE_BUILD_TYPE ${BUILD})
@@ -136,4 +152,10 @@ endif(CPPCHECK_FOUND)
 
 # Packaging
 set(CPACK_GENERATOR "STGZ")
+
+set(CPACK_PACKAGE_VENDOR "Arkoon Network Security")
+set(CPACK_PACKAGE_VERSION_MAJOR ${HAKA_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${HAKA_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${HAKA_VERSION_BUILD})
+
 include(CPack)
