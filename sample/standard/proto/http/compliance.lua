@@ -30,7 +30,7 @@ haka.rule {
 
 -- check content length value
 haka.rule {
-	hooks = {"http-request"},
+	hooks = {"http-response"},
 	eval = function (self, http)
 		local content_length = http.request.headers["Content-Length"]
 		if content_length then
