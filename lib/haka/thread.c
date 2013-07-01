@@ -10,9 +10,19 @@
 #include <haka/error.h>
 
 
+static int thread_capture_count = 0;
+
 int thread_get_packet_capture_cpu_count()
 {
-	return thread_get_cpu_count();
+	if (thread_capture_count == 0)
+		return thread_get_cpu_count();
+	else
+		return thread_capture_count;
+}
+
+void thread_set_packet_capture_cpu_count(int count)
+{
+	thread_capture_count = count;
 }
 
 int thread_get_cpu_count()

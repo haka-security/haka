@@ -73,6 +73,7 @@ static void help(const char *program)
 	fprintf(stdout, "\t--version:     Display version information\n");
 	fprintf(stdout, "\t-d,--debug:    Display debug output\n");
 	fprintf(stdout, "\t--daemon:      Run in the background\n");
+	fprintf(stdout, "\t-jN:           Use N threads for packet capture (if supported)\n");
 }
 
 static bool daemonize = false;
@@ -90,7 +91,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{0,         0,                 0,  0 }
 	};
 
-	while ((c = getopt_long(*argc, *argv, "dh", long_options, &index)) != -1) {
+	while ((c = getopt_long(*argc, *argv, "dhj:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
 			setlevel(HAKA_LOG_DEBUG, NULL);
@@ -107,6 +108,20 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'D':
 			daemonize = true;
+			break;
+
+		case 'j':
+			{
+				const int thread_count = atoi(optarg);
+				if (thread_count > 0) {
+					thread_set_packet_capture_cpu_count(thread_count);
+				}
+				else {
+					usage(stderr, (*argv)[0]);
+					fprintf(stderr, "invalid thread count\n");
+					return 2;
+				}
+			}
 			break;
 
 		default:

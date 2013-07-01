@@ -14,6 +14,7 @@
 /* Thread functions */
 
 int thread_get_packet_capture_cpu_count();
+void thread_set_packet_capture_cpu_count(int count);
 int thread_get_cpu_count();
 int thread_get_id();
 void thread_set_id(int id);
