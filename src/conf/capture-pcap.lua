@@ -2,6 +2,8 @@ local arg = {...}
 
 require("utils")
 
+haka.app.install("log", haka.module.load("log-stdout"))
+
 haka.log.info("config", "configuring haka...")
 
 if arg[3] then
@@ -9,8 +11,6 @@ if arg[3] then
 else
 	haka.app.install("packet", haka.module.load("packet-pcap", "-i", arg[1]))
 end
-
-haka.app.install("log", haka.module.load("log-stdout"))
 
 haka.module.addpath(get_file_directory(arg[2]))
 

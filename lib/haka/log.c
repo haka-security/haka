@@ -20,16 +20,16 @@ int set_log_module(struct module *module)
 		return 1;
 	}
 
+	if (prev_log_module) {
+		module_release(&prev_log_module->module);
+	}
+
 	if (module) {
 		log_module = (struct log_module *)module;
 		module_addref(&log_module->module);
 	}
 	else {
 		log_module = NULL;
-	}
-
-	if (prev_log_module) {
-		module_release(&prev_log_module->module);
 	}
 
 	return 0;
