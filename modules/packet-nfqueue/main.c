@@ -323,6 +323,8 @@ static void cleanup()
 		close_pcap(&pcap->in);
 		close_pcap(&pcap->out);
 		close_pcap(&pcap->drop);
+		free(pcap);
+		pcap = NULL;
 	}
 }
 
