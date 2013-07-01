@@ -4,8 +4,10 @@
 
 #define INLINE static inline
 
-#define INIT __attribute__((constructor))
-#define FINI __attribute__((destructor))
+#define INIT __attribute__((constructor(32767)))
+#define INIT_P(p) __attribute__((constructor(p)))
+#define FINI __attribute__((destructor(32767)))
+#define FINI_P(p) __attribute__((destructor(p)))
 
 #define MIN(a, b)     ((a) < (b) ? (a) : (b))
 

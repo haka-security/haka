@@ -2,6 +2,7 @@
 #ifndef _HAKA_LUA_OBJECT_H
 #define _HAKA_LUA_OBJECT_H
 
+struct lua_state;
 struct lua_State;
 
 
@@ -13,7 +14,7 @@ struct lua_State;
  */
 
 struct lua_object {
-	struct lua_State *state;
+	struct lua_state *state;
 };
 
 void lua_object_initialize(struct lua_State *L);

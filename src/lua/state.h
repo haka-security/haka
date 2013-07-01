@@ -3,15 +3,14 @@
 #define _STATE_H
 
 #include <wchar.h>
+#include <haka/lua/state.h>
 
-typedef struct lua_State lua_state;
+struct lua_State;
 
-lua_state *init_state();
-void cleanup_state(lua_state *L);
-void print_error(lua_state *L, const wchar_t *msg);
-int run_file(lua_state *L, const char *filename, int argc, char *argv[]);
-int do_file_as_function(lua_state *L, const char *filename);
-int lua_error_formater(lua_state *L);
+struct lua_state *haka_init_state();
+void print_error(struct lua_State *L, const wchar_t *msg);
+int run_file(struct lua_State *L, const char *filename, int argc, char *argv[]);
+int do_file_as_function(struct lua_State *L, const char *filename);
 
 #endif /* _STATE_H */
 

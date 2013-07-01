@@ -19,10 +19,26 @@ struct ctable {
 	bool                  dropped;
 };
 
+static void tcp_connection_release(struct ctable *elem, bool freemem);
+
 static struct ctable *ct_head = NULL;
 
 mutex_t ct_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+static FINI void tcp_connection_fini()
+{
+	struct ctable *ptr, *del;
+
+	ptr = ct_head;
+	while (ptr) {
+		del = ptr;
+		ptr = ptr->next;
+
+		tcp_connection_release(del, true);
+	}
+
+	ct_head = NULL;
+}
 
 void tcp_connection_insert(struct ctable **head, struct ctable *elem)
 {

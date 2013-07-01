@@ -12,6 +12,7 @@
 #include <haka/packet_module.h>
 #include <haka/error.h>
 #include <haka/thread.h>
+#include <haka/lua/state.h>
 #include <haka/lua/lua.h>
 
 #include "thread.h"
@@ -22,7 +23,7 @@ struct thread_state {
 	int                         thread_id;
 	struct packet_module       *packet_module;
 	struct packet_module_state *capture;
-	lua_state                  *lua;
+	struct lua_state           *lua;
 	int                         lua_function;
 	pthread_t                   thread;
 	struct thread_pool         *pool;
@@ -38,20 +39,20 @@ extern void lua_pushppacket(lua_State *L, struct packet *pkt);
 
 static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 {
-	LUA_STACK_MARK(state->lua);
+	LUA_STACK_MARK(state->lua->L);
 
-	lua_pushcfunction(state->lua, lua_error_formater);
-	lua_getglobal(state->lua, "haka");
-	lua_getfield(state->lua, -1, "filter");
-	lua_pushppacket(state->lua, pkt);
+	lua_pushcfunction(state->lua->L, lua_state_error_formater);
+	lua_getglobal(state->lua->L, "haka");
+	lua_getfield(state->lua->L, -1, "filter");
+	lua_pushppacket(state->lua->L, pkt);
 
-	if (lua_pcall(state->lua, 1, 0, 2)) {
-		print_error(state->lua, L"filter function");
+	if (lua_pcall(state->lua->L, 1, 0, 2)) {
+		print_error(state->lua->L, L"filter function");
 	}
 
-	lua_pop(state->lua, 2);
+	lua_pop(state->lua->L, 2);
 
-	LUA_STACK_CHECK(state->lua, 0);
+	LUA_STACK_CHECK(state->lua->L, 0);
 }
 
 static void cleanup_thread_state(struct thread_state *state)
@@ -60,7 +61,7 @@ static void cleanup_thread_state(struct thread_state *state)
 	assert(state->packet_module);
 
 	if (state->lua) {
-		cleanup_state(state->lua);
+		lua_state_close(state->lua);
 		state->lua = NULL;
 	}
 
@@ -90,7 +91,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 
 	messagef(HAKA_LOG_INFO, L"core", L"initializing thread %d", thread_id);
 
-	state->lua = init_state();
+	state->lua = haka_init_state();
 	if (!state->lua) {
 		message(HAKA_LOG_FATAL, L"core", L"unable to create lua state");
 		cleanup_thread_state(state);
@@ -104,27 +105,27 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		return NULL;
 	}
 
-	lua_getglobal(state->lua, "require");
-	lua_pushstring(state->lua, "rule");
-	if (lua_pcall(state->lua, 1, 0, 0)) {
-		print_error(state->lua, NULL);
+	lua_getglobal(state->lua->L, "require");
+	lua_pushstring(state->lua->L, "rule");
+	if (lua_pcall(state->lua->L, 1, 0, 0)) {
+		print_error(state->lua->L, NULL);
 		cleanup_thread_state(state);
 		return NULL;
 	}
 
-	if (run_file(state->lua, get_configuration_script(), 0, NULL)) {
+	if (run_file(state->lua->L, get_configuration_script(), 0, NULL)) {
 		cleanup_thread_state(state);
 		return NULL;
 	}
 
-	lua_getglobal(state->lua, "haka");
-	lua_getfield(state->lua, -1, "rule_summary");
-	if (lua_pcall(state->lua, 0, 0, 0)) {
-		print_error(state->lua, NULL);
+	lua_getglobal(state->lua->L, "haka");
+	lua_getfield(state->lua->L, -1, "rule_summary");
+	if (lua_pcall(state->lua->L, 0, 0, 0)) {
+		print_error(state->lua->L, NULL);
 		cleanup_thread_state(state);
 		return NULL;
 	}
-	lua_pop(state->lua, 2);
+	lua_pop(state->lua->L, 2);
 
 	return state;
 }

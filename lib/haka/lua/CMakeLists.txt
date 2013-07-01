@@ -4,8 +4,9 @@ find_package(SWIG REQUIRED)
 include(UseSWIG)
 swig_add_module(libhaka-lua lua STATIC
 	packet.i
-	ref.c
 	object.i
+	ref.c
+	state.c
 	)
 
 # Lua dependency

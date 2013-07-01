@@ -1,6 +1,7 @@
 
 #include <haka/types.h>
 #include <haka/lua/ref.h>
+#include <haka/lua/state.h>
 
 #include <assert.h>
 
@@ -24,14 +25,17 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref)
 {
 	lua_ref_clear(ref);
 
-	ref->state = state;
-	ref->ref = luaL_ref(ref->state, LUA_REGISTRYINDEX);
+	ref->state = lua_state_get(state);
+	ref->ref = luaL_ref(state, LUA_REGISTRYINDEX);
 }
 
 bool lua_ref_clear(struct lua_ref *ref)
 {
 	if (lua_ref_isvalid(ref)) {
-		luaL_unref(ref->state, LUA_REGISTRYINDEX, ref->ref);
+		if (lua_state_isvalid(ref->state)) {
+			luaL_unref(ref->state->L, LUA_REGISTRYINDEX, ref->ref);
+		}
+
 		ref->ref = LUA_NOREF;
 		ref->state = NULL;
 		return true;
@@ -44,6 +48,6 @@ bool lua_ref_clear(struct lua_ref *ref)
 void lua_ref_push(struct lua_State *state, struct lua_ref *ref)
 {
 	assert(lua_ref_isvalid(ref));
-	assert(state == ref->state);
-	lua_rawgeti(ref->state, LUA_REGISTRYINDEX, ref->ref);
+	assert(state == ref->state->L);
+	lua_rawgeti(state, LUA_REGISTRYINDEX, ref->ref);
 }

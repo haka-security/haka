@@ -4,6 +4,7 @@
 #include <haka/types.h>
 #include <haka/compiler.h>
 #include <haka/lua/object.h>
+#include <haka/lua/state.h>
 #include <haka/lua/lua.h>
 
 #include <assert.h>
@@ -34,49 +35,54 @@ void lua_object_release(void *ptr, struct lua_object *obj)
 	assert(obj);
 
 	if (obj->state) {
-		lua_State *L = obj->state;
-		obj->state = NULL;
+		if (lua_state_isvalid(obj->state)) {
+			lua_State *L = obj->state->L;
+			obj->state = NULL;
 
-		LUA_STACK_MARK(L);
+			LUA_STACK_MARK(L);
 
-		lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
-		assert(lua_istable(L, -1));
+			lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
+			assert(lua_istable(L, -1));
 
-		lua_pushlightuserdata(L, obj);
-		lua_gettable(L, -2);
-		lua_pushnil(L);
+			lua_pushlightuserdata(L, obj);
+			lua_gettable(L, -2);
+			lua_pushnil(L);
 
-		assert(!lua_isnil(L, -2));
-		assert(lua_istable(L, -2));
+			assert(!lua_isnil(L, -2));
+			assert(lua_istable(L, -2));
 
-		while (lua_next(L, -2)) {
-			swig_lua_userdata *usr;
-			swig_lua_class *clss;
+			while (lua_next(L, -2)) {
+				swig_lua_userdata *usr;
+				swig_lua_class *clss;
 
-			assert(lua_isuserdata(L, -1));
-			usr = (swig_lua_userdata*)lua_touserdata(L, -1);
-			assert(usr);
-			assert(usr->ptr);
+				assert(lua_isuserdata(L, -1));
+				usr = (swig_lua_userdata*)lua_touserdata(L, -1);
+				assert(usr);
+				assert(usr->ptr);
 
-			if (usr->ptr != ptr && usr->own) {
-				clss = (swig_lua_class*)usr->type->clientdata;
-				if (clss && clss->destructor)
-				{
-					clss->destructor(usr->ptr);
+				if (usr->ptr != ptr && usr->own) {
+					clss = (swig_lua_class*)usr->type->clientdata;
+					if (clss && clss->destructor)
+					{
+						clss->destructor(usr->ptr);
+					}
 				}
+
+				usr->ptr = NULL;
+				lua_pop(L, 1);
 			}
 
-			usr->ptr = NULL;
 			lua_pop(L, 1);
+			lua_pushlightuserdata(L, obj);
+			lua_pushnil(L);
+			lua_settable(L, -3);
+			lua_pop(L, 1);
+
+			LUA_STACK_CHECK(L, 0);
 		}
-
-		lua_pop(L, 1);
-		lua_pushlightuserdata(L, obj);
-		lua_pushnil(L);
-		lua_settable(L, -3);
-		lua_pop(L, 1);
-
-		LUA_STACK_CHECK(L, 0);
+		else {
+			obj->state = NULL;
+		}
 	}
 }
 
@@ -84,7 +90,7 @@ bool lua_object_get(lua_State *L, struct lua_object *obj, swig_type_info *type_i
 {
 	assert(obj);
 
-	if (obj->state && obj->state != L) {
+	if (obj->state && obj->state->L != L) {
 		lua_pushstring(L, "invalid lua state (an object is being used by multiple lua state)");
 		return false;
 	}
@@ -113,11 +119,11 @@ bool lua_object_get(lua_State *L, struct lua_object *obj, swig_type_info *type_i
 void lua_object_register(lua_State *L, struct lua_object *obj, swig_type_info *type_info, int index)
 {
 	if (!obj->state) {
-		obj->state = L;
+		obj->state = lua_state_get(L);
 	}
 	else {
 		/* A given lua object can only belong to 1 lua state */
-		assert(obj->state == L);
+		assert(obj->state->L == L);
 	}
 
 	LUA_STACK_MARK(L);

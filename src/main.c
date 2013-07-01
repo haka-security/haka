@@ -13,13 +13,14 @@
 #include <haka/thread.h>
 #include <haka/error.h>
 #include <haka/version.h>
+#include <haka/lua/state.h>
 
 #include "app.h"
 #include "thread.h"
 #include "lua/state.h"
 
 
-static lua_state *global_lua_state;
+static struct lua_state *global_lua_state;
 static struct thread_pool *thread_states;
 
 
@@ -36,7 +37,7 @@ static void clean_exit()
 	}
 
 	if (global_lua_state) {
-		cleanup_state(global_lua_state);
+		lua_state_close(global_lua_state);
 		global_lua_state = NULL;
 	}
 
@@ -164,10 +165,10 @@ int main(int argc, char *argv[])
 	}
 
 	/* Init lua vm */
-	global_lua_state = init_state();
+	global_lua_state = haka_init_state();
 
 	/* Execute configuration file */
-	if (run_file(global_lua_state, argv[0], argc-1, argv+1)) {
+	if (run_file(global_lua_state->L, argv[0], argc-1, argv+1)) {
 		message(HAKA_LOG_FATAL, L"core", L"configuration error");
 		clean_exit();
 		return 1;

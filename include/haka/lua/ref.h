@@ -2,6 +2,7 @@
 #ifndef _HAKA_LUA_REF_H
 #define _HAKA_LUA_REF_H
 
+struct lua_state;
 struct lua_State;
 
 
@@ -10,7 +11,7 @@ struct lua_State;
  */
 
 struct lua_ref {
-	struct lua_State *state;
+	struct lua_state *state;
 	int               ref;
 };
 
