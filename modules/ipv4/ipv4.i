@@ -93,6 +93,8 @@ struct ipv4_addr {
 
 
 %rename(network) ipv4_network;
+%newobject ipv4_network::net;
+
 struct ipv4_network {
 	%extend {
 		ipv4_network(const char *str) {
@@ -205,6 +207,8 @@ struct ipv4_payload {
 
 LUA_OBJECT(struct ipv4);
 %newobject ipv4::forge;
+%newobject ipv4::src;
+%newobject ipv4::dst;
 
 struct ipv4 {
 	%extend {

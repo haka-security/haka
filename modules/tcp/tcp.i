@@ -164,6 +164,8 @@ struct tcp {
 LUA_OBJECT(struct tcp_connection);
 %delobject tcp_connection::close;
 %delobject tcp_connection::drop;
+%newobject tcp_connection::srcip;
+%newobject tcp_connection::dstip;
 
 struct tcp_connection {
 	%extend {
