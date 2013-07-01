@@ -52,7 +52,7 @@ Options
 To add an option to cmake, add ``-DOPTION=VALUE`` to the command line option when calling cmake.
 The configuration with cmake supports the following options:
 
-.. option:: BUILD=[Debug|Release|RelWithDebInfo|MinSizeRel]
+.. option:: BUILD=[Debug|Memcheck|Release|RelWithDebInfo|MinSizeRel]
 
     Select the build type to be compiled (default: *Release*)
 

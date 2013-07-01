@@ -32,6 +32,22 @@ set(BUILD "None" CACHE STRING "Selected build type")
 set(CMAKE_BUILD_TYPE ${BUILD})
 message(STATUS "Building configuration (BUILD): ${CMAKE_BUILD_TYPE}")
 
+set(CMAKE_C_FLAGS_MEMCHECK ${CMAKE_C_FLAGS_DEBUG})
+set(CMAKE_CXX_FLAGS_MEMCHECK ${CMAKE_CXX_FLAGS_DEBUG})
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+set(HAKA_DEBUG 1)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Memcheck")
+set(HAKA_DEBUG 1)
+set(HAKA_MEMCHECK 1)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+set(HAKA_NDEBUG 1)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+set(HAKA_NDEBUG 1)
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+set(HAKA_NDEBUG 1)
+endif()
+
 # Install prefix
 set(PREFIX "/usr/local" CACHE STRING "Installation prefix")
 message(STATUS "Installation prefix (PREFIX): ${PREFIX}")
