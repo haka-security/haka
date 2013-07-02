@@ -73,8 +73,10 @@ struct tcp_payload {
 	}
 };
 
+LUA_OBJECT(struct tcp);
+LUA_OBJECT(struct tcp_connection);
 LUA_OBJECT(struct stream);
-%delobject stream::push;
+
 %newobject stream::pop;
 
 struct stream
@@ -85,9 +87,9 @@ struct stream
 			tcp_stream_init($self, seq);
 		}
 
-		void push(struct tcp *tcp)
+		void push(struct tcp *DISOWN)
 		{
-			tcp_stream_push($self, tcp);
+			tcp_stream_push($self, DISOWN);
 		}
 
 		struct tcp *pop()
@@ -109,7 +111,6 @@ struct stream
 
 BASIC_STREAM(stream)
 
-LUA_OBJECT(struct tcp);
 %newobject tcp::forge;
 
 struct tcp {
@@ -161,9 +162,6 @@ struct tcp {
 };
 
 
-LUA_OBJECT(struct tcp_connection);
-%delobject tcp_connection::close;
-%delobject tcp_connection::drop;
 %newobject tcp_connection::srcip;
 %newobject tcp_connection::dstip;
 
