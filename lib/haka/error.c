@@ -18,6 +18,7 @@ struct local_error {
 };
 
 static local_storage_t local_error_key;
+static bool error_is_valid = false;
 
 
 static void error_delete(void *value)
@@ -29,6 +30,8 @@ INIT static void _error_init()
 {
 	UNUSED const bool ret = local_storage_init(&local_error_key, error_delete);
 	assert(ret);
+
+	error_is_valid = true;
 }
 
 FINI static void _error_fini()
@@ -39,6 +42,8 @@ FINI static void _error_fini()
 			error_delete(context);
 		}
 	}
+
+	error_is_valid = false;
 
 	{
 		UNUSED const bool ret = local_storage_destroy(&local_error_key);
@@ -62,38 +67,50 @@ static struct local_error *error_context()
 
 void error(const wchar_t *error, ...)
 {
-	struct local_error *context = error_context();
-	if (!context->is_error) {
-		va_list ap;
-		va_start(ap, error);
-		vswprintf(context->error_message, HAKA_ERROR_SIZE, error, ap);
-		va_end(ap);
+	if (error_is_valid) {
+		struct local_error *context = error_context();
+		if (!context->is_error) {
+			va_list ap;
+			va_start(ap, error);
+			vswprintf(context->error_message, HAKA_ERROR_SIZE, error, ap);
+			va_end(ap);
 
-		context->is_error = true;
+			context->is_error = true;
+		}
 	}
 }
 
 const char *errno_error(int err)
 {
-	struct local_error *context = error_context();
-	if (strerror_r(err, context->errno_message, HAKA_ERROR_SIZE))
-		return context->errno_message;
-	else
-		return "Unknown error";
+	if (error_is_valid) {
+		struct local_error *context = error_context();
+		if (strerror_r(err, context->errno_message, HAKA_ERROR_SIZE)) {
+			return context->errno_message;
+		}
+	}
+
+	return "Unknown error";
 }
 
 bool check_error()
 {
-	struct local_error *context = error_context();
-	return context->is_error;
+	if (error_is_valid) {
+		struct local_error *context = error_context();
+		return context->is_error;
+	}
+	else {
+		return false;
+	}
 }
 
 const wchar_t *clear_error()
 {
-	struct local_error *context = error_context();
-	if (context->is_error) {
-		context->is_error = false;
-		return context->error_message;
+	if (error_is_valid) {
+		struct local_error *context = error_context();
+		if (context->is_error) {
+			context->is_error = false;
+			return context->error_message;
+		}
 	}
 	return NULL;
 }
