@@ -70,11 +70,11 @@ static int log_message(log_level lvl, const wchar_t *module, const wchar_t *mess
 	}
 
 #ifdef USE_COLORS
-	fwprintf(stdout, L"%s%s%s%*s %s%ls:%s%*s %s%ls%s\n", level_color[lvl], level_str,
+	fprintf(stdout, "%s%s%s%*s %s%ls:%s%*s %s%ls%s\n", level_color[lvl], level_str,
 			CLEAR, level_size-5, "", MODULE_COLOR, module, CLEAR,
 			_max_module_size-module_size, "", message_color[lvl], message, CLEAR);
 #else
-	fwprintf(stdout, L"%s%*s %ls:%*s %ls\n", level_str, level_size-5, "",
+	fprintf(stdout, "%s%*s %ls:%*s %ls\n", level_str, level_size-5, "",
 			module, _max_module_size-module_size, "", message);
 #endif /* USES_COLORS */
 

@@ -53,7 +53,7 @@ static void fatal_error_signal(int sig)
 		raise(sig);
 	fatal_error_in_progress = 1;
 
-	wprintf(L"\n");
+	printf("\n");
 	message(HAKA_LOG_FATAL, L"core", L"fatal signal received");
 
 	clean_exit();

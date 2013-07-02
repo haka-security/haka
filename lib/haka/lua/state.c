@@ -90,10 +90,6 @@ static const char *luaL_tolstring(lua_State* L, int idx, size_t *len)
 	return lua_tolstring(L, -1, len);
 }
 
-/*
- * We need to override the print function to print using wprintf otherwise
- * nothing is visible in the output on Linux.
- */
 static int lua_print(lua_State* L)
 {
 	int i;
@@ -101,13 +97,13 @@ static int lua_print(lua_State* L)
 
 	for (i=1; i<=nargs; i++) {
 		if (i > 1)
-			wprintf(L" ");
+			printf(" ");
 
-		wprintf(L"%s", luaL_tolstring(L, i, NULL));
+		printf("%s", luaL_tolstring(L, i, NULL));
 		lua_pop(L, 1);
 	}
 
-	wprintf(L"\n");
+	printf("\n");
 
 	return 0;
 }

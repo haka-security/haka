@@ -29,7 +29,6 @@ START_TEST(ipv4_network_check)
 	char str[32];
 	ipv4network network;
 	network = ipv4_network_from_string("192.168.1.0/24");
-	wprintf(L"--------- : %d\n", network.net);
 	ck_assert_int_eq(network.net, -1062731520);
 	ck_assert_int_eq(network.mask, 24);
 	network.net = -1408237568;
