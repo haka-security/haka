@@ -67,6 +67,8 @@ void print_error(struct lua_State *L, const wchar_t *msg)
 		messagef(HAKA_LOG_ERROR, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
 	else
 		messagef(HAKA_LOG_ERROR, L"lua", L"%s", lua_tostring(L, -1));
+
+	lua_pop(L, 1);
 }
 
 int run_file(struct lua_State *L, const char *filename, int argc, char *argv[])
