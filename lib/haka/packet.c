@@ -7,7 +7,6 @@
 #include <haka/log.h>
 #include <haka/packet_module.h>
 
-//extern void lua_invalidatepacket(struct packet *pkt);
 
 static struct packet_module *packet_module = NULL;
 

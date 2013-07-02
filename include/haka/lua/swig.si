@@ -10,8 +10,7 @@
 	#pragma GCC diagnostic ignored "-Warray-bounds"
 %}
 
-%define DEFAULT_EXCEPTION
-
+%exception {
 	const wchar_t *error;
 	$action
 	if ((error = clear_error())) {
@@ -36,9 +35,6 @@
 
 		SWIG_fail;
 	}
-%enddef
-%exception {
-	DEFAULT_EXCEPTION
 }
 
 %typemap(out) temporary_string {
