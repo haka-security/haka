@@ -5,7 +5,8 @@ if(READLINE_FOUND)
 	include(UseSWIG)
 	swig_add_module(luainteract lua SHARED
 		interact.i
-		interact.c
+		session.c
+		complete.c
 	)
 
 	LUA_LINK(luainteract)

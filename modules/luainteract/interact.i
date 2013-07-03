@@ -1,9 +1,9 @@
 %module luainteract
 
 %{
-	#include "interact.h"
+	#include "session.h"
 
-	#define new_luainteract_session()   luainteract_create(L)
+	#define new_luainteract_session()   luainteract_session_create(L)
 %}
 
 %rename(session) luainteract_session;
@@ -13,15 +13,15 @@ struct luainteract_session {
 		luainteract_session();
 
 		~luainteract_session() {
-			luainteract_cleanup($self);
+			luainteract_session_cleanup($self);
 		}
 
 		void start() {
-			luainteract_enter($self);
+			luainteract_session_enter($self);
 		}
 
 		void setprompt(const char *single, const char *multi) {
-			luainteract_setprompts($self, single, multi);
+			luainteract_session_setprompts($self, single, multi);
 		}
 	}
 };
