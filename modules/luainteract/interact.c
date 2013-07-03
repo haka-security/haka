@@ -532,13 +532,10 @@ void luainteract_enter(struct luainteract_session *session)
 		char *current_line;
 
 		if (multiline) {
-			if (full_line) {
-				full_line = realloc(full_line, strlen(full_line) + strlen(line) + 1);
-				strcpy(full_line + strlen(full_line), line);
-			}
-			else {
-				full_line = strdup(line);
-			}
+			assert(full_line);
+
+			full_line = realloc(full_line, strlen(full_line) + strlen(line) + 1);
+			strcpy(full_line + strlen(full_line), line);
 
 			current_line = full_line;
 		}
@@ -566,13 +563,6 @@ void luainteract_enter(struct luainteract_session *session)
 		}
 
 		multiline = false;
-
-		free(line);
-
-		if (!multiline) {
-			free(full_line);
-			full_line = NULL;
-		}
 
 		/* Change the chunk environment */
 		lua_pushvalue(session->L, session->env_index);
@@ -605,6 +595,16 @@ void luainteract_enter(struct luainteract_session *session)
 		else {
 			execute(session->L);
 		}
+
+		if (!multiline) {
+			free(full_line);
+			full_line = NULL;
+		}
+		else if (!full_line) {
+			full_line = strdup(line);
+		}
+
+		free(line);
 	}
 
 	printf("\n");
