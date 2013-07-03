@@ -25,8 +25,10 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref)
 {
 	lua_ref_clear(ref);
 
-	ref->state = lua_state_get(state);
-	ref->ref = luaL_ref(state, LUA_REGISTRYINDEX);
+	if (!lua_isnil(state, -1)) {
+		ref->state = lua_state_get(state);
+		ref->ref = luaL_ref(state, LUA_REGISTRYINDEX);
+	}
 }
 
 bool lua_ref_clear(struct lua_ref *ref)
@@ -47,7 +49,11 @@ bool lua_ref_clear(struct lua_ref *ref)
 
 void lua_ref_push(struct lua_State *state, struct lua_ref *ref)
 {
-	assert(lua_ref_isvalid(ref));
-	assert(state == ref->state->L);
-	lua_rawgeti(state, LUA_REGISTRYINDEX, ref->ref);
+	if (lua_ref_isvalid(ref)) {
+		assert(state == ref->state->L);
+		lua_rawgeti(state, LUA_REGISTRYINDEX, ref->ref);
+	}
+	else {
+		lua_pushnil(state);
+	}
 }

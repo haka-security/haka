@@ -2,6 +2,9 @@
 #ifndef _HAKA_LUA_REF_H
 #define _HAKA_LUA_REF_H
 
+#include <haka/types.h>
+
+
 struct lua_state;
 struct lua_State;
 
