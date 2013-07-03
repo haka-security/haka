@@ -45,32 +45,7 @@ struct luainteract_session
 #define EOF_MARKER   "'<eof>'"
 
 
-static local_storage_t current_session_key;
 static mutex_t active_session_mutex = MUTEX_INIT;
-
-INIT static void _luainteract_init()
-{
-	UNUSED const bool ret = local_storage_init(&current_session_key, NULL);
-	assert(ret);
-}
-
-FINI static void _luainteract_fini()
-{
-	UNUSED const bool ret = local_storage_destroy(&current_session_key);
-	assert(ret);
-}
-
-static void luainteract_setcurrent(struct luainteract_session *session)
-{
-	local_storage_set(&current_session_key, session);
-}
-
-static struct luainteract_session *luainteract_getcurrent()
-{
-	struct luainteract_session *ret = (struct luainteract_session *)local_storage_get(&current_session_key);
-	assert(ret);
-	return ret;
-}
 
 static void display_matches(char **matches, int num_matches, int max_length)
 {
@@ -90,32 +65,20 @@ static const complete_callback completions[] = {
 	NULL
 };
 
+static struct luainteract_session *current_session;
+
 static char *generator(const char *text, int state)
 {
-	struct luainteract_session *session = luainteract_getcurrent();
-	char *match = complete_generator(session->L, &session->complete, completions, text, state);
-	rl_completion_suppress_append = !session->complete.space;
+	char *match = complete_generator(current_session->L, &current_session->complete,
+			completions, text, state);
+	rl_completion_suppress_append = !current_session->complete.space;
 	return match;
 }
 
 static char **complete(const char *text, int start, int end)
 {
-	char **matches;
-	struct luainteract_session *session = luainteract_getcurrent();
-
-	session->complete.stack_env = session->env_index;
-	matches = rl_completion_matches(text, generator);
-
-	return matches;
-}
-
-INIT static void luainteract_init()
-{
-	rl_basic_word_break_characters = " \t\n`@$><=;|&{(";
-	rl_readline_name = "Haka";
-	rl_attempted_completion_function = complete;
-	rl_filename_completion_desired = 0;
-	rl_completion_display_matches_hook = display_matches;
+	current_session->complete.stack_env = current_session->env_index;
+	return rl_completion_matches(text, generator);
 }
 
 struct luainteract_session *luainteract_session_create(struct lua_State *L)
@@ -190,7 +153,13 @@ void luainteract_session_enter(struct luainteract_session *session)
 
 	mutex_lock(&active_session_mutex);
 
-	luainteract_setcurrent(session);
+	rl_basic_word_break_characters = " \t\n`@$><=;|&{(";
+	rl_readline_name = "Haka";
+	rl_attempted_completion_function = complete;
+	rl_filename_completion_desired = 0;
+	rl_completion_display_matches_hook = display_matches;
+
+	current_session = session;
 	LUA_STACK_MARK(session->L);
 
 	/* Build a local environment that contains the parent context
@@ -306,7 +275,7 @@ void luainteract_session_enter(struct luainteract_session *session)
 	lua_pop(session->L, 2);
 	LUA_STACK_CHECK(session->L, 0);
 
-	luainteract_setcurrent(NULL);
+	current_session = NULL;
 
 	mutex_unlock(&active_session_mutex);
 }
