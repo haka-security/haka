@@ -81,18 +81,18 @@ local function parse_header(stream, http)
 	local total_len = 0
 
 	http.headers = {}
-	http.headers_order = {}
+	http._headers_order = {}
 	line, len = read_line(stream)
 	total_len = total_len + len
 	while #line > 0 do
 		local name, value = line:match("([^%s]+):%s*(.+)")
 		if not name then
-			http.valid = false
+			http._valid = false
 			return
 		end
 
 		http.headers[name] = value
-		table.insert(http.headers_order, name)
+		table.insert(http._headers_order, name)
 		line, len = read_line(stream)
 		total_len = total_len + len
 	end
@@ -108,20 +108,20 @@ local function parse_request(stream, http)
 
 	http.method, http.uri, http.version = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.method then
-		http.valid = false
+		http._valid = false
 		return
 	end
 
 	total_len = total_len + parse_header(stream, http)
 
 	http.data = stream
-	http.length = total_len
+	http._length = total_len
 
 	http.dump = function (self)
 		dump(self, "")
 	end
 
-	http.valid = true
+	http._valid = true
 	return true
 end
 
@@ -133,20 +133,20 @@ local function parse_response(stream, http)
 
 	http.version, http.status, http.reason = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.version then
-		http.valid = false
+		http._valid = false
 		return
 	end
 
 	total_len = total_len + parse_header(stream, http)
 
 	http.data = stream
-	http.length = total_len
+	http._length = total_len
 
 	http.dump = function (self)
 		dump(self, "")
 	end
 
-	http.valid = true
+	http._valid = true
 	return true
 end
 
@@ -176,57 +176,57 @@ local function build_headers(stream, headers, headers_order)
 end
 
 local function forge(http)
-	local tcp = http.tcp_stream
+	local tcp = http._tcp_stream
 	if tcp then
-		if http.state == 2 and tcp.direction then
-			http.state = 3
+		if http._state == 2 and tcp.direction then
+			http._state = 3
 
-			tcp.stream:seek(http.request.mark, true)
-			http.request.mark = nil
+			tcp.stream:seek(http.request._mark, true)
+			http.request._mark = nil
 
-			tcp.stream:erase(http.request.length)
+			tcp.stream:erase(http.request._length)
 			tcp.stream:insert(http.request.method)
 			tcp.stream:insert(" ")
 			tcp.stream:insert(http.request.uri)
 			tcp.stream:insert(" ")
 			tcp.stream:insert(http.request.version)
 			tcp.stream:insert("\r\n")
-			build_headers(tcp.stream, http.request.headers, http.request.headers_order)
+			build_headers(tcp.stream, http.request.headers, http.request._headers_order)
 			tcp.stream:insert("\r\n")
 
-		elseif http.state == 5 and not tcp.direction then
-			http.state = 0
+		elseif http._state == 5 and not tcp.direction then
+			http._state = 0
 
-			tcp.stream:seek(http.response.mark, true)
-			http.response.mark = nil
+			tcp.stream:seek(http.response._mark, true)
+			http.response._mark = nil
 
-			tcp.stream:erase(http.response.length)
+			tcp.stream:erase(http.response._length)
 			tcp.stream:insert(http.response.version)
 			tcp.stream:insert(" ")
 			tcp.stream:insert(http.response.status)
 			tcp.stream:insert(" ")
 			tcp.stream:insert(http.response.reason)
 			tcp.stream:insert("\r\n")
-			build_headers(tcp.stream, http.response.headers, http.response.headers_order)
+			build_headers(tcp.stream, http.response.headers, http.response._headers_order)
 			tcp.stream:insert("\r\n")
 		end
 
-		http.tcp_stream = nil
+		http._tcp_stream = nil
 	end
 	return tcp
 end
 
 local function parse(http, context, f, name, next_state)
 	if not context.co then
-		context.mark = http.tcp_stream.stream:mark()
-		context.co = coroutine.create(function () f(http.tcp_stream.stream, context) end)
+		context._mark = http._tcp_stream.stream:mark()
+		context._co = coroutine.create(function () f(http._tcp_stream.stream, context) end)
 	end
 
-	coroutine.resume(context.co)
+	coroutine.resume(context._co)
 
-	if coroutine.status(context.co) == "dead" then
-		if context.valid then
-			http.state = next_state
+	if coroutine.status(context._co) == "dead" then
+		if context._valid then
+			http._state = next_state
 			if haka.rule_hook("http-".. name, http) then
 				return nil
 			end
@@ -234,7 +234,7 @@ local function parse(http, context, f, name, next_state)
 			context.next_dissector = http.next_dissector
 		else
 			haka.log.error("http", "invalid " .. name)
-			http.tcp_stream:drop()
+			http._tcp_stream:drop()
 			return nil
 		end
 	end
@@ -249,27 +249,27 @@ haka.dissector {
 			http.dissector = "http"
 			http.next_dissector = nil
 			http.valid = function (self)
-				return self.tcp_stream:valid()
+				return self._tcp_stream:valid()
 			end
 			http.drop = function (self)
-				return self.tcp_stream:drop()
+				return self._tcp_stream:drop()
 			end
 			http.forge = forge
-			http.state = 0
+			http._state = 0
 
 			stream.connection.data.http = http
 		end
 
 		local http = stream.connection.data.http
-		http.tcp_stream = stream
+		http._tcp_stream = stream
 
 		if stream.direction then
-			if http.state == 0 or http.state == 1 then
+			if http._state == 0 or http._state == 1 then
 				if stream.stream:available() > 0 then
-					if http.state == 0 then
+					if http._state == 0 then
 						http.request = {}
 						http.response = nil
-						http.state = 1
+						http._state = 1
 					end
 
 					parse(http, http.request, parse_request, "request", 2)
@@ -278,11 +278,11 @@ haka.dissector {
 				http.next_dissector = http.request.next_dissector
 			end
 		else
-			if http.state == 3 or http.state == 4 then
+			if http._state == 3 or http._state == 4 then
 				if stream.stream:available() > 0 then
-					if http.state == 3 then
+					if http._state == 3 then
 						http.response = {}
-						http.state = 4
+						http._state = 4
 					end
 
 					parse(http, http.response, parse_response, "response", 5)

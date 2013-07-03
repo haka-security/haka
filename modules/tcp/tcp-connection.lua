@@ -7,7 +7,7 @@ local function forge(self)
 
 	pkt = self.stream:pop()
 	if not pkt then
-		pkt = table.remove(self.connection.data.queue)
+		pkt = table.remove(self.connection.data._queue)
 		if pkt then
 			self.connection:stream(self.direction):seq(pkt)
 		end
@@ -62,9 +62,9 @@ local function dissect(pkt)
 				return nil
 			end
 
-			newpkt.connection.data.next_dissector = newpkt.next_dissector
-			newpkt.connection.data.state = 0
-			newpkt.connection.data.queue = {}
+			newpkt.connection.data._next_dissector = newpkt.next_dissector
+			newpkt.connection.data._state = 0
+			newpkt.connection.data._queue = {}
 			newpkt.direction = true
 		else
 			if not dropped then
@@ -84,26 +84,26 @@ local function dissect(pkt)
 		return nil
 	elseif pkt.flags.rst then
 		newpkt.__drop = true
-		table.insert(newpkt.connection.data.queue, pkt)
+		table.insert(newpkt.connection.data._queue, pkt)
 		return newpkt
-	elseif newpkt.connection.data.state >= 2 then
+	elseif newpkt.connection.data._state >= 2 then
 		if pkt.flags.ack then
-			newpkt.connection.data.state = newpkt.connection.data.state + 1
+			newpkt.connection.data._state = newpkt.connection.data._state + 1
 		end
 	
-		if newpkt.connection.data.state >= 3 then
+		if newpkt.connection.data._state >= 3 then
 			newpkt.__close = true
 		end
 
-		table.insert(newpkt.connection.data.queue, pkt)
+		table.insert(newpkt.connection.data._queue, pkt)
 		return newpkt
 	elseif pkt.flags.fin then
-		newpkt.connection.data.state = newpkt.connection.data.state+1
-		table.insert(newpkt.connection.data.queue, pkt)
+		newpkt.connection.data._state = newpkt.connection.data._state+1
+		table.insert(newpkt.connection.data._queue, pkt)
 		return newpkt
 	else
 		newpkt.stream:push(pkt)
-		newpkt.next_dissector = newpkt.connection.data.next_dissector
+		newpkt.next_dissector = newpkt.connection.data._next_dissector
 		return newpkt
 	end
 end
