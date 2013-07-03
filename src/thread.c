@@ -39,14 +39,18 @@ extern void lua_pushppacket(lua_State *L, struct packet *pkt);
 
 static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 {
+	int h;
+
 	LUA_STACK_MARK(state->lua->L);
 
 	lua_pushcfunction(state->lua->L, lua_state_error_formater);
+	h = lua_gettop(state->lua->L);
+
 	lua_getglobal(state->lua->L, "haka");
 	lua_getfield(state->lua->L, -1, "filter");
 	lua_pushppacket(state->lua->L, pkt);
 
-	if (lua_pcall(state->lua->L, 1, 0, 2)) {
+	if (lua_pcall(state->lua->L, 1, 0, h)) {
 		print_error(state->lua->L, L"filter function");
 	}
 
