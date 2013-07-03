@@ -29,6 +29,8 @@ struct luainteract_session {
 %luacode {
 	haka.session = luainteract.session()
 
+	local color = require("haka/color")
+
 	local function __hidden(name)
 		if type(name) == "string" then
 			return name:sub(1, 1) == "_"
@@ -50,7 +52,7 @@ struct luainteract_session {
 
 		local title
 		if name then
-			title = indent .. " \x1b[34m\x1b[1m" .. name .. "\x1b[0m" .. " :"
+			title = indent .. " " .. color.blue .. color.bold .. name .. color.clear .. " :"
 		else
 			title = ""
 		end
@@ -76,7 +78,7 @@ struct luainteract_session {
 					for key, _ in pairs(meta[".get"]) do
 						if not __hidden(key) then
 							if not has_value then
-								print(indent, name, ": {")
+								print(title, "{")
 								has_value = true
 							end
 
@@ -87,16 +89,18 @@ struct luainteract_session {
 					if has_value then
 						print(indent, "}")
 					else
-						print(title, "userdata")
+						print(title, color.cyan .. color.bold .. "userdata" .. color.clear)
 					end
 				end
 			else
-				print(title, "userdata")
+				print(title, color.cyan .. color.bold .. "userdata" .. color.clear)
 			end
 		elseif type == "function" then
-			print(title, "function")
+			print(title, color.cyan .. color.bold .. "function" .. color.clear)
 		elseif type == "string" then
-			print(title, "\"" .. obj .. "\"")
+			print(title, color.magenta .. color.bold .. "\"" .. obj .. "\"" .. color.clear)
+		elseif type == "boolean" then
+			print(title, color.magenta .. color.bold .. tostring(obj) .. color.clear)
 		else
 			print(title, obj)
 		end
@@ -108,5 +112,14 @@ struct luainteract_session {
 		else
 			__pprint(obj, "", nil, {})
 		end
+	end
+
+	function luainteract.interactive_rule(self, input)
+		haka.log("luainteract", "entering interactive rule")
+		luainteract.pprint(input, "input")
+		haka.session:setprompt(color.green .. self.hook .. color.bold .. ">  " .. color.clear,
+			color.green .. self.hook .. color.bold .. ">> " .. color.clear)
+		haka.session:start()
+		haka.log("luainteract", "continue")
 	end
 }

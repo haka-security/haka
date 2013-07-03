@@ -5,6 +5,7 @@
 #include <haka/compiler.h>
 #include <haka/thread.h>
 #include <haka/lua/state.h>
+#include <haka/lua/lua.h>
 
 #include <stdio.h>
 #include <lua.h>
@@ -430,7 +431,7 @@ struct luainteract_session *luainteract_create(struct lua_State *L)
 	ret->prompt_single = NULL;
 	ret->prompt_multi = NULL;
 
-	luainteract_setprompts(ret, ">  ", ">> ");
+	luainteract_setprompts(ret, GREEN BOLD ">  " CLEAR, GREEN BOLD ">> " CLEAR);
 
 	return ret;
 }
@@ -497,6 +498,7 @@ void luainteract_enter(struct luainteract_session *session)
 	mutex_lock(&active_session_mutex);
 
 	luainteract_setcurrent(session);
+	LUA_STACK_MARK(session->L);
 
 	/* Build a local environment that contains the parent context
 	 * and the local variables */
@@ -608,6 +610,9 @@ void luainteract_enter(struct luainteract_session *session)
 	printf("\n");
 	rl_on_new_line();
 
+	lua_pop(session->L, 2);
+	LUA_STACK_CHECK(session->L, 0);
+
 	luainteract_setcurrent(NULL);
 
 	mutex_unlock(&active_session_mutex);
@@ -618,6 +623,6 @@ void luainteract_setprompts(struct luainteract_session *session, const char *sin
 	free(session->prompt_single);
 	free(session->prompt_multi);
 
-	asprintf(&session->prompt_single, "%s%s%s%s", GREEN, BOLD, single, CLEAR);
-	asprintf(&session->prompt_multi, "%s%s%s%s", GREEN, BOLD, multi, CLEAR);
+	session->prompt_single = strdup(single);
+	session->prompt_multi = strdup(multi);
 }
