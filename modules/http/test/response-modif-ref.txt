@@ -6,7 +6,6 @@ HTTP REQUEST
    3 = Host
    4 = Connection
  _length = 127
- _valid = true
  headers
    Accept = */*
    Connection = Keep-Alive
@@ -24,7 +23,6 @@ HTTP RESPONSE
    5 = Transfer-Encoding
    6 = Content-Type
  _length = 223
- _valid = true
  headers
    Connection = Keep-Alive
    Content-Type = text/html; charset=ISO-8859-1
@@ -42,7 +40,6 @@ HTTP MODIFIED RESPONSE
    3 = Host
    4 = Connection
  _length = 127
- _valid = true
  headers
  method = GET
  uri = /twiki/bin/view/
