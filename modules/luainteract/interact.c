@@ -156,7 +156,8 @@ static char *table_key_search(struct luainteract_session *session, const char *t
 				else {
 					candidate = strdup(lua_tolstring(session->L, -1, &l));
 
-					if (skip_internal && candidate[0] == '_') {
+					if (skip_internal && candidate[0] == '_' &&
+						session->compl_token[0] != '_') {
 						continue;
 					}
 
@@ -447,18 +448,13 @@ static int luap_call(lua_State *L, int n) {
 	int status;
 	int h;
 
-	/* Add the traceback formatter */
 	h = lua_gettop(L) - n;
 	lua_pushcfunction(L, lua_state_error_formater);
 	lua_insert(L, h);
 
-	/* Try to execute the supplied chunk and keep note of any return
-	 * values. */
 	status = lua_pcall(L, n, LUA_MULTRET, h);
-
-	/* Print all returned values with proper formatting. */
 	if (status) {
-		printf("%s\n", lua_tostring(L, -1));
+		printf(RED "%s\n" CLEAR, lua_tostring(L, -1));
 		lua_pop(L, 1);
 	}
 
@@ -469,11 +465,11 @@ static int luap_call(lua_State *L, int n) {
 
 static int execute(lua_State *L)
 {
-	int i, h_0, h, status;
+	int i, g, h, status;
 
-	h_0 = lua_gettop(L);
+	g = lua_gettop(L);
 	status = luap_call(L, 0);
-	h = lua_gettop(L) - h_0 + 1;
+	h = lua_gettop(L) - g + 1;
 
 	for (i = h ; i > 0 ; i -= 1) {
 		lua_getglobal(L, "luainteract");
@@ -484,8 +480,7 @@ static int execute(lua_State *L)
 		lua_pop(L, 1);
 	}
 
-	lua_settop(L, h_0 - 1);
-
+	lua_settop(L, g - 1);
 	return status;
 }
 

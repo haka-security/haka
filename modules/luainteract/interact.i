@@ -39,16 +39,8 @@ struct luainteract_session {
 		end
 	end
 
-	local function __pprint(obj, indent, name, visited)
+	local function __pprint(obj, indent, name, visited, hidden)
 		local type = type(obj)
-
-		if type == "userdata" or type == "table" then
-			if visited[obj] then
-				return
-			end
-
-			visited[obj] = true
-		end
 
 		local title
 		if name then
@@ -57,12 +49,21 @@ struct luainteract_session {
 			title = ""
 		end
 
+		if type == "userdata" or type == "table" then
+			if visited[obj] then
+				print(title, color.red .. "recursive value" .. color.clear)
+				return
+			end
+
+			visited[obj] = true
+		end
+
 		if type == "table" then
-			print(title, "{")
+			print(title, color.cyan .. color.bold .. "table" .. color.clear, "{")
 
 			for key, value in pairs(obj) do
-				if not __hidden(key) then
-					__pprint(value, indent .. "  ", key, visited)
+				if not hidden or not hidden(key) then
+					__pprint(value, indent .. "  ", key, visited, hidden)
 				end
 			end
 
@@ -70,26 +71,30 @@ struct luainteract_session {
 		elseif type == "userdata" then
 			local meta = getmetatable(obj)
 			if meta then
-				if meta[".fn"].__tostring then
+				title = title .. " " .. color.cyan .. color.bold .. "userdata" .. color.clear
+
+				if meta[".fn"] and meta[".fn"].__tostring then
 					print(title, tostring(obj))
 				else
 					local has_value = false
 
 					for key, _ in pairs(meta[".get"]) do
-						if not __hidden(key) then
+						if not hidden or not hidden(key) then
 							if not has_value then
 								print(title, "{")
 								has_value = true
 							end
 
-							__pprint(obj[key], indent .. "  ", key, visited)
+							__pprint(obj[key], indent .. "  ", key, visited, hidden)
 						end
 					end
 
 					if has_value then
 						print(indent, "}")
+					elseif meta[".type"] then
+						print(title, meta[".type"])
 					else
-						print(title, color.cyan .. color.bold .. "userdata" .. color.clear)
+						print(title)
 					end
 				end
 			else
@@ -101,16 +106,20 @@ struct luainteract_session {
 			print(title, color.magenta .. color.bold .. "\"" .. obj .. "\"" .. color.clear)
 		elseif type == "boolean" then
 			print(title, color.magenta .. color.bold .. tostring(obj) .. color.clear)
+		elseif type == "thread" then
+			print(title, color.cyan .. color.bold .. "thread" .. color.clear)
 		else
 			print(title, obj)
 		end
+
+		visited[obj] = nil
 	end
 
 	function luainteract.pprint(obj, num)
 		if num then
-			__pprint(obj, "", tostring(num), {})
+			__pprint(obj, "", tostring(num), {}, __hidden)
 		else
-			__pprint(obj, "", nil, {})
+			__pprint(obj, "", nil, {}, __hidden)
 		end
 	end
 
