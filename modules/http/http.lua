@@ -87,7 +87,7 @@ local function parse_header(stream, http)
 	while #line > 0 do
 		local name, value = line:match("([^%s]+):%s*(.+)")
 		if not name then
-			http._valid = false
+			http._invalid = string.format("invalid header '%s'", line)
 			return
 		end
 
@@ -108,7 +108,7 @@ local function parse_request(stream, http)
 
 	http.method, http.uri, http.version = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.method then
-		http._valid = false
+		http._invalid = string.format("invalid request '%s'", line)
 		return
 	end
 
@@ -121,7 +121,6 @@ local function parse_request(stream, http)
 		dump(self, "")
 	end
 
-	http._valid = true
 	return true
 end
 
@@ -133,7 +132,7 @@ local function parse_response(stream, http)
 
 	http.version, http.status, http.reason = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.version then
-		http._valid = false
+		http._invalid = string.format("invalid response '%s'", line)
 		return
 	end
 
@@ -146,7 +145,6 @@ local function parse_response(stream, http)
 		dump(self, "")
 	end
 
-	http._valid = true
 	return true
 end
 
@@ -217,7 +215,7 @@ local function forge(http)
 end
 
 local function parse(http, context, f, name, next_state)
-	if not context.co then
+	if not context._co then
 		context._mark = http._tcp_stream.stream:mark()
 		context._co = coroutine.create(function () f(http._tcp_stream.stream, context) end)
 	end
@@ -225,7 +223,7 @@ local function parse(http, context, f, name, next_state)
 	coroutine.resume(context._co)
 
 	if coroutine.status(context._co) == "dead" then
-		if context._valid then
+		if not context._invalid then
 			http._state = next_state
 			if haka.rule_hook("http-".. name, http) then
 				return nil
@@ -233,7 +231,7 @@ local function parse(http, context, f, name, next_state)
 
 			context.next_dissector = http.next_dissector
 		else
-			haka.log.error("http", "invalid " .. name)
+			haka.log.error("http", context._invalid)
 			http._tcp_stream:drop()
 			return nil
 		end
