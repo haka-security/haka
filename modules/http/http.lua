@@ -242,7 +242,7 @@ haka.dissector {
 	name = "http",
 	dissect = function (stream)
 
-		if not stream.connection.data.http then
+		if not stream.connection.data._http then
 			local http = {}
 			http.dissector = "http"
 			http.next_dissector = nil
@@ -255,10 +255,10 @@ haka.dissector {
 			http.forge = forge
 			http._state = 0
 
-			stream.connection.data.http = http
+			stream.connection.data._http = http
 		end
 
-		local http = stream.connection.data.http
+		local http = stream.connection.data._http
 		http._tcp_stream = stream
 
 		if stream.direction then
