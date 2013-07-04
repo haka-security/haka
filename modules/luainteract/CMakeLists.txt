@@ -7,6 +7,9 @@ if(READLINE_FOUND)
 		interact.i
 		session.c
 		complete.c
+		debugger.c
+		readline.c
+		utils.c
 	)
 
 	LUA_LINK(luainteract)
