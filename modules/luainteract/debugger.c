@@ -32,12 +32,15 @@ struct luainteract_debugger {
 	struct luainteract_complete  complete;
 
 	bool                         break_immediatly;
-
+	unsigned int                 break_depth;
+	int                          stack_depth;
 	int                          list_line;
 	lua_Debug                    frame;
 	int                          frame_index;
 	int                          breakpoints;
 	int                          env_index;
+	int                          last_line;
+	const char                  *last_source;
 };
 
 static mutex_t active_session_mutex = MUTEX_INIT;
@@ -50,7 +53,8 @@ static char *complete_callback_debug_keyword(struct lua_State *L, struct luainte
 {
 	static const char *keywords[] = {
 		"bt", "stack", "local", "upvalue", "list", "n", "next", "l", "frame", "f",
-		"continue", "c", "removebreak", "rb", "print", "p", NULL
+		"continue", "c", "removebreak", "rb", "print", "p", "step", "s",
+		"finish", "listbreak", "lb", NULL
 	};
 
 	return complete_keyword(context, keywords, text, state);
@@ -151,6 +155,15 @@ static void dump_backtrace(lua_State *L, int current)
 
 		dump_frame(L, &ar);
 	}
+}
+
+static int get_stack_depth(lua_State *L)
+{
+	int i;
+	lua_Debug ar;
+
+	for (i = 0; lua_getstack(L, i, &ar); ++i);
+	return i;
 }
 
 static void change_frame(struct luainteract_debugger *session, int index)
@@ -369,6 +382,11 @@ static void remove_breakpoint(struct luainteract_debugger *session, int line)
 	else {
 		printf(RED "invalid breakpoint location\n" CLEAR);
 	}
+}
+
+static void list_breakpoint(struct luainteract_debugger *session)
+{
+	//int i = 0;
 }
 
 static bool print_line_char(lua_State *L, int c, int line, int current, int *count,
@@ -601,8 +619,23 @@ static bool process_command(struct luainteract_debugger *session, const char *li
 		const int line = option ? atoi(option) : session->frame.currentline;
 		remove_breakpoint(session, line);
 	}
+	else if (check_token(line, "listbreak", "lb", &option) && !option) {
+		list_breakpoint(session);
+	}
 	else if (check_token(line, "next", "n", &option) && !option) {
 		session->break_immediatly = true;
+		cont = true;
+	}
+	else if (check_token(line, "step", "s", &option) && !option) {
+		session->break_immediatly = true;
+		session->break_depth = session->stack_depth;
+		cont = true;
+	}
+	else if (check_token(line, "finish", NULL, &option) && !option) {
+		if (session->stack_depth > 0) {
+			session->break_immediatly = true;
+			session->break_depth = session->stack_depth-1;
+		}
 		cont = true;
 	}
 	else if (check_token(line, "continue", "c", &option) && !option) {
@@ -650,6 +683,8 @@ static void enter_debugger(struct luainteract_debugger *session, lua_Debug *ar)
 	session->frame_index = 0;
 	session->env_index = capture_env(session->L, 0);
 	assert(session->env_index != -1);
+	session->break_immediatly = false;
+	session->break_depth = -1;
 
 	dump_source(session, ar, ar->currentline, ar->currentline);
 	rl_on_new_line();
@@ -689,18 +724,28 @@ static void lua_debug_hook(lua_State *L, lua_Debug *ar)
 	lua_pop(L, 1);
 	assert(session);
 
+	if (L != session->top_L) {
+		return;
+	}
+
 	session->L = L;
 
 	switch (ar->event) {
 	case LUA_HOOKLINE:
 		{
-			if (session->break_immediatly) {
-				session->break_immediatly = false;
+			lua_getinfo(session->L, "S", ar);
+			session->stack_depth = get_stack_depth(L);
+
+			if (session->break_immediatly && session->stack_depth <= session->break_depth) {
 				enter_debugger(session, ar);
 			}
-			else if (has_breakpoint(session, ar)) {
+			else if ((session->last_source != ar->source || session->last_line != ar->currentline) &&
+					has_breakpoint(session, ar)) {
 				enter_debugger(session, ar);
 			}
+
+			session->last_source = ar->source;
+			session->last_line = ar->currentline;
 		}
 		break;
 
@@ -738,7 +783,11 @@ struct luainteract_debugger *luainteract_debugger_create(struct lua_State *L)
 
 	ret->top_L = L;
 	ret->break_immediatly = true;
+	ret->break_depth = -1;
+	ret->stack_depth = get_stack_depth(L);
 	ret->list_line = 0;
+	ret->last_line = 0;
+	ret->last_source = NULL;
 
 	lua_pushlightuserdata(L, ret);
 	lua_setfield(L, LUA_REGISTRYINDEX, "__debugger");
@@ -769,4 +818,5 @@ void luainteract_debugger_cleanup(struct luainteract_debugger *session)
 void luainteract_debugger_break(struct luainteract_debugger *session)
 {
 	session->break_immediatly = true;
+	session->break_depth = -1;
 }
