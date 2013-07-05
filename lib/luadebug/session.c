@@ -22,14 +22,14 @@
 #include "readline.h"
 
 
-struct luainteract_session
+struct luadebug_session
 {
 	lua_State                   *L;
 	char                        *prompt_single;
 	char                        *prompt_multi;
 	int                          env_index;
 
-	struct luainteract_complete  complete;
+	struct luadebug_complete     complete;
 };
 
 
@@ -37,7 +37,7 @@ struct luainteract_session
 
 
 static mutex_t active_session_mutex = MUTEX_INIT;
-static struct luainteract_session *current_session;
+static struct luadebug_session *current_session;
 
 static const complete_callback completions[] = {
 	&complete_callback_lua_keyword,
@@ -63,9 +63,9 @@ static char **complete(const char *text, int start, int end)
 	return rl_completion_matches(text, generator);
 }
 
-struct luainteract_session *luainteract_session_create(struct lua_State *L)
+struct luadebug_session *luadebug_session_create(struct lua_State *L)
 {
-	struct luainteract_session *ret = malloc(sizeof(struct luainteract_session));
+	struct luadebug_session *ret = malloc(sizeof(struct luadebug_session));
 	if (!ret) {
 		error(L"memory error");
 		return NULL;
@@ -75,19 +75,19 @@ struct luainteract_session *luainteract_session_create(struct lua_State *L)
 	ret->prompt_single = NULL;
 	ret->prompt_multi = NULL;
 
-	luainteract_session_setprompts(ret, GREEN BOLD ">  " CLEAR, GREEN BOLD ">> " CLEAR);
+	luadebug_session_setprompts(ret, GREEN BOLD ">  " CLEAR, GREEN BOLD ">> " CLEAR);
 
 	return ret;
 }
 
-void luainteract_session_cleanup(struct luainteract_session *session)
+void luadebug_session_cleanup(struct luadebug_session *session)
 {
 	free(session->prompt_single);
 	free(session->prompt_multi);
 	free(session);
 }
 
-void luainteract_session_enter(struct luainteract_session *session)
+void luadebug_session_enter(struct luadebug_session *session)
 {
 	char *line, *full_line = NULL;
 	bool multiline = false;
@@ -198,7 +198,7 @@ void luainteract_session_enter(struct luainteract_session *session)
 	mutex_unlock(&active_session_mutex);
 }
 
-void luainteract_session_setprompts(struct luainteract_session *session, const char *single, const char *multi)
+void luadebug_session_setprompts(struct luadebug_session *session, const char *single, const char *multi)
 {
 	free(session->prompt_single);
 	free(session->prompt_multi);

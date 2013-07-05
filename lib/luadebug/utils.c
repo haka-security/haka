@@ -39,7 +39,7 @@ int execute_print(lua_State *L)
 	status = execute_call(L, 0);
 	h = lua_gettop(L) - g + 1;
 
-	lua_getglobal(L, "luainteract");
+	lua_getglobal(L, "luadebug");
 	lua_getfield(L, -1, "pprint");
 
 	for (i = h ; i > 0 ; --i) {

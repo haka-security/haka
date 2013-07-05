@@ -1,12 +1,12 @@
 
-#ifndef _LUAINTERACT_DEBUGGER_H
-#define _LUAINTERACT_DEBUGGER_H
+#ifndef _LUADEBUG_DEBUGGER_H
+#define _LUADEBUG_DEBUGGER_H
 
 struct lua_State;
-struct luainteract_debugger;
+struct luadebug_debugger;
 
-struct luainteract_debugger *luainteract_debugger_create(struct lua_State *L);
-void luainteract_debugger_cleanup(struct luainteract_debugger *session);
-void luainteract_debugger_break(struct luainteract_debugger *session);
+struct luadebug_debugger *luadebug_debugger_create(struct lua_State *L);
+void luadebug_debugger_cleanup(struct luadebug_debugger *session);
+void luadebug_debugger_break(struct luadebug_debugger *session);
 
-#endif /* _LUAINTERACT_DEBUGGER_H */
+#endif /* _LUADEBUG_DEBUGGER_H */

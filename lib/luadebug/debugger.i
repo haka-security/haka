@@ -2,21 +2,21 @@
 %{
 	#include "debugger.h"
 
-	#define new_luainteract_debugger()   luainteract_debugger_create(L)
+	#define new_luadebug_debugger()   luadebug_debugger_create(L)
 %}
 
-%rename(debugger) luainteract_debugger;
+%rename(debugger) luadebug_debugger;
 
-struct luainteract_debugger {
+struct luadebug_debugger {
 	%extend {
-		luainteract_debugger();
+		luadebug_debugger();
 
-		~luainteract_debugger() {
-			luainteract_debugger_cleanup($self);
+		~luadebug_debugger() {
+			luadebug_debugger_cleanup($self);
 		}
 
 		void stop() {
-			luainteract_debugger_break($self);
+			luadebug_debugger_break($self);
 		}
 	}
 };

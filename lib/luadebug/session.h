@@ -1,13 +1,13 @@
 
-#ifndef _LUAINTERACT_INTERACT_H
-#define _LUAINTERACT_INTERACT_H
+#ifndef _LUADEBUG_INTERACT_H
+#define _LUADEBUG_INTERACT_H
 
 struct lua_State;
-struct luainteract_session;
+struct luadebug_session;
 
-struct luainteract_session *luainteract_session_create(struct lua_State *L);
-void luainteract_session_cleanup(struct luainteract_session *session);
-void luainteract_session_enter(struct luainteract_session *session);
-void luainteract_session_setprompts(struct luainteract_session *session, const char *single, const char *multi);
+struct luadebug_session *luadebug_session_create(struct lua_State *L);
+void luadebug_session_cleanup(struct luadebug_session *session);
+void luadebug_session_enter(struct luadebug_session *session);
+void luadebug_session_setprompts(struct luadebug_session *session, const char *single, const char *multi);
 
-#endif /* _LUAINTERACT_INTERACT_H */
+#endif /* _LUADEBUG_INTERACT_H */

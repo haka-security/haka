@@ -18,7 +18,7 @@
 #include <lauxlib.h>
 
 
-char *complete_keyword(struct luainteract_complete *context, const char *keywords[],
+char *complete_keyword(struct luadebug_complete *context, const char *keywords[],
 		const char *text, int state)
 {
 	int text_len;
@@ -39,7 +39,7 @@ char *complete_keyword(struct luainteract_complete *context, const char *keyword
 	return NULL;
 }
 
-char *complete_callback_lua_keyword(struct lua_State *L, struct luainteract_complete *context,
+char *complete_callback_lua_keyword(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state)
 {
 	static const char *keywords[] = {
@@ -51,7 +51,7 @@ char *complete_callback_lua_keyword(struct lua_State *L, struct luainteract_comp
 	return complete_keyword(context, keywords, text, state);
 }
 
-bool complete_push_table_context(struct lua_State *L, struct luainteract_complete *context,
+bool complete_push_table_context(struct lua_State *L, struct luadebug_complete *context,
 		const char *text)
 {
 	const char *c;
@@ -109,7 +109,7 @@ bool complete_push_table_context(struct lua_State *L, struct luainteract_complet
 	return true;
 }
 
-char *complete_table(struct lua_State *L, struct luainteract_complete *context,
+char *complete_table(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state, bool (*hidden)(const char *text))
 {
 	if (state == 0) {
@@ -209,7 +209,7 @@ bool complete_underscore_hidden(const char *text)
 	return text[0] == '_';
 }
 
-char *complete_generator(struct lua_State *L, struct luainteract_complete *context,
+char *complete_generator(struct lua_State *L, struct luadebug_complete *context,
 		const complete_callback callbacks[], const char *text, int state)
 {
 	char *match = NULL;
@@ -240,7 +240,7 @@ char *complete_generator(struct lua_State *L, struct luainteract_complete *conte
 	return NULL;
 }
 
-char *complete_callback_table(struct lua_State *L, struct luainteract_complete *context,
+char *complete_callback_table(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state)
 {
 	if (state == 0) {
@@ -252,7 +252,7 @@ char *complete_callback_table(struct lua_State *L, struct luainteract_complete *
 	return complete_table(L, context, text, state, &complete_underscore_hidden);
 }
 
-char *complete_callback_swig_get(struct lua_State *L, struct luainteract_complete *context,
+char *complete_callback_swig_get(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state)
 {
 	if (state == 0) {
@@ -268,7 +268,7 @@ char *complete_callback_swig_get(struct lua_State *L, struct luainteract_complet
 }
 
 
-char *complete_callback_swig_fn(struct lua_State *L, struct luainteract_complete *context,
+char *complete_callback_swig_fn(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state)
 {
 	if (state == 0) {
@@ -283,7 +283,7 @@ char *complete_callback_swig_fn(struct lua_State *L, struct luainteract_complete
 	return complete_table(L, context, text, state, &complete_underscore_hidden);
 }
 
-char *complete_callback_global(struct lua_State *L, struct luainteract_complete *context,
+char *complete_callback_global(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state)
 {
 	if (state == 0) {
@@ -296,7 +296,7 @@ char *complete_callback_global(struct lua_State *L, struct luainteract_complete 
 	return complete_table(L, context, text, state, &complete_underscore_hidden);
 }
 
-char *complete_callback_fenv(struct lua_State *L, struct luainteract_complete *context,
+char *complete_callback_fenv(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state)
 {
 	if (state == 0) {

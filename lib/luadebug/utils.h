@@ -1,6 +1,6 @@
 
-#ifndef _LUAINTERACT_UTILS_H
-#define _LUAINTERACT_UTILS_H
+#ifndef _LUADEBUG_UTILS_H
+#define _LUADEBUG_UTILS_H
 
 #define CLEAR   "\e[0m"
 #define BOLD    "\e[1m"
@@ -19,4 +19,4 @@ struct lua_State;
 int execute_print(struct lua_State *L);
 int capture_env(struct lua_State *L, int frame);
 
-#endif /* _LUAINTERACT_UTILS_H */
+#endif /* _LUADEBUG_UTILS_H */

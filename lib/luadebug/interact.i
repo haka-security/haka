@@ -1,37 +1,35 @@
-%module luainteract
+%module luadebug
 
 %{
 	#include "session.h"
 
-	#define new_luainteract_session()   luainteract_session_create(L)
+	#define new_luadebug_session()   luadebug_session_create(L)
 %}
 
-%rename(session) luainteract_session;
+%rename(session) luadebug_session;
 
-struct luainteract_session {
+struct luadebug_session {
 	%extend {
-		luainteract_session();
+		luadebug_session();
 
-		~luainteract_session() {
-			luainteract_session_cleanup($self);
+		~luadebug_session() {
+			luadebug_session_cleanup($self);
 		}
 
 		void start() {
-			luainteract_session_enter($self);
+			luadebug_session_enter($self);
 		}
 
 		void setprompt(const char *single, const char *multi) {
-			luainteract_session_setprompts($self, single, multi);
+			luadebug_session_setprompts($self, single, multi);
 		}
 	}
 };
 
 %luacode {
-	haka.session = luainteract.session()
-
 	local color = require("haka/color")
 
-	function luainteract.hide_underscore(name)
+	function luadebug.hide_underscore(name)
 		if type(name) == "string" then
 			return name:sub(1, 1) == "_"
 		else
@@ -125,7 +123,7 @@ struct luainteract_session {
 		end
 	end
 
-	function luainteract.pprint(obj, indent, depth, hide)
+	function luadebug.pprint(obj, indent, depth, hide)
 		if num then
 			__pprint(obj, indent or "", nil, {}, hide, depth or -1)
 		else
@@ -133,13 +131,13 @@ struct luainteract_session {
 		end
 	end
 
-	function luainteract.interactive_rule(self, input)
-		haka.log("luainteract", "entering interactive rule")
-		luainteract.pprint(input, "", 1, luainteract.hide_underscore)
+	function luadebug.interactive_rule(self, input)
+		haka.log("luadebug", "entering interactive rule")
+		luadebug.pprint(input, "", 1, luadebug.hide_underscore)
 		haka.session:setprompt(color.green .. self.hook .. color.bold .. ">  " .. color.clear,
 			color.green .. self.hook .. color.bold .. ">> " .. color.clear)
 		haka.session:start()
-		haka.log("luainteract", "continue")
+		haka.log("luadebug", "continue")
 	end
 }
 
