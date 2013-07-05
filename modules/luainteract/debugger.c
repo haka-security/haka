@@ -580,95 +580,95 @@ struct command {
 static struct command commands[] = {
 	{
 		keyword:     "bt",
-		description: "bt:            dump the backtrace",
+		description: BOLD "bt" CLEAR "            dump the backtrace",
 		callback:    dump_backtrace
 	},
 	{
 		keyword:     "frame",
 		alt_keyword: "f",
-		description: "frame N:       change the current frame",
+		description: BOLD "frame N" CLEAR "       change the current frame",
 		option:      true,
 		callback:    change_frame
 	},
 	{
 		keyword:     "stack",
-		description: "stack:         dump the full Lua stack\n"
-		             "stack N:       dump the element at index N in the Lua stack",
+		description: BOLD "stack" CLEAR "         dump the full Lua stack\n"
+		             BOLD "stack N" CLEAR "       dump the element at index N in the Lua stack",
 		option:      true,
 		callback:    dump_stack
 	},
 	{
 		keyword:     "local",
-		description: "local:         dump all Lua locals\n"
-		             "local N:       dump the Nth local",
+		description: BOLD "local" CLEAR "         dump all Lua locals\n"
+		             BOLD "local N" CLEAR "       dump the Nth local",
 		option:      true,
 		callback:    dump_local
 	},
 	{
 		keyword:     "upvalue",
-		description: "upvalue:       dump all Lua up-values\n"
-		             "upvalue N:     dump the Nth up-value",
+		description: BOLD "upvalue" CLEAR "       dump all Lua up-values\n"
+		             BOLD "upvalue N" CLEAR "     dump the Nth up-value",
 		option:      true,
 		callback:    dump_upvalue
 	},
 	{
 		keyword:     "print",
 		alt_keyword: "p",
-		description: "print exp:     print the expression",
+		description: BOLD "print exp" CLEAR "     print the expression",
 		option:      true,
 		callback:    print_exp
 	},
 	{
 		keyword:     "list",
 		alt_keyword: "l",
-		description: "list:          show sources\n"
-		             "list [+|-]:    show next or previous lines\n"
-		             "list N:        show sources around line N",
+		description: BOLD "list" CLEAR "          show sources\n"
+		             BOLD "list [+|-]" CLEAR "    show next or previous lines\n"
+		             BOLD "list N" CLEAR "        show sources around line N",
 		option:      true,
 		callback:    list_source
 	},
 	{
 		keyword:     "break",
 		alt_keyword: "b",
-		description: "break:         add breakpoint on current line\n"
-		             "break N:       add breakpoint on line N",
+		description: BOLD "break" CLEAR "         add breakpoint on current line\n"
+		             BOLD "break N" CLEAR "       add breakpoint on line N",
 		option:      true,
 		callback:    add_breakpoint
 	},
 	{
 		keyword:     "removebreak",
 		alt_keyword: "rb",
-		description: "removebreak:   remove breakpoint on current line\n"
-		             "removebreak N: remove breakpoint on line N",
+		description: BOLD "removebreak" CLEAR "   remove breakpoint on current line\n"
+		             BOLD "removebreak N" CLEAR " remove breakpoint on line N",
 		option:      true,
 		callback:    remove_breakpoint
 	},
 	{
 		keyword:     "next",
 		alt_keyword: "n",
-		description: "next:          step in the program (enter subcalls)",
+		description: BOLD "next" CLEAR "          step in the program (enter subcalls)",
 		callback:    do_next
 	},
 	{
 		keyword:     "step",
 		alt_keyword: "s",
-		description: "step:          step in the program",
+		description: BOLD "step" CLEAR "          step in the program",
 		callback:    do_step
 	},
 	{
 		keyword:     "finish",
-		description: "finish:        step out of the current function",
+		description: BOLD "finish" CLEAR "        step out of the current function",
 		callback:    do_finish
 	},
 	{
 		keyword:     "continue",
 		alt_keyword: "c",
-		description: "continue:      continue execution",
+		description: BOLD "continue" CLEAR "      continue execution",
 		callback:    do_continue
 	},
 	{
 		keyword:     "help",
-		description: "help:          command help",
+		description: BOLD "help" CLEAR "          command help",
 		callback:    do_help
 	},
 	{
