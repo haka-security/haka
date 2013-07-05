@@ -48,72 +48,6 @@ static struct luainteract_debugger *current_session;
 #define LIST_DEFAULT_LINE   10
 
 
-static char *complete_callback_debug_keyword(struct lua_State *L, struct luainteract_complete *context,
-		const char *text, int state)
-{
-	static const char *keywords[] = {
-		"bt", "stack", "local", "upvalue", "list", "n", "next", "l", "frame", "f",
-		"continue", "c", "removebreak", "rb", "print", "p", "step", "s",
-		"finish", "listbreak", "lb", NULL
-	};
-
-	return complete_keyword(context, keywords, text, state);
-}
-
-static const complete_callback completions[] = {
-	&complete_callback_debug_keyword,
-	NULL
-};
-
-static char *empty_generator(const char *text, int state)
-{
-	return NULL;
-}
-
-static char *command_generator(const char *text, int state)
-{
-	char *match = complete_generator(current_session->L, &current_session->complete,
-			completions, text, state);
-	rl_completion_suppress_append = !current_session->complete.space;
-	return match;
-}
-
-static const complete_callback lua_completions[] = {
-	&complete_callback_lua_keyword,
-	&complete_callback_global,
-	&complete_callback_fenv,
-	&complete_callback_table,
-	&complete_callback_swig_get,
-	&complete_callback_swig_fn,
-	NULL
-};
-
-static char *lua_generator(const char *text, int state)
-{
-	char *match = complete_generator(current_session->L, &current_session->complete,
-			lua_completions, text, state);
-	rl_completion_suppress_append = !current_session->complete.space;
-	return match;
-}
-
-static char **complete(const char *text, int start, int end)
-{
-	current_session->complete.stack_env = -1;
-	if (start == 0) {
-		return rl_completion_matches(text, command_generator);
-	}
-	else {
-		if (strncmp(rl_line_buffer, "p ", 2) == 0 ||
-			strncmp(rl_line_buffer, "print ", 6) == 0) {
-			current_session->complete.stack_env = current_session->env_index;
-			return rl_completion_matches(text, lua_generator);
-		}
-		else {
-			return NULL;
-		}
-	}
-}
-
 static void dump_frame(lua_State *L, lua_Debug *ar)
 {
 	lua_getinfo(L, "Snl", ar);
@@ -138,23 +72,25 @@ static void dump_frame(lua_State *L, lua_Debug *ar)
 	}
 }
 
-static void dump_backtrace(lua_State *L, int current)
+static bool dump_backtrace(struct luainteract_debugger *session, const char *option)
 {
 	int i;
 	lua_Debug ar;
 
 	printf("Backtrace\n");
 
-	for (i = 0; lua_getstack(L, i, &ar); ++i) {
-		if (i == current) {
+	for (i = 0; lua_getstack(session->L, i, &ar); ++i) {
+		if (i == session->frame_index) {
 			printf(RED BOLD " =>" CLEAR "%d\t" CYAN, i);
 		}
 		else {
 			printf("  #%d\t" CYAN, i);
 		}
 
-		dump_frame(L, &ar);
+		dump_frame(session->L, &ar);
 	}
+
+	return false;
 }
 
 static int get_stack_depth(lua_State *L)
@@ -166,8 +102,10 @@ static int get_stack_depth(lua_State *L)
 	return i;
 }
 
-static void change_frame(struct luainteract_debugger *session, int index)
+static bool change_frame(struct luainteract_debugger *session, const char *option)
 {
+	const int index = option ? atoi(option) : session->frame_index;
+
 	if (!lua_getstack(session->L, index, &session->frame)) {
 		printf(RED "invalid frame index '%d'\n" CLEAR, index);
 	}
@@ -186,127 +124,135 @@ static void change_frame(struct luainteract_debugger *session, int index)
 
 		session->list_line = session->frame.currentline - LIST_DEFAULT_LINE/2;
 	}
+
+	return false;
 }
 
-static void dump_stack(lua_State *L, int index)
+static bool dump_stack(struct luainteract_debugger *session, const char *option)
 {
 	int i, h;
+	const int index = option ? atoi(option) : -1;
 
-	h = lua_gettop(L);
+	h = lua_gettop(session->L);
 
-	lua_getglobal(L, "luainteract");
-	lua_getfield(L, -1, "pprint");
+	lua_getglobal(session->L, "luainteract");
+	lua_getfield(session->L, -1, "pprint");
 
 	if (index < 0) {
 		printf("Stack (size=%d)\n", h-1);
 		for (i = 1; i < h; ++i) {
 			printf("  #%d\t", i);
 
-			lua_pushvalue(L, -1);
-			lua_pushvalue(L, i);
-			lua_pushstring(L, "    \t");
-			lua_pushnumber(L, 1);
-			lua_call(L, 3, 0);
+			lua_pushvalue(session->L, -1);
+			lua_pushvalue(session->L, i);
+			lua_pushstring(session->L, "    \t");
+			lua_pushnumber(session->L, 1);
+			lua_call(session->L, 3, 0);
 		}
 	}
 	else if (index > 0 && index < h) {
 		printf("  #%d\t", index);
 
-		lua_pushvalue(L, -1);
-		lua_pushvalue(L, index);
-		lua_pushstring(L, "    \t");
-		lua_call(L, 2, 0);
+		lua_pushvalue(session->L, -1);
+		lua_pushvalue(session->L, index);
+		lua_pushstring(session->L, "    \t");
+		lua_call(session->L, 2, 0);
 	}
 	else {
 		printf(RED "invalid stack index '%d'\n" CLEAR, index);
 	}
 
-	lua_pop(L, 2);
+	lua_pop(session->L, 2);
+	return false;
 }
 
-static void dump_local(lua_State *L, lua_Debug *ar, int index)
+static bool dump_local(struct luainteract_debugger *session, const char *option)
 {
 	int i;
 	const char *local;
+	const int index = option ? atoi(option) : -1;
 
-	lua_getglobal(L, "luainteract");
-	lua_getfield(L, -1, "pprint");
+	lua_getglobal(session->L, "luainteract");
+	lua_getfield(session->L, -1, "pprint");
 
 	if (index < 0) {
 		printf("Locals\n");
-		for (i=1; (local = lua_getlocal(L, ar, i)); ++i) {
+		for (i=1; (local = lua_getlocal(session->L, &session->frame, i)); ++i) {
 			printf("  #%d\t%s = ", i, local);
 
-			lua_pushvalue(L, -2);
-			lua_pushvalue(L, -2);
-			lua_pushstring(L, "    \t");
-			lua_pushnumber(L, 1);
-			lua_call(L, 3, 0);
+			lua_pushvalue(session->L, -2);
+			lua_pushvalue(session->L, -2);
+			lua_pushstring(session->L, "    \t");
+			lua_pushnumber(session->L, 1);
+			lua_call(session->L, 3, 0);
 
-			lua_pop(L, 1);
+			lua_pop(session->L, 1);
 		}
 	}
 	else {
-		local = lua_getlocal(L, ar, index);
+		local = lua_getlocal(session->L, &session->frame, index);
 		if (!local) {
 			printf(RED "invalid local index '%d'\n" CLEAR, index);
 		}
 		else {
 			printf("  #%d\t%s = ", index, local);
 
-			lua_pushvalue(L, -2);
-			lua_pushvalue(L, -2);
-			lua_pushstring(L, "    \t");
-			lua_call(L, 2, 0);
+			lua_pushvalue(session->L, -2);
+			lua_pushvalue(session->L, -2);
+			lua_pushstring(session->L, "    \t");
+			lua_call(session->L, 2, 0);
 
-			lua_pop(L, 1);
+			lua_pop(session->L, 1);
 		}
 	}
 
-	lua_pop(L, 2);
+	lua_pop(session->L, 2);
+	return false;
 }
 
-static void dump_upvalue(lua_State *L, lua_Debug *ar, int index)
+static bool dump_upvalue(struct luainteract_debugger *session, const char *option)
 {
 	int i;
 	const char *local;
+	const int index = option ? atoi(option) : -1;
 
-	lua_getinfo(L, "f", ar);
-	lua_getglobal(L, "luainteract");
-	lua_getfield(L, -1, "pprint");
+	lua_getinfo(session->L, "f", &session->frame);
+	lua_getglobal(session->L, "luainteract");
+	lua_getfield(session->L, -1, "pprint");
 
 	if (index < 0) {
 		printf("Up-values\n");
-		for (i=1; (local = lua_getupvalue(L, -3, i)); ++i) {
+		for (i=1; (local = lua_getupvalue(session->L, -3, i)); ++i) {
 			printf("  #%d\t%s = ", i, local);
 
-			lua_pushvalue(L, -2);
-			lua_pushvalue(L, -2);
-			lua_pushstring(L, "    \t");
-			lua_pushnumber(L, 1);
-			lua_call(L, 3, 0);
+			lua_pushvalue(session->L, -2);
+			lua_pushvalue(session->L, -2);
+			lua_pushstring(session->L, "    \t");
+			lua_pushnumber(session->L, 1);
+			lua_call(session->L, 3, 0);
 
-			lua_pop(L, 1);
+			lua_pop(session->L, 1);
 		}
 	}
 	else {
-		local = lua_getupvalue(L, -3, index);
+		local = lua_getupvalue(session->L, -3, index);
 		if (!local) {
 			printf(RED "invalid up-value index '%d'\n" CLEAR, index);
 		}
 		else {
 			printf("  #%d\t%s = ", index, local);
 
-			lua_pushvalue(L, -2);
-			lua_pushvalue(L, -2);
-			lua_pushstring(L, "    \t");
-			lua_call(L, 2, 0);
+			lua_pushvalue(session->L, -2);
+			lua_pushvalue(session->L, -2);
+			lua_pushstring(session->L, "    \t");
+			lua_call(session->L, 2, 0);
 
-			lua_pop(L, 1);
+			lua_pop(session->L, 1);
 		}
 	}
 
-	lua_pop(L, 3);
+	lua_pop(session->L, 3);
+	return false;
 }
 
 static bool push_breapoints(struct luainteract_debugger *session, lua_Debug *ar)
@@ -345,8 +291,10 @@ static bool has_breakpoint(struct luainteract_debugger *session, lua_Debug *ar)
 	return breakpoint;
 }
 
-static void add_breakpoint(struct luainteract_debugger *session, int line)
+static bool add_breakpoint(struct luainteract_debugger *session, const char *option)
 {
+	const int line = option ? atoi(option) : session->frame.currentline;
+
 	if (push_breapoints(session, &session->frame)) {
 		lua_pushnumber(session->L, line);
 		lua_pushboolean(session->L, true);
@@ -358,10 +306,13 @@ static void add_breakpoint(struct luainteract_debugger *session, int line)
 	else {
 		printf(RED "invalid breakpoint location\n" CLEAR);
 	}
+	return false;
 }
 
-static void remove_breakpoint(struct luainteract_debugger *session, int line)
+static bool remove_breakpoint(struct luainteract_debugger *session, const char *option)
 {
+	const int line = option ? atoi(option) : session->frame.currentline;
+
 	if (push_breapoints(session, &session->frame)) {
 		lua_pushnumber(session->L, line);
 		lua_gettable(session->L, -2);
@@ -382,11 +333,7 @@ static void remove_breakpoint(struct luainteract_debugger *session, int line)
 	else {
 		printf(RED "invalid breakpoint location\n" CLEAR);
 	}
-}
-
-static void list_breakpoint(struct luainteract_debugger *session)
-{
-	//int i = 0;
+	return false;
 }
 
 static bool print_line_char(lua_State *L, int c, int line, int current, int *count,
@@ -543,105 +490,226 @@ static bool check_token(const char *line, const char *token, const char *short_t
 	return false;
 }
 
+static bool print_exp(struct luainteract_debugger *session, const char *option)
+{
+	int status;
+	char *print_line = malloc(7 + strlen(option) + 1);
+
+	strcpy(print_line, "return ");
+	strcpy(print_line+7, option);
+
+	status = luaL_loadbuffer(session->L, print_line, strlen(print_line), "stdin");
+	if (status) {
+		printf(RED "%s\n" CLEAR, lua_tostring(session->L, -1));
+		lua_pop(session->L, 1);
+	}
+	else {
+		lua_pushvalue(session->L, session->env_index);
+		lua_setfenv(session->L, -2);
+
+		execute_print(session->L);
+		lua_pop(session->L, 1);
+	}
+
+	free(print_line);
+	return false;
+}
+
+static bool list_source(struct luainteract_debugger *session, const char *option)
+{
+	if (option) {
+		if (strcmp(option, "-") == 0) {
+			session->list_line -= 2*LIST_DEFAULT_LINE + 1;
+		}
+		else if (strcmp(option, "+") == 0) {
+		}
+		else {
+			const int line = atoi(option);
+			session->list_line = line - LIST_DEFAULT_LINE/2;
+		}
+
+		if (session->list_line < 0) {
+			session->list_line = 0;
+		}
+	}
+
+	dump_source(session, &session->frame, session->list_line, session->list_line + LIST_DEFAULT_LINE);
+	session->list_line += LIST_DEFAULT_LINE+1;
+	return false;
+}
+
+static bool do_next(struct luainteract_debugger *session, const char *option)
+{
+	session->break_immediatly = true;
+	return true;
+}
+
+static bool do_step(struct luainteract_debugger *session, const char *option)
+{
+	session->break_immediatly = true;
+	session->break_depth = session->stack_depth;
+	return true;
+}
+
+static bool do_finish(struct luainteract_debugger *session, const char *option)
+{
+	if (session->stack_depth > 0) {
+		session->break_immediatly = true;
+		session->break_depth = session->stack_depth-1;
+	}
+	return true;
+}
+
+static bool do_continue(struct luainteract_debugger *session, const char *option)
+{
+	return true;
+}
+
+static bool do_help(struct luainteract_debugger *session, const char *option);
+
+typedef bool (*command_callback)(struct luainteract_debugger *, const char *);
+
+struct command {
+	const char      *keyword;
+	const char      *alt_keyword;
+	const char      *description;
+	bool             option;
+	command_callback callback;
+};
+
+static struct command commands[] = {
+	{
+		keyword:     "bt",
+		description: "bt:            dump the backtrace",
+		callback:    dump_backtrace
+	},
+	{
+		keyword:     "frame",
+		alt_keyword: "f",
+		description: "frame N:       change the current frame",
+		option:      true,
+		callback:    change_frame
+	},
+	{
+		keyword:     "stack",
+		description: "stack:         dump the full Lua stack\n"
+		             "stack N:       dump the element at index N in the Lua stack",
+		option:      true,
+		callback:    dump_stack
+	},
+	{
+		keyword:     "local",
+		description: "local:         dump all Lua locals\n"
+		             "local N:       dump the Nth local",
+		option:      true,
+		callback:    dump_local
+	},
+	{
+		keyword:     "upvalue",
+		description: "upvalue:       dump all Lua up-values\n"
+		             "upvalue N:     dump the Nth up-value",
+		option:      true,
+		callback:    dump_upvalue
+	},
+	{
+		keyword:     "print",
+		alt_keyword: "p",
+		description: "print exp:     print the expression",
+		option:      true,
+		callback:    print_exp
+	},
+	{
+		keyword:     "list",
+		alt_keyword: "l",
+		description: "list:          show sources\n"
+		             "list [+|-]:    show next or previous lines\n"
+		             "list N:        show sources around line N",
+		option:      true,
+		callback:    list_source
+	},
+	{
+		keyword:     "break",
+		alt_keyword: "b",
+		description: "break:         add breakpoint on current line\n"
+		             "break N:       add breakpoint on line N",
+		option:      true,
+		callback:    add_breakpoint
+	},
+	{
+		keyword:     "removebreak",
+		alt_keyword: "rb",
+		description: "removebreak:   remove breakpoint on current line\n"
+		             "removebreak N: remove breakpoint on line N",
+		option:      true,
+		callback:    remove_breakpoint
+	},
+	{
+		keyword:     "next",
+		alt_keyword: "n",
+		description: "next:          step in the program (enter subcalls)",
+		callback:    do_next
+	},
+	{
+		keyword:     "step",
+		alt_keyword: "s",
+		description: "step:          step in the program",
+		callback:    do_step
+	},
+	{
+		keyword:     "finish",
+		description: "finish:        step out of the current function",
+		callback:    do_finish
+	},
+	{
+		keyword:     "continue",
+		alt_keyword: "c",
+		description: "continue:      continue execution",
+		callback:    do_continue
+	},
+	{
+		keyword:     "help",
+		description: "help:          command help",
+		callback:    do_help
+	},
+	{
+		keyword:     NULL,
+	}
+};
+
+static bool do_help(struct luainteract_debugger *session, const char *option)
+{
+	struct command *iter = commands;
+
+	while (iter->keyword) {
+		printf("%s\n", iter->description);
+		++iter;
+	}
+
+	return false;
+}
+
 static bool process_command(struct luainteract_debugger *session, const char *line,
 		bool with_history)
 {
-	bool valid_line = true;
+	bool valid_line = false;
 	bool cont = false;
 	const char *option;
+	struct command *iter = commands;
 
-	if (check_token(line, "bt", NULL, &option) && !option) {
-		dump_backtrace(session->L, session->frame_index);
-	}
-	else if (check_token(line, "frame", "f", &option)) {
-		const int index = option ? atoi(option) : session->frame_index;
-		change_frame(session, index);
-	}
-	else if (check_token(line, "stack", NULL, &option)) {
-		const int index = option ? atoi(option) : -1;
-		dump_stack(session->L, index);
-	}
-	else if (check_token(line, "local", NULL, &option)) {
-		const int index = option ? atoi(option) : -1;
-		dump_local(session->L, &session->frame, index);
-	}
-	else if (check_token(line, "upvalue", NULL, &option)) {
-		const int index = option ? atoi(option) : -1;
-		dump_upvalue(session->L, &session->frame, index);
-	}
-	else if (check_token(line, "print", "p", &option) && option) {
-		int status;
-		char *print_line = malloc(7 + strlen(option) + 1);
+	while (iter->keyword) {
+		if (check_token(line, iter->keyword, iter->alt_keyword, &option)) {
+			valid_line = true;
 
-		strcpy(print_line, "return ");
-		strcpy(print_line+7, option);
-
-		status = luaL_loadbuffer(session->L, print_line, strlen(print_line), "stdin");
-		if (status) {
-			printf(RED "%s\n" CLEAR, lua_tostring(session->L, -1));
-			lua_pop(session->L, 1);
-		}
-		else {
-			lua_pushvalue(session->L, session->env_index);
-			lua_setfenv(session->L, -2);
-
-			execute_print(session->L);
-			lua_pop(session->L, 1);
-		}
-
-		free(print_line);
-	}
-	else if (check_token(line, "list", "l", &option)) {
-		if (option) {
-			if (strcmp(option, "-") == 0) {
-				session->list_line -= 2*LIST_DEFAULT_LINE;
-			}
-			else if (strcmp(option, "+") == 0) {
-			}
-			else {
-				const int line = atoi(option);
-				session->list_line = line - LIST_DEFAULT_LINE/2;
-			}
-
-			if (session->list_line < 0) {
-				session->list_line = 0;
+			if (iter->option || !option) {
+				cont = (*iter->callback)(session, option);
+				break;
 			}
 		}
 
-		dump_source(session, &session->frame, session->list_line, session->list_line + LIST_DEFAULT_LINE);
-		session->list_line += LIST_DEFAULT_LINE;
+		++iter;
 	}
-	else if (check_token(line, "break", "b", &option)) {
-		const int line = option ? atoi(option) : session->frame.currentline;
-		add_breakpoint(session, line);
-	}
-	else if (check_token(line, "removebreak", "rb", &option)) {
-		const int line = option ? atoi(option) : session->frame.currentline;
-		remove_breakpoint(session, line);
-	}
-	else if (check_token(line, "listbreak", "lb", &option) && !option) {
-		list_breakpoint(session);
-	}
-	else if (check_token(line, "next", "n", &option) && !option) {
-		session->break_immediatly = true;
-		cont = true;
-	}
-	else if (check_token(line, "step", "s", &option) && !option) {
-		session->break_immediatly = true;
-		session->break_depth = session->stack_depth;
-		cont = true;
-	}
-	else if (check_token(line, "finish", NULL, &option) && !option) {
-		if (session->stack_depth > 0) {
-			session->break_immediatly = true;
-			session->break_depth = session->stack_depth-1;
-		}
-		cont = true;
-	}
-	else if (check_token(line, "continue", "c", &option) && !option) {
-		cont = true;
-	}
-	else if (strlen(line) == 0) {
+
+	if (!valid_line && strlen(line) == 0) {
 		HIST_ENTRY *history = previous_history();
 		if (history && strlen(history->line) > 0) {
 			cont = process_command(session, history->line, false);
@@ -649,9 +717,9 @@ static bool process_command(struct luainteract_debugger *session, const char *li
 
 		valid_line = false;
 	}
-	else {
+	else if (!valid_line)
+	{
 		printf(RED "invalid command '%s'\n" CLEAR, line);
-		valid_line = false;
 	}
 
 	if (valid_line && with_history) {
@@ -659,6 +727,88 @@ static bool process_command(struct luainteract_debugger *session, const char *li
 	}
 
 	return cont;
+}
+
+static char *complete_callback_debug_keyword(struct lua_State *L, struct luainteract_complete *context,
+		const char *text, int state)
+{
+	int text_len;
+
+	if (state == 0) {
+		context->index = -1;
+		context->space = true;
+	}
+
+	text_len = strlen(text);
+
+	for (++context->index; commands[context->index>>1].keyword; ++context->index) {
+		struct command *cmd = &commands[context->index>>1];
+		const char *keyword = (context->index & 1) ? cmd->keyword : cmd->alt_keyword;
+
+		if (keyword) {
+			const int len = strlen(keyword);
+			if (len >= text_len && !strncmp(keyword, text, text_len)) {
+				context->space = cmd->option;
+			return strdup(keyword);
+			}
+		}
+	}
+
+	return NULL;
+}
+
+static const complete_callback completions[] = {
+	&complete_callback_debug_keyword,
+	NULL
+};
+
+static char *empty_generator(const char *text, int state)
+{
+	return NULL;
+}
+
+static char *command_generator(const char *text, int state)
+{
+	char *match = complete_generator(current_session->L, &current_session->complete,
+			completions, text, state);
+	rl_completion_suppress_append = !current_session->complete.space;
+	return match;
+}
+
+static const complete_callback lua_completions[] = {
+	&complete_callback_lua_keyword,
+	&complete_callback_global,
+	&complete_callback_fenv,
+	&complete_callback_table,
+	&complete_callback_swig_get,
+	&complete_callback_swig_fn,
+	NULL
+};
+
+static char *lua_generator(const char *text, int state)
+{
+	char *match = complete_generator(current_session->L, &current_session->complete,
+			lua_completions, text, state);
+	rl_completion_suppress_append = !current_session->complete.space;
+	return match;
+}
+
+static char **complete(const char *text, int start, int end)
+{
+	current_session->complete.stack_env = -1;
+	if (start == 0) {
+		return rl_completion_matches(text, command_generator);
+	}
+	else {
+		if (strncmp(rl_line_buffer, "p ", 2) == 0 ||
+			strncmp(rl_line_buffer, "print ", 6) == 0) {
+			current_session->complete.stack_env = current_session->env_index;
+			return rl_completion_matches(text, lua_generator);
+		}
+		else {
+			return NULL;
+		}
+	}
 }
 
 static void enter_debugger(struct luainteract_debugger *session, lua_Debug *ar)

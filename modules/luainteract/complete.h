@@ -12,6 +12,7 @@ struct luainteract_complete {
 	int              stack_env;
 	int              state;
 	const char     **keyword;
+	int              index;
 	const char      *token;
 	int              operator;
 	bool             space;
