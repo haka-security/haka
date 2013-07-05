@@ -146,13 +146,4 @@ struct luadebug_debugger {
 			__pprint(obj, indent or "", nil, {}, hide, depth or -1)
 		end
 	end
-
-	function luadebug.interactive_rule(self, input)
-		haka.log("debug", "entering interactive rule")
-		luadebug.pprint(input, "", 1, luadebug.hide_underscore)
-		haka.interactive:setprompt(color.green .. self.hook .. color.bold .. ">  " .. color.clear,
-			color.green .. self.hook .. color.bold .. ">> " .. color.clear)
-		haka.interactive:start()
-		haka.log("debug", "continue")
-	end
 }
