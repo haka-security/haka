@@ -135,7 +135,8 @@ static bool dump_stack(struct luadebug_debugger *session, const char *option)
 
 	h = lua_gettop(session->L);
 
-	lua_getglobal(session->L, "luadebug");
+	lua_getglobal(session->L, "haka");
+	lua_getfield(session->L, -1, "debug");
 	lua_getfield(session->L, -1, "pprint");
 
 	if (index < 0) {
@@ -162,7 +163,7 @@ static bool dump_stack(struct luadebug_debugger *session, const char *option)
 		printf(RED "invalid stack index '%d'\n" CLEAR, index);
 	}
 
-	lua_pop(session->L, 2);
+	lua_pop(session->L, 3);
 	return false;
 }
 
@@ -172,7 +173,8 @@ static bool dump_local(struct luadebug_debugger *session, const char *option)
 	const char *local;
 	const int index = option ? atoi(option) : -1;
 
-	lua_getglobal(session->L, "luadebug");
+	lua_getglobal(session->L, "haka");
+	lua_getfield(session->L, -1, "debug");
 	lua_getfield(session->L, -1, "pprint");
 
 	if (index < 0) {
@@ -206,7 +208,7 @@ static bool dump_local(struct luadebug_debugger *session, const char *option)
 		}
 	}
 
-	lua_pop(session->L, 2);
+	lua_pop(session->L, 3);
 	return false;
 }
 
@@ -217,7 +219,8 @@ static bool dump_upvalue(struct luadebug_debugger *session, const char *option)
 	const int index = option ? atoi(option) : -1;
 
 	lua_getinfo(session->L, "f", &session->frame);
-	lua_getglobal(session->L, "luadebug");
+	lua_getglobal(session->L, "haka");
+	lua_getfield(session->L, -1, "debug");
 	lua_getfield(session->L, -1, "pprint");
 
 	if (index < 0) {
@@ -251,7 +254,7 @@ static bool dump_upvalue(struct luadebug_debugger *session, const char *option)
 		}
 	}
 
-	lua_pop(session->L, 3);
+	lua_pop(session->L, 4);
 	return false;
 }
 
@@ -701,7 +704,9 @@ static bool process_command(struct luadebug_debugger *session, const char *line,
 			valid_line = true;
 
 			if (iter->option || !option) {
+				LUA_STACK_MARK(session->L);
 				cont = (*iter->callback)(session, option);
+				LUA_STACK_CHECK(session->L, 0);
 				break;
 			}
 		}

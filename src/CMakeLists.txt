@@ -1,7 +1,6 @@
 
 # Setup rpath for modules
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-#$ORIGIN/modules" "$ORIGIN" "$ORIGIN/../lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH false)
 
 # Build main program

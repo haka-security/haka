@@ -39,13 +39,14 @@ int execute_print(lua_State *L)
 	status = execute_call(L, 0);
 	h = lua_gettop(L) - g + 1;
 
-	lua_getglobal(L, "luadebug");
+	lua_getglobal(L, "haka");
+	lua_getfield(L, -1, "debug");
 	lua_getfield(L, -1, "pprint");
 
 	for (i = h ; i > 0 ; --i) {
 		printf("  #%d\t", h-i+1);
 		lua_pushvalue(L, -1);
-		lua_pushvalue(L, -i-3);
+		lua_pushvalue(L, -i-4);
 		lua_pushstring(L, "    \t");
 		lua_pushnil(L);
 		lua_getfield(L, -6, "hide_underscore");
@@ -55,7 +56,7 @@ int execute_print(lua_State *L)
 		}
 	}
 
-	lua_pop(L, 2);
+	lua_pop(L, 3);
 	lua_settop(L, g);
 
 	LUA_STACK_CHECK(L, 0);

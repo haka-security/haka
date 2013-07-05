@@ -5,7 +5,7 @@ if(READLINE_FOUND)
 	
 	find_package(SWIG REQUIRED)
 	include(UseSWIG)
-	swig_add_module(luadebug lua STATIC
+	swig_add_module(libluadebug lua STATIC
 		luadebug.i
 		interactive.c
 		complete.c
@@ -14,7 +14,6 @@ if(READLINE_FOUND)
 		utils.c
 	)
 
-	LUA_LINK(luadebug)
-	target_link_libraries(luadebug libhaka)
-	target_link_libraries(luadebug ${READLINE_LIBRARY})
+	LUA_LINK(libluadebug)
+	target_link_libraries(libluadebug ${READLINE_LIBRARY})
 endif(READLINE_FOUND)

@@ -16,18 +16,21 @@ extern int luaopen_module(lua_State *L);
 extern int luaopen_packet(lua_State *L);
 extern int luaopen_log(lua_State *L);
 extern int luaopen_stream(lua_State *L);
+extern int luaopen_luadebug(lua_State *L);
 
 typedef struct {
 	lua_CFunction open;
-	const char * name;
+	const char   *name;
+	const char   *rename;
 } swig_module;
 
 swig_module swig_builtins[] = {
-	{ luaopen_app, "app" },
-	{ luaopen_module, "module" },
-	{ luaopen_packet, "packet" },
-	{ luaopen_log, "log" },
-	{ luaopen_stream, "stream" },
+	{ luaopen_app, "app", NULL },
+	{ luaopen_module, "module", NULL },
+	{ luaopen_packet, "packet", NULL },
+	{ luaopen_log, "log", NULL },
+	{ luaopen_stream, "stream", NULL },
+	{ luaopen_luadebug, "luadebug", "debug" },
 	{NULL, NULL}
 };
 
@@ -45,12 +48,17 @@ struct lua_state *haka_init_state()
 	lua_getglobal(state->L, "haka");
 
 	cur_module = swig_builtins;
-	while(cur_module->open) {
+	while (cur_module->open) {
 		lua_getglobal(state->L, cur_module->name); /* save old value of global <name> */
 		lua_setfield(state->L, LUA_REGISTRYINDEX, "swig_tmp");
 		lua_pushcfunction(state->L, cur_module->open);
 		lua_call(state->L, 0, 1);
-		lua_setfield(state->L, -2, cur_module->name); /* haka.<name> = <module */
+		if (cur_module->rename) {
+			lua_setfield(state->L, -2, cur_module->rename);
+		}
+		else {
+			lua_setfield(state->L, -2, cur_module->name); /* haka.<name> = <module */
+		}
 		lua_getfield(state->L, LUA_REGISTRYINDEX, "swig_tmp"); /* restore old value of global <name> */
 		lua_setglobal(state->L, cur_module->name);
 		cur_module++;
