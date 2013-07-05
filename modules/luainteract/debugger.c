@@ -538,13 +538,13 @@ static bool list_source(struct luainteract_debugger *session, const char *option
 	return false;
 }
 
-static bool do_next(struct luainteract_debugger *session, const char *option)
+static bool do_step(struct luainteract_debugger *session, const char *option)
 {
 	session->break_immediatly = true;
 	return true;
 }
 
-static bool do_step(struct luainteract_debugger *session, const char *option)
+static bool do_next(struct luainteract_debugger *session, const char *option)
 {
 	session->break_immediatly = true;
 	session->break_depth = session->stack_depth;
@@ -646,7 +646,7 @@ static struct command commands[] = {
 	{
 		keyword:     "next",
 		alt_keyword: "n",
-		description: BOLD "next" CLEAR "          step in the program (enter subcalls)",
+		description: BOLD "next" CLEAR "          step in the program (through subcalls)",
 		callback:    do_next
 	},
 	{
