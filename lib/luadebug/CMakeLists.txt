@@ -6,8 +6,8 @@ if(READLINE_FOUND)
 	find_package(SWIG REQUIRED)
 	include(UseSWIG)
 	swig_add_module(luadebug lua STATIC
-		interact.i
-		session.c
+		luadebug.i
+		interactive.c
 		complete.c
 		debugger.c
 		readline.c

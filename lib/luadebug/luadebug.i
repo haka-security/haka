@@ -1,27 +1,43 @@
 %module luadebug
 
 %{
-	#include "session.h"
+	#include "debugger.h"
+	#include "interactive.h"
 
-	#define new_luadebug_session()   luadebug_session_create(L)
+	#define new_luadebug_debugger()      luadebug_debugger_create(L)
+	#define new_luadebug_interactive()   luadebug_interactive_create(L)
 %}
 
-%rename(session) luadebug_session;
-
-struct luadebug_session {
+%rename(interactive) luadebug_interactive;
+struct luadebug_interactive {
 	%extend {
-		luadebug_session();
+		luadebug_interactive();
 
-		~luadebug_session() {
-			luadebug_session_cleanup($self);
+		~luadebug_interactive() {
+			luadebug_interactive_cleanup($self);
 		}
 
 		void start() {
-			luadebug_session_enter($self);
+			luadebug_interactive_enter($self);
 		}
 
 		void setprompt(const char *single, const char *multi) {
-			luadebug_session_setprompts($self, single, multi);
+			luadebug_interactive_setprompts($self, single, multi);
+		}
+	}
+};
+
+%rename(debugger) luadebug_debugger;
+struct luadebug_debugger {
+	%extend {
+		luadebug_debugger();
+
+		~luadebug_debugger() {
+			luadebug_debugger_cleanup($self);
+		}
+
+		void stop() {
+			luadebug_debugger_break($self);
 		}
 	}
 };
@@ -134,11 +150,9 @@ struct luadebug_session {
 	function luadebug.interactive_rule(self, input)
 		haka.log("luadebug", "entering interactive rule")
 		luadebug.pprint(input, "", 1, luadebug.hide_underscore)
-		haka.session:setprompt(color.green .. self.hook .. color.bold .. ">  " .. color.clear,
+		haka.interactive:setprompt(color.green .. self.hook .. color.bold .. ">  " .. color.clear,
 			color.green .. self.hook .. color.bold .. ">> " .. color.clear)
-		haka.session:start()
+		haka.interactive:start()
 		haka.log("luadebug", "continue")
 	end
 }
-
-%include "debugger.i"
