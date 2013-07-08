@@ -13,8 +13,8 @@
 #include <lauxlib.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <string.h>
+#include <editline/readline.h>
 
 #include "interactive.h"
 #include "complete.h"
@@ -53,7 +53,6 @@ static char *generator(const char *text, int state)
 {
 	char *match = complete_generator(current_session->L, &current_session->complete,
 			completions, text, state);
-	rl_completion_suppress_append = !current_session->complete.space;
 	return match;
 }
 
@@ -94,11 +93,7 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 
 	mutex_lock(&active_session_mutex);
 
-	rl_basic_word_break_characters = " \t\n`@$><=;|&{(";
-	rl_readline_name = "haka";
-	rl_attempted_completion_function = complete;
-	rl_filename_completion_desired = 0;
-	rl_completion_display_matches_hook = rl_display_matches;
+	init_readline("haka", complete);
 
 	current_session = session;
 	LUA_STACK_MARK(session->L);
@@ -160,14 +155,12 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 				multiline = true;
 			} else {
 				printf(RED "%s" CLEAR "\n", lua_tostring(session->L, -1));
-				rl_on_new_line();
 			}
 
 			lua_pop(session->L, 1);
 		}
 		else if (status == LUA_ERRMEM) {
 			printf(RED "%s" CLEAR "\n", lua_tostring(session->L, -1));
-			rl_on_new_line();
 
 			lua_pop(session->L, 1);
 		}
@@ -188,7 +181,6 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 	}
 
 	printf("\n");
-	rl_on_new_line();
 
 	lua_pop(session->L, 1);
 	LUA_STACK_CHECK(session->L, 0);

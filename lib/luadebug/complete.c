@@ -18,13 +18,26 @@
 #include <lauxlib.h>
 
 
+char *complete_addchar(const char *str, char c)
+{
+	const size_t len = strlen(str);
+	char *ret = malloc(len+2);
+	if (!ret) {
+		return NULL;
+	}
+
+	strcpy(ret, str);
+	ret[len] = c;
+	ret[len+1] = 0;
+	return ret;
+}
+
 char *complete_keyword(struct luadebug_complete *context, const char *keywords[],
 		const char *text, int state)
 {
 	int text_len;
 	if (state == 0) {
 		context->keyword = keywords - 1;
-		context->space = true;
 	}
 
 	text_len = strlen(text);
@@ -32,7 +45,7 @@ char *complete_keyword(struct luadebug_complete *context, const char *keywords[]
 	for (++context->keyword; *context->keyword; ++context->keyword) {
 		const int len = strlen(*context->keyword);
 		if (len >= text_len && !strncmp(*context->keyword, text, text_len)) {
-			return strdup(*context->keyword);
+			return complete_addchar(*context->keyword, ' ');
 		}
 	}
 
@@ -190,10 +203,16 @@ char *complete_table(struct lua_State *L, struct luadebug_complete *context,
 						match = strdup(candidate);
 					}
 
-					context->space = !nospace;
-
 					free(candidate);
-					return match;
+
+					if (!nospace) {
+						char *ret = complete_addchar(match, ' ');
+						free(match);
+						return ret;
+					}
+					else {
+						return match;
+					}
 				}
 
 				free(candidate);
@@ -219,7 +238,6 @@ char *complete_generator(struct lua_State *L, struct luadebug_complete *context,
 	if (state == 0) {
 		context->state = 0;
 		context->stack_top = lua_gettop(L);
-		context->space = true;
 	}
 
 	for (iter = callbacks, i=0; *iter; ++iter, ++i) {

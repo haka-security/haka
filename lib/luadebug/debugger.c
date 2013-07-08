@@ -14,8 +14,8 @@
 #include <lauxlib.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <string.h>
+#include <editline/readline.h>
 
 #ifdef HAKA_LUAJIT
 #include <luajit.h>
@@ -745,7 +745,6 @@ static char *complete_callback_debug_keyword(struct lua_State *L, struct luadebu
 
 	if (state == 0) {
 		context->index = -1;
-		context->space = true;
 	}
 
 	text_len = strlen(text);
@@ -757,8 +756,12 @@ static char *complete_callback_debug_keyword(struct lua_State *L, struct luadebu
 		if (keyword) {
 			const int len = strlen(keyword);
 			if (len >= text_len && !strncmp(keyword, text, text_len)) {
-				context->space = cmd->option;
-			return strdup(keyword);
+				if (cmd->option) {
+					return complete_addchar(keyword, ' ');
+				}
+				else {
+					return strdup(keyword);
+				}
 			}
 		}
 	}
@@ -771,16 +774,10 @@ static const complete_callback completions[] = {
 	NULL
 };
 
-static char *empty_generator(const char *text, int state)
-{
-	return NULL;
-}
-
 static char *command_generator(const char *text, int state)
 {
 	char *match = complete_generator(current_session->L, &current_session->complete,
 			completions, text, state);
-	rl_completion_suppress_append = !current_session->complete.space;
 	return match;
 }
 
@@ -798,7 +795,6 @@ static char *lua_generator(const char *text, int state)
 {
 	char *match = complete_generator(current_session->L, &current_session->complete,
 			lua_completions, text, state);
-	rl_completion_suppress_append = !current_session->complete.space;
 	return match;
 }
 
@@ -829,13 +825,7 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar)
 
 	current_session = session;
 
-	rl_basic_word_break_characters = " \t\n`@$><=;|&{(";
-	rl_readline_name = "debug";
-	rl_attempted_completion_function = complete;
-	rl_completion_entry_function = empty_generator;
-	rl_filename_completion_desired = 0;
-	rl_completion_display_matches_hook = rl_display_matches;
-	using_history();
+	init_readline("debug", complete);
 
 	session->list_line = ar->currentline - LIST_DEFAULT_LINE/2;
 	session->frame = *ar;
@@ -846,7 +836,6 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar)
 	session->break_depth = -1;
 
 	dump_source(session, ar, ar->currentline, ar->currentline);
-	rl_on_new_line();
 
 	while ((line = readline(GREEN "debug" BOLD ">  " CLEAR))) {
 		const bool cont = process_command(session, line, true);
@@ -865,8 +854,6 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar)
 
 	current_session = NULL;
 	LUA_STACK_CHECK(session->L, 0);
-
-	rl_on_new_line();
 
 	mutex_unlock(&active_session_mutex);
 }

@@ -2,6 +2,8 @@
 #ifndef _LUAINTERACT_READLINE_H
 #define _LUAINTERACT_READLINE_H
 
-void rl_display_matches(char **matches, int num_matches, int max_length);
+#include <editline/readline.h>
+
+void init_readline(const char *name, CPPFunction* complete);
 
 #endif /* _LUAINTERACT_READLINE_H */

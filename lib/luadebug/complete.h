@@ -15,7 +15,6 @@ struct luadebug_complete {
 	int              index;
 	const char      *token;
 	int              operator;
-	bool             space;
 };
 
 bool complete_push_table_context(struct lua_State *L, struct luadebug_complete *context,
@@ -47,5 +46,7 @@ char *complete_callback_global(struct lua_State *L, struct luadebug_complete *co
 		const char *text, int state);
 char *complete_callback_fenv(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state);
+
+char *complete_addchar(const char *str, char c);
 
 #endif /* _LUADEBUG_COMPLETE_H */

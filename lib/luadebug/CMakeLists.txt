@@ -1,7 +1,7 @@
 
-find_package(Readline)
-if(READLINE_FOUND)
-	include_directories(.)
+find_package(Editline)
+if(EDITLINE_FOUND)
+	include_directories(. ${EDITLINE_INCLUDE_DIR})
 	
 	find_package(SWIG REQUIRED)
 	include(UseSWIG)
@@ -15,8 +15,8 @@ if(READLINE_FOUND)
 	)
 
 	LUA_LINK(libluadebug)
-	target_link_libraries(libluadebug ${READLINE_LIBRARY})
+	target_link_libraries(libluadebug ${EDITLINE_LIBRARY})
 	
 	# The static library is going to be used in a shared library
 	SET_TARGET_PROPERTIES(libluadebug PROPERTIES COMPILE_FLAGS "-fPIC")
-endif(READLINE_FOUND)
+endif(EDITLINE_FOUND)
