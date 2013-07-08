@@ -55,7 +55,7 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 	LUA_STACK_CHECK(state->lua->L, 0);
 }
 
-static void cleanup_thread_state(struct thread_state *state)
+static void cleanup_thread_state_lua(struct thread_state *state)
 {
 	assert(state);
 	assert(state->packet_module);
@@ -64,6 +64,14 @@ static void cleanup_thread_state(struct thread_state *state)
 		lua_state_close(state->lua);
 		state->lua = NULL;
 	}
+}
+
+static void cleanup_thread_state(struct thread_state *state)
+{
+	assert(state);
+	assert(state->packet_module);
+
+	cleanup_thread_state_lua(state);
 
 	if (state->capture) {
 		state->packet_module->cleanup_state(state->capture);
@@ -222,6 +230,17 @@ void thread_pool_cleanup(struct thread_pool *pool)
 {
 	int i;
 
+	/* Clean all Lua states first, to trigger the unload of the
+	 * extensions before cleaning the thread capture states.
+	 */
+	for (i=0; i<pool->count; ++i) {
+		if (pool->threads[i]) {
+			cleanup_thread_state_lua(pool->threads[i]);
+		}
+	}
+
+	/* Finalize cleanup.
+	 */
 	for (i=0; i<pool->count; ++i) {
 		if (pool->threads[i]) {
 			cleanup_thread_state(pool->threads[i]);
