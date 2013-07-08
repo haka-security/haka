@@ -39,24 +39,24 @@ struct pcap_sinks {
 };
 
 struct packet_module_state {
-	struct nfq_handle	*handle;
-	struct nfq_q_handle	*queue;
-	int					fd;
+	struct nfq_handle           *handle;
+	struct nfq_q_handle         *queue;
+	int                          fd;
 
-	struct nfqueue_packet	*current_packet; /* Packet allocated by nfq callback */
-	int						error;
-	char					receive_buffer[PACKET_RECV_SIZE];
+	struct nfqueue_packet       *current_packet; /* Packet allocated by nfq callback */
+	int                          error;
+	char                         receive_buffer[PACKET_RECV_SIZE];
 };
 
-struct pcap_sinks *pcap = NULL;
+static struct pcap_sinks           *pcap = NULL;
 
 struct nfqueue_packet {
-	struct	packet core_packet;
-	struct	packet_module_state *state;
-	int		id; /* nfq identifier */
-	size_t	length;
-	int		modified:1;
-	uint8	*data;
+	struct packet               core_packet;
+	struct packet_module_state *state;
+	int                         id; /* nfq identifier */
+	size_t                      length;
+	int                         modified:1;
+	uint8                       *data;
 };
 
 bool use_multithreading = true;
@@ -230,6 +230,9 @@ static void cleanup_state(struct packet_module_state *state)
 		nfq_destroy_queue(state->queue);
 	if (state->handle)
 		nfq_close(state->handle);
+
+	state->queue = NULL;
+	state->handle = NULL;
 
 	free(state);
 }
@@ -491,7 +494,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	int verdict;
 	switch (result) {
 	case FILTER_ACCEPT: verdict = NF_ACCEPT; break;
-	case FILTER_DROP:	verdict = NF_DROP; break;
+	case FILTER_DROP:   verdict = NF_DROP; break;
 	default:
 		message(HAKA_LOG_DEBUG, MODULE_NAME, L"unknown verdict");
 		verdict = NF_DROP;
