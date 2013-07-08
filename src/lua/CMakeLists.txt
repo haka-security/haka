@@ -11,7 +11,7 @@ swig_add_module(haka-lua lua STATIC
 
 # Lua dependency
 LUA_LINK(haka-lua)
-target_link_libraries(haka-lua libluadebug)
+target_link_libraries(haka-lua libhaka)
 
 install(FILES rule.lua utils.lua color.lua
 	DESTINATION share/haka/core)

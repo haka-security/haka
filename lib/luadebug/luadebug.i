@@ -1,7 +1,7 @@
 %module luadebug
 
 %{
-	#include "debugger.h"
+	#include <luadebug/debugger.h>
 	#include "interactive.h"
 
 	#define new_luadebug_debugger()      luadebug_debugger_create(L)

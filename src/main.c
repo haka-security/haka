@@ -14,6 +14,7 @@
 #include <haka/error.h>
 #include <haka/version.h>
 #include <haka/lua/state.h>
+#include <luadebug/debugger.h>
 
 #include "app.h"
 #include "thread.h"
@@ -49,15 +50,18 @@ static void fatal_error_signal(int sig)
 {
 	static volatile sig_atomic_t fatal_error_in_progress = 0;
 
-	if (fatal_error_in_progress)
-		raise(sig);
-	fatal_error_in_progress = 1;
-
 	printf("\n");
-	message(HAKA_LOG_FATAL, L"core", L"fatal signal received");
 
-	clean_exit();
-	exit(1);
+	if (sig != 2 || !luadebug_debugger_breakall()) {
+		if (fatal_error_in_progress)
+			raise(sig);
+		fatal_error_in_progress = 1;
+
+		messagef(HAKA_LOG_FATAL, L"core", L"fatal signal received (sig=%d)", sig);
+
+		clean_exit();
+		exit(1);
+	}
 }
 
 static void usage(FILE *output, const char *program)

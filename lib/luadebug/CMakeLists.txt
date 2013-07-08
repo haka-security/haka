@@ -16,4 +16,7 @@ if(READLINE_FOUND)
 
 	LUA_LINK(libluadebug)
 	target_link_libraries(libluadebug ${READLINE_LIBRARY})
+	
+	# The static library is going to be used in a shared library
+	SET_TARGET_PROPERTIES(libluadebug PROPERTIES COMPILE_FLAGS "-fPIC")
 endif(READLINE_FOUND)

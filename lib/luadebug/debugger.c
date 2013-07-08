@@ -4,6 +4,7 @@
 #include <haka/error.h>
 #include <haka/compiler.h>
 #include <haka/thread.h>
+#include <haka/log.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
 
@@ -20,7 +21,7 @@
 #include <luajit.h>
 #endif
 
-#include "debugger.h"
+#include <luadebug/debugger.h>
 #include "complete.h"
 #include "utils.h"
 #include "readline.h"
@@ -45,6 +46,9 @@ struct luadebug_debugger {
 
 static mutex_t active_session_mutex = MUTEX_INIT;
 static struct luadebug_debugger *current_session;
+static atomic_t break_required = 0;
+static atomic_t active_debugger = 0;
+
 #define LIST_DEFAULT_LINE   10
 
 
@@ -891,7 +895,11 @@ static void lua_debug_hook(lua_State *L, lua_Debug *ar)
 			lua_getinfo(session->L, "S", ar);
 			session->stack_depth = get_stack_depth(L);
 
-			if (session->break_immediatly && session->stack_depth <= session->break_depth) {
+			if (atomic_get(&break_required)) {
+				enter_debugger(session, ar);
+				atomic_set(&break_required, 0);
+			}
+			else if (session->break_immediatly && session->stack_depth <= session->break_depth) {
 				enter_debugger(session, ar);
 			}
 			else if ((session->last_source != ar->source || session->last_line != ar->currentline) &&
@@ -954,7 +962,22 @@ struct luadebug_debugger *luadebug_debugger_create(struct lua_State *L)
 	luaJIT_setmode(L, 0, LUAJIT_MODE_OFF);
 #endif
 
+	atomic_inc(&active_debugger);
+
 	lua_sethook(L, &lua_debug_hook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
+	return ret;
+}
+
+struct luadebug_debugger *luadebug_debugger_get(struct lua_State *L)
+{
+	struct luadebug_debugger *ret = NULL;
+
+	lua_getfield(L, LUA_REGISTRYINDEX, "__debugger");
+	if (!lua_isnil(L, -1)) {
+		ret = (struct luadebug_debugger *)lua_topointer(L, -1);
+	}
+
+	lua_pop(L, 1);
 	return ret;
 }
 
@@ -968,10 +991,35 @@ void luadebug_debugger_cleanup(struct luadebug_debugger *session)
 	luaL_unref(session->top_L, LUA_REGISTRYINDEX, session->breakpoints);
 
 	free(session);
+
+	atomic_dec(&active_debugger);
 }
 
 void luadebug_debugger_break(struct luadebug_debugger *session)
 {
 	session->break_immediatly = true;
 	session->break_depth = -1;
+}
+
+void luadebug_debugger_interrupt(struct luadebug_debugger *session)
+{
+	lua_Debug ar;
+	lua_getstack(session->L, 0, &ar);
+	enter_debugger(session, &ar);
+}
+
+bool luadebug_debugger_breakall()
+{
+	if (atomic_get(&active_debugger) > 0) {
+		if (atomic_get(&break_required)) {
+			return false;
+		}
+
+		message(HAKA_LOG_FATAL, L"debug", L"break (hit ^C again to kill)");
+		atomic_set(&break_required, 1);
+		return true;
+	}
+	else {
+		return false;
+	}
 }

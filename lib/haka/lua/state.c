@@ -13,6 +13,7 @@
 #include <haka/lua/object.h>
 #include <haka/log.h>
 #include <haka/compiler.h>
+#include <luadebug/debugger.h>
 
 
 #define STATE_TABLE "__haka_state"
@@ -34,6 +35,11 @@ static int panic(lua_State *L)
 
 int lua_state_error_formater(lua_State *L)
 {
+	struct luadebug_debugger *debugger = luadebug_debugger_get(L);
+	if (debugger) {
+		luadebug_debugger_interrupt(debugger);
+	}
+
 	if (getlevel(L"lua") >= HAKA_LOG_DEBUG) {
 		if (!lua_isstring(L, 1)) {
 			return 0;
