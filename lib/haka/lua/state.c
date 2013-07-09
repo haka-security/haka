@@ -308,12 +308,12 @@ struct lua_state *lua_state_init()
 #ifdef HAKA_LUA
 	lua_getglobal(L, "string");
 	lua_pushcfunction(L, str_format);
-	lua_setfield(L, 1, "format");
+	lua_setfield(L, -2, "format");
 #endif
 
 	lua_getglobal(L, "debug");
 	lua_pushcfunction(L, lua_state_error_formater);
-	lua_setfield(L, 1, "format_error");
+	lua_setfield(L, -2, "format_error");
 
 	lua_object_initialize(L);
 
