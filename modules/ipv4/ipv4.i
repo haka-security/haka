@@ -251,8 +251,7 @@ struct ipv4 {
 
 %rename(dissect) ipv4_dissect;
 %newobject ipv4_dissect;
-%delobject ipv4_dissect;
-struct ipv4 *ipv4_dissect(struct packet *packet);
+struct ipv4 *ipv4_dissect(struct packet *DISOWN_SUCCESS_ONLY);
 
 %rename(register_proto) ipv4_register_proto_dissector;
 void ipv4_register_proto_dissector(int proto, const char *dissector);

@@ -87,9 +87,9 @@ struct stream
 			tcp_stream_init($self, seq);
 		}
 
-		void push(struct tcp *DISOWN)
+		void push(struct tcp *DISOWN_SUCCESS_ONLY)
 		{
-			tcp_stream_push($self, DISOWN);
+			tcp_stream_push($self, DISOWN_SUCCESS_ONLY);
 		}
 
 		struct tcp *pop()
@@ -193,8 +193,7 @@ struct tcp_connection {
 
 %rename(dissect) tcp_dissect;
 %newobject tcp_dissect;
-%delobject tcp_dissect;
-struct tcp *tcp_dissect(struct ipv4 *packet);
+struct tcp *tcp_dissect(struct ipv4 *DISOWN_SUCCESS_ONLY);
 
 %{
 

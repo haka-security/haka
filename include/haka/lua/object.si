@@ -48,12 +48,30 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 	}
 %}
 
+%apply typeptr* DISOWN { typeptr* DISOWN_SUCCESS_ONLY };
+
 %typemap(out) typeptr* {
 	if (!lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, $owner)) {
-		SWIG_fail;
+		SWIG_execfail;
 	}
 	else {
 		SWIG_arg++;
+	}
+}
+
+%typemap(freearg) typeptr* DISOWN {
+	if (SWIG_arg == -1 && $1) {
+		if (lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, 1)) {
+			lua_pop(L, 1);
+		}
+	}
+}
+
+%typemap(freearg) typeptr* DISOWN_SUCCESS_ONLY {
+	if (SWIG_arg == -2 && $1) {
+		if (lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, 1)) {
+			lua_pop(L, 1);
+		}
 	}
 }
 
