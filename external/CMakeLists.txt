@@ -17,15 +17,20 @@ if(USE_LUAJIT)
 	endif()
 
 	execute_process(COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/luajit)
-	execute_process(COMMAND echo ${LUAJIT_CCDEBUG} ${LUAJIT_XCFLAGS} OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.opt)
+	execute_process(COMMAND echo CCDEBUG=${LUAJIT_CCDEBUG} XCFLAGS=${LUAJIT_XCFLAGS} PREFIX=${INSTALL_DIR} OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.tmp)
+	execute_process(COMMAND cmp ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.tmp ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.build
+		RESULT_VARIABLE FILE_IS_SAME OUTPUT_FILE /dev/null)
+	if(FILE_IS_SAME)
+		execute_process(COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.tmp ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.opt)
+	endif(FILE_IS_SAME)
 
 	add_custom_target(luajit-sync
 		COMMAND rsync -rt ${CMAKE_CURRENT_SOURCE_DIR}/luajit ${CMAKE_CURRENT_BINARY_DIR}
 	)
 
-	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.cache
+	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.build
 		COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/luajit PREFIX=${INSTALL_DIR} clean
-		COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.opt ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.cache
+		COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.opt ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.build
 		MAIN_DEPENDENCY ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.opt
 		DEPENDS luajit-sync
 	)
@@ -34,7 +39,7 @@ if(USE_LUAJIT)
 		COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/luajit PREFIX=${INSTALL_DIR} BUILDMODE=dynamic CCDEBUG="${LUAJIT_CCDEBUG}" XCFLAGS="${LUAJIT_CFLAGS}"
 		COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/luajit LDCONFIG='/sbin/ldconfig -n' PREFIX=${INSTALL_DIR} BUILDMODE=dynamic CCDEBUG="${LUAJIT_CCDEBUG}" XCFLAGS="${LUAJIT_CFLAGS}"
 			INSTALL_X='install -m 0755 -p' INSTALL_F='install -m 0644 -p' DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/luajit/ install
-		DEPENDS luajit-sync ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.cache
+		DEPENDS luajit-sync ${CMAKE_CURRENT_BINARY_DIR}/luajit/cmake.build
 	)
 
 	set(LUA_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/luajit/${INSTALL_DIR}/include/luajit-2.0 PARENT_SCOPE)
