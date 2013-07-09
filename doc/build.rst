@@ -18,10 +18,11 @@ Required
 * rsync
 * libpcap-dev
 * gawk
+* libedit-dev
 
 Debian: ::
 
-    sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 tshark check rsync libpcap-dev gawk
+    sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 tshark check rsync libpcap-dev gawk libedit-dev
 
 Optional
 ^^^^^^^^
