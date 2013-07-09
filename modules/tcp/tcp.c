@@ -26,7 +26,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	}
 
 	if (ipv4_get_payload_length(packet) < sizeof(struct tcp_header)) {
-		error(L"TCP header length should have a minimum size of  %d", sizeof(struct tcp_header));
+		error(L"TCP header length should have a minimum size of %d", sizeof(struct tcp_header));
 		return NULL;
 	}
 
