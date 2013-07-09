@@ -643,6 +643,18 @@ struct stream *tcp_stream_create()
 	return &tcp_s->stream;
 }
 
+static void tcp_stream_chunk_release(struct tcp_stream_chunk *chunk)
+{
+	struct tcp_stream_chunk_modif *iter = chunk->modifs;
+	while (iter) {
+		struct tcp_stream_chunk_modif *modif = iter;
+		iter = iter->next;
+		free(modif);
+	}
+
+	chunk->modifs = NULL;
+}
+
 static bool tcp_stream_destroy(struct stream *s)
 {
 	struct tcp_stream_chunk *iter;
@@ -653,13 +665,13 @@ static bool tcp_stream_destroy(struct stream *s)
 
 	iter = tcp_s->first;
 	while (iter) {
-		struct tcp_stream_chunk *tmp;
+		struct tcp_stream_chunk *tmp = iter;
 
-		assert(iter->tcp);
-		tcp_release(iter->tcp);
+		assert(tmp->tcp);
+		tcp_release(tmp->tcp);
+		tcp_stream_chunk_release(tmp);
 
-		tmp = iter;
-		iter = iter->next;
+		iter = tmp->next;
 		free(tmp);
 	}
 
@@ -739,6 +751,7 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 
 	/* Search for insert point */
 	if (!tcp_s->last) {
+		assert(!tcp_s->first);
 		tcp_s->first = chunk;
 		tcp_s->last = chunk;
 		chunk->next = NULL;
@@ -760,7 +773,7 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 
 		if (*iter) {
 			if (chunk->end_seq <= (*iter)->start_seq) {
-				chunk->next = (*iter)->next;
+				chunk->next = (*iter);
 			}
 			else {
 				error(L"retransmit packet (unsupported)");
@@ -787,18 +800,6 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	}
 
 	return true;
-}
-
-static void tcp_stream_chunk_release(struct tcp_stream_chunk *chunk)
-{
-	struct tcp_stream_chunk_modif *iter = chunk->modifs;
-	while (iter) {
-		struct tcp_stream_chunk_modif *modif = iter;
-		iter = iter->next;
-		free(modif);
-	}
-
-	chunk->modifs = NULL;
 }
 
 void tcp_stream_seq(struct stream *s, struct tcp *tcp)
@@ -891,7 +892,6 @@ struct tcp *tcp_stream_pop(struct stream *s)
 			tcp_s->last = NULL;
 		}
 
-		chunk->next = NULL;
 		if (tcp_s->last_sent) {
 			assert(tcp_s->last_sent->end_seq == chunk->start_seq);
 			tcp_s->last_sent->next = chunk;
@@ -901,6 +901,7 @@ struct tcp *tcp_stream_pop(struct stream *s)
 			tcp_s->last_sent = chunk;
 			tcp_s->sent = chunk;
 		}
+
 		chunk->tcp = NULL;
 
 		tcp_stream_chunk_release(chunk);
