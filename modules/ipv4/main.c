@@ -16,6 +16,7 @@ struct module HAKA_MODULE = {
 	name:        L"IPv4",
 	description: L"IPv4 protocol",
 	author:      L"Arkoon Network Security",
+	api_version: HAKA_API_VERSION,
 	init:        init,
 	cleanup:     cleanup
 };

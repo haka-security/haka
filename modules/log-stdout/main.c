@@ -90,6 +90,7 @@ struct log_module HAKA_MODULE = {
 		name:        L"Stdout logger",
 		description: L"Basic logger to stdout",
 		author:      L"Arkoon Network Security",
+		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup
 	},

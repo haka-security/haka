@@ -4,6 +4,7 @@
 
 #include <wchar.h>
 #include <haka/thread.h>
+#include <haka/version.h>
 
 #define MAX_EXTRA_MODULE_PARAMETERS 10
 
@@ -21,6 +22,7 @@ struct module {
 	const wchar_t *name;
 	const wchar_t *description;
 	const wchar_t *author;
+	int            api_version;
 
 	int          (*init)(int argc, char *argv[]);
 	void         (*cleanup)();

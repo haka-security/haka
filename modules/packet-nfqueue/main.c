@@ -609,9 +609,10 @@ struct packet_module HAKA_MODULE = {
 		type:        MODULE_PACKET,
 		name:        MODULE_NAME,
 		description: L"Netfilter queue packet module",
-		author:      L"Arkoon Network Security",
-		init:        init,
-		cleanup:     cleanup
+		author:		 L"Arkoon Network Security",
+		api_version: HAKA_API_VERSION,
+		init:		 init,
+		cleanup:	 cleanup
 	},
 	multi_threaded:  multi_threaded,
 	init_state:      init_state,

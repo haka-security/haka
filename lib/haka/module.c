@@ -95,6 +95,13 @@ struct module *module_load(const char *module_name,... )
 
 	module->handle = module_handle;
 
+	if (module->api_version != HAKA_API_VERSION) {
+		messagef(HAKA_LOG_INFO, L"core", L"%s: invalid API version", full_module_name);
+		dlclose(module->handle);
+		free(full_module_name);
+		return NULL;
+	}
+
 	if (atomic_get(&module->ref) == 0) {
 		/* Initialize the module */
 		messagef(HAKA_LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
