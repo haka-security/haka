@@ -16,7 +16,4 @@ target_link_libraries(haka-lua libhaka)
 install(FILES rule.lua utils.lua color.lua
 	DESTINATION share/haka/core)
 
-install(FILES color.lua
-	DESTINATION share/haka/core/haka)
-
 include_directories(.)

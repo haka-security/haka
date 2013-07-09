@@ -43,7 +43,7 @@ struct luadebug_debugger {
 };
 
 %luacode {
-	local color = require("haka/color")
+	local color = require("color")
 
 	function luadebug.hide_underscore(name)
 		if type(name) == "string" then

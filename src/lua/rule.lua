@@ -188,7 +188,7 @@ function haka.filter(pkt)
 	filter_down(pkt)
 end
 
-local color = require("haka/color")
+local color = require("color")
 
 function haka.interactive_rule(self, input)
 	if not haka.__interactive then
