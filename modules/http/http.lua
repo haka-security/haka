@@ -47,13 +47,43 @@ local function read_line(stream)
 	end
 end
 
+-- The comparison is broken in Lua 5.1, so we need to reimplement the
+-- string comparison
+local function string_compare(a, b)
+	if type(a) == "string" and type(b) == "string" then
+		local i = 1
+		local sa = #a
+		local sb = #b
+
+		while true do
+			if i > sa then
+				return false
+			elseif i > sb then
+				return true
+			end
+
+			if a:byte(i) < b:byte(i) then
+				return true
+			elseif a:byte(i) > b:byte(i) then
+				return false
+			end
+			
+			i = i+1
+		end
+		
+		return false
+	else
+		return a < b
+	end
+end
+
 function sorted_pairs(t)
 	local a = {}
 	for n in pairs(t) do
 		table.insert(a, n)
 	end
 
-	table.sort(a)
+	table.sort(a, string_compare)
 	local i = 0
 	local iter = function ()   -- iterator function
 		i = i + 1
