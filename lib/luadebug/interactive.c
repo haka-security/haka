@@ -106,10 +106,13 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 		char *current_line;
 
 		if (multiline) {
+			const size_t full_line_size = strlen(full_line);
+
 			assert(full_line);
 
-			full_line = realloc(full_line, strlen(full_line) + strlen(line) + 1);
-			strcpy(full_line + strlen(full_line), line);
+			full_line = realloc(full_line, full_line_size + 1 + strlen(line) + 1);
+			full_line[full_line_size] = ' ';
+			strcpy(full_line + full_line_size + 1, line);
 
 			current_line = full_line;
 		}
