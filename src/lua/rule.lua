@@ -1,6 +1,7 @@
 
 local __dissectors = {}
 local __rule_groups = {}
+local __hooks = {}
 
 function haka.dissector(d)
 	if d.name == nil or d.dissect == nil then
@@ -10,6 +11,15 @@ function haka.dissector(d)
 			d.enable = true
 			__dissectors[d.name] = d
 			haka.log.info("core", "registering new dissector: '%s'", d.name)
+			
+			__hooks[d.name .. "-up"] = true
+			__hooks[d.name .. "-down"] = true
+			
+			if d.hooks then
+				for _, hook in pairs(d.hooks) do
+					__hooks[hook] = true
+				end
+			end
 		end
 	end
 end
@@ -93,7 +103,11 @@ function haka.rule_summary()
 		haka.log.warning("core", "no registered rule\n")
 	else
 		for hook, count in pairs(rule_count) do
-			haka.log.info("core", "%d rule(s) on hook '%s'", count, hook)
+			if __hooks[hook] then
+				haka.log.info("core", "%d rule(s) on hook '%s'", count, hook)
+			else
+				haka.log.warning("core", "%d rule(s) on unknown hook '%s'", count, hook)
+			end
 		end
 
 		haka.log.info("core", "%d rule(s) registered\n", total)

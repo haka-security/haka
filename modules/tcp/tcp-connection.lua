@@ -110,5 +110,6 @@ end
 
 haka.dissector {
 	name = "tcp-connection",
+	hooks = { "tcp-connection-new" },
 	dissect = dissect
 }

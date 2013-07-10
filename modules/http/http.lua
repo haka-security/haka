@@ -270,6 +270,7 @@ end
 
 haka.dissector {
 	name = "http",
+	hooks = { "http-request", "http-response" },
 	dissect = function (stream)
 
 		if not stream.connection.data._http then
