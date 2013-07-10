@@ -3,9 +3,11 @@ include(TestPcap)
 include(TestUnit)
 
 TEST_PCAP(tcp getfields)
+TEST_PCAP(tcp getfields-passthrough OPTIONS --pass-through)
 TEST_PCAP(tcp filter)
 TEST_PCAP(tcp setchecksum)
 TEST_PCAP(tcp setfields)
+TEST_PCAP(tcp setfields-passthrough OPTIONS --pass-through)
 
 TEST_PCAP(tcp oneconnection)
 TEST_PCAP(tcp interleavedconnection)

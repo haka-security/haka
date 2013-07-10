@@ -26,9 +26,11 @@ endif(NOT GAWK_COMMAND)
 
 macro(TEST_PCAP module name)
 	set(cur "")
+	set(TEST_PCAP_OPTIONS "")
+
 	foreach(it ${ARGN})
 		if(it STREQUAL "OPTIONS")
-			set(cur "OPTIONS")
+			set(cur "TEST_PCAP_OPTIONS")
 		elseif(cur)
 			set(${cur} "${${cur}} ${it}")
 		endif()
@@ -40,7 +42,7 @@ macro(TEST_PCAP module name)
 		-DCTEST_MODULE_BINARY_DIR=${CTEST_MODULE_BINARY_DIR}
 		-DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
 		-DEXE=$<TARGET_FILE:haka>
-		-DEXE_OPTIONS=${OPTIONS}
+		-DEXE_OPTIONS=${TEST_PCAP_OPTIONS}
 		-DCONF=${CMAKE_CURRENT_SOURCE_DIR}/${name}.lua
 		-DSRC=${CMAKE_CURRENT_SOURCE_DIR}/${name}.pcap
 		-DREF=${CMAKE_CURRENT_SOURCE_DIR}/${name}-ref
