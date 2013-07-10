@@ -10,6 +10,52 @@
 
 
 static struct log_module *log_module = NULL;
+static local_storage_t local_message_key;
+static bool message_is_valid = false;
+
+#define MESSAGE_BUFSIZE   2048
+
+static void message_delete(void *value)
+{
+	free(value);
+}
+
+INIT static void _message_init()
+{
+	UNUSED const bool ret = local_storage_init(&local_message_key, message_delete);
+	assert(ret);
+
+	message_is_valid = true;
+}
+
+FINI static void _message_fini()
+{
+	{
+		wchar_t *buffer = local_storage_get(&local_message_key);
+		if (buffer) {
+			message_delete(buffer);
+		}
+	}
+
+	message_is_valid = false;
+
+	{
+		UNUSED const bool ret = local_storage_destroy(&local_message_key);
+		assert(ret);
+	}
+}
+
+static wchar_t *message_context()
+{
+	wchar_t *buffer = (wchar_t *)local_storage_get(&local_message_key);
+	if (!buffer) {
+		buffer = malloc(sizeof(wchar_t) * MESSAGE_BUFSIZE);
+		assert(buffer);
+
+		local_storage_set(&local_message_key, buffer);
+	}
+	return buffer;
+}
 
 int set_log_module(struct module *module)
 {
@@ -67,19 +113,19 @@ void message(log_level level, const wchar_t *module, const wchar_t *message)
 	}
 }
 
-#define MESSAGE_BUFSIZE   1024
-
 void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...)
 {
 	const log_level max_level = getlevel(module);
 	if (level <= max_level) {
-		wchar_t message_buffer[MESSAGE_BUFSIZE];
-
-		va_list ap;
-		va_start(ap, fmt);
-		vswprintf(message_buffer, MESSAGE_BUFSIZE, fmt, ap);
-		message(level, module, message_buffer);
-		va_end(ap);
+		wchar_t *message_buffer = message_context();
+		if (message_buffer) {
+			va_list ap;
+			va_start(ap, fmt);
+			vswprintf(message_buffer, MESSAGE_BUFSIZE, fmt, ap);
+			message_buffer[MESSAGE_BUFSIZE-1] = 0;
+			message(level, module, message_buffer);
+			va_end(ap);
+		}
 	}
 }
 

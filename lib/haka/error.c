@@ -9,7 +9,7 @@
 #include <assert.h>
 
 
-#define HAKA_ERROR_SIZE    1024
+#define HAKA_ERROR_SIZE    2048
 
 struct local_error {
 	bool       is_error;
@@ -73,6 +73,7 @@ void error(const wchar_t *error, ...)
 			va_list ap;
 			va_start(ap, error);
 			vswprintf(context->error_message, HAKA_ERROR_SIZE, error, ap);
+			context->error_message[HAKA_ERROR_SIZE-1] = 0;
 			va_end(ap);
 
 			context->is_error = true;
@@ -85,6 +86,7 @@ const char *errno_error(int err)
 	if (error_is_valid) {
 		struct local_error *context = error_context();
 		if (strerror_r(err, context->errno_message, HAKA_ERROR_SIZE)) {
+			context->error_message[HAKA_ERROR_SIZE-1] = 0;
 			return context->errno_message;
 		}
 	}
