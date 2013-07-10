@@ -47,7 +47,7 @@ struct luadebug_debugger {
 static mutex_t active_session_mutex = MUTEX_INIT;
 static struct luadebug_debugger *current_session;
 static atomic_t break_required = 0;
-static atomic_t active_debugger = 0;
+static atomic_t running_debugger = 0;
 
 #define LIST_DEFAULT_LINE   10
 
@@ -971,7 +971,7 @@ struct luadebug_debugger *luadebug_debugger_create(struct lua_State *L)
 	luaJIT_setmode(L, 0, LUAJIT_MODE_OFF);
 #endif
 
-	atomic_inc(&active_debugger);
+	atomic_inc(&running_debugger);
 
 	lua_sethook(L, &lua_debug_hook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
 	return ret;
@@ -1001,7 +1001,7 @@ void luadebug_debugger_cleanup(struct luadebug_debugger *session)
 
 	free(session);
 
-	atomic_dec(&active_debugger);
+	atomic_dec(&running_debugger);
 }
 
 void luadebug_debugger_break(struct luadebug_debugger *session)
@@ -1019,7 +1019,7 @@ void luadebug_debugger_interrupt(struct luadebug_debugger *session)
 
 bool luadebug_debugger_breakall()
 {
-	if (atomic_get(&active_debugger) > 0) {
+	if (atomic_get(&running_debugger) > 0 && !current_session) {
 		if (atomic_get(&break_required)) {
 			return false;
 		}
