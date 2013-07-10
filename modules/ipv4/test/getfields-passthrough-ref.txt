@@ -1,0 +1,108 @@
+Internet Protocol Version 4, Src: 7.176.206.34 (7.176.206.34), Dst: 127.0.0.1 (127.0.0.1)
+    Version: 4
+    Header length: 20 bytes
+    Total Length: 20
+    Identification: 0x5b84 (23428)
+    Flags: 0x03 (Don't Fragment) (More Fragments)
+        0... .... = Reserved bit: Not set
+        .1.. .... = Don't fragment: Set
+        ..1. .... = More fragments: Set
+    Fragment offset: 8
+    Time to live: 255
+    Protocol: ICMP (1)
+    Header checksum: 0xab8d [correct]
+        [Good: True]
+        [Bad: False]
+    Source: 7.176.206.34 (7.176.206.34)
+    Destination: 127.0.0.1 (127.0.0.1)
+
+Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0.1)
+    Version: 4
+    Header length: 20 bytes
+    Total Length: 84
+    Identification: 0x0000 (0)
+    Flags: 0x02 (Don't Fragment)
+        0... .... = Reserved bit: Not set
+        .1.. .... = Don't fragment: Set
+        ..0. .... = More fragments: Not set
+    Fragment offset: 0
+    Time to live: 64
+    Protocol: ICMP (1)
+    Header checksum: 0x3ca7 [correct]
+        [Good: True]
+        [Bad: False]
+    Source: 127.0.0.1 (127.0.0.1)
+    Destination: 127.0.0.1 (127.0.0.1)
+
+Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0.1)
+    Version: 4
+    Header length: 20 bytes
+    Total Length: 84
+    Identification: 0x82db (33499)
+    Flags: 0x00
+        0... .... = Reserved bit: Not set
+        .0.. .... = Don't fragment: Not set
+        ..0. .... = More fragments: Not set
+    Fragment offset: 0
+    Time to live: 64
+    Protocol: ICMP (1)
+    Header checksum: 0xf9cb [correct]
+        [Good: True]
+        [Bad: False]
+    Source: 127.0.0.1 (127.0.0.1)
+    Destination: 127.0.0.1 (127.0.0.1)
+
+Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0.1)
+    Version: 4
+    Header length: 20 bytes
+    Total Length: 60
+    Identification: 0x39ef (14831)
+    Flags: 0x02 (Don't Fragment)
+        0... .... = Reserved bit: Not set
+        .1.. .... = Don't fragment: Set
+        ..0. .... = More fragments: Not set
+    Fragment offset: 0
+    Time to live: 64
+    Protocol: TCP (6)
+    Header checksum: 0x02cb [correct]
+        [Good: True]
+        [Bad: False]
+    Source: 127.0.0.1 (127.0.0.1)
+    Destination: 127.0.0.1 (127.0.0.1)
+
+Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0.1)
+    Version: 4
+    Header length: 20 bytes
+    Total Length: 40
+    Identification: 0x0000 (0)
+    Flags: 0x02 (Don't Fragment)
+        0... .... = Reserved bit: Not set
+        .1.. .... = Don't fragment: Set
+        ..0. .... = More fragments: Not set
+    Fragment offset: 0
+    Time to live: 64
+    Protocol: TCP (6)
+    Header checksum: 0x3cce [correct]
+        [Good: True]
+        [Bad: False]
+    Source: 127.0.0.1 (127.0.0.1)
+    Destination: 127.0.0.1 (127.0.0.1)
+
+Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0.1)
+    Version: 4
+    Header length: 20 bytes
+    Total Length: 84
+    Identification: 0x0000 (0)
+    Flags: 0x02 (Don't Fragment)
+        0... .... = Reserved bit: Not set
+        .1.. .... = Don't fragment: Set
+        ..0. .... = More fragments: Not set
+    Fragment offset: 0
+    Time to live: 64
+    Protocol: UDP (17)
+    Header checksum: 0x3c97 [correct]
+        [Good: True]
+        [Bad: False]
+    Source: 127.0.0.1 (127.0.0.1)
+    Destination: 127.0.0.1 (127.0.0.1)
+

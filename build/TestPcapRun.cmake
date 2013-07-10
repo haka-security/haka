@@ -4,8 +4,13 @@ set(ENV{DIFF} ${DIFF})
 set(ENV{TSHARK} ${TSHARK})
 set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/src/lua/?.lua)
 
-message(STATUS "Executing LUA_PATH=\"${PROJECT_SOURCE_DIR}/src/lua/?.lua\" ${EXE} -d ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap")
-execute_process(COMMAND ${EXE} -d ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap
+message(STATUS "Executing LUA_PATH=\"${PROJECT_SOURCE_DIR}/src/lua/?.lua\" ${EXE} -d ${EXE_OPTIONS} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap")
+
+if(EXE_OPTIONS)
+	string(REPLACE " " ";" EXE_OPTIONS ${EXE_OPTIONS})
+endif()
+
+execute_process(COMMAND ${EXE} -d ${EXE_OPTIONS} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap
 	RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)
 
 execute_process(COMMAND cat ${DST}-tmp.txt)

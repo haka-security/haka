@@ -25,12 +25,22 @@ if (NOT GAWK_COMMAND)
 endif(NOT GAWK_COMMAND)
 
 macro(TEST_PCAP module name)
+	set(cur "")
+	foreach(it ${ARGN})
+		if(it STREQUAL "OPTIONS")
+			set(cur "OPTIONS")
+		elseif(cur)
+			set(${cur} "${${cur}} ${it}")
+		endif()
+	endforeach(it ${ARGN})
+	
 	add_test(NAME ${module}-${name}-pcap
 		COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
 		-DCTEST_MODULE_BINARY_DIR=${CTEST_MODULE_BINARY_DIR}
 		-DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
 		-DEXE=$<TARGET_FILE:haka>
+		-DEXE_OPTIONS=${OPTIONS}
 		-DCONF=${CMAKE_CURRENT_SOURCE_DIR}/${name}.lua
 		-DSRC=${CMAKE_CURRENT_SOURCE_DIR}/${name}.pcap
 		-DREF=${CMAKE_CURRENT_SOURCE_DIR}/${name}-ref
