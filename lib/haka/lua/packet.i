@@ -88,6 +88,14 @@ struct packet {
 	}
 };
 
+%rename(NORMAL) MODE_NORMAL;
+%rename(PASSTHROUGH) MODE_PASSTHROUGH;
+
+enum packet_mode { MODE_NORMAL, MODE_PASSTHROUGH };
+
+%rename(mode) packet_mode;
+enum packet_mode packet_mode();
+
 %{
 size_t packet_length_get(struct packet *pkt) {
 	return packet_length(pkt);
