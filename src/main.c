@@ -112,7 +112,7 @@ static int parse_cmdline(int *argc, char ***argv)
 			return 0;
 
 		case 'v':
-			printf("version %s, arch %s\n", HAKA_VERSION, HAKA_ARCH);
+			printf("version %s, arch %s, %s\n", HAKA_VERSION, HAKA_ARCH, HAKA_LUA);
 			printf("API version %d\n", HAKA_API_VERSION);
 			return 0;
 

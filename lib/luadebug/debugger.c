@@ -17,7 +17,7 @@
 #include <string.h>
 #include <editline/readline.h>
 
-#ifdef HAKA_LUAJIT
+#if HAKA_LUAJIT
 #include <luajit.h>
 #endif
 
@@ -965,7 +965,7 @@ struct luadebug_debugger *luadebug_debugger_create(struct lua_State *L)
 	lua_newtable(L);
 	ret->breakpoints = luaL_ref(L, LUA_REGISTRYINDEX);
 
-#ifdef HAKA_LUAJIT
+#if HAKA_LUAJIT
 	luaJIT_setmode(L, 0, LUAJIT_MODE_OFF);
 #endif
 

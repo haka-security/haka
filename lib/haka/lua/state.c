@@ -115,7 +115,7 @@ static int lua_print(lua_State* L)
 	return 0;
 }
 
-#ifdef HAKA_LUA
+#if !HAKA_LUAJIT
 
 /*
  * On Lua 5.1, the string.format function does not convert userdata to
@@ -306,7 +306,7 @@ struct lua_state *lua_state_init()
 	lua_pushcfunction(L, lua_print);
 	lua_setglobal(L, "print");
 
-#ifdef HAKA_LUA
+#if !HAKA_LUAJIT
 	lua_getglobal(L, "string");
 	lua_pushcfunction(L, str_format);
 	lua_setfield(L, -2, "format");

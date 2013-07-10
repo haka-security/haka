@@ -18,8 +18,9 @@
 #define HAKA_MODULE_PREFIX    "${HAKA_MODULE_PREFIX}"
 #define HAKA_MODULE_SUFFIX    "${HAKA_MODULE_SUFFIX}"
 
+#define HAKA_LUA         "${LUA}"
 #cmakedefine HAKA_LUAJIT @HAKA_LUAJIT@
-#cmakedefine HAKA_LUA    @HAKA_LUA@
+#cmakedefine HAKA_LUA51  @HAKA_LUA51@
 
 #define HAKA_PREFIX      "@CMAKE_INSTALL_PREFIX@"
 
