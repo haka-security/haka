@@ -24,6 +24,8 @@
 static struct lua_state *global_lua_state;
 static struct thread_pool *thread_states;
 
+extern void packet_set_mode(enum packet_mode mode);
+
 
 /* Clean up lua state and loaded modules */
 static void clean_exit()
@@ -74,14 +76,16 @@ static void help(const char *program)
 	usage(stdout, program);
 
 	fprintf(stdout, "Options:\n");
-	fprintf(stdout, "\t-h,--help:     Display this information\n");
-	fprintf(stdout, "\t--version:     Display version information\n");
-	fprintf(stdout, "\t-d,--debug:    Display debug output\n");
-	fprintf(stdout, "\t--daemon:      Run in the background\n");
-	fprintf(stdout, "\t-jN:           Use N threads for packet capture (if supported)\n");
+	fprintf(stdout, "\t-h,--help:       Display this information\n");
+	fprintf(stdout, "\t--version:       Display version information\n");
+	fprintf(stdout, "\t-d,--debug:      Display debug output\n");
+	fprintf(stdout, "\t--daemon:        Run in the background\n");
+	fprintf(stdout, "\t-jN:             Use N threads for packet capture (if supported)\n");
+	fprintf(stdout, "\t--pass-through:  Run in pass-through mode\n");
 }
 
 static bool daemonize = false;
+static bool pass_throught = false;
 
 static int parse_cmdline(int *argc, char ***argv)
 {
@@ -89,11 +93,12 @@ static int parse_cmdline(int *argc, char ***argv)
 	int index = 0;
 
 	static struct option long_options[] = {
-		{"version", no_argument,       0,  'v' },
-		{"help",    no_argument,       0,  'h' },
-		{"debug",   no_argument,       0,  'd' },
-		{"daemon",  no_argument,       0,  'D' },
-		{0,         0,                 0,  0 }
+		{ "version",      no_argument,       0, 'v' },
+		{ "help",         no_argument,       0, 'h' },
+		{ "debug",        no_argument,       0, 'd' },
+		{ "daemon",       no_argument,       0, 'D' },
+		{ "pass-through", no_argument,       0, 'P' },
+		{ 0,              0,                 0, 0 }
 	};
 
 	while ((c = getopt_long(*argc, *argv, "dhj:", long_options, &index)) != -1) {
@@ -113,6 +118,10 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'D':
 			daemonize = true;
+			break;
+
+		case 'P':
+			pass_throught = true;
 			break;
 
 		case 'j':
@@ -140,7 +149,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		return 2;
 	}
 
-	*argc += optind;
+	*argc -= optind;
 	*argv += optind;
 	return -1;
 }
@@ -202,6 +211,11 @@ int main(int argc, char *argv[])
 			clean_exit();
 			return 1;
 		}
+	}
+
+	if (pass_throught) {
+		messagef(HAKA_LOG_INFO, L"core", L"setting packet mode to pass-through\n");
+		packet_set_mode(MODE_PASSTHROUGH);
 	}
 
 	/* Main loop */

@@ -9,6 +9,7 @@
 
 
 static struct packet_module *packet_module = NULL;
+static enum packet_mode global_packet_mode = MODE_NORMAL;
 
 int set_packet_module(struct module *module)
 {
@@ -65,17 +66,41 @@ const char *packet_dissector(struct packet *pkt)
 	return packet_module->get_dissector(pkt);
 }
 
-uint8* packet_data_modifiable(struct packet *pkt)
+uint8 *packet_data_modifiable(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	return packet_module->make_modifiable(pkt);
+
+	switch (global_packet_mode) {
+	case MODE_NORMAL:
+		return packet_module->make_modifiable(pkt);
+
+	case MODE_PASSTHROUGH:
+		error(L"operation not supported (pass-through mode)");
+		return NULL;
+
+	default:
+		assert(0);
+		return NULL;
+	}
 }
 
 int packet_resize(struct packet *pkt, size_t size)
 {
 	assert(packet_module);
-	return packet_module->resize(pkt, size);
+
+	switch (global_packet_mode) {
+	case MODE_NORMAL:
+		return packet_module->resize(pkt, size);
+
+	case MODE_PASSTHROUGH:
+		error(L"operation not supported (pass-through mode)");
+		return -1;
+
+	default:
+		assert(0);
+		return -1;
+	}
 }
 
 int packet_receive(struct packet_module_state *state, struct packet **pkt)
@@ -110,4 +135,14 @@ void packet_accept(struct packet *pkt)
 	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%d, len=%u",
 			packet_module->get_id(pkt), packet_length(pkt));
 	packet_module->verdict(pkt, FILTER_ACCEPT);
+}
+
+void packet_set_mode(enum packet_mode mode)
+{
+	global_packet_mode = mode;
+}
+
+enum packet_mode packet_mode()
+{
+	return global_packet_mode;
 }

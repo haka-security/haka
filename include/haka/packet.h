@@ -23,5 +23,12 @@ void         packet_drop(struct packet *pkt);
 void         packet_accept(struct packet *pkt);
 int          packet_receive(struct packet_module_state *state, struct packet **pkt);
 
+enum packet_mode {
+	MODE_NORMAL,
+	MODE_PASSTHROUGH,
+};
+
+enum packet_mode    packet_mode();
+
 #endif /* _HAKA_PACKET_H */
 
