@@ -499,6 +499,10 @@ static bool check_token(const char *line, const char *token, const char *short_t
 
 static bool print_exp(struct luadebug_debugger *session, const char *option)
 {
+	if (!option) {
+		return false;
+	}
+
 	int status;
 	char *print_line = malloc(7 + strlen(option) + 1);
 
