@@ -6,6 +6,11 @@ haka.app.install("log", haka.module.load("log-stdout"))
 
 haka.log.info("config", "configuring haka...")
 
+if (#arg ~= 2 and #arg ~= 3) or arg[1] == "-h" or arg[1] == "--help" then
+	print("usage: capture-pcapfile.lua <pcap file> <configuration> [pcap output]")
+	haka.app.exit(0)
+end
+
 if arg[3] then
 	haka.app.install("packet", haka.module.load("packet-pcap", "-f", arg[1], "-o", arg[3]))
 else
