@@ -152,7 +152,10 @@ static bool dump_stack(struct luadebug_debugger *session, const char *option)
 			lua_pushvalue(session->L, i);
 			lua_pushstring(session->L, "    \t");
 			lua_pushnumber(session->L, 1);
-			lua_call(session->L, 3, 0);
+			if (lua_pcall(session->L, 3, 0, 0)) {
+				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
+				lua_pop(session->L, 1);
+			}
 		}
 	}
 	else if (index > 0 && index < h) {
@@ -161,7 +164,10 @@ static bool dump_stack(struct luadebug_debugger *session, const char *option)
 		lua_pushvalue(session->L, -1);
 		lua_pushvalue(session->L, index);
 		lua_pushstring(session->L, "    \t");
-		lua_call(session->L, 2, 0);
+		if (lua_pcall(session->L, 2, 0, 0)) {
+			printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
+			lua_pop(session->L, 1);
+		}
 	}
 	else {
 		printf(RED "invalid stack index '%d'\n" CLEAR, index);
@@ -190,7 +196,10 @@ static bool dump_local(struct luadebug_debugger *session, const char *option)
 			lua_pushvalue(session->L, -2);
 			lua_pushstring(session->L, "    \t");
 			lua_pushnumber(session->L, 1);
-			lua_call(session->L, 3, 0);
+			if (lua_pcall(session->L, 3, 0, 0)) {
+				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
+				lua_pop(session->L, 1);
+			}
 
 			lua_pop(session->L, 1);
 		}
@@ -206,7 +215,10 @@ static bool dump_local(struct luadebug_debugger *session, const char *option)
 			lua_pushvalue(session->L, -2);
 			lua_pushvalue(session->L, -2);
 			lua_pushstring(session->L, "    \t");
-			lua_call(session->L, 2, 0);
+			if (lua_pcall(session->L, 2, 0, 0)) {
+				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
+				lua_pop(session->L, 1);
+			}
 
 			lua_pop(session->L, 1);
 		}
@@ -236,7 +248,10 @@ static bool dump_upvalue(struct luadebug_debugger *session, const char *option)
 			lua_pushvalue(session->L, -2);
 			lua_pushstring(session->L, "    \t");
 			lua_pushnumber(session->L, 1);
-			lua_call(session->L, 3, 0);
+			if (lua_pcall(session->L, 3, 0, 0)) {
+				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
+				lua_pop(session->L, 1);
+			}
 
 			lua_pop(session->L, 1);
 		}
@@ -252,7 +267,10 @@ static bool dump_upvalue(struct luadebug_debugger *session, const char *option)
 			lua_pushvalue(session->L, -2);
 			lua_pushvalue(session->L, -2);
 			lua_pushstring(session->L, "    \t");
-			lua_call(session->L, 2, 0);
+			if (lua_pcall(session->L, 2, 0, 0)) {
+				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
+				lua_pop(session->L, 1);
+			}
 
 			lua_pop(session->L, 1);
 		}

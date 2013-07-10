@@ -58,14 +58,14 @@ struct luadebug_debugger {
 
 		local title
 		if name then
-			title = indent .. color.blue .. color.bold .. name .. color.clear .. " : "
+			title = table.concat({indent, color.blue, color.bold, name, color.clear, " : "})
 		else
 			title = ""
 		end
 
 		if type == "userdata" or type == "table" then
 			if visited[obj] then
-				print(title .. color.red .. "recursive value" .. color.clear)
+				print(table.concat({title, color.red, "recursive value", color.clear}))
 				return
 			end
 
@@ -73,10 +73,11 @@ struct luadebug_debugger {
 		end
 
 		if type == "table" then
+			title = table.concat({title, color.cyan, color.bold, "table", color.clear})
 			if depth == 0 then
-				print(title .. color.cyan .. color.bold .. "table" .. color.clear)
+				print(title)
 			else
-				print(title .. color.cyan .. color.bold .. "table" .. color.clear, "{")
+				print(title, "{")
 
 				for key, value in pairs(obj) do
 					if not hidden or not hidden(key) then
@@ -89,10 +90,14 @@ struct luadebug_debugger {
 		elseif type == "userdata" then
 			local meta = getmetatable(obj)
 			if meta then
-				title = title .. color.cyan .. color.bold .. "userdata " .. color.clear
+				title = table.concat({title, color.cyan, color.bold, "userdata", color.clear})
+
+				if meta[".type"] then
+					title = table.concat({title, " ", tostring(meta[".type"])})
+				end
 
 				if meta[".fn"] and meta[".fn"].__tostring then
-					print(title .. tostring(obj))
+					print(title, tostring(obj))
 				else
 					if depth == 0 then
 						print(title)
@@ -102,34 +107,38 @@ struct luadebug_debugger {
 						for key, _ in pairs(meta[".get"]) do
 							if not hidden or not hidden(key) then
 								if not has_value then
-									print(title .. "{")
+									print(title, "{")
 									has_value = true
 								end
 
-								__pprint(obj[key], indent .. "  ", key, visited, hidden, depth-1)
+								local success, child_obj = pcall(function () return obj[key] end)
+								if success then
+									__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1)
+								else
+									local error = table.concat({indent, "  ", color.blue, color.bold, key, color.clear, " : ", color.red, child_obj, color.clear})
+									print(error)
+								end
 							end
 						end
 
 						if has_value then
 							print(indent .. "}")
-						elseif meta[".type"] then
-							print(title .. meta[".type"])
 						else
 							print(title)
 						end
 					end
 				end
 			else
-				print(title .. color.cyan .. color.bold .. "userdata" .. color.clear)
+				print(table.concat({title, color.cyan, color.bold, "userdata", color.clear}))
 			end
 		elseif type == "function" then
-			print(title .. color.cyan .. color.bold .. "function" .. color.clear)
+			print(table.concat({title, color.cyan, color.bold, "function", color.clear}))
 		elseif type == "string" then
-			print(title .. color.magenta .. color.bold .. "\"" .. obj .. "\"" .. color.clear)
+			print(table.concat({title, color.magenta, color.bold, "\"", obj, "\"", color.clear}))
 		elseif type == "boolean" then
-			print(title .. color.magenta .. color.bold .. tostring(obj) .. color.clear)
+			print(table.concat({title, color.magenta, color.bold, tostring(obj), color.clear}))
 		elseif type == "thread" then
-			print(title .. color.cyan .. color.bold .. "thread" .. color.clear)
+			print(table.concat({title, color.cyan, color.bold, "thread", color.clear}))
 		else
 			print(title .. tostring(obj))
 		end
