@@ -554,6 +554,7 @@ static int packet_do_resize(struct packet *orig_pkt, size_t size)
 
 	new_data = malloc(size);
 	if (!new_data) {
+		error(L"memory error");
 		return ENOMEM;
 	}
 
@@ -579,22 +580,22 @@ static const char *packet_get_dissector(struct packet *pkt)
 
 struct packet_module HAKA_MODULE = {
 	module: {
-		type:		 MODULE_PACKET,
-		name:		 MODULE_NAME,
+		type:        MODULE_PACKET,
+		name:        MODULE_NAME,
 		description: L"Netfilter queue packet module",
-		author:		 L"Arkoon Network Security",
-		init:		 init,
-		cleanup:	 cleanup
+		author:      L"Arkoon Network Security",
+		init:        init,
+		cleanup:     cleanup
 	},
 	multi_threaded:  multi_threaded,
-	init_state:		 init_state,
-	cleanup_state:	 cleanup_state,
-	receive:		 packet_do_receive,
-	verdict:		 packet_verdict,
-	get_length:		 packet_get_length,
+	init_state:      init_state,
+	cleanup_state:   cleanup_state,
+	receive:         packet_do_receive,
+	verdict:         packet_verdict,
+	get_length:      packet_get_length,
 	make_modifiable: packet_modifiable,
-	resize:			 packet_do_resize,
-	get_id:			 packet_get_id,
-	get_data:		 packet_get_data,
-	get_dissector:	 packet_get_dissector
+	resize:          packet_do_resize,
+	get_id:          packet_get_id,
+	get_data:        packet_get_data,
+	get_dissector:   packet_get_dissector
 };

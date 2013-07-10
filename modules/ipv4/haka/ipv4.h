@@ -61,8 +61,8 @@ struct ipv4 {
 struct ipv4 *ipv4_dissect(struct packet *packet);
 struct packet *ipv4_forge(struct ipv4 *ip);
 void ipv4_release(struct ipv4 *ip);
-void ipv4_pre_modify(struct ipv4 *ip);
-void ipv4_pre_modify_header(struct ipv4 *ip);
+int ipv4_pre_modify(struct ipv4 *ip);
+int ipv4_pre_modify_header(struct ipv4 *ip);
 bool ipv4_verify_checksum(const struct ipv4 *ip);
 void ipv4_compute_checksum(struct ipv4 *ip);
 int16 inet_checksum(uint16 *ptr, uint16 size);
@@ -78,7 +78,7 @@ bool ipv4_valid(struct ipv4 *ip);
 
 #define IPV4_GETSET_FIELD(type, field) \
 		INLINE type ipv4_get_##field(const struct ipv4 *ip) { IPV4_CHECK(ip, 0); return SWAP_FROM_IPV4(type, ip->header->field); } \
-		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { IPV4_CHECK(ip); ipv4_pre_modify_header(ip); ip->header->field = SWAP_TO_IPV4(type, v); }
+		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { IPV4_CHECK(ip); if (!ipv4_pre_modify_header(ip)) ip->header->field = SWAP_TO_IPV4(type, v); }
 
 IPV4_GETSET_FIELD(uint8, version);
 IPV4_GETSET_FIELD(uint8, tos);
@@ -99,8 +99,8 @@ INLINE uint8 ipv4_get_hdr_len(const struct ipv4 *ip)
 INLINE void ipv4_set_hdr_len(struct ipv4 *ip, uint8 v)
 {
 	IPV4_CHECK(ip);
-	ipv4_pre_modify_header(ip);
-	ip->header->hdr_len = v >> IPV4_HDR_LEN_OFFSET;
+	if (!ipv4_pre_modify_header(ip))
+		ip->header->hdr_len = v >> IPV4_HDR_LEN_OFFSET;
 }
 
 INLINE uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
@@ -112,8 +112,8 @@ INLINE uint16 ipv4_get_frag_offset(const struct ipv4 *ip)
 INLINE void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
 {
 	IPV4_CHECK(ip);
-	ipv4_pre_modify_header(ip);
-	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS, v >> IPV4_FRAGMENTOFFSET_OFFSET);
+	if (!ipv4_pre_modify_header(ip))
+		ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FRAGMENTOFFSET_BITS, v >> IPV4_FRAGMENTOFFSET_OFFSET);
 }
 
 INLINE uint16 ipv4_get_flags(const struct ipv4 *ip)
@@ -125,13 +125,13 @@ INLINE uint16 ipv4_get_flags(const struct ipv4 *ip)
 INLINE void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 {
 	IPV4_CHECK(ip);
-	ipv4_pre_modify_header(ip);
-	ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FLAG_BITS, v);
+	if (!ipv4_pre_modify_header(ip))
+		ip->header->fragment = IPV4_SET_BITS(uint16, ip->header->fragment, IPV4_FLAG_BITS, v);
 }
 
 #define IPV4_GETSET_FLAG(name, flag) \
 		INLINE bool ipv4_get_flags_##name(const struct ipv4 *ip) { IPV4_CHECK(ip, 0); return IPV4_GET_BIT(uint16, ip->header->fragment, flag); } \
-		INLINE void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { IPV4_CHECK(ip); ipv4_pre_modify_header(ip); ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, v); }
+		INLINE void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { IPV4_CHECK(ip); if (!ipv4_pre_modify_header(ip)) ip->header->fragment = IPV4_SET_BIT(uint16, ip->header->fragment, flag, v); }
 
 IPV4_GETSET_FLAG(df, IPV4_FLAG_DF);
 IPV4_GETSET_FLAG(mf, IPV4_FLAG_MF);

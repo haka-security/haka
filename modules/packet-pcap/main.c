@@ -3,6 +3,7 @@
 #include <haka/log.h>
 #include <haka/types.h>
 #include <haka/thread.h>
+#include <haka/error.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -289,6 +290,7 @@ static int packet_do_resize(struct packet *orig_pkt, size_t size)
 
 	new_data = malloc(new_size);
 	if (!new_data) {
+		error(L"memory error");
 		return ENOMEM;
 	}
 

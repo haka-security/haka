@@ -74,19 +74,29 @@ void ipv4_release(struct ipv4 *ip)
 	free(ip);
 }
 
-void ipv4_pre_modify(struct ipv4 *ip)
+int ipv4_pre_modify(struct ipv4 *ip)
 {
 	if (!ip->modified) {
-		ip->header = (struct ipv4_header*)(packet_data_modifiable(ip->packet));
+		struct ipv4_header *header = (struct ipv4_header *)(packet_data_modifiable(ip->packet));
+		if (!header) {
+			assert(check_error());
+			return -1;
+		}
+
+		ip->header = header;
 	}
 
 	ip->modified = true;
+	return 0;
 }
 
-void ipv4_pre_modify_header(struct ipv4 *ip)
+int ipv4_pre_modify_header(struct ipv4 *ip)
 {
-	ipv4_pre_modify(ip);
+	const int ret = ipv4_pre_modify(ip);
+	if (ret) return ret;
+
 	ip->invalid_checksum = true;
+	return 0;
 }
 
 
@@ -125,11 +135,11 @@ bool ipv4_verify_checksum(const struct ipv4 *ip)
 void ipv4_compute_checksum(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip);
-	ipv4_pre_modify_header(ip);
-
-	ip->header->checksum = 0;
-	ip->header->checksum = inet_checksum((uint16 *)ip->header, ipv4_get_hdr_len(ip));
-	ip->invalid_checksum = false;
+	if (!ipv4_pre_modify_header(ip)) {
+		ip->header->checksum = 0;
+		ip->header->checksum = inet_checksum((uint16 *)ip->header, ipv4_get_hdr_len(ip));
+		ip->invalid_checksum = false;
+	}
 }
 
 const uint8 *ipv4_get_payload(struct ipv4 *ip)
@@ -141,8 +151,10 @@ const uint8 *ipv4_get_payload(struct ipv4 *ip)
 uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip, NULL);
-	ipv4_pre_modify(ip);
-	return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip);
+	if (!ipv4_pre_modify(ip))
+		return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip);
+	else
+		return NULL;
 }
 
 size_t ipv4_get_payload_length(struct ipv4 *ip)
@@ -160,7 +172,10 @@ uint8 *ipv4_resize_payload(struct ipv4 *ip, size_t size)
 	IPV4_CHECK(ip, NULL);
 
 	new_size = size + ipv4_get_hdr_len(ip);
-	packet_resize(ip->packet, new_size);
+	if (packet_resize(ip->packet, new_size)) {
+		return NULL;
+	}
+
 	ip->header = (struct ipv4_header*)packet_data_modifiable(ip->packet);
 	ip->modified = true;
 	ip->invalid_checksum = true;
