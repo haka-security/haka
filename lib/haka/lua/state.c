@@ -37,11 +37,12 @@ int lua_state_error_formater(lua_State *L)
 {
 	struct luadebug_debugger *debugger = luadebug_debugger_get(L);
 	if (debugger) {
+		messagef(HAKA_LOG_ERROR, L"lua", L"catched lua error: %s", lua_tostring(L, -1));
 		luadebug_debugger_interrupt(debugger);
 	}
 
 	if (getlevel(L"lua") >= HAKA_LOG_DEBUG) {
-		if (!lua_isstring(L, 1)) {
+		if (!lua_isstring(L, -1)) {
 			return 0;
 		}
 
@@ -57,14 +58,14 @@ int lua_state_error_formater(lua_State *L)
 			return 0;
 		}
 
-		lua_pushvalue(L, 1);
+		lua_pushvalue(L, -3);
 		lua_pushinteger(L, 2);
 		lua_call(L, 2, 1);
 
 		return 1;
 	}
 	else {
-		lua_pushvalue(L, 1);
+		lua_pushvalue(L, -1);
 		return 1;
 	}
 }
