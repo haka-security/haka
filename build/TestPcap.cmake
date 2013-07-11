@@ -24,6 +24,8 @@ if (NOT GAWK_COMMAND)
 	message(FATAL_ERROR "Cannot find gawk command")
 endif(NOT GAWK_COMMAND)
 
+find_program(VALGRIND_COMMAND valgrind)
+
 macro(TEST_PCAP module name)
 	set(cur "")
 	set(TEST_PCAP_OPTIONS "")
@@ -49,6 +51,7 @@ macro(TEST_PCAP module name)
 		-DDST=${name}-out
 		-DDIFF=${DIFF_COMMAND}
 		-DTSHARK=${TSHARK_COMMAND}
+		-DVALGRIND=${VALGRIND_COMMAND}
 		-P ${CTEST_MODULE_DIR}/TestPcapRun.cmake)
 endmacro(TEST_PCAP)
 

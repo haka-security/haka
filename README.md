@@ -26,10 +26,11 @@ Dependencies
 
 * Cppcheck
 * Netfilter Queue
+* Valgrind
 
 #### Debian
 
-    $ sudo apt-get install cppcheck libnetfilter-queue-dev
+    $ sudo apt-get install cppcheck libnetfilter-queue-dev valgrind
 
 Build
 -----
