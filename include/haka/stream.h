@@ -117,6 +117,11 @@ INLINE bool stream_unmark(struct stream *stream, struct stream_mark *mark)
 		return false;
 	}
 
+	if (!mark) {
+		error(L"invalid argument");
+		return false;
+	}
+
 	return stream->ftable->unmark(stream, mark);
 }
 
@@ -124,6 +129,11 @@ INLINE bool stream_seek(struct stream *stream, struct stream_mark *mark, bool un
 {
 	if (!stream->ftable->seek) {
 		error(L"usupported operation");
+		return false;
+	}
+
+	if (!mark) {
+		error(L"invalid argument");
 		return false;
 	}
 

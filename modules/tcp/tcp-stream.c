@@ -44,6 +44,8 @@ enum tcp_modif_type {
 	TCP_MODIF_ERASE
 };
 
+struct tcp_stream;
+
 struct tcp_stream_chunk_modif {
 	enum tcp_modif_type             type;
 	uint64                          position;
@@ -77,6 +79,7 @@ struct tcp_stream_mark {
 	struct tcp_stream_mark         *prev;
 	struct tcp_stream_mark         *next;
 
+	struct tcp_stream              *stream;
 	uint64                          chunk_seq;
 	size_t                          chunk_offset;
 	size_t                          modif_offset;
@@ -862,7 +865,7 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		local_pos = *read_pos;
 		write_pos = &local_pos;
 
-		while (tcp_mark->readonly) {
+		while (tcp_mark->readonly && tcp_mark->next) {
 			tcp_stream_position_moveforward(tcp_s, write_pos, tcp_mark->next);
 			tcp_mark = tcp_mark->next;
 		}
@@ -1309,6 +1312,7 @@ static struct stream_mark *tcp_stream_mark(struct stream *s, bool readonly)
 	}
 
 	tcp_stream_position_getmark(tcp_s, &tcp_s->current_position, mark);
+	mark->stream = tcp_s;
 	mark->prev = NULL;
 	mark->next = NULL;
 
@@ -1359,6 +1363,13 @@ static bool tcp_stream_unmark(struct stream *s, struct stream_mark *mark)
 	struct tcp_stream_mark *tcp_mark = (struct tcp_stream_mark *)mark;
 	TCP_STREAM(s);
 
+	assert(tcp_mark);
+
+	if (tcp_mark->stream != tcp_s) {
+		error(L"invalid mark");
+		return false;
+	}
+
 	if (!tcp_mark->prev) {
 		if (tcp_mark->next) {
 			struct tcp_stream_chunk *chunk;
@@ -1381,13 +1392,16 @@ static bool tcp_stream_unmark(struct stream *s, struct stream_mark *mark)
 		}
 	}
 
-	if (tcp_mark->next) tcp_mark->next->prev = tcp_mark->prev;
+	if (tcp_mark->next) {
+		tcp_mark->next->prev = tcp_mark->prev;
+	}
+
 	if (tcp_mark->prev) {
 		tcp_mark->prev->next = tcp_mark->next;
 	}
 	else {
 		assert(tcp_s->marks == tcp_mark);
-		tcp_s->marks = NULL;
+		tcp_s->marks = tcp_mark->next;
 	}
 
 	free(tcp_mark);
@@ -1399,6 +1413,13 @@ static bool tcp_stream_seek(struct stream *s, struct stream_mark *mark, bool unm
 	struct tcp_stream_mark current;
 	struct tcp_stream_mark *tcp_mark = (struct tcp_stream_mark *)mark;
 	TCP_STREAM(s);
+
+	assert(tcp_mark);
+
+	if (tcp_mark->stream != tcp_s) {
+		error(L"invalid mark");
+		return false;
+	}
 
 	if (!tcp_stream_position_isvalid(&tcp_s->mark_position)) {
 		error(L"invalid mark");
