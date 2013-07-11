@@ -30,6 +30,7 @@
 %include "haka/lua/object.si"
 %include "haka/lua/packet.si"
 %include "haka/lua/ipv4.si"
+%include "haka/lua/ipv4-addr.si"
 
 %rename(addr) ipv4_addr;
 struct ipv4_addr {

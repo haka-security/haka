@@ -1,3 +1,14 @@
 
+%{
+
 struct ipv4_addr;
 struct ipv4_addr *ipv4_addr_new(ipv4addr a);
+
+%}
+
+/* ipv4_addr should never be disowned */
+%typemap(in, checkfn="SWIG_isptrtype") struct ipv4_addr* %{
+	if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, 0))){
+		SWIG_fail_ptr("$symname", $argnum, $descriptor);
+	}
+%}
