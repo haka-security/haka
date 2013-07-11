@@ -1,6 +1,7 @@
 #!/bin/awk
 BEGIN {
 	show = 0
+	trace = 0
 }
 
 $0 ~ /info core: starting single threaded processing/ {
@@ -21,12 +22,20 @@ $0 ~ /^debug rule:/ {
 	next;
 }
 
+$0 ~ /^stack traceback:$/ {
+	trace = 1;
+	next;
+}
+
+$0 ~ /^[^ \t]/ {
+	trace = 0;
+}
+
 {
-	if (show == 2) {
+	if (show == 2 && trace == 0) {
 		print;
 	}
 	else if (show == 1) {
 		show = 2
 	}
 }
-
