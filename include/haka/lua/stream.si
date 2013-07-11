@@ -78,7 +78,11 @@ LUA_OBJECT(struct stream);
 
 	unsigned int erase(int size);
 
-	struct stream_mark *mark();
+	struct stream_mark *mark() {
+		return stream_mark($self, false);
+	}
+
+	struct stream_mark *mark(bool readonly);
 	void unmark(struct stream_mark *mark);
 	void seek(struct stream_mark *mark, bool unmark);
 }

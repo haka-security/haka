@@ -209,34 +209,38 @@ local function forge(http)
 		if http._state == 2 and tcp.direction then
 			http._state = 3
 
-			tcp.stream:seek(http.request._mark, true)
-			http.request._mark = nil
-
-			tcp.stream:erase(http.request._length)
-			tcp.stream:insert(http.request.method)
-			tcp.stream:insert(" ")
-			tcp.stream:insert(http.request.uri)
-			tcp.stream:insert(" ")
-			tcp.stream:insert(http.request.version)
-			tcp.stream:insert("\r\n")
-			build_headers(tcp.stream, http.request.headers, http.request._headers_order)
-			tcp.stream:insert("\r\n")
+			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
+				tcp.stream:seek(http.request._mark, true)
+				http.request._mark = nil
+	
+				tcp.stream:erase(http.request._length)
+				tcp.stream:insert(http.request.method)
+				tcp.stream:insert(" ")
+				tcp.stream:insert(http.request.uri)
+				tcp.stream:insert(" ")
+				tcp.stream:insert(http.request.version)
+				tcp.stream:insert("\r\n")
+				build_headers(tcp.stream, http.request.headers, http.request._headers_order)
+				tcp.stream:insert("\r\n")
+			end
 
 		elseif http._state == 5 and not tcp.direction then
 			http._state = 0
 
-			tcp.stream:seek(http.response._mark, true)
-			http.response._mark = nil
-
-			tcp.stream:erase(http.response._length)
-			tcp.stream:insert(http.response.version)
-			tcp.stream:insert(" ")
-			tcp.stream:insert(http.response.status)
-			tcp.stream:insert(" ")
-			tcp.stream:insert(http.response.reason)
-			tcp.stream:insert("\r\n")
-			build_headers(tcp.stream, http.response.headers, http.response._headers_order)
-			tcp.stream:insert("\r\n")
+			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
+				tcp.stream:seek(http.response._mark, true)
+				http.response._mark = nil
+	
+				tcp.stream:erase(http.response._length)
+				tcp.stream:insert(http.response.version)
+				tcp.stream:insert(" ")
+				tcp.stream:insert(http.response.status)
+				tcp.stream:insert(" ")
+				tcp.stream:insert(http.response.reason)
+				tcp.stream:insert("\r\n")
+				build_headers(tcp.stream, http.response.headers, http.response._headers_order)
+				tcp.stream:insert("\r\n")
+			end
 		end
 
 		http._tcp_stream = nil
@@ -246,7 +250,9 @@ end
 
 local function parse(http, context, f, name, next_state)
 	if not context._co then
-		context._mark = http._tcp_stream.stream:mark()
+		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
+			context._mark = http._tcp_stream.stream:mark()
+		end
 		context._co = coroutine.create(function () f(http._tcp_stream.stream, context) end)
 	end
 
