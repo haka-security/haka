@@ -1,0 +1,162 @@
+debug tcp-connection: opening connection 10.2.96.127:45034 -> 10.2.104.129:4444
+error core: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'insert'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:13: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178>
+	[C]: in function 'xpcall'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error core: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'insert'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:13: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178>
+	[C]: in function 'xpcall'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error core: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'insert'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:13: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178>
+	[C]: in function 'xpcall'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error core: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'insert'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:13: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178>
+	[C]: in function 'xpcall'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error core: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'insert'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:13: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178>
+	[C]: in function 'xpcall'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error core: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'insert'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:13: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178>
+	[C]: in function 'xpcall'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error core: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'insert'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:13: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178>
+	[C]: in function 'xpcall'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error core: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'insert'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:13: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178>
+	[C]: in function 'xpcall'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error core: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'insert'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:13: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178>
+	[C]: in function 'xpcall'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:178: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
+error lua: filter function: operation not supported (pass-through mode)
+stack traceback:
+	[C]: in function 'erase'
+	...eta/runtime/modules/tcp/test/streammodif-passthrough.lua:20: in function 'eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:68: in function '_rule_group_eval'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:120: in function 'eval_rules'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:131: in function 'filter_down'
+	/home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:202: in function </home/psdesse/src/haka/meta/runtime/src/lua/rule.lua:158>
