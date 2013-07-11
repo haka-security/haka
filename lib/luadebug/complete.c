@@ -90,8 +90,7 @@ bool complete_push_table_context(struct lua_State *L, struct luadebug_complete *
 		}
 
 		strcpy(buffer, "return ");
-		strncpy(buffer+7, text, table_size);
-		buffer[7+table_size] = 0;
+		strncat(buffer+7, text, table_size);
 
 		if (luaL_loadstring(L, buffer)) {
 			free(buffer);
@@ -152,8 +151,7 @@ char *complete_table(struct lua_State *L, struct luadebug_complete *context,
 			}
 
 			type = lua_type(L, -1);
-			nospace = (type == LUA_TTABLE || type == LUA_TUSERDATA ||
-					type == LUA_TFUNCTION);
+			nospace = (type == LUA_TTABLE || type == LUA_TUSERDATA || type == LUA_TFUNCTION);
 			lua_pop(L, 1);
 
 			type = lua_type(L, -1);
@@ -270,8 +268,8 @@ char *complete_callback_table(struct lua_State *L, struct luadebug_complete *con
 	return complete_table(L, context, text, state, &complete_underscore_hidden);
 }
 
-char *complete_callback_swig_get(struct lua_State *L, struct luadebug_complete *context,
-		const char *text, int state)
+static char *complete_callback_swig(struct lua_State *L, struct luadebug_complete *context,
+		const char *text, int state, const char *table)
 {
 	if (state == 0) {
 		if (!complete_push_table_context(L, context, text)) {
@@ -279,26 +277,22 @@ char *complete_callback_swig_get(struct lua_State *L, struct luadebug_complete *
 		}
 
 		lua_getmetatable(L, -1);
-		lua_getfield(L, -1, ".get");
+		lua_getfield(L, -1, table);
 	}
 
 	return complete_table(L, context, text, state, &complete_underscore_hidden);
 }
 
+char *complete_callback_swig_get(struct lua_State *L, struct luadebug_complete *context,
+		const char *text, int state)
+{
+	return complete_callback_swig(L, context, text, state, ".get");
+}
 
 char *complete_callback_swig_fn(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state)
 {
-	if (state == 0) {
-		if (!complete_push_table_context(L, context, text)) {
-			return NULL;
-		}
-
-		lua_getmetatable(L, -1);
-		lua_getfield(L, -1, ".fn");
-	}
-
-	return complete_table(L, context, text, state, &complete_underscore_hidden);
+	return complete_callback_swig(L, context, text, state, ".fn");
 }
 
 char *complete_callback_global(struct lua_State *L, struct luadebug_complete *context,

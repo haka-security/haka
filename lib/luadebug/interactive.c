@@ -51,9 +51,8 @@ static const complete_callback completions[] = {
 
 static char *generator(const char *text, int state)
 {
-	char *match = complete_generator(current_session->L, &current_session->complete,
+	return complete_generator(current_session->L, &current_session->complete,
 			completions, text, state);
-	return match;
 }
 
 static char **complete(const char *text, int start, int end)

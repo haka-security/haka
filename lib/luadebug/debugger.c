@@ -280,7 +280,7 @@ static bool dump_upvalue(struct luadebug_debugger *session, const char *option)
 	return false;
 }
 
-static bool push_breapoints(struct luadebug_debugger *session, lua_Debug *ar)
+static bool push_breakpoints(struct luadebug_debugger *session, lua_Debug *ar)
 {
 	lua_getinfo(session->L, "nS", ar);
 
@@ -306,7 +306,7 @@ static bool has_breakpoint(struct luadebug_debugger *session, lua_Debug *ar)
 {
 	bool breakpoint = false;
 
-	if (push_breapoints(session, ar)) {
+	if (push_breakpoints(session, ar)) {
 		lua_pushnumber(session->L, ar->currentline);
 		lua_gettable(session->L, -2);
 		breakpoint = !lua_isnil(session->L, -1);
@@ -320,7 +320,7 @@ static bool add_breakpoint(struct luadebug_debugger *session, const char *option
 {
 	const int line = option ? atoi(option) : session->frame.currentline;
 
-	if (push_breapoints(session, &session->frame)) {
+	if (push_breakpoints(session, &session->frame)) {
 		lua_pushnumber(session->L, line);
 		lua_pushboolean(session->L, true);
 		lua_settable(session->L, -3);
@@ -338,7 +338,7 @@ static bool remove_breakpoint(struct luadebug_debugger *session, const char *opt
 {
 	const int line = option ? atoi(option) : session->frame.currentline;
 
-	if (push_breapoints(session, &session->frame)) {
+	if (push_breakpoints(session, &session->frame)) {
 		lua_pushnumber(session->L, line);
 		lua_gettable(session->L, -2);
 		if (lua_isnil(session->L, -1)) {
@@ -449,7 +449,7 @@ static bool print_line(lua_State *L, const char **string, int num, int current,
 
 static void dump_source(struct luadebug_debugger *session, lua_Debug *ar, unsigned int start, unsigned int end)
 {
-	const bool breakpoints = push_breapoints(session, ar);
+	const bool breakpoints = push_breakpoints(session, ar);
 
 	lua_getinfo(session->L, "S", ar);
 
@@ -798,9 +798,8 @@ static const complete_callback completions[] = {
 
 static char *command_generator(const char *text, int state)
 {
-	char *match = complete_generator(current_session->L, &current_session->complete,
+	return complete_generator(current_session->L, &current_session->complete,
 			completions, text, state);
-	return match;
 }
 
 static const complete_callback lua_completions[] = {
@@ -815,9 +814,8 @@ static const complete_callback lua_completions[] = {
 
 static char *lua_generator(const char *text, int state)
 {
-	char *match = complete_generator(current_session->L, &current_session->complete,
+	return complete_generator(current_session->L, &current_session->complete,
 			lua_completions, text, state);
-	return match;
 }
 
 static char **complete(const char *text, int start, int end)
