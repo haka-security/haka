@@ -2,6 +2,7 @@
 #include <haka/tcp-stream.h>
 #include <haka/tcp.h>
 #include <haka/error.h>
+#include <haka/container/list.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,125 +34,6 @@ struct stream_ftable tcp_stream_ftable = {
 	unmark: tcp_stream_unmark,
 	seek: tcp_stream_seek
 };
-
-
-/*
- * List functions
- * TODO: Should be extracted and improved
- */
-
-struct list {
-	struct list    *prev;
-	struct list    *next;
-};
-
-static void _list_init(struct list *l)
-{
-	l->prev = NULL;
-	l->next = NULL;
-}
-
-static void _list_remove(struct list *l, struct list **head, struct list **tail)
-{
-	if (l->next) {
-		l->next->prev = l->prev;
-	}
-	else {
-		if (tail) {
-			assert(*tail == l);
-			*tail = l->prev;
-		}
-	}
-
-	if (l->prev) {
-		l->prev->next = l->next;
-	}
-	else {
-		if (head) {
-			assert(*head == l);
-			*head = l->next;
-		}
-	}
-
-	l->next = NULL;
-	l->prev = NULL;
-}
-
-static void _list_insert_after(struct list *elem, struct list *l,
-		struct list **head, struct list **tail)
-{
-	assert(elem);
-	assert(!elem->next);
-	assert(!elem->prev);
-
-	if (!l) {
-		assert(tail);
-		l = *tail;
-		assert(!l || !(*tail)->next);
-	}
-
-	if (l) {
-		elem->next = l->next;
-
-		if (l->next) {
-			l->next->prev = elem;
-		}
-		else {
-			if (tail) {
-				assert(*tail == l);
-				*tail = elem;
-			}
-		}
-
-		elem->prev = l;
-		l->next = elem;
-	}
-	else {
-		if (head) *head = elem;
-		if (tail) *tail = elem;
-	}
-}
-
-static void _list_insert_before(struct list *elem, struct list *l,
-		struct list **head, struct list **tail)
-{
-	assert(elem);
-	assert(!elem->next);
-	assert(!elem->prev);
-
-	if (!l) {
-		assert(head);
-		l = *head;
-		assert(!l || !(*head)->prev);
-	}
-
-	if (l) {
-		elem->prev = l->prev;
-		if (l->prev) {
-			l->prev->next = elem;
-		}
-		else {
-			if (head) {
-				assert(*head == l);
-				*head = elem;
-			}
-		}
-
-		elem->next = l;
-		l->prev = elem;
-	}
-	else {
-		if (head) *head = elem;
-		if (tail) *tail = elem;
-	}
-}
-
-#define list_init(a)                  { STATIC_ASSERT(offsetof(typeof(*a), list)==0, invalid_list_head); _list_init(&(a)->list); }
-#define list_next(a)                  ((typeof(a))(a)->list.next)
-#define list_prev(a)                  ((typeof(a))(a)->list.prev)
-#define list_remove(a, h, t)           _list_remove(&(a)->list, (struct list**)(h), (struct list**)(t))
-#define list_insert_after(a, i, h, t)  _list_insert_after(&(a)->list, (struct list*)(i), (struct list**)(h), (struct list**)(t))
-#define list_insert_before(a, i, h, t) _list_insert_before(&(a)->list, (struct list*)(i), (struct list**)(h), (struct list**)(t))
 
 
 /*
