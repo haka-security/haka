@@ -36,6 +36,66 @@ struct stream_ftable tcp_stream_ftable = {
 
 
 /*
+ * List functions
+ * TODO: Should be extracted and improved
+ */
+
+struct list {
+	struct list    *prev;
+	struct list    *next;
+};
+
+static void _list_init(struct list *l)
+{
+	l->prev = NULL;
+	l->next = NULL;
+}
+
+static void _list_remove(struct list *l)
+{
+	if (l->next) l->next->prev = l->prev;
+	if (l->prev) l->prev->next = l->next;
+	l->next = NULL;
+	l->prev = NULL;
+}
+
+static void _list_insert_after(struct list *elem, struct list *l)
+{
+	assert(l);
+	assert(elem);
+	assert(!elem->next);
+	assert(!elem->prev);
+
+	elem->next = l->next;
+	if (l->next) l->next->prev = elem;
+
+	elem->prev = l;
+	l->next = elem;
+}
+
+static void _list_insert_before(struct list *elem, struct list *l)
+{
+	assert(l);
+	assert(elem);
+	assert(!elem->next);
+	assert(!elem->prev);
+
+	elem->prev = l->prev;
+	if (l->prev) l->prev->next = elem;
+
+	elem->next = l;
+	l->prev = elem;
+}
+
+#define list_init(a)             { STATIC_ASSERT(offsetof(typeof(*a), list)==0, invalid_list_head); _list_init(&(a)->list); }
+#define list_next(a)             ((typeof(a))(a)->list.next)
+#define list_prev(a)             ((typeof(a))(a)->list.prev)
+#define list_remove(a)           _list_remove(&(a)->list)
+#define list_insert_after(a, i)  _list_insert_after(&(a)->list, &(i)->list)
+#define list_insert_before(a, i) _list_insert_before(&(a)->list, &(i)->list)
+
+
+/*
  * Stream structures
  */
 
@@ -47,22 +107,23 @@ enum tcp_modif_type {
 struct tcp_stream;
 
 struct tcp_stream_chunk_modif {
+	struct list                     list;
+
 	enum tcp_modif_type             type;
 	uint64                          position;
 	size_t                          length;
-	struct tcp_stream_chunk_modif  *prev;
-	struct tcp_stream_chunk_modif  *next;
 	uint8                           data[0];
 };
 
 struct tcp_stream_chunk {
+	struct list                     list;
+
 	struct tcp                     *tcp;
 	uint8                          *data;
 	uint64                          start_seq;
 	uint64                          end_seq;
 	int64                           offset_seq;
 	struct tcp_stream_chunk_modif  *modifs;
-	struct tcp_stream_chunk        *next;
 };
 
 struct tcp_stream_position {
@@ -76,8 +137,7 @@ struct tcp_stream_position {
 };
 
 struct tcp_stream_mark {
-	struct tcp_stream_mark         *prev;
-	struct tcp_stream_mark         *next;
+	struct list                     list;
 
 	struct tcp_stream              *stream;
 	uint64                          chunk_seq;
@@ -90,10 +150,10 @@ struct tcp_stream {
 	struct stream                   stream;
 	uint32                          start_seq;
 
-	struct tcp_stream_chunk        *first;   /* first packet in the stream */
+	struct tcp_stream_chunk        *first;
 	int                             first_offset_seq;
 	struct tcp_stream_chunk        *last;    /* last inserted packet */
-	struct tcp_stream_chunk        *sent;    /* oldest sent packet not acked */
+	struct tcp_stream_chunk        *sent;
 	struct tcp_stream_chunk        *last_sent;
 	int                             sent_offset_seq;
 
@@ -129,20 +189,20 @@ static struct tcp_stream_chunk_modif *tcp_stream_position_modif(struct tcp_strea
 			(pos->modif->type == TCP_MODIF_ERASE &&
 			pos->modif_offset != 0)) {
 			if (prev) *prev = pos->modif;
-			if (next) *next = pos->modif->next;
+			if (next) *next = list_next(pos->modif);
 			return NULL;
 		}
 		else {
 			*modif_offset = pos->modif_offset;
-			if (prev) *prev = pos->modif->prev;
-			if (next) *next = pos->modif->next;
+			if (prev) *prev = list_prev(pos->modif);
+			if (next) *next = list_next(pos->modif);
 			return pos->modif;
 		}
 	}
 	else {
 		if (pos->modif) {
 			if (prev) *prev = pos->modif;
-			if (next) *next = pos->modif->next;
+			if (next) *next = list_next(pos->modif);
 		}
 		else {
 			if (prev) *prev = NULL;
@@ -160,15 +220,15 @@ static void tcp_stream_position_update_modif(struct tcp_stream_position *pos)
 		if (pos->chunk_offset == pos->modif->position) {
 			if (pos->modif->type == TCP_MODIF_INSERT &&
 				pos->modif_offset >= pos->modif->length) {
-				next_modif = pos->modif->next;
+				next_modif = list_next(pos->modif);
 			}
 			else if (pos->modif->type == TCP_MODIF_ERASE &&
 				pos->modif_offset != 0) {
-				next_modif = pos->modif->next;
+				next_modif = list_next(pos->modif);
 			}
 		}
 		else {
-			next_modif = pos->modif->next;
+			next_modif = list_next(pos->modif);
 		}
 	}
 	else {
@@ -200,8 +260,8 @@ static bool tcp_stream_position_chunk_at_end(struct tcp_stream_position *pos)
 	if (!modif) {
 		return true;
 	}
-	else if (modif->next) {
-		assert(modif->next->position >= pos->chunk_offset);
+	else if (list_next(modif)) {
+		assert(list_next(modif)->position >= pos->chunk_offset);
 		return false;
 	}
 	else {
@@ -216,10 +276,10 @@ static bool tcp_stream_position_next_chunk(struct tcp_stream *tcp_s,
 {
 	assert(pos->chunk);
 
-	if (!pos->chunk->next || pos->chunk->next->start_seq == pos->chunk->end_seq) {
+	if (!list_next(pos->chunk) || list_next(pos->chunk)->start_seq == pos->chunk->end_seq) {
 		pos->chunk_seq += pos->chunk_offset;
 		pos->chunk_seq_modif += pos->chunk_offset + pos->chunk->offset_seq;
-		pos->chunk = pos->chunk->next;
+		pos->chunk = list_next(pos->chunk);
 		assert(!pos->chunk || pos->chunk->start_seq == pos->chunk_seq);
 		pos->chunk_offset = 0;
 		pos->modif = NULL;
@@ -259,7 +319,7 @@ static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
 
 			while (chunk && chunk->start_seq != pos->chunk_seq) {
 				seq_offset += chunk->offset_seq;
-				chunk = chunk->next;
+				chunk = list_next(chunk);
 			}
 
 			assert(chunk);
@@ -289,7 +349,7 @@ static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
 
 		if (pos->chunk) {
 			if (tcp_stream_position_chunk_at_end(pos)) {
-				if (!pos->chunk->next || !tcp_stream_position_next_chunk(tcp_s, pos)) {
+				if (!list_next(pos->chunk) || !tcp_stream_position_next_chunk(tcp_s, pos)) {
 					return false;
 				}
 			}
@@ -300,7 +360,7 @@ static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
 		else if (pos->modif) {
 			/* Pending modif case */
 			assert(pos->modif == tcp_s->pending_modif);
-			assert(pos->modif->next == NULL);
+			assert(list_next(pos->modif) == NULL);
 
 			if (pos->modif_offset >= pos->modif->length) {
 				return false;
@@ -420,8 +480,8 @@ static size_t tcp_stream_position_skip_available(struct tcp_stream *tcp_s,
 			if (!pos->modif) pos->modif = pos->chunk->modifs;
 
 			if (pos->modif) {
-				while (pos->modif->next) {
-					pos->modif = pos->modif->next;
+				while (list_next(pos->modif)) {
+					pos->modif = list_next(pos->modif);
 
 					switch (pos->modif->type) {
 					case TCP_MODIF_INSERT:
@@ -592,8 +652,8 @@ static bool tcp_stream_position_moveforward(struct tcp_stream *tcp_s,
 				if (!pos->modif) pos->modif = pos->chunk->modifs;
 
 				if (pos->modif) {
-					while (pos->modif->next) {
-						pos->modif = pos->modif->next;
+					while (list_next(pos->modif)) {
+						pos->modif = list_next(pos->modif);
 
 						switch (pos->modif->type) {
 						case TCP_MODIF_INSERT:
@@ -662,7 +722,7 @@ static void tcp_stream_chunk_release(struct tcp_stream_chunk *chunk, bool all)
 	struct tcp_stream_chunk_modif *iter = chunk->modifs;
 	while (iter) {
 		struct tcp_stream_chunk_modif *modif = iter;
-		iter = iter->next;
+		iter = list_next(iter);
 		free(modif);
 	}
 
@@ -690,7 +750,8 @@ static bool tcp_stream_destroy(struct stream *s)
 		tcp_release(tmp->tcp);
 		tcp_stream_chunk_release(tmp, true);
 
-		iter = tmp->next;
+		iter = list_next(tmp);
+		list_remove(tmp);
 		free(tmp);
 	}
 
@@ -698,14 +759,14 @@ static bool tcp_stream_destroy(struct stream *s)
 	while (iter) {
 		struct tcp_stream_chunk *tmp = iter;
 		tcp_stream_chunk_release(tmp, true);
-		iter = iter->next;
+		iter = list_next(iter);
 		free(tmp);
 	}
 
 	mark = tcp_s->marks;
 	while (mark) {
 		struct tcp_stream_mark *tmp = mark;
-		mark = mark->next;
+		mark = list_next(mark);
 		free(tmp);
 	}
 
@@ -762,6 +823,7 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	chunk->end_seq = chunk->start_seq + tcp_get_payload_length(tcp);
 	chunk->offset_seq = 0;
 	chunk->modifs = NULL;
+	list_init(chunk);
 
 	if (chunk->start_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset ||
 		chunk->end_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset) {
@@ -775,42 +837,40 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 		assert(!tcp_s->first);
 		tcp_s->first = chunk;
 		tcp_s->last = chunk;
-		chunk->next = NULL;
 	}
 	else {
-		struct tcp_stream_chunk **iter;
+		struct tcp_stream_chunk *iter, *prev = NULL, **start;
 
 		if (tcp_s->last->start_seq < chunk->start_seq) {
-			iter = &tcp_s->last;
+			start = &tcp_s->last;
 		}
 		else {
-			iter = &tcp_s->first;
+			start = &tcp_s->first;
 		}
 
-		do {
-			iter = &((*iter)->next);
+		iter = *start;
+		while (iter && iter->start_seq < chunk->start_seq) {
+			prev = iter;
+			iter = list_next(iter);
 		}
-		while (*iter && (*iter)->start_seq < chunk->start_seq);
 
-		if (*iter) {
-			if (chunk->end_seq <= (*iter)->start_seq) {
-				chunk->next = (*iter);
-			}
-			else {
-				error(L"retransmit packet (unsupported)");
-				free(chunk);
-				return false;
-			}
+		if (iter && chunk->end_seq > iter->start_seq) {
+			error(L"retransmit packet (unsupported)");
+			free(chunk);
+			return false;
+		}
+
+		if (prev) {
+			list_insert_after(chunk, prev);
 		}
 		else {
-			chunk->next = NULL;
+			if (*start) list_insert_before(chunk, *start);
+			*start = chunk;
 		}
-
-		*iter = chunk;
 
 		if (tcp_s->pending_modif) {
 			assert(!chunk->modifs);
-			assert(!tcp_s->pending_modif->next && !tcp_s->pending_modif->prev);
+			assert(!list_next(tcp_s->pending_modif) && !list_prev(tcp_s->pending_modif));
 			assert(tcp_s->pending_modif->position == 0);
 			chunk->modifs = tcp_s->pending_modif;
 			chunk->offset_seq += chunk->modifs->length;
@@ -865,12 +925,17 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		local_pos = *read_pos;
 		write_pos = &local_pos;
 
-		while (tcp_mark->readonly && tcp_mark->next) {
-			tcp_stream_position_moveforward(tcp_s, write_pos, tcp_mark->next);
-			tcp_mark = tcp_mark->next;
+		while (tcp_mark->readonly && list_next(tcp_mark)) {
+			tcp_stream_position_moveforward(tcp_s, write_pos, list_next(tcp_mark));
+			tcp_mark = list_next(tcp_mark);
 		}
 
 		tcp_stream_position_advance(tcp_s, write_pos);
+
+		if (tcp_mark->readonly) {
+			tcp_stream_position_skip_available(tcp_s, write_pos);
+		}
+
 		tcp_stream_position_try_advance_chunk(tcp_s, write_pos, chunk);
 	}
 	else {
@@ -951,19 +1016,21 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		tcp_stream_seq(s, tcp);
 
 		tcp_s->first_offset_seq += tcp_s->first->offset_seq;
-		tcp_s->first = tcp_s->first->next;
+		tcp_s->first = list_next(tcp_s->first);
 
 		if (tcp_s->last == chunk) {
-			assert(chunk->next == NULL);
+			assert(list_next(chunk) == NULL);
 			tcp_s->last = NULL;
 		}
 
 		if (tcp_s->last_sent) {
 			assert(tcp_s->last_sent->end_seq == chunk->start_seq);
-			tcp_s->last_sent->next = chunk;
+			list_remove(chunk);
+			list_insert_after(chunk, tcp_s->last_sent);
 			tcp_s->last_sent = chunk;
 		}
 		else {
+			list_remove(chunk);
 			tcp_s->last_sent = chunk;
 			tcp_s->sent = chunk;
 		}
@@ -1006,9 +1073,9 @@ void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 			break;
 		}
 
-		assert(!iter->next || iter->next->start_seq == iter->end_seq);
+		assert(!list_next(iter) || list_next(iter)->start_seq == iter->end_seq);
 
-		iter = iter->next;
+		iter = list_next(iter);
 	}
 
 	/* Need to account for offset (case of the FIN for instance) */
@@ -1050,20 +1117,17 @@ static struct tcp_stream_chunk_modif *tcp_stream_create_insert_modif(struct tcp_
 		return NULL;
 	}
 
+	list_init(new_modif);
 	new_modif->type = TCP_MODIF_INSERT;
 	new_modif->position = pos->chunk_offset;
 	new_modif->length = length;
 	memcpy(new_modif->data, data, length);
 
 	if (prev) {
-		new_modif->prev = prev;
-		new_modif->next = prev->next;
-		if (new_modif->next) new_modif->next->prev = new_modif;
-		prev->next = new_modif;
+		list_insert_after(new_modif, prev);
 	}
 	else {
-		new_modif->next = next;
-		new_modif->prev = NULL;
+		if (next) list_insert_before(new_modif, next);
 		if (pos->chunk) pos->chunk->modifs = new_modif;
 	}
 
@@ -1092,6 +1156,7 @@ static size_t tcp_stream_update_insert_modif(struct tcp_stream *tcp_s,
 		return -1;
 	}
 
+	list_init(new_modif);
 	new_modif->type = TCP_MODIF_INSERT;
 	new_modif->position = cur_modif->position;
 	new_modif->length = cur_modif->length + length;
@@ -1102,10 +1167,8 @@ static size_t tcp_stream_update_insert_modif(struct tcp_stream *tcp_s,
 			cur_modif->data + modif_offset,
 			cur_modif->length - modif_offset);
 
-	new_modif->next = cur_modif->next;
-	new_modif->prev = cur_modif->prev;
-	if (cur_modif->next) cur_modif->next->prev = new_modif;
-	if (cur_modif->prev) cur_modif->prev->next = new_modif;
+	list_insert_before(new_modif, cur_modif);
+	list_remove(cur_modif);
 
 	if (pos->chunk) pos->chunk->offset_seq += length;
 	free(cur_modif);
@@ -1202,13 +1265,12 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 
 		if (cur_modif->length == erase_length) {
 			/* Remove modif */
-			if (cur_modif->next) cur_modif->next->prev = cur_modif->prev;
-			if (cur_modif->prev) cur_modif->prev->next = cur_modif->next;
-
 			if (!prev_modif) {
 				assert(pos->chunk->modifs == cur_modif);
-				pos->chunk->modifs = cur_modif->next;
+				pos->chunk->modifs = list_next(cur_modif);
 			}
+
+			list_remove(cur_modif);
 
 			if (pos->modif == cur_modif) {
 				pos->modif = prev_modif;
@@ -1223,6 +1285,7 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 				return -1;
 			}
 
+			list_init(new_modif);
 			new_modif->type = TCP_MODIF_INSERT;
 			new_modif->position = cur_modif->position;
 			new_modif->length = cur_modif->length - erase_length;
@@ -1232,10 +1295,8 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 					cur_modif->data + modif_offset + erase_length,
 					cur_modif->length - modif_offset - erase_length);
 
-			new_modif->next = cur_modif->next;
-			new_modif->prev = cur_modif->prev;
-			if (cur_modif->next) cur_modif->next->prev = new_modif;
-			if (cur_modif->prev) cur_modif->prev->next = new_modif;
+			list_insert_after(new_modif, cur_modif);
+			list_remove(cur_modif);
 
 			if (!prev_modif) {
 				assert(pos->chunk->modifs == cur_modif);
@@ -1269,19 +1330,16 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 			return -1;
 		}
 
+		list_init(cur_modif);
 		cur_modif->type = TCP_MODIF_ERASE;
 		cur_modif->position = pos->chunk_offset;
 		cur_modif->length = erase_length;
 
 		if (prev_modif) {
-			cur_modif->prev = prev_modif;
-			cur_modif->next = prev_modif->next;
-			if (cur_modif->next) cur_modif->next->prev = cur_modif;
-			prev_modif->next = cur_modif;
+			list_insert_after(cur_modif, prev_modif);
 		}
 		else {
-			cur_modif->next = next_modif;
-			cur_modif->prev = NULL;
+			if (next_modif) list_insert_before(cur_modif, next_modif);
 			pos->chunk->modifs = cur_modif;
 		}
 
@@ -1313,8 +1371,7 @@ static struct stream_mark *tcp_stream_mark(struct stream *s, bool readonly)
 
 	tcp_stream_position_getmark(tcp_s, &tcp_s->current_position, mark);
 	mark->stream = tcp_s;
-	mark->prev = NULL;
-	mark->next = NULL;
+	list_init(mark);
 
 	{
 		struct tcp_stream_mark *iter = tcp_s->marks;
@@ -1322,13 +1379,11 @@ static struct stream_mark *tcp_stream_mark(struct stream *s, bool readonly)
 			tcp_s->marks = mark;
 		}
 		else {
-			while (iter->next && tcp_stream_mark_compare(iter->next, mark) <= 0) {
-				iter = iter->next;
+			while (list_next(iter) && tcp_stream_mark_compare(list_next(iter), mark) <= 0) {
+				iter = list_next(iter);
 			}
 
-			mark->prev = iter;
-			mark->next = iter->next;
-			iter->next = mark;
+			list_insert_after(mark, iter);
 		}
 	}
 
@@ -1354,7 +1409,7 @@ static void tcp_stream_chunk_release_data(struct tcp_stream *tcp_s, struct tcp_s
 		}
 
 		tcp_stream_chunk_release(chunk, true);
-		chunk = chunk->next;
+		chunk = list_next(chunk);
 	}
 }
 
@@ -1370,8 +1425,8 @@ static bool tcp_stream_unmark(struct stream *s, struct stream_mark *mark)
 		return false;
 	}
 
-	if (!tcp_mark->prev) {
-		if (tcp_mark->next) {
+	if (!list_prev(tcp_mark)) {
+		if (list_next(tcp_mark)) {
 			struct tcp_stream_chunk *chunk;
 			struct tcp_stream_mark current;
 			tcp_stream_position_getmark(tcp_s, &tcp_s->mark_position, &current);
@@ -1383,7 +1438,7 @@ static bool tcp_stream_unmark(struct stream *s, struct stream_mark *mark)
 
 			chunk = tcp_s->mark_position.chunk;
 
-			tcp_stream_position_moveforward(tcp_s, &tcp_s->mark_position, tcp_mark->next);
+			tcp_stream_position_moveforward(tcp_s, &tcp_s->mark_position, list_next(tcp_mark));
 
 			tcp_stream_chunk_release_data(tcp_s, chunk, &tcp_s->mark_position);
 		}
@@ -1392,17 +1447,12 @@ static bool tcp_stream_unmark(struct stream *s, struct stream_mark *mark)
 		}
 	}
 
-	if (tcp_mark->next) {
-		tcp_mark->next->prev = tcp_mark->prev;
+	if (!list_prev(tcp_mark)) {
+		assert(tcp_s->marks == tcp_mark);
+		tcp_s->marks = list_next(tcp_mark);
 	}
 
-	if (tcp_mark->prev) {
-		tcp_mark->prev->next = tcp_mark->next;
-	}
-	else {
-		assert(tcp_s->marks == tcp_mark);
-		tcp_s->marks = tcp_mark->next;
-	}
+	list_remove(tcp_mark);
 
 	free(tcp_mark);
 	return true;
