@@ -17,4 +17,5 @@ include_directories(. ${EDITLINE_INCLUDE_DIR})
 target_link_libraries(libluadebug ${EDITLINE_LIBRARY})
 
 # The static library is going to be used in a shared library
-SET_TARGET_PROPERTIES(libluadebug PROPERTIES COMPILE_FLAGS "-fPIC")
+set_target_properties(libluadebug PROPERTIES COMPILE_FLAGS "-fPIC")
+set_target_properties(libluadebug PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)

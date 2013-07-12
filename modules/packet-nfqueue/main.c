@@ -184,7 +184,13 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 {
 	struct packet_module_state *state = data;
 	struct nfqnl_msg_packet_hdr* packet_hdr;
+
+#if NFQ_GET_PAYLOAD_UNSIGNED_CHAR
+	unsigned char *packet_data;
+#else
 	char *packet_data;
+#endif
+
 	int packet_len;
 
 	state->error = 0;

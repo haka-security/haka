@@ -1,6 +1,4 @@
 
-#define _GNU_SOURCE
-
 #include <haka/error.h>
 #include <haka/compiler.h>
 #include <haka/thread.h>
