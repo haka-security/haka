@@ -37,12 +37,16 @@ Some scripts are available in ``share/haka``:
 
   Capture the packets using the libpcap on a network interface. It takes two or three parameters:
 
-  * An interface (``any`` is supported).
+  * An interface (Its name, or ``any`` keyword).
   * A configuration file containing the rules.
   * An optional file name to save the processed packets.
 
-  The packets will net really be dropped or modified by the rule when using the pcap capture. This
+  The packets will not really be dropped or modified by the rule when using the pcap capture. This
   could lead to various problems. It is better to use the nfqueue capture.
+
+  .. code-block:: bash
+
+      haka capture-pcap.lua any conf.lua
 
 * ``capture-pcapfile.lua``
 
@@ -58,14 +62,21 @@ Some scripts are available in ``share/haka``:
 
       haka capture-pcapfile.lua input.pcap config.lua
 
-Configuration
--------------
+First Configuration
+-------------------
+This is a fully functional commented configuration file.
+
+.. literalinclude:: ../../../sample/doc/gettingstarted.lua
+    :language: lua
+
+Sample Configuration
+--------------------
 
 A sample configuration is installed at ``share/haka/sample/standard``. The main file is named
 ``config.lua`` which can be used directly with haka.
 
 .. code-block:: bash
 
-    haka share/haka/capture-pcap.lua eth0 share/haka/sample/standard/config.lua
+    haka share/haka/capture-nfq.lua eth0:eth1 share/haka/sample/standard/config.lua
 
 This configuration contains various rules with different dissectors (*ipv4*, *tcp* and *http*).

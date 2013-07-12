@@ -15,11 +15,11 @@ Contents:
    doc/intro.rst
    doc/build.rst
    doc/getting_started.rst
-   doc/debug.rst
    doc/module.rst
    doc/rulearch.rst
    doc/api/lua/main.rst
    doc/api/c/main.rst
+   doc/debug.rst
 
 Indices and tables
 ==================

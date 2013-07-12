@@ -37,15 +37,23 @@ Debian: ::
 Build
 -----
 
+Submodules
+^^^^^^^^^^
+
+The repository uses submodules that need to be initialized and updated: ::
+
+    git submodule init
+    git submodule update
+
 Configure
 ^^^^^^^^^
 
-It is highly recommanded to create a separate directory to store
+It is mandatory to create a separate directory to store
 all the files generated during the build using cmake. ::
 
     mkdir make
     cd make
-    cmake ..
+    cmake .. <options>
 
 Options
 """""""
@@ -68,12 +76,7 @@ The configuration with cmake supports the following options:
 Compile
 ^^^^^^^
 
-The repository uses submodules that need to be initialized and updated: ::
-
-    git submodule init
-    git submodule update
-
-Then use make like usual to compile: ::
+Use make like usual to compile: ::
 
     make
     make install
