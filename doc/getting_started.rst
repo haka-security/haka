@@ -66,7 +66,7 @@ First Configuration
 -------------------
 This is a fully functional commented configuration file.
 
-.. literalinclude:: ../../../sample/doc/gettingstarted.lua
+.. literalinclude:: ../sample/doc/gettingstarted.lua
     :language: lua
 
 Sample Configuration
