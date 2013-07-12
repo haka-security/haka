@@ -29,6 +29,8 @@ struct packet_module {
 	uint64         (*get_id)(struct packet *pkt);
 	const uint8   *(*get_data)(struct packet *pkt);
 	const char    *(*get_dissector)(struct packet *pkt);
+	void           (*release_packet)(struct packet *pkt);
+	enum packet_status (*packet_getstate)(struct packet *pkt);
 };
 
 #endif /* _HAKA_PACKET_MODULE_H */

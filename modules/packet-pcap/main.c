@@ -256,11 +256,13 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	/* dump capture in pcap file */
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 
-	if (pkt->state->pf && result == FILTER_ACCEPT)
-		pcap_dump((u_char *)pkt->state->pf, &(pkt->header), pkt->data);
+	if (pkt->data) {
+		if (pkt->state->pf && result == FILTER_ACCEPT)
+			pcap_dump((u_char *)pkt->state->pf, &(pkt->header), pkt->data);
 
-	free(pkt->data);
-	free(pkt);
+		free(pkt->data);
+		pkt->data = NULL;
+	}
 }
 
 static size_t packet_get_length(struct packet *orig_pkt)
@@ -314,6 +316,30 @@ static const char *packet_get_dissector(struct packet *pkt)
 	return "ipv4";
 }
 
+static void packet_do_release(struct packet *orig_pkt)
+{
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+
+	if (pkt->data) {
+		packet_verdict(orig_pkt, FILTER_DROP);
+	}
+
+	free(pkt->data);
+	free(pkt);
+}
+
+static enum packet_status packet_getstate(struct packet *orig_pkt)
+{
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+
+	if (pkt->data) {
+		return STATUS_NORMAL;
+	}
+	else {
+		return STATUS_SENT;
+	}
+}
+
 
 struct packet_module HAKA_MODULE = {
 	module: {
@@ -334,6 +360,8 @@ struct packet_module HAKA_MODULE = {
 	resize:          packet_do_resize,
 	get_id:          packet_get_id,
 	get_data:        packet_get_data,
-	get_dissector:   packet_get_dissector
+	get_dissector:   packet_get_dissector,
+	release_packet:  packet_do_release,
+	packet_getstate: packet_getstate
 };
 

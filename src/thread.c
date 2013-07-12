@@ -40,8 +40,9 @@ extern void lua_pushppacket(lua_State *L, struct packet *pkt);
 static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 {
 	int h;
-
 	LUA_STACK_MARK(state->lua->L);
+
+	packet_addref(pkt);
 
 	lua_pushcfunction(state->lua->L, lua_state_error_formater);
 	h = lua_gettop(state->lua->L);
@@ -52,11 +53,19 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 
 	if (lua_pcall(state->lua->L, 1, 0, h)) {
 		print_error(state->lua->L, L"filter function");
+		packet_drop(pkt);
 	}
 
 	lua_pop(state->lua->L, 2);
 
 	LUA_STACK_CHECK(state->lua->L, 0);
+
+	if (packet_mode() == MODE_PASSTHROUGH &&
+	    packet_state(pkt) == STATUS_NORMAL) {
+		message(HAKA_LOG_WARNING, L"core", L"pass-through error: packet is not transmitted");
+	}
+
+	packet_release(pkt);
 }
 
 static void cleanup_thread_state_lua(struct thread_state *state)

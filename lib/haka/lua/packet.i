@@ -26,9 +26,7 @@ enum filter_result { FILTER_ACCEPT, FILTER_DROP };
 %nodefaultctor;
 %nodefaultdtor;
 
-%delobject packet::drop;
-%delobject packet::accept;
-%delobject packet::forge;
+%newobject packet::forge;
 
 struct packet {
 	%extend {
@@ -39,8 +37,9 @@ struct packet {
 
 		~packet()
 		{
-			if ($self)
-				packet_drop($self);
+			if ($self) {
+				packet_release($self);
+			}
 		}
 
 		size_t __len(void *dummy)

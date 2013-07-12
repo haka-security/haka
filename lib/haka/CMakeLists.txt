@@ -7,7 +7,8 @@ add_library(libhaka SHARED
 	log.c
 	module.c
 	error.c
-	thread.c)
+	thread.c
+	container/list.c)
 
 LUA_LINK(libhaka)
 find_package(DL REQUIRED)

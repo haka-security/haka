@@ -128,17 +128,26 @@ end
 
 local function filter_down(pkt)
 	if pkt.dissector then
-		eval_rules(pkt.dissector .. '-down', pkt)
+		local err, msg = xpcall(function () eval_rules(pkt.dissector .. '-down', pkt) end, debug.format_error)
+		if not err then
+			haka.log.error("core", msg)
+			pkt:drop()
+		end
 	end
 
 	local pkts = {}
-	while true do
-		local pktdown = pkt:forge()
-		if pktdown then
-			table.insert(pkts, pktdown)
-		else
-			break
-		end
+	local err, msg = xpcall(function ()
+			while true do
+				local pktdown = pkt:forge()
+				if pktdown then
+					table.insert(pkts, pktdown)
+				else
+					break
+				end
+			end
+		end, debug.format_error)
+	if not err then
+		haka.log.error("core", msg)
 	end
 
 	for _, pktdown in pairs(pkts) do

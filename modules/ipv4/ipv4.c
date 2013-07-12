@@ -43,6 +43,7 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 			ip->packet = NULL;
 			ip->header = NULL;
 			packet_drop(packet);
+			packet_release(packet);
 			return NULL;
 		}
 		else {
@@ -64,6 +65,7 @@ static void ipv4_flush(struct ipv4 *ip)
 	struct packet *packet;
 	while ((packet = ipv4_forge(ip))) {
 		packet_drop(packet);
+		packet_release(packet);
 	}
 }
 

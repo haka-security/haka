@@ -490,41 +490,43 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	int ret;
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
-	/* Convert verdict to netfilter */
-	int verdict;
-	switch (result) {
-	case FILTER_ACCEPT: verdict = NF_ACCEPT; break;
-	case FILTER_DROP:   verdict = NF_DROP; break;
-	default:
-		message(HAKA_LOG_DEBUG, MODULE_NAME, L"unknown verdict");
-		verdict = NF_DROP;
-		break;
-	}
-
-	if (pkt->modified)
-		ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, pkt->length, pkt->data);
-	else
-		ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, 0, NULL);
-
-	if (pcap) {
+	if (pkt->data) {
+		/* Convert verdict to netfilter */
+		int verdict;
 		switch (result) {
-		case FILTER_ACCEPT:
-			dump_pcap(&pcap->out, pkt);
-			break;
-
-		case FILTER_DROP:
+		case FILTER_ACCEPT: verdict = NF_ACCEPT; break;
+		case FILTER_DROP:   verdict = NF_DROP; break;
 		default:
-			dump_pcap(&pcap->drop, pkt);
+			message(HAKA_LOG_DEBUG, MODULE_NAME, L"unknown verdict");
+			verdict = NF_DROP;
 			break;
 		}
-	}
 
-	if (ret == -1) {
-		message(HAKA_LOG_ERROR, MODULE_NAME, L"packet verdict failed");
-	}
+		if (pkt->modified)
+			ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, pkt->length, pkt->data);
+		else
+			ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, 0, NULL);
 
-	free(pkt->data);
-	free(pkt);
+		if (pcap) {
+			switch (result) {
+			case FILTER_ACCEPT:
+				dump_pcap(&pcap->out, pkt);
+				break;
+
+			case FILTER_DROP:
+			default:
+				dump_pcap(&pcap->drop, pkt);
+				break;
+			}
+		}
+
+		if (ret == -1) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"packet verdict failed");
+		}
+
+		free(pkt->data);
+		pkt->data = NULL;
+	}
 }
 
 static size_t packet_get_length(struct packet *orig_pkt)
@@ -577,6 +579,30 @@ static const char *packet_get_dissector(struct packet *pkt)
 	return "ipv4";
 }
 
+static void packet_do_release(struct packet *orig_pkt)
+{
+	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
+
+	if (pkt->data) {
+		packet_verdict(orig_pkt, FILTER_DROP);
+	}
+
+	free(pkt->data);
+	free(pkt);
+}
+
+static enum packet_status packet_getstate(struct packet *orig_pkt)
+{
+	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
+
+	if (pkt->data) {
+		return STATUS_NORMAL;
+	}
+	else {
+		return STATUS_SENT;
+	}
+}
+
 
 struct packet_module HAKA_MODULE = {
 	module: {
@@ -597,5 +623,7 @@ struct packet_module HAKA_MODULE = {
 	resize:          packet_do_resize,
 	get_id:          packet_get_id,
 	get_data:        packet_get_data,
-	get_dissector:   packet_get_dissector
+	get_dissector:   packet_get_dissector,
+	release_packet:  packet_do_release,
+	packet_getstate: packet_getstate
 };

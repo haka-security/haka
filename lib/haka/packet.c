@@ -111,6 +111,7 @@ int packet_receive(struct packet_module_state *state, struct packet **pkt)
 	ret = packet_module->receive(state, pkt);
 	if (!ret && *pkt) {
 		lua_object_init(&(*pkt)->lua_object);
+		atomic_set(&(*pkt)->ref, 1);
 		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%d, len=%u",
 				packet_module->get_id(*pkt), packet_length(*pkt));
 	}
@@ -121,7 +122,6 @@ void packet_drop(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	lua_object_release(pkt, &pkt->lua_object);
 	messagef(HAKA_LOG_DEBUG, L"packet", L"dropping packet id=%d, len=%u",
 			packet_module->get_id(pkt), packet_length(pkt));
 	packet_module->verdict(pkt, FILTER_DROP);
@@ -131,10 +131,36 @@ void packet_accept(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	lua_object_release(pkt, &pkt->lua_object);
 	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%d, len=%u",
 			packet_module->get_id(pkt), packet_length(pkt));
 	packet_module->verdict(pkt, FILTER_ACCEPT);
+}
+
+void packet_addref(struct packet *pkt)
+{
+	assert(pkt);
+	atomic_inc(&pkt->ref);
+}
+
+bool packet_release(struct packet *pkt)
+{
+	assert(packet_module);
+	assert(pkt);
+	if (atomic_dec(&pkt->ref) == 0) {
+		lua_object_release(pkt, &pkt->lua_object);
+		packet_module->release_packet(pkt);
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+enum packet_status packet_state(struct packet *pkt)
+{
+	assert(packet_module);
+	assert(pkt);
+	return packet_module->packet_getstate(pkt);
 }
 
 void packet_set_mode(enum packet_mode mode)
