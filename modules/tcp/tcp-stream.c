@@ -51,48 +51,107 @@ static void _list_init(struct list *l)
 	l->next = NULL;
 }
 
-static void _list_remove(struct list *l)
+static void _list_remove(struct list *l, struct list **head, struct list **tail)
 {
-	if (l->next) l->next->prev = l->prev;
-	if (l->prev) l->prev->next = l->next;
+	if (l->next) {
+		l->next->prev = l->prev;
+	}
+	else {
+		if (tail) {
+			assert(*tail == l);
+			*tail = l->prev;
+		}
+	}
+
+	if (l->prev) {
+		l->prev->next = l->next;
+	}
+	else {
+		if (head) {
+			assert(*head == l);
+			*head = l->next;
+		}
+	}
+
 	l->next = NULL;
 	l->prev = NULL;
 }
 
-static void _list_insert_after(struct list *elem, struct list *l)
+static void _list_insert_after(struct list *elem, struct list *l,
+		struct list **head, struct list **tail)
 {
-	assert(l);
 	assert(elem);
 	assert(!elem->next);
 	assert(!elem->prev);
 
-	elem->next = l->next;
-	if (l->next) l->next->prev = elem;
+	if (!l) {
+		assert(tail);
+		l = *tail;
+		assert(!l || !(*tail)->next);
+	}
 
-	elem->prev = l;
-	l->next = elem;
+	if (l) {
+		elem->next = l->next;
+
+		if (l->next) {
+			l->next->prev = elem;
+		}
+		else {
+			if (tail) {
+				assert(*tail == l);
+				*tail = elem;
+			}
+		}
+
+		elem->prev = l;
+		l->next = elem;
+	}
+	else {
+		if (head) *head = elem;
+		if (tail) *tail = elem;
+	}
 }
 
-static void _list_insert_before(struct list *elem, struct list *l)
+static void _list_insert_before(struct list *elem, struct list *l,
+		struct list **head, struct list **tail)
 {
-	assert(l);
 	assert(elem);
 	assert(!elem->next);
 	assert(!elem->prev);
 
-	elem->prev = l->prev;
-	if (l->prev) l->prev->next = elem;
+	if (!l) {
+		assert(head);
+		l = *head;
+		assert(!l || !(*head)->prev);
+	}
 
-	elem->next = l;
-	l->prev = elem;
+	if (l) {
+		elem->prev = l->prev;
+		if (l->prev) {
+			l->prev->next = elem;
+		}
+		else {
+			if (head) {
+				assert(*head == l);
+				*head = elem;
+			}
+		}
+
+		elem->next = l;
+		l->prev = elem;
+	}
+	else {
+		if (head) *head = elem;
+		if (tail) *tail = elem;
+	}
 }
 
-#define list_init(a)             { STATIC_ASSERT(offsetof(typeof(*a), list)==0, invalid_list_head); _list_init(&(a)->list); }
-#define list_next(a)             ((typeof(a))(a)->list.next)
-#define list_prev(a)             ((typeof(a))(a)->list.prev)
-#define list_remove(a)           _list_remove(&(a)->list)
-#define list_insert_after(a, i)  _list_insert_after(&(a)->list, &(i)->list)
-#define list_insert_before(a, i) _list_insert_before(&(a)->list, &(i)->list)
+#define list_init(a)                  { STATIC_ASSERT(offsetof(typeof(*a), list)==0, invalid_list_head); _list_init(&(a)->list); }
+#define list_next(a)                  ((typeof(a))(a)->list.next)
+#define list_prev(a)                  ((typeof(a))(a)->list.prev)
+#define list_remove(a, h, t)           _list_remove(&(a)->list, (struct list**)(h), (struct list**)(t))
+#define list_insert_after(a, i, h, t)  _list_insert_after(&(a)->list, (struct list*)(i), (struct list**)(h), (struct list**)(t))
+#define list_insert_before(a, i, h, t) _list_insert_before(&(a)->list, (struct list*)(i), (struct list**)(h), (struct list**)(t))
 
 
 /*
@@ -150,6 +209,8 @@ struct tcp_stream {
 	struct stream                   stream;
 	uint32                          start_seq;
 
+	struct tcp_stream_chunk        *begin;
+	struct tcp_stream_chunk        *end;
 	struct tcp_stream_chunk        *first;
 	int                             first_offset_seq;
 	struct tcp_stream_chunk        *last;    /* last inserted packet */
@@ -742,24 +803,14 @@ static bool tcp_stream_destroy(struct stream *s)
 
 	lua_object_release(&tcp_s->stream, &tcp_s->stream.lua_object);
 
-	iter = tcp_s->first;
+	iter = tcp_s->begin;
 	while (iter) {
 		struct tcp_stream_chunk *tmp = iter;
 
-		assert(tmp->tcp);
-		tcp_release(tmp->tcp);
+		if (tmp->tcp) tcp_release(tmp->tcp);
 		tcp_stream_chunk_release(tmp, true);
 
 		iter = list_next(tmp);
-		list_remove(tmp);
-		free(tmp);
-	}
-
-	iter = tcp_s->sent;
-	while (iter) {
-		struct tcp_stream_chunk *tmp = iter;
-		tcp_stream_chunk_release(tmp, true);
-		iter = list_next(iter);
 		free(tmp);
 	}
 
@@ -771,8 +822,8 @@ static bool tcp_stream_destroy(struct stream *s)
 	}
 
 	free(tcp_s->pending_modif);
-
 	free(s);
+
 	return true;
 }
 
@@ -814,6 +865,7 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 
 	chunk->tcp = tcp;
 	chunk->data = NULL;
+	list_init(chunk);
 
 	if (tcp_s->last_sent) ref_seq = tcp_s->last_sent->start_seq + tcp_s->start_seq;
 	else ref_seq = tcp_s->start_seq;
@@ -823,7 +875,6 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	chunk->end_seq = chunk->start_seq + tcp_get_payload_length(tcp);
 	chunk->offset_seq = 0;
 	chunk->modifs = NULL;
-	list_init(chunk);
 
 	if (chunk->start_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset ||
 		chunk->end_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset) {
@@ -835,6 +886,7 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	/* Search for insert point */
 	if (!tcp_s->last) {
 		assert(!tcp_s->first);
+		list_insert_after(chunk, NULL, &tcp_s->begin, &tcp_s->end);
 		tcp_s->first = chunk;
 		tcp_s->last = chunk;
 	}
@@ -849,6 +901,8 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 		}
 
 		iter = *start;
+		assert(iter);
+
 		while (iter && iter->start_seq < chunk->start_seq) {
 			prev = iter;
 			iter = list_next(iter);
@@ -861,10 +915,10 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 		}
 
 		if (prev) {
-			list_insert_after(chunk, prev);
+			list_insert_after(chunk, prev, &tcp_s->begin, &tcp_s->end);
 		}
 		else {
-			if (*start) list_insert_before(chunk, *start);
+			list_insert_before(chunk, *start, &tcp_s->begin, &tcp_s->end);
 			*start = chunk;
 		}
 
@@ -1025,12 +1079,10 @@ struct tcp *tcp_stream_pop(struct stream *s)
 
 		if (tcp_s->last_sent) {
 			assert(tcp_s->last_sent->end_seq == chunk->start_seq);
-			list_remove(chunk);
-			list_insert_after(chunk, tcp_s->last_sent);
+			assert(tcp_s->last_sent == list_prev(chunk));
 			tcp_s->last_sent = chunk;
 		}
 		else {
-			list_remove(chunk);
 			tcp_s->last_sent = chunk;
 			tcp_s->sent = chunk;
 		}
@@ -1104,7 +1156,7 @@ static size_t tcp_stream_available(struct stream *s)
 
 static struct tcp_stream_chunk_modif *tcp_stream_create_insert_modif(struct tcp_stream *tcp_s,
 		struct tcp_stream_chunk_modif *prev, struct tcp_stream_chunk_modif *next,
-		const uint8 *data, size_t length)
+		struct tcp_stream_chunk_modif **head, const uint8 *data, size_t length)
 {
 	struct tcp_stream_chunk_modif *new_modif = NULL;
 	struct tcp_stream_position *pos;
@@ -1124,11 +1176,10 @@ static struct tcp_stream_chunk_modif *tcp_stream_create_insert_modif(struct tcp_
 	memcpy(new_modif->data, data, length);
 
 	if (prev) {
-		list_insert_after(new_modif, prev);
+		list_insert_after(new_modif, prev, head, NULL);
 	}
 	else {
-		if (next) list_insert_before(new_modif, next);
-		if (pos->chunk) pos->chunk->modifs = new_modif;
+		list_insert_before(new_modif, next, head, NULL);
 	}
 
 	if (pos->chunk) pos->chunk->offset_seq += length;
@@ -1141,8 +1192,8 @@ static struct tcp_stream_chunk_modif *tcp_stream_create_insert_modif(struct tcp_
 }
 
 static size_t tcp_stream_update_insert_modif(struct tcp_stream *tcp_s,
-		struct tcp_stream_chunk_modif *cur_modif, const uint8 *data,
-		size_t length, size_t modif_offset)
+		struct tcp_stream_chunk_modif *cur_modif, struct tcp_stream_chunk_modif **modif_head,
+		const uint8 *data, size_t length, size_t modif_offset)
 {
 	struct tcp_stream_chunk_modif *new_modif = NULL;
 	struct tcp_stream_position *pos;
@@ -1167,8 +1218,8 @@ static size_t tcp_stream_update_insert_modif(struct tcp_stream *tcp_s,
 			cur_modif->data + modif_offset,
 			cur_modif->length - modif_offset);
 
-	list_insert_before(new_modif, cur_modif);
-	list_remove(cur_modif);
+	list_insert_before(new_modif, cur_modif, modif_head, NULL);
+	list_remove(cur_modif, modif_head, NULL);
 
 	if (pos->chunk) pos->chunk->offset_seq += length;
 	free(cur_modif);
@@ -1195,11 +1246,11 @@ static size_t tcp_stream_insert(struct stream *s, const uint8 *data, size_t leng
 	if (!pos->chunk) {
 		if (tcp_s->pending_modif) {
 			return tcp_stream_update_insert_modif(tcp_s, tcp_s->pending_modif,
-					data, length, pos->modif_offset);
+					&tcp_s->pending_modif, data, length, pos->modif_offset);
 		}
 		else {
 			tcp_s->pending_modif = tcp_stream_create_insert_modif(tcp_s, NULL,
-					NULL, data, length);
+					NULL, &tcp_s->pending_modif, data, length);
 			if (!tcp_s->pending_modif) {
 				return -1;
 			}
@@ -1214,11 +1265,12 @@ static size_t tcp_stream_insert(struct stream *s, const uint8 *data, size_t leng
 
 		cur_modif = tcp_stream_position_modif(pos, &modif_offset, &prev_modif, &next_modif);
 		if (cur_modif) {
-			return tcp_stream_update_insert_modif(tcp_s, cur_modif, data, length,
+			return tcp_stream_update_insert_modif(tcp_s, cur_modif, &pos->chunk->modifs, data, length,
 					modif_offset);
 		}
 		else {
-			cur_modif = tcp_stream_create_insert_modif(tcp_s, prev_modif, next_modif, data, length);
+			cur_modif = tcp_stream_create_insert_modif(tcp_s, prev_modif, next_modif,
+					&pos->chunk->modifs, data, length);
 			if (!cur_modif) {
 				return -1;
 			}
@@ -1265,12 +1317,7 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 
 		if (cur_modif->length == erase_length) {
 			/* Remove modif */
-			if (!prev_modif) {
-				assert(pos->chunk->modifs == cur_modif);
-				pos->chunk->modifs = list_next(cur_modif);
-			}
-
-			list_remove(cur_modif);
+			list_remove(cur_modif, &pos->chunk->modifs, NULL);
 
 			if (pos->modif == cur_modif) {
 				pos->modif = prev_modif;
@@ -1295,13 +1342,8 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 					cur_modif->data + modif_offset + erase_length,
 					cur_modif->length - modif_offset - erase_length);
 
-			list_insert_after(new_modif, cur_modif);
-			list_remove(cur_modif);
-
-			if (!prev_modif) {
-				assert(pos->chunk->modifs == cur_modif);
-				pos->chunk->modifs = new_modif;
-			}
+			list_insert_after(new_modif, cur_modif, &pos->chunk->modifs, NULL);
+			list_remove(cur_modif, &pos->chunk->modifs, NULL);
 
 			if (pos->modif == cur_modif) {
 				pos->modif = new_modif;
@@ -1336,11 +1378,10 @@ static size_t tcp_stream_erase(struct stream *s, size_t length)
 		cur_modif->length = erase_length;
 
 		if (prev_modif) {
-			list_insert_after(cur_modif, prev_modif);
+			list_insert_after(cur_modif, prev_modif, &pos->chunk->modifs, NULL);
 		}
 		else {
-			if (next_modif) list_insert_before(cur_modif, next_modif);
-			pos->chunk->modifs = cur_modif;
+			list_insert_before(cur_modif, next_modif, &pos->chunk->modifs, NULL);
 		}
 
 		pos->chunk->offset_seq -= erase_length;
@@ -1383,7 +1424,7 @@ static struct stream_mark *tcp_stream_mark(struct stream *s, bool readonly)
 				iter = list_next(iter);
 			}
 
-			list_insert_after(mark, iter);
+			list_insert_after(mark, iter, &tcp_s->marks, NULL);
 		}
 	}
 
@@ -1447,12 +1488,7 @@ static bool tcp_stream_unmark(struct stream *s, struct stream_mark *mark)
 		}
 	}
 
-	if (!list_prev(tcp_mark)) {
-		assert(tcp_s->marks == tcp_mark);
-		tcp_s->marks = list_next(tcp_mark);
-	}
-
-	list_remove(tcp_mark);
+	list_remove(tcp_mark, &tcp_s->marks, NULL);
 
 	free(tcp_mark);
 	return true;
