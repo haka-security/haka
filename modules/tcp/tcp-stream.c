@@ -5,6 +5,7 @@
 #include <haka/container/list.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
@@ -996,7 +997,7 @@ void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 
 	new_seq = tcp_s->sent->start_seq;
 
-	while (iter) {
+	while (iter && !iter->tcp) {
 		if (seq + (iter->end_seq - iter->start_seq) + iter->offset_seq > ack) {
 			break;
 		}
@@ -1007,7 +1008,7 @@ void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 			break;
 		}
 
-		assert(!list_next(iter) || list_next(iter)->start_seq == iter->end_seq);
+		assert(!list_next(iter) || list_next(iter)->tcp || list_next(iter)->start_seq == iter->end_seq);
 
 		iter = list_next(iter);
 	}
