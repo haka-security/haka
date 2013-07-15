@@ -14,15 +14,20 @@ The configuration will define a list of dissector. Each dissector is described b
 
 .. seealso:: :lua:func:`haka.dissector`.
 
+The dissector will give access to any fields in read/write mode. For 
+example, once an IP packet is dissected, all fields are accessible
+by their name : IP.dst, IP.df flags, and so on.
+
 Rules
 -----
 
 Along with the dissector, the configuration can define rules to apply. Those rules are
 assigned to some `hooks`. A rule need the following fields:
 
-* A :lua:data:`hooks` member that contains a array of hook string name. It will be used to install the rule on
-  them.
+* A :lua:data:`hooks` member that contains a array of hook string name. 
+It will be used to install the rule on them.
 * A :lua:func:`rule.eval` function that is called to evaluate the rule.
+* All fields defined from the dissector can be used from the rule
 
 .. seealso: :lua:func:`rule`.
 

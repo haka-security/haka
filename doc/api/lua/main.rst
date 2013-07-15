@@ -199,7 +199,9 @@ Example: ::
     haka.rule {
         hooks = { "ipv4-up" },
         eval = function (self, pkt)
-            return nil
+            if pkt.src == ipv4.addr("192.168.1.2") then
+                pkt:drop()
+            end
         end
     }
 
@@ -260,7 +262,9 @@ Example: ::
     group:rule {
         hooks = { "ipv4-up" },
         eval = function (self, pkt)
-            return nil
+            if pkt.src ~= ipv4.addr("10.0.0.2") then
+                pkt:accept()
+            end
         end
     }
 

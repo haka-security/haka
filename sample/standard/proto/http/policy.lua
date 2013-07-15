@@ -10,7 +10,7 @@ haka.rule {
 	end
 }
 
--- allow only get and post methods
+-- warn if method is different than get and post 
 haka.rule {
 	hooks = {"http-request"},
 	eval = function (self, http)
