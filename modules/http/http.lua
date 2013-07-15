@@ -1,8 +1,6 @@
 module("http", package.seeall)
 
-local function str(char)
-	return string.char(char)
-end
+local str = string.char
 
 local function getchar(stream)
 	local char
@@ -85,16 +83,16 @@ function sorted_pairs(t)
 
 	table.sort(a, string_compare)
 	local i = 0
-	local iter = function ()   -- iterator function
+	return function ()   -- iterator function
 		i = i + 1
 		if a[i] == nil then return nil
 		else return a[i], t[a[i]]
 		end
 	end
-	return iter
 end
 
 local function dump(t, indent)
+        if not indent then indent = "" end
 	for n, v in sorted_pairs(t) do
 		if type(v) == "table" then
 			print(indent, n)
@@ -147,9 +145,7 @@ local function parse_request(stream, http)
 	http.data = stream
 	http._length = total_len
 
-	http.dump = function (self)
-		dump(self, "")
-	end
+	http.dump = dump
 
 	return true
 end
@@ -171,20 +167,17 @@ local function parse_response(stream, http)
 	http.data = stream
 	http._length = total_len
 
-	http.dump = function (self)
-		dump(self, "")
-	end
+	http.dump = dump
 
 	return true
 end
 
 local function build_headers(stream, headers, headers_order)
-	local copy = headers
 
 	for _, name in pairs(headers_order) do
-		local value = copy[name]
+		local value = headers[name]
 		if value then
-			copy[name] = nil
+			headers[name] = nil
 
 			stream:insert(name)
 			stream:insert(": ")
@@ -193,7 +186,7 @@ local function build_headers(stream, headers, headers_order)
 		end
 	end
 
-	for name, value in pairs(copy) do
+	for name, value in pairs(headers) do
 		if value then
 			stream:insert(name)
 			stream:insert(": ")
