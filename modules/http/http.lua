@@ -212,7 +212,7 @@ local function forge(http)
 			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
 				tcp.stream:seek(http.request._mark, true)
 				http.request._mark = nil
-	
+
 				tcp.stream:erase(http.request._length)
 				tcp.stream:insert(http.request.method)
 				tcp.stream:insert(" ")
@@ -230,7 +230,7 @@ local function forge(http)
 			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
 				tcp.stream:seek(http.response._mark, true)
 				http.response._mark = nil
-	
+
 				tcp.stream:erase(http.response._length)
 				tcp.stream:insert(http.response.version)
 				tcp.stream:insert(" ")

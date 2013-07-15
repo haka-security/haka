@@ -37,7 +37,7 @@ macro(TEST_PCAP module name)
 			set(${cur} "${${cur}} ${it}")
 		endif()
 	endforeach(it ${ARGN})
-	
+
 	add_test(NAME ${module}-${name}-pcap
 		COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
