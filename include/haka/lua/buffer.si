@@ -4,7 +4,8 @@
 struct buffer {
 	size_t    allocated_size;
 	size_t    size;
-	bool      own;
+	bool      owner:1;     /* True if the data should be freed. */
+	bool      internal:1;  /* True if the data have been allocated along with the buffer struct. */
 	uint8*    data;
 };
 
@@ -18,7 +19,8 @@ struct buffer *allocate_buffer(size_t size)
 
 	buf->allocated_size = size;
 	buf->size = size;
-	buf->own = false;
+	buf->owner = true;
+	buf->internal = true;
 	buf->data = ((uint8 *)buf) + sizeof(struct buffer);
 	return buf;
 }
@@ -33,15 +35,18 @@ struct buffer *create_buffer(uint8 *data, size_t size, bool own)
 
 	buf->allocated_size = size;
 	buf->size = size;
-	buf->own = own;
+	buf->owner = own;
+	buf->internal = false;
 	buf->data = data;
 	return buf;
 }
 
 void free_buffer(struct buffer *buf)
 {
-	if (buf->own) {
-		free(buf->data);
+	if (buf->owner) {
+		if (!buf->internal) {
+			free(buf->data);
+		}
 	}
 	free(buf);
 }
@@ -59,7 +64,8 @@ struct buffer {
 
 		~buffer()
 		{
-			free_buffer($self);
+			if ($self)
+				free_buffer($self);
 		}
 
 		size_t __len(void *dummy)
