@@ -1,8 +1,8 @@
 -- This script is meant to be launched with a capture type
 -- nfq, or pcap, as:
--- hake capture-nfq.lua eth0:eth1 gettingstarted.lua
+-- haka capture-nfq.lua eth0:eth1 gettingstarted.lua
 
--- mandatory to load ipv4 dissector
+-- Mandatory to load ipv4 dissector
 require("ipv4")
 -- Once dissector is loaded, we can access all fields
 -- of IPv4 packets inside this script.
@@ -23,13 +23,13 @@ haka.rule {
 			-- (see docs)
 		end
 	end
-	}
+}
 
--- mandatory to load tcp dissector
--- It also loads all the magic to track connection
+-- Mandatory to load tcp dissector
+-- It also loads all the magic to track connections
 require("tcp")
 
--- For exemple, we want to log somethings about
+-- For example, we want to log something about
 -- connections
 akpf:rule {
 	hooks = {"tcp-connection-new"},
@@ -38,7 +38,7 @@ akpf:rule {
 			haka.log.warning("filter","Trafic on HTTP port from %s", tcp.ip.src)
 		end
 	end
-	}
+}
 
 -- For more example and possibilities, read this doc,
 -- Chapters about rule, rule group and dissector.
