@@ -3,6 +3,9 @@
 include(TestPcap)
 include(TestUnit)
 
+TEST_PCAP(ipv4 formatting-text)
+TEST_PCAP(ipv4 hook-up-rule)
+TEST_PCAP(ipv4 hook-down-rule)
 TEST_PCAP(ipv4 land)
 TEST_PCAP(ipv4 nat)
 TEST_PCAP(ipv4 net)

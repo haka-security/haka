@@ -2,6 +2,9 @@
 include(TestPcap)
 include(TestUnit)
 
+TEST_PCAP(tcp hook-up-rule)
+TEST_PCAP(tcp hook-down-rule)
+TEST_PCAP(tcp ipv4-field-access)
 TEST_PCAP(tcp getfields)
 TEST_PCAP(tcp getfields-passthrough OPTIONS --pass-through)
 TEST_PCAP(tcp filter)
