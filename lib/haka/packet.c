@@ -10,6 +10,19 @@
 
 static struct packet_module *packet_module = NULL;
 static enum packet_mode global_packet_mode = MODE_NORMAL;
+static local_storage_t capture_state;
+
+INIT static void __init()
+{
+	UNUSED const bool ret = local_storage_init(&capture_state, NULL);
+	assert(ret);
+}
+
+FINI static void __fini()
+{
+	UNUSED const bool ret = local_storage_destroy(&capture_state);
+	assert(ret);
+}
 
 int set_packet_module(struct module *module)
 {
@@ -45,6 +58,19 @@ struct packet_module *get_packet_module()
 	return packet_module;
 }
 
+bool packet_init(struct packet_module_state *state)
+{
+	assert(!local_storage_get(&capture_state));
+	return local_storage_set(&capture_state, state);
+}
+
+static struct packet_module_state *get_capture_state()
+{
+	struct packet_module_state *state = local_storage_get(&capture_state);
+	assert(state);
+	return state;
+}
+
 size_t packet_length(struct packet *pkt)
 {
 	assert(packet_module);
@@ -66,55 +92,72 @@ const char *packet_dissector(struct packet *pkt)
 	return packet_module->get_dissector(pkt);
 }
 
+static bool packet_is_modifiable(struct packet *pkt)
+{
+	switch (global_packet_mode) {
+	case MODE_NORMAL:
+		break;
+
+	case MODE_PASSTHROUGH:
+		error(L"operation not supported (pass-through mode)");
+		return false;
+
+	default:
+		assert(0);
+		return false;
+	}
+
+	switch (packet_state(pkt)) {
+	case STATUS_NORMAL:
+	case STATUS_FORGED:
+		break;
+
+	case STATUS_SENT:
+		error(L"operation not supported (packet already sent)");
+		return false;
+
+	default:
+		assert(0);
+		return false;
+	}
+
+	return true;
+}
+
 uint8 *packet_data_modifiable(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
 
-	switch (global_packet_mode) {
-	case MODE_NORMAL:
+	if (packet_is_modifiable(pkt))
 		return packet_module->make_modifiable(pkt);
-
-	case MODE_PASSTHROUGH:
-		error(L"operation not supported (pass-through mode)");
+	else
 		return NULL;
-
-	default:
-		assert(0);
-		return NULL;
-	}
 }
 
 int packet_resize(struct packet *pkt, size_t size)
 {
 	assert(packet_module);
 
-	switch (global_packet_mode) {
-	case MODE_NORMAL:
+	if (packet_is_modifiable(pkt))
 		return packet_module->resize(pkt, size);
-
-	case MODE_PASSTHROUGH:
-		error(L"operation not supported (pass-through mode)");
+	else
 		return -1;
-
-	default:
-		assert(0);
-		return -1;
-	}
 }
 
-int packet_receive(struct packet_module_state *state, struct packet **pkt)
+int packet_receive(struct packet **pkt)
 {
 	int ret;
 	assert(packet_module);
 
-	ret = packet_module->receive(state, pkt);
+	ret = packet_module->receive(get_capture_state(), pkt);
 	if (!ret && *pkt) {
 		lua_object_init(&(*pkt)->lua_object);
 		atomic_set(&(*pkt)->ref, 1);
 		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%d, len=%u",
 				packet_module->get_id(*pkt), packet_length(*pkt));
 	}
+
 	return ret;
 }
 
@@ -154,6 +197,49 @@ bool packet_release(struct packet *pkt)
 	else {
 		return false;
 	}
+}
+
+struct packet *packet_new(size_t size)
+{
+	struct packet *pkt;
+
+	assert(packet_module);
+
+	pkt = packet_module->new_packet(get_capture_state(), size);
+	if (!pkt) {
+		assert(check_error());
+		return NULL;
+	}
+
+	lua_object_init(&pkt->lua_object);
+	atomic_set(&pkt->ref, 1);
+
+	return pkt;
+}
+
+bool packet_send(struct packet *pkt)
+{
+	assert(pkt);
+	assert(packet_module);
+
+	switch (packet_state(pkt)) {
+	case STATUS_FORGED:
+		break;
+
+	case STATUS_NORMAL:
+	case STATUS_SENT:
+		error(L"operation not supported (packet captured)");
+		return false;
+
+	default:
+		assert(0);
+		return false;
+	}
+
+	messagef(HAKA_LOG_DEBUG, L"packet", L"sending packet id=%d, len=%u",
+		packet_module->get_id(pkt), packet_length(pkt));
+
+	return packet_module->send_packet(pkt);
 }
 
 enum packet_status packet_state(struct packet *pkt)

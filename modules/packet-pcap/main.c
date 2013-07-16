@@ -4,6 +4,7 @@
 #include <haka/types.h>
 #include <haka/thread.h>
 #include <haka/error.h>
+#include <haka/container/list.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,7 @@
 #include <pcap.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/time.h>
 
 
 /* snapshot length - a value of 65535 is sufficient to get all
@@ -18,17 +20,23 @@
  */
 #define SNAPLEN 65535
 
+struct pcap_packet;
+
 struct packet_module_state {
 	pcap_t                     *pd;
 	pcap_dumper_t              *pf;
 	size_t                      link_hdr_len;
+	struct pcap_packet         *sent_head;
+	struct pcap_packet         *sent_tail;
 };
 
 struct pcap_packet {
-	struct packet core_packet;
+	struct packet               core_packet;
+	struct list                 list;
 	struct packet_module_state *state;
-	struct pcap_pkthdr header;
-	u_char *data;
+	struct pcap_pkthdr          header;
+	u_char                     *data;
+	bool                        captured;
 };
 
 
@@ -208,46 +216,61 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	const u_char *p;
 	int ret;
 
-	/* read packet */
-	ret = pcap_next_ex(state->pd, &header, &p);
+	/* first check if a packet is waiting in the sent queue */
+	if (state->sent_head) {
+		struct pcap_packet *packet = state->sent_head;
 
-	if(ret == -1) {
-		/* error while reading packet */
-		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(state->pd));
-		return 1;
-	}
-	else if (ret == -2) {
-		/* end of pcap file */
-		return 1;
-	}
-	else if (ret == 0) {
-		/* Timeout expired. */
-		return 0;
-	}
-	else {
-		struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
-		if (!packet) {
-			return ENOMEM;
-		}
-
-		memset(packet, 0, sizeof(struct pcap_packet));
-
-		packet->data = malloc(header->caplen);
-		if (!packet->data) {
-			free(packet);
-			return ENOMEM;
-		}
-
-		/* fill packet data structure */
-		memcpy(packet->data, p, header->caplen);
-		packet->header = *header;
-		packet->state = state;
-
-		if (packet->header.caplen < packet->header.len)
-			messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
+		list_remove(packet, &state->sent_head, &state->sent_tail);
+		packet->captured = true;
 
 		*pkt = (struct packet *)packet;
 		return 0;
+	}
+	else {
+		/* read packet */
+		ret = pcap_next_ex(state->pd, &header, &p);
+
+		if(ret == -1) {
+			/* error while reading packet */
+			messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(state->pd));
+			return 1;
+		}
+		else if (ret == -2) {
+			/* end of pcap file */
+			return 1;
+		}
+		else if (ret == 0) {
+			/* Timeout expired. */
+			return 0;
+		}
+		else {
+			struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
+			if (!packet) {
+				return ENOMEM;
+			}
+
+			memset(packet, 0, sizeof(struct pcap_packet));
+
+			list_init(packet);
+
+			packet->data = malloc(header->caplen);
+			if (!packet->data) {
+				free(packet);
+				return ENOMEM;
+			}
+
+			/* fill packet data structure */
+			memcpy(packet->data, p, header->caplen);
+			packet->header = *header;
+			packet->state = state;
+			packet->captured = true;
+
+			if (packet->header.caplen < packet->header.len)
+				messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
+
+			*pkt = (struct packet *)packet;
+			return 0;
+		}
 	}
 }
 
@@ -332,12 +355,59 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 
-	if (pkt->data) {
-		return STATUS_NORMAL;
+	if (pkt->data && !list_next(pkt) && !list_prev(pkt)) {
+		if (pkt->captured)
+			return STATUS_NORMAL;
+		else
+			return STATUS_FORGED;
 	}
 	else {
 		return STATUS_SENT;
 	}
+}
+
+static struct packet *new_packet(struct packet_module_state *state, size_t size)
+{
+	struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
+	if (!packet) {
+		error(L"Memory error");
+		return NULL;
+	}
+
+	memset(packet, 0, sizeof(struct pcap_packet));
+
+	size += state->link_hdr_len;
+
+	packet->data = malloc(size);
+	if (!packet->data) {
+		free(packet);
+		error(L"Memory error");
+		return NULL;
+	}
+
+	memset(packet->data, 0, size);
+
+	list_init(packet);
+
+	packet->header.len = size;
+	packet->header.caplen = size;
+	gettimeofday(&packet->header.ts, NULL);
+	packet->state = state;
+	packet->captured = false;
+
+	return (struct packet *)packet;
+}
+
+static bool send_packet(struct packet *orig_pkt)
+{
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+
+	assert(pkt->data);
+	assert(!list_next(pkt) && !list_prev(pkt));
+
+	list_insert_after(pkt, pkt->state->sent_tail, &pkt->state->sent_head, &pkt->state->sent_tail);
+
+	return true;
 }
 
 
@@ -363,6 +433,7 @@ struct packet_module HAKA_MODULE = {
 	get_data:        packet_get_data,
 	get_dissector:   packet_get_dissector,
 	release_packet:  packet_do_release,
-	packet_getstate: packet_getstate
+	packet_getstate: packet_getstate,
+	new_packet:      new_packet,
+	send_packet:     send_packet
 };
-

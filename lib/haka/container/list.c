@@ -11,15 +11,18 @@ void _list_init(struct list *l)
 	l->next = NULL;
 }
 
-void _list_remove(struct list *l, struct list **head, struct list **tail)
+#define getuserptr(a)     ((a) ? (void*)((char*)(a)-offset) : NULL)
+#define getlistptr(a)     ((a) ? ((struct list *)((char*)(a)+offset)) : NULL)
+
+void _list_remove(struct list *l, int offset, void **head, void **tail)
 {
 	if (l->next) {
 		l->next->prev = l->prev;
 	}
 	else {
 		if (tail) {
-			assert(*tail == l);
-			*tail = l->prev;
+			assert(*tail == getuserptr(l));
+			*tail = getuserptr(l->prev);
 		}
 	}
 
@@ -28,8 +31,8 @@ void _list_remove(struct list *l, struct list **head, struct list **tail)
 	}
 	else {
 		if (head) {
-			assert(*head == l);
-			*head = l->next;
+			assert(*head == getuserptr(l));
+			*head = getuserptr(l->next);
 		}
 	}
 
@@ -37,8 +40,8 @@ void _list_remove(struct list *l, struct list **head, struct list **tail)
 	l->prev = NULL;
 }
 
-void _list_insert_after(struct list *elem, struct list *l,
-		struct list **head, struct list **tail)
+void _list_insert_after(struct list *elem, struct list *l, int offset,
+		void **head, void **tail)
 {
 	assert(elem);
 	assert(!elem->next);
@@ -46,8 +49,8 @@ void _list_insert_after(struct list *elem, struct list *l,
 
 	if (!l) {
 		assert(tail);
-		l = *tail;
-		assert(!l || !(*tail)->next);
+		l = getlistptr(*tail);
+		assert(!l || !(getlistptr(*tail)->next));
 	}
 
 	if (l) {
@@ -58,8 +61,8 @@ void _list_insert_after(struct list *elem, struct list *l,
 		}
 		else {
 			if (tail) {
-				assert(*tail == l);
-				*tail = elem;
+				assert(*tail == getuserptr(l));
+				*tail = getuserptr(elem);
 			}
 		}
 
@@ -67,13 +70,13 @@ void _list_insert_after(struct list *elem, struct list *l,
 		l->next = elem;
 	}
 	else {
-		if (head) *head = elem;
-		if (tail) *tail = elem;
+		if (head) *head = getuserptr(elem);
+		if (tail) *tail = getuserptr(elem);
 	}
 }
 
-void _list_insert_before(struct list *elem, struct list *l,
-		struct list **head, struct list **tail)
+void _list_insert_before(struct list *elem, struct list *l, int offset,
+		void **head, void **tail)
 {
 	assert(elem);
 	assert(!elem->next);
@@ -81,8 +84,8 @@ void _list_insert_before(struct list *elem, struct list *l,
 
 	if (!l) {
 		assert(head);
-		l = *head;
-		assert(!l || !(*head)->prev);
+		l = getlistptr(*head);
+		assert(!l || !(getlistptr(*head)->prev));
 	}
 
 	if (l) {
@@ -92,8 +95,8 @@ void _list_insert_before(struct list *elem, struct list *l,
 		}
 		else {
 			if (head) {
-				assert(*head == l);
-				*head = elem;
+				assert(*head == getuserptr(l));
+				*head = getuserptr(elem);
 			}
 		}
 
@@ -101,7 +104,7 @@ void _list_insert_before(struct list *elem, struct list *l,
 		l->prev = elem;
 	}
 	else {
-		if (head) *head = elem;
-		if (tail) *tail = elem;
+		if (head) *head = getuserptr(elem);
+		if (tail) *tail = getuserptr(elem);
 	}
 }

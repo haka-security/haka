@@ -119,6 +119,8 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		return NULL;
 	}
 
+	LUA_STACK_MARK(state->lua->L);
+
 	state->capture = packet_module->init_state(thread_id);
 	if (!state->capture) {
 		message(HAKA_LOG_FATAL, L"core", L"unable to create packet capture state");
@@ -146,8 +148,9 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		cleanup_thread_state(state);
 		return NULL;
 	}
-	lua_pop(state->lua->L, 2);
+	lua_pop(state->lua->L, 1);
 
+	LUA_STACK_CHECK(state->lua->L, 0);
 	return state;
 }
 
@@ -166,13 +169,15 @@ static void *thread_main_loop(void *_state)
 		}
 
 		/* To make sure we can still cancel even if some thread are locked in
-		 * infinte loops */
+		 * infinite loops */
 		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	}
 
 	thread_set_id(state->thread_id);
 
-	while (packet_receive(state->capture, &pkt) == 0) {
+	packet_init(state->capture);
+
+	while (packet_receive(&pkt) == 0) {
 		/* The packet can be NULL in case of failure in packet receive */
 		if (pkt) {
 			filter_wrapper(state, pkt);

@@ -11,14 +11,15 @@
 
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 #include <linux/netfilter.h>
+#include <linux/ip.h>
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
 #include "iptables.h"
 #include <pcap.h>
 #include "config.h"
 
-mutex_t ct_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define PACKET_BUFFER_SIZE	0xffff
 /* Should be enough to receive the packet and the extra headers */
@@ -30,6 +31,7 @@ mutex_t ct_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct pcap_dump {
 	pcap_t        *pd;
 	pcap_dumper_t *pf;
+	mutex_t        mutex;
 };
 
 struct pcap_sinks {
@@ -39,16 +41,18 @@ struct pcap_sinks {
 };
 
 struct packet_module_state {
-	struct nfq_handle           *handle;
-	struct nfq_q_handle         *queue;
-	int                          fd;
+	struct nfq_handle          *handle;
+	struct nfq_q_handle        *queue;
+	int                         fd;
+	int                         send_fd;
+	int                         send_mark_fd;
 
-	struct nfqueue_packet       *current_packet; /* Packet allocated by nfq callback */
-	int                          error;
-	char                         receive_buffer[PACKET_RECV_SIZE];
+	struct nfqueue_packet      *current_packet; /* Packet allocated by nfq callback */
+	int                         error;
+	char                        receive_buffer[PACKET_RECV_SIZE];
 };
 
-static struct pcap_sinks           *pcap = NULL;
+static struct pcap_sinks       *pcap = NULL;
 
 struct nfqueue_packet {
 	struct packet               core_packet;
@@ -71,6 +75,7 @@ static const char iptables_config_template_begin[] =
 static const char iptables_config_template_mt_iface[] =
 "-A PREROUTING -i %s -m mark --mark 0xffff -j ACCEPT\n"
 "-A PREROUTING -i %s -j NFQUEUE --queue-balance 0:%i\n"
+"-A OUTPUT -o %s -m mark --mark 0xffff -j ACCEPT\n"
 "-A OUTPUT -o %s -j MARK --set-mark 0xffff\n"
 "-A OUTPUT -o %s -j NFQUEUE --queue-balance 0:%i\n"
 ;
@@ -78,6 +83,7 @@ static const char iptables_config_template_mt_iface[] =
 static const char iptables_config_template_iface[] =
 "-A PREROUTING -i %s -m mark --mark 0xffff -j ACCEPT\n"
 "-A PREROUTING -i %s -j NFQUEUE\n"
+"-A OUTPUT -o %s -m mark --mark 0xffff -j ACCEPT\n"
 "-A OUTPUT -o %s -j MARK --set-mark 0xffff\n"
 "-A OUTPUT -o %s -j NFQUEUE\n"
 ;
@@ -85,6 +91,7 @@ static const char iptables_config_template_iface[] =
 static const char iptables_config_template_mt_all[] =
 "-A PREROUTING -m mark --mark 0xffff -j ACCEPT\n"
 "-A PREROUTING -j NFQUEUE --queue-balance 0:%i\n"
+"-A OUTPUT -m mark --mark 0xffff -j ACCEPT\n"
 "-A OUTPUT -j MARK --set-mark 0xffff\n"
 "-A OUTPUT -j NFQUEUE --queue-balance 0:%i\n"
 ;
@@ -92,6 +99,7 @@ static const char iptables_config_template_mt_all[] =
 static const char iptables_config_template_all[] =
 "-A PREROUTING -m mark --mark 0xffff -j ACCEPT\n"
 "-A PREROUTING -j NFQUEUE\n"
+"-A OUTPUT -m mark --mark 0xffff -j ACCEPT\n"
 "-A OUTPUT -j MARK --set-mark 0xffff\n"
 "-A OUTPUT -j NFQUEUE\n"
 ;
@@ -114,11 +122,11 @@ static int iptables_config_build(char *output, size_t outsize, char **ifaces, in
 		while (*iface) {
 			if (threads > 1) {
 				size = snprintf(output, outsize, iptables_config_template_mt_iface, *iface, *iface,
-						threads-1, *iface, *iface, threads-1);
+						threads-1, *iface, *iface, *iface, threads-1);
 			}
 			else {
 				size = snprintf(output, outsize, iptables_config_template_iface, *iface, *iface,
-						*iface, *iface);
+						*iface, *iface, *iface);
 			}
 
 			if (!size) return -1;
@@ -234,7 +242,54 @@ static void cleanup_state(struct packet_module_state *state)
 	state->queue = NULL;
 	state->handle = NULL;
 
+	close(state->send_fd);
+	close(state->send_mark_fd);
+
 	free(state);
+}
+
+static int open_send_socket(bool mark)
+{
+	int fd;
+	int one = 1;
+
+	fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+	if (fd < 0) {
+		messagef(HAKA_LOG_ERROR, MODULE_NAME, L"cannot open send socket: %s", errno_error(errno));
+		return -1;
+	}
+
+	if (setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
+		messagef(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup send socket: %s", errno_error(errno));
+		return -1;
+	}
+
+	if (mark) {
+		one = 0xffff;
+		if (setsockopt(fd, SOL_SOCKET, SO_MARK, &one, sizeof(one)) < 0) {
+			messagef(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup send socket: %s", errno_error(errno));
+			return -1;
+		}
+	}
+
+	return fd;
+}
+
+static bool socket_send_packet(int fd, const void *pkt, size_t size)
+{
+	struct sockaddr_in sin;
+	const struct iphdr *iphdr = pkt;
+
+	sin.sin_family = AF_INET;
+	sin.sin_port = iphdr->protocol;
+	sin.sin_addr.s_addr = iphdr->saddr;
+
+	if (sendto(fd, pkt, size, 0, (struct sockaddr*)&sin, sizeof(sin)) == (size_t)-1) {
+		error(L"send failed: %s", errno_error(errno));
+		return false;
+	}
+
+	return true;
 }
 
 static struct packet_module_state *init_state(int thread_id)
@@ -263,6 +318,18 @@ static struct packet_module_state *init_state(int thread_id)
 
 		if (nfq_bind_pf(state->handle, proto_family[i]) < 0) {
 			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot bind queue");
+			cleanup_state(state);
+			return NULL;
+		}
+
+		state->send_fd = open_send_socket(false);
+		if (state->send_fd < 0) {
+			cleanup_state(state);
+			return NULL;
+		}
+
+		state->send_mark_fd = open_send_socket(true);
+		if (state->send_fd < 0) {
 			cleanup_state(state);
 			return NULL;
 		}
@@ -304,6 +371,8 @@ static int open_pcap(struct pcap_dump *pcap, const char *file)
 		}
 	}
 
+	mutex_init(&pcap->mutex, false);
+
 	return 0;
 }
 
@@ -311,6 +380,7 @@ static void close_pcap(struct pcap_dump *pcap)
 {
 	if (pcap->pf) pcap_dump_close(pcap->pf);
 	if (pcap->pd) pcap_close(pcap->pd);
+	mutex_destroy(&pcap->mutex);
 }
 
 static void cleanup()
@@ -443,14 +513,13 @@ static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt)
 	if (pcap->pf) {
 		struct pcap_pkthdr hdr;
 
-		mutex_lock(&ct_mutex);
+		mutex_lock(&pcap->mutex);
 
 		hdr.caplen = hdr.len = pkt->length;
-		hdr.ts.tv_sec = 0;
-		hdr.ts.tv_usec = 0;
+		gettimeofday(&hdr.ts, NULL);
 		pcap_dump((u_char *)pcap->pf, &hdr, pkt->data);
 
-		mutex_unlock(&ct_mutex);
+		mutex_unlock(&pcap->mutex);
 	}
 }
 
@@ -502,10 +571,15 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 			break;
 		}
 
-		if (pkt->modified)
-			ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, pkt->length, pkt->data);
-		else
-			ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, 0, NULL);
+		if (pkt->id == -1) {
+			ret = socket_send_packet(pkt->state->send_mark_fd, pkt->data, pkt->length);
+		}
+		else {
+			if (pkt->modified)
+				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, pkt->length, pkt->data);
+			else
+				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, 0, NULL);
+		}
 
 		if (pcap) {
 			switch (result) {
@@ -596,11 +670,53 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
 	if (pkt->data) {
-		return STATUS_NORMAL;
+		if (pkt->id == -1)
+			return STATUS_FORGED;
+		else
+			return STATUS_NORMAL;
 	}
 	else {
 		return STATUS_SENT;
 	}
+}
+
+static struct packet *new_packet(struct packet_module_state *state, size_t size)
+{
+	struct nfqueue_packet *packet = malloc(sizeof(struct nfqueue_packet));
+	if (!packet) {
+		error(L"Memory error");
+		return NULL;
+	}
+
+	memset(packet, 0, sizeof(struct nfqueue_packet));
+
+	packet->data = malloc(size);
+	if (!packet->data) {
+		free(packet);
+		error(L"Memory error");
+		return NULL;
+	}
+
+	memset(packet->data, 0, size);
+
+	packet->id = -1;
+	packet->length = size;
+	packet->state = state;
+
+	return (struct packet *)packet;
+}
+
+static bool send_packet(struct packet *orig_pkt)
+{
+	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
+	bool ret;
+
+	ret = socket_send_packet(pkt->state->send_fd, pkt->data, pkt->length);
+
+	free(pkt->data);
+	pkt->data = NULL;
+
+	return ret;
 }
 
 
@@ -626,5 +742,7 @@ struct packet_module HAKA_MODULE = {
 	get_data:        packet_get_data,
 	get_dissector:   packet_get_dissector,
 	release_packet:  packet_do_release,
-	packet_getstate: packet_getstate
+	packet_getstate: packet_getstate,
+	new_packet:      new_packet,
+	send_packet:     send_packet
 };

@@ -16,6 +16,8 @@ void lua_pushppacket(lua_State *L, struct packet *pkt)
 	}
 }
 
+#define _new(s) __new(L, s)
+
 %}
 
 %rename(ACCEPT) FILTER_ACCEPT;
@@ -67,17 +69,9 @@ struct packet {
 			packet_data_modifiable($self)[index] = value;
 		}
 
-		%rename(drop) _drop;
-		void _drop()
-		{
-			packet_drop($self);
-		}
-
-		%rename(accept) _accept;
-		void _accept()
-		{
-			packet_accept($self);
-		}
+		void drop();
+		void accept();
+		void send();
 
 		struct packet *forge()
 		{
@@ -95,6 +89,10 @@ enum packet_mode { MODE_NORMAL, MODE_PASSTHROUGH };
 %rename(mode) packet_mode;
 enum packet_mode packet_mode();
 
+%rename(new) packet_new;
+%newobject packet_new;
+struct packet *packet_new(int size);
+
 %{
 size_t packet_length_get(struct packet *pkt) {
 	return packet_length(pkt);
@@ -107,4 +105,5 @@ const char *packet_dissector_get(struct packet *pkt) {
 const char *packet_next_dissector_get(struct packet *pkt) {
 	return packet_dissector(pkt);
 }
+
 %}

@@ -31,6 +31,8 @@ struct packet_module {
 	const char    *(*get_dissector)(struct packet *pkt);
 	void           (*release_packet)(struct packet *pkt);
 	enum packet_status (*packet_getstate)(struct packet *pkt);
+	struct packet *(*new_packet)(struct packet_module_state *state, size_t size);
+	bool           (*send_packet)(struct packet *pkt);
 };
 
 #endif /* _HAKA_PACKET_MODULE_H */
