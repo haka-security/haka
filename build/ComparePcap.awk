@@ -16,6 +16,10 @@ $0 ~ /Interface id: .*$/ {
 	next;
 }
 
+$0 ~ /The RTT to ACK the segment was: / {
+	next;
+}
+
 {
 	print;
 }

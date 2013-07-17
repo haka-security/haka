@@ -23,5 +23,7 @@ TEST_PCAP(tcp streamread-passthrough OPTIONS --pass-through)
 TEST_PCAP(tcp streammodif-passthrough OPTIONS --pass-through)
 TEST_PCAP(tcp streammark-passthrough OPTIONS --pass-through)
 
+TEST_PCAP(tcp create)
+
 TEST_UNIT(tcp unit unit.c)
 target_link_libraries(tcp-unit tcp)
