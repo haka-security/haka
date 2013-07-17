@@ -1,3 +1,4 @@
+warn core: no log module found
 false operation not supported (pass-through mode)
 false operation not supported (pass-through mode)
 false operation not supported (pass-through mode)

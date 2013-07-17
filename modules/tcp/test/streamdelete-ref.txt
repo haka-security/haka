@@ -1,3 +1,4 @@
+warn core: no log module found
 debug tcp-connection: opening connection 10.2.96.127:45036 -> 10.2.104.129:4444
 debug filter: received stream len=0
 debug filter: received stream len=35

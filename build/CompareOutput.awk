@@ -4,6 +4,10 @@ BEGIN {
 	trace = 0
 }
 
+$0 ~ /warn core:/ {
+	print;
+}
+
 $0 ~ /info core: starting single threaded processing/ {
 	show = 1;
 	next;
