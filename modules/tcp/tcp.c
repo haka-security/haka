@@ -215,6 +215,7 @@ void tcp_action_send(struct tcp *tcp)
 
 	while ((packet = tcp_forge(tcp))) {
 		ipv4_action_send(packet);
+		ipv4_release(packet);
 	}
 }
 
