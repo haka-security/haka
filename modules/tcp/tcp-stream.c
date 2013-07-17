@@ -661,21 +661,20 @@ struct stream *tcp_stream_create()
 	return &tcp_s->stream;
 }
 
-static void tcp_stream_chunk_release(struct tcp_stream_chunk *chunk, bool all)
+static void tcp_stream_chunk_release(struct tcp_stream_chunk *chunk, bool modif)
 {
-	struct tcp_stream_chunk_modif *iter = chunk->modifs;
-	while (iter) {
-		struct tcp_stream_chunk_modif *modif = iter;
-		iter = list_next(iter);
-		free(modif);
+	if (modif) {
+		struct tcp_stream_chunk_modif *iter = chunk->modifs;
+		while (iter) {
+			struct tcp_stream_chunk_modif *modif = iter;
+			iter = list_next(iter);
+			free(modif);
+		}
+		chunk->modifs = NULL;
 	}
 
-	if (all) {
-		free(chunk->data);
-		chunk->data = NULL;
-	}
-
-	chunk->modifs = NULL;
+	free(chunk->data);
+	chunk->data = NULL;
 }
 
 static bool tcp_stream_destroy(struct stream *s)
@@ -890,6 +889,18 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		tcp = chunk->tcp;
 		assert(tcp || chunk->data);
 
+		if (keepdata && !chunk->data) {
+			const size_t size = tcp_get_payload_length(chunk->tcp);
+
+			chunk->data = malloc(size);
+			if (!chunk->data) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			memcpy(chunk->data, tcp_get_payload(chunk->tcp), size);
+		}
+
 		if (chunk->modifs) {
 			/*
 			 * Apply modifs to tcp packet
@@ -930,29 +941,8 @@ struct tcp *tcp_stream_pop(struct stream *s)
 				}
 
 				memcpy(payload, buffer, new_size);
-
-				if (keepdata) {
-					chunk->data = buffer;
-				}
-				else {
-					free(buffer);
-				}
+				free(buffer);
 			}
-		}
-
-		if (keepdata && !chunk->data) {
-			size_t size;
-			assert(tcp);
-
-			size = tcp_get_payload_length(tcp);
-
-			chunk->data = malloc(size);
-			if (!chunk->data) {
-				error(L"memory error");
-				return NULL;
-			}
-
-			memcpy(chunk->data, tcp_get_payload(tcp), size);
 		}
 
 		if (tcp) {
@@ -1044,6 +1034,46 @@ void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 			assert(!list_next(iter) || list_next(iter)->tcp || list_next(iter)->start_seq == iter->end_seq);
 
 			iter = list_next(iter);
+		}
+
+		/* Find the exact ack position taking into account the modifs */
+		if (iter)
+		{
+			int offset = 0;
+
+			struct tcp_stream_chunk_modif *modif = iter->modifs;
+			while (modif) {
+				if (seq + (modif->position - offset) >= ack) {
+					break;
+				}
+				else {
+					new_seq = iter->start_seq + modif->position;
+					seq += modif->position - offset;
+					offset = modif->position;
+
+					switch (modif->type) {
+					case TCP_MODIF_INSERT:
+						if (seq + modif->length > ack) {
+							seq = ack;
+						}
+						else {
+							seq += modif->length;
+						}
+						break;
+
+					case TCP_MODIF_ERASE:
+						new_seq += modif->length;
+						offset += modif->length;
+						break;
+
+					default:
+						assert(0);
+						break;
+					}
+				}
+
+				modif = list_next(modif);
+			}
 		}
 
 		/* Need to account for offset (case of the FIN for instance) */
@@ -1366,7 +1396,7 @@ static void tcp_stream_chunk_release_data(struct tcp_stream *tcp_s, struct tcp_s
 			break;
 		}
 
-		tcp_stream_chunk_release(chunk, true);
+		tcp_stream_chunk_release(chunk, false);
 		chunk = list_next(chunk);
 	}
 }

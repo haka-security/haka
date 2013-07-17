@@ -124,8 +124,7 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 			tcp_set_seq(rem_tcp, tcp_get_seq(tcp) + size);
 			tcp_set_ack_seq(rem_tcp, tcp_get_ack_seq(tcp));
 
-			tcp_set_flags_ack(tcp, false);
-			tcp_set_ack_seq(tcp, 0);
+			tcp_set_flags_psh(tcp, false);
 
 			payload = tcp_resize_payload(rem_tcp, rem_size);
 			if (!payload) {
