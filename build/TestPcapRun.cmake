@@ -10,7 +10,11 @@ if(EXE_OPTIONS)
 	string(REPLACE " " ";" EXE_OPTIONS ${EXE_OPTIONS})
 endif()
 
-if(VALGRIND)
+if(VALGRIND AND NOT "$ENV{QUICK}" STREQUAL "yes")
+	set(DO_VALGRIND 1)
+endif()
+
+if(DO_VALGRIND)
 	execute_process(COMMAND ${VALGRIND} --log-file=${DST}-valgrind.txt ${EXE} -d ${EXE_OPTIONS} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap
 		RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)
 else()
@@ -66,7 +70,7 @@ else()
 endif()
 
 # Memory leak
-if(VALGRIND)
+if(DO_VALGRIND)
 	message("")
 	message("-- Memory leak check")
 	execute_process(COMMAND gawk -f ${CTEST_MODULE_DIR}/CheckValgrind.awk ${DST}-valgrind.txt OUTPUT_VARIABLE VALGRIND_OUT)
