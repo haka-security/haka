@@ -13,6 +13,8 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <linux/if_ether.h>
+#include <arpa/inet.h>
 
 
 /* snapshot length - a value of 65535 is sufficient to get all
@@ -26,6 +28,7 @@ struct packet_module_state {
 	pcap_t                     *pd;
 	pcap_dumper_t              *pf;
 	size_t                      link_hdr_len;
+	int                         link_type;
 	struct pcap_packet         *sent_head;
 	struct pcap_packet         *sent_tail;
 };
@@ -125,7 +128,6 @@ static void cleanup_state(struct packet_module_state *state)
 
 static struct packet_module_state *init_state(int thread_id)
 {
-	int linktype;
 	struct packet_module_state *state;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
@@ -170,7 +172,7 @@ static struct packet_module_state *init_state(int thread_id)
 	}
 
 	/* Determine the datalink layer type. */
-	if ((linktype = pcap_datalink(state->pd)) < 0)
+	if ((state->link_type = pcap_datalink(state->pd)) < 0)
 	{
 		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(state->pd));
 		cleanup_state(state);
@@ -178,7 +180,7 @@ static struct packet_module_state *init_state(int thread_id)
 	}
 
 	/* Set the datalink layer header size. */
-	switch (linktype)
+	switch (state->link_type)
 	{
 	case DLT_NULL:
 		state->link_hdr_len = 4;
@@ -395,6 +397,30 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	gettimeofday(&packet->header.ts, NULL);
 	packet->state = state;
 	packet->captured = false;
+
+	switch (state->link_type)
+	{
+	case DLT_NULL:
+	case DLT_LINUX_SLL:
+	case DLT_SLIP:
+	case DLT_PPP:
+		/* TODO */
+		break;
+
+	case DLT_IPV4:
+		break;
+
+	case DLT_EN10MB:
+		{
+			struct ethhdr *eh = (struct ethhdr *)packet->data;
+			eh->h_proto = htons(ETH_P_IP);
+		}
+		break;
+
+	default:
+		assert(0);
+		break;
+	}
 
 	return (struct packet *)packet;
 }
