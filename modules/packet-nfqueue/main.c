@@ -725,6 +725,12 @@ static bool send_packet(struct packet *orig_pkt)
 	return ret;
 }
 
+static size_t get_mtu(struct packet *pkt)
+{
+	// TODO
+	return 1500;
+}
+
 
 struct packet_module HAKA_MODULE = {
 	module: {
@@ -750,5 +756,6 @@ struct packet_module HAKA_MODULE = {
 	release_packet:  packet_do_release,
 	packet_getstate: packet_getstate,
 	new_packet:      new_packet,
-	send_packet:     send_packet
+	send_packet:     send_packet,
+	get_mtu:         get_mtu
 };

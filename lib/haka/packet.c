@@ -249,6 +249,13 @@ enum packet_status packet_state(struct packet *pkt)
 	return packet_module->packet_getstate(pkt);
 }
 
+size_t packet_mtu(struct packet *pkt)
+{
+	assert(packet_module);
+	assert(pkt);
+	return packet_module->get_mtu(pkt);
+}
+
 void packet_set_mode(enum packet_mode mode)
 {
 	global_packet_mode = mode;

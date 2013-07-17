@@ -22,7 +22,7 @@
 
 struct lua_state_ext {
 	struct lua_state       state;
-	struct lua_state_ext   *next;
+	struct lua_state_ext  *next;
 };
 
 
@@ -129,7 +129,7 @@ static int lua_print(lua_State* L)
 #define MAX_FORMAT       (sizeof(FLAGS) + sizeof(LUA_INTFRMLEN) + 10)
 #define uchar(c)         ((unsigned char)(c))
 
-static void addquoted (lua_State *L, luaL_Buffer *b, int arg)
+static void addquoted(lua_State *L, luaL_Buffer *b, int arg)
 {
 	size_t l;
 	const char *s = luaL_checklstring(L, arg, &l);
@@ -154,7 +154,7 @@ static void addquoted (lua_State *L, luaL_Buffer *b, int arg)
 	luaL_addchar(b, '"');
 }
 
-static const char *scanformat (lua_State *L, const char *strfrmt, char *form)
+static const char *scanformat(lua_State *L, const char *strfrmt, char *form)
 {
 	const char *p = strfrmt;
 	while (*p != '\0' && strchr(FLAGS, *p) != NULL) p++;  /* skip flags */
@@ -176,7 +176,7 @@ static const char *scanformat (lua_State *L, const char *strfrmt, char *form)
 	return p;
 }
 
-static void addlenmod (char *form, const char *lenmod)
+static void addlenmod(char *form, const char *lenmod)
 {
 	size_t l = strlen(form);
 	size_t lm = strlen(lenmod);

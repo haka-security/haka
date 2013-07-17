@@ -51,6 +51,12 @@ struct ipv4 *ipv4_create(struct packet *packet)
 
 	packet_resize(packet, sizeof(struct ipv4_header));
 	ip->header = (struct ipv4_header*)(packet_data_modifiable(packet));
+	if (!ip->header) {
+		assert(check_error());
+		free(ip);
+		return NULL;
+	}
+
 	ip->modified = true;
 	ip->invalid_checksum = true;
 	ip->drop = false;

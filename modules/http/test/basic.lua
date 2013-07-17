@@ -13,13 +13,6 @@ haka.rule {
 }
 
 haka.rule {
-	hooks = { "ipv4-down" },
-	eval = function (self, pkt)
-		pkt.flags.df = false
-	end
-}
-
-haka.rule {
 	hooks = { "http-request" },
 	eval = function (self, http)
 		print("HTTP REQUEST")

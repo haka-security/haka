@@ -35,6 +35,7 @@ void               packet_drop(struct packet *pkt);
 void               packet_accept(struct packet *pkt);
 bool               packet_send(struct packet *pkt);
 int                packet_receive(struct packet **pkt);
+size_t             packet_mtu(struct packet *pkt);
 enum packet_status packet_state(struct packet *pkt);
 
 enum packet_mode {

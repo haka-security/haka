@@ -58,6 +58,12 @@ struct tcp *tcp_create(struct ipv4 *packet)
 
 	ipv4_resize_payload(packet, sizeof(struct tcp_header));
 	tcp->header = (struct tcp_header*)(ipv4_get_payload_modifiable(packet));
+	if (!tcp->header) {
+		assert(check_error());
+		free(tcp);
+		return NULL;
+	}
+
 	tcp->modified = true;
 	tcp->invalid_checksum = true;
 
@@ -72,12 +78,83 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 {
 	struct ipv4 *packet = tcp->packet;
 	if (packet) {
-		if (tcp->invalid_checksum || packet->invalid_checksum)
+		const size_t mtu = packet_mtu(packet->packet);
+
+		if (packet_mode() != MODE_PASSTHROUGH && packet_length(packet->packet) > mtu) {
+			size_t size, rem_size;
+			uint8 *payload;
+			struct packet *rem_pkt;
+			struct ipv4 *rem_ip;
+			struct tcp *rem_tcp;
+
+			rem_pkt = packet_new(0);
+			if (!rem_pkt) {
+				assert(check_error());
+				return NULL;
+			}
+
+			rem_ip = ipv4_create(rem_pkt);
+			if (!rem_ip) {
+				assert(check_error());
+				packet_release(rem_pkt);
+				return NULL;
+			}
+
+			ipv4_set_tos(rem_ip, ipv4_get_tos(packet));
+			ipv4_set_ttl(rem_ip, ipv4_get_ttl(packet));
+			ipv4_set_flags(rem_ip, ipv4_get_flags(packet));
+			ipv4_set_src(rem_ip, ipv4_get_src(packet));
+			ipv4_set_dst(rem_ip, ipv4_get_dst(packet));
+
+			rem_tcp = tcp_create(rem_ip);
+			if (!rem_tcp) {
+				assert(check_error());
+				ipv4_release(rem_ip);
+				return NULL;
+			}
+
+			size = mtu - ipv4_get_hdr_len(packet) - tcp_get_hdr_len(tcp);
+			rem_size = tcp_get_payload_length(tcp) - size;
+
+			tcp_set_srcport(rem_tcp, tcp_get_srcport(tcp));
+			tcp_set_dstport(rem_tcp, tcp_get_dstport(tcp));
+			tcp_set_window_size(rem_tcp, tcp_get_window_size(tcp));
+			tcp_set_urgent_pointer(rem_tcp, tcp_get_urgent_pointer(tcp));
+			tcp_set_flags(rem_tcp, tcp_get_flags(tcp));
+			tcp_set_seq(rem_tcp, tcp_get_seq(tcp) + size);
+			tcp_set_ack_seq(rem_tcp, tcp_get_ack_seq(tcp));
+
+			tcp_set_flags_ack(tcp, false);
+			tcp_set_ack_seq(tcp, 0);
+
+			payload = tcp_resize_payload(rem_tcp, rem_size);
+			if (!payload) {
+				assert(check_error());
+				tcp_release(rem_tcp);
+				return NULL;
+			}
+
+			memcpy(payload, tcp_get_payload(tcp) + size, rem_size);
+
+			tcp_resize_payload(tcp, size);
 			tcp_compute_checksum(tcp);
 
-		tcp->packet = NULL;
-		tcp->header = NULL;
-		return packet;
+			tcp->packet = rem_ip;
+			tcp->header = rem_tcp->header;
+			rem_tcp->packet = NULL;
+			rem_tcp->header = NULL;
+			tcp_release(rem_tcp);
+
+			return packet;
+		}
+		else {
+			if (tcp->invalid_checksum || packet->invalid_checksum)
+				tcp_compute_checksum(tcp);
+
+			tcp->packet = NULL;
+			tcp->header = NULL;
+			return packet;
+		}
 	}
 	else {
 		return NULL;
