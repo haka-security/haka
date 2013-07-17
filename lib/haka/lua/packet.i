@@ -69,6 +69,7 @@ struct packet {
 			packet_data_modifiable($self)[index] = value;
 		}
 
+		void resize(int size);
 		void drop();
 		void accept();
 		void send();
@@ -91,7 +92,7 @@ enum packet_mode packet_mode();
 
 %rename(new) packet_new;
 %newobject packet_new;
-struct packet *packet_new(int size);
+struct packet *packet_new(int size = 0);
 
 %{
 size_t packet_length_get(struct packet *pkt) {

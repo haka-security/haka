@@ -218,6 +218,11 @@ struct ipv4_payload {
 			}
 			ipv4_get_payload_modifiable((struct ipv4 *)$self)[index] = value;
 		}
+
+		void resize(int size)
+		{
+			ipv4_resize_payload((struct ipv4 *)$self, size);
+		}
 	}
 };
 
@@ -261,6 +266,11 @@ struct ipv4 {
 			ipv4_action_drop($self);
 		}
 
+		void send()
+		{
+			ipv4_action_send($self);
+		}
+
 		bool valid();
 		struct packet *forge();
 	}
@@ -269,6 +279,10 @@ struct ipv4 {
 %rename(dissect) ipv4_dissect;
 %newobject ipv4_dissect;
 struct ipv4 *ipv4_dissect(struct packet *DISOWN_SUCCESS_ONLY);
+
+%rename(create) ipv4_create;
+%newobject ipv4_create;
+struct ipv4 *ipv4_create(struct packet *DISOWN_SUCCESS_ONLY);
 
 %rename(register_proto) ipv4_register_proto_dissector;
 void ipv4_register_proto_dissector(int proto, const char *dissector);

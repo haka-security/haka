@@ -560,21 +560,26 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
 	if (pkt->data) {
-		/* Convert verdict to netfilter */
-		int verdict;
-		switch (result) {
-		case FILTER_ACCEPT: verdict = NF_ACCEPT; break;
-		case FILTER_DROP:   verdict = NF_DROP; break;
-		default:
-			message(HAKA_LOG_DEBUG, MODULE_NAME, L"unknown verdict");
-			verdict = NF_DROP;
-			break;
-		}
-
 		if (pkt->id == -1) {
-			ret = socket_send_packet(pkt->state->send_mark_fd, pkt->data, pkt->length);
+			if (result == FILTER_ACCEPT) {
+				ret = socket_send_packet(pkt->state->send_mark_fd, pkt->data, pkt->length);
+			}
+			else {
+				ret = 0;
+			}
 		}
 		else {
+			/* Convert verdict to netfilter */
+			int verdict;
+			switch (result) {
+			case FILTER_ACCEPT: verdict = NF_ACCEPT; break;
+			case FILTER_DROP:   verdict = NF_DROP; break;
+			default:
+				message(HAKA_LOG_DEBUG, MODULE_NAME, L"unknown verdict");
+				verdict = NF_DROP;
+				break;
+			}
+
 			if (pkt->modified)
 				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, pkt->length, pkt->data);
 			else
@@ -635,6 +640,7 @@ static int packet_do_resize(struct packet *orig_pkt, size_t size)
 	}
 
 	memcpy(new_data, pkt->data, copy_size);
+	memset(new_data + copy_size, 0, size - copy_size);
 
 	free(pkt->data);
 	pkt->data = new_data;

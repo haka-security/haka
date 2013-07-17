@@ -45,6 +45,29 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	return tcp;
 }
 
+struct tcp *tcp_create(struct ipv4 *packet)
+{
+	struct tcp *tcp = malloc(sizeof(struct tcp));
+	if (!tcp) {
+		error(L"Failed to allocate memory");
+		return NULL;
+	}
+
+	lua_object_init(&tcp->lua_object);
+	tcp->packet = packet;
+
+	ipv4_resize_payload(packet, sizeof(struct tcp_header));
+	tcp->header = (struct tcp_header*)(ipv4_get_payload_modifiable(packet));
+	tcp->modified = true;
+	tcp->invalid_checksum = true;
+
+	ipv4_set_proto(packet, TCP_PROTO);
+	tcp_set_checksum(tcp, 0);
+	tcp_set_hdr_len(tcp, sizeof(struct tcp_header));
+
+	return tcp;
+}
+
 struct ipv4 *tcp_forge(struct tcp *tcp)
 {
 	struct ipv4 *packet = tcp->packet;
@@ -182,6 +205,17 @@ void tcp_action_drop(struct tcp *tcp)
 {
 	TCP_CHECK(tcp);
 	ipv4_action_drop(tcp->packet);
+}
+
+void tcp_action_send(struct tcp *tcp)
+{
+	struct ipv4 *packet;
+
+	TCP_CHECK(tcp);
+
+	while ((packet = tcp_forge(tcp))) {
+		ipv4_action_send(packet);
+	}
 }
 
 bool tcp_valid(struct tcp *tcp)

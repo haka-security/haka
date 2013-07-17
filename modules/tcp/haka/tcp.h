@@ -65,6 +65,7 @@ struct tcp {
 };
 
 struct tcp *tcp_dissect(struct ipv4 *packet);
+struct tcp *tcp_create(struct ipv4 *packet);
 struct ipv4 *tcp_forge(struct tcp *packet);
 void tcp_release(struct tcp *packet);
 int tcp_pre_modify(struct tcp *packet);
@@ -75,6 +76,7 @@ uint8 *tcp_get_payload_modifiable(struct tcp *packet);
 size_t tcp_get_payload_length(const struct tcp *packet);
 uint8 *tcp_resize_payload(struct tcp *packet, size_t size);
 void tcp_action_drop(struct tcp *packet);
+void tcp_action_send(struct tcp *packet);
 bool tcp_valid(struct tcp *packet);
 
 

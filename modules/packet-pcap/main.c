@@ -320,6 +320,7 @@ static int packet_do_resize(struct packet *orig_pkt, size_t size)
 	}
 
 	memcpy(new_data, pkt->data, copy_size);
+	memset(new_data + copy_size, 0, new_size - copy_size);
 
 	free(pkt->data);
 	pkt->data = new_data;

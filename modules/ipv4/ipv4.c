@@ -35,6 +35,34 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	return ip;
 }
 
+struct ipv4 *ipv4_create(struct packet *packet)
+{
+	struct ipv4 *ip = NULL;
+
+	assert(packet);
+
+	ip = malloc(sizeof(struct ipv4));
+	if (!ip) {
+		return NULL;
+	}
+
+	lua_object_init(&ip->lua_object);
+	ip->packet = packet;
+
+	packet_resize(packet, sizeof(struct ipv4_header));
+	ip->header = (struct ipv4_header*)(packet_data_modifiable(packet));
+	ip->modified = true;
+	ip->invalid_checksum = true;
+	ip->drop = false;
+
+	ipv4_set_version(ip, 4);
+	ipv4_set_checksum(ip, 0);
+	ipv4_set_len(ip, sizeof(struct ipv4_header));
+	ipv4_set_hdr_len(ip, sizeof(struct ipv4_header));
+
+	return ip;
+}
+
 struct packet *ipv4_forge(struct ipv4 *ip)
 {
 	struct packet *packet = ip->packet;
@@ -219,7 +247,19 @@ static FINI void ipv4_dissector_cleanup()
 
 void ipv4_action_drop(struct ipv4 *ip)
 {
+	IPV4_CHECK(ip);
 	ip->drop = true;
+}
+
+void ipv4_action_send(struct ipv4 *ip)
+{
+	struct packet *packet;
+
+	IPV4_CHECK(ip);
+
+	while ((packet = ipv4_forge(ip))) {
+		packet_send(packet);
+	}
 }
 
 bool ipv4_valid(struct ipv4 *ip)

@@ -59,6 +59,7 @@ struct ipv4 {
 };
 
 struct ipv4 *ipv4_dissect(struct packet *packet);
+struct ipv4 *ipv4_create(struct packet *packet);
 struct packet *ipv4_forge(struct ipv4 *ip);
 void ipv4_release(struct ipv4 *ip);
 int ipv4_pre_modify(struct ipv4 *ip);
@@ -73,6 +74,7 @@ uint8 *ipv4_resize_payload(struct ipv4 *ip, size_t size);
 const char *ipv4_get_proto_dissector(struct ipv4 *ip);
 void ipv4_register_proto_dissector(uint8 proto, const char *dissector);
 void ipv4_action_drop(struct ipv4 *ip);
+void ipv4_action_send(struct ipv4 *ip);
 bool ipv4_valid(struct ipv4 *ip);
 
 

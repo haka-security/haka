@@ -70,6 +70,11 @@ struct tcp_payload {
 			}
 			tcp_get_payload_modifiable((struct tcp *)$self)[index] = value;
 		}
+
+		void resize(int size)
+		{
+			tcp_resize_payload((struct tcp *)$self, size);
+		}
 	}
 };
 
@@ -157,6 +162,11 @@ struct tcp {
 			tcp_action_drop($self);
 		}
 
+		void send()
+		{
+			tcp_action_send($self);
+		}
+
 		bool valid();
 	}
 };
@@ -194,6 +204,10 @@ struct tcp_connection {
 %rename(dissect) tcp_dissect;
 %newobject tcp_dissect;
 struct tcp *tcp_dissect(struct ipv4 *DISOWN_SUCCESS_ONLY);
+
+%rename(create) tcp_create;
+%newobject tcp_create;
+struct tcp *tcp_create(struct ipv4 *DISOWN_SUCCESS_ONLY);
 
 %{
 
