@@ -1,8 +1,4 @@
 
-find_package(Editline REQUIRED)
-
-include_directories(. ${EDITLINE_INCLUDE_DIR})
-
 find_package(SWIG REQUIRED)
 include(UseSWIG)
 swig_add_module(libluadebug lua STATIC
@@ -15,6 +11,9 @@ swig_add_module(libluadebug lua STATIC
 )
 
 LUA_LINK(libluadebug)
+
+find_package(Editline REQUIRED)
+include_directories(. ${EDITLINE_INCLUDE_DIR})
 target_link_libraries(libluadebug ${EDITLINE_LIBRARY})
 
 # The static library is going to be used in a shared library
