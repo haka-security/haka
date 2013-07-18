@@ -42,6 +42,11 @@ struct ipv4_addr {
 			}
 
 			ret->addr = ipv4_addr_from_string(str);
+			if (check_error()) {
+				free(ret);
+				return NULL;
+			}
+
 			return ret;
 		}
 
@@ -56,6 +61,11 @@ struct ipv4_addr {
 			}
 
 			ret->addr = ipv4_addr_from_bytes(a, b, c, d);
+			if (check_error()) {
+				free(ret);
+				return NULL;
+			}
+
 			return ret;
 		}
 
@@ -105,6 +115,11 @@ struct ipv4_network {
 			}
 
 			ret->net = ipv4_network_from_string(str);
+			if (check_error()) {
+				free(ret);
+				return NULL;
+			}
+
 			return ret;
 		}
 
