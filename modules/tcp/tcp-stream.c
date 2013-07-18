@@ -721,11 +721,10 @@ static uint64 tcp_remap_seq(uint32 seq, uint64 ref)
 {
 	uint64 ret = seq + ((ref>>32)<<32);
 
-	if (ret < ref) {
+	if (ret + (1LL<<31) < ref) {
 		ret += (1ULL<<32);
 	}
 
-	assert(ret >= ref);
 	return ret;
 }
 
