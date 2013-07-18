@@ -822,13 +822,15 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 
 void tcp_stream_seq(struct stream *s, struct tcp *tcp)
 {
-	uint32 ack;
+	if (packet_mode() == MODE_NORMAL) {
+		uint32 ack;
 
-	TCP_STREAM(s);
+		TCP_STREAM(s);
 
-	ack = tcp_get_seq(tcp) + tcp_s->first_offset_seq;
-	if (ack != tcp_get_seq(tcp)) {
-		tcp_set_seq(tcp, ack);
+		ack = tcp_get_seq(tcp) + tcp_s->first_offset_seq;
+		if (ack != tcp_get_seq(tcp)) {
+			tcp_set_seq(tcp, ack);
+		}
 	}
 }
 
@@ -887,8 +889,7 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		const bool keepdata = !tcp_stream_position_chunk_is_before(read_pos, chunk);
 
 		tcp = chunk->tcp;
-		assert(tcp);
-		assert(!chunk->data);
+		assert(tcp || chunk->data);
 
 		if (chunk->modifs) {
 			/*
@@ -898,6 +899,8 @@ struct tcp *tcp_stream_pop(struct stream *s)
 			struct tcp_stream_position pos;
 			uint8 *buffer, *payload;
 			UNUSED size_t size;
+
+			assert(tcp);
 
 			if (chunk->end_seq - chunk->start_seq > 0 && new_size == 0) {
 				tcp_action_drop(tcp);
@@ -939,7 +942,10 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		}
 
 		if (keepdata && !chunk->data) {
-			const size_t size = tcp_get_payload_length(chunk->tcp);
+			size_t size;
+			assert(tcp);
+
+			size = tcp_get_payload_length(tcp);
 
 			chunk->data = malloc(size);
 			if (!chunk->data) {
@@ -947,10 +953,12 @@ struct tcp *tcp_stream_pop(struct stream *s)
 				return NULL;
 			}
 
-			memcpy(chunk->data, tcp_get_payload(chunk->tcp), size);
+			memcpy(chunk->data, tcp_get_payload(tcp), size);
 		}
 
-		tcp_stream_seq(s, tcp);
+		if (tcp) {
+			tcp_stream_seq(s, tcp);
+		}
 
 		tcp_s->first_offset_seq += tcp_s->first->offset_seq;
 		tcp_s->first = list_next(tcp_s->first);
@@ -973,7 +981,32 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		chunk->tcp = NULL;
 
 		tcp_stream_chunk_release(chunk, false);
-		return tcp;
+
+		if (tcp) {
+			return tcp;
+		}
+	}
+
+	if (packet_mode() == MODE_PASSTHROUGH) {
+		/*
+		 * If no packet as been sent, send our last received packet.
+		 */
+		chunk = tcp_s->last;
+		if (chunk && chunk->tcp) {
+			tcp = chunk->tcp;
+			size_t size = tcp_get_payload_length(tcp);
+
+			chunk->data = malloc(size);
+			if (!chunk->data) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			memcpy(chunk->data, tcp_get_payload(tcp), size);
+
+			chunk->tcp = NULL;
+			return tcp;
+		}
 	}
 
 	return NULL;
@@ -981,44 +1014,46 @@ struct tcp *tcp_stream_pop(struct stream *s)
 
 void tcp_stream_ack(struct stream *s, struct tcp *tcp)
 {
-	uint64 ack = tcp_get_ack_seq(tcp);
-	uint64 seq, new_seq;
-	struct tcp_stream_chunk *iter;
-	TCP_STREAM(s);
+	if (packet_mode() == MODE_NORMAL) {
+		uint64 ack = tcp_get_ack_seq(tcp);
+		uint64 seq, new_seq;
+		struct tcp_stream_chunk *iter;
+		TCP_STREAM(s);
 
-	iter = tcp_s->sent;
-	if (!iter) {
-		return;
-	}
-
-	seq = tcp_s->sent_offset_seq + tcp_s->sent->start_seq;
-	ack = tcp_remap_seq(ack, seq);
-	ack -= tcp_s->start_seq;
-
-	new_seq = tcp_s->sent->start_seq;
-
-	while (iter && !iter->tcp) {
-		if (seq + (iter->end_seq - iter->start_seq) + iter->offset_seq > ack) {
-			break;
+		iter = tcp_s->sent;
+		if (!iter) {
+			return;
 		}
 
-		seq += (iter->end_seq - iter->start_seq) + iter->offset_seq;
-		new_seq = iter->end_seq;
-		if (ack <= seq) {
-			break;
+		seq = tcp_s->sent_offset_seq + tcp_s->sent->start_seq;
+		ack = tcp_remap_seq(ack, seq);
+		ack -= tcp_s->start_seq;
+
+		new_seq = tcp_s->sent->start_seq;
+
+		while (iter && !iter->tcp) {
+			if (seq + (iter->end_seq - iter->start_seq) + iter->offset_seq > ack) {
+				break;
+			}
+
+			seq += (iter->end_seq - iter->start_seq) + iter->offset_seq;
+			new_seq = iter->end_seq;
+			if (ack <= seq) {
+				break;
+			}
+
+			assert(!list_next(iter) || list_next(iter)->tcp || list_next(iter)->start_seq == iter->end_seq);
+
+			iter = list_next(iter);
 		}
 
-		assert(!list_next(iter) || list_next(iter)->tcp || list_next(iter)->start_seq == iter->end_seq);
+		/* Need to account for offset (case of the FIN for instance) */
+		new_seq += ack-seq;
+		new_seq += tcp_s->start_seq;
 
-		iter = list_next(iter);
-	}
-
-	/* Need to account for offset (case of the FIN for instance) */
-	new_seq += ack-seq;
-	new_seq += tcp_s->start_seq;
-
-	if (tcp_get_ack_seq(tcp) != new_seq) {
-		tcp_set_ack_seq(tcp, new_seq);
+		if (tcp_get_ack_seq(tcp) != new_seq) {
+			tcp_set_ack_seq(tcp, new_seq);
+		}
 	}
 }
 
