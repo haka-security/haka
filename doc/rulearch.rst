@@ -24,8 +24,8 @@ Rules
 Along with the dissector, the configuration can define rules to apply. Those rules are
 assigned to some `hooks`. A rule need the following fields:
 
-* A :lua:data:`hooks` member that contains a array of hook string name. 
-It will be used to install the rule on them.
+* A :lua:data:`hooks` member that contains a array of hook string name.
+  It will be used to install the rule on them.
 * A :lua:func:`rule.eval` function that is called to evaluate the rule.
 * All fields defined from the dissector can be used from the rule
 
