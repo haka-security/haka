@@ -959,7 +959,7 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		}
 
 		tcp_s->first_offset_seq += chunk->offset_seq;
-		tcp_s->last_seq = chunk->end_seq;
+		tcp_s->last_seq = chunk->end_seq + tcp_s->first_offset_seq;
 		tcp_s->first = list_next(tcp_s->first);
 
 		if (tcp_s->last == chunk) {
