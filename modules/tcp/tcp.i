@@ -87,6 +87,9 @@ LUA_OBJECT(struct stream);
 struct stream
 {
 	%extend {
+		%immutable;
+		unsigned int lastseq;
+
 		void init(unsigned int seq)
 		{
 			tcp_stream_init($self, seq);
@@ -271,6 +274,7 @@ TCP_FLAGS_GETSET(cwr);
 unsigned int tcp_flags_all_get(struct tcp_flags *flags) { return tcp_get_flags((struct tcp *)flags); }
 void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set_flags((struct tcp *)flags, v); }
 
+unsigned int stream_lastseq_get(struct stream *s) { return tcp_stream_lastseq(s); }
 
 %}
 

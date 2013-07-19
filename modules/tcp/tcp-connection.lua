@@ -1,35 +1,88 @@
 module("tcp-connection", package.seeall)
 
+
+local function forge_reset(conn, inv)
+	tcprst = haka.packet.new()
+	tcprst = ipv4.create(tcprst)
+
+	if inv then
+		tcprst.src = conn.dstip
+		tcprst.dst = conn.srcip
+	else
+		tcprst.src = conn.srcip
+		tcprst.dst = conn.dstip
+	end
+
+	tcprst.ttl = 64
+
+	tcprst = tcp.create(tcprst)
+	
+	if inv then
+		tcprst.srcport = conn.dstport
+		tcprst.dstport = conn.srcport
+	else
+		tcprst.srcport = conn.srcport
+		tcprst.dstport = conn.dstport
+	end
+
+	tcprst.seq = conn:stream(not inv).lastseq
+
+	tcprst.flags.rst = true
+
+	return tcprst
+end
+
 local function forge(self)
 	if not self.connection then
 		return nil
 	end
 
-	pkt = self.stream:pop()
-	if not pkt then
-		pkt = table.remove(self.connection.data._queue)
-		if pkt then
-			self.connection:stream(self.direction):seq(pkt)
+	if self.__reset ~= nil then
+		local pkt = forge_reset(self.connection, self.__reset==1)
+		self.__reset = self.__reset-1
+
+		if self.__reset == 0 then
+			self.connection:drop()
+			self.connection = nil
 		end
-	end
+
+		return pkt
+	else
+		local pkt = self.stream:pop()
+		if not pkt then
+			pkt = table.remove(self.connection.data._queue)
+			if pkt then
+				self.connection:stream(self.direction):seq(pkt)
+			end
+		end
+		
+		if pkt then
+			self.connection:stream(not self.direction):ack(pkt)
+		end
 	
-	if pkt then
-		self.connection:stream(not self.direction):ack(pkt)
-	end
+		if self.__drop then
+			if self.__droppkt and pkt then
+				pkt:drop()
+			end
+	
+			self.connection:drop()
+			self.connection = nil
+		elseif self.__close then
+			self.connection:close()
+			self.connection = nil
+		end
 
-	if self.__drop then
-		self.connection:drop()
-		self.connection = nil
-	elseif self.__close then
-		self.connection:close()
-		self.connection = nil
+		return pkt
 	end
-
-	return pkt
 end
 
 local function drop(self)
 	self.__drop = true
+	self.__droppkt = true
+end
+
+local function reset(self)
+	self.__reset = 2
 end
 
 local function dissect(pkt)
@@ -44,8 +97,7 @@ local function dissect(pkt)
 	end
 	newpkt.drop = drop
 	newpkt.forge = forge
-	newpkt.__close = false
-	newpkt.__drop = false
+	newpkt.reset = reset
 
 	if not newpkt.connection then
 		-- new connection

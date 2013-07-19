@@ -289,6 +289,9 @@ haka.dissector {
 			http.drop = function (self)
 				return self._tcp_stream:drop()
 			end
+			http.reset = function (self)
+				return self._tcp_stream:reset()
+			end
 			http.forge = forge
 			http._state = 0
 

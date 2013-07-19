@@ -91,6 +91,7 @@ struct tcp_stream_mark {
 struct tcp_stream {
 	struct stream                   stream;
 	uint32                          start_seq;
+	uint64                          last_seq;
 
 	struct tcp_stream_chunk        *begin;
 	struct tcp_stream_chunk        *end;
@@ -714,6 +715,7 @@ void tcp_stream_init(struct stream *s, uint32 seq)
 	TCP_STREAM(s);
 
 	tcp_s->start_seq = seq;
+	tcp_s->last_seq = 0;
 }
 
 static uint64 tcp_remap_seq(uint32 seq, uint64 ref)
@@ -830,6 +832,13 @@ void tcp_stream_seq(struct stream *s, struct tcp *tcp)
 			tcp_set_seq(tcp, ack);
 		}
 	}
+}
+
+uint32 tcp_stream_lastseq(struct stream *s)
+{
+	TCP_STREAM(s);
+
+	return tcp_s->start_seq + tcp_s->last_seq;
 }
 
 struct tcp *tcp_stream_pop(struct stream *s)
@@ -949,7 +958,8 @@ struct tcp *tcp_stream_pop(struct stream *s)
 			tcp_stream_seq(s, tcp);
 		}
 
-		tcp_s->first_offset_seq += tcp_s->first->offset_seq;
+		tcp_s->first_offset_seq += chunk->offset_seq;
+		tcp_s->last_seq = chunk->end_seq;
 		tcp_s->first = list_next(tcp_s->first);
 
 		if (tcp_s->last == chunk) {
