@@ -29,4 +29,3 @@ haka.rule {
 		end
 	end
 }
-

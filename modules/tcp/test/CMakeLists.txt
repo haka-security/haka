@@ -22,6 +22,8 @@ TEST_PCAP(tcp streammark)
 TEST_PCAP(tcp streamread-passthrough OPTIONS --pass-through)
 TEST_PCAP(tcp streammodif-passthrough OPTIONS --pass-through)
 TEST_PCAP(tcp streammark-passthrough OPTIONS --pass-through)
+TEST_PCAP(tcp stream-rst)
+TEST_PCAP(tcp streammodif-rst)
 
 TEST_PCAP(tcp create)
 
