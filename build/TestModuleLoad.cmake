@@ -1,5 +1,7 @@
 
 macro(TEST_MODULE_LOAD name)
+	configure_file(${CTEST_MODULE_DIR}/TestModuleLoad.lua.in TestModuleLoad-${name}.lua)
+
 	add_test(NAME ${name}-load
 		COMMAND ${CMAKE_COMMAND}
 		-DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
@@ -7,6 +9,7 @@ macro(TEST_MODULE_LOAD name)
 		-DEXE=$<TARGET_FILE:haka>
 		-DMODULE=${name}
 		-DCMAKE_TEMP_DIR=${CMAKE_BINARY_DIR}/Testing/Temporary
+		-DLUASCRIPT=TestModuleLoad-${name}.lua
 		-P ${CTEST_MODULE_DIR}/TestModuleLoadRun.cmake)
 endmacro(TEST_MODULE_LOAD)
 
