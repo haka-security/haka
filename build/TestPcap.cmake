@@ -27,16 +27,8 @@ endif(NOT GAWK_COMMAND)
 find_program(VALGRIND_COMMAND valgrind)
 
 macro(TEST_PCAP module name)
-	set(cur "")
-	set(TEST_PCAP_OPTIONS "")
-
-	foreach(it ${ARGN})
-		if(it STREQUAL "OPTIONS")
-			set(cur "TEST_PCAP_OPTIONS")
-		elseif(cur)
-			set(${cur} "${${cur}} ${it}")
-		endif()
-	endforeach(it ${ARGN})
+	set(oneValueArgs OPTIONS)
+	cmake_parse_arguments(TEST_PCAP "" "${oneValueArgs}" "" ${ARGN})
 
 	add_test(NAME ${module}-${name}-pcap
 		COMMAND ${CMAKE_COMMAND}

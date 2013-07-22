@@ -16,7 +16,7 @@ local function forge_reset(conn, inv)
 	tcprst.ttl = 64
 
 	tcprst = tcp.create(tcprst)
-	
+
 	if inv then
 		tcprst.srcport = conn.dstport
 		tcprst.dstport = conn.srcport
@@ -55,16 +55,16 @@ local function forge(self)
 				self.connection:stream(self.direction):seq(pkt)
 			end
 		end
-		
+
 		if pkt then
 			self.connection:stream(not self.direction):ack(pkt)
 		end
-	
+
 		if self.__drop then
 			if self.__droppkt and pkt then
 				pkt:drop()
 			end
-	
+
 			self.connection:drop()
 			self.connection = nil
 		elseif self.__close then
@@ -142,7 +142,7 @@ local function dissect(pkt)
 		if pkt.flags.ack then
 			newpkt.connection.data._state = newpkt.connection.data._state + 1
 		end
-	
+
 		if newpkt.connection.data._state >= 3 then
 			newpkt.__close = true
 		end

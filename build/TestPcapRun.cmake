@@ -6,10 +6,6 @@ set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/src/lua/?.lua)
 
 message("Executing LUA_PATH=\"${PROJECT_SOURCE_DIR}/src/lua/?.lua\" ${EXE} -d ${EXE_OPTIONS} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap")
 
-if(EXE_OPTIONS)
-	string(REPLACE " " ";" EXE_OPTIONS ${EXE_OPTIONS})
-endif()
-
 if(VALGRIND AND NOT "$ENV{QUICK}" STREQUAL "yes")
 	set(DO_VALGRIND 1)
 endif()
@@ -77,13 +73,13 @@ if(DO_VALGRIND)
 	list(GET VALGRIND_OUT 0 VALGRIND_LEAK)
 	list(GET VALGRIND_OUT 1 VALGRIND_REACHABLE)
 
-	if (VALGRIND_LEAK GREATER 0)
+	if(VALGRIND_LEAK GREATER 0)
 		message(FATAL_ERROR "Memory leak detected: ${VALGRIND_LEAK} lost bytes")
 	endif()
 
-	if (VALGRIND_REACHABLE GREATER 32)
+	if(VALGRIND_REACHABLE GREATER 32)
 		message(FATAL_ERROR "Memory leak detected: ${VALGRIND_REACHABLE} reachable bytes")
 	endif()
-	
+
 	message("No leak detected")
 endif()

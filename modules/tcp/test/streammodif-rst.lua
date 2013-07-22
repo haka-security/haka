@@ -14,7 +14,7 @@ haka.rule {
 			buf2[2] = 0x61
 			buf2[3] = 0x6b
 			buf2[4] = 0x61
-	
+
 			while pkt.stream:available() > 0 do
 				pkt.stream:insert(buf2)
 				local buf = pkt.stream:read(10)
