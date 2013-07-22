@@ -35,6 +35,10 @@ IPv4
 
     Forge packets out of an IPv4 packet.
 
+.. c:function:: struct ipv4 *ipv4_create(struct packet *packet)
+
+    Create a new IPv4 packet on top of the given raw packet.
+
 .. c:function:: void ipv4_release(struct ipv4 *ip)
 
     Release IPv4 structure memory.

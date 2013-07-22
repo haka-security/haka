@@ -60,6 +60,9 @@ Dissector
 
 This module register the `ipv4` dissector.
 
+.. lua:function:: create(raw)
+
+    Create a new IPv4 packet on top of the given raw packet.
 
 .. lua:class:: ipv4
 
@@ -111,6 +114,10 @@ This module register the `ipv4` dissector.
     .. lua:method:: compute_checksum()
 
         Recompute the checksum and set the resulting value in the packet.
+
+    .. lua:method:: drop()
+
+        Drop the IPv4 packet.
 
 Example
 -------

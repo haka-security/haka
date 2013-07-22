@@ -34,6 +34,10 @@ TCP
 
     Forge IPv4 packet from TCP.
 
+.. c:function:: struct tcp *tcp_create(struct ipv4 *packet)
+
+    Create a new TCP packet on top of the given IPv4.
+
 .. c:function:: void tcp_release(struct tcp *packet)
 
     Release TCP structure memory allocation.

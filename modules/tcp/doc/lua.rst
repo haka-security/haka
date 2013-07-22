@@ -58,6 +58,10 @@ Dissectors
 TCP
 ^^^
 
+.. lua:function:: create(ip)
+
+    Create a new TCP packet on top of the given IP packet.
+
 .. lua:class:: tcp
 
     Dissector data for a TCP packet. This dissector is state-less. It will only parse the
@@ -127,6 +131,10 @@ TCP
             * A boolean containing the direction of this packet in the connection.
             * A boolean indicating if the packet is part of a dropped connection.
 
+    .. lua:method:: drop()
+
+        Drop the TCP packet.
+
 
 TCP connection
 ^^^^^^^^^^^^^^
@@ -151,6 +159,16 @@ TCP connection
     .. lua:data:: direction
 
         Contains the direction of the current packet.
+
+    .. lua:method:: drop()
+
+        Drop the TCP connection. All future packets that belong to this connection will be
+        silently dropped.
+
+    .. lua:method:: reset()
+
+        Reset the TCP connection. A RST packet will be sent to both end and all future packet
+        that belong to this connection will be silently dropped.
 
 Example
 ^^^^^^^
