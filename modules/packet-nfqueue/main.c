@@ -282,7 +282,7 @@ static bool socket_send_packet(int fd, const void *pkt, size_t size)
 
 	sin.sin_family = AF_INET;
 	sin.sin_port = iphdr->protocol;
-	sin.sin_addr.s_addr = iphdr->saddr;
+	sin.sin_addr.s_addr = iphdr->daddr;
 
 	if (sendto(fd, pkt, size, 0, (struct sockaddr*)&sin, sizeof(sin)) == (size_t)-1) {
 		error(L"send failed: %s", errno_error(errno));
