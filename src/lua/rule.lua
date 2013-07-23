@@ -160,8 +160,13 @@ local function get_dissector(name)
 end
 
 function haka.rule_hook(name, pkt)
-	eval_rules(name, pkt)
-	return not pkt:valid()
+	local ok, msg = xpcall(function () eval_rules(name, pkt) end, debug.format_error)
+	if not ok then
+		haka.log.error("core", msg)
+		pkt:drop()
+	end
+
+	return pkt:valid()
 end
 
 function haka.filter(pkt)

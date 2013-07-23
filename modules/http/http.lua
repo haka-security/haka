@@ -261,7 +261,7 @@ local function parse(http, context, f, name, next_state)
 	if coroutine.status(context._co) == "dead" then
 		if not context._invalid then
 			http._state = next_state
-			if haka.rule_hook("http-".. name, http) then
+			if not haka.rule_hook("http-".. name, http) then
 				return nil
 			end
 
