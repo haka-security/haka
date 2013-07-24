@@ -263,11 +263,14 @@ static bool tcp_stream_position_advance(struct tcp_stream *tcp_s,
 			int seq_offset = tcp_s->first_offset_seq;
 
 			while (chunk && chunk->start_seq != pos->chunk_seq) {
+				assert(chunk->start_seq < pos->chunk_seq);
 				seq_offset += chunk->offset_seq;
 				chunk = list_next(chunk);
 			}
 
-			assert(chunk);
+			if (!chunk) {
+				return false;
+			}
 
 			pos->chunk = chunk;
 			pos->chunk_offset = 0;
