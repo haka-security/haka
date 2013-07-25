@@ -556,10 +556,10 @@ static bool list_source(struct luadebug_debugger *session, const char *option)
 			const int line = atoi(option);
 			session->list_line = line - LIST_DEFAULT_LINE/2;
 		}
+	}
 
-		if (session->list_line < 0) {
-			session->list_line = 0;
-		}
+	if (session->list_line < 0) {
+		session->list_line = 0;
 	}
 
 	dump_source(session, &session->frame, session->list_line, session->list_line + LIST_DEFAULT_LINE);
@@ -741,7 +741,7 @@ static bool process_command(struct luadebug_debugger *session, const char *line,
 	}
 
 	if (!valid_line && strlen(line) == 0) {
-		HIST_ENTRY *history = previous_history();
+		HIST_ENTRY *history = current_history();
 		if (history && strlen(history->line) > 0) {
 			cont = process_command(session, history->line, false);
 		}

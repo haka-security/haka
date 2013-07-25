@@ -89,7 +89,7 @@ struct luadebug_debugger {
 			end
 		elseif type == "userdata" then
 			local meta = getmetatable(obj)
-			if meta then
+			if meta and meta[".type"] and meta[".get"]then
 				title = table.concat({title, color.cyan, color.bold, "userdata", color.clear})
 
 				if meta[".type"] then
