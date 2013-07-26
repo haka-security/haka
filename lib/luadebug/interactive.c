@@ -89,6 +89,7 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 {
 	char *line, *full_line = NULL;
 	bool multiline = false;
+	bool stop = false;
 
 	mutex_lock(&active_session_mutex);
 
@@ -100,8 +101,9 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 	session->env_index = capture_env(session->L, 1);
 	assert(session->env_index != -1);
 
-	while ((line = readline(multiline ? session->prompt_multi : session->prompt_single))) {
+	while (!stop && (line = readline(multiline ? session->prompt_multi : session->prompt_single))) {
 		int status = -1;
+		bool is_return = false;
 		char *current_line;
 
 		if (multiline) {
@@ -120,7 +122,14 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 			current_line = line;
 		}
 
-		if (!multiline) {
+		while (*current_line == ' ' || *current_line == '\t') {
+			++current_line;
+		}
+
+		is_return = (strncmp(current_line, "return ", 7) == 0) ||
+				(strcmp(current_line, "return") == 0);
+
+		if (!multiline && !is_return) {
 			char *return_line = malloc(7 + strlen(current_line) + 1);
 			strcpy(return_line, "return ");
 			strcpy(return_line+7, current_line);
@@ -169,6 +178,10 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 		else {
 			execute_print(session->L);
 			lua_pop(session->L, 1);
+
+			if (is_return) {
+				stop = true;
+			}
 		}
 
 		if (!multiline) {
@@ -181,6 +194,8 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 
 		free(line);
 	}
+
+	free(full_line);
 
 	printf("\n");
 
