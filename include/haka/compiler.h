@@ -4,6 +4,8 @@
 
 #define INLINE static inline
 
+#define PACKED __attribute__((packed))
+
 #define INIT __attribute__((constructor(32767)))
 #define INIT_P(p) __attribute__((constructor(p)))
 #define FINI __attribute__((destructor(32767)))

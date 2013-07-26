@@ -27,7 +27,6 @@ struct pcap_packet;
 struct packet_module_state {
 	pcap_t                     *pd;
 	pcap_dumper_t              *pf;
-	size_t                      link_hdr_len;
 	int                         link_type;
 	struct pcap_packet         *sent_head;
 	struct pcap_packet         *sent_tail;
@@ -41,6 +40,18 @@ struct pcap_packet {
 	u_char                     *data;
 	bool                        captured;
 };
+
+/*
+ * Packet headers
+ */
+
+struct linux_sll_header {
+	uint16     type;
+	uint16     arphdr_type;
+	uint16     link_layer_length;
+	uint64     link_layer_address;
+	uint16     protocol;
+} PACKED;
 
 
 /* Init parameters */
@@ -179,30 +190,18 @@ static struct packet_module_state *init_state(int thread_id)
 		return NULL;
 	}
 
-	/* Set the datalink layer header size. */
+	/* Check for supported datalink layer. */
 	switch (state->link_type)
 	{
-	case DLT_NULL:
-		state->link_hdr_len = 4;
-		break;
-
-	case DLT_LINUX_SLL:
-		state->link_hdr_len = 16;
-		break;
-
 	case DLT_EN10MB:
-		state->link_hdr_len = 14;
+	case DLT_NULL:
+	case DLT_LINUX_SLL:
+	case DLT_IPV4:
+	case DLT_RAW:
 		break;
 
 	case DLT_SLIP:
 	case DLT_PPP:
-		state->link_hdr_len = 24;
-		break;
-
-	case DLT_IPV4:
-		state->link_hdr_len = 0;
-		break;
-
 	default:
 		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", "unsupported data link");
 		cleanup_state(state);
@@ -290,30 +289,105 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	}
 }
 
+static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
+{
+	switch (pkt->state->link_type)
+	{
+	case DLT_LINUX_SLL:
+		{
+			struct linux_sll_header *eh = (struct linux_sll_header *)pkt->data;
+			*data_offset = sizeof(struct linux_sll_header);
+			if (eh) return ntohs(eh->protocol);
+			else return 0;
+		}
+		break;
+
+	case DLT_EN10MB:
+		{
+			struct ethhdr *eh = (struct ethhdr *)pkt->data;
+			*data_offset = sizeof(struct ethhdr);
+			if (eh) return ntohs(eh->h_proto);
+			else return 0;
+		}
+		break;
+
+	case DLT_IPV4:
+	case DLT_RAW:
+		*data_offset = 0;
+		return ETH_P_IP;
+
+		{
+			*data_offset = 16;
+			struct ethhdr *eh = (struct ethhdr *)pkt->data;
+			*data_offset = sizeof(struct ethhdr);
+			if (eh) return ntohs(eh->h_proto);
+			else return 0;
+		}
+		break;
+
+	case DLT_NULL:
+		*data_offset = 4;
+		if (*(uint32 *)pkt->data == PF_INET) {
+			return ETH_P_IP;
+		}
+		else {
+			return -1;
+		}
+		break;
+
+	default:
+		assert(0);
+		return -1;
+	}
+}
+
 static size_t packet_get_length(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	return pkt->header.caplen - pkt->state->link_hdr_len;
+	size_t data_offset;
+	get_protocol(pkt, &data_offset);
+	return pkt->header.caplen - data_offset;
 }
 
 static const uint8 *packet_get_data(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	return (pkt->data + pkt->state->link_hdr_len);
+	size_t data_offset;
+	get_protocol(pkt, &data_offset);
+	return (pkt->data + data_offset);
 }
 
 static uint8 *packet_modifiable(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	return (pkt->data + pkt->state->link_hdr_len);
+	size_t data_offset;
+	get_protocol(pkt, &data_offset);
+	return (pkt->data + data_offset);
+}
+
+static const char *packet_get_dissector(struct packet *orig_pkt)
+{
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+	size_t data_offset;
+	switch (get_protocol(pkt, &data_offset)) {
+	case ETH_P_IP:
+		return "ipv4";
+
+	default:
+		return NULL;
+	}
 }
 
 static int packet_do_resize(struct packet *orig_pkt, size_t size)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 	u_char *new_data;
-	const size_t new_size = size + pkt->state->link_hdr_len;
-	const size_t copy_size = MIN(new_size, pkt->header.caplen);
+	size_t new_size, copy_size;
+	size_t data_offset;
+
+	get_protocol(pkt, &data_offset);
+	new_size = size + data_offset;
+	copy_size = MIN(new_size, pkt->header.caplen);
 
 	new_data = malloc(new_size);
 	if (!new_data) {
@@ -335,11 +409,6 @@ static uint64 packet_get_id(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 	return (((uint64)pkt->header.ts.tv_sec) << 32) + pkt->header.ts.tv_usec;
-}
-
-static const char *packet_get_dissector(struct packet *pkt)
-{
-	return "ipv4";
 }
 
 static void packet_do_release(struct packet *orig_pkt)
@@ -371,6 +440,7 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 
 static struct packet *new_packet(struct packet_module_state *state, size_t size)
 {
+	size_t data_offset;
 	struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
 	if (!packet) {
 		error(L"Memory error");
@@ -379,7 +449,13 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 	memset(packet, 0, sizeof(struct pcap_packet));
 
-	size += state->link_hdr_len;
+	list_init(packet);
+	gettimeofday(&packet->header.ts, NULL);
+	packet->state = state;
+	packet->captured = false;
+
+	get_protocol(packet, &data_offset);
+	size += data_offset;
 
 	packet->data = malloc(size);
 	if (!packet->data) {
@@ -390,24 +466,24 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 	memset(packet->data, 0, size);
 
-	list_init(packet);
-
 	packet->header.len = size;
 	packet->header.caplen = size;
-	gettimeofday(&packet->header.ts, NULL);
-	packet->state = state;
-	packet->captured = false;
 
 	switch (state->link_type)
 	{
-	case DLT_NULL:
-	case DLT_LINUX_SLL:
-	case DLT_SLIP:
-	case DLT_PPP:
-		/* TODO */
+	case DLT_IPV4:
+	case DLT_RAW:
 		break;
 
-	case DLT_IPV4:
+	case DLT_NULL:
+		*(uint32 *)packet->data = PF_INET;
+		break;
+
+	case DLT_LINUX_SLL:
+		{
+			struct linux_sll_header *eh = (struct linux_sll_header *)packet->data;
+			eh->protocol = htons(ETH_P_IP);
+		}
 		break;
 
 	case DLT_EN10MB:
