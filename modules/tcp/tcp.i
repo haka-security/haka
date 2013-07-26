@@ -8,7 +8,7 @@
 #include <haka/log.h>
 
 struct tcp_payload;
-
+struct tcp_flags;
 
 %}
 
@@ -37,6 +37,8 @@ struct tcp_flags {
 		unsigned char all;
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(tcp_flags);
 
 LUA_OBJECT_CAST(struct tcp_payload, struct tcp);
 
@@ -77,6 +79,8 @@ struct tcp_payload {
 		}
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(tcp_payload);
 
 LUA_OBJECT(struct tcp);
 LUA_OBJECT(struct tcp_connection);
@@ -174,6 +178,7 @@ struct tcp {
 	}
 };
 
+STRUCT_UNKNOWN_KEY_ERROR(tcp);
 
 %newobject tcp_connection::srcip;
 %newobject tcp_connection::dstip;
@@ -203,6 +208,8 @@ struct tcp_connection {
 		}
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(tcp_connection);
 
 %rename(dissect) tcp_dissect;
 %newobject tcp_dissect;

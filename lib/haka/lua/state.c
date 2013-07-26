@@ -74,7 +74,7 @@ int lua_state_error_formater(lua_State *L)
 /*
  * Redefine the luaL_tolstring (taken from Lua 5.2)
  */
-static const char *luaL_tolstring(lua_State* L, int idx, size_t *len)
+const char *lua_converttostring(struct lua_State *L, int idx, size_t *len)
 {
 	if (!luaL_callmeta(L, idx, "__tostring")) {  /* no metafield? */
 		switch (lua_type(L, idx)) {
@@ -106,7 +106,7 @@ static int lua_print(lua_State* L)
 		if (i > 1)
 			printf(" ");
 
-		printf("%s", luaL_tolstring(L, i, NULL));
+		printf("%s", lua_converttostring(L, i, NULL));
 		lua_pop(L, 1);
 	}
 
@@ -253,7 +253,7 @@ static int str_format(lua_State *L)
 				case 's':
 					{
 						size_t l;
-						const char *s = luaL_tolstring(L, arg, &l);
+						const char *s = lua_converttostring(L, arg, &l);
 						if (!strchr(form, '.') && l >= 100) {
 							/* no precision and string is too long to be formatted;
 							   keep original string */
@@ -262,7 +262,7 @@ static int str_format(lua_State *L)
 						}
 						else {
 							nb = sprintf(buff, form, s);
-							lua_pop(L, 1);  /* remove result from 'luaL_tolstring' */
+							lua_pop(L, 1);  /* remove result from 'lua_converttostring' */
 							break;
 						}
 					}

@@ -1,5 +1,6 @@
 %{
 	#include <haka/error.h>
+	#include <haka/lua/lua.h>
 
 	#include <stdlib.h>
 
@@ -23,6 +24,8 @@
 	  {lua_pushfstring(L,"Error in %s expected %d..%d args, got %d",func_name,a,b,lua_gettop(L));\
 	  SWIG_arg=-1;goto fail;}
 	#define SWIG_execfail {SWIG_arg=-2;goto fail;}
+
+	#define SWIG_lua_always(L, a) 1
 %}
 
 %exception %{
@@ -56,6 +59,42 @@
 	lua_pushstring(L, (const char *)$result); SWIG_arg++;
 	free((void*)$result);
 }
+
+%typecheck(20000) void *ANY {
+	$1 = 1;
+}
+
+%typemap(in) void *ANY {
+	$1 = (void *)lua_topointer(L, $input);
+}
+
+%typecheck(20000) char *KEY {
+	$1 = 1;
+}
+
+%typemap(in) char *KEY {
+	size_t len;
+	$1 = (char *)lua_converttostring(L, $input, &len);
+}
+
+%define STRUCT_UNKNOWN_KEY_ERROR(type)
+
+%extend type {
+	void __getitem(char *KEY);
+	void __setitem(char *KEY, void *ANY);
+}
+
+%{
+void type ## ___getitem(struct type *self, char *KEY) {
+	error(L"unknown field '%s'", KEY);
+}
+
+void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
+	error(L"unknown field '%s'", KEY);
+}
+%}
+
+%enddef
 
 %include "typemaps.i"
 

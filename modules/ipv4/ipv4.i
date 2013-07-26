@@ -102,6 +102,7 @@ struct ipv4_addr {
 	}
 };
 
+STRUCT_UNKNOWN_KEY_ERROR(ipv4_addr);
 
 %rename(network) ipv4_network;
 %newobject ipv4_network::net;
@@ -172,6 +173,7 @@ struct ipv4_network {
 	}
 };
 
+STRUCT_UNKNOWN_KEY_ERROR(ipv4_network);
 
 LUA_OBJECT_CAST(struct ipv4_flags, struct ipv4);
 
@@ -185,6 +187,8 @@ struct ipv4_flags {
 		unsigned int all;
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(ipv4_flags);
 
 LUA_OBJECT_CAST(struct ipv4_payload, struct ipv4);
 
@@ -225,6 +229,8 @@ struct ipv4_payload {
 		}
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(ipv4_payload);
 
 LUA_OBJECT(struct ipv4);
 %newobject ipv4::forge;
@@ -275,6 +281,8 @@ struct ipv4 {
 		struct packet *forge();
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(ipv4);
 
 %rename(dissect) ipv4_dissect;
 %newobject ipv4_dissect;

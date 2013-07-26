@@ -20,4 +20,7 @@
 
 #endif
 
+
+const char *lua_converttostring(struct lua_State *L, int idx, size_t *len);
+
 #endif /* _HAKA_LUA_LUA_H */

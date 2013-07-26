@@ -1,6 +1,7 @@
 
 %include "haka/lua/buffer.si"
 %include "haka/lua/object.si"
+%include "haka/lua/swig.si"
 
 LUA_OBJECT(struct stream);
 
@@ -86,4 +87,7 @@ LUA_OBJECT(struct stream);
 	void unmark(struct stream_mark *mark);
 	void seek(struct stream_mark *mark, bool unmark);
 }
+
+STRUCT_UNKNOWN_KEY_ERROR(type);
+
 %enddef
