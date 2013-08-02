@@ -147,15 +147,13 @@ find_package(Sphinx)
 if(SPHINX_FOUND)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
 	add_custom_target(doc
+		ALL
 		COMMAND ${SPHINX_EXECUTABLE} -b html -c ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/doc
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		COMMENT "Generating API documentation with Sphinx" VERBATIM
 	)
 
 	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION share/doc/haka/manual)
-
-	# It is not possible to add a dependency on the install target which would be way better
-	add_dependencies(haka doc)
 endif(SPHINX_FOUND)
 
 # add a target to run cppcheck on the sources

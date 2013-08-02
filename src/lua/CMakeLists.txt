@@ -13,7 +13,6 @@ swig_add_module(haka-lua lua STATIC
 LUA_LINK(haka-lua)
 target_link_libraries(haka-lua libhaka)
 
-install(FILES rule.lua utils.lua color.lua
-	DESTINATION share/haka/core)
+lua_install(NAME haka-lua-src FILES rule.lua utils.lua color.lua DESTINATION share/haka/core COMPILED)
 
 include_directories(.)

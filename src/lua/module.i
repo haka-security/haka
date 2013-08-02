@@ -45,7 +45,7 @@ char *suffix;
 
 %luacode {
 	package.cpath = package.cpath .. ";" .. string.gsub(module.path(), '*', module.prefix .. '?' .. module.suffix)
-	package.path = package.path .. ";" .. string.gsub(module.path(), '*', '?.lua')
+	package.path = package.path .. ";" .. string.gsub(module.path(), '*', '?.lua') .. ";" .. string.gsub(module.path(), '*', '?.bc')
 
 	function module.addpath(newpath)
 		if haka.module.path ~= "" then
