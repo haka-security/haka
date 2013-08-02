@@ -114,7 +114,7 @@ static bool change_frame(struct luadebug_debugger *session, const char *option)
 		printf(RED "invalid frame index '%d'\n" CLEAR, index);
 	}
 	else {
-		int env_index;
+		UNUSED int env_index;
 
 		printf("  #%d\t" CYAN, index);
 		dump_frame(session->L, &session->frame);

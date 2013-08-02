@@ -1,5 +1,7 @@
 %module object
 
+%include "haka/lua/swig.si"
+
 %{
 #include <haka/types.h>
 #include <haka/compiler.h>

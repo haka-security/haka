@@ -336,6 +336,7 @@ static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 		break;
 
 	default:
+		*data_offset = 0;
 		assert(0);
 		return -1;
 	}
