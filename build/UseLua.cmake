@@ -25,11 +25,18 @@ endmacro(LUA_LINK)
 macro(LUA_INSTALL)
 	set(options COMPILED)
 	set(oneValueArgs DESTINATION NAME)
-	set(multiValueArgs FILES)
+	set(multiValueArgs FILES FLAGS)
 	cmake_parse_arguments(LUA_INSTALL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
 	if (LUA_INSTALL_COMPILED)
 		set(LUA_INSTALL_COMPILED_FILES "")
+
+		if (LUA_INSTALL_FLAGS)
+			set(LUA_FLAGS "${LUA_INSTALL_FLAGS}")
+		else (LUA_INSTALL_FLAGS)
+			string(TOUPPER "LUA_FLAGS_${CMAKE_BUILD_TYPE}" LUA_FLAGS)
+			set(LUA_FLAGS "${${LUA_FLAGS}}")
+		endif (LUA_INSTALL_FLAGS)
 
 		foreach(it ${LUA_INSTALL_FILES})
 			get_filename_component(lua_source_file_path "${it}" ABSOLUTE)
@@ -38,7 +45,7 @@ macro(LUA_INSTALL)
 
 			add_custom_command(
 				OUTPUT "${lua_source_outfile_path}"
-				COMMAND ${LUA_COMPILER} ${LUA_FLAGS_${CMAKE_BUILD_TYPE}} -o ${lua_source_outfile_path} ${lua_source_file_path}
+				COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_source_outfile_path} ${lua_source_file_path}
 				MAIN_DEPENDENCY "${lua_source_file_path}"
 				COMMENT "Building Lua file ${it}"
 				VERBATIM)
