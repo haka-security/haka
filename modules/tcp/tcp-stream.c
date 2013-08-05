@@ -966,7 +966,6 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		tcp_s->first = list_next(tcp_s->first);
 
 		if (tcp_s->last == chunk) {
-			assert(list_next(chunk) == NULL);
 			tcp_s->last = NULL;
 		}
 
