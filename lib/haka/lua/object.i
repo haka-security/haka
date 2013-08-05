@@ -57,20 +57,23 @@ void lua_object_release(void *ptr, struct lua_object *obj)
 				swig_lua_userdata *usr;
 				swig_lua_class *clss;
 
-				assert(lua_isuserdata(L, -1));
-				usr = (swig_lua_userdata*)lua_touserdata(L, -1);
-				assert(usr);
-				assert(usr->ptr);
+				if (!lua_isnil(L, -1)) {
+					assert(lua_isuserdata(L, -1));
+					usr = (swig_lua_userdata*)lua_touserdata(L, -1);
+					assert(usr);
+					assert(usr->ptr);
 
-				if (usr->ptr != ptr && usr->own) {
-					clss = (swig_lua_class*)usr->type->clientdata;
-					if (clss && clss->destructor)
-					{
-						clss->destructor(usr->ptr);
+					if (usr->ptr != ptr && usr->own) {
+						clss = (swig_lua_class*)usr->type->clientdata;
+						if (clss && clss->destructor)
+						{
+							clss->destructor(usr->ptr);
+						}
 					}
+
+					usr->ptr = NULL;
 				}
 
-				usr->ptr = NULL;
 				lua_pop(L, 1);
 			}
 
@@ -137,7 +140,15 @@ void lua_object_register(lua_State *L, struct lua_object *obj, swig_type_info *t
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
 		lua_pushlightuserdata(L, obj);
+
 		lua_newtable(L);
+
+		/* Make the values of this table weak refs */
+		lua_newtable(L);
+		lua_pushstring(L, "v");
+		lua_setfield(L, -2, "__mode");
+		lua_setmetatable(L, -2);
+
 		lua_settable(L, -3);
 
 		lua_pushlightuserdata(L, obj);
