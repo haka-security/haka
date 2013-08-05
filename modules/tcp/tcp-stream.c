@@ -966,7 +966,7 @@ struct tcp *tcp_stream_pop(struct stream *s)
 		tcp_s->first = list_next(tcp_s->first);
 
 		if (tcp_s->last == chunk) {
-			tcp_s->last = NULL;
+			tcp_s->last = list_next(chunk);
 		}
 
 		if (tcp_s->last_sent) {
