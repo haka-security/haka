@@ -2,7 +2,7 @@ local arg = {...}
 
 require("utils")
 
-haka.app.install("log", haka.module.load("log-stdout"))
+haka.app.install("log", haka.module.load("log/stdout"))
 
 haka.log.info("config", "configuring haka...")
 
@@ -12,9 +12,9 @@ if (#arg ~= 2 and #arg ~= 3) or arg[1] == "-h" or arg[1] == "--help" then
 end
 
 if arg[3] then
-	haka.app.install("packet", haka.module.load("packet-pcap", "-i", arg[1], "-o", arg[3]))
+	haka.app.install("packet", haka.module.load("packet/pcap", "-i", arg[1], "-o", arg[3]))
 else
-	haka.app.install("packet", haka.module.load("packet-pcap", "-i", arg[1]))
+	haka.app.install("packet", haka.module.load("packet/pcap", "-i", arg[1]))
 end
 
 haka.module.addpath(get_file_directory(arg[2]))

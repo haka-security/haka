@@ -52,7 +52,7 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 	lua_pushppacket(state->lua->L, pkt);
 
 	if (lua_pcall(state->lua->L, 1, 0, h)) {
-		print_error(state->lua->L, L"filter function");
+		lua_state_print_error(state->lua->L, L"filter function");
 		packet_drop(pkt);
 	}
 
@@ -131,7 +131,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	lua_getglobal(state->lua->L, "require");
 	lua_pushstring(state->lua->L, "rule");
 	if (lua_pcall(state->lua->L, 1, 0, 0)) {
-		print_error(state->lua->L, NULL);
+		lua_state_print_error(state->lua->L, NULL);
 		cleanup_thread_state(state);
 		return NULL;
 	}
@@ -144,7 +144,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	lua_getglobal(state->lua->L, "haka");
 	lua_getfield(state->lua->L, -1, "rule_summary");
 	if (lua_pcall(state->lua->L, 0, 0, 0)) {
-		print_error(state->lua->L, NULL);
+		lua_state_print_error(state->lua->L, NULL);
 		cleanup_thread_state(state);
 		return NULL;
 	}

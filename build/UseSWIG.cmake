@@ -91,6 +91,7 @@ MACRO(SWIG_GET_WRAPPER_DEPENDENCIES swigFile genWrapper language DEST_VARIABLE)
   IF("${swig_getdeps_extra_flags}" STREQUAL "NOTFOUND")
     SET(swig_getdeps_extra_flags "")
   ENDIF("${swig_getdeps_extra_flags}" STREQUAL "NOTFOUND")
+  string(TOUPPER "${language}" SWIG_LANG)
 
   IF(NOT swig_getdeps_outdir)
     SET(swig_getdeps_outdir ${CMAKE_CURRENT_BINARY_DIR})
@@ -105,7 +106,7 @@ MACRO(SWIG_GET_WRAPPER_DEPENDENCIES swigFile genWrapper language DEST_VARIABLE)
   EXECUTE_PROCESS(
     COMMAND ${SWIG_EXECUTABLE}
     -MM -MF ${swig_getdeps_depsfile} ${swig_getdeps_extra_flags}
-    ${CMAKE_SWIG_FLAGS} -${language}
+    -${language} ${CMAKE_SWIG_FLAGS}
     -o ${genWrapper} ${swig_getdeps_include_dirs} ${swigFile}
     RESULT_VARIABLE swig_getdeps_result
     ERROR_VARIABLE swig_getdeps_error

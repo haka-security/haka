@@ -2,6 +2,7 @@
 
 %{
 	#include "haka/ipv4.h"
+	#include "haka/lua/state.h"
 
 	struct ipv4_flags;
 	struct ipv4_payload;
@@ -345,8 +346,10 @@ void ipv4_register_proto_dissector(int proto, const char *dissector);
 %}
 
 %luacode {
+	local this = unpack({...})
+
 	haka.dissector {
 		name = "ipv4",
-		dissect = ipv4.dissect
+		dissect = this.dissect
 	}
 }

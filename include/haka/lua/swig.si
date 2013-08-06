@@ -26,6 +26,26 @@
 	#define SWIG_execfail {SWIG_arg=-2;goto fail;}
 
 	#define SWIG_lua_always(L, a) 1
+
+	#define _STR_TO_WCS(str)   L##str
+	#define STR_TO_WCS(str)   _STR_TO_WCS(str)
+%}
+
+%insert("init") %{
+	if (luaL_loadstring(L, SWIG_LUACODE)) {
+		luaL_error(L, lua_tostring(L, -1));
+		lua_pop(L, 1);
+		return;
+	}
+
+	lua_pushvalue(L, -2);
+	if (lua_pcall(L, 1, 0, 0)) {
+		luaL_error(L, lua_tostring(L, -1));
+		lua_pop(L, 1);
+		return;
+	}
+
+	return;
 %}
 
 %exception %{

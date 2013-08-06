@@ -1,4 +1,3 @@
-module("http", package.seeall)
 
 local str = string.char
 
@@ -75,7 +74,7 @@ local function string_compare(a, b)
 	end
 end
 
-function sorted_pairs(t)
+local function sorted_pairs(t)
 	local a = {}
 	for n in pairs(t) do
 		table.insert(a, n)
@@ -92,7 +91,8 @@ function sorted_pairs(t)
 end
 
 local function dump(t, indent)
-        if not indent then indent = "" end
+	if not indent then indent = "" end
+
 	for n, v in sorted_pairs(t) do
 		if type(v) == "table" then
 			print(indent, n)

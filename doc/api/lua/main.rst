@@ -275,4 +275,4 @@ External modules
     :glob:
     :maxdepth: 1
 
-    ../../../modules/*/doc/lua*
+    ../../../modules/*/*/doc/lua*

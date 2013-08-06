@@ -122,5 +122,5 @@ This module register the `ipv4` dissector.
 Example
 -------
 
-.. literalinclude:: ../../../sample/standard/proto/ipv4/security.lua
+.. literalinclude:: ../../../../sample/standard/proto/ipv4/security.lua
     :language: lua

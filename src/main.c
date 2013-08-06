@@ -168,7 +168,8 @@ int main(int argc, char *argv[])
 	signal(SIGHUP, fatal_error_signal);
 
 	/* Default module path */
-	module_set_path(HAKA_PREFIX "/share/haka/core/*;" HAKA_PREFIX "/share/haka/modules/*");
+	module_set_path(HAKA_PREFIX "/share/haka/core/*;"
+			HAKA_PREFIX "/share/haka/modules/*");
 
 	/* Check arguments */
 	ret = parse_cmdline(&argc, &argv);

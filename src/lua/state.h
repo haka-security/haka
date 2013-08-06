@@ -8,7 +8,6 @@
 struct lua_State;
 
 struct lua_state *haka_init_state();
-void print_error(struct lua_State *L, const wchar_t *msg);
 int run_file(struct lua_State *L, const char *filename, int argc, char *argv[]);
 int do_file_as_function(struct lua_State *L, const char *filename);
 

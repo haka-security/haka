@@ -33,6 +33,16 @@ static int panic(lua_State *L)
 	return 0;
 }
 
+void lua_state_print_error(struct lua_State *L, const wchar_t *msg)
+{
+	if (msg)
+		messagef(HAKA_LOG_ERROR, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
+	else
+		messagef(HAKA_LOG_ERROR, L"lua", L"%s", lua_tostring(L, -1));
+
+	lua_pop(L, 1);
+}
+
 int lua_state_error_formater(lua_State *L)
 {
 	struct luadebug_debugger *debugger = luadebug_debugger_get(L);

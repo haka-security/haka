@@ -173,5 +173,5 @@ TCP connection
 Example
 ^^^^^^^
 
-.. literalinclude:: ../../../sample/standard/proto/tcp/rules.lua
+.. literalinclude:: ../../../../sample/standard/proto/tcp/rules.lua
     :language: lua

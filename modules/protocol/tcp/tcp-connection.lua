@@ -1,5 +1,3 @@
-module("tcp-connection", package.seeall)
-
 
 local function forge_reset(conn, inv)
 	tcprst = haka.packet.new()

@@ -7,6 +7,7 @@ swig_add_module(ipv4 lua SHARED
 	ipv4.c
 	ipv4-addr.c
 	ipv4-network.c)
+SWIG_FIX_ENTRYPOINT(ipv4 protocol)
 
 include_directories(.)
 
@@ -14,7 +15,7 @@ include_directories(.)
 LUA_LINK(ipv4)
 target_link_libraries(ipv4 libhaka)
 
-INSTALL_MODULE(ipv4)
+INSTALL_MODULE(ipv4 protocol)
 
 # Tests
 include(TestModuleLoad)

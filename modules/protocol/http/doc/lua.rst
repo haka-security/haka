@@ -55,5 +55,5 @@ Dissector
 Example
 -------
 
-.. literalinclude:: ../../../sample/standard/proto/http/policy.lua
+.. literalinclude:: ../../../../sample/standard/proto/http/policy.lua
     :language: lua

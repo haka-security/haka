@@ -13,4 +13,4 @@ External modules
 .. toctree::
     :glob:
 
-    ../../../modules/*/doc/module*
+    ../../../modules/*/*/doc/module*

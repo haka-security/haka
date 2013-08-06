@@ -28,6 +28,7 @@ int main()
 	add_library(packet-nfqueue MODULE
 		main.c
 		iptables.c)
+	set_target_properties(packet-nfqueue PROPERTIES OUTPUT_NAME nfqueue)
 
 	include_directories(${NETFILTERQUEUE_INCLUDE_DIR} ${PCAP_INCLUDE_DIR})
 	target_link_libraries(packet-nfqueue ${NETFILTERQUEUE_LIBRARIES} ${PCAP_LIBRARY})
@@ -36,5 +37,5 @@ int main()
 		set_target_properties(packet-nfqueue PROPERTIES COMPILE_DEFINITIONS NFQ_GET_PAYLOAD_UNSIGNED_CHAR)
 	endif(NFQ_GET_PAYLOAD_UNSIGNED_CHAR)
 
-	INSTALL_MODULE(packet-nfqueue)
+	INSTALL_MODULE(packet-nfqueue packet)
 endif()

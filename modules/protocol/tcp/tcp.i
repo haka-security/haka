@@ -286,13 +286,15 @@ unsigned int stream_lastseq_get(struct stream *s) { return tcp_stream_lastseq(s)
 %}
 
 %luacode {
+	local this = unpack({...})
+
 	haka.dissector {
 		name = "tcp",
-		dissect = tcp.dissect
+		dissect = this.dissect
 	}
 
 	require("tcp-connection")
 
-	local ipv4 = require("ipv4")
+	local ipv4 = require("protocol/ipv4")
 	ipv4.register_proto(6, "tcp")
 }

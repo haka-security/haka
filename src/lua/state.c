@@ -69,28 +69,18 @@ struct lua_state *haka_init_state()
 	return state;
 }
 
-void print_error(struct lua_State *L, const wchar_t *msg)
-{
-	if (msg)
-		messagef(HAKA_LOG_ERROR, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
-	else
-		messagef(HAKA_LOG_ERROR, L"lua", L"%s", lua_tostring(L, -1));
-
-	lua_pop(L, 1);
-}
-
 int run_file(struct lua_State *L, const char *filename, int argc, char *argv[])
 {
 	int i;
 	if (luaL_loadfile(L, filename)) {
-		print_error(L, NULL);
+		lua_state_print_error(L, NULL);
 		return 1;
 	}
 	for (i = 1; i <= argc; i++) {
 		lua_pushstring(L, argv[i-1]);
 	}
 	if (lua_pcall(L, argc, 0, 0)) {
-		print_error(L, NULL);
+		lua_state_print_error(L, NULL);
 		return 1;
 	}
 
@@ -100,12 +90,12 @@ int run_file(struct lua_State *L, const char *filename, int argc, char *argv[])
 int do_file_as_function(struct lua_State *L, const char *filename)
 {
 	if (luaL_loadfile(L, filename)) {
-		print_error(L, NULL);
+		lua_state_print_error(L, NULL);
 		return -1;
 	}
 
 	if (lua_pcall(L, 0, 1, 0)) {
-		print_error(L, NULL);
+		lua_state_print_error(L, NULL);
 		return -1;
 	}
 
