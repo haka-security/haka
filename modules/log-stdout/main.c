@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <unistd.h>
 #include <string.h>
 
 
@@ -41,6 +42,7 @@
 #endif /* USE_COLORS */
 
 static int _max_module_size = 0;
+static bool use_colors = 0;
 static mutex_t mutex;
 
 
@@ -49,6 +51,9 @@ static int init(int argc, char *argv[])
 	if (!mutex_init(&mutex, true)) {
 		return 1;
 	}
+
+	use_colors = isatty(fileno(stdout));
+
 	return 0;
 }
 
@@ -70,13 +75,16 @@ static int log_message(log_level lvl, const wchar_t *module, const wchar_t *mess
 	}
 
 #ifdef USE_COLORS
-	fprintf(stdout, "%s%s%s%*s %s%ls:%s%*s %s%ls%s\n", level_color[lvl], level_str,
-			CLEAR, level_size-5, "", MODULE_COLOR, module, CLEAR,
-			_max_module_size-module_size, "", message_color[lvl], message, CLEAR);
-#else
-	fprintf(stdout, "%s%*s %ls:%*s %ls\n", level_str, level_size-5, "",
-			module, _max_module_size-module_size, "", message);
+	if (use_colors) {
+		fprintf(stdout, "%s%s" CLEAR "%*s " MODULE_COLOR "%ls:" CLEAR "%*s %s%ls\n" CLEAR, level_color[lvl], level_str,
+				level_size-5, "", module, _max_module_size-module_size, "", message_color[lvl], message);
+	}
+	else
 #endif /* USES_COLORS */
+	{
+		fprintf(stdout, "%s%*s %ls:%*s %ls\n", level_str, level_size-5, "",
+				module, _max_module_size-module_size, "", message);
+	}
 
 	mutex_unlock(&mutex);
 
