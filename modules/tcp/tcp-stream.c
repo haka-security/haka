@@ -1,6 +1,7 @@
 
 #include <haka/tcp-stream.h>
 #include <haka/tcp.h>
+#include <haka/log.h>
 #include <haka/error.h>
 #include <haka/container/list.h>
 
@@ -764,7 +765,8 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 
 	if (chunk->start_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset ||
 		chunk->end_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset) {
-		error(L"retransmit packet (unsupported)");
+		message(HAKA_LOG_WARNING, L"tcp-connection", L"retransmit packet (ignored)");
+		tcp_action_drop(tcp);
 		free(chunk);
 		return false;
 	}
@@ -795,7 +797,8 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 		}
 
 		if (iter && chunk->end_seq > iter->start_seq) {
-			error(L"retransmit packet (unsupported)");
+			message(HAKA_LOG_WARNING, L"tcp-connection", L"retransmit packet (ignored)");
+			tcp_action_drop(tcp);
 			free(chunk);
 			return false;
 		}
