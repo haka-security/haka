@@ -1,4 +1,6 @@
 
+local module = {}
+
 local str = string.char
 
 local function getchar(stream)
@@ -326,3 +328,5 @@ haka.dissector {
 		return http
 	end
 }
+
+return module
