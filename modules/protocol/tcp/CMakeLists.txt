@@ -18,6 +18,8 @@ INSTALL_MODULE(tcp protocol)
 
 lua_install(NAME tcp-connection FILES tcp-connection.lua DESTINATION ${MODULE_INSTALL_PATH}/protocol COMPILED)
 
+install(DIRECTORY haka DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.si")
+
 # Tests
 include(TestModuleLoad)
 TEST_MODULE_LOAD(tcp protocol)

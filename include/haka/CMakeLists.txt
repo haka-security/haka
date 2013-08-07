@@ -1,0 +1,2 @@
+
+install(DIRECTORY . DESTINATION include/haka FILES_MATCHING PATTERN "*.h" PATTERN "*.si")

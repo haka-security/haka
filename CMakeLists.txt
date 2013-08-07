@@ -163,6 +163,7 @@ add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(modules)
 add_subdirectory(sample)
+add_subdirectory(include)
 
 # Configuration files
 configure_file(src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/haka/config.h)

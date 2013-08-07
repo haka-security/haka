@@ -1,2 +1,2 @@
 
-install(DIRECTORY standard DESTINATION share/haka/sample)
+install(DIRECTORY . DESTINATION share/haka/sample FILES_MATCHING PATTERN "*.lua")
