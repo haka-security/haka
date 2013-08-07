@@ -168,8 +168,37 @@ int main(int argc, char *argv[])
 	signal(SIGHUP, fatal_error_signal);
 
 	/* Default module path */
-	module_set_path(HAKA_PREFIX "/share/haka/core/*;"
-			HAKA_PREFIX "/share/haka/modules/*");
+	{
+		static const char *HAKA_CORE_PATH = "/share/haka/core/*";
+		static const char *HAKA_MODULE_PATH = "/share/haka/modules/*";
+
+		size_t path_len;
+		char *path;
+		char *haka_path = getenv("HAKA_PATH");
+		if (haka_path == NULL) {
+			haka_path = HAKA_PREFIX;
+		}
+
+		path_len = 2*strlen(haka_path) + strlen(HAKA_CORE_PATH) + 1 +
+				strlen(HAKA_MODULE_PATH) + 1;
+
+		path = malloc(path_len);
+		if (!path) {
+			fprintf(stderr, "memory allocation error\n");
+			clean_exit();
+			return 1;
+		}
+
+		strncpy(path, haka_path, path_len);
+		strncat(path, HAKA_CORE_PATH, path_len);
+		strncat(path, ";", path_len);
+		strncat(path, haka_path, path_len);
+		strncat(path, HAKA_MODULE_PATH, path_len);
+
+		module_set_path(path);
+
+		free(path);
+	}
 
 	/* Check arguments */
 	ret = parse_cmdline(&argc, &argv);

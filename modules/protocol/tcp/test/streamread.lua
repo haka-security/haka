@@ -1,5 +1,6 @@
-require("ipv4")
-require("tcp")
+
+require("protocol/ipv4")
+require("protocol/tcp")
 
 local function buffer_to_string(buf)
 	local r = ""

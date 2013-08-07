@@ -1,6 +1,3 @@
 
-package.path = package.path .. ";@PROJECT_BINARY_DIR@/?.lua"
-require("src/config")
-
 haka.module.load('@MODULE@')
 haka.app.exit(0)

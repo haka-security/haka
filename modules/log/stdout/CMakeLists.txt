@@ -10,4 +10,4 @@ INSTALL_MODULE(log-stdout log)
 
 # Tests
 include(TestModuleLoad)
-TEST_MODULE_LOAD(log-stdout)
+TEST_MODULE_LOAD(log-stdout log)

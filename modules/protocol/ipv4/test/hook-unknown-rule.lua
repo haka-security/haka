@@ -2,7 +2,7 @@
 -- This test will check how ipv4 reacts
 -- to an unkonw hook
 
-require("ipv4")
+require("protocol/ipv4")
 
 haka.rule {
 	hooks = {"ipv4-unknown"},

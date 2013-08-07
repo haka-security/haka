@@ -3,6 +3,9 @@
 cmake_minimum_required(VERSION 2.6)
 include(TestBigEndian)
 include(CheckTypeSize)
+include(ProcessorCount)
+
+ProcessorCount(CPU_COUNT)
 
 # Warn in source build
 if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
@@ -131,6 +134,20 @@ include_directories(include)
 enable_testing()
 find_package(Check REQUIRED)
 include_directories(${CHECK_INCLUDE_DIRS})
+set(TEST_RUNDIR ${CMAKE_CURRENT_BINARY_DIR}/_Test/${CMAKE_INSTALL_PREFIX})
+
+add_custom_target(pre-tests
+	COMMAND $(MAKE) install DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/_Test
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_custom_target(tests
+	COMMAND $(MAKE) install DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/_Test
+	COMMAND ctest -j${CPU_COUNT}
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	COMMENT "Run all tests" VERBATIM
+	DEPENDS pre-tests
+)
 
 # Add sub directories)
 add_subdirectory(external)

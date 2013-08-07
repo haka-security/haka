@@ -9,6 +9,7 @@ swig_add_module(tcp lua SHARED
 	tcp.c
 	tcp-stream.c
 	tcp-connection.c)
+SWIG_FIX_ENTRYPOINT(tcp protocol)
 
 LUA_LINK(tcp)
 
@@ -19,5 +20,5 @@ lua_install(NAME tcp-connection FILES tcp-connection.lua DESTINATION ${MODULE_IN
 
 # Tests
 include(TestModuleLoad)
-TEST_MODULE_LOAD(tcp)
+TEST_MODULE_LOAD(tcp protocol)
 add_subdirectory(test)

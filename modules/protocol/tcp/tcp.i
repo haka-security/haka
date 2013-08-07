@@ -293,7 +293,9 @@ unsigned int stream_lastseq_get(struct stream *s) { return tcp_stream_lastseq(s)
 		dissect = this.dissect
 	}
 
-	require("tcp-connection")
+	tcp = this
+	require("protocol/tcp-connection")
+	tcp = nil
 
 	local ipv4 = require("protocol/ipv4")
 	ipv4.register_proto(6, "tcp")

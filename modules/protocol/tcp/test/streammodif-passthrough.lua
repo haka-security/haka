@@ -1,5 +1,6 @@
-require("ipv4")
-require("tcp")
+
+require("protocol/ipv4")
+require("protocol/tcp")
 
 local buf = haka.stream.buffer(4)
 buf[1] = 0x48

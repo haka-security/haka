@@ -1,8 +1,8 @@
 -- Basic test that will output some basic information about the
 -- received packets.
 
-require("ipv4")
-require("tcp")
+require("protocol/ipv4")
+require("protocol/tcp")
 
 haka.rule {
 	hooks = { "tcp-connexion-new" },

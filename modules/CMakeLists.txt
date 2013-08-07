@@ -1,5 +1,5 @@
 
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" "${CMAKE_INSTALL_PREFIX}/share/haka/modules")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 set(CMAKE_SWIG_FLAGS "-nomoduleglobal")
 macro(SWIG_FIX_ENTRYPOINT target type)
@@ -19,8 +19,9 @@ macro(INCLUDE_MODULE name type)
 endmacro(INCLUDE_MODULE)
 
 macro(DEPENDS_MODULE target name type)
-	INCLUDE_MODULE(name type)
+	INCLUDE_MODULE(${name} ${type})
 	target_link_libraries(${target} ${name})
+	set_target_properties(${target} PROPERTIES INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/share/haka/modules/${type}")
 endmacro(DEPENDS_MODULE)
 
 macro(INSTALL_MODULE target type)
@@ -35,8 +36,9 @@ set(MODULES_BINARY_DIRS "")
 set(MODULES_SOURCE_DIRS "")
 file(GLOB SUBDIRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/*/*/CMakeLists.txt")
 foreach(subdir ${SUBDIRS})
-	get_filename_component(DIR ${CMAKE_CURRENT_SOURCE_DIR}/${subdir} PATH)
+	get_filename_component(DIR ${CMAKE_CURRENT_BINARY_DIR}/${subdir} PATH)
 	set(MODULES_BINARY_DIRS "${DIR}:${MODULES_BINARY_DIRS}")
+	get_filename_component(DIR ${CMAKE_CURRENT_SOURCE_DIR}/${subdir} PATH)
 	set(MODULES_SOURCE_DIRS "${DIR}:${MODULES_SOURCE_DIRS}")
 endforeach(subdir)
 set(MODULES_BINARY_DIRS "${MODULES_BINARY_DIRS}" CACHE INTERNAL "list of build directories for the modules")

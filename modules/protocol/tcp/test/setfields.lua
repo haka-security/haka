@@ -19,8 +19,8 @@ function checks(proto)
 	return good, bad
 end
 
-require("ipv4")
-require("tcp")
+require("protocol/ipv4")
+require("protocol/tcp")
 
 -- To avoid the packet to be dropped by the tcp-connection dissector,
 -- disable it

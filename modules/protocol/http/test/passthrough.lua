@@ -1,7 +1,7 @@
 
-require("ipv4")
-require("tcp")
-require("http")
+require("protocol/ipv4")
+require("protocol/tcp")
+require("protocol/http")
 
 haka.rule {
 	hooks = { "tcp-connection-new" },

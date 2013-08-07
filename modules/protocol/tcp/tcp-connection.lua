@@ -1,4 +1,7 @@
 
+local ipv4 = require("protocol/ipv4")
+local tcp = tcp
+
 local function forge_reset(conn, inv)
 	tcprst = haka.packet.new()
 	tcprst = ipv4.create(tcprst)

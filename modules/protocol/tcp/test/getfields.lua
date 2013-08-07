@@ -19,8 +19,8 @@ function checks(proto)
 	return good, bad
 end
 
-require("ipv4")
-require("tcp")
+require("protocol/ipv4")
+require("protocol/tcp")
 
 haka.rule {
 	hooks = { "tcp-up" },

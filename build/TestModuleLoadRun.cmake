@@ -1,8 +1,8 @@
 set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/src/lua/?.lua)
+set(ENV{HAKA_PATH} ${TEST_RUNDIR})
+set(ENV{LD_LIBRARY_PATH} "${TEST_RUNDIR}/lib:${TEST_RUNDIR}/share/haka/modules/protocol")
 
-message(STATUS "All outputs and commands for this test are located in ${CMAKE_CURRENT_SOURCE_DIR}")
-
-message(STATUS "Executing LUA_PATH=\"${PROJECT_SOURCE_DIR}/src/lua/?.lua\" ${EXE} -d ${LUASCRIPT}")
+message(STATUS "Executing LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" ${EXE} -d ${CMAKE_CURRENT_SOURCE_DIR}/${LUASCRIPT}")
 
 execute_process(COMMAND ${EXE} -d ${LUASCRIPT} RESULT_VARIABLE HAD_ERROR)
 if(HAD_ERROR)

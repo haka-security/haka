@@ -1,6 +1,6 @@
 -- Basic test that will create a new packet for scratch
 
-require("ipv4")
+local ipv4 = require("protocol/ipv4")
 
 haka.rule {
 	hooks = { "ipv4-up" },

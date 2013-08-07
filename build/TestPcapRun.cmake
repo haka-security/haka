@@ -3,8 +3,10 @@ set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
 set(ENV{DIFF} ${DIFF})
 set(ENV{TSHARK} ${TSHARK})
 set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/src/lua/?.lua)
+set(ENV{HAKA_PATH} ${TEST_RUNDIR})
+set(ENV{LD_LIBRARY_PATH} ${TEST_RUNDIR}/lib)
 
-message("Executing LUA_PATH=\"${PROJECT_SOURCE_DIR}/src/lua/?.lua\" ${EXE} -d ${EXE_OPTIONS} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap")
+message("Executing LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" ${EXE} -d ${EXE_OPTIONS} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap")
 
 if(VALGRIND AND NOT "$ENV{QUICK}" STREQUAL "yes")
 	set(DO_VALGRIND 1)

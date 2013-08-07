@@ -2,8 +2,8 @@
 -- Here we check that we still have access to IP data
 -- from TCP dissected packets
 
-require("ipv4")
-require("tcp")
+require("protocol/ipv4")
+require("protocol/tcp")
 
 haka.rule {
 	hooks = {"tcp-up"},

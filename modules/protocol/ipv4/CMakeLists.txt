@@ -19,5 +19,5 @@ INSTALL_MODULE(ipv4 protocol)
 
 # Tests
 include(TestModuleLoad)
-TEST_MODULE_LOAD(ipv4)
+TEST_MODULE_LOAD(ipv4 protocol)
 add_subdirectory(test)

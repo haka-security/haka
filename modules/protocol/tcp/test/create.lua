@@ -1,7 +1,7 @@
 -- Test that will duplicate a tcp connection
 
-require("ipv4")
-require("tcp")
+local ipv4 = require("protocol/ipv4")
+local tcp = require("protocol/tcp")
 
 haka.rule {
 	hooks = { "tcp-up" },
