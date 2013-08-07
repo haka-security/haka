@@ -92,9 +92,15 @@ in `doc` inside your build folder.
 Tests
 ^^^^^
 
-Run ``make tests`` to play all tests. This command will install locally the project and run the
-tests in ths folder. If you need to run the tests manually using the command ctest, you can
-prepare the environement with the command ``make pre-tests``.
+Run ``make tests`` to play all tests.
+
+You can also pass some arguments to ctest by using the variable ``CTEST_ARGS``. ::
+
+    make tests CTEST_ARGS="-V"
+
+This command will install locally the project and run the tests in ths folder. If you need
+to run the tests manually using the command ctest, you can prepare the environment with the
+command ``make pre-tests``.
 
 Packaging
 ^^^^^^^^^
