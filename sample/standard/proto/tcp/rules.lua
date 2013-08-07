@@ -2,8 +2,8 @@
 -- Firewall rules
 ------------------------------------
 
-akpf = haka.rule_group {
-	name = "akpf",
+local group = haka.rule_group {
+	name = "group",
 	init = function (self, pkt)
 		haka.log.debug("filter", "entering packet filetring rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
 	end,
@@ -17,7 +17,7 @@ akpf = haka.rule_group {
 }
 
 
-akpf:rule {
+group:rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
 
@@ -37,7 +37,7 @@ akpf:rule {
 	end
 }
 
-akpf:rule {
+group:rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
 

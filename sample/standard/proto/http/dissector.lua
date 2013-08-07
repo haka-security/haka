@@ -1,1 +1,1 @@
-require("http")
+http = require("protocol/http")

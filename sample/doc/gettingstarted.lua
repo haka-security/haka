@@ -3,7 +3,7 @@
 -- haka capture-nfq.lua eth0:eth1 gettingstarted.lua
 
 -- Mandatory to load ipv4 dissector
-require("ipv4")
+local ipv4 = require("protocol/ipv4")
 -- Once dissector is loaded, we can access all fields
 -- of IPv4 packets inside this script.
 
@@ -27,15 +27,15 @@ haka.rule {
 
 -- Mandatory to load tcp dissector
 -- It also loads all the magic to track connections
-require("tcp")
+require("protocol/tcp")
 
 -- For example, we want to log something about
 -- connections
 akpf:rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
-		if tcp.ip.dst == ipv4.addr("192.168.1.1") and tcp.dstport == 80 then
-			haka.log.warning("filter","Trafic on HTTP port from %s", tcp.ip.src)
+		if pkt.ip.dst == ipv4.addr("192.168.1.1") and pkt.dstport == 80 then
+			haka.log.warning("filter","Trafic on HTTP port from %s", pkt.ip.src)
 		end
 	end
 }
