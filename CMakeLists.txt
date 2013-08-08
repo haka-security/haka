@@ -143,7 +143,7 @@ add_custom_target(pre-tests-build
 )
 
 add_custom_target(pre-tests
-	COMMAND $(MAKE) install/fast DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/_Test &> /dev/null
+	COMMAND $(MAKE) install/fast DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/_Test > /dev/null
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Preparing tests environment..." VERBATIM
 	VERBATIM
