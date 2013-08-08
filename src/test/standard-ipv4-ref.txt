@@ -1,0 +1,3 @@
+warn core: no log module found
+error filter: Land attack detected
+error filter: Land attack detected

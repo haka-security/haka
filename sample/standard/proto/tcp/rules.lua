@@ -2,6 +2,9 @@
 -- Firewall rules
 ------------------------------------
 
+local client_network = ipv4.network("192.168.10.0/25");
+local server_network = ipv4.network("192.168.20.0/25");
+
 local group = haka.rule_group {
 	name = "group",
 	init = function (self, pkt)
@@ -21,13 +24,10 @@ group:rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
 
-		local netsrc = ipv4.network("10.2.96.0/22")
-		local netdst = ipv4.network("10.2.104.0/22")
-
 		local tcp = pkt.tcp
 
-		if netsrc:contains(tcp.ip.src) and
-		   netdst:contains(tcp.ip.dst) and
+		if client_network:contains(tcp.ip.src) and
+		   server_network:contains(tcp.ip.dst) and
 		   tcp.dstport == 80 then
 
 			haka.log.warning("filter", "authorizing http traffic")
@@ -41,13 +41,10 @@ group:rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
 
-		local netsrc = ipv4.network("10.2.96.0/22")
-		local netdst = ipv4.network("10.2.104.0/22")
-
 		local tcp = pkt.tcp
 
-		if netsrc:contains(tcp.ip.src) and
-		   netdst:contains(tcp.ip.dst) and
+		if client_network:contains(tcp.ip.src) and
+		   server_network:contains(tcp.ip.dst) and
 		   tcp.dstport == 22 then
 
 			haka.log.warning("filter", "authorizing ssh traffic")

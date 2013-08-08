@@ -27,8 +27,13 @@ endif(NOT GAWK_COMMAND)
 find_program(VALGRIND_COMMAND valgrind)
 
 macro(TEST_PCAP module name)
-	set(oneValueArgs OPTIONS)
+	set(oneValueArgs OPTIONS CONFIG)
 	cmake_parse_arguments(TEST_PCAP "" "${oneValueArgs}" "" ${ARGN})
+	
+	if(TEST_PCAP_CONFIG)
+	else()
+		set(TEST_PCAP_CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/${name}.lua)
+	endif()
 
 	add_test(NAME ${module}-${name}-pcap
 		COMMAND ${CMAKE_COMMAND}
@@ -38,7 +43,7 @@ macro(TEST_PCAP module name)
 		-DEXE=${TEST_RUNDIR}/bin/haka
 		-DEXE_OPTIONS=${TEST_PCAP_OPTIONS}
 		-DTEST_RUNDIR=${TEST_RUNDIR}
-		-DCONF=${CMAKE_CURRENT_SOURCE_DIR}/${name}.lua
+		-DCONF=${TEST_PCAP_CONFIG}
 		-DSRC=${CMAKE_CURRENT_SOURCE_DIR}/${name}.pcap
 		-DREF=${CMAKE_CURRENT_SOURCE_DIR}/${name}-ref
 		-DDST=${name}-out

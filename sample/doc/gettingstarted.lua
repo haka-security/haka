@@ -7,15 +7,19 @@ local ipv4 = require("protocol/ipv4")
 -- Once dissector is loaded, we can access all fields
 -- of IPv4 packets inside this script.
 
+-- Mandatory to load tcp dissector
+-- It also loads all the magic to track connections
+require("protocol/tcp")
+
 -- For example, to reject bad checksums, we simply 
 -- create a rule
 haka.rule {
-	hooks = { "ipv4-up" },
+	hooks = { "tcp-up" },
 	eval = function (self, pkt)
 		-- bad IP checksum
 		if not pkt:verify_checksum() then
 			-- Logging type is described in capture-type file
-			haka.log.error("filter", "Bad IP checksum")
+			haka.log.error("filter", "Bad TCP checksum")
 			pkt:drop() 
 			-- Here we drop the packet, but we could
 			-- also calculate and set the good checksum
@@ -25,17 +29,13 @@ haka.rule {
 	end
 }
 
--- Mandatory to load tcp dissector
--- It also loads all the magic to track connections
-require("protocol/tcp")
-
 -- For example, we want to log something about
 -- connections
-akpf:rule {
+haka.rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
-		if pkt.ip.dst == ipv4.addr("192.168.1.1") and pkt.dstport == 80 then
-			haka.log.warning("filter","Trafic on HTTP port from %s", pkt.ip.src)
+		if pkt.tcp.ip.dst == ipv4.addr("192.168.20.1") and pkt.tcp.dstport == 80 then
+			haka.log.warning("filter","Trafic on HTTP port from %s", pkt.tcp.ip.src)
 		end
 	end
 }
