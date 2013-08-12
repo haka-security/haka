@@ -167,7 +167,7 @@ add_subdirectory(include)
 
 # Configuration files
 configure_file(src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/haka/config.h)
-configure_file(src/lua/config.lua.in ${CMAKE_CURRENT_BINARY_DIR}/src/config.lua)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/haka/config.h DESTINATION include/haka)
 
 find_package(Sphinx)
 if(SPHINX_FOUND)
