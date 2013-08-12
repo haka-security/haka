@@ -2,7 +2,7 @@
 # SWIG lua bindings for the lib haka
 find_package(SWIG REQUIRED)
 include(UseSWIG)
-swig_add_module(haka-lua lua STATIC
+swig_add_module(haka-liblua lua STATIC
 	app.i
 	module.i
 	log.i
@@ -10,10 +10,12 @@ swig_add_module(haka-lua lua STATIC
 	state.c)
 
 # Lua dependency
-lua_link(haka-lua)
-target_link_libraries(haka-lua libhaka)
+lua_link(haka-liblua)
+target_link_libraries(haka-liblua libhaka)
 
-lua_install(NAME haka-lua-src FILES rule.lua utils.lua color.lua DESTINATION share/haka/core COMPILED)
-lua_install(NAME haka-lua-src-debug FILES interactive.lua DESTINATION share/haka/core COMPILED FLAGS ${LUA_FLAGS_DEBUG})
+lua_compile(NAME haka-lua FILES rule.lua utils.lua color.lua)
+lua_compile(NAME haka-lua FILES interactive.lua FLAGS ${LUA_FLAGS_DEBUG})
+
+lua_install(TARGET haka-lua DESTINATION share/haka/core)
 
 include_directories(.)

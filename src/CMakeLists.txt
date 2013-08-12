@@ -16,7 +16,7 @@ LUA_LINK(haka)
 include_directories(.)
 
 add_subdirectory(lua)
-target_link_libraries(haka haka-lua)
+target_link_libraries(haka haka-liblua)
 
 install(TARGETS haka RUNTIME DESTINATION bin)
 

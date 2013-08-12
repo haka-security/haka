@@ -16,7 +16,8 @@ LUA_LINK(tcp)
 DEPENDS_MODULE(tcp ipv4 protocol)
 INSTALL_MODULE(tcp protocol)
 
-lua_install(NAME tcp-connection FILES tcp-connection.lua DESTINATION ${MODULE_INSTALL_PATH}/protocol COMPILED)
+lua_compile(NAME tcp-connection FILES tcp-connection.lua)
+lua_install(TARGET tcp-connection DESTINATION ${MODULE_INSTALL_PATH}/protocol)
 
 install(DIRECTORY haka DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.si")
 

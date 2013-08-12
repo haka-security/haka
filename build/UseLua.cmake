@@ -22,46 +22,61 @@ macro(LUA_LINK target)
 	target_link_libraries(${target} ${LUA_LIBRARIES})
 endmacro(LUA_LINK)
 
-macro(LUA_INSTALL)
-	set(options COMPILED)
-	set(oneValueArgs DESTINATION NAME)
+macro(LUA_COMPILE)
+	set(oneValueArgs NAME)
 	set(multiValueArgs FILES FLAGS)
-	cmake_parse_arguments(LUA_INSTALL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+	cmake_parse_arguments(LUA_COMPILE "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-	if (LUA_INSTALL_COMPILED)
-		set(LUA_INSTALL_COMPILED_FILES "")
+	set(LUA_COMPILE_COMPILED_FILES "")
 
-		if (LUA_INSTALL_FLAGS)
-			set(LUA_FLAGS "${LUA_INSTALL_FLAGS}")
-		else (LUA_INSTALL_FLAGS)
-			string(TOUPPER "LUA_FLAGS_${CMAKE_BUILD_TYPE}" LUA_FLAGS)
-			set(LUA_FLAGS "${${LUA_FLAGS}}")
-		endif (LUA_INSTALL_FLAGS)
+	if(LUA_COMPILE_FLAGS)
+		set(LUA_FLAGS "${LUA_COMPILE_FLAGS}")
+	else(LUA_COMPILE_FLAGS)
+		string(TOUPPER "LUA_FLAGS_${CMAKE_BUILD_TYPE}" LUA_FLAGS)
+		set(LUA_FLAGS "${${LUA_FLAGS}}")
+	endif(LUA_COMPILE_FLAGS)
 
-		foreach(it ${LUA_INSTALL_FILES})
-			get_filename_component(lua_source_file_path "${it}" ABSOLUTE)
-			get_filename_component(lua_source_file_name "${it}" NAME_WE)
-			set(lua_source_outfile_path "${lua_source_file_name}.bc")
+	foreach(it ${LUA_COMPILE_FILES})
+		get_filename_component(lua_source_file_path "${it}" ABSOLUTE)
+		get_filename_component(lua_source_file_name "${it}" NAME_WE)
+		set(lua_source_outfile_path "${lua_source_file_name}.bc")
 
-			add_custom_command(
-				OUTPUT "${lua_source_outfile_path}"
-				COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_source_outfile_path} ${lua_source_file_path}
-				MAIN_DEPENDENCY "${lua_source_file_path}"
-				COMMENT "Building Lua file ${it}"
-				VERBATIM)
+		add_custom_command(
+			OUTPUT "${lua_source_outfile_path}"
+			COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_source_outfile_path} ${lua_source_file_path}
+			MAIN_DEPENDENCY "${lua_source_file_path}"
+			COMMENT "Building Lua file ${it}"
+			VERBATIM)
 
-			SET_SOURCE_FILES_PROPERTIES("${lua_source_outfile_path}" PROPERTIES GENERATED 1)
-			LIST(APPEND LUA_INSTALL_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_source_outfile_path}")
-		endforeach(it)
+		SET_SOURCE_FILES_PROPERTIES("${lua_source_outfile_path}" PROPERTIES GENERATED 1)
+		LIST(APPEND LUA_COMPILE_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_source_outfile_path}")
+	endforeach(it)
 
-		add_custom_target(${LUA_INSTALL_NAME} ALL DEPENDS ${LUA_INSTALL_COMPILED_FILES} ${LUA_DEPENDS})
+	get_directory_property(lua_extra_clean_files ADDITIONAL_MAKE_CLEAN_FILES)
+	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${lua_extra_clean_files};${LUA_COMPILE_COMPILED_FILES}")
 
-		GET_DIRECTORY_PROPERTY(lua_extra_clean_files ADDITIONAL_MAKE_CLEAN_FILES)
-		SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${lua_extra_clean_files};${LUA_INSTALL_COMPILED_FILES}")
+	if(TARGET ${LUA_COMPILE_NAME})
+		get_target_property(ID ${LUA_COMPILE_NAME} LUA_ID)
+		set_target_properties(${LUA_COMPILE_NAME} PROPERTIES LUA_ID ${LUA_ID}+1)
 
-		install(FILES ${LUA_INSTALL_COMPILED_FILES} DESTINATION ${LUA_INSTALL_DESTINATION})
+		add_custom_target(${LUA_COMPILE_NAME}-${ID} ALL DEPENDS ${LUA_COMPILE_COMPILED_FILES} ${LUA_DEPENDS})
+
+		add_dependencies(${LUA_COMPILE_NAME} ${LUA_COMPILE_NAME}-${ID})
+		get_target_property(FILES ${LUA_COMPILE_NAME} LUA_FILES)
+		list(APPEND FILES "${LUA_COMPILE_COMPILED_FILES}")
+		set_target_properties(${LUA_COMPILE_NAME} PROPERTIES LUA_FILES "${FILES}")
 	else()
-		install(FILES ${LUA_INSTALL_FILES} DESTINATION ${LUA_INSTALL_DESTINATION})
+		add_custom_target(${LUA_COMPILE_NAME} ALL DEPENDS ${LUA_COMPILE_COMPILED_FILES} ${LUA_DEPENDS})
+		set_target_properties(${LUA_COMPILE_NAME} PROPERTIES LUA_FILES "${LUA_COMPILE_COMPILED_FILES}")
+		set_target_properties(${LUA_COMPILE_NAME} PROPERTIES LUA_ID "0")
 	endif()
 
+endmacro(LUA_COMPILE)
+
+macro(LUA_INSTALL)
+	set(oneValueArgs DESTINATION TARGET)
+	cmake_parse_arguments(LUA_INSTALL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+	get_target_property(FILES ${LUA_INSTALL_TARGET} LUA_FILES)
+	install(FILES ${FILES} DESTINATION ${LUA_INSTALL_DESTINATION})
 endmacro(LUA_INSTALL)
