@@ -107,6 +107,23 @@ local function dump(t, indent)
 	end
 end
 
+local function safe_string(str)
+	local len = #str
+	local sstr = {}
+
+	for i=1,len do
+		local b = str:byte(i)
+
+		if b >= 0x20 and b <= 0x7e then
+			sstr[i] = string.char(b)
+		else
+			sstr[i] = string.format('\\x%x', b)
+		end
+	end
+
+	return table.concat(sstr)
+end
+
 local function parse_header(stream, http)
 	local total_len = 0
 
@@ -117,7 +134,7 @@ local function parse_header(stream, http)
 	while #line > 0 do
 		local name, value = line:match("([^%s]+):%s*(.+)")
 		if not name then
-			http._invalid = string.format("invalid header '%s'", line)
+			http._invalid = string.format("invalid header '%s'", safe_string(line))
 			return
 		end
 
@@ -138,7 +155,7 @@ local function parse_request(stream, http)
 
 	http.method, http.uri, http.version = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.method then
-		http._invalid = string.format("invalid request '%s'", line)
+		http._invalid = string.format("invalid request '%s'", safe_string(line))
 		return
 	end
 
@@ -160,7 +177,7 @@ local function parse_response(stream, http)
 
 	http.version, http.status, http.reason = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.version then
-		http._invalid = string.format("invalid response '%s'", line)
+		http._invalid = string.format("invalid response '%s'", safe_string(line))
 		return
 	end
 
@@ -262,7 +279,7 @@ local function parse(http, context, f, name, next_state)
 
 			context.next_dissector = http.next_dissector
 		else
-			haka.log.error("http", context._invalid)
+			haka.log.error("http", "%s", context._invalid)
 			http._tcp_stream:drop()
 			return nil
 		end
@@ -289,6 +306,7 @@ haka.dissector {
 			end
 			http.forge = forge
 			http._state = 0
+			http.connection = connection
 
 			stream.connection.data._http = http
 		end
