@@ -306,7 +306,7 @@ haka.dissector {
 			end
 			http.forge = forge
 			http._state = 0
-			http.connection = connection
+			http.connection = stream.connection
 
 			stream.connection.data._http = http
 		end
