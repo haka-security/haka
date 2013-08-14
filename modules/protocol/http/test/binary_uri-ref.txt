@@ -1,5 +1,5 @@
 warn core: no log module found
-debug tcp-connection: opening connection 127.0.0.1:34220 -> 127.0.0.1:80
+debug tcp-connection: opening connection 127.0.0.1:42072 -> 127.0.0.1:80
 HTTP REQUEST
  _headers_order
    1 = Host
@@ -10,4 +10,4 @@ HTTP REQUEST
  uri = /Ž™ÿ
  version = HTTP/1.1
 error http: invalid header '<html><head>'
-debug tcp-connection: dropping connection 127.0.0.1:34220 -> 127.0.0.1:80
+debug tcp-connection: dropping connection 127.0.0.1:42072 -> 127.0.0.1:80
