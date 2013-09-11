@@ -32,6 +32,7 @@ struct module *module_load(const char *module_name,...);
 void           module_addref(struct module *module);
 void           module_release(struct module *module);
 void           module_set_path(const char *path);
+void           module_add_path(const char *path);
 const char    *module_get_path();
 
 #endif /* _HAKA_MODULE_H */

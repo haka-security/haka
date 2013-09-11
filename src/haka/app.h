@@ -8,6 +8,12 @@
 #include "thread.h"
 
 
+void clean_exit();
+void initialize();
+void check();
+void prepare(int threadcount);
+void start();
+
 struct module;
 
 extern int set_packet_module(struct module *module);
@@ -16,7 +22,6 @@ extern int set_log_module(struct module *module);
 extern int has_log_module();
 
 int set_configuration_script(const char *file);
-int has_configuration_script();
 const char *get_configuration_script();
 
 extern char directory[1024];

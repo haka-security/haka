@@ -151,6 +151,36 @@ void module_set_path(const char *path)
 	modules_path = NULL;
 
 	modules_path = strdup(path);
+	assert(modules_path);
+}
+
+void module_add_path(const char *path)
+{
+	char *new_modules_path = NULL;
+	const int modules_path_len = modules_path ? strlen(modules_path) : 0;
+
+	if (!strchr(path, '*')) {
+		error(L"invalid module path");
+		return;
+	}
+
+	if (modules_path_len > 0) {
+		new_modules_path = malloc(modules_path_len + strlen(path) + 2);
+		assert(new_modules_path);
+
+		strcpy(new_modules_path, modules_path);
+		strcat(new_modules_path, ";");
+		strcat(new_modules_path, path);
+	}
+	else {
+		new_modules_path = malloc(strlen(path) + 1);
+		assert(new_modules_path);
+
+		strcpy(new_modules_path, path);
+	}
+
+	free(modules_path);
+	modules_path = new_modules_path;
 }
 
 const char *module_get_path()
