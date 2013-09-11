@@ -1,2 +1,1 @@
-warn core: no log module found
 error core: Invalid IPv4 address format

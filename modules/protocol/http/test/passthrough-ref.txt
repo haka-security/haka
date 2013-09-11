@@ -1,4 +1,3 @@
-warn core: no log module found
 debug tcp-connection: opening connection 10.2.96.127:57804 -> 10.2.104.129:80
 HTTP REQUEST
  _headers_order

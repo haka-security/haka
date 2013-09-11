@@ -1,4 +1,3 @@
-warn core: no log module found
 error core: unknown field 'none'
 error core: unknown field 'none'
 error core: unknown field 'none'

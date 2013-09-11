@@ -1,3 +1,2 @@
-warn core: no log module found
 debug tcp-connection: opening connection 127.0.0.1:42077 -> 127.0.0.1:80
 debug tcp-connection: closing connection 127.0.0.1:42077 -> 127.0.0.1:80

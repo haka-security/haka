@@ -6,17 +6,17 @@ set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/src/lua/?.lua)
 set(ENV{HAKA_PATH} ${TEST_RUNDIR})
 set(ENV{LD_LIBRARY_PATH} ${TEST_RUNDIR}/lib)
 
-message("Executing LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" ${EXE} -d ${EXE_OPTIONS} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap")
+message("Executing LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" ${EXE} -d ${EXE_OPTIONS} -o ${DST}.pcap ${SRC} ${CONF}")
 
 if(VALGRIND AND NOT "$ENV{QUICK}" STREQUAL "yes")
 	set(DO_VALGRIND 1)
 endif()
 
 if(DO_VALGRIND)
-	execute_process(COMMAND ${VALGRIND} --log-file=${DST}-valgrind.txt ${EXE} -d ${EXE_OPTIONS} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap
+	execute_process(COMMAND ${VALGRIND} --log-file=${DST}-valgrind.txt ${EXE} -d ${EXE_OPTIONS} -o ${DST}.pcap ${SRC} ${CONF}
 		RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)
 else()
-	execute_process(COMMAND ${EXE} -d ${EXE_OPTIONS} ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua ${CONF} ${SRC} ${DST}.pcap
+	execute_process(COMMAND ${EXE} -d ${EXE_OPTIONS} -o ${DST}.pcap ${SRC} ${CONF}
 		RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)
 endif()
 
@@ -40,6 +40,9 @@ if(EXISTS ${REF}.txt)
 	message("Generated output file is ${CMAKE_CURRENT_SOURCE_DIR}/${DST}.txt")
 	message("Original output file is ${REF}.txt")
 	if(HAD_ERROR)
+		if(NOT "$ENV{HAKA_TEST_FIX}" STREQUAL "")
+			execute_process(COMMAND echo cp ${CMAKE_CURRENT_SOURCE_DIR}/${DST}.txt ${REF}.txt OUTPUT_FILE $ENV{HAKA_TEST_FIX})
+		endif()
 		message(FATAL_ERROR "Output different")
 	endif(HAD_ERROR)
 else()
@@ -59,6 +62,9 @@ if(EXISTS ${REF}.pcap)
 	message("Generated pcap file is ${CMAKE_CURRENT_SOURCE_DIR}/${DST}.pcap")
 	message("Original pcap file is ${REF}.pcap")
 	if(HAD_ERROR)
+		if(ENV{HAKA_TEST_FIX})
+			execute_process(COMMAND echo cp ${CMAKE_CURRENT_SOURCE_DIR}/${DST}.pcap ${REF}.pcap OUTPUT_FILE $ENV{HAKA_TEST_FIX})
+		endif()
 		message(FATAL_ERROR "Pcap different")
 	endif(HAD_ERROR)
 else()

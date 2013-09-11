@@ -4,6 +4,11 @@ BEGIN {
 	trace = 0
 }
 
+$0 ~ /^[^ ]+[ ]+[^:]+:[ ]+.*$/ {
+	/* Reformat log output to avoid extra spaces */
+	$0 = $1 " " $2 " " substr($0, index($0,$3));
+}
+
 $0 ~ /warn core:/ {
 	print;
 }

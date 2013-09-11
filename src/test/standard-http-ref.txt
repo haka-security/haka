@@ -1,4 +1,3 @@
-warn core: no log module found
 debug tcp-connection: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
 debug filter: entering packet filetring rules : 50692 --> 80
 warn filter: authorizing http traffic
