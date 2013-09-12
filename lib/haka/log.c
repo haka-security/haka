@@ -126,51 +126,67 @@ bool add_log_module(struct module *module)
 bool remove_log_module(struct module *module)
 {
 	int i;
+	struct module *module_to_release = NULL;
 
 	assert(module);
 
-	rwlock_writelock(&log_module_lock);
+	{
+		rwlock_writelock(&log_module_lock);
 
-	for (i=0; i<log_module_count; ++i) {
-		if (log_module[i] == (struct log_module *)module) {
-			module_release(&log_module[i]->module);
-			log_module[i] = NULL;
-			break;
+		for (i=0; i<log_module_count; ++i) {
+			if (log_module[i] == (struct log_module *)module) {
+				module_to_release = &log_module[i]->module;
+				log_module[i] = NULL;
+				break;
+			}
 		}
-	}
 
-	for (; i<log_module_count; ++i) {
-		log_module[i] = log_module[i-1];
-	}
+		for (; i<log_module_count; ++i) {
+			log_module[i] = log_module[i-1];
+		}
 
-	if (i<log_module_count) {
-		log_module[i] = NULL;
-		--log_module_count;
-	}
-	else {
+		if (i<log_module_count) {
+			log_module[i] = NULL;
+			--log_module_count;
+		}
+		else {
+			rwlock_unlock(&log_module_lock);
+			error(L"Log modules is not registered");
+			return false;
+		}
+
 		rwlock_unlock(&log_module_lock);
-		error(L"Log modules is not registered");
-		return false;
 	}
 
-	rwlock_unlock(&log_module_lock);
+	if (module_to_release) {
+		module_release(module_to_release);
+	}
+
 	return true;
 }
 
 void remove_all_log_modules()
 {
-	int i;
+	int i, module_count;
+	struct module *module_to_release[MAX_LOG_MODULE] = {0};
 
-	rwlock_writelock(&log_module_lock);
+	{
+		rwlock_writelock(&log_module_lock);
 
-	for (i=0; i<log_module_count; ++i) {
-		module_release(&log_module[i]->module);
-		log_module[i] = NULL;
+		for (i=0; i<log_module_count; ++i) {
+			module_to_release[i] = &log_module[i]->module;
+			log_module[i] = NULL;
+		}
+
+		module_count = log_module_count;
+		log_module_count = 0;
+
+		rwlock_unlock(&log_module_lock);
 	}
 
-	log_module_count = 0;
-
-	rwlock_unlock(&log_module_lock);
+	for (i=0; i<module_count; ++i) {
+		module_release(module_to_release[i]);
+	}
 }
 
 static const char *str_level[HAKA_LOG_LEVEL_LAST] = {
