@@ -2,6 +2,7 @@
 #include <haka/packet_module.h>
 #include <haka/log.h>
 #include <haka/types.h>
+#include <haka/parameters.h>
 #include <haka/thread.h>
 #include <haka/error.h>
 #include <haka/container/list.h>
@@ -62,59 +63,33 @@ static char *output_file;
 
 static void cleanup()
 {
-	free(input_file);
 	free(input_iface);
+	free(input_file);
 	free(output_file);
 }
 
 static int init(struct parameters *args)
 {
-#ifdef TODO
-	int index = 0;
+	const char *input, *output, *interface;
 
-	if (argc < 2) {
-		messagef(HAKA_LOG_ERROR, L"pcap", L"specify a device (-i) or a pcap filename (-f)");
+	interface = parameters_get_string(args, "interfaces", NULL);
+	input = parameters_get_string(args, "file", NULL);
+
+	if ((interface && input) || !(interface || input)) {
+		messagef(HAKA_LOG_ERROR, L"pcap", L"specifiy either a device or a pcap filename");
 		cleanup();
 		return 1;
 	}
 
-	/* get a pcap descriptor from device */
-	if (strcmp(argv[0], "-i") == 0) {
-		input_iface = strdup(argv[1]);
-	}
-	/* get a pcap descriptor from a pcap file */
-	else if (strcmp(argv[0], "-f") == 0) {
-		input_file = strdup(argv[1]);
-	}
-	/* unkonwn options */
-	else  {
-		messagef(HAKA_LOG_ERROR, L"pcap", L"unkown options");
-		cleanup();
-		return 1;
-	}
+	if (interface)
+		input_iface = strdup(interface);
 
-	index += 2;
+	if (input)
+		input_file = strdup(input);
 
-	while (argc-index >= 1) {
-		if (strcmp(argv[index], "-o") == 0) {
-			if (argc-index >= 2) {
-				output_file = strdup(argv[++index]);
-			}
-			else {
-				messagef(HAKA_LOG_ERROR, L"pcap", L"-o must be followed by the file output name");
-				cleanup();
-				return 1;
-			}
-		}
-		else {
-			messagef(HAKA_LOG_ERROR, L"pcap", L"unknown option '%s'", argv[index]);
-			cleanup();
-			return 1;
-		}
+	if ((output = parameters_get_string(args, "output", NULL)))
+		output_file = strdup(output);
 
-		++index;
-	}
-#endif
 	return 0;
 }
 
