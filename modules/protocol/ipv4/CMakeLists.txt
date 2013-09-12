@@ -20,6 +20,4 @@ INSTALL_MODULE(ipv4 protocol)
 install(DIRECTORY haka DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.si")
 
 # Tests
-include(TestModuleLoad)
-TEST_MODULE_LOAD(ipv4 protocol)
 add_subdirectory(test)
