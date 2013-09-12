@@ -10,9 +10,10 @@
 
 void clean_exit();
 void initialize();
-void check();
 void prepare(int threadcount);
 void start();
+
+const char *haka_path();
 
 struct module;
 

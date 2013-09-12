@@ -46,4 +46,3 @@ enum packet_mode {
 enum packet_mode   packet_mode();
 
 #endif /* _HAKA_PACKET_H */
-

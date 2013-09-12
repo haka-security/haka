@@ -5,6 +5,7 @@
 #include <string.h>
 #include <locale.h>
 #include <signal.h>
+#include <libgen.h>
 
 #include <haka/packet_module.h>
 #include <haka/thread.h>
@@ -52,6 +53,12 @@ static void fatal_error_signal(int sig)
 	}
 }
 
+const char *haka_path()
+{
+	const char *haka_path = getenv("HAKA_PATH");
+	return haka_path ? haka_path : HAKA_PREFIX;
+}
+
 void initialize()
 {
 		/* Set locale */
@@ -70,12 +77,9 @@ void initialize()
 
 		size_t path_len;
 		char *path;
-		char *haka_path = getenv("HAKA_PATH");
-		if (haka_path == NULL) {
-			haka_path = HAKA_PREFIX;
-		}
+		const char *haka_path_s = haka_path();
 
-		path_len = 2*strlen(haka_path) + strlen(HAKA_CORE_PATH) + 1 +
+		path_len = 2*strlen(haka_path_s) + strlen(HAKA_CORE_PATH) + 1 +
 				strlen(HAKA_MODULE_PATH) + 1;
 
 		path = malloc(path_len);
@@ -85,39 +89,15 @@ void initialize()
 			exit(1);
 		}
 
-		strncpy(path, haka_path, path_len);
+		strncpy(path, haka_path_s, path_len);
 		strncat(path, HAKA_CORE_PATH, path_len);
 		strncat(path, ";", path_len);
-		strncat(path, haka_path, path_len);
+		strncat(path, haka_path_s, path_len);
 		strncat(path, HAKA_MODULE_PATH, path_len);
 
 		module_set_path(path);
 
 		free(path);
-	}
-}
-
-void check()
-{
-	int err = 0;
-
-	if (!get_packet_module()) {
-		message(HAKA_LOG_FATAL, L"core", L"no packet module found");
-		err = 1;
-	}
-
-	if (!configuration_file) {
-		message(HAKA_LOG_FATAL, L"core", L"no configuration script set");
-		err = 1;
-	}
-
-	if (!has_log_module()) {
-		message(HAKA_LOG_WARNING, L"core", L"no log module found");
-	}
-
-	if (err) {
-		clean_exit();
-		exit(1);
 	}
 }
 
@@ -131,6 +111,28 @@ void prepare(int threadcount)
 		if (!packet_module->multi_threaded()) {
 			threadcount = 1;
 		}
+	}
+
+	/* Add module path to the configuration folder */
+	{
+		char *module_path;
+
+		module_path = malloc(strlen(configuration_file) + 3);
+		assert(module_path);
+		strcpy(module_path, configuration_file);
+		dirname(module_path);
+		strcat(module_path, "/*");
+
+		module_add_path(module_path);
+		if (check_error()) {
+			message(HAKA_LOG_FATAL, L"core", clear_error());
+			free(module_path);
+			clean_exit();
+			exit(1);
+		}
+
+		free(module_path);
+		module_path = NULL;
 	}
 
 	thread_states = thread_pool_create(threadcount, packet_module);
@@ -163,8 +165,9 @@ int set_configuration_script(const char *file)
 	free(configuration_file);
 	configuration_file = NULL;
 
-	if (file)
+	if (file) {
 		configuration_file = strdup(file);
+	}
 
 	return 0;
 }

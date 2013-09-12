@@ -25,7 +25,7 @@
 #define HAKA_LOG_FACILITY LOG_LOCAL0
 
 
-static int init(int argc, char *argv[])
+static int init(struct parameters *args)
 {
 	openlog("Haka", LOG_CONS | LOG_PID | LOG_NDELAY, HAKA_LOG_FACILITY);
 	return 0;

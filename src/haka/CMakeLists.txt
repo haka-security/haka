@@ -25,6 +25,8 @@ LUA_LINK(haka)
 
 install(TARGETS haka RUNTIME DESTINATION bin)
 
+install(FILES haka.conf DESTINATION etc/haka)
+
 add_subdirectory(conf)
 
 # Build hakapcap program

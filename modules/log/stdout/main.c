@@ -46,7 +46,7 @@ static bool use_colors = 0;
 static mutex_t mutex;
 
 
-static int init(int argc, char *argv[])
+static int init(struct parameters *args)
 {
 	if (!mutex_init(&mutex, true)) {
 		return 1;

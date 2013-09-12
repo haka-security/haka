@@ -5,8 +5,8 @@
 #include <wchar.h>
 #include <haka/thread.h>
 #include <haka/version.h>
+#include <haka/parameters.h>
 
-#define MAX_EXTRA_MODULE_PARAMETERS 10
 
 struct module {
 	void          *handle;
@@ -24,11 +24,11 @@ struct module {
 	const wchar_t *author;
 	int            api_version;
 
-	int          (*init)(int argc, char *argv[]);
+	int          (*init)(struct parameters *args);
 	void         (*cleanup)();
 };
 
-struct module *module_load(const char *module_name,...);
+struct module *module_load(const char *module_name, struct parameters *args);
 void           module_addref(struct module *module);
 void           module_release(struct module *module);
 void           module_set_path(const char *path);

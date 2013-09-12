@@ -12,6 +12,7 @@
 #include <haka/log.h>
 #include <haka/error.h>
 #include <haka/compiler.h>
+#include <haka/parameters.h>
 
 
 static char *modules_path = NULL;
@@ -21,23 +22,11 @@ FINI static void _module_cleanup()
 	free(modules_path);
 }
 
-struct module *module_load(const char *module_name,... )
+struct module *module_load(const char *module_name, struct parameters *args)
 {
 	void *module_handle = NULL;
 	struct module *module = NULL;
 	char *full_module_name;
-	int argc = 0;
-	char *argv[MAX_EXTRA_MODULE_PARAMETERS], *arg;
-
-	va_list params;
-	va_start(params,module_name);
-	arg = va_arg(params,char *);
-	while(arg) {
-		argv[argc] = arg;
-		arg = va_arg(params,char *);
-		argc++;
-	}
-	va_end(params);
 
 	assert(module_name);
 
@@ -107,7 +96,7 @@ struct module *module_load(const char *module_name,... )
 		messagef(HAKA_LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
 		         module->name, module->author);
 
-		if (module->init(argc, argv) || check_error()) {
+		if (module->init(args) || check_error()) {
 			if (check_error())
 				error(L"unable to initialize module: %ls", clear_error());
 			else

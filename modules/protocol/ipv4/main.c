@@ -2,7 +2,7 @@
 #include <haka/module.h>
 
 
-static int init(int argc, char *argv[])
+static int init(struct parameters *args)
 {
 	return 0;
 }

@@ -11,28 +11,6 @@ char *suffix = HAKA_MODULE_SUFFIX;
 
 %include "haka/lua/swig.si"
 
-%nodefaultctor;
-
-struct module {
-	%immutable;
-	const wchar_t *name;
-	const wchar_t *author;
-	const wchar_t *description;
-
-	%extend {
-		~module()
-		{
-			module_release($self);
-		}
-	}
-};
-
-%rename(load) module_load;
-
-%varargs(10, char *arg = NULL) module_load;
-%newobject module_load;
-struct module *module_load(const char *name, ...);
-
 %rename(path) module_get_path;
 const char *module_get_path();
 

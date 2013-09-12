@@ -407,8 +407,14 @@ static void cleanup()
 	}
 }
 
-static int init(int argc, char *argv[])
+static int init(struct parameters *args)
 {
+	if (0) {
+		iptables_config(NULL, 0);
+		open_pcap(NULL, NULL);
+	}
+
+#ifdef TODO
 	char *new_iptables_config = NULL;
 	char **ifaces = NULL;
 	int thread_count = thread_get_packet_capture_cpu_count();
@@ -506,6 +512,8 @@ static int init(int argc, char *argv[])
 		open_pcap(&pcap->out, file_out);
 		open_pcap(&pcap->drop, file_drop);
 	}
+#endif
+
 	return 0;
 }
 

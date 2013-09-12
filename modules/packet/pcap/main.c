@@ -67,8 +67,9 @@ static void cleanup()
 	free(output_file);
 }
 
-static int init(int argc, char *argv[])
+static int init(struct parameters *args)
 {
+#ifdef TODO
 	int index = 0;
 
 	if (argc < 2) {
@@ -113,7 +114,7 @@ static int init(int argc, char *argv[])
 
 		++index;
 	}
-
+#endif
 	return 0;
 }
 
