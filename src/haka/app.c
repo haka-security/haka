@@ -31,7 +31,7 @@ void clean_exit()
 	}
 
 	set_packet_module(NULL);
-	set_log_module(NULL);
+	remove_all_log_modules();
 }
 
 
@@ -53,6 +53,11 @@ static void fatal_error_signal(int sig)
 	}
 }
 
+static void handle_sighup()
+{
+	enable_stdout_logging(false);
+}
+
 const char *haka_path()
 {
 	const char *haka_path = getenv("HAKA_PATH");
@@ -68,7 +73,7 @@ void initialize()
 	signal(SIGTERM, fatal_error_signal);
 	signal(SIGINT, fatal_error_signal);
 	signal(SIGQUIT, fatal_error_signal);
-	signal(SIGHUP, fatal_error_signal);
+	signal(SIGHUP, handle_sighup);
 
 	/* Default module path */
 	{

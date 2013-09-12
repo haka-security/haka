@@ -110,21 +110,6 @@ int main(int argc, char *argv[])
 
 	/* Select and initialize modules */
 	{
-		struct module *logger;
-
-		logger = module_load("log/stdout", NULL);
-		if (!logger) {
-			message(HAKA_LOG_WARNING, L"core", L"cannot log module");
-			free(output);
-			clean_exit();
-			return 1;
-		}
-
-		set_log_module(logger);
-		module_release(logger);
-	}
-
-	{
 		struct module *pcap = NULL;
 		struct parameters *args = parameters_create();
 

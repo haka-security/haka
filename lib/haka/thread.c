@@ -126,6 +126,83 @@ bool mutex_unlock(mutex_t *mutex)
 
 
 /*
+ * Read-Write Locks
+ */
+
+bool rwlock_init(rwlock_t *rwlock)
+{
+	const int err = pthread_rwlock_init(rwlock, NULL);
+	if (err) {
+		error(L"rwlock error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool rwlock_destroy(rwlock_t *rwlock)
+{
+	const int err = pthread_rwlock_destroy(rwlock);
+	if (err) {
+		error(L"rwlock error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool rwlock_readlock(rwlock_t *rwlock)
+{
+	const int err = pthread_rwlock_rdlock(rwlock);
+	if (err) {
+		error(L"rwlock error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool rwlock_tryreadlock(rwlock_t *rwlock)
+{
+	const int err = pthread_rwlock_tryrdlock(rwlock);
+	if (err == 0) return true;
+	else if (err == EBUSY) return false;
+	else {
+		error(L"rwlock error: %s", errno_error(err));
+		return false;
+	}
+}
+
+bool rwlock_writelock(rwlock_t *rwlock)
+{
+	const int err = pthread_rwlock_wrlock(rwlock);
+	if (err) {
+		error(L"rwlock error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool rwlock_trywritelock(rwlock_t *rwlock)
+{
+	const int err = pthread_rwlock_trywrlock(rwlock);
+	if (err == 0) return true;
+	else if (err == EBUSY) return false;
+	else {
+		error(L"rwlock error: %s", errno_error(err));
+		return false;
+	}
+}
+
+bool rwlock_unlock(rwlock_t *rwlock)
+{
+	const int err = pthread_rwlock_unlock(rwlock);
+	if (err) {
+		error(L"rwlock error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+
+/*
  * Semaphore
  */
 

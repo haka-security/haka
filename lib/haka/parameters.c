@@ -114,20 +114,35 @@ static bool parameters_check_key(struct parameters *params, const char *key)
 
 const char *parameters_get_string(struct parameters *params, const char *key, const char *def)
 {
-	if (!parameters_check_key(params, key)) return NULL;
-	return iniparser_getstring(params->iniparser_dict, params->key, (char *)def);
+	if (params) {
+		if (!parameters_check_key(params, key)) return NULL;
+		return iniparser_getstring(params->iniparser_dict, params->key, (char *)def);
+	}
+	else {
+		return def;
+	}
 }
 
 bool parameters_get_boolean(struct parameters *params, const char *key, bool def)
 {
-	if (!parameters_check_key(params, key)) return false;
-	return iniparser_getboolean(params->iniparser_dict, params->key, def);
+	if (params) {
+		if (!parameters_check_key(params, key)) return false;
+		return iniparser_getboolean(params->iniparser_dict, params->key, def);
+	}
+	else {
+		return def;
+	}
 }
 
 int parameters_get_integer(struct parameters *params, const char *key, int def)
 {
-	if (!parameters_check_key(params, key)) return false;
-	return iniparser_getint(params->iniparser_dict, params->key, def);
+	if (params) {
+		if (!parameters_check_key(params, key)) return false;
+		return iniparser_getint(params->iniparser_dict, params->key, def);
+	}
+	else {
+		return def;
+	}
 }
 
 bool parameters_set_string(struct parameters *params, const char *key, const char *value)

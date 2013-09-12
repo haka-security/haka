@@ -58,6 +58,21 @@ bool mutex_trylock(mutex_t *mutex);
 bool mutex_unlock(mutex_t *mutex);
 
 
+/* Read-Write Locks */
+
+typedef pthread_rwlock_t rwlock_t;
+
+#define RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER
+
+bool rwlock_init(rwlock_t *rwlock);
+bool rwlock_destroy(rwlock_t *rwlock);
+bool rwlock_readlock(rwlock_t *rwlock);
+bool rwlock_tryreadlock(rwlock_t *rwlock);
+bool rwlock_writelock(rwlock_t *rwlock);
+bool rwlock_trywritelock(rwlock_t *rwlock);
+bool rwlock_unlock(rwlock_t *rwlock);
+
+
 /* Semaphore */
 
 typedef sem_t semaphore_t;

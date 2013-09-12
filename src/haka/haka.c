@@ -80,20 +80,6 @@ static int parse_cmdline(int *argc, char ***argv)
 			pass_throught = true;
 			break;
 
-		/*case 'j':
-			{
-				const int thread_count = atoi(optarg);
-				if (thread_count > 0) {
-					thread_set_packet_capture_cpu_count(thread_count);
-				}
-				else {
-					usage(stderr, (*argv)[0]);
-					fprintf(stderr, "invalid thread count\n");
-					return 2;
-				}
-			}
-			break;*/
-
 		case 'c':
 			{
 				config = strdup(optarg);
@@ -155,11 +141,8 @@ int read_configuration(const char *file)
 				return 1;
 			}
 
-			set_log_module(logger);
+			add_log_module(logger);
 			module_release(logger);
-		}
-		else {
-			message(HAKA_LOG_WARNING, L"core", L"no logging module specified");
 		}
 	}
 
