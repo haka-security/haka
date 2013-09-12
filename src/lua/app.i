@@ -37,3 +37,17 @@ void exit(int);
 
 %rename(current_thread) thread_get_id;
 int thread_get_id();
+
+%luacode {
+	app._on_exit = {}
+
+	function app._exiting()
+		for _, f in pairs(haka.app._on_exit) do
+			f()
+		end
+	end
+
+	function haka.on_exit(func)
+		table.insert(haka.app._on_exit, func)
+	end
+}

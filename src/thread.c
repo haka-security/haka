@@ -68,12 +68,34 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 	packet_release(pkt);
 }
 
+static void lua_on_exit(lua_State *L)
+{
+	int h;
+	LUA_STACK_MARK(L);
+
+	lua_pushcfunction(L, lua_state_error_formater);
+	h = lua_gettop(L);
+
+	lua_getglobal(L, "haka");
+	lua_getfield(L, -1, "app");
+	lua_getfield(L, -1, "_exiting");
+
+	if (lua_pcall(L, 0, 0, h)) {
+		lua_state_print_error(L, L"exit");
+	}
+
+	lua_pop(L, 3);
+
+	LUA_STACK_CHECK(L, 0);
+}
+
 static void cleanup_thread_state_lua(struct thread_state *state)
 {
 	assert(state);
 	assert(state->packet_module);
 
 	if (state->lua) {
+		lua_on_exit(state->lua->L);
 		lua_state_close(state->lua);
 		state->lua = NULL;
 	}

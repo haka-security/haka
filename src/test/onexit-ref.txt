@@ -1,0 +1,3 @@
+warn core: no log module found
+warn core: no registered rule
+info test: exiting
