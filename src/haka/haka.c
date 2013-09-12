@@ -36,11 +36,10 @@ static void help(const char *program)
 	fprintf(stdout, "\t-c,--config <conf>: Load a specific configuration file\n"
 					"\t                      (default: %s/etc/haka/haka.conf)\n", haka_path());
 	fprintf(stdout, "\t-d,--debug:         Display debug output\n");
-	fprintf(stdout, "\t--daemon:           Run in the background\n");
+	fprintf(stdout, "\t--no-daemon:        Do no run in the background\n");
 }
 
-static bool daemonize = false;
-static bool pass_throught = false;
+static bool daemonize = true;
 static char *config = NULL;
 
 static int parse_cmdline(int *argc, char ***argv)
@@ -53,7 +52,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "help",         no_argument,       0, 'h' },
 		{ "config",       required_argument, 0, 'c' },
 		{ "debug",        no_argument,       0, 'd' },
-		{ "daemon",       no_argument,       0, 'D' },
+		{ "no-daemon",    no_argument,       0, 'D' },
 		{ 0,              0,                 0, 0 }
 	};
 
@@ -73,17 +72,11 @@ static int parse_cmdline(int *argc, char ***argv)
 			return 0;
 
 		case 'D':
-			daemonize = true;
-			break;
-
-		case 'P':
-			pass_throught = true;
+			daemonize = false;
 			break;
 
 		case 'c':
-			{
-				config = strdup(optarg);
-			}
+			config = strdup(optarg);
 			break;
 
 		default:
@@ -217,6 +210,17 @@ int main(int argc, char *argv[])
 
 	/* Main loop */
 	prepare(-1);
+
+	if (daemonize) {
+		message(HAKA_LOG_INFO, L"core", L"switch to background");
+
+		if (daemon(1, 0)) {
+			message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
+			clean_exit();
+			return 1;
+		}
+	}
+
 	start();
 
 	clean_exit();

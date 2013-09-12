@@ -27,8 +27,6 @@ install(TARGETS haka RUNTIME DESTINATION bin)
 
 install(FILES haka.conf DESTINATION etc/haka)
 
-add_subdirectory(conf)
-
 # Build hakapcap program
 add_executable(hakapcap
 	hakapcap.c)
