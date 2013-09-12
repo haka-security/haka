@@ -27,7 +27,7 @@
 
 static int init(struct parameters *args)
 {
-	openlog("Haka", LOG_CONS | LOG_PID | LOG_NDELAY, HAKA_LOG_FACILITY);
+	openlog("haka", LOG_CONS | LOG_PID | LOG_NDELAY, HAKA_LOG_FACILITY);
 	return 0;
 }
 
