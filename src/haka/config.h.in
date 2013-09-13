@@ -1,0 +1,2 @@
+
+#define HAKA_PID_FILE     "${HAKA_PID_FILE}"

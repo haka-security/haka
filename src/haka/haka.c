@@ -14,6 +14,7 @@
 #include "app.h"
 #include "thread.h"
 #include "lua/state.h"
+#include "config.h"
 
 
 #define HAKA_CONFIG "/etc/haka/haka.conf"
@@ -189,10 +190,10 @@ int read_configuration(const char *file)
 int main(int argc, char *argv[])
 {
 	int ret;
+	FILE *pid_file = NULL;
 
 	initialize();
 
-	/* Check arguments */
 	ret = parse_cmdline(&argc, &argv);
 	if (ret >= 0) {
 		free(config);
@@ -200,7 +201,6 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	/* Read configuration file */
 	ret = read_configuration(config);
 	free(config);
 	if (ret >= 0) {
@@ -208,17 +208,31 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	/* Main loop */
 	prepare(-1);
+
+	pid_file = fopen(HAKA_PID_FILE, "w");
+	if (!pid_file) {
+		message(HAKA_LOG_FATAL, L"core", L"cannot create pid file");
+		clean_exit();
+		return 1;
+	}
 
 	if (daemonize) {
 		message(HAKA_LOG_INFO, L"core", L"switch to background");
 
 		if (daemon(1, 0)) {
 			message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
+			fclose(pid_file);
 			clean_exit();
 			return 1;
 		}
+	}
+
+	{
+		const pid_t pid = getpid();
+		fprintf(pid_file, "%i\n", pid);
+		fclose(pid_file);
+		pid_file = NULL;
 	}
 
 	start();

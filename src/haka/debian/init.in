@@ -2,12 +2,12 @@
 # Start/stop the haka daemon.
 #
 
-PATH=/bin:/usr/bin:/sbin:/usr/sbin:@HAKA_INSTALL_PREFIX@/bin
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:@CMAKE_HAKA_INSTALL_PREFIX@/bin
 DESC="haka daemon"
 NAME=haka
-DAEMON=@HAKA_INSTALL_PREFIX@/bin/haka
-PIDFILE=/var/run/haka.pid
-SCRIPTNAME=/etc/init.d/"$NAME"
+DAEMON=@CMAKE_HAKA_INSTALL_PREFIX@/bin/haka
+PIDFILE=@HAKA_PID_FILE@
+SCRIPTNAME=@CMAKE_INSTALL_PREFIX@/etc/init.d/"$NAME"
 DESCRIPTION="haka network tool"
 
 test -f $DAEMON || exit 0

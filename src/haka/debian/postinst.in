@@ -1,0 +1,9 @@
+#!/bin/sh
+
+#echo postinst $*
+
+if [ -f @HAKA_PID_FILE@ ]; then
+	if [ "$(cat @HAKA_PID_FILE@)" = "restart" ]; then
+		@CMAKE_INSTALL_PREFIX@/etc/init.d/haka start
+	fi
+fi

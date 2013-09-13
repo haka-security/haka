@@ -23,7 +23,7 @@
 #cmakedefine HAKA_LUAJIT @HAKA_LUAJIT@
 #cmakedefine HAKA_LUA51  @HAKA_LUA51@
 
-#define HAKA_PREFIX      "@HAKA_INSTALL_PREFIX@"
+#define HAKA_PREFIX      "@CMAKE_HAKA_INSTALL_PREFIX@"
 
 #cmakedefine HAKA_DEBUG
 #cmakedefine HAKA_NDEBUG

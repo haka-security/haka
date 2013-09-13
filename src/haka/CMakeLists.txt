@@ -1,9 +1,12 @@
 
+set(HAKA_PID_FILE "${CMAKE_INSTALL_PREFIX}/var/run/haka.pid")
+
 # Setup rpath
-set(CMAKE_INSTALL_RPATH "${HAKA_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_RPATH "${CMAKE_HAKA_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH false)
 
 include_directories(.)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Lua
 add_subdirectory(lua)
@@ -16,6 +19,8 @@ add_library(haka-common STATIC
 add_dependencies(haka-common ${LUA_DEPENDS})
 
 # Build haka program
+configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
 add_executable(haka
 	haka.c)
 
@@ -29,9 +34,6 @@ install(TARGETS haka RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
 
 install(FILES haka.conf DESTINATION ${HAKA_INSTALL_PREFIX}/etc/haka)
 
-configure_file(init.debian.in ${CMAKE_CURRENT_BINARY_DIR}/init.debian)
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/init.debian DESTINATION etc/init.d RENAME haka)
-
 # Build hakapcap program
 add_executable(hakapcap
 	hakapcap.c)
@@ -43,3 +45,5 @@ target_link_libraries(hakapcap haka-liblua)
 LUA_LINK(hakapcap)
 
 install(TARGETS hakapcap RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
+
+add_subdirectory(debian)
