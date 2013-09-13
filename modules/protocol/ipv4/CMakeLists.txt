@@ -17,7 +17,7 @@ target_link_libraries(ipv4 libhaka)
 
 INSTALL_MODULE(ipv4 protocol)
 
-install(DIRECTORY haka DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.si")
+install(DIRECTORY haka DESTINATION ${HAKA_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" PATTERN "*.si")
 
 # Tests
 add_subdirectory(test)

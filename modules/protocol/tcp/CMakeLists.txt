@@ -19,7 +19,7 @@ INSTALL_MODULE(tcp protocol)
 lua_compile(NAME tcp-connection FILES tcp-connection.lua)
 lua_install(TARGET tcp-connection DESTINATION ${MODULE_INSTALL_PATH}/protocol)
 
-install(DIRECTORY haka DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.si")
+install(DIRECTORY haka DESTINATION ${HAKA_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" PATTERN "*.si")
 
 # Tests
 add_subdirectory(test)

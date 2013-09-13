@@ -16,6 +16,6 @@ target_link_libraries(haka-liblua libhaka)
 lua_compile(NAME haka-lua FILES rule.lua utils.lua color.lua)
 lua_compile(NAME haka-lua FILES interactive.lua FLAGS ${LUA_FLAGS_DEBUG})
 
-lua_install(TARGET haka-lua DESTINATION share/haka/core)
+lua_install(TARGET haka-lua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/core)
 
 include_directories(.)

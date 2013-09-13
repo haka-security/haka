@@ -1,5 +1,5 @@
 
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_RPATH "${HAKA_INSTALL_PREFIX}/lib")
 
 set(CMAKE_SWIG_FLAGS "-nomoduleglobal")
 macro(SWIG_FIX_ENTRYPOINT target type)
@@ -12,7 +12,7 @@ set(CMAKE_SHARED_MODULE_SUFFIX "${HAKA_MODULE_SUFFIX}")
 set(CMAKE_SHARED_LIBRARY_PREFIX "${HAKA_MODULE_PREFIX}")
 set(CMAKE_SHARED_LIBRARY_SUFFIX "${HAKA_MODULE_SUFFIX}")
 
-set(MODULE_INSTALL_PATH share/haka/modules)
+set(MODULE_INSTALL_PATH ${HAKA_INSTALL_PREFIX}/share/haka/modules)
 
 macro(INCLUDE_MODULE name type)
 	include_directories(${CMAKE_SOURCE_DIR}/modules/${type}/${name})
@@ -21,7 +21,7 @@ endmacro(INCLUDE_MODULE)
 macro(DEPENDS_MODULE target name type)
 	INCLUDE_MODULE(${name} ${type})
 	target_link_libraries(${target} ${name})
-	set_target_properties(${target} PROPERTIES INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/share/haka/modules/${type}")
+	set_target_properties(${target} PROPERTIES INSTALL_RPATH "${MODULE_INSTALL_PATH}/${type}")
 endmacro(DEPENDS_MODULE)
 
 macro(INSTALL_MODULE target type)

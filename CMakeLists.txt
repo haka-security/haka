@@ -56,7 +56,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 endif()
 
 # Install prefix
-set(PREFIX "/usr/local" CACHE STRING "Installation prefix")
+set(PREFIX "/" CACHE STRING "Installation prefix")
 message(STATUS "Installation prefix (PREFIX): ${PREFIX}")
 
 if(NOT IS_ABSOLUTE ${PREFIX})
@@ -64,6 +64,8 @@ if(NOT IS_ABSOLUTE ${PREFIX})
 else()
 	set(CMAKE_INSTALL_PREFIX ${PREFIX})
 endif()
+
+set(HAKA_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/opt/haka")
 
 # Lua
 set(LUA "luajit" CACHE STRING "Lua version")
@@ -165,10 +167,7 @@ add_subdirectory(modules)
 add_subdirectory(sample)
 add_subdirectory(include)
 
-# Configuration files
-configure_file(include/haka/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/haka/config.h)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/haka/config.h DESTINATION include/haka)
-
+# Documentation
 find_package(Sphinx)
 if(SPHINX_FOUND)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
@@ -179,7 +178,7 @@ if(SPHINX_FOUND)
 		COMMENT "Generating API documentation with Sphinx" VERBATIM
 	)
 
-	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION share/doc/haka/manual)
+	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/doc/manual)
 endif(SPHINX_FOUND)
 
 # add a target to run cppcheck on the sources
@@ -206,7 +205,7 @@ set(CPACK_PACKAGE_VERSION_MINOR ${HAKA_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${HAKA_VERSION_PATCH})
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${CMAKE_SYSTEM_PROCESSOR}_${LUA}")
 
-install(FILES LICENSE.txt DESTINATION share/doc/haka)
+install(FILES LICENSE.txt DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka)
 set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt)
 
 # Debian package
