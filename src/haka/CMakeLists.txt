@@ -15,8 +15,8 @@ add_subdirectory(lua)
 add_library(haka-common STATIC
 	app.c
 	thread.c)
-	
-add_dependencies(haka-common ${LUA_DEPENDS})
+
+LUA_DEPENDS(haka-common)
 
 # Build haka program
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
