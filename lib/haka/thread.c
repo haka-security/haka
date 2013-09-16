@@ -107,6 +107,21 @@ bool thread_setcanceltype(enum thread_cancel_t type)
 	return true;
 }
 
+bool thread_setcancelstate(bool enable)
+{
+	const int err = pthread_setcancelstate(enable ? PTHREAD_CANCEL_ENABLE : PTHREAD_CANCEL_DISABLE, NULL);
+	if (err) {
+		error(L"thread set cancel state error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+void thread_testcancel()
+{
+	pthread_testcancel();
+}
+
 
 /*
  * Mutex

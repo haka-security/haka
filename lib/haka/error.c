@@ -85,7 +85,7 @@ const char *errno_error(int err)
 {
 	if (error_is_valid) {
 		struct local_error *context = error_context();
-		if (strerror_r(err, context->errno_message, HAKA_ERROR_SIZE)) {
+		if (strerror_r(err, context->errno_message, HAKA_ERROR_SIZE) == 0) {
 			context->error_message[HAKA_ERROR_SIZE-1] = 0;
 			return context->errno_message;
 		}

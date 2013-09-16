@@ -94,6 +94,11 @@ static int parse_cmdline(int *argc, char ***argv)
 	return -1;
 }
 
+void clean_exit()
+{
+	basic_clean_exit();
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;

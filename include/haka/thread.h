@@ -19,6 +19,8 @@ int  thread_get_cpu_count();
 
 typedef pthread_t thread_t;
 
+#define THREAD_CANCELED  PTHREAD_CANCELED
+
 bool     thread_create(thread_t *thread, void *(*main)(void*), void *param);
 bool     thread_join(thread_t thread, void **ret);
 bool     thread_cancel(thread_t thread);
@@ -33,7 +35,9 @@ enum thread_cancel_t {
 	THREAD_CANCEL_ASYNCHRONOUS
 };
 
+bool     thread_setcancelstate(bool enable);
 bool     thread_setcanceltype(enum thread_cancel_t type);
+void     thread_testcancel();
 
 
 /* Atomic counter */

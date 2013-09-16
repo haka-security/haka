@@ -1,5 +1,6 @@
 
 set(HAKA_PID_FILE "${CMAKE_INSTALL_PREFIX}/var/run/haka.pid")
+set(HAKA_CTL_SOCKET_FILE "${CMAKE_INSTALL_PREFIX}/var/run/haka-ctl.sock")
 
 # Setup rpath
 set(CMAKE_INSTALL_RPATH "${CMAKE_HAKA_INSTALL_PREFIX}/lib")
@@ -22,7 +23,8 @@ LUA_DEPENDS(haka-common)
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 add_executable(haka
-	haka.c)
+	haka.c
+	ctl.c)
 
 target_link_libraries(haka libhaka)
 target_link_libraries(haka haka-common)

@@ -11,10 +11,11 @@ struct list {
 	struct list    *next;
 };
 
+#define list_getuserptr(l, offset)    ((l) ? (void*)((char*)(l)-(offset)) : NULL)
 
 #define list_init(a)                  { _list_init(&(a)->list); }
-#define list_next(a)                  ((typeof(a))(a)->list.next)
-#define list_prev(a)                  ((typeof(a))(a)->list.prev)
+#define list_next(a)                  ((typeof(a))(list_getuserptr((a)->list.next, offsetof(typeof(*a), list))))
+#define list_prev(a)                  ((typeof(a))(list_getuserptr((a)->list.prev, offsetof(typeof(*a), list))))
 #define list_remove(a, h, t)           _list_remove(&(a)->list, offsetof(typeof(*a), list), (void**)(h), (void**)(t))
 #define list_insert_after(a, i, h, t)  _list_insert_after(&(a)->list, (i) ? &(((typeof(a))(i))->list) : NULL, offsetof(typeof(*a), list), (void**)(h), (void**)(t))
 #define list_insert_before(a, i, h, t) _list_insert_before(&(a)->list, (i) ? &(((typeof(a))(i))->list) : NULL, offsetof(typeof(*a), list), (void**)(h), (void**)(t))

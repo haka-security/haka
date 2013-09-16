@@ -8,6 +8,7 @@
 #include "thread.h"
 
 
+void basic_clean_exit();
 void clean_exit();
 void initialize();
 void prepare(int threadcount);

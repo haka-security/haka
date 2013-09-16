@@ -19,7 +19,7 @@ static struct thread_pool *thread_states;
 static char *configuration_file;
 
 
-void clean_exit()
+void basic_clean_exit()
 {
 	set_configuration_script(NULL);
 

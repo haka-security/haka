@@ -13,6 +13,7 @@
 
 #include "app.h"
 #include "thread.h"
+#include "ctl.h"
 #include "lua/state.h"
 #include "config.h"
 
@@ -187,6 +188,13 @@ int read_configuration(const char *file)
 	return -1;
 }
 
+void clean_exit()
+{
+	stop_ctl_server();
+
+	basic_clean_exit();
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;
@@ -206,6 +214,11 @@ int main(int argc, char *argv[])
 	if (ret >= 0) {
 		clean_exit();
 		return ret;
+	}
+
+	if (!start_ctl_server()) {
+		clean_exit();
+		return 2;
 	}
 
 	prepare(-1);
