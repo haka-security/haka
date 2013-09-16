@@ -1,0 +1,26 @@
+
+[general]
+
+# Select the haka configuration file to use.
+configuration = "@CMAKE_HAKA_INSTALL_PREFIX@/share/haka/sample/empty.lua"
+
+# Optionally select the number of thread to use. By default, all system thread
+# will be used.
+#thread = 4
+
+[packet]
+module = "packet/nfqueue"
+
+# Select the interfaces to listen to
+#interfaces = "eth0,eth1"
+#interfaces = "any"
+interfaces = "eth0"
+
+# Select packet dumping for nfqueue
+#dump = yes
+#dump_input = "input.pcap"
+#dump_output = "output.pcap"
+#dump_drop = "drop.pcap"
+
+[log]
+module = "log/syslog"

@@ -32,7 +32,8 @@ LUA_LINK(haka)
 
 install(TARGETS haka RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
 
-install(FILES haka.conf DESTINATION ${HAKA_INSTALL_PREFIX}/etc/haka)
+configure_file(haka.conf.in ${CMAKE_CURRENT_BINARY_DIR}/haka.conf)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/haka.conf DESTINATION ${HAKA_INSTALL_PREFIX}/etc/haka)
 
 # Build hakapcap program
 add_executable(hakapcap
