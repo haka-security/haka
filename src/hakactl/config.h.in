@@ -1,0 +1,3 @@
+
+#define HAKA_PID_FILE            "${HAKA_PID_FILE}"
+#define HAKA_CTL_SOCKET_FILE     "${HAKA_CTL_SOCKET_FILE}"
