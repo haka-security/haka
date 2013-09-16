@@ -72,7 +72,7 @@ The configuration with cmake supports the following options:
 
 .. option:: PREFIX=PATH
 
-    Installation prefix (default: *out*)
+    Installation prefix (default: */*)
 
 Compile
 ^^^^^^^
@@ -80,8 +80,21 @@ Compile
 Use make like usual to compile: ::
 
     make
-    make install
     make clean
+
+Install
+^^^^^^^
+
+To install haka, you have the following options: ::
+
+    make install
+    make localinstall
+
+Using ``localinstall`` allow to install haka in a locally under the folder ``out``. To use
+this version, you will have to set a few environment variables by sourcing the generated
+file ``env.sh``: ::
+
+    . env.sh
 
 Documentation
 ^^^^^^^^^^^^^
