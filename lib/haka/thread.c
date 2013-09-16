@@ -1,6 +1,7 @@
 
 #include <unistd.h>
 #include <pthread.h>
+#include <signal.h>
 #include <semaphore.h>
 #include <errno.h>
 #include <string.h>
@@ -46,6 +47,64 @@ int thread_get_id()
 void thread_set_id(int id)
 {
 	local_storage_set(&thread_id_key, (void*)(ptrdiff_t)id);
+}
+
+bool thread_create(thread_t *thread, void *(*main)(void*), void *param)
+{
+	const int err = pthread_create(thread, NULL, main, param);
+	if (err) {
+		error(L"thread creation error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool thread_join(thread_t thread, void **ret)
+{
+	const int err = pthread_join(thread, ret);
+	if (err) {
+		error(L"thread join error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool thread_cancel(thread_t thread)
+{
+	const int err = pthread_cancel(thread);
+	if (err) {
+		error(L"thread cancel error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool thread_sigmask(int how, sigset_t *set, sigset_t *oldset)
+{
+	const int err = pthread_sigmask(how, set, oldset);
+	if (err) {
+		error(L"thread sigmask error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool thread_setcanceltype(enum thread_cancel_t type)
+{
+	int err;
+
+	switch (type) {
+	case THREAD_CANCEL_DEFERRED: err = pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL); break;
+	case THREAD_CANCEL_ASYNCHRONOUS: err = pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL); break;
+	default: error(L"invalid thread cancel mode"); return false;
+	}
+
+	if (err) {
+		error(L"thread cancel type error: %s", errno_error(err));
+		return false;
+	}
+
+	return true;
 }
 
 

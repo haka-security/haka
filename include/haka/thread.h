@@ -13,11 +13,27 @@
 
 /* Thread functions */
 
-int thread_get_packet_capture_cpu_count();
+int  thread_get_packet_capture_cpu_count();
 void thread_set_packet_capture_cpu_count(int count);
-int thread_get_cpu_count();
-int thread_get_id();
-void thread_set_id(int id);
+int  thread_get_cpu_count();
+
+typedef pthread_t thread_t;
+
+bool     thread_create(thread_t *thread, void *(*main)(void*), void *param);
+bool     thread_join(thread_t thread, void **ret);
+bool     thread_cancel(thread_t thread);
+
+int      thread_get_id();
+void     thread_set_id(int id);
+
+bool     thread_sigmask(int how, sigset_t *set, sigset_t *oldset);
+
+enum thread_cancel_t {
+	THREAD_CANCEL_DEFERRED,
+	THREAD_CANCEL_ASYNCHRONOUS
+};
+
+bool     thread_setcanceltype(enum thread_cancel_t type);
 
 
 /* Atomic counter */

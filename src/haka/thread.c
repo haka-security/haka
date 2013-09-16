@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <lua.h>
-#include <pthread.h>
 #include <semaphore.h>
 #include <string.h>
 #include <signal.h>
@@ -25,7 +24,7 @@ struct thread_state {
 	struct packet_module_state *capture;
 	struct lua_state           *lua;
 	int                         lua_function;
-	pthread_t                   thread;
+	thread_t                    thread;
 	struct thread_pool         *pool;
 };
 
@@ -185,14 +184,17 @@ static void *thread_main_loop(void *_state)
 	if (!state->pool->single) {
 		/* Block all signal to let the main thread handle them */
 		sigfillset(&set);
-		if (pthread_sigmask(SIG_BLOCK, &set, NULL)) {
-			messagef(HAKA_LOG_FATAL, L"core", L"thread initialization error: %s", errno_error(errno));
+		if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
+			message(HAKA_LOG_FATAL, L"core", clear_error());
 			return NULL;
 		}
 
 		/* To make sure we can still cancel even if some thread are locked in
 		 * infinite loops */
-		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+		if (!thread_setcanceltype(THREAD_CANCEL_ASYNCHRONOUS)) {
+			message(HAKA_LOG_FATAL, L"core", clear_error());
+			return NULL;
+		}
 	}
 
 	thread_set_id(state->thread_id);
@@ -212,13 +214,7 @@ static void *thread_main_loop(void *_state)
 
 static void start_thread(struct thread_state *state)
 {
-	int err;
-
-	err = pthread_create(&state->thread, NULL, thread_main_loop, state);
-	if (err) {
-		error(L"thread creation error: %s", errno_error(err));
-		return;
-	}
+	thread_create(&state->thread, thread_main_loop, state);
 }
 
 static void start_single(struct thread_state *state)
@@ -297,7 +293,7 @@ void thread_pool_wait(struct thread_pool *pool)
 
 	for (i=0; i<pool->count; ++i) {
 		void *ret;
-		pthread_join(pool->threads[i]->thread, &ret);
+		thread_join(pool->threads[i]->thread, &ret);
 	}
 }
 
@@ -307,7 +303,7 @@ void thread_pool_cancel(struct thread_pool *pool)
 		int i;
 
 		for (i=0; i<pool->count; ++i) {
-			pthread_cancel(pool->threads[i]->thread);
+			thread_cancel(pool->threads[i]->thread);
 		}
 
 		thread_pool_wait(pool);
