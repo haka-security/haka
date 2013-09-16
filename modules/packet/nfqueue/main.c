@@ -409,19 +409,15 @@ static void cleanup()
 
 static int init(struct parameters *args)
 {
-	if (0) {
-		iptables_config(NULL, 0);
-		open_pcap(NULL, NULL);
-	}
-
-#ifdef TODO
 	char *new_iptables_config = NULL;
+	char *interfaces_buf = NULL;
 	char **ifaces = NULL;
 	int thread_count = thread_get_packet_capture_cpu_count();
 	const char *file_in = NULL;
 	const char *file_out = NULL;
 	const char *file_drop = NULL;
-	int dump = 0;
+	int count;
+	bool dump = false;
 
 	/* Setup iptables rules */
 	if (save_iptables("raw", &iptables_saved)) {
@@ -430,63 +426,57 @@ static int init(struct parameters *args)
 		return 1;
 	}
 
-	if (argc > 0) {
-		if (strcmp(argv[0], "--single") == 0) {
-			use_multithreading = false;
-			thread_count = 1;
-
-			argc -= 1;
-			argv += 1;
+	{
+		const char *iter;
+		const char *interfaces = parameters_get_string(args, "interfaces", NULL);
+		if (!interfaces) {
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"no interfaces selected");
+			cleanup();
+			return 1;
 		}
+
+		for (count = 0, iter = interfaces; *iter; ++iter) {
+			if (*iter == ',')
+				++count;
+		}
+
+		interfaces_buf = strdup(interfaces);
+		++count;
 	}
 
-	if (argc > 0) {
-		if (strcmp(argv[0], "-p") == 0) {
-			if (argc < 4) {
-				message(HAKA_LOG_ERROR, MODULE_NAME, L"missing parameters for pcap dump");
-				cleanup();
-				return 1;
-			}
-
-			dump = 1;
-			file_in = argv[1];
-			file_out = argv[2];
-			file_drop = argv[3];
-
-			argc -= 4;
-			argv += 4;
-		}
+	ifaces = malloc((sizeof(char *) * (count + 1)));
+	if (!ifaces) {
+		message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
+		free(interfaces_buf);
+		cleanup();
+		return 1;
 	}
 
-	if (argc > 0) {
-		if (strcmp(argv[0], "any") != 0) {
-			int index = 0;
+	messagef(HAKA_LOG_INFO, MODULE_NAME, L"installing iptables rules for device(s) %s", interfaces_buf);
 
-			ifaces = malloc((sizeof(char *) * (argc+1)));
-			if (!ifaces) {
-				message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
-				cleanup();
-				return 1;
-			}
-
-			while (index < argc) {
-				ifaces[index] = argv[index];
-				index++;
-			}
-			ifaces[index] = NULL;
+	{
+		int index = 0;
+		char *str, *ptr;
+		for (index = 0, str = interfaces_buf; index < count; index++, str = NULL) {
+			char *token = strtok_r(str, ",", &ptr);
+			assert(token != NULL);
+			ifaces[index] = token;
 		}
+		ifaces[index] = NULL;
 	}
 
 	new_iptables_config = iptables_config(ifaces, thread_count);
 	if (!new_iptables_config) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot generate iptables rules");
-		if (ifaces)
-			free(ifaces);
+		free(ifaces);
+		free(interfaces_buf);
 		cleanup();
 		return 1;
 	}
 	free(ifaces);
 	ifaces = NULL;
+	free(interfaces_buf);
+	interfaces_buf = NULL;
 
 	if (apply_iptables(new_iptables_config)) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup iptables rules");
@@ -498,21 +488,37 @@ static int init(struct parameters *args)
 	free(new_iptables_config);
 
 	/* Setup pcap dump */
+	dump = parameters_get_boolean(args, "dump", false);
 	if (dump) {
-		pcap = malloc(sizeof(struct pcap_sinks));
-		if (!pcap) {
-			message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
-			cleanup();
-			return 1;
+		file_in = parameters_get_string(args, "dump_input", NULL);
+		file_out = parameters_get_string(args, "dump_output", NULL);
+		file_drop = parameters_get_string(args, "dump_drop", NULL);
+		if (!(file_in || file_out || file_drop)) {
+			message(HAKA_LOG_WARNING, MODULE_NAME, L"no dump pcap files specified");
 		}
+		else {
+			pcap = malloc(sizeof(struct pcap_sinks));
+			if (!pcap) {
+				message(HAKA_LOG_ERROR, MODULE_NAME, L"memory error");
+				cleanup();
+				return 1;
+			}
+			memset(pcap, 0, sizeof(struct pcap_sinks));
 
-		memset(pcap, 0, sizeof(struct pcap_sinks));
-
-		open_pcap(&pcap->in, file_in);
-		open_pcap(&pcap->out, file_out);
-		open_pcap(&pcap->drop, file_drop);
+			if (file_in) {
+				open_pcap(&pcap->in, file_in);
+				messagef(HAKA_LOG_INFO, MODULE_NAME, L"dumping received packets into '%s'", file_in);
+			}
+			if (file_out) {
+				open_pcap(&pcap->out, file_out);
+				messagef(HAKA_LOG_INFO, MODULE_NAME, L"dumping emitted packets into '%s'", file_out);
+			}
+			if (file_drop) {
+				open_pcap(&pcap->drop, file_drop);
+				messagef(HAKA_LOG_INFO, MODULE_NAME, L"dumping dropped packets into '%s'", file_drop);
+			}
+		}
 	}
-#endif
 
 	return 0;
 }
@@ -744,7 +750,6 @@ static size_t get_mtu(struct packet *pkt)
 	// TODO
 	return 1500;
 }
-
 
 struct packet_module HAKA_MODULE = {
 	module: {
