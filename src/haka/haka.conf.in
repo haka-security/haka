@@ -1,4 +1,3 @@
-
 [general]
 
 # Select the haka configuration file to use.
@@ -12,6 +11,7 @@ configuration = "@CMAKE_HAKA_INSTALL_PREFIX@/share/haka/sample/empty.lua"
 pass-through = no
 
 [packet]
+#Select the capture model, nfqueue or pcap
 module = "packet/nfqueue"
 
 # Select the interfaces to listen to
@@ -21,9 +21,10 @@ interfaces = "eth0"
 
 # Select packet dumping for nfqueue
 #dump = yes
-#dump_input = "input.pcap"
-#dump_output = "output.pcap"
-#dump_drop = "drop.pcap"
+#dump_input = "/tmp/input.pcap"
+#dump_output = "/tmp/output.pcap"
+#dump_drop = "/tmp/drop.pcap"
 
 [log]
+#Select the log module
 module = "log/syslog"
