@@ -55,6 +55,9 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 	set(HAKA_NDEBUG 1)
 endif()
 
+# Force the RUNPATH to be set to the RPATH to improve library search order
+SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags")
+
 # Install prefix
 set(PREFIX "/" CACHE STRING "Installation prefix")
 message(STATUS "Installation prefix (PREFIX): ${PREFIX}")
