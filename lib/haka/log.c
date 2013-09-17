@@ -13,13 +13,7 @@
 #include <haka/container/list.h>
 
 
-struct installed_module {
-	struct list              list;
-	struct log_module       *module;
-	struct log_module_state *state;
-};
-
-static struct installed_module *log_modules = NULL;
+static struct logger *loggers = NULL;
 static rwlock_t log_module_lock = RWLOCK_INIT;
 static local_storage_t local_message_key;
 static bool message_is_valid = false;
@@ -71,7 +65,7 @@ INIT static void _message_init()
 
 FINI static void _message_fini()
 {
-	remove_all_log_modules();
+	remove_all_logger();
 
 	{
 		wchar_t *buffer = local_storage_get(&local_message_key);
@@ -93,65 +87,57 @@ FINI static void _message_fini()
 	}
 }
 
-static wchar_t *message_context()
-{
-	wchar_t *buffer = (wchar_t *)local_storage_get(&local_message_key);
-	if (!buffer) {
-		buffer = malloc(sizeof(wchar_t) * MESSAGE_BUFSIZE);
-		assert(buffer);
+struct message_context_t {
+	bool       doing_message;
+	wchar_t    buffer[MESSAGE_BUFSIZE];
+};
 
-		local_storage_set(&local_message_key, buffer);
+static struct message_context_t *message_context()
+{
+	struct message_context_t *context = (struct message_context_t *)local_storage_get(&local_message_key);
+	if (!context) {
+		context = malloc(sizeof(struct message_context_t));
+		assert(context);
+
+		context->doing_message = false;
+
+		local_storage_set(&local_message_key, context);
 	}
-	return buffer;
+	return context;
 }
 
-bool add_log_module(struct log_module *module, struct log_module_state *state)
+bool add_logger(struct logger *logger)
 {
-	struct installed_module *log_module;
-
-	assert(module);
-
-	log_module = malloc(sizeof(struct installed_module));
-	if (!log_module) {
-		error(L"memory error");
-		return false;
-	}
-
-	log_module->module = module;
-	module_addref(&module->module);
-	log_module->state = state;
+	assert(logger);
 
 	rwlock_writelock(&log_module_lock);
-	list_insert_before(log_module, log_modules, &log_modules, NULL);
+	list_insert_before(logger, loggers, &loggers, NULL);
 	rwlock_unlock(&log_module_lock);
 
 	return true;
 }
 
-static void cleanup_log_module(struct installed_module *log_module, struct installed_module **head)
+static void cleanup_logger(struct logger *logger, struct logger **head)
 {
 	rwlock_writelock(&log_module_lock);
-	list_remove(log_module, head, NULL);
+	list_remove(logger, head, NULL);
 	rwlock_unlock(&log_module_lock);
 
-	log_module->module->cleanup_state(log_module->state);
-	module_release(&log_module->module->module);
-	free(log_module);
+	logger->destroy(logger);
 }
 
-bool remove_log_module(struct log_module *module, struct log_module_state *state)
+bool remove_logger(struct logger *logger)
 {
-	struct installed_module *module_to_release = NULL;
-	struct installed_module *iter = log_modules;
+	struct logger *module_to_release = NULL;
+	struct logger *iter;
 
-	assert(module);
+	assert(logger);
 
 	{
 		rwlock_readlock(&log_module_lock);
 
-		for (iter=log_modules; iter; iter = list_next(iter)) {
-			if (iter->module == module &&
-				iter->state == state) {
+		for (iter=loggers; iter; iter = list_next(iter)) {
+			if (iter == logger) {
 				module_to_release = iter;
 				break;
 			}
@@ -166,29 +152,29 @@ bool remove_log_module(struct log_module *module, struct log_module_state *state
 	}
 
 	if (module_to_release) {
-		cleanup_log_module(module_to_release, &log_modules);
+		cleanup_logger(logger, &loggers);
 	}
 
 	return true;
 }
 
-void remove_all_log_modules()
+void remove_all_logger()
 {
-	struct installed_module *modules = NULL;
+	struct logger *logger = NULL;
 
 	{
 		rwlock_writelock(&log_module_lock);
-		modules = log_modules;
-		log_modules = NULL;
+		logger = loggers;
+		loggers = NULL;
 		rwlock_unlock(&log_module_lock);
 	}
 
 
-	while (modules) {
-		struct installed_module *current = modules;
-		modules = list_next(modules);
+	while (logger) {
+		struct logger *current = logger;
+		logger = list_next(logger);
 
-		cleanup_log_module(current, NULL);
+		cleanup_logger(current, NULL);
 	}
 }
 
@@ -211,7 +197,7 @@ void enable_stdout_logging(bool enable)
 	stdout_enable = enable;
 }
 
-static int stdout_message(log_level lvl, const wchar_t *module, const wchar_t *message)
+bool stdout_message(log_level lvl, const wchar_t *module, const wchar_t *message)
 {
 	const char *level_str = level_to_str(lvl);
 	const int level_size = strlen(level_str);
@@ -236,23 +222,46 @@ static int stdout_message(log_level lvl, const wchar_t *module, const wchar_t *m
 
 	mutex_unlock(&stdout_mutex);
 
-	return 0;
+	return true;
 }
 
 void message(log_level level, const wchar_t *module, const wchar_t *message)
 {
-	const log_level max_level = getlevel(module);
-	if (level <= max_level) {
-		struct installed_module *iter;
+	struct message_context_t *context = message_context();
+	if (context && !context->doing_message) {
+		const log_level max_level = getlevel(module);
+		if (level <= max_level) {
+			bool remove_pass = false;
 
-		rwlock_readlock(&log_module_lock);
-		for (iter=log_modules; iter; iter = list_next(iter)) {
-			iter->module->message(iter->state, level, module, message);
-		}
-		rwlock_unlock(&log_module_lock);
+			context->doing_message = true;
 
-		if (stdout_enable) {
-			stdout_message(level, module, message);
+			struct logger *iter;
+
+			rwlock_readlock(&log_module_lock);
+			for (iter=loggers; iter; iter = list_next(iter)) {
+				iter->message(iter, level, module, message);
+
+				remove_pass &= iter->mark_for_remove;
+			}
+			rwlock_unlock(&log_module_lock);
+
+			if (stdout_enable) {
+				stdout_message(level, module, message);
+			}
+
+			if (remove_pass) {
+				rwlock_readlock(&log_module_lock);
+				for (iter=loggers; iter; iter = list_next(iter)) {
+					if (iter->mark_for_remove) {
+						rwlock_unlock(&log_module_lock);
+						remove_logger(iter);
+						rwlock_readlock(&log_module_lock);
+					}
+				}
+				rwlock_unlock(&log_module_lock);
+			}
+
+			context->doing_message = false;
 		}
 	}
 }
@@ -261,13 +270,13 @@ void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...)
 {
 	const log_level max_level = getlevel(module);
 	if (level <= max_level) {
-		wchar_t *message_buffer = message_context();
-		if (message_buffer) {
+		struct message_context_t *context = message_context();
+		if (context && !context->doing_message) {
 			va_list ap;
 			va_start(ap, fmt);
-			vswprintf(message_buffer, MESSAGE_BUFSIZE, fmt, ap);
-			message_buffer[MESSAGE_BUFSIZE-1] = 0;
-			message(level, module, message_buffer);
+			vswprintf(context->buffer, MESSAGE_BUFSIZE, fmt, ap);
+			context->buffer[MESSAGE_BUFSIZE-1] = 0;
+			message(level, module, context->buffer);
 			va_end(ap);
 		}
 	}

@@ -70,6 +70,15 @@ static bool ctl_send(int fd, const char *message)
 	return true;
 }
 
+static bool ctl_wsend(int fd, const wchar_t *message)
+{
+	if (send(fd, message, (wcslen(message)+1)*sizeof(wchar_t), 0) < 0) {
+		messagef(HAKA_LOG_ERROR, MODULE, L"cannot write to ctl socket: %s", errno_error(errno));
+		return false;
+	}
+	return true;
+}
+
 static void *ctl_client_process_thread(void *param)
 {
 	struct ctl_client_state *state = (struct ctl_client_state *)param;
@@ -224,7 +233,7 @@ static void *ctl_server_coreloop(void *param)
 	return NULL;
 }
 
-bool start_ctl_server()
+bool prepare_ctl_server()
 {
 	struct sockaddr_un addr;
 	socklen_t len;
@@ -250,6 +259,11 @@ bool start_ctl_server()
 
 	ctl_server.binded = true;
 
+	return true;
+}
+
+bool start_ctl_server()
+{
 	if (listen(ctl_server.fd, MAX_CLIENT_QUEUE)) {
 		messagef(HAKA_LOG_FATAL, MODULE, L"failed to listen on ctl socket: %s", errno_error(errno));
 		ctl_server_cleanup(&ctl_server);
@@ -276,6 +290,54 @@ void stop_ctl_server()
  * Command code
  */
 
+struct redirect_logger {
+	struct logger    logger;
+	int              fd;
+};
+
+int redirect_logger_message(struct logger *_logger, log_level level, const wchar_t *module, const wchar_t *message)
+{
+	struct redirect_logger *logger = (struct redirect_logger *)_logger;
+
+	if (logger->fd > 0) {
+		if (send(logger->fd, &level, sizeof(log_level), 0) < 0 ||
+			!ctl_wsend(logger->fd, module) ||
+			!ctl_wsend(logger->fd, message)) {
+			logger->logger.mark_for_remove = true;
+		}
+	}
+
+	return 1;
+}
+
+void redirect_logger_destroy(struct logger *_logger)
+{
+	struct redirect_logger *logger = (struct redirect_logger *)_logger;
+
+	if (logger->fd > 0) {
+		close(logger->fd);
+	}
+
+	free(logger);
+}
+
+struct redirect_logger *redirect_logger_create(d)
+{
+	struct redirect_logger *logger = malloc(sizeof(struct redirect_logger));
+	if (!logger) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	list_init(&logger->logger);
+	logger->logger.message = redirect_logger_message;
+	logger->logger.destroy = redirect_logger_destroy;
+	logger->logger.mark_for_remove = false;
+	logger->fd = -1;
+
+	return logger;
+}
+
 static bool ctl_client_process_command(struct ctl_client_state *state, const char *command)
 {
 	if (strcmp(command, "STATUS") == 0) {
@@ -287,7 +349,21 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 		ctl_send(state->fd, "OK");
 	}
 	else if (strcmp(command, "LOGS") == 0) {
+		struct redirect_logger *logger = redirect_logger_create(state->fd);
+		if (!logger) {
+			ctl_send(state->fd, "ERROR");
+			return true;
+		}
+
+		if (!add_logger(&logger->logger)) {
+			ctl_send(state->fd, "ERROR");
+			logger->logger.destroy(&logger->logger);
+			return true;
+		}
+
 		ctl_send(state->fd, "OK");
+		logger->fd = state->fd;
+		state->fd = -1;
 	}
 	else if (strlen(command) > 0) {
 		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", command);

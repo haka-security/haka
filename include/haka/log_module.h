@@ -7,15 +7,19 @@
 #include <haka/log.h>
 
 
-struct log_module_state;
+struct logger_module {
+	struct logger       logger;
+	struct log_module  *module;
+};
 
 struct log_module {
 	struct module    module;
 
-	struct log_module_state *(*init_state)(struct parameters *args);
-	void           (*cleanup_state)(struct log_module_state *state);
-	int            (*message)(struct log_module_state *state, log_level level, const wchar_t *module, const wchar_t *message);
+	struct logger_module *(*init_logger)(struct parameters *args);
+	void                  (*cleanup_logger)(struct logger_module *logger);
 };
+
+struct logger *log_module_logger(struct module *module, struct parameters *args);
 
 #endif /* _HAKA_LOG_MODULE_H */
 

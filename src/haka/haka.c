@@ -129,36 +129,32 @@ int read_configuration(const char *file)
 		parameters_open_section(config, "log");
 		module = parameters_get_string(config, "module", NULL);
 		if (module) {
-			struct log_module *log_module;
-			struct log_module_state *state;
+			struct logger *logger;
 
-			struct module *logger = module_load(module, config);
-			if (!logger) {
+			struct module *logger_module = module_load(module, config);
+			if (!logger_module) {
 				message(HAKA_LOG_FATAL, L"core", L"cannot load logging module");
 				clean_exit();
 				return 1;
 			}
 
-			if (logger->type != MODULE_LOG) {
-				message(HAKA_LOG_FATAL, L"core", L"cannot load logging module: invalid module type");
-				module_release(logger);
+			logger = log_module_logger(logger_module, config);
+			if (!logger) {
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot initialize logging module: %s", clear_error());
+				module_release(logger_module);
 				clean_exit();
 				return 1;
 			}
 
-			log_module = (struct log_module *)logger;
-			state = log_module->init_state(config);
-
-			if (!add_log_module(log_module, state)) {
+			if (!add_logger(logger)) {
 				messagef(HAKA_LOG_FATAL, L"core", L"cannot install logging module: %s", clear_error());
-				log_module->cleanup_state(state);
-				state = NULL;
-				module_release(logger);
+				logger->destroy(logger);
+				module_release(logger_module);
 				clean_exit();
 				return 1;
 			}
 
-			module_release(logger);
+			module_release(logger_module);
 		}
 	}
 
@@ -237,7 +233,7 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	if (!start_ctl_server()) {
+	if (!prepare_ctl_server()) {
 		clean_exit();
 		return 2;
 	}
@@ -260,6 +256,11 @@ int main(int argc, char *argv[])
 			clean_exit();
 			return 1;
 		}
+	}
+
+	if (!start_ctl_server()) {
+		clean_exit();
+		return 2;
 	}
 
 	{

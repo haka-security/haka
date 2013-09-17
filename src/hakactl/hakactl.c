@@ -1,4 +1,5 @@
 
+#include <sys/socket.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,7 @@
 #include <haka/version.h>
 #include <haka/types.h>
 #include <haka/colors.h>
+#include <haka/log.h>
 
 #include "config.h"
 #include "ctl.h"
@@ -84,6 +86,25 @@ static void clean_exit()
 {
 }
 
+static bool display_log_line(int fd)
+{
+	#define MESSAGE_BUFSIZE   2048
+
+	log_level level;
+	wchar_t module[128];
+	wchar_t message[MESSAGE_BUFSIZE];
+
+	if (recv(fd, &level, sizeof(log_level), 0) < 0 ||
+		!ctl_receive_wchars(fd, module, 128) ||
+		!ctl_receive_wchars(fd, message, MESSAGE_BUFSIZE))
+	{
+		return false;
+	}
+
+	stdout_message(level, module, message);
+	return true;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret, fd;
@@ -132,13 +153,28 @@ int main(int argc, char *argv[])
 		return ERROR_CTL_SOCKET;
 	}
 
-	else if (strcasecmp(argv[0], "STOP") == 0) {
+	if (strcasecmp(argv[0], "STOP") == 0) {
 		printf("[....] stopping haka");
 		fflush(stdout);
 
 		ctl_send(fd, "STOP");
 		if (ctl_check(fd, "OK")) {
 			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+		}
+		else {
+			printf("failed!");
+			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		}
+	}
+	else if (strcasecmp(argv[0], "LOGS") == 0) {
+		printf("[....] connecting to haka");
+		fflush(stdout);
+
+		ctl_send(fd, "LOGS");
+		if (ctl_check(fd, "OK")) {
+			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+
+			while (display_log_line(fd));
 		}
 		else {
 			printf("failed!");

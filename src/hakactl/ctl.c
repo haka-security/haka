@@ -4,6 +4,7 @@
 #include <sys/un.h>
 #include <stdio.h>
 #include <errno.h>
+#include <wchar.h>
 
 #include "ctl.h"
 #include "config.h"
@@ -44,39 +45,96 @@ bool ctl_send(int fd, const char *command)
 	return true;
 }
 
-bool ctl_print(int fd)
+static int ctl_next_char(int fd)
 {
-	char buffer[1024];
 	int len;
+	char c;
 
-	do {
-		len = recv(fd, buffer, 1024, 0);
-		if (len < 0) {
-			printf("\n");
-			fprintf(stderr, "cannot read from ctl socket: %i, %i %s\n", len , errno, strerror(errno));
+	len = recv(fd, &c, 1, 0);
+	if (len < 0) {
+		return -1;
+	}
+	else if (len == 0) {
+		return -1;
+	}
+
+	return c;
+}
+
+static int ctl_next_wchar(int fd)
+{
+	int len;
+	wchar_t c;
+
+	len = recv(fd, &c, sizeof(wchar_t), 0);
+	if (len <= 0) {
+		return -1;
+	}
+
+	return c;
+}
+
+bool ctl_receive_chars(int fd, char *buffer, size_t len)
+{
+	while (true) {
+		const int c = ctl_next_char(fd);
+		if (c < 0) {
 			return false;
 		}
 
-		printf("%.*s", len, buffer);
-	} while (len > 0);
+		if (len > 0) {
+			len--;
+			if (len > 0) {
+				*buffer++ = c;
+			}
+			else {
+				*buffer = 0;
+			}
+		}
 
-	printf("\n");
+		if (c == 0) {
+			break;
+		}
+	}
+
+	return true;
+}
+
+bool ctl_receive_wchars(int fd, wchar_t *buffer, size_t len)
+{
+	while (true) {
+		const int c = ctl_next_wchar(fd);
+		if (c < 0) {
+			return false;
+		}
+
+		if (len > 0) {
+			len--;
+			if (len > 0) {
+				*buffer++ = c;
+			}
+			else {
+				*buffer = 0;
+			}
+		}
+
+		if (c == 0) {
+			break;
+		}
+	}
+
 	return true;
 }
 
 bool ctl_check(int fd, const char *str)
 {
-	char c;
-	int len;
+	int c;
 	bool ret = true;
 	const char *iter = str;
 
 	do {
-		len = recv(fd, &c, 1, 0);
-		if (len < 0) {
-			return false;
-		}
-		else if (len == 0) {
+		c = ctl_next_char(fd);
+		if (c < 0) {
 			return false;
 		}
 

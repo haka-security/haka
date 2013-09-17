@@ -31,7 +31,7 @@ void basic_clean_exit()
 	}
 
 	set_packet_module(NULL);
-	remove_all_log_modules();
+	remove_all_logger();
 }
 
 
@@ -73,6 +73,7 @@ void initialize()
 	signal(SIGTERM, fatal_error_signal);
 	signal(SIGINT, fatal_error_signal);
 	signal(SIGQUIT, fatal_error_signal);
+	signal(SIGPIPE, SIG_IGN);
 	signal(SIGHUP, handle_sighup);
 
 	/* Default module path */

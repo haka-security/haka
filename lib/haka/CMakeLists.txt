@@ -7,6 +7,7 @@ include_directories(${LIBINIPARSER_INCLUDE})
 add_library(libhaka SHARED
 	packet.c
 	log.c
+	log_module.c
 	module.c
 	error.c
 	thread.c
