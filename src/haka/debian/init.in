@@ -18,14 +18,20 @@ test -f $DAEMON || exit 0
 
 case "$1" in
 start)  log_daemon_msg "Starting $DESCRIPTION" "$NAME"
-        start_daemon -p $PIDFILE $DAEMON -- $EXTRA_OPTS > /dev/null 2>&1
+        start_daemon -p $PIDFILE $DAEMON -- $EXTRA_OPTS >/dev/null 2>&1
         log_end_msg $?
         ;;
 stop)   log_daemon_msg "Stopping $DESCRIPTION" "$NAME"
-        killproc -p $PIDFILE $DAEMON
-        RETVAL=$?
-        [ $RETVAL -eq 0 ] && [ -e "$PIDFILE" ] && rm -f $PIDFILE
-        log_end_msg $RETVAL
+        pidofproc -p $PIDFILE $DAEMON >/dev/null; status="$?"
+        if [ "$status" = 0 ]; then
+            killproc -p $PIDFILE $DAEMON
+            RETVAL=$?
+            [ $RETVAL -eq 0 ] && [ -e "$PIDFILE" ] && rm -f $PIDFILE
+            log_end_msg $RETVAL
+        else
+            log_progress_msg "is not running"
+            log_end_msg 255
+        fi
         ;;
 restart) log_daemon_msg "Restarting $DESCRIPTION" "$NAME" 
         $0 stop
