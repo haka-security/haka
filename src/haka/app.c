@@ -46,7 +46,12 @@ static void fatal_error_signal(int sig)
 			raise(sig);
 		fatal_error_in_progress = 1;
 
-		messagef(HAKA_LOG_FATAL, L"core", L"fatal signal received (sig=%d)", sig);
+		if (sig != SIGTERM) {
+			messagef(HAKA_LOG_FATAL, L"core", L"fatal signal received (sig=%d)", sig);
+		}
+		else {
+			messagef(HAKA_LOG_INFO, L"core", L"terminate signal received");
+		}
 
 		clean_exit();
 		exit(1);
