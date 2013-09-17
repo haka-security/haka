@@ -68,25 +68,31 @@ bool ctl_check(int fd, const char *str)
 {
 	char c;
 	int len;
+	bool ret = true;
 	const char *iter = str;
 
 	do {
 		len = recv(fd, &c, 1, 0);
 		if (len < 0) {
-			printf("\n");
-			fprintf(stderr, "cannot read from ctl socket: %i, %i %s\n", len , errno, strerror(errno));
+			return false;
+		}
+		else if (len == 0) {
 			return false;
 		}
 
-		if (*iter != c) {
-			return false;
-		}
-		else if (*iter == 0) {
-			return true;
-		}
+		if (iter) {
+			if (*iter != c) {
+				ret = false;
+			}
 
-		++iter;
-	} while (len > 0);
+			if (*iter == 0) {
+				iter = NULL;
+			}
+			else {
+				++iter;
+			}
+		}
+	} while (c != 0);
 
-	return false;
+	return ret;
 }

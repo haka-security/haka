@@ -27,6 +27,8 @@ struct ctl_client_state {
 	struct list              list;
 	int                      fd;
 	thread_t                 thread;
+	void                   (*callback)(void*);
+	void                    *data;
 };
 
 struct ctl_server_state {
@@ -39,6 +41,8 @@ struct ctl_server_state {
 };
 
 struct ctl_server_state ctl_server = {0};
+
+static bool ctl_client_process_command(struct ctl_client_state *state, const char *command);
 
 static void ctl_client_cleanup(struct ctl_client_state *state)
 {
@@ -66,36 +70,7 @@ static bool ctl_send(int fd, const char *message)
 	return true;
 }
 
-static bool ctl_client_process_command(struct ctl_client_state *state)
-{
-	char buffer[MAX_COMMAND_LEN];
-	int len;
-
-	len = recv(state->fd, buffer, MAX_COMMAND_LEN, 0);
-	if (len < 0) {
-		messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %s", errno_error(errno));
-		return false;
-	}
-
-	buffer[MAX_COMMAND_LEN-1] = 0;
-
-	if (strcmp(buffer, "STATUS") == 0) {
-		ctl_send(state->fd, "OK");
-	}
-	else if (strcmp(buffer, "STOP") == 0) {
-		messagef(HAKA_LOG_INFO, MODULE, L"request to stop haka received");
-		kill(getpid(), SIGTERM);
-		ctl_send(state->fd, "OK");
-	}
-	else if (len > 0) {
-		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", buffer);
-		ctl_send(state->fd, "ERROR");
-	}
-
-	return true;
-}
-
-static void *ctl_client_process(void *param)
+static void *ctl_client_process_thread(void *param)
 {
 	struct ctl_client_state *state = (struct ctl_client_state *)param;
 	sigset_t set;
@@ -104,45 +79,77 @@ static void *ctl_client_process(void *param)
 	sigfillset(&set);
 	if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
 		message(HAKA_LOG_ERROR, MODULE, clear_error());
+		ctl_client_cleanup(state);
 		return NULL;
 	}
 
 	if (!thread_setcanceltype(THREAD_CANCEL_ASYNCHRONOUS)) {
 		message(HAKA_LOG_ERROR, MODULE, clear_error());
+		ctl_client_cleanup(state);
 		return NULL;
 	}
 
-	ctl_client_process_command(state);
+	state->callback(state->data);
 
-	thread_setcancelstate(false);
 	ctl_client_cleanup(state);
 	return NULL;
+}
+
+UNUSED static bool ctl_start_client_thread(struct ctl_client_state *state, void (*func)(void*), void *data)
+{
+	state->callback = func;
+	state->data = data;
+
+	if (!thread_create(&state->thread, ctl_client_process_thread, state)) {
+		messagef(HAKA_LOG_DEBUG, MODULE, L"failed to create thread: %s", clear_error(errno));
+		return false;
+	}
+
+	return true;
+}
+
+static void ctl_client_process(struct ctl_client_state *state)
+{
+	char buffer[MAX_COMMAND_LEN];
+	int len;
+
+	len = recv(state->fd, buffer, MAX_COMMAND_LEN, 0);
+	if (len < 0) {
+		messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %s", errno_error(errno));
+		ctl_client_cleanup(state);
+		return;
+	}
+
+	buffer[MAX_COMMAND_LEN-1] = 0;
+
+	if (ctl_client_process_command(state, buffer)) {
+		ctl_client_cleanup(state);
+	}
 }
 
 static void ctl_server_cleanup(struct ctl_server_state *state)
 {
 	void *ret;
-	struct ctl_client_state *iter;
 
 	mutex_lock(&state->lock);
 
 	state->exiting = true;
 	thread_cancel(state->thread);
+
+	mutex_unlock(&state->lock);
 	thread_join(state->thread, &ret);
+	mutex_lock(&state->lock);
 
-	iter = state->clients;
-	while (iter) {
-		struct ctl_client_state *current = iter;
-		thread_t client_thread = current->thread;
-		iter = list_next(iter);
-
-		thread_cancel(current->thread);
+	while (state->clients) {
+		struct ctl_client_state *current = state->clients;
+		const thread_t client_thread = current->thread;
+		thread_cancel(client_thread);
 
 		mutex_unlock(&state->lock);
 		thread_join(client_thread, &ret);
 		mutex_lock(&state->lock);
 
-		if (ret == THREAD_CANCELED) {
+		if (state->clients == current) {
 			ctl_client_cleanup(current);
 		}
 	}
@@ -186,29 +193,32 @@ static void *ctl_server_coreloop(void *param)
 
 		thread_testcancel();
 
-		client = malloc(sizeof(struct ctl_client_state));
-		if (!client) {
-			message(HAKA_LOG_ERROR, MODULE, L"memmory error");
-			continue;
-		}
+		{
+			thread_setcancelstate(false);
 
-		list_init(client);
-		client->server = state;
+			client = malloc(sizeof(struct ctl_client_state));
+			if (!client) {
+				thread_setcancelstate(true);
+				message(HAKA_LOG_ERROR, MODULE, L"memmory error");
+				continue;
+			}
+
+			list_init(client);
+			client->server = state;
+			client->fd = -1;
+			list_insert_before(client, state->clients, &state->clients, NULL);
+
+			thread_setcancelstate(true);
+		}
 
 		client->fd = accept(state->fd, (struct sockaddr *)&addr, &len);
 		if (client->fd < 0) {
 			messagef(HAKA_LOG_DEBUG, MODULE, L"failed to accept ctl connection: %s", errno_error(errno));
-			free(client);
-			continue;
-		}
-
-		if (!thread_create(&client->thread, ctl_client_process, client)) {
-			messagef(HAKA_LOG_DEBUG, MODULE, L"failed to create thread: %s", clear_error(errno));
 			ctl_client_cleanup(client);
 			continue;
 		}
 
-		list_insert_before(client, state->clients, &state->clients, NULL);
+		ctl_client_process(client);
 	}
 
 	return NULL;
@@ -259,4 +269,30 @@ bool start_ctl_server()
 void stop_ctl_server()
 {
 	ctl_server_cleanup(&ctl_server);
+}
+
+
+/*
+ * Command code
+ */
+
+static bool ctl_client_process_command(struct ctl_client_state *state, const char *command)
+{
+	if (strcmp(command, "STATUS") == 0) {
+		ctl_send(state->fd, "OK");
+	}
+	else if (strcmp(command, "STOP") == 0) {
+		messagef(HAKA_LOG_INFO, MODULE, L"request to stop haka received");
+		kill(getpid(), SIGTERM);
+		ctl_send(state->fd, "OK");
+	}
+	else if (strcmp(command, "LOGS") == 0) {
+		ctl_send(state->fd, "OK");
+	}
+	else if (strlen(command) > 0) {
+		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", command);
+		ctl_send(state->fd, "ERROR");
+	}
+
+	return true;
 }
