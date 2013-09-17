@@ -18,7 +18,7 @@ test -f $DAEMON || exit 0
 
 case "$1" in
 start)  log_daemon_msg "Starting $DESCRIPTION" "$NAME"
-        start_daemon -p $PIDFILE $DAEMON -- $EXTRA_OPTS &> /dev/null
+        start_daemon -p $PIDFILE $DAEMON -- $EXTRA_OPTS > /dev/null 2>&1
         log_end_msg $?
         ;;
 stop)   log_daemon_msg "Stopping $DESCRIPTION" "$NAME"
