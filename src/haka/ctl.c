@@ -57,19 +57,48 @@ static void ctl_client_cleanup(struct ctl_client_state *state)
 	mutex_unlock(&server_state->lock);
 }
 
-static void ctl_send(int fd, const char *message)
+static bool ctl_send(int fd, const char *message)
 {
 	if (send(fd, message, strlen(message)+1, 0) < 0) {
 		messagef(HAKA_LOG_ERROR, MODULE, L"cannot write to ctl socket: %s", errno_error(errno));
+		return false;
 	}
+	return true;
+}
+
+static bool ctl_client_process_command(struct ctl_client_state *state)
+{
+	char buffer[MAX_COMMAND_LEN];
+	int len;
+
+	len = recv(state->fd, buffer, MAX_COMMAND_LEN, 0);
+	if (len < 0) {
+		messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %s", errno_error(errno));
+		return false;
+	}
+
+	buffer[MAX_COMMAND_LEN-1] = 0;
+
+	if (strcmp(buffer, "STATUS") == 0) {
+		ctl_send(state->fd, "OK");
+	}
+	else if (strcmp(buffer, "STOP") == 0) {
+		messagef(HAKA_LOG_INFO, MODULE, L"request to stop haka received");
+		kill(getpid(), 2);
+		ctl_send(state->fd, "OK");
+	}
+	else if (len > 0) {
+		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", buffer);
+		ctl_send(state->fd, "ERROR");
+	}
+
+	return true;
 }
 
 static void *ctl_client_process(void *param)
 {
 	struct ctl_client_state *state = (struct ctl_client_state *)param;
 	sigset_t set;
-	char buffer[MAX_COMMAND_LEN];
-	int len;
 
 	/* Block all signal to let the main thread handle them */
 	sigfillset(&set);
@@ -83,23 +112,8 @@ static void *ctl_client_process(void *param)
 		return NULL;
 	}
 
-	/* Read command */
-	len = recv(state->fd, buffer, MAX_COMMAND_LEN, 0);
-	if (len < 0) {
-		messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %s", errno_error(errno));
-		goto stop;
-	}
+	ctl_client_process_command(state);
 
-	buffer[MAX_COMMAND_LEN-1] = 0;
-
-	if (strcmp(buffer, "STATUS") == 0) {
-		ctl_send(state->fd, "haka is running");
-	}
-	else {
-		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", buffer);
-	}
-
-stop:
 	thread_setcancelstate(false);
 	ctl_client_cleanup(state);
 	return NULL;

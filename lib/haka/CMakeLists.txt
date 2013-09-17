@@ -11,6 +11,7 @@ add_library(libhaka SHARED
 	error.c
 	thread.c
 	parameters.c
+	colors.c
 	container/list.c)
 
 LUA_LINK(libhaka)

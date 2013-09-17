@@ -60,7 +60,7 @@ INIT static void _message_init()
 	ret = mutex_init(&stdout_mutex, true);
 	assert(ret);
 
-	stdout_use_colors = isatty(fileno(stdout));
+	stdout_use_colors = colors_supported(fileno(stdout));
 
 	message_is_valid = true;
 }

@@ -1,9 +1,7 @@
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <getopt.h>
@@ -12,9 +10,19 @@
 #include <haka/config.h>
 #include <haka/version.h>
 #include <haka/types.h>
+#include <haka/colors.h>
 
 #include "config.h"
+#include "ctl.h"
 
+
+enum {
+	COMMAND_SUCCESS       = 0,
+	COMMAND_FAILED        = 1,
+	ERROR_INVALID_OPTIONS = 100,
+	ERROR_INVALID_COMMAND = 101,
+	ERROR_CTL_SOCKET      = 102
+};
 
 static void usage(FILE *output, const char *program)
 {
@@ -31,6 +39,7 @@ static void help(const char *program)
 
 	fprintf(stdout, "\nCommands:\n");
 	fprintf(stdout, "\tstatus:             Display haka daemon status\n");
+	fprintf(stdout, "\tstop:               Stop haka daemon\n");
 }
 
 static int parse_cmdline(int *argc, char ***argv)
@@ -57,13 +66,13 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		default:
 			usage(stderr, (*argv)[0]);
-			return 2;
+			return ERROR_INVALID_OPTIONS;
 		}
 	}
 
 	if (optind+1 != *argc) {
 		usage(stderr, (*argv)[0]);
-		return 2;
+		return ERROR_INVALID_COMMAND;
 	}
 
 	*argc -= optind;
@@ -75,44 +84,10 @@ static void clean_exit()
 {
 }
 
-static bool ctl_send(int fd, const char *command)
-{
-	const size_t len = strlen(command);
-
-	if (send(fd, command, len+1, 0) < 0) {
-		fprintf(stderr, "cannot write on ctl socket: %s\n", strerror(errno));
-		return false;
-	}
-
-	return true;
-}
-
-static bool ctl_print(int fd)
-{
-	char buffer[1024];
-	int len;
-
-	do {
-		len = recv(fd, buffer, 1024, 0);
-		if (len < 0) {
-			printf("\n");
-			fprintf(stderr, "cannot read from ctl socket: %i, %i %s\n", len , errno, strerror(errno));
-			return false;
-		}
-
-		printf("%.*s", len, buffer);
-	} while (len == 1024);
-
-	printf("\n");
-	return true;
-}
-
 int main(int argc, char *argv[])
 {
-	int ret;
-	int fd;
-	struct sockaddr_un addr;
-	socklen_t len;
+	int ret, fd;
+	const bool use_colors = colors_supported(fileno(stdout));
 
 	ret = parse_cmdline(&argc, &argv);
 	if (ret >= 0) {
@@ -120,29 +95,59 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	/* Create the socket */
-	if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-		fprintf(stderr, "cannot create ctl socket: %s\n", strerror(errno));
-		return 3;
+	fd = ctl_open_socket();
+	if (fd < -1) {
+		clean_exit();
+		return ERROR_CTL_SOCKET;
 	}
 
-	bzero((char *)&addr, sizeof(addr));
-	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, HAKA_CTL_SOCKET_FILE);
-
-	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
-	if (connect(fd, (struct sockaddr *)&addr, len)) {
-		fprintf(stderr, "cannot connect ctl socket: %s\n", strerror(errno));
-		return 3;
-	}
-
+	/* Commands */
 	if (strcasecmp(argv[0], "STATUS") == 0) {
-		ctl_send(fd, "STATUS");
-		ctl_print(fd);
+		printf("[....] haka status");
+
+		if (fd < 0) {
+			printf(": cannot connect to haka socket");
+			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+			return COMMAND_FAILED;
+		}
+		else {
+			fflush(stdout);
+			ctl_send(fd, "STATUS");
+
+			if (ctl_check(fd, "OK")) {
+				printf(": haka is running");
+				printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+			}
+			else {
+				printf(": haka not responding");
+				printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+			}
+			return COMMAND_SUCCESS;
+		}
+	}
+
+	/* Other command that need a valid ctl socket */
+	if (fd < 0) {
+		fprintf(stderr, "cannot connect ctl socket: %s\n", strerror(errno));
+		return ERROR_CTL_SOCKET;
+	}
+
+	else if (strcasecmp(argv[0], "STOP") == 0) {
+		printf("[....] stopping haka");
+		fflush(stdout);
+
+		ctl_send(fd, "STOP");
+		if (ctl_check(fd, "OK")) {
+			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+		}
+		else {
+			printf("failed!");
+			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		}
 	}
 	else {
 		fprintf(stderr, "invalid command '%s', see help for the list of available command\n", argv[0]);
-		return 1;
+		return ERROR_INVALID_COMMAND;
 	}
 
 	return 0;
