@@ -11,6 +11,8 @@ struct list {
 	struct list    *next;
 };
 
+#define LIST_INIT    {NULL, NULL}
+
 #define list_getuserptr(l, offset)    ((l) ? (void*)((char*)(l)-(offset)) : NULL)
 
 #define list_init(a)                  { _list_init(&(a)->list); }
