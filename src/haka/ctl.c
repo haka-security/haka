@@ -84,7 +84,7 @@ static bool ctl_client_process_command(struct ctl_client_state *state)
 	}
 	else if (strcmp(buffer, "STOP") == 0) {
 		messagef(HAKA_LOG_INFO, MODULE, L"request to stop haka received");
-		kill(getpid(), 2);
+		kill(getpid(), SIGTERM);
 		ctl_send(state->fd, "OK");
 	}
 	else if (len > 0) {
