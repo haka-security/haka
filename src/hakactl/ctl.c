@@ -17,8 +17,7 @@ int ctl_open_socket()
 	socklen_t len;
 
 	if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-		fprintf(stderr, "cannot create ctl socket: %s\n", strerror(errno));
-		return -2;
+		return -1;
 	}
 
 	bzero((char *)&addr, sizeof(addr));
@@ -38,7 +37,7 @@ bool ctl_send(int fd, const char *command)
 	const size_t len = strlen(command);
 
 	if (send(fd, command, len+1, 0) < 0) {
-		fprintf(stderr, "cannot write on ctl socket: %s\n", strerror(errno));
+		printf(": cannot write on ctl socket: %s", strerror(errno));
 		return false;
 	}
 

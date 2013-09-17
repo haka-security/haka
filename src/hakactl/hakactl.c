@@ -42,6 +42,7 @@ static void help(const char *program)
 	fprintf(stdout, "\nCommands:\n");
 	fprintf(stdout, "\tstatus:             Display haka daemon status\n");
 	fprintf(stdout, "\tstop:               Stop haka daemon\n");
+	fprintf(stdout, "\tlogs:               Show haka logs in realtime\n");
 }
 
 static int parse_cmdline(int *argc, char ***argv)
@@ -116,68 +117,75 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	fd = ctl_open_socket();
-	if (fd < -1) {
-		clean_exit();
-		return ERROR_CTL_SOCKET;
-	}
-
-	/* Commands */
+	/* Connecting to haka */
 	if (strcasecmp(argv[0], "STATUS") == 0) {
 		printf("[....] haka status");
-
-		if (fd < 0) {
-			printf(": cannot connect to haka socket");
-			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
-			return COMMAND_FAILED;
-		}
-		else {
-			fflush(stdout);
-			ctl_send(fd, "STATUS");
-
-			if (ctl_check(fd, "OK")) {
-				printf(": haka is running");
-				printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
-			}
-			else {
-				printf(": haka not responding");
-				printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
-			}
-			return COMMAND_SUCCESS;
-		}
+	}
+	else {
+		printf("[....] connecting to haka");
 	}
 
-	/* Other command that need a valid ctl socket */
+	fd = ctl_open_socket();
 	if (fd < 0) {
-		fprintf(stderr, "cannot connect ctl socket: %s\n", strerror(errno));
+		printf(": cannot connect to haka socket");
+		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		return ERROR_CTL_SOCKET;
 	}
 
+	/* Status command */
+	if (strcasecmp(argv[0], "STATUS") == 0) {
+		fflush(stdout);
+		ctl_send(fd, "STATUS");
+
+		if (ctl_check(fd, "OK")) {
+			printf(": haka is running");
+			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+		}
+		else {
+			printf(": haka not responding");
+			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		}
+
+		return COMMAND_SUCCESS;
+	}
+	else {
+		printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+	}
+
+	/* Other commands */
 	if (strcasecmp(argv[0], "STOP") == 0) {
 		printf("[....] stopping haka");
 		fflush(stdout);
 
-		ctl_send(fd, "STOP");
+		if (!ctl_send(fd, "STOP")) {
+			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+			return COMMAND_FAILED;
+		}
+
 		if (ctl_check(fd, "OK")) {
 			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 		}
 		else {
-			printf("failed!");
+			printf(": %sfailed!%s", c(RED, use_colors), c(CLEAR, use_colors));
 			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		}
 	}
 	else if (strcasecmp(argv[0], "LOGS") == 0) {
-		printf("[....] connecting to haka");
+		printf("[....] requesting logs");
 		fflush(stdout);
 
-		ctl_send(fd, "LOGS");
+		if (!ctl_send(fd, "LOGS")) {
+			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+			return COMMAND_FAILED;
+		}
+
 		if (ctl_check(fd, "OK")) {
 			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 
 			while (display_log_line(fd));
 		}
 		else {
-			printf("failed!");
+			printf(": %sfailed!%s", c(RED, use_colors), c(CLEAR, use_colors));
 			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		}
 	}
@@ -186,5 +194,5 @@ int main(int argc, char *argv[])
 		return ERROR_INVALID_COMMAND;
 	}
 
-	return 0;
+	return COMMAND_SUCCESS;
 }
