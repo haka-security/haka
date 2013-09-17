@@ -129,6 +129,9 @@ int read_configuration(const char *file)
 		parameters_open_section(config, "log");
 		module = parameters_get_string(config, "module", NULL);
 		if (module) {
+			struct log_module *log_module;
+			struct log_module_state *state;
+
 			struct module *logger = module_load(module, config);
 			if (!logger) {
 				message(HAKA_LOG_FATAL, L"core", L"cannot load logging module");
@@ -136,7 +139,25 @@ int read_configuration(const char *file)
 				return 1;
 			}
 
-			add_log_module(logger);
+			if (logger->type != MODULE_LOG) {
+				message(HAKA_LOG_FATAL, L"core", L"cannot load logging module: invalid module type");
+				module_release(logger);
+				clean_exit();
+				return 1;
+			}
+
+			log_module = (struct log_module *)logger;
+			state = log_module->init_state(config);
+
+			if (!add_log_module(log_module, state)) {
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot install logging module: %s", clear_error());
+				log_module->cleanup_state(state);
+				state = NULL;
+				module_release(logger);
+				clean_exit();
+				return 1;
+			}
+
 			module_release(logger);
 		}
 	}

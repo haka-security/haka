@@ -22,11 +22,12 @@ void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...);
 void setlevel(log_level level, const wchar_t *module);
 log_level getlevel(const wchar_t *module);
 
-struct module;
+struct log_module;
+struct log_module_state;
 
 void enable_stdout_logging(bool enable);
-bool add_log_module(struct module *module);
-bool remove_log_module(struct module *module);
+bool add_log_module(struct log_module *module, struct log_module_state *state);
+bool remove_log_module(struct log_module *module, struct log_module_state *state);
 void remove_all_log_modules();
 
 #endif /* _HAKA_LOG_H */

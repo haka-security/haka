@@ -109,7 +109,16 @@ static int convert_concat(char *buffer, int *position, size_t len, const wchar_t
 	}
 }
 
-static int log_message(log_level lvl, const wchar_t *module, const wchar_t *message)
+struct log_module_state *init_state(struct parameters *args)
+{
+	return NULL;
+}
+
+void cleanup_state(struct log_module_state *state)
+{
+}
+
+static int log_message(struct log_module_state *state, log_level lvl, const wchar_t *module, const wchar_t *message)
 {
 	int ret;
 	int buffer_position = 0;
@@ -147,6 +156,8 @@ struct log_module HAKA_MODULE = {
 		init:        init,
 		cleanup:     cleanup
 	},
+	init_state:      init_state,
+	cleanup_state:   cleanup_state,
 	message:         log_message
 };
 

@@ -10,12 +10,16 @@
 #include <haka/error.h>
 #include <haka/colors.h>
 #include <haka/log_module.h>
+#include <haka/container/list.h>
 
 
-#define MAX_LOG_MODULE         10
+struct installed_module {
+	struct list              list;
+	struct log_module       *module;
+	struct log_module_state *state;
+};
 
-static struct log_module *log_module[MAX_LOG_MODULE] = {0};
-static int log_module_count = 0;
+static struct installed_module *log_modules = NULL;
 static rwlock_t log_module_lock = RWLOCK_INIT;
 static local_storage_t local_message_key;
 static bool message_is_valid = false;
@@ -67,6 +71,8 @@ INIT static void _message_init()
 
 FINI static void _message_fini()
 {
+	remove_all_log_modules();
+
 	{
 		wchar_t *buffer = local_storage_get(&local_message_key);
 		if (buffer) {
@@ -99,67 +105,68 @@ static wchar_t *message_context()
 	return buffer;
 }
 
-bool add_log_module(struct module *module)
+bool add_log_module(struct log_module *module, struct log_module_state *state)
 {
+	struct installed_module *log_module;
+
 	assert(module);
 
-	if (module->type != MODULE_LOG) {
-		error(L"'%ls' is not a valid log module", module->name);
+	log_module = malloc(sizeof(struct installed_module));
+	if (!log_module) {
+		error(L"memory error");
 		return false;
 	}
 
-	if (log_module_count >= MAX_LOG_MODULE) {
-		error(L"Too many log modules registered");
-		return false;
-	}
+	log_module->module = module;
+	module_addref(&module->module);
+	log_module->state = state;
 
 	rwlock_writelock(&log_module_lock);
-
-	log_module[log_module_count++] = (struct log_module *)module;
-	module_addref(module);
-
+	list_insert_before(log_module, log_modules, &log_modules, NULL);
 	rwlock_unlock(&log_module_lock);
 
-	return 0;
+	return true;
 }
 
-bool remove_log_module(struct module *module)
+static void cleanup_log_module(struct installed_module *log_module, struct installed_module **head)
 {
-	int i;
-	struct module *module_to_release = NULL;
+	rwlock_writelock(&log_module_lock);
+	list_remove(log_module, head, NULL);
+	rwlock_unlock(&log_module_lock);
+
+	log_module->module->cleanup_state(log_module->state);
+	module_release(&log_module->module->module);
+	free(log_module);
+}
+
+bool remove_log_module(struct log_module *module, struct log_module_state *state)
+{
+	struct installed_module *module_to_release = NULL;
+	struct installed_module *iter = log_modules;
 
 	assert(module);
 
 	{
-		rwlock_writelock(&log_module_lock);
+		rwlock_readlock(&log_module_lock);
 
-		for (i=0; i<log_module_count; ++i) {
-			if (log_module[i] == (struct log_module *)module) {
-				module_to_release = &log_module[i]->module;
-				log_module[i] = NULL;
+		for (iter=log_modules; iter; iter = list_next(iter)) {
+			if (iter->module == module &&
+				iter->state == state) {
+				module_to_release = iter;
 				break;
 			}
-		}
-
-		for (; i<log_module_count; ++i) {
-			log_module[i] = log_module[i-1];
-		}
-
-		if (i<log_module_count) {
-			log_module[i] = NULL;
-			--log_module_count;
-		}
-		else {
-			rwlock_unlock(&log_module_lock);
-			error(L"Log modules is not registered");
-			return false;
 		}
 
 		rwlock_unlock(&log_module_lock);
 	}
 
+	if (!iter) {
+		error(L"Log modules is not registered");
+		return false;
+	}
+
 	if (module_to_release) {
-		module_release(module_to_release);
+		cleanup_log_module(module_to_release, &log_modules);
 	}
 
 	return true;
@@ -167,25 +174,21 @@ bool remove_log_module(struct module *module)
 
 void remove_all_log_modules()
 {
-	int i, module_count;
-	struct module *module_to_release[MAX_LOG_MODULE] = {0};
+	struct installed_module *modules = NULL;
 
 	{
 		rwlock_writelock(&log_module_lock);
-
-		for (i=0; i<log_module_count; ++i) {
-			module_to_release[i] = &log_module[i]->module;
-			log_module[i] = NULL;
-		}
-
-		module_count = log_module_count;
-		log_module_count = 0;
-
+		modules = log_modules;
+		log_modules = NULL;
 		rwlock_unlock(&log_module_lock);
 	}
 
-	for (i=0; i<module_count; ++i) {
-		module_release(module_to_release[i]);
+
+	while (modules) {
+		struct installed_module *current = modules;
+		modules = list_next(modules);
+
+		cleanup_log_module(current, NULL);
 	}
 }
 
@@ -240,19 +243,17 @@ void message(log_level level, const wchar_t *module, const wchar_t *message)
 {
 	const log_level max_level = getlevel(module);
 	if (level <= max_level) {
-		int i;
+		struct installed_module *iter;
 
 		rwlock_readlock(&log_module_lock);
-
-		for (i=0; i<log_module_count; ++i) {
-			log_module[i]->message(level, module, message);
+		for (iter=log_modules; iter; iter = list_next(iter)) {
+			iter->module->message(iter->state, level, module, message);
 		}
+		rwlock_unlock(&log_module_lock);
 
 		if (stdout_enable) {
 			stdout_message(level, module, message);
 		}
-
-		rwlock_unlock(&log_module_lock);
 	}
 }
 
