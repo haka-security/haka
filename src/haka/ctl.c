@@ -26,6 +26,7 @@ struct ctl_client_state {
 	struct ctl_server_state *server;
 	struct list              list;
 	int                      fd;
+	bool                     thread_created;
 	thread_t                 thread;
 	void                   (*callback)(void*);
 	void                    *data;
@@ -98,6 +99,8 @@ static void *ctl_client_process_thread(void *param)
 		return NULL;
 	}
 
+	state->thread_created = true;
+
 	state->callback(state->data);
 
 	ctl_client_cleanup(state);
@@ -151,12 +154,14 @@ static void ctl_server_cleanup(struct ctl_server_state *state)
 
 	while (state->clients) {
 		struct ctl_client_state *current = state->clients;
-		const thread_t client_thread = current->thread;
-		thread_cancel(client_thread);
+		if (current->thread_created) {
+			const thread_t client_thread = current->thread;
+			thread_cancel(client_thread);
 
-		mutex_unlock(&state->lock);
-		thread_join(client_thread, &ret);
-		mutex_lock(&state->lock);
+			mutex_unlock(&state->lock);
+			thread_join(client_thread, &ret);
+			mutex_lock(&state->lock);
+		}
 
 		if (state->clients == current) {
 			ctl_client_cleanup(current);
@@ -198,11 +203,19 @@ static void *ctl_server_coreloop(void *param)
 
 	while (!state->exiting) {
 		socklen_t len = sizeof(addr);
-		struct ctl_client_state *client = NULL;
+		int fd;
 
 		thread_testcancel();
 
+		fd = accept(state->fd, (struct sockaddr *)&addr, &len);
+		if (fd < 0) {
+			messagef(HAKA_LOG_DEBUG, MODULE, L"failed to accept ctl connection: %s", errno_error(errno));
+			continue;
+		}
+
 		{
+			struct ctl_client_state *client = NULL;
+
 			thread_setcancelstate(false);
 
 			client = malloc(sizeof(struct ctl_client_state));
@@ -214,20 +227,14 @@ static void *ctl_server_coreloop(void *param)
 
 			list_init(client);
 			client->server = state;
-			client->fd = -1;
+			client->fd = fd;
+			client->thread_created = false;
 			list_insert_before(client, state->clients, &state->clients, NULL);
 
 			thread_setcancelstate(true);
-		}
 
-		client->fd = accept(state->fd, (struct sockaddr *)&addr, &len);
-		if (client->fd < 0) {
-			messagef(HAKA_LOG_DEBUG, MODULE, L"failed to accept ctl connection: %s", errno_error(errno));
-			ctl_client_cleanup(client);
-			continue;
+			ctl_client_process(client);
 		}
-
-		ctl_client_process(client);
 	}
 
 	return NULL;
