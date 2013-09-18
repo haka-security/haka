@@ -1,6 +1,4 @@
--- This script is meant to be launched with a capture type
--- nfq, or pcap, as:
--- haka capture-nfq.lua eth0:eth1 gettingstarted.lua
+-- This script is meant to be launched with a capture type nfq or pcap
 
 -- Mandatory to load ipv4 dissector
 local ipv4 = require("protocol/ipv4")

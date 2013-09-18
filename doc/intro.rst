@@ -12,7 +12,9 @@ Major features
 * Read packet either from a pcap file or from interface using libpcap
 * Filter packet from Lua policy files
 * Alter packet from Lua policy files
-* Log using either stdout or syslog modules
+* Inject new packet from Lua policy files
+* Filter packet in an interfactive fashion way 
+* Debug security rules
 * And more features coming soon ...
 
 Authors / Contributors
