@@ -8,7 +8,7 @@
 
 struct thread_pool;
 
-struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module);
+struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module, bool attach_debugger);
 void thread_pool_cleanup(struct thread_pool *pool);
 void thread_pool_wait(struct thread_pool *pool);
 void thread_pool_cancel(struct thread_pool *pool);

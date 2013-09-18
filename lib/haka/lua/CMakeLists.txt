@@ -12,7 +12,5 @@ swig_add_module(libhaka-lua lua STATIC
 # Lua dependency
 LUA_LINK(libhaka-lua)
 
-target_link_libraries(libhaka-lua libluadebug)
-
 # The static library is going to be used in a shared library
 SET_TARGET_PROPERTIES(libhaka-lua PROPERTIES COMPILE_FLAGS "-fPIC")

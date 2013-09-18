@@ -2,45 +2,39 @@
 
 %{
 	#include <luadebug/debugger.h>
-	#include "interactive.h"
+	#include "debugger.h"
+	#include <luadebug/interactive.h>
 
-	#define new_luadebug_debugger()      luadebug_debugger_create(L)
-	#define new_luadebug_interactive()   luadebug_interactive_create(L)
+	#define lua_luadebug_interactive_enter(single, multi) luadebug_interactive_enter(L, single, multi)
+
+	#define lua_luadebug_debugger_start(break_immediatly) luadebug_debugger_start(L, break_immediatly)
+	#define lua_luadebug_debugger_stop()                  luadebug_debugger_stop(L)
+	#define lua_luadebug_debugger_break()                 luadebug_debugger_break(L)
 %}
 
-%rename(interactive) luadebug_interactive;
-struct luadebug_interactive {
-	%extend {
-		luadebug_interactive();
+%nodefaultctor;
+%nodefaultdtor;
 
-		~luadebug_interactive() {
-			luadebug_interactive_cleanup($self);
-		}
+%rename(__interactive_enter) lua_luadebug_interactive_enter;
+void lua_luadebug_interactive_enter(const char *single, const char *multi);
 
-		void start() {
-			luadebug_interactive_enter($self);
-		}
-
-		void setprompt(const char *single, const char *multi) {
-			luadebug_interactive_setprompts($self, single, multi);
-		}
-	}
-};
-
-%rename(debugger) luadebug_debugger;
+%rename(__debugger) luadebug_debugger;
 struct luadebug_debugger {
 	%extend {
-		luadebug_debugger();
-
 		~luadebug_debugger() {
 			luadebug_debugger_cleanup($self);
 		}
-
-		void stop() {
-			luadebug_debugger_break($self);
-		}
 	}
 };
+
+%rename(__debugger_start) lua_luadebug_debugger_start;
+void lua_luadebug_debugger_start(bool break_immediatly=false);
+
+%rename(__debugger_stop) lua_luadebug_debugger_stop;
+void lua_luadebug_debugger_stop();
+
+%rename(__debugger_break) lua_luadebug_debugger_break;
+void lua_luadebug_debugger_break();
 
 %luacode {
 	local color = require("color")
@@ -155,4 +149,12 @@ struct luadebug_debugger {
 			__pprint(obj, indent or "", nil, {}, hide, depth or -1)
 		end
 	end
+
+	luadebug.debugger = {}
+	luadebug.debugger.start = luadebug.__debugger_start
+	luadebug.debugger.stop = luadebug.__debugger_stop
+	luadebug.debugger.breakpoint = luadebug.__debugger_break
+
+	luadebug.interactive = {}
+	luadebug.interactive.enter = luadebug.__interactive_enter
 }

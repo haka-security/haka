@@ -41,21 +41,26 @@ static void fatal_error_signal(int sig)
 
 	printf("\n");
 
-	if (sig != 2 || !luadebug_debugger_breakall()) {
-		if (fatal_error_in_progress)
-			raise(sig);
-		fatal_error_in_progress = 1;
-
-		if (sig != SIGTERM) {
-			messagef(HAKA_LOG_FATAL, L"core", L"fatal signal received (sig=%d)", sig);
+	if (sig == SIGINT) {
+		if (luadebug_debugger_breakall()) {
+			message(HAKA_LOG_FATAL, L"debug", L"break (hit ^C again to kill)");
+			return;
 		}
-		else {
-			messagef(HAKA_LOG_INFO, L"core", L"terminate signal received");
-		}
-
-		clean_exit();
-		exit(1);
 	}
+
+	if (fatal_error_in_progress)
+		raise(sig);
+	fatal_error_in_progress = 1;
+
+	if (sig != SIGTERM) {
+		messagef(HAKA_LOG_FATAL, L"core", L"fatal signal received (sig=%d)", sig);
+	}
+	else {
+		messagef(HAKA_LOG_INFO, L"core", L"terminate signal received");
+	}
+
+	clean_exit();
+	exit(1);
 }
 
 static void handle_sighup()
@@ -112,7 +117,7 @@ void initialize()
 	}
 }
 
-void prepare(int threadcount)
+void prepare(int threadcount, bool attach_debugger)
 {
 	struct packet_module *packet_module = get_packet_module();
 	assert(packet_module);
@@ -146,7 +151,7 @@ void prepare(int threadcount)
 		module_path = NULL;
 	}
 
-	thread_states = thread_pool_create(threadcount, packet_module);
+	thread_states = thread_pool_create(threadcount, packet_module, attach_debugger);
 	if (check_error()) {
 		message(HAKA_LOG_FATAL, L"core", clear_error());
 		clean_exit();

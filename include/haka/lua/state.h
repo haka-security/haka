@@ -20,4 +20,6 @@ int lua_state_error_formater(struct lua_State *L);
 void lua_state_print_error(struct lua_State *L, const wchar_t *msg);
 struct lua_state *lua_state_get(struct lua_State *L);
 
+extern void (*lua_state_error_hook)(struct lua_State *L);
+
 #endif /* _HAKA_LUA_STATE_H */

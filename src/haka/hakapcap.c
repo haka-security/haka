@@ -13,6 +13,9 @@
 #include <haka/version.h>
 #include <haka/parameters.h>
 #include <haka/lua/state.h>
+#include <luadebug/user.h>
+#include <luadebug/debugger.h>
+#include <luadebug/interactive.h>
 
 #include "app.h"
 #include "thread.h"
@@ -34,12 +37,14 @@ static void help(const char *program)
 	fprintf(stdout, "\t-h,--help:       Display this information\n");
 	fprintf(stdout, "\t--version:       Display version information\n");
 	fprintf(stdout, "\t-d,--debug:      Display debug output\n");
+	fprintf(stdout, "\t--luadebug:      Attach lua debugger\n");
 	fprintf(stdout, "\t--pass-through:  Run in pass-through mode\n");
 	fprintf(stdout, "\t-o <output>:     Save result in a pcap file\n");
 }
 
 static char *output = NULL;
 static bool pass_throught = false;
+static bool lua_debugger = false;
 
 static int parse_cmdline(int *argc, char ***argv)
 {
@@ -50,6 +55,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "version",      no_argument,       0, 'v' },
 		{ "help",         no_argument,       0, 'h' },
 		{ "debug",        no_argument,       0, 'd' },
+		{ "luadebug",     no_argument,       0, 'L' },
 		{ "pass-through", no_argument,       0, 'P' },
 		{ 0,              0,                 0, 0 }
 	};
@@ -75,6 +81,10 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'o':
 			output = strdup(optarg);
+			break;
+
+		case 'L':
+			lua_debugger = true;
 			break;
 
 		default:
@@ -149,8 +159,11 @@ int main(int argc, char *argv[])
 		packet_set_mode(MODE_PASSTHROUGH);
 	}
 
+	luadebug_debugger_user(luadebug_user_readline());
+	luadebug_interactive_user(luadebug_user_readline());
+
 	/* Main loop */
-	prepare(1);
+	prepare(1, lua_debugger);
 	start();
 
 	clean_exit();

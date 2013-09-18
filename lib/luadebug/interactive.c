@@ -2,6 +2,7 @@
 #include <haka/error.h>
 #include <haka/compiler.h>
 #include <haka/thread.h>
+#include <haka/log.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
 
@@ -12,30 +13,25 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <editline/readline.h>
 
-#include "interactive.h"
+#include <luadebug/user.h>
+#include <luadebug/interactive.h>
 #include "complete.h"
 #include "utils.h"
-#include "readline.h"
 
 
 struct luadebug_interactive
 {
 	lua_State                   *L;
-	char                        *prompt_single;
-	char                        *prompt_multi;
 	int                          env_index;
-
 	struct luadebug_complete     complete;
 };
 
-
 #define EOF_MARKER   "'<eof>'"
-
 
 static mutex_t active_session_mutex = MUTEX_INIT;
 static struct luadebug_interactive *current_session;
+static struct luadebug_user        *current_user = NULL;
 
 static const complete_callback completions[] = {
 	&complete_callback_lua_keyword,
@@ -53,53 +49,56 @@ static char *generator(const char *text, int state)
 			completions, text, state);
 }
 
-static char **complete(const char *text, int start, int end)
+static generator_callback *completion(const char *line, int start)
 {
-	current_session->complete.stack_env = current_session->env_index;
-	return rl_completion_matches(text, generator);
+	return generator;
 }
 
-struct luadebug_interactive *luadebug_interactive_create(struct lua_State *L)
+void luadebug_interactive_user(struct luadebug_user *user)
 {
-	struct luadebug_interactive *ret = malloc(sizeof(struct luadebug_interactive));
-	if (!ret) {
-		error(L"memory error");
-		return NULL;
+	mutex_lock(&active_session_mutex);
+
+	if (current_user) {
+		current_user->destroy(current_user);
+		current_user = NULL;
 	}
 
-	ret->L = L;
-	ret->prompt_single = NULL;
-	ret->prompt_multi = NULL;
+	current_user = user;
 
-	luadebug_interactive_setprompts(ret, GREEN BOLD ">  " CLEAR, GREEN BOLD ">> " CLEAR);
-
-	return ret;
+	mutex_unlock(&active_session_mutex);
 }
 
-void luadebug_interactive_cleanup(struct luadebug_interactive *session)
-{
-	free(session->prompt_single);
-	free(session->prompt_multi);
-	free(session);
-}
-
-void luadebug_interactive_enter(struct luadebug_interactive *session)
+void luadebug_interactive_enter(struct lua_State *L, const char *single, const char *multi)
 {
 	char *line, *full_line = NULL;
 	bool multiline = false;
 	bool stop = false;
+	struct luadebug_interactive session;
 
 	mutex_lock(&active_session_mutex);
 
-	init_readline("haka", complete);
+	if (!current_user) {
+		message(HAKA_LOG_ERROR, L"interactive", L"no input/output handler");
+		mutex_unlock(&active_session_mutex);
+		return;
+	}
 
-	current_session = session;
-	LUA_STACK_MARK(session->L);
+	if (!single) single = GREEN BOLD ">  " CLEAR;
+	if (!multi) multi = GREEN BOLD ">> " CLEAR;
 
-	session->env_index = capture_env(session->L, 1);
-	assert(session->env_index != -1);
+	current_user->completion = completion;
+	current_user->start(current_user, "haka");
 
-	while (!stop && (line = readline(multiline ? session->prompt_multi : session->prompt_single))) {
+	current_session = &session;
+	LUA_STACK_MARK(L);
+
+	session.L = L;
+	session.env_index = capture_env(L, 1);
+	assert(session.env_index != -1);
+
+	session.complete.stack_env = session.env_index;
+
+	while (!stop && (line = current_user->readline(current_user, multiline ? multi : single))) {
 		int status = -1;
 		bool is_return = false;
 		char *current_line;
@@ -116,7 +115,7 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 			current_line = full_line;
 		}
 		else {
-			add_history(line);
+			current_user->addhistory(current_user, line);
 			current_line = line;
 		}
 
@@ -132,9 +131,9 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 			strcpy(return_line, "return ");
 			strcpy(return_line+7, current_line);
 
-			status = luaL_loadbuffer(session->L, return_line, strlen(return_line), "stdin");
+			status = luaL_loadbuffer(L, return_line, strlen(return_line), "stdin");
 			if (status) {
-				lua_pop(session->L, 1);
+				lua_pop(L, 1);
 				status = -1;
 			}
 
@@ -142,40 +141,40 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 		}
 
 		if (status == -1) {
-			status = luaL_loadbuffer(session->L, current_line, strlen(current_line), "stdin");
+			status = luaL_loadbuffer(L, current_line, strlen(current_line), "stdin");
 		}
 
 		multiline = false;
 
 		/* Change the chunk environment */
-		lua_pushvalue(session->L, session->env_index);
-		lua_setfenv(session->L, -2);
+		lua_pushvalue(L, session.env_index);
+		lua_setfenv(L, -2);
 
 		if (status == LUA_ERRSYNTAX) {
 			const char *message;
 			const int k = sizeof(EOF_MARKER) / sizeof(char) - 1;
 			size_t n;
 
-			message = lua_tolstring(session->L, -1, &n);
+			message = lua_tolstring(L, -1, &n);
 
 			if (n > k &&
 				!strncmp(message + n - k, EOF_MARKER, k) &&
 				strlen(line) > 0) {
 				multiline = true;
 			} else {
-				printf(RED "%s" CLEAR "\n", lua_tostring(session->L, -1));
+				printf(RED "%s" CLEAR "\n", lua_tostring(L, -1));
 			}
 
-			lua_pop(session->L, 1);
+			lua_pop(L, 1);
 		}
 		else if (status == LUA_ERRMEM) {
-			printf(RED "%s" CLEAR "\n", lua_tostring(session->L, -1));
+			printf(RED "%s" CLEAR "\n", lua_tostring(L, -1));
 
-			lua_pop(session->L, 1);
+			lua_pop(L, 1);
 		}
 		else {
-			execute_print(session->L);
-			lua_pop(session->L, 1);
+			execute_print(L);
+			lua_pop(L, 1);
 
 			if (is_return) {
 				stop = true;
@@ -197,19 +196,18 @@ void luadebug_interactive_enter(struct luadebug_interactive *session)
 
 	printf("\n");
 
-	lua_pop(session->L, 1);
-	LUA_STACK_CHECK(session->L, 0);
+	lua_pop(L, 1);
+	LUA_STACK_CHECK(L, 0);
 
+	current_user->stop(current_user);
 	current_session = NULL;
 
 	mutex_unlock(&active_session_mutex);
 }
 
-void luadebug_interactive_setprompts(struct luadebug_interactive *session, const char *single, const char *multi)
+FINI void _luadebug_interactive_fini()
 {
-	free(session->prompt_single);
-	free(session->prompt_multi);
-
-	session->prompt_single = strdup(single);
-	session->prompt_multi = strdup(multi);
+	if (current_user) {
+		current_user->destroy(current_user);
+	}
 }

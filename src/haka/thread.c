@@ -13,6 +13,7 @@
 #include <haka/thread.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
+#include <luadebug/debugger.h>
 
 #include "thread.h"
 #include "app.h"
@@ -115,7 +116,8 @@ static void cleanup_thread_state(struct thread_state *state)
 	free(state);
 }
 
-static struct thread_state *init_thread_state(struct packet_module *packet_module, int thread_id)
+static struct thread_state *init_thread_state(struct packet_module *packet_module, int thread_id,
+		bool attach_debugger)
 {
 	struct thread_state *state;
 
@@ -147,6 +149,10 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		message(HAKA_LOG_FATAL, L"core", L"unable to create packet capture state");
 		cleanup_thread_state(state);
 		return NULL;
+	}
+
+	if (attach_debugger) {
+		luadebug_debugger_start(state->lua->L, true);
 	}
 
 	lua_getglobal(state->lua->L, "require");
@@ -222,7 +228,8 @@ static void start_single(struct thread_state *state)
 	thread_main_loop(state);
 }
 
-struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module)
+struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module,
+		bool attach_debugger)
 {
 	int i;
 	struct thread_pool *pool;
@@ -249,7 +256,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 	pool->count = count;
 
 	for (i=0; i<count; ++i) {
-		pool->threads[i] = init_thread_state(packet_module, i);
+		pool->threads[i] = init_thread_state(packet_module, i, attach_debugger);
 		if (!pool->threads[i]) {
 			error(L"thread initialization error");
 			thread_pool_cleanup(pool);
@@ -332,4 +339,17 @@ void thread_pool_start(struct thread_pool *pool)
 	else {
 		error(L"no thread to run");
 	}
+}
+
+int thread_pool_count(struct thread_pool *pool)
+{
+	assert(pool);
+	return pool->count;
+}
+
+struct lua_state *thread_pool_lua_state(struct thread_pool *pool, int thread_index)
+{
+	assert(pool);
+	assert(thread_index < pool->count);
+	return pool->threads[thread_index]->lua;
 }

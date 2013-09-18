@@ -12,6 +12,7 @@ swig_add_module(haka-liblua lua STATIC
 # Lua dependency
 lua_link(haka-liblua)
 target_link_libraries(haka-liblua libhaka)
+target_link_libraries(haka-liblua libluadebug)
 
 lua_compile(NAME haka-lua FILES rule.lua utils.lua color.lua)
 lua_compile(NAME haka-lua FILES interactive.lua FLAGS ${LUA_FLAGS_DEBUG})

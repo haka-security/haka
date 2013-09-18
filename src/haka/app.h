@@ -11,7 +11,7 @@
 void basic_clean_exit();
 void clean_exit();
 void initialize();
-void prepare(int threadcount);
+void prepare(int threadcount, bool attach_debugger);
 void start();
 
 const char *haka_path();

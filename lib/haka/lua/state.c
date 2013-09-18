@@ -43,12 +43,12 @@ void lua_state_print_error(struct lua_State *L, const wchar_t *msg)
 	lua_pop(L, 1);
 }
 
+void (*lua_state_error_hook)(struct lua_State *L) = NULL;
+
 int lua_state_error_formater(lua_State *L)
 {
-	struct luadebug_debugger *debugger = luadebug_debugger_get(L);
-	if (debugger) {
-		messagef(HAKA_LOG_ERROR, L"lua", L"catched lua error: %s", lua_tostring(L, -1));
-		luadebug_debugger_interrupt(debugger);
+	if (lua_state_error_hook) {
+		lua_state_error_hook(L);
 	}
 
 	if (getlevel(L"lua") >= HAKA_LOG_DEBUG) {

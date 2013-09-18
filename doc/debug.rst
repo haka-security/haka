@@ -31,12 +31,12 @@ When you are done, you can let Haka continue its execution by hitting `^D`.
 Debugger
 --------
 
-If you need to inspect an existing configuration, you can use the debugger. You need to initialize
+If you need to inspect an existing configuration, you can use the debugger. You need to activate
 the debugger first. This can be done like so:
 
 .. code-block:: lua
 
-    debugger = haka.debug.debugger()
+    haka.debug.debugger.start()
 
 This line will start the debugger and break immediately. A prompt will allow you to inspect variables,
 up-values, expressions... You can also set breakpoints and execute your code line by line. To get the

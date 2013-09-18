@@ -10,6 +10,9 @@
 #include <haka/error.h>
 #include <haka/version.h>
 #include <haka/lua/state.h>
+#include <luadebug/debugger.h>
+#include <luadebug/interactive.h>
+#include <luadebug/user.h>
 
 #include "app.h"
 #include "thread.h"
@@ -38,11 +41,13 @@ static void help(const char *program)
 	fprintf(stdout, "\t-c,--config <conf>: Load a specific configuration file\n"
 					"\t                      (default: %s/etc/haka/haka.conf)\n", haka_path());
 	fprintf(stdout, "\t-d,--debug:         Display debug output\n");
+	fprintf(stdout, "\t--luadebug:         Attach lua debugger (and keep haka in foreground)\n");
 	fprintf(stdout, "\t--no-daemon:        Do no run in the background\n");
 }
 
 static bool daemonize = true;
 static char *config = NULL;
+static bool lua_debugger = false;
 
 static int parse_cmdline(int *argc, char ***argv)
 {
@@ -54,6 +59,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "help",         no_argument,       0, 'h' },
 		{ "config",       required_argument, 0, 'c' },
 		{ "debug",        no_argument,       0, 'd' },
+		{ "luadebug",     no_argument,       0, 'L' },
 		{ "no-daemon",    no_argument,       0, 'D' },
 		{ 0,              0,                 0, 0 }
 	};
@@ -79,6 +85,11 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'c':
 			config = strdup(optarg);
+			break;
+
+		case 'L':
+			lua_debugger = true;
+			daemonize = false;
 			break;
 
 		default:
@@ -238,7 +249,10 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
-	prepare(-1);
+	luadebug_debugger_user(luadebug_user_readline());
+	luadebug_interactive_user(luadebug_user_readline());
+
+	prepare(-1, lua_debugger);
 
 	pid_file = fopen(HAKA_PID_FILE, "w");
 	if (!pid_file) {
@@ -256,6 +270,9 @@ int main(int argc, char *argv[])
 			clean_exit();
 			return 1;
 		}
+
+		luadebug_debugger_user(NULL);
+		luadebug_interactive_user(NULL);
 	}
 
 	if (!start_ctl_server()) {

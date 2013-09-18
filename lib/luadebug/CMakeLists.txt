@@ -6,8 +6,9 @@ swig_add_module(libluadebug lua STATIC
 	interactive.c
 	complete.c
 	debugger.c
-	readline.c
 	utils.c
+	user.c
+	readline_user.c
 )
 
 LUA_LINK(libluadebug)
@@ -15,6 +16,7 @@ LUA_LINK(libluadebug)
 find_package(Editline REQUIRED)
 include_directories(. ${EDITLINE_INCLUDE_DIR})
 target_link_libraries(libluadebug ${EDITLINE_LIBRARY})
+target_link_libraries(libluadebug libhaka)
 
 # The static library is going to be used in a shared library
 set_target_properties(libluadebug PROPERTIES COMPILE_FLAGS "-fPIC")
