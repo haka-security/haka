@@ -52,27 +52,45 @@ static atomic_t running_debugger = 0;
 #define LIST_DEFAULT_LINE   10
 
 
+static int lua_user_print(lua_State *L)
+{
+	int i;
+	int nargs = lua_gettop(L);
+
+	for (i=1; i<=nargs; i++) {
+		if (i > 1)
+			current_user->print(current_user, " ");
+
+		current_user->print(current_user, "%s", lua_converttostring(L, i, NULL));
+		lua_pop(L, 1);
+	}
+
+	current_user->print(current_user, "\n");
+
+	return 0;
+}
+
 static void dump_frame(lua_State *L, lua_Debug *ar)
 {
 	lua_getinfo(L, "Snl", ar);
 
 	if (!strcmp(ar->what, "C")) {
-		printf("[C]" CLEAR ": in function '" MAGENTA "%s" CLEAR "'\n",
+		current_user->print(current_user, "[C]" CLEAR ": in function '" MAGENTA "%s" CLEAR "'\n",
 				ar->name);
 	}
 	else if (!strcmp(ar->what, "main")) {
-		printf("%s:%d" CLEAR ": in the main chunk\n",
+		current_user->print(current_user, "%s:%d" CLEAR ": in the main chunk\n",
 				ar->short_src, ar->currentline);
 	}
 	else if (!strcmp(ar->what, "Lua")) {
-		printf("%s:%d" CLEAR ": in function '" MAGENTA "%s" CLEAR "'\n",
+		current_user->print(current_user, "%s:%d" CLEAR ": in function '" MAGENTA "%s" CLEAR "'\n",
 				ar->short_src, ar->currentline, ar->name);
 	}
 	else if (!strcmp(ar->what, "tail")) {
-		printf(CLEAR "in tail call\n");
+		current_user->print(current_user, CLEAR "in tail call\n");
 	}
 	else {
-		printf("%s\n" CLEAR, ar->what);
+		current_user->print(current_user, "%s\n" CLEAR, ar->what);
 	}
 }
 
@@ -81,14 +99,14 @@ static bool dump_backtrace(struct luadebug_debugger *session, const char *option
 	int i;
 	lua_Debug ar;
 
-	printf("Backtrace\n");
+	current_user->print(current_user, "Backtrace\n");
 
 	for (i = 0; lua_getstack(session->L, i, &ar); ++i) {
 		if (i == session->frame_index) {
-			printf(RED BOLD " =>" CLEAR "%d\t" CYAN, i);
+			current_user->print(current_user, RED BOLD " =>" CLEAR "%d\t" CYAN, i);
 		}
 		else {
-			printf("  #%d\t" CYAN, i);
+			current_user->print(current_user, "  #%d\t" CYAN, i);
 		}
 
 		dump_frame(session->L, &ar);
@@ -111,12 +129,12 @@ static bool change_frame(struct luadebug_debugger *session, const char *option)
 	const int index = option ? atoi(option) : session->frame_index;
 
 	if (!lua_getstack(session->L, index, &session->frame)) {
-		printf(RED "invalid frame index '%d'\n" CLEAR, index);
+		current_user->print(current_user, RED "invalid frame index '%d'\n" CLEAR, index);
 	}
 	else {
 		UNUSED int env_index;
 
-		printf("  #%d\t" CYAN, index);
+		current_user->print(current_user, "  #%d\t" CYAN, index);
 		dump_frame(session->L, &session->frame);
 
 		session->frame_index = index;
@@ -132,6 +150,40 @@ static bool change_frame(struct luadebug_debugger *session, const char *option)
 	return false;
 }
 
+static void dump_pprint(struct luadebug_debugger *session, int index, bool full)
+{
+	LUA_STACK_MARK(session->L);
+
+	lua_getglobal(session->L, "haka");
+	lua_getfield(session->L, -1, "debug");
+	lua_getfield(session->L, -1, "pprint");
+
+	if (index < 0) {
+		lua_pushvalue(session->L, index-3);
+	}
+	else {
+		lua_pushvalue(session->L, index);
+	}
+
+	lua_pushstring(session->L, "    \t");
+	if (!full) {
+		lua_pushnumber(session->L, 1);
+	}
+	else {
+		lua_pushnil(session->L);
+	}
+	lua_pushnil(session->L);
+	lua_pushcfunction(session->L, lua_user_print);
+	if (lua_pcall(session->L, 5, 0, 0)) {
+		current_user->print(current_user, CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
+		lua_pop(session->L, 1);
+	}
+
+	lua_pop(session->L, 2);
+
+	LUA_STACK_CHECK(session->L, 0);
+}
+
 static bool dump_stack(struct luadebug_debugger *session, const char *option)
 {
 	int i, h;
@@ -139,41 +191,21 @@ static bool dump_stack(struct luadebug_debugger *session, const char *option)
 
 	h = lua_gettop(session->L);
 
-	lua_getglobal(session->L, "haka");
-	lua_getfield(session->L, -1, "debug");
-	lua_getfield(session->L, -1, "pprint");
-
 	if (index < 0) {
-		printf("Stack (size=%d)\n", h-1);
+		current_user->print(current_user, "Stack (size=%d)\n", h-1);
 		for (i = 1; i < h; ++i) {
-			printf("  #%d\t", i);
-
-			lua_pushvalue(session->L, -1);
-			lua_pushvalue(session->L, i);
-			lua_pushstring(session->L, "    \t");
-			lua_pushnumber(session->L, 1);
-			if (lua_pcall(session->L, 3, 0, 0)) {
-				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
-				lua_pop(session->L, 1);
-			}
+			current_user->print(current_user, "  #%d\t", i);
+			dump_pprint(session, i, false);
 		}
 	}
 	else if (index > 0 && index < h) {
-		printf("  #%d\t", index);
-
-		lua_pushvalue(session->L, -1);
-		lua_pushvalue(session->L, index);
-		lua_pushstring(session->L, "    \t");
-		if (lua_pcall(session->L, 2, 0, 0)) {
-			printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
-			lua_pop(session->L, 1);
-		}
+		current_user->print(current_user, "  #%d\t", index);
+		dump_pprint(session, index, true);
 	}
 	else {
-		printf(RED "invalid stack index '%d'\n" CLEAR, index);
+		current_user->print(current_user, RED "invalid stack index '%d'\n" CLEAR, index);
 	}
 
-	lua_pop(session->L, 3);
 	return false;
 }
 
@@ -183,48 +215,26 @@ static bool dump_local(struct luadebug_debugger *session, const char *option)
 	const char *local;
 	const int index = option ? atoi(option) : -1;
 
-	lua_getglobal(session->L, "haka");
-	lua_getfield(session->L, -1, "debug");
-	lua_getfield(session->L, -1, "pprint");
-
 	if (index < 0) {
-		printf("Locals\n");
+		current_user->print(current_user, "Locals\n");
 		for (i=1; (local = lua_getlocal(session->L, &session->frame, i)); ++i) {
-			printf("  #%d\t%s = ", i, local);
-
-			lua_pushvalue(session->L, -2);
-			lua_pushvalue(session->L, -2);
-			lua_pushstring(session->L, "    \t");
-			lua_pushnumber(session->L, 1);
-			if (lua_pcall(session->L, 3, 0, 0)) {
-				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
-				lua_pop(session->L, 1);
-			}
-
+			current_user->print(current_user, "  #%d\t%s = ", i, local);
+			dump_pprint(session, -1, false);
 			lua_pop(session->L, 1);
 		}
 	}
 	else {
 		local = lua_getlocal(session->L, &session->frame, index);
 		if (!local) {
-			printf(RED "invalid local index '%d'\n" CLEAR, index);
+			current_user->print(current_user, RED "invalid local index '%d'\n" CLEAR, index);
 		}
 		else {
-			printf("  #%d\t%s = ", index, local);
-
-			lua_pushvalue(session->L, -2);
-			lua_pushvalue(session->L, -2);
-			lua_pushstring(session->L, "    \t");
-			if (lua_pcall(session->L, 2, 0, 0)) {
-				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
-				lua_pop(session->L, 1);
-			}
-
+			current_user->print(current_user, "  #%d\t%s = ", index, local);
+			dump_pprint(session, -1, true);
 			lua_pop(session->L, 1);
 		}
 	}
 
-	lua_pop(session->L, 3);
 	return false;
 }
 
@@ -235,48 +245,28 @@ static bool dump_upvalue(struct luadebug_debugger *session, const char *option)
 	const int index = option ? atoi(option) : -1;
 
 	lua_getinfo(session->L, "f", &session->frame);
-	lua_getglobal(session->L, "haka");
-	lua_getfield(session->L, -1, "debug");
-	lua_getfield(session->L, -1, "pprint");
 
 	if (index < 0) {
-		printf("Up-values\n");
-		for (i=1; (local = lua_getupvalue(session->L, -3, i)); ++i) {
-			printf("  #%d\t%s = ", i, local);
-
-			lua_pushvalue(session->L, -2);
-			lua_pushvalue(session->L, -2);
-			lua_pushstring(session->L, "    \t");
-			lua_pushnumber(session->L, 1);
-			if (lua_pcall(session->L, 3, 0, 0)) {
-				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
-				lua_pop(session->L, 1);
-			}
-
+		current_user->print(current_user, "Up-values\n");
+		for (i=1; (local = lua_getupvalue(session->L, -1, i)); ++i) {
+			current_user->print(current_user, "  #%d\t%s = ", i, local);
+			dump_pprint(session, -1, false);
 			lua_pop(session->L, 1);
 		}
 	}
 	else {
-		local = lua_getupvalue(session->L, -3, index);
+		local = lua_getupvalue(session->L, -1, index);
 		if (!local) {
-			printf(RED "invalid up-value index '%d'\n" CLEAR, index);
+			current_user->print(current_user, RED "invalid up-value index '%d'\n" CLEAR, index);
 		}
 		else {
-			printf("  #%d\t%s = ", index, local);
-
-			lua_pushvalue(session->L, -2);
-			lua_pushvalue(session->L, -2);
-			lua_pushstring(session->L, "    \t");
-			if (lua_pcall(session->L, 2, 0, 0)) {
-				printf(CLEAR RED "error: %s\n" CLEAR, lua_tostring(session->L, -1));
-				lua_pop(session->L, 1);
-			}
-
+			current_user->print(current_user, "  #%d\t%s = ", index, local);
+			dump_pprint(session, -1, true);
 			lua_pop(session->L, 1);
 		}
 	}
 
-	lua_pop(session->L, 4);
+	lua_pop(session->L, 1);
 	return false;
 }
 
@@ -326,10 +316,10 @@ static bool add_breakpoint(struct luadebug_debugger *session, const char *option
 		lua_settable(session->L, -3);
 		lua_pop(session->L, 1);
 
-		printf("breakpoint added at '%s:%d'\n", session->frame.short_src, line);
+		current_user->print(current_user, "breakpoint added at '%s:%d'\n", session->frame.short_src, line);
 	}
 	else {
-		printf(RED "invalid breakpoint location\n" CLEAR);
+		current_user->print(current_user, RED "invalid breakpoint location\n" CLEAR);
 	}
 	return false;
 }
@@ -343,20 +333,20 @@ static bool remove_breakpoint(struct luadebug_debugger *session, const char *opt
 		lua_gettable(session->L, -2);
 		if (lua_isnil(session->L, -1)) {
 			lua_pop(session->L, 1);
-			printf(RED "not breakpoint at '%s:%d'\n" CLEAR, session->frame.short_src, line);
+			current_user->print(current_user, RED "not breakpoint at '%s:%d'\n" CLEAR, session->frame.short_src, line);
 		}
 		else {
 			lua_pop(session->L, 1);
 			lua_pushnumber(session->L, line);
 			lua_pushnil(session->L);
 			lua_settable(session->L, -3);
-			printf("breakpoint removed from '%s:%d'\n", session->frame.short_src, line);
+			current_user->print(current_user, "breakpoint removed from '%s:%d'\n", session->frame.short_src, line);
 		}
 
 		lua_pop(session->L, 1);
 	}
 	else {
-		printf(RED "invalid breakpoint location\n" CLEAR);
+		current_user->print(current_user, RED "invalid breakpoint location\n" CLEAR);
 	}
 	return false;
 }
@@ -377,25 +367,25 @@ static bool print_line_char(lua_State *L, int c, int line, int current, int *cou
 		if (line >= start && line <= end) {
 			if (line == current) {
 				if (breakpoint) {
-					printf(RED "%4d" BOLD "#> " CLEAR, line);
+					current_user->print(current_user, RED "%4d" BOLD "#> " CLEAR, line);
 				}
 				else {
-					printf(RED "%4d" BOLD "=> " CLEAR, line);
+					current_user->print(current_user, RED "%4d" BOLD "=> " CLEAR, line);
 				}
 			}
 			else {
 				if (breakpoint) {
-					printf(YELLOW "%4d" BOLD "#  " CLEAR, line);
+					current_user->print(current_user, YELLOW "%4d" BOLD "#  " CLEAR, line);
 				}
 				else {
-					printf(YELLOW "%4d:  " CLEAR, line);
+					current_user->print(current_user, YELLOW "%4d:  " CLEAR, line);
 				}
 			}
 		}
 	}
 
 	if (line >= start && line <= end) {
-		if (c == '\t') printf("    ");
+		if (c == '\t') current_user->print(current_user, "    ");
 		else fputc(c, stdout);
 	}
 	else if (line > end) {
@@ -422,7 +412,7 @@ static bool print_file_line(lua_State *L, FILE *file, int num, int current,
 	}
 
 	if (count) {
-		printf("\n");
+		current_user->print(current_user, "\n");
 	}
 
 	return false;
@@ -441,7 +431,7 @@ static bool print_line(lua_State *L, const char **string, int num, int current,
 	}
 
 	if (count) {
-		printf("\n");
+		current_user->print(current_user, "\n");
 	}
 
 	return false;
@@ -462,7 +452,7 @@ static void dump_source(struct luadebug_debugger *session, lua_Debug *ar, unsign
 		fclose(file);
 	}
 	else if (ar->source[0] == '=') {
-		printf("%s\n", ar->source+1);
+		current_user->print(current_user, "%s\n", ar->source+1);
 	}
 	else {
 		int line = 1;
@@ -529,7 +519,7 @@ static bool print_exp(struct luadebug_debugger *session, const char *option)
 
 	status = luaL_loadbuffer(session->L, print_line, strlen(print_line), "stdin");
 	if (status) {
-		printf(RED "%s\n" CLEAR, lua_tostring(session->L, -1));
+		current_user->print(current_user, RED "%s\n" CLEAR, lua_tostring(session->L, -1));
 		lua_pop(session->L, 1);
 	}
 	else {
@@ -710,7 +700,7 @@ static bool do_help(struct luadebug_debugger *session, const char *option)
 	struct command *iter = commands;
 
 	while (iter->keyword) {
-		printf("%s\n", iter->description);
+		current_user->print(current_user, "%s\n", iter->description);
 		++iter;
 	}
 
@@ -749,7 +739,7 @@ static bool process_command(struct luadebug_debugger *session, const char *line,
 	}
 	else if (!valid_line)
 	{
-		printf(RED "invalid command '%s'\n" CLEAR, line);
+		current_user->print(current_user, RED "invalid command '%s'\n" CLEAR, line);
 	}
 
 	if (valid_line && with_history) {
@@ -866,7 +856,7 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, con
 	session->break_depth = -1;
 
 	if (reason) {
-		printf("%s\n", reason);
+		current_user->print(current_user, GREEN "entering debugger" CLEAR ": %s\n", reason);
 	}
 
 	if (show_backtrace) {
@@ -885,7 +875,7 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, con
 	}
 
 	if (!line) {
-		printf("\n");
+		current_user->print(current_user, "\n");
 	}
 
 	lua_pop(session->L, 1);

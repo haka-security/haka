@@ -1,6 +1,8 @@
 
 #include <editline/readline.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #include <haka/error.h>
 
@@ -58,6 +60,15 @@ static void stop(struct luadebug_user *data)
 	current = NULL;
 }
 
+void print(struct luadebug_user *data, const char *format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	vprintf(format, args);
+	va_end(args);
+}
+
 static void destroy(struct luadebug_user *data)
 {
 	free(data);
@@ -75,6 +86,7 @@ struct luadebug_user *luadebug_user_readline()
 	ret->readline = my_readline;
 	ret->addhistory = addhistory;
 	ret->stop = stop;
+	ret->print = print;
 	ret->destroy = destroy;
 
 	return ret;

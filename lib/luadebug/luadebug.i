@@ -47,7 +47,7 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	local function __pprint(obj, indent, name, visited, hidden, depth)
+	local function __pprint(obj, indent, name, visited, hidden, depth, out)
 		local type = type(obj)
 
 		local title
@@ -59,7 +59,7 @@ void lua_luadebug_debugger_break();
 
 		if type == "userdata" or type == "table" then
 			if visited[obj] then
-				print(table.concat({title, color.red, "recursive value", color.clear}))
+				out(table.concat({title, color.red, "recursive value", color.clear}))
 				return
 			end
 
@@ -69,17 +69,17 @@ void lua_luadebug_debugger_break();
 		if type == "table" then
 			title = table.concat({title, color.cyan, color.bold, "table", color.clear})
 			if depth == 0 then
-				print(title)
+				out(title)
 			else
-				print(title, "{")
+				out(title, "{")
 
 				for key, value in pairs(obj) do
 					if not hidden or not hidden(key) then
-						__pprint(value, indent .. "  ", key, visited, hidden, depth-1)
+						__pprint(value, indent .. "  ", key, visited, hidden, depth-1, out)
 					end
 				end
 
-				print(indent .. "}")
+				out(indent .. "}")
 			end
 		elseif type == "userdata" then
 			local meta = getmetatable(obj)
@@ -91,50 +91,50 @@ void lua_luadebug_debugger_break();
 				end
 
 				if meta[".fn"] and meta[".fn"].__tostring then
-					print(title, tostring(obj))
+					out(title, tostring(obj))
 				else
 					if depth == 0 then
-						print(title)
+						out(title)
 					else
 						local has_value = false
 
 						for key, _ in pairs(meta[".get"]) do
 							if not hidden or not hidden(key) then
 								if not has_value then
-									print(title, "{")
+									out(title, "{")
 									has_value = true
 								end
 
 								local success, child_obj = pcall(function () return obj[key] end)
 								if success then
-									__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1)
+									__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
 								else
 									local error = table.concat({indent, "  ", color.blue, color.bold, key, color.clear, " : ", color.red, child_obj, color.clear})
-									print(error)
+									out(error)
 								end
 							end
 						end
 
 						if has_value then
-							print(indent .. "}")
+							out(indent .. "}")
 						else
-							print(title)
+							out(title)
 						end
 					end
 				end
 			else
-				print(table.concat({title, color.cyan, color.bold, "userdata", color.clear}))
+				out(table.concat({title, color.cyan, color.bold, "userdata", color.clear}))
 			end
 		elseif type == "function" then
-			print(table.concat({title, color.cyan, color.bold, "function", color.clear}))
+			out(table.concat({title, color.cyan, color.bold, "function", color.clear}))
 		elseif type == "string" then
-			print(table.concat({title, color.magenta, color.bold, "\"", obj, "\"", color.clear}))
+			out(table.concat({title, color.magenta, color.bold, "\"", obj, "\"", color.clear}))
 		elseif type == "boolean" then
-			print(table.concat({title, color.magenta, color.bold, tostring(obj), color.clear}))
+			out(table.concat({title, color.magenta, color.bold, tostring(obj), color.clear}))
 		elseif type == "thread" then
-			print(table.concat({title, color.cyan, color.bold, "thread", color.clear}))
+			out(table.concat({title, color.cyan, color.bold, "thread", color.clear}))
 		else
-			print(title .. tostring(obj))
+			out(title .. tostring(obj))
 		end
 
 		if type == "userdata" or type == "table" then
@@ -142,11 +142,11 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	function luadebug.pprint(obj, indent, depth, hide)
+	function luadebug.pprint(obj, indent, depth, hide, out)
 		if num then
-			__pprint(obj, indent or "", nil, {}, hide, depth or -1)
+			__pprint(obj, indent or "", nil, {}, hide, depth or -1, out or print)
 		else
-			__pprint(obj, indent or "", nil, {}, hide, depth or -1)
+			__pprint(obj, indent or "", nil, {}, hide, depth or -1, out or print)
 		end
 	end
 

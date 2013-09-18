@@ -14,6 +14,7 @@ struct luadebug_user {
 	char     *(*readline)(struct luadebug_user *data, const char *prompt);
 	void      (*addhistory)(struct luadebug_user *data, const char *line);
 	void      (*stop)(struct luadebug_user *data);
+	void      (*print)(struct luadebug_user *data, const char *format, ...);
 	void      (*destroy)(struct luadebug_user *data);
 };
 

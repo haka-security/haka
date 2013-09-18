@@ -162,13 +162,13 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 				strlen(line) > 0) {
 				multiline = true;
 			} else {
-				printf(RED "%s" CLEAR "\n", lua_tostring(L, -1));
+				current_user->print(current_user, RED "%s" CLEAR "\n", lua_tostring(L, -1));
 			}
 
 			lua_pop(L, 1);
 		}
 		else if (status == LUA_ERRMEM) {
-			printf(RED "%s" CLEAR "\n", lua_tostring(L, -1));
+			current_user->print(current_user, RED "%s" CLEAR "\n", lua_tostring(L, -1));
 
 			lua_pop(L, 1);
 		}
@@ -194,7 +194,7 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 
 	free(full_line);
 
-	printf("\n");
+	current_user->print(current_user, "\n");
 
 	lua_pop(L, 1);
 	LUA_STACK_CHECK(L, 0);
