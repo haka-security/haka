@@ -176,6 +176,11 @@ void start()
 	}
 }
 
+struct thread_pool *get_thread_pool()
+{
+	return thread_states;
+}
+
 int set_configuration_script(const char *file)
 {
 	free(configuration_file);

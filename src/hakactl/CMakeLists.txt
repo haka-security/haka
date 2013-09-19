@@ -10,6 +10,7 @@ add_executable(hakactl
 	ctl.c)
 
 target_link_libraries(hakactl libhaka)
+target_link_libraries(hakactl libluadebug)
 target_link_libraries(hakactl ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS hakactl RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)

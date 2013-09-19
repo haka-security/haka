@@ -26,12 +26,14 @@ struct thread_state {
 	struct lua_state           *lua;
 	int                         lua_function;
 	thread_t                    thread;
+	int32                       attach_debugger;
 	struct thread_pool         *pool;
 };
 
 struct thread_pool {
 	int                         count;
 	bool                        single;
+	int32                       attach_debugger;
 	struct thread_state       **threads;
 };
 
@@ -213,6 +215,11 @@ static void *thread_main_loop(void *_state)
 			filter_wrapper(state, pkt);
 			pkt = NULL;
 		}
+
+		if (state->pool->attach_debugger > state->attach_debugger) {
+			luadebug_debugger_start(state->lua->L, true);
+			state->attach_debugger = state->pool->attach_debugger;
+		}
 	}
 
 	return NULL;
@@ -347,9 +354,8 @@ int thread_pool_count(struct thread_pool *pool)
 	return pool->count;
 }
 
-struct lua_state *thread_pool_lua_state(struct thread_pool *pool, int thread_index)
+void thread_pool_attachdebugger(struct thread_pool *pool)
 {
 	assert(pool);
-	assert(thread_index < pool->count);
-	return pool->threads[thread_index]->lua;
+	++pool->attach_debugger;
 }

@@ -8,7 +8,8 @@ swig_add_module(libluadebug lua STATIC
 	debugger.c
 	utils.c
 	user.c
-	readline_user.c
+	user_readline.c
+	user_remote.c
 )
 
 LUA_LINK(libluadebug)

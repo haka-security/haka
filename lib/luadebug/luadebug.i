@@ -5,22 +5,41 @@
 	#include "debugger.h"
 	#include <luadebug/interactive.h>
 
-	#define lua_luadebug_interactive_enter(single, multi) luadebug_interactive_enter(L, single, multi)
+	#define lua_luadebug_interactive_enter(single, multi, msg) luadebug_interactive_enter(L, single, multi, msg)
 
 	#define lua_luadebug_debugger_start(break_immediatly) luadebug_debugger_start(L, break_immediatly)
 	#define lua_luadebug_debugger_stop()                  luadebug_debugger_stop(L)
 	#define lua_luadebug_debugger_break()                 luadebug_debugger_break(L)
+
+
+	void lua_pushpdebugger(lua_State *L, struct luadebug_debugger *dbg)
+	{
+		SWIG_NewPointerObj(L,dbg,SWIGTYPE_p_luadebug_debugger,1);
+	}
+
+	struct luadebug_debugger *lua_getpdebugger(lua_State *L, int index)
+	{
+		struct luadebug_debugger *dbg = NULL;
+		if (!SWIG_IsOK(SWIG_ConvertPtr(L, index, (void**)&dbg, SWIGTYPE_p_luadebug_debugger, 0))) {
+			return NULL;
+		}
+		return dbg;
+	}
 %}
 
 %nodefaultctor;
 %nodefaultdtor;
 
 %rename(__interactive_enter) lua_luadebug_interactive_enter;
-void lua_luadebug_interactive_enter(const char *single, const char *multi);
+void lua_luadebug_interactive_enter(const char *single, const char *multi, const char *msg);
 
 %rename(__debugger) luadebug_debugger;
 struct luadebug_debugger {
 	%extend {
+		luadebug_debugger() {
+			return NULL;
+		}
+
 		~luadebug_debugger() {
 			luadebug_debugger_cleanup($self);
 		}
@@ -44,6 +63,12 @@ void lua_luadebug_debugger_break();
 			return name:sub(1, 1) == "_"
 		else
 			return false
+		end
+	end
+
+	function luadebug.__printwrapper(p, data)
+		return function (...)
+			p(data, ...)
 		end
 	end
 

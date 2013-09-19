@@ -13,6 +13,8 @@
 #include <haka/types.h>
 #include <haka/colors.h>
 #include <haka/log.h>
+#include <haka/error.h>
+#include <luadebug/user.h>
 
 #include "config.h"
 #include "ctl.h"
@@ -48,6 +50,8 @@ static void help(const char *program)
 	fprintf(stdout, "\tstatus:             Display haka daemon status\n");
 	fprintf(stdout, "\tstop:               Stop haka daemon\n");
 	fprintf(stdout, "\tlogs:               Show haka logs in realtime\n");
+	fprintf(stdout, "\tdebug:              Attach a remote lua debugger to haka\n");
+	fprintf(stdout, "\tinteractive:        Attach an interactive session to haka\n");
 }
 
 
@@ -236,6 +240,46 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "\t-%s\n", level_to_str(index));
 			printf("\r");
 			return ERROR_INVALID_COMMAND;
+		}
+	}
+	else if (strcasecmp(argv[0], "DEBUG") == 0 || strcasecmp(argv[0], "INTERACTIVE") == 0) {
+		const char *command;
+
+		if (strcasecmp(argv[0], "DEBUG") == 0) {
+			printf("[....] attaching remote debugger");
+			command = "DEBUG";
+		}
+		else {
+			printf("[....] attaching interactive session");
+			command = "INTERACTIVE";
+		}
+
+		fflush(stdout);
+
+		if (!ctl_send(fd, command)) {
+			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+			return COMMAND_FAILED;
+		}
+
+		if (ctl_check(fd, "OK")) {
+			struct luadebug_user *readline_user = luadebug_user_readline();
+			if (!readline_user) {
+				printf(": %ls", clear_error());
+				printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+			}
+			else {
+				printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+
+				luadebug_user_remote_server(fd, readline_user);
+				if (check_error()) {
+					message(HAKA_LOG_FATAL, L"debug", clear_error());
+					return COMMAND_FAILED;
+				}
+			}
+		}
+		else {
+			printf(": %sfailed!%s", c(RED, use_colors), c(CLEAR, use_colors));
+			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		}
 	}
 	else {

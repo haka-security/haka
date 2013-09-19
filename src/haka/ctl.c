@@ -11,8 +11,13 @@
 #include <haka/thread.h>
 #include <haka/log.h>
 #include <haka/container/list.h>
+#include <luadebug/user.h>
+#include <luadebug/debugger.h>
+#include <luadebug/interactive.h>
 
 #include "ctl.h"
+#include "app.h"
+#include "thread.h"
 #include "config.h"
 
 
@@ -380,7 +385,31 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 				ctl_send(state->fd, "OK");
 			}
 		}
+	else if (strcmp(command, "DEBUG") == 0) {
+		struct luadebug_user *remote_user = luadebug_user_remote(state->fd);
+		if (!remote_user) {
+			ctl_send(state->fd, "ERROR");
+			return true;
+		}
 
+		ctl_send(state->fd, "OK");
+		state->fd = -1;
+
+		luadebug_debugger_user(remote_user);
+		thread_pool_attachdebugger(get_thread_pool());
+	}
+	else if (strcmp(command, "INTERACTIVE") == 0) {
+		struct luadebug_user *remote_user = luadebug_user_remote(state->fd);
+		if (!remote_user) {
+			ctl_send(state->fd, "ERROR");
+			return true;
+		}
+
+		ctl_send(state->fd, "OK");
+		state->fd = -1;
+
+		luadebug_interactive_user(remote_user);
+	}
 	else if (strlen(command) > 0) {
 		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", command);
 		ctl_send(state->fd, "ERROR");

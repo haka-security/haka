@@ -13,6 +13,7 @@ void clean_exit();
 void initialize();
 void prepare(int threadcount, bool attach_debugger);
 void start();
+struct thread_pool *get_thread_pool();
 
 const char *haka_path();
 
