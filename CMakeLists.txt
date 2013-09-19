@@ -196,7 +196,7 @@ if(SPHINX_FOUND)
 		COMMENT "Generating API documentation with Sphinx" VERBATIM
 	)
 
-	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/doc/manual)
+	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka/manual)
 endif(SPHINX_FOUND)
 
 # add a target to run cppcheck on the sources
