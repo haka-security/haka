@@ -49,6 +49,7 @@ macro(LUA_COMPILE)
 			COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_source_outfile_path} ${lua_source_file_path}
 			MAIN_DEPENDENCY "${lua_source_file_path}"
 			COMMENT "Building Lua file ${it}"
+			DEPENDS ${LUA_DEPENDENCY}
 			VERBATIM)
 
 		SET_SOURCE_FILES_PROPERTIES("${lua_source_outfile_path}" PROPERTIES GENERATED 1)
