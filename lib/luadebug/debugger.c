@@ -375,7 +375,7 @@ static bool print_line(lua_State *L, const char **string, int num, int current,
 	int c;
 	int count = 0;
 
-	while ((c = *(*string++)) > 0) {
+	while ((c = *((*string)++)) > 0) {
 		if (print_line_char(L, c, num, current, &count, start, end, show_breakpoints)) {
 			return true;
 		}
@@ -1035,6 +1035,7 @@ bool luadebug_debugger_start(struct lua_State *L, bool break_immediatly)
 	}
 	else {
 		luadebug_debugger_activate(debugger);
+		debugger->break_immediatly = break_immediatly;
 	}
 
 	return true;
