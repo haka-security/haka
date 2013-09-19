@@ -3,6 +3,7 @@
 #define _CTL_COMM_H
 
 #include <haka/types.h>
+#include <wchar.h>
 
 bool ctl_send_chars(int fd, const char *str);
 bool ctl_send_wchars(int fd, const wchar_t *str);

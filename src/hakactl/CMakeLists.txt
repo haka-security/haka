@@ -7,7 +7,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 add_executable(hakactl
-	hakactl.c)
+	hakactl.c
+	commands.c)
 
 target_link_libraries(hakactl libhaka)
 target_link_libraries(hakactl haka-common-ctl)
