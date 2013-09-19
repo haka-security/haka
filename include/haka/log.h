@@ -18,6 +18,7 @@ typedef enum {
 } log_level;
 
 const char *level_to_str(log_level level);
+log_level str_to_level(const char *str);
 void message(log_level level, const wchar_t *module, const wchar_t *message);
 void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...);
 void setlevel(log_level level, const wchar_t *module);

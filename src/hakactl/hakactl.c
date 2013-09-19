@@ -26,6 +26,11 @@ enum {
 	ERROR_CTL_SOCKET      = 102
 };
 
+struct commands {
+	char *cmd;
+	int  nb_args;
+};
+
 static void usage(FILE *output, const char *program)
 {
 	fprintf(stdout, "Usage: %s [options] <command>\n", program);
@@ -45,16 +50,38 @@ static void help(const char *program)
 	fprintf(stdout, "\tlogs:               Show haka logs in realtime\n");
 }
 
+
+static int get_parameters_nb(char *command)
+{
+	#define NB_COMMAND 4
+
+	static struct commands cmd_options[] = {
+		{ "status",		0},
+		{ "stop",		0},
+		{ "logs",		0},
+		{ "loglevel",	1}
+	};
+
+	if (command) {
+		int index = 0;
+		while(index < NB_COMMAND && strcasecmp(cmd_options[index].cmd, command) != 0)
+			index++;
+		if (index != NB_COMMAND)
+			return cmd_options[index].nb_args;
+	}
+	return -1;
+}
+
 static int parse_cmdline(int *argc, char ***argv)
 {
 	int c;
 	int index = 0;
-
 	static struct option long_options[] = {
 		{ "version",      no_argument,       0, 'v' },
 		{ "help",         no_argument,       0, 'h' },
 		{ 0,              0,                 0, 0 }
 	};
+
 
 	while ((c = getopt_long(*argc, *argv, "h", long_options, &index)) != -1) {
 		switch (c) {
@@ -73,7 +100,8 @@ static int parse_cmdline(int *argc, char ***argv)
 		}
 	}
 
-	if (optind+1 != *argc) {
+	index = get_parameters_nb(*(argv[0] + 1)) + 1;
+	if ((index == 0) || (optind+index != *argc)) {
 		usage(stderr, (*argv)[0]);
 		return ERROR_INVALID_COMMAND;
 	}
@@ -187,6 +215,27 @@ int main(int argc, char *argv[])
 		else {
 			printf(": %sfailed!%s", c(RED, use_colors), c(CLEAR, use_colors));
 			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		}
+	}
+	else if (strcasecmp(argv[0], "LOGLEVEL") == 0) {
+		printf("     ");
+		if (str_to_level(argv[1]) != HAKA_LOG_LEVEL_LAST) {
+			if ((!ctl_send(fd,"LOGLEVEL")) || (!ctl_send(fd, argv[1]))) {
+				printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+				return COMMAND_FAILED;
+			}
+			if (ctl_check(fd, "OK")) {
+				printf(": log level set to %s", argv[1]);
+				printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+			}
+		}
+		else {
+			fprintf(stderr, "invalid log level '%s', possible logging levels :\n", argv[1]);
+			int index;
+			for (index = 0; index < HAKA_LOG_LEVEL_LAST; index++)
+				fprintf(stderr, "\t-%s\n", level_to_str(index));
+			printf("\r");
+			return ERROR_INVALID_COMMAND;
 		}
 	}
 	else {

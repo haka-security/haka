@@ -125,15 +125,14 @@ static void ctl_client_process(struct ctl_client_state *state)
 	char buffer[MAX_COMMAND_LEN];
 	int len;
 
+	bzero(buffer, MAX_COMMAND_LEN);
 	len = recv(state->fd, buffer, MAX_COMMAND_LEN, 0);
-	if (len < 0) {
-		messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %s", errno_error(errno));
-		ctl_client_cleanup(state);
+	if (len <= 0) {
+		if (len < 0)
+			messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %s", errno_error(errno));
 		return;
 	}
-
 	buffer[MAX_COMMAND_LEN-1] = 0;
-
 	if (ctl_client_process_command(state, buffer)) {
 		ctl_client_cleanup(state);
 	}
@@ -372,6 +371,16 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 		logger->fd = state->fd;
 		state->fd = -1;
 	}
+	else if (strcmp(command, "LOGLEVEL") == 0) {
+			const char *ptr = command + 9;
+			if (*ptr != '\0') {
+				messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", ptr);
+				log_level level = str_to_level(ptr);
+				setlevel(level, NULL);
+				ctl_send(state->fd, "OK");
+			}
+		}
+
 	else if (strlen(command) > 0) {
 		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", command);
 		ctl_send(state->fd, "ERROR");

@@ -192,6 +192,14 @@ const char *level_to_str(log_level level)
 	return str_level[level];
 }
 
+log_level str_to_level(const char *str)
+{
+	int level = 0;
+	while ((level < HAKA_LOG_LEVEL_LAST) && (strcmp(str_level[level], str) != 0))
+		level++;
+	return level;
+}
+
 void enable_stdout_logging(bool enable)
 {
 	stdout_enable = enable;
