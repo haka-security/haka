@@ -25,12 +25,14 @@ struct luadebug_interactive
 	lua_State                   *L;
 	int                          env_index;
 	struct luadebug_complete     complete;
+	struct luadebug_user        *user;
 };
 
 #define EOF_MARKER   "'<eof>'"
 
 static mutex_t active_session_mutex = MUTEX_INIT;
 static struct luadebug_interactive *current_session;
+static mutex_t current_user_mutex;
 static struct luadebug_user        *current_user = NULL;
 
 static const complete_callback completions[] = {
@@ -56,24 +58,21 @@ static generator_callback *completion(const char *line, int start)
 
 void luadebug_interactive_user(struct luadebug_user *user)
 {
-	mutex_lock(&active_session_mutex);
+	mutex_lock(&current_user_mutex);
 
-	if (current_user) {
-		current_user->destroy(current_user);
-		current_user = NULL;
+	luadebug_user_release(&current_user);
+
+	if (user) {
+		current_user = user;
+		luadebug_user_addref(user);
 	}
 
-	current_user = user;
-
-	mutex_unlock(&active_session_mutex);
+	mutex_unlock(&current_user_mutex);
 }
 
 static void on_user_error()
 {
-	if (current_user) {
-		current_user->destroy(current_user);
-		current_user = NULL;
-	}
+	luadebug_interactive_user(NULL);
 }
 
 void luadebug_interactive_enter(struct lua_State *L, const char *single, const char *multi,
@@ -84,21 +83,30 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 	bool stop = false;
 	struct luadebug_interactive session;
 
-	mutex_lock(&active_session_mutex);
+	{
+		mutex_lock(&current_user_mutex);
+		session.user = current_user;
 
-	if (!current_user) {
-		message(HAKA_LOG_ERROR, L"interactive", L"no input/output handler");
-		mutex_unlock(&active_session_mutex);
-		return;
+		if (!session.user) {
+			message(HAKA_LOG_ERROR, L"interactive", L"no input/output handler");
+			mutex_unlock(&current_user_mutex);
+			return;
+		}
+
+		luadebug_user_addref(session.user);
+		mutex_unlock(&current_user_mutex);
 	}
+
+	mutex_lock(&active_session_mutex);
 
 	if (!single) single = GREEN BOLD ">  " CLEAR;
 	if (!multi) multi = GREEN BOLD ">> " CLEAR;
 
-	current_user->completion = completion;
+	session.user->completion = completion;
 
-	if (!current_user->start(current_user, "haka")) {
+	if (!session.user->start(session.user, "haka")) {
 		on_user_error();
+		luadebug_user_release(&session.user);
 		mutex_unlock(&active_session_mutex);
 		return;
 	}
@@ -106,7 +114,7 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 	current_session = &session;
 	LUA_STACK_MARK(L);
 
-	current_user->print(current_user, GREEN "entering interactive session" CLEAR ": %s", msg);
+	session.user->print(session.user, GREEN "entering interactive session" CLEAR ": %s", msg);
 
 	session.L = L;
 	session.env_index = capture_env(L, 1);
@@ -114,7 +122,7 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 
 	session.complete.stack_env = session.env_index;
 
-	while (!stop && (line = current_user->readline(current_user, multiline ? multi : single))) {
+	while (!stop && (line = session.user->readline(session.user, multiline ? multi : single))) {
 		int status = -1;
 		bool is_return = false;
 		char *current_line;
@@ -131,7 +139,7 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 			current_line = full_line;
 		}
 		else {
-			current_user->addhistory(current_user, line);
+			session.user->addhistory(session.user, line);
 			current_line = line;
 		}
 
@@ -178,18 +186,18 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 				strlen(line) > 0) {
 				multiline = true;
 			} else {
-				current_user->print(current_user, RED "%s" CLEAR "\n", lua_tostring(L, -1));
+				session.user->print(session.user, RED "%s" CLEAR "\n", lua_tostring(L, -1));
 			}
 
 			lua_pop(L, 1);
 		}
 		else if (status == LUA_ERRMEM) {
-			current_user->print(current_user, RED "%s" CLEAR "\n", lua_tostring(L, -1));
+			session.user->print(session.user, RED "%s" CLEAR "\n", lua_tostring(L, -1));
 
 			lua_pop(L, 1);
 		}
 		else {
-			execute_print(L, current_user);
+			execute_print(L, session.user);
 			lua_pop(L, 1);
 
 			if (is_return) {
@@ -210,25 +218,30 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 
 	free(full_line);
 
-	current_user->print(current_user, "\n");
-	current_user->print(current_user, GREEN "continue" CLEAR "\n");
+	session.user->print(session.user, "\n");
+	session.user->print(session.user, GREEN "continue" CLEAR "\n");
 
 	lua_pop(L, 1);
 	LUA_STACK_CHECK(L, 0);
 
-	if (!current_user->stop(current_user)) {
+	if (!session.user->stop(session.user)) {
 		on_user_error();
 	}
 
+	luadebug_user_release(&session.user);
 	current_session = NULL;
 
 	mutex_unlock(&active_session_mutex);
 }
 
+INIT void _luadebug_interactive_init()
+{
+	mutex_init(&current_user_mutex, true);
+}
+
 FINI void _luadebug_interactive_fini()
 {
-	if (current_user) {
-		current_user->destroy(current_user);
-		current_user = NULL;
-	}
+	luadebug_interactive_user(NULL);
+
+	mutex_destroy(&current_user_mutex);
 }

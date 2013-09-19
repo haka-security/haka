@@ -235,6 +235,7 @@ struct luadebug_user *luadebug_user_remote(int fd)
 		return NULL;
 	}
 
+	luadebug_user_init(&ret->user);
 	ret->user.start = start;
 	ret->user.readline = my_readline;
 	ret->user.addhistory = addhistory;
@@ -357,4 +358,6 @@ void luadebug_user_remote_server(int fd, struct luadebug_user *user)
 			return;
 		}
 	}
+
+	luadebug_user_release(&user);
 }

@@ -249,8 +249,18 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
-	luadebug_debugger_user(luadebug_user_readline());
-	luadebug_interactive_user(luadebug_user_readline());
+	{
+		struct luadebug_user *user = luadebug_user_readline();
+		if (!user) {
+			message(HAKA_LOG_FATAL, L"core", L"cannot create readline handler");
+			clean_exit();
+			return 2;
+		}
+
+		luadebug_debugger_user(user);
+		luadebug_interactive_user(user);
+		luadebug_user_release(&user);
+	}
 
 	prepare(-1, lua_debugger);
 

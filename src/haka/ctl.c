@@ -407,6 +407,8 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 		state->fd = -1;
 
 		luadebug_debugger_user(remote_user);
+		luadebug_user_release(&remote_user);
+
 		thread_pool_attachdebugger(get_thread_pool());
 	}
 	else if (strcmp(command, "INTERACTIVE") == 0) {
@@ -420,6 +422,7 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 		state->fd = -1;
 
 		luadebug_interactive_user(remote_user);
+		luadebug_user_release(&remote_user);
 	}
 	else if (strlen(command) > 0) {
 		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", command);

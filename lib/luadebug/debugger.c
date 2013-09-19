@@ -44,10 +44,12 @@ struct luadebug_debugger {
 	int                          last_line;
 	const char                  *last_source;
 	char                        *last_command;
+	struct luadebug_user        *user;
 };
 
 static mutex_t active_session_mutex = MUTEX_INIT;
 static struct luadebug_debugger *current_session;
+static mutex_t current_user_mutex;
 static struct luadebug_user *current_user;
 static atomic_t break_required = 0;
 static atomic_t running_debugger = 0;
@@ -55,27 +57,27 @@ static atomic_t running_debugger = 0;
 #define LIST_DEFAULT_LINE   10
 
 
-static void dump_frame(lua_State *L, lua_Debug *ar)
+static void dump_frame(lua_State *L, lua_Debug *ar, struct luadebug_user *user)
 {
 	lua_getinfo(L, "Snl", ar);
 
 	if (!strcmp(ar->what, "C")) {
-		current_user->print(current_user, "[C]" CLEAR ": in function '" MAGENTA "%s" CLEAR "'\n",
+		user->print(user, "[C]" CLEAR ": in function '" MAGENTA "%s" CLEAR "'\n",
 				ar->name);
 	}
 	else if (!strcmp(ar->what, "main")) {
-		current_user->print(current_user, "%s:%d" CLEAR ": in the main chunk\n",
+		user->print(user, "%s:%d" CLEAR ": in the main chunk\n",
 				ar->short_src, ar->currentline);
 	}
 	else if (!strcmp(ar->what, "Lua")) {
-		current_user->print(current_user, "%s:%d" CLEAR ": in function '" MAGENTA "%s" CLEAR "'\n",
+		user->print(user, "%s:%d" CLEAR ": in function '" MAGENTA "%s" CLEAR "'\n",
 				ar->short_src, ar->currentline, ar->name);
 	}
 	else if (!strcmp(ar->what, "tail")) {
-		current_user->print(current_user, CLEAR "in tail call\n");
+		user->print(user, CLEAR "in tail call\n");
 	}
 	else {
-		current_user->print(current_user, "%s\n" CLEAR, ar->what);
+		user->print(user, "%s\n" CLEAR, ar->what);
 	}
 }
 
@@ -84,17 +86,17 @@ static bool dump_backtrace(struct luadebug_debugger *session, const char *option
 	int i;
 	lua_Debug ar;
 
-	current_user->print(current_user, "Backtrace\n");
+	session->user->print(session->user, "Backtrace\n");
 
 	for (i = 0; lua_getstack(session->L, i, &ar); ++i) {
 		if (i == session->frame_index) {
-			current_user->print(current_user, RED BOLD " =>" CLEAR "%d\t" CYAN, i);
+			session->user->print(session->user, RED BOLD " =>" CLEAR "%d\t" CYAN, i);
 		}
 		else {
-			current_user->print(current_user, "  #%d\t" CYAN, i);
+			session->user->print(session->user, "  #%d\t" CYAN, i);
 		}
 
-		dump_frame(session->L, &ar);
+		dump_frame(session->L, &ar, session->user);
 	}
 
 	return false;
@@ -114,13 +116,13 @@ static bool change_frame(struct luadebug_debugger *session, const char *option)
 	const int index = option ? atoi(option) : session->frame_index;
 
 	if (!lua_getstack(session->L, index, &session->frame)) {
-		current_user->print(current_user, RED "invalid frame index '%d'\n" CLEAR, index);
+		session->user->print(session->user, RED "invalid frame index '%d'\n" CLEAR, index);
 	}
 	else {
 		UNUSED int env_index;
 
-		current_user->print(current_user, "  #%d\t" CYAN, index);
-		dump_frame(session->L, &session->frame);
+		session->user->print(session->user, "  #%d\t" CYAN, index);
+		dump_frame(session->L, &session->frame, session->user);
 
 		session->frame_index = index;
 
@@ -143,18 +145,18 @@ static bool dump_stack(struct luadebug_debugger *session, const char *option)
 	h = lua_gettop(session->L);
 
 	if (index < 0) {
-		current_user->print(current_user, "Stack (size=%d)\n", h-1);
+		session->user->print(session->user, "Stack (size=%d)\n", h-1);
 		for (i = 1; i < h; ++i) {
-			current_user->print(current_user, "  #%d\t", i);
-			pprint(session->L, current_user, i, false, NULL);
+			session->user->print(session->user, "  #%d\t", i);
+			pprint(session->L, session->user, i, false, NULL);
 		}
 	}
 	else if (index > 0 && index < h) {
-		current_user->print(current_user, "  #%d\t", index);
-		pprint(session->L, current_user, index, true, NULL);
+		session->user->print(session->user, "  #%d\t", index);
+		pprint(session->L, session->user, index, true, NULL);
 	}
 	else {
-		current_user->print(current_user, RED "invalid stack index '%d'\n" CLEAR, index);
+		session->user->print(session->user, RED "invalid stack index '%d'\n" CLEAR, index);
 	}
 
 	return false;
@@ -167,21 +169,21 @@ static bool dump_local(struct luadebug_debugger *session, const char *option)
 	const int index = option ? atoi(option) : -1;
 
 	if (index < 0) {
-		current_user->print(current_user, "Locals\n");
+		session->user->print(session->user, "Locals\n");
 		for (i=1; (local = lua_getlocal(session->L, &session->frame, i)); ++i) {
-			current_user->print(current_user, "  #%d\t%s = ", i, local);
-			pprint(session->L, current_user, -1, false, NULL);
+			session->user->print(session->user, "  #%d\t%s = ", i, local);
+			pprint(session->L, session->user, -1, false, NULL);
 			lua_pop(session->L, 1);
 		}
 	}
 	else {
 		local = lua_getlocal(session->L, &session->frame, index);
 		if (!local) {
-			current_user->print(current_user, RED "invalid local index '%d'\n" CLEAR, index);
+			session->user->print(session->user, RED "invalid local index '%d'\n" CLEAR, index);
 		}
 		else {
-			current_user->print(current_user, "  #%d\t%s = ", index, local);
-			pprint(session->L, current_user, -1, true, NULL);
+			session->user->print(session->user, "  #%d\t%s = ", index, local);
+			pprint(session->L, session->user, -1, true, NULL);
 			lua_pop(session->L, 1);
 		}
 	}
@@ -198,21 +200,21 @@ static bool dump_upvalue(struct luadebug_debugger *session, const char *option)
 	lua_getinfo(session->L, "f", &session->frame);
 
 	if (index < 0) {
-		current_user->print(current_user, "Up-values\n");
+		session->user->print(session->user, "Up-values\n");
 		for (i=1; (local = lua_getupvalue(session->L, -1, i)); ++i) {
-			current_user->print(current_user, "  #%d\t%s = ", i, local);
-			pprint(session->L, current_user, -1, false, NULL);
+			session->user->print(session->user, "  #%d\t%s = ", i, local);
+			pprint(session->L, session->user, -1, false, NULL);
 			lua_pop(session->L, 1);
 		}
 	}
 	else {
 		local = lua_getupvalue(session->L, -1, index);
 		if (!local) {
-			current_user->print(current_user, RED "invalid up-value index '%d'\n" CLEAR, index);
+			session->user->print(session->user, RED "invalid up-value index '%d'\n" CLEAR, index);
 		}
 		else {
-			current_user->print(current_user, "  #%d\t%s = ", index, local);
-			pprint(session->L, current_user, -1, true, NULL);
+			session->user->print(session->user, "  #%d\t%s = ", index, local);
+			pprint(session->L, session->user, -1, true, NULL);
 			lua_pop(session->L, 1);
 		}
 	}
@@ -267,10 +269,10 @@ static bool add_breakpoint(struct luadebug_debugger *session, const char *option
 		lua_settable(session->L, -3);
 		lua_pop(session->L, 1);
 
-		current_user->print(current_user, "breakpoint added at '%s:%d'\n", session->frame.short_src, line);
+		session->user->print(session->user, "breakpoint added at '%s:%d'\n", session->frame.short_src, line);
 	}
 	else {
-		current_user->print(current_user, RED "invalid breakpoint location\n" CLEAR);
+		session->user->print(session->user, RED "invalid breakpoint location\n" CLEAR);
 	}
 	return false;
 }
@@ -284,26 +286,26 @@ static bool remove_breakpoint(struct luadebug_debugger *session, const char *opt
 		lua_gettable(session->L, -2);
 		if (lua_isnil(session->L, -1)) {
 			lua_pop(session->L, 1);
-			current_user->print(current_user, RED "not breakpoint at '%s:%d'\n" CLEAR, session->frame.short_src, line);
+			session->user->print(session->user, RED "not breakpoint at '%s:%d'\n" CLEAR, session->frame.short_src, line);
 		}
 		else {
 			lua_pop(session->L, 1);
 			lua_pushnumber(session->L, line);
 			lua_pushnil(session->L);
 			lua_settable(session->L, -3);
-			current_user->print(current_user, "breakpoint removed from '%s:%d'\n", session->frame.short_src, line);
+			session->user->print(session->user, "breakpoint removed from '%s:%d'\n", session->frame.short_src, line);
 		}
 
 		lua_pop(session->L, 1);
 	}
 	else {
-		current_user->print(current_user, RED "invalid breakpoint location\n" CLEAR);
+		session->user->print(session->user, RED "invalid breakpoint location\n" CLEAR);
 	}
 	return false;
 }
 
 static bool print_line_char(lua_State *L, int c, int line, int current, int *count,
-		unsigned int start, unsigned int end, bool show_breakpoints)
+		unsigned int start, unsigned int end, bool show_breakpoints, struct luadebug_user *user)
 {
 	bool breakpoint = false;
 
@@ -318,26 +320,26 @@ static bool print_line_char(lua_State *L, int c, int line, int current, int *cou
 		if (line >= start && line <= end) {
 			if (line == current) {
 				if (breakpoint) {
-					current_user->print(current_user, RED "%4d" BOLD "#> " CLEAR, line);
+					user->print(user, RED "%4d" BOLD "#> " CLEAR, line);
 				}
 				else {
-					current_user->print(current_user, RED "%4d" BOLD "=> " CLEAR, line);
+					user->print(user, RED "%4d" BOLD "=> " CLEAR, line);
 				}
 			}
 			else {
 				if (breakpoint) {
-					current_user->print(current_user, YELLOW "%4d" BOLD "#  " CLEAR, line);
+					user->print(user, YELLOW "%4d" BOLD "#  " CLEAR, line);
 				}
 				else {
-					current_user->print(current_user, YELLOW "%4d:  " CLEAR, line);
+					user->print(user, YELLOW "%4d:  " CLEAR, line);
 				}
 			}
 		}
 	}
 
 	if (line >= start && line <= end) {
-		if (c == '\t') current_user->print(current_user, "    ");
-		else current_user->print(current_user, "%c", c);
+		if (c == '\t') user->print(user, "    ");
+		else user->print(user, "%c", c);
 	}
 	else if (line > end) {
 		return true;
@@ -351,38 +353,38 @@ static bool print_line_char(lua_State *L, int c, int line, int current, int *cou
 }
 
 static bool print_file_line(lua_State *L, FILE *file, int num, int current,
-		unsigned int start, unsigned int end, bool show_breakpoints)
+		unsigned int start, unsigned int end, bool show_breakpoints, struct luadebug_user *user)
 {
 	int c;
 	int count = 0;
 
 	while ((c = fgetc(file)) > 0) {
-		if (print_line_char(L, c, num, current, &count, start, end, show_breakpoints)) {
+		if (print_line_char(L, c, num, current, &count, start, end, show_breakpoints, user)) {
 			return true;
 		}
 	}
 
 	if (count) {
-		current_user->print(current_user, "\n");
+		user->print(user, "\n");
 	}
 
 	return false;
 }
 
 static bool print_line(lua_State *L, const char **string, int num, int current,
-		unsigned int start, unsigned int end, bool show_breakpoints)
+		unsigned int start, unsigned int end, bool show_breakpoints, struct luadebug_user *user)
 {
 	int c;
 	int count = 0;
 
 	while ((c = *((*string)++)) > 0) {
-		if (print_line_char(L, c, num, current, &count, start, end, show_breakpoints)) {
+		if (print_line_char(L, c, num, current, &count, start, end, show_breakpoints, user)) {
 			return true;
 		}
 	}
 
 	if (count) {
-		current_user->print(current_user, "\n");
+		user->print(user, "\n");
 	}
 
 	return false;
@@ -398,18 +400,18 @@ static void dump_source(struct luadebug_debugger *session, lua_Debug *ar, unsign
 		int line = 1;
 		FILE *file = fopen(ar->source+1, "r");
 
-		while (print_file_line(session->L, file, line++, ar->currentline, start, end, breakpoints));
+		while (print_file_line(session->L, file, line++, ar->currentline, start, end, breakpoints, session->user));
 
 		fclose(file);
 	}
 	else if (ar->source[0] == '=') {
-		current_user->print(current_user, "%s\n", ar->source+1);
+		session->user->print(session->user, "%s\n", ar->source+1);
 	}
 	else {
 		int line = 1;
 		const char *source = ar->source;
 
-		while (print_line(session->L, &source, line++, ar->currentline, start, end, breakpoints));
+		while (print_line(session->L, &source, line++, ar->currentline, start, end, breakpoints, session->user));
 	}
 
 	if (breakpoints) {
@@ -470,14 +472,14 @@ static bool print_exp(struct luadebug_debugger *session, const char *option)
 
 	status = luaL_loadbuffer(session->L, print_line, strlen(print_line), "stdin");
 	if (status) {
-		current_user->print(current_user, RED "%s\n" CLEAR, lua_tostring(session->L, -1));
+		session->user->print(session->user, RED "%s\n" CLEAR, lua_tostring(session->L, -1));
 		lua_pop(session->L, 1);
 	}
 	else {
 		lua_pushvalue(session->L, session->env_index);
 		lua_setfenv(session->L, -2);
 
-		execute_print(session->L, current_user);
+		execute_print(session->L, session->user);
 		lua_pop(session->L, 1);
 	}
 
@@ -651,7 +653,7 @@ static bool do_help(struct luadebug_debugger *session, const char *option)
 	struct command *iter = commands;
 
 	while (iter->keyword) {
-		current_user->print(current_user, "%s\n", iter->description);
+		session->user->print(session->user, "%s\n", iter->description);
 		++iter;
 	}
 
@@ -690,11 +692,11 @@ static bool process_command(struct luadebug_debugger *session, const char *line,
 	}
 	else if (!valid_line)
 	{
-		current_user->print(current_user, RED "invalid command '%s'\n" CLEAR, line);
+		session->user->print(session->user, RED "invalid command '%s'\n" CLEAR, line);
 	}
 
 	if (valid_line && with_history) {
-		current_user->addhistory(current_user, line);
+		session->user->addhistory(session->user, line);
 
 		if (session->last_command) free(session->last_command);
 		session->last_command = strdup(line);
@@ -779,11 +781,7 @@ static generator_callback *completion(const char *line, int start)
 
 static void on_user_error(struct luadebug_debugger *session)
 {
-	if (current_user) {
-		current_user->destroy(current_user);
-		current_user = NULL;
-	}
-
+	luadebug_debugger_user(NULL);
 	luadebug_debugger_stop(session->L);
 }
 
@@ -793,21 +791,31 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, con
 	char *line;
 	LUA_STACK_MARK(session->L);
 
-	mutex_lock(&active_session_mutex);
+	{
+		mutex_lock(&current_user_mutex);
+		session->user = current_user;
 
-	if (!current_user) {
-		message(HAKA_LOG_ERROR, MODULE, L"no input/output handler");
-		on_user_error(session);
-		mutex_unlock(&active_session_mutex);
-		return;
+		if (!session->user) {
+			message(HAKA_LOG_ERROR, MODULE, L"no input/output handler");
+			mutex_unlock(&current_user_mutex);
+			on_user_error(session);
+			return;
+		}
+
+		luadebug_user_addref(session->user);
+
+		mutex_unlock(&current_user_mutex);
 	}
+
+	mutex_lock(&active_session_mutex);
 
 	current_session = session;
 
-	current_user->completion = completion;
+	session->user->completion = completion;
 
-	if (!current_user->start(current_user, "debug")) {
+	if (!session->user->start(session->user, "debug")) {
 		on_user_error(session);
+		luadebug_user_release(&session->user);
 		mutex_unlock(&active_session_mutex);
 		return;
 	}
@@ -822,7 +830,7 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, con
 	session->break_depth = -1;
 
 	if (reason) {
-		current_user->print(current_user, GREEN "entering debugger" CLEAR ": %s\n", reason);
+		session->user->print(session->user, GREEN "entering debugger" CLEAR ": %s\n", reason);
 	}
 
 	if (show_backtrace) {
@@ -831,7 +839,7 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, con
 
 	dump_source(session, ar, ar->currentline, ar->currentline);
 
-	while ((line = current_user->readline(current_user, GREEN "debug" BOLD ">  " CLEAR))) {
+	while ((line = session->user->readline(session->user, GREEN "debug" BOLD ">  " CLEAR))) {
 		const bool cont = process_command(session, line, true);
 		free(line);
 
@@ -841,8 +849,8 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, con
 	}
 
 	if (!line) {
-		current_user->print(current_user, "\n");
-		current_user->print(current_user, GREEN "continue" CLEAR "\n");
+		session->user->print(session->user, "\n");
+		session->user->print(session->user, GREEN "continue" CLEAR "\n");
 	}
 
 	lua_pop(session->L, 1);
@@ -850,9 +858,11 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, con
 	current_session = NULL;
 	LUA_STACK_CHECK(session->L, 0);
 
-	if (!current_user->stop(current_user)) {
+	if (!session->user->stop(session->user)) {
 		on_user_error(session);
 	}
+
+	luadebug_user_release(&session->user);
 
 	mutex_unlock(&active_session_mutex);
 }
@@ -967,6 +977,7 @@ struct luadebug_debugger *luadebug_debugger_create(struct lua_State *L, bool bre
 	ret->last_line = 0;
 	ret->last_source = NULL;
 	ret->last_command = NULL;
+	ret->user = NULL;
 
 	lua_newtable(L);
 	ret->breakpoints = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -1013,16 +1024,16 @@ void luadebug_debugger_cleanup(struct luadebug_debugger *session)
 
 void luadebug_debugger_user(struct luadebug_user *user)
 {
-	mutex_lock(&active_session_mutex);
+	mutex_lock(&current_user_mutex);
 
-	if (current_user) {
-		current_user->destroy(current_user);
-		current_user = NULL;
+	luadebug_user_release(&current_user);
+
+	if (user) {
+		current_user = user;
+		luadebug_user_addref(user);
 	}
 
-	current_user = user;
-
-	mutex_unlock(&active_session_mutex);
+	mutex_unlock(&current_user_mutex);
 }
 
 bool luadebug_debugger_start(struct lua_State *L, bool break_immediatly)
@@ -1095,15 +1106,14 @@ void luadebug_debbugger_error_hook(struct lua_State *L)
 
 INIT void _luadebug_debugger_init()
 {
+	mutex_init(&current_user_mutex, true);
 	lua_state_error_hook = luadebug_debbugger_error_hook;
 }
 
 FINI void _luadebug_debugger_fini()
 {
 	lua_state_error_hook = NULL;
+	luadebug_debugger_user(NULL);
 
-	if (current_user) {
-		current_user->destroy(current_user);
-		current_user = NULL;
-	}
+	mutex_destroy(&current_user_mutex);
 }

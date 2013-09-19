@@ -90,6 +90,7 @@ struct luadebug_user *luadebug_user_readline()
 		return NULL;
 	}
 
+	luadebug_user_init(ret);
 	ret->start = start;
 	ret->readline = my_readline;
 	ret->addhistory = addhistory;
