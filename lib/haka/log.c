@@ -50,7 +50,7 @@ static void message_delete(void *value)
 
 INIT static void _message_init()
 {
-	bool ret;
+	UNUSED bool ret;
 
 	ret = local_storage_init(&local_message_key, message_delete);
 	assert(ret);
@@ -77,7 +77,7 @@ FINI static void _message_fini()
 	message_is_valid = false;
 
 	{
-		bool ret;
+		UNUSED bool ret;
 
 		ret = mutex_destroy(&stdout_mutex);
 		assert(ret);
