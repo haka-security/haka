@@ -262,10 +262,21 @@ bool prepare_ctl_server()
 	strcpy(addr.sun_path, HAKA_CTL_SOCKET_FILE);
 
 	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
-	if (bind(ctl_server.fd, (struct sockaddr *)&addr, len)) {
-		messagef(HAKA_LOG_FATAL, MODULE, L"cannot bind ctl server socket: %s", errno_error(errno));
-		ctl_server_cleanup(&ctl_server);
-		return false;
+
+	while (bind(ctl_server.fd, (struct sockaddr *)&addr, len)) {
+		if (errno == EADDRINUSE) {
+			/* TODO: Should check if another haka process is running */
+			if (unlink(HAKA_CTL_SOCKET_FILE)) {
+				messagef(HAKA_LOG_FATAL, MODULE, L"cannot remove ctl server socket: %s", errno_error(errno));
+				ctl_server_cleanup(&ctl_server);
+				return false;
+			}
+		}
+		else {
+			messagef(HAKA_LOG_FATAL, MODULE, L"cannot bind ctl server socket: %s", errno_error(errno));
+			ctl_server_cleanup(&ctl_server);
+			return false;
+		}
 	}
 
 	ctl_server.binded = true;
