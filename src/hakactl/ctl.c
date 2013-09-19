@@ -36,7 +36,7 @@ bool ctl_send(int fd, const char *command)
 {
 	const size_t len = strlen(command);
 
-	if (send(fd, command, len+1, 0) < 0) {
+	if (send(fd, command, len+1, 0) != len+1) {
 		printf(": cannot write on ctl socket: %s", strerror(errno));
 		return false;
 	}

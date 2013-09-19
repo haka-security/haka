@@ -388,14 +388,14 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 		state->fd = -1;
 	}
 	else if (strcmp(command, "LOGLEVEL") == 0) {
-			const char *ptr = command + 9;
-			if (*ptr != '\0') {
-				messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", ptr);
-				log_level level = str_to_level(ptr);
-				setlevel(level, NULL);
-				ctl_send(state->fd, "OK");
-			}
+		const char *ptr = command + 9;
+		if (*ptr != '\0') {
+			messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", ptr);
+			log_level level = str_to_level(ptr);
+			setlevel(level, NULL);
+			ctl_send(state->fd, "OK");
 		}
+	}
 	else if (strcmp(command, "DEBUG") == 0) {
 		struct luadebug_user *remote_user = luadebug_user_remote(state->fd);
 		if (!remote_user) {

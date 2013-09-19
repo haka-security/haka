@@ -222,7 +222,9 @@ int main(int argc, char *argv[])
 		}
 	}
 	else if (strcasecmp(argv[0], "LOGLEVEL") == 0) {
-		printf("     ");
+		printf("[....] changing log level");
+		fflush(stdout);
+
 		if (str_to_level(argv[1]) != HAKA_LOG_LEVEL_LAST) {
 			if ((!ctl_send(fd,"LOGLEVEL")) || (!ctl_send(fd, argv[1]))) {
 				printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
@@ -234,12 +236,19 @@ int main(int argc, char *argv[])
 			}
 		}
 		else {
-			fprintf(stderr, "invalid log level '%s', possible logging levels :\n", argv[1]);
 			int index;
-			for (index = 0; index < HAKA_LOG_LEVEL_LAST; index++)
-				fprintf(stderr, "\t-%s\n", level_to_str(index));
-			printf("\r");
-			return ERROR_INVALID_COMMAND;
+
+			printf(": invalid log level '%s'", argv[1]);
+			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+
+			printf("       possible log levels are ");
+			for (index = 0; index < HAKA_LOG_LEVEL_LAST; index++) {
+				if (index != 0) printf(", ");
+				printf("%s", level_to_str(index));
+			}
+			printf("\n");
+
+			return COMMAND_FAILED;
 		}
 	}
 	else if (strcasecmp(argv[0], "DEBUG") == 0 || strcasecmp(argv[0], "INTERACTIVE") == 0) {
