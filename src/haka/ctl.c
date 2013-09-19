@@ -19,6 +19,7 @@
 #include "app.h"
 #include "thread.h"
 #include "config.h"
+#include "ctl_comm.h"
 
 
 #define MODULE             L"ctl"
@@ -67,24 +68,6 @@ static void ctl_client_cleanup(struct ctl_client_state *state)
 	mutex_unlock(&server_state->lock);
 }
 
-static bool ctl_send(int fd, const char *message)
-{
-	if (send(fd, message, strlen(message)+1, 0) < 0) {
-		messagef(HAKA_LOG_ERROR, MODULE, L"cannot write to ctl socket: %s", errno_error(errno));
-		return false;
-	}
-	return true;
-}
-
-static bool ctl_wsend(int fd, const wchar_t *message)
-{
-	if (send(fd, message, (wcslen(message)+1)*sizeof(wchar_t), 0) < 0) {
-		messagef(HAKA_LOG_ERROR, MODULE, L"cannot write to ctl socket: %s", errno_error(errno));
-		return false;
-	}
-	return true;
-}
-
 static void *ctl_client_process_thread(void *param)
 {
 	struct ctl_client_state *state = (struct ctl_client_state *)param;
@@ -118,7 +101,7 @@ UNUSED static bool ctl_start_client_thread(struct ctl_client_state *state, void 
 	state->data = data;
 
 	if (!thread_create(&state->thread, ctl_client_process_thread, state)) {
-		messagef(HAKA_LOG_DEBUG, MODULE, L"failed to create thread: %s", clear_error(errno));
+		messagef(HAKA_LOG_DEBUG, MODULE, L"failed to create thread: %ls", clear_error(errno));
 		return false;
 	}
 
@@ -127,20 +110,17 @@ UNUSED static bool ctl_start_client_thread(struct ctl_client_state *state, void 
 
 static void ctl_client_process(struct ctl_client_state *state)
 {
-	char buffer[MAX_COMMAND_LEN];
-	int len;
-
-	bzero(buffer, MAX_COMMAND_LEN);
-	len = recv(state->fd, buffer, MAX_COMMAND_LEN, 0);
-	if (len <= 0) {
-		if (len < 0)
-			messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %s", errno_error(errno));
+	char *command = ctl_recv_chars(state->fd);
+	if (!command) {
+		messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %ls", clear_error());
 		return;
 	}
-	buffer[MAX_COMMAND_LEN-1] = 0;
-	if (ctl_client_process_command(state, buffer)) {
+
+	if (ctl_client_process_command(state, command)) {
 		ctl_client_cleanup(state);
 	}
+
+	free(command);
 }
 
 static void ctl_server_cleanup(struct ctl_server_state *state)
@@ -322,9 +302,10 @@ int redirect_logger_message(struct logger *_logger, log_level level, const wchar
 	struct redirect_logger *logger = (struct redirect_logger *)_logger;
 
 	if (logger->fd > 0) {
-		if (send(logger->fd, &level, sizeof(log_level), 0) < 0 ||
-			!ctl_wsend(logger->fd, module) ||
-			!ctl_wsend(logger->fd, message)) {
+		if (!ctl_send_int(logger->fd, level) ||
+			!ctl_send_wchars(logger->fd, module) ||
+			!ctl_send_wchars(logger->fd, message)) {
+			clear_error();
 			logger->logger.mark_for_remove = true;
 		}
 	}
@@ -363,47 +344,49 @@ struct redirect_logger *redirect_logger_create(d)
 static bool ctl_client_process_command(struct ctl_client_state *state, const char *command)
 {
 	if (strcmp(command, "STATUS") == 0) {
-		ctl_send(state->fd, "OK");
+		ctl_send_chars(state->fd, "OK");
 	}
 	else if (strcmp(command, "STOP") == 0) {
 		messagef(HAKA_LOG_INFO, MODULE, L"request to stop haka received");
 		kill(getpid(), SIGTERM);
-		ctl_send(state->fd, "OK");
+		ctl_send_chars(state->fd, "OK");
 	}
 	else if (strcmp(command, "LOGS") == 0) {
 		struct redirect_logger *logger = redirect_logger_create(state->fd);
 		if (!logger) {
-			ctl_send(state->fd, "ERROR");
+			ctl_send_chars(state->fd, "ERROR");
 			return true;
 		}
 
 		if (!add_logger(&logger->logger)) {
-			ctl_send(state->fd, "ERROR");
+			ctl_send_chars(state->fd, "ERROR");
 			logger->logger.destroy(&logger->logger);
 			return true;
 		}
 
-		ctl_send(state->fd, "OK");
+		ctl_send_chars(state->fd, "OK");
 		logger->fd = state->fd;
 		state->fd = -1;
 	}
 	else if (strcmp(command, "LOGLEVEL") == 0) {
-		const char *ptr = command + 9;
-		if (*ptr != '\0') {
-			messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", ptr);
-			log_level level = str_to_level(ptr);
+		log_level level = ctl_recv_int(state->fd);
+		if (check_error()) {
+			message(HAKA_LOG_ERROR, MODULE, clear_error());
+		}
+		else {
+			messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", level_to_str(level));
 			setlevel(level, NULL);
-			ctl_send(state->fd, "OK");
+			ctl_send_chars(state->fd, "OK");
 		}
 	}
 	else if (strcmp(command, "DEBUG") == 0) {
 		struct luadebug_user *remote_user = luadebug_user_remote(state->fd);
 		if (!remote_user) {
-			ctl_send(state->fd, "ERROR");
+			ctl_send_chars(state->fd, "ERROR");
 			return true;
 		}
 
-		ctl_send(state->fd, "OK");
+		ctl_send_chars(state->fd, "OK");
 		state->fd = -1;
 
 		luadebug_debugger_user(remote_user);
@@ -414,11 +397,11 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 	else if (strcmp(command, "INTERACTIVE") == 0) {
 		struct luadebug_user *remote_user = luadebug_user_remote(state->fd);
 		if (!remote_user) {
-			ctl_send(state->fd, "ERROR");
+			ctl_send_chars(state->fd, "ERROR");
 			return true;
 		}
 
-		ctl_send(state->fd, "OK");
+		ctl_send_chars(state->fd, "OK");
 		state->fd = -1;
 
 		luadebug_interactive_user(remote_user);
@@ -426,7 +409,7 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 	}
 	else if (strlen(command) > 0) {
 		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", command);
-		ctl_send(state->fd, "ERROR");
+		ctl_send_chars(state->fd, "ERROR");
 	}
 
 	return true;

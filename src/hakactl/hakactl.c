@@ -1,5 +1,6 @@
 
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +18,7 @@
 #include <luadebug/user.h>
 
 #include "config.h"
-#include "ctl.h"
+#include "ctl_comm.h"
 
 
 enum {
@@ -35,7 +36,7 @@ struct commands {
 
 static void usage(FILE *output, const char *program)
 {
-	fprintf(stdout, "Usage: %s [options] <command>\n", program);
+	fprintf(stdout, "Usage: %s [options] <command> [arguments]\n", program);
 }
 
 static void help(const char *program)
@@ -50,6 +51,7 @@ static void help(const char *program)
 	fprintf(stdout, "\tstatus:             Display haka daemon status\n");
 	fprintf(stdout, "\tstop:               Stop haka daemon\n");
 	fprintf(stdout, "\tlogs:               Show haka logs in realtime\n");
+	fprintf(stdout, "\tloglevel <level>:   Change haka logging level\n");
 	fprintf(stdout, "\tdebug:              Attach a remote lua debugger to haka\n");
 	fprintf(stdout, "\tinteractive:        Attach an interactive session to haka\n");
 }
@@ -57,13 +59,15 @@ static void help(const char *program)
 
 static int get_parameters_nb(char *command)
 {
-	#define NB_COMMAND 4
+	#define NB_COMMAND  6
 
 	static struct commands cmd_options[] = {
-		{ "status",		0},
-		{ "stop",		0},
-		{ "logs",		0},
-		{ "loglevel",	1}
+		{ "status",		0 },
+		{ "stop",		0 },
+		{ "logs",		0 },
+		{ "loglevel",	1 },
+		{ "debug",		0 },
+		{ "interactive",0 },
 	};
 
 	if (command) {
@@ -73,6 +77,7 @@ static int get_parameters_nb(char *command)
 		if (index != NB_COMMAND)
 			return cmd_options[index].nb_args;
 	}
+
 	return -1;
 }
 
@@ -119,22 +124,53 @@ static void clean_exit()
 {
 }
 
+static int ctl_open_socket()
+{
+	int fd;
+	struct sockaddr_un addr;
+	socklen_t len;
+
+	if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+		return -1;
+	}
+
+	bzero((char *)&addr, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	strcpy(addr.sun_path, HAKA_CTL_SOCKET_FILE);
+
+	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
+	if (connect(fd, (struct sockaddr *)&addr, len)) {
+		return -1;
+	}
+
+	return fd;
+}
+
 static bool display_log_line(int fd)
 {
-	#define MESSAGE_BUFSIZE   2048
-
 	log_level level;
-	wchar_t module[128];
-	wchar_t message[MESSAGE_BUFSIZE];
+	wchar_t *module, *msg;
 
-	if (recv(fd, &level, sizeof(log_level), 0) < 0 ||
-		!ctl_receive_wchars(fd, module, 128) ||
-		!ctl_receive_wchars(fd, message, MESSAGE_BUFSIZE))
-	{
+	level = ctl_recv_int(fd);
+	if (check_error()) {
 		return false;
 	}
 
-	stdout_message(level, module, message);
+	module = ctl_recv_wchars(fd);
+	if (!module) {
+		return false;
+	}
+
+	msg = ctl_recv_wchars(fd);
+	if (!msg) {
+		return false;
+	}
+
+	stdout_message(level, module, msg);
+
+	free(module);
+	free(msg);
+
 	return true;
 }
 
@@ -167,9 +203,9 @@ int main(int argc, char *argv[])
 	/* Status command */
 	if (strcasecmp(argv[0], "STATUS") == 0) {
 		fflush(stdout);
-		ctl_send(fd, "STATUS");
+		ctl_send_chars(fd, "STATUS");
 
-		if (ctl_check(fd, "OK")) {
+		if (ctl_expect_chars(fd, "OK")) {
 			printf(": haka is running");
 			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 		}
@@ -189,12 +225,12 @@ int main(int argc, char *argv[])
 		printf("[....] stopping haka");
 		fflush(stdout);
 
-		if (!ctl_send(fd, "STOP")) {
+		if (!ctl_send_chars(fd, "STOP")) {
 			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 			return COMMAND_FAILED;
 		}
 
-		if (ctl_check(fd, "OK")) {
+		if (ctl_expect_chars(fd, "OK")) {
 			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 		}
 		else {
@@ -206,12 +242,12 @@ int main(int argc, char *argv[])
 		printf("[....] requesting logs");
 		fflush(stdout);
 
-		if (!ctl_send(fd, "LOGS")) {
+		if (!ctl_send_chars(fd, "LOGS")) {
 			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 			return COMMAND_FAILED;
 		}
 
-		if (ctl_check(fd, "OK")) {
+		if (ctl_expect_chars(fd, "OK")) {
 			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 
 			while (display_log_line(fd));
@@ -222,15 +258,18 @@ int main(int argc, char *argv[])
 		}
 	}
 	else if (strcasecmp(argv[0], "LOGLEVEL") == 0) {
+		log_level level;
+
 		printf("[....] changing log level");
 		fflush(stdout);
 
-		if (str_to_level(argv[1]) != HAKA_LOG_LEVEL_LAST) {
-			if ((!ctl_send(fd,"LOGLEVEL")) || (!ctl_send(fd, argv[1]))) {
+		level = str_to_level(argv[1]);
+		if (level != HAKA_LOG_LEVEL_LAST) {
+			if ((!ctl_send_chars(fd,"LOGLEVEL")) || (!ctl_send_int(fd, level))) {
 				printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 				return COMMAND_FAILED;
 			}
-			if (ctl_check(fd, "OK")) {
+			if (ctl_expect_chars(fd, "OK")) {
 				printf(": log level set to %s", argv[1]);
 				printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 			}
@@ -265,12 +304,12 @@ int main(int argc, char *argv[])
 
 		fflush(stdout);
 
-		if (!ctl_send(fd, command)) {
+		if (!ctl_send_chars(fd, command)) {
 			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 			return COMMAND_FAILED;
 		}
 
-		if (ctl_check(fd, "OK")) {
+		if (ctl_expect_chars(fd, "OK")) {
 			struct luadebug_user *readline_user = luadebug_user_readline();
 			if (!readline_user) {
 				printf(": %ls", clear_error());

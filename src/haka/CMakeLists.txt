@@ -1,5 +1,6 @@
 
 include_directories(.)
+include_directories(../common)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Lua
@@ -21,6 +22,7 @@ add_executable(haka
 
 target_link_libraries(haka libhaka)
 target_link_libraries(haka haka-common)
+target_link_libraries(haka haka-common-ctl)
 target_link_libraries(haka ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(haka haka-liblua)
 LUA_LINK(haka)
