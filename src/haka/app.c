@@ -129,6 +129,8 @@ void prepare(int threadcount, bool attach_debugger)
 		}
 	}
 
+	messagef(HAKA_LOG_INFO, L"core", L"loading rule file '%s'", configuration_file);
+
 	/* Add module path to the configuration folder */
 	{
 		char *module_path;
