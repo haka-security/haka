@@ -298,6 +298,7 @@ struct module_level {
 
 static struct module_level *module_level = NULL;
 static log_level default_level = HAKA_LOG_INFO;
+static rwlock_t log_level_lock = RWLOCK_INIT;
 
 static struct module_level *get_module_level(const wchar_t *module, bool create)
 {
@@ -336,6 +337,8 @@ static struct module_level *get_module_level(const wchar_t *module, bool create)
 
 void setlevel(log_level level, const wchar_t *module)
 {
+	rwlock_writelock(&log_level_lock);
+
 	if (!module) {
 		default_level = level;
 	}
@@ -345,15 +348,25 @@ void setlevel(log_level level, const wchar_t *module)
 			module_level->level = level;
 		}
 	}
+
+	rwlock_unlock(&log_level_lock);
 }
 
 log_level getlevel(const wchar_t *module)
 {
+	log_level level;
+
+	rwlock_readlock(&log_level_lock);
+
+	level = default_level;
 	if (module) {
 		struct module_level *module_level = get_module_level(module, false);
 		if (module_level) {
-			return module_level->level;
+			level = module_level->level;
 		}
 	}
-	return default_level;
+
+	rwlock_unlock(&log_level_lock);
+
+	return level;
 }
