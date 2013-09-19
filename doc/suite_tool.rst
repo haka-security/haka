@@ -37,6 +37,10 @@ Options
 
     Read setup configuration from given file
 
+.. option:: --lua-debug
+
+	Run lua debugger 
+
 Configuration File
 ^^^^^^^^^^^^^^^^^^
 The configuration file is divided into three main topics: general, packet and log
@@ -86,7 +90,7 @@ Packet Directives
 
 .. describe:: dump_output
     
-    Nfqueue's directive. Save not filtered packets in the specified pcap file capture
+    Nfqueue's directive. Save unfiltered packets in the specified pcap file capture
 
 .. describe:: dump_drop
     
@@ -105,9 +109,9 @@ Packet Directives
 
 .. describe:: output
 
-    Pcap's directive. Save not filtered packets to the specified pcap output file
+    Pcap's directive. Save unfiltered packets to the specified pcap output file
 
-    Example of capturing packets from a pcap file and saving not filtered ones in a pcap output file : ::
+    Example of capturing packets from a pcap file and saving unfiltered ones in a pcap output file : ::
 
             #interfaces <-- commented out
             file = "/tmp/input.pcap"
@@ -118,7 +122,7 @@ Log Directives
 
 .. describe:: log
 
-    Set the logging module.
+    Set the logging module
 
 Service
 ^^^^^^^
@@ -152,6 +156,59 @@ It is possible to launch ``haka`` as a service. When started, ``haka`` loads the
         sudo service haka status
 
 
+hakactl
+-------
+
+.. program:: hakactl
+
+``hakactl`` allows to control `haka` remotely 
+
+    .. code-block:: bash
+        
+         hakactl [options] <command>
+
+Options
+^^^^^^^
+
+.. option:: -h, --help
+
+    Display usage and options information
+
+.. option:: --version
+
+    Display version information
+
+Commands
+^^^^^^^^
+
+.. option:: status
+    
+    Display haka status (running or not)
+         
+.. option:: stop
+
+    Stop haka daemon
+
+.. option:: logs
+
+    Show haka logs in realtime
+
+.. option:: loglevel <level>
+
+	Set the logging level (fatal, error, warn, info, debug)
+
+.. seealso:: Check :lua:mod:`haka.log` to get more information about logging levels
+
+.. option:: debug
+
+	Debug haka rules remotely
+
+.. option:: interactive
+
+	Launch the inetractive mode remotely
+
+.. seealso:: Check the :doc:`\debug` topic to get more information about the debugger and the interactive mode
+
 hakapcap
 --------
 
@@ -180,15 +237,12 @@ Options
          
 .. option:: --pass-through
 
-    Run in pass-through mode (probe mode).
+    Run in pass-through mode (probe mode)
 
 .. option:: -o <output>
 
-    Save not filtered packets
+    Save unfiltered packets
 
-hakactl
--------
+.. option:: --lua-debug
 
-.. program:: hakactl
-
-*TODO*
+	Run lua debugger
