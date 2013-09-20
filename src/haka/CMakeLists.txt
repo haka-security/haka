@@ -27,7 +27,7 @@ target_link_libraries(haka ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(haka haka-liblua)
 LUA_LINK(haka)
 
-install(TARGETS haka RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
+install(TARGETS haka RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/sbin)
 
 configure_file(haka.conf.in ${CMAKE_CURRENT_BINARY_DIR}/haka.conf)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/haka.conf DESTINATION ${HAKA_INSTALL_PREFIX}/etc/haka)

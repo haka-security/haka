@@ -15,4 +15,4 @@ target_link_libraries(hakactl haka-common-ctl)
 target_link_libraries(hakactl libluadebug)
 target_link_libraries(hakactl ${CMAKE_THREAD_LIBS_INIT})
 
-install(TARGETS hakactl RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
+install(TARGETS hakactl RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/sbin)
