@@ -3,7 +3,6 @@
 find_package(SWIG REQUIRED)
 include(UseSWIG)
 swig_add_module(libhaka-lua lua STATIC
-	packet.i
 	object.i
 	ref.c
 	state.c

@@ -3,7 +3,7 @@ local color = require("color")
 
 function haka.interactive_rule(self, input)
 	local dump = "interactive rule\ninput = "
-	function out(...)
+	local function out(...)
 		dump = table.concat({dump, ..., "\n"})
 	end
 	

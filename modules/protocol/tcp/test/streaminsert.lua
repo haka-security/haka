@@ -15,7 +15,7 @@ haka.rule {
 	eval = function (self, pkt)
 		haka.log.debug("filter", "received stream len=%d", pkt.stream:available())
 
-		local buf2 = haka.stream.buffer(4)
+		local buf2 = haka.buffer(4)
 		buf2[1] = 0x48
 		buf2[2] = 0x61
 		buf2[3] = 0x6b

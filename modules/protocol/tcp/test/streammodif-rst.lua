@@ -10,7 +10,7 @@ haka.rule {
 		if pkt.stream:available() > 30 then
 			pkt:reset()
 		else
-			local buf2 = haka.stream.buffer(4)
+			local buf2 = haka.buffer(4)
 			buf2[1] = 0x48
 			buf2[2] = 0x61
 			buf2[3] = 0x6b

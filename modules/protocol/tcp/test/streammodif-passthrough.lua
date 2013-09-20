@@ -2,7 +2,7 @@
 require("protocol/ipv4")
 require("protocol/tcp")
 
-local buf = haka.stream.buffer(4)
+local buf = haka.buffer(4)
 buf[1] = 0x48
 buf[2] = 0x61
 buf[3] = 0x6b

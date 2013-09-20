@@ -1,7 +1,6 @@
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_HAKA_INSTALL_PREFIX}/lib")
 
-set(CMAKE_SWIG_FLAGS "-nomoduleglobal")
 macro(SWIG_FIX_ENTRYPOINT target type)
 	set_target_properties(${target} PROPERTIES LINK_FLAGS "-Wl,--defsym=luaopen_${type}/${target}=luaopen_${target}")
 endmacro()

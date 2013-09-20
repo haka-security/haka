@@ -216,4 +216,6 @@ function haka.filter(pkt)
 	filter_down(pkt)
 end
 
+-- Load interactive.lua as a different file to allow to compile it
+-- with the debugging information
 require("interactive")

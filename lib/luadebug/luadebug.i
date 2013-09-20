@@ -27,6 +27,8 @@
 	}
 %}
 
+%include "haka/lua/swig.si";
+
 %nodefaultctor;
 %nodefaultdtor;
 
@@ -56,9 +58,10 @@ void lua_luadebug_debugger_stop();
 void lua_luadebug_debugger_break();
 
 %luacode {
+	local this = unpack({...})
 	local color = require("color")
 
-	function luadebug.hide_underscore(name)
+	function this.hide_underscore(name)
 		if type(name) == "string" then
 			return name:sub(1, 1) == "_"
 		else
@@ -66,7 +69,7 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	function luadebug.__printwrapper(p, data)
+	function this.__printwrapper(p, data)
 		return function (...)
 			p(data, ...)
 		end
@@ -167,7 +170,7 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	function luadebug.pprint(obj, indent, depth, hide, out)
+	function this.pprint(obj, indent, depth, hide, out)
 		if num then
 			__pprint(obj, indent or "", nil, {}, hide, depth or -1, out or print)
 		else
@@ -175,11 +178,11 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	luadebug.debugger = {}
-	luadebug.debugger.start = luadebug.__debugger_start
-	luadebug.debugger.stop = luadebug.__debugger_stop
-	luadebug.debugger.breakpoint = luadebug.__debugger_break
+	this.debugger = {}
+	this.debugger.start = this.__debugger_start
+	this.debugger.stop = this.__debugger_stop
+	this.debugger.breakpoint = this.__debugger_break
 
-	luadebug.interactive = {}
-	luadebug.interactive.enter = luadebug.__interactive_enter
+	this.interactive = {}
+	this.interactive.enter = this.__interactive_enter
 }

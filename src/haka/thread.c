@@ -79,14 +79,13 @@ static void lua_on_exit(lua_State *L)
 	h = lua_gettop(L);
 
 	lua_getglobal(L, "haka");
-	lua_getfield(L, -1, "app");
 	lua_getfield(L, -1, "_exiting");
 
 	if (lua_pcall(L, 0, 0, h)) {
 		lua_state_print_error(L, L"exit");
 	}
 
-	lua_pop(L, 3);
+	lua_pop(L, 2);
 
 	LUA_STACK_CHECK(L, 0);
 }

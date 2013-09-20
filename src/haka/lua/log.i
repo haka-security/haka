@@ -36,32 +36,33 @@ void setlevel1(const wchar_t *module, log_level level);
 void setlevel0(log_level level);
 
 %luacode {
-	function log.message(level, module, fmt, ...)
-		haka.log._message(level, module, string.format(fmt, ...))
+	local this = unpack({...})
+
+	function this.message(level, module, fmt, ...)
+		this._message(level, module, string.format(fmt, ...))
 	end
 
-	function log.fatal(module, fmt, ...)
-		haka.log.message(haka.log.FATAL, module, fmt, ...)
+	function this.fatal(module, fmt, ...)
+		this.message(this.FATAL, module, fmt, ...)
 	end
 
-	function log.error(module, fmt, ...)
-		haka.log.message(haka.log.ERROR, module, fmt, ...)
+	function this.error(module, fmt, ...)
+		this.message(this.ERROR, module, fmt, ...)
 	end
 
-	function log.warning(module, fmt, ...)
-		haka.log.message(haka.log.WARNING, module, fmt, ...)
+	function this.warning(module, fmt, ...)
+		this.message(this.WARNING, module, fmt, ...)
 	end
 
-	function log.info(module, fmt, ...)
-		haka.log.message(haka.log.INFO, module, fmt, ...)
+	function this.info(module, fmt, ...)
+		this.message(this.INFO, module, fmt, ...)
 	end
 
-	function log.debug(module, fmt, ...)
-		haka.log.message(haka.log.DEBUG, module, fmt, ...)
+	function this.debug(module, fmt, ...)
+		this.message(this.DEBUG, module, fmt, ...)
 	end
 
-	getmetatable(log).__call = function (_, module, fmt, ...)
-		haka.log.info(module, fmt, ...)
+	getmetatable(this).__call = function (_, module, fmt, ...)
+		this.info(module, fmt, ...)
 	end
 }
-

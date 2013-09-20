@@ -58,6 +58,9 @@ endif()
 # Force the RUNPATH to be set to the RPATH to improve library search order
 SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags")
 
+# Default SWIG behavior to not create global module
+set(CMAKE_SWIG_FLAGS "-nomoduleglobal")
+
 # Install prefix
 set(PREFIX "/" CACHE STRING "Installation prefix")
 message(STATUS "Installation prefix (PREFIX): ${PREFIX}")
