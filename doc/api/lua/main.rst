@@ -4,68 +4,11 @@
 Lua API :lua:mod:`haka`
 =======================
 
-Application :lua:mod:`haka.app`
--------------------------------
-
-.. lua:module:: haka.app
+.. lua:module:: haka
 
 .. lua:function:: current_thread()
 
     Returns the thread current unique index.
-
-.. lua:function:: exit()
-
-    Exists the application.
-
-.. lua:function:: install(type, module)
-
-    Install a module into the application.
-
-    The type is a string which value can be one of :
-
-    * `packet`
-    * `log`
-
-.. lua:function:: load_configuration(file)
-
-    Set the configuration file containing the rules to load.
-
-Module :lua:mod:`haka.module`
------------------------------
-
-.. lua:module:: haka.module
-
-.. lua:function:: load(name, ...)
-
-    Load the module `name`. The function also take a list of arguments that
-    will be passed to the module initialization function.
-
-    An example to setup nfqueue capture on two interfaces: ::
-
-        local mod = haka.module.load("packet-nfqueue", "eth1", "eth2")
-        haka.app.install("packet", mod)
-
-.. lua:function:: path()
-
-    Gets the current module search path.
-
-.. lua:function:: setpath(paths)
-
-   Set the module search path list. The paths are separated by a semi-colon. Should be of the form::
-
-       path1/*;path2/*
-
-.. lua:function:: addpath(path)
-
-   Add a path the the search path list.
-
-.. lua:data:: prefix
-
-    Module prefix.
-
-.. lua:data:: suffix
-
-    Module suffix.
 
 Log :lua:mod:`haka.log`
 -----------------------
@@ -131,7 +74,7 @@ Packet :lua:mod:`haka.packet`
 Dissector
 ---------
 
-.. lua:module:: haka
+.. lua:currentmodule:: haka
 
 .. lua:class:: dissector_data
 

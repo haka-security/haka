@@ -1,8 +1,10 @@
+.. highlightlang:: ini
 
-.. program:: packet-nfqueue
+Netfilter queue `packet/nfqueue`
+================================
 
-Netfilter NFQUEUE capture `packet-nfqueue`
-==========================================
+Description
+^^^^^^^^^^^
 
 The module uses the library netfilter queue to intercept all packets.
 
@@ -12,11 +14,40 @@ The table will be cleared when the application is closed.
 To operate correctly, the process need to be launched with the proper access
 rights.
 
-.. option:: -p <input file> <output file> <drop file>
+Parameters
+^^^^^^^^^^
 
-    Optional pcap file used to store, respectively, the received packets, the outputed
-    packet and the packets dropped by the filter.
+.. describe:: interfaces
 
-.. option:: <interface1> <interface2> ...
+    List of comma-separated interfaces.
 
-    List of interface to capture.
+    Example of possible values : ::
+
+        # Capture loopback traffic
+        interfaces = "lo"
+        # Capture on interface eth1 and eth2
+        # interfaces = "eth1, eth2"
+        # Capture on all interfaces
+        # interfaces = "any"
+
+.. describe:: dump
+
+    Save output in pcap files (yes/no option).
+
+.. describe:: dump_input
+
+    Save received packets in the specified pcap file capture.
+
+.. describe:: dump_output
+    
+    Save unfiltered packets in the specified pcap file capture.
+
+.. describe:: dump_drop
+    
+    Save filtered packets in the specified pcap file capture.
+
+    An example to set packet dumping for nfqueue (only revceived and filtered packets will be saved in pcap files) : ::
+
+        dump = true
+        dump_input = "/tmp/input.pcap"
+        dump_drop = "/tmp/drop.pcap"

@@ -1,8 +1,9 @@
 
-.. program:: log-syslog
+Syslog `log/syslog`
+===================
 
-Syslog logging `log-syslog`
-===========================
+Description
+^^^^^^^^^^^
 
 Module that output log messages using syslog.
 
@@ -13,3 +14,8 @@ For instance: ::
 
     # HAKA syslog en Facility log level local0
     local0.*   /var/log/haka
+
+Parameters
+^^^^^^^^^^
+
+This module does not have any parameters.
