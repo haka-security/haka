@@ -53,5 +53,3 @@ macro(TEST_PCAP module name)
 		-DVALGRIND=${VALGRIND_COMMAND}
 		-P ${CTEST_MODULE_DIR}/TestPcapRun.cmake)
 endmacro(TEST_PCAP)
-
-configure_file(${CTEST_MODULE_DIR}/TestPcap.lua.in ${CTEST_MODULE_BINARY_DIR}/TestPcap.lua)
