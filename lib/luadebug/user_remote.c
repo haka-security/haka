@@ -289,6 +289,11 @@ static bool luadebug_user_remote_server_session(int fd, struct luadebug_user *us
 		case 'p':
 		{
 			char *line = read_string(fd);
+			if (!line) {
+				messagef(HAKA_LOG_ERROR, MODULE, L"remote communication error: %s", errno_error(errno));
+				return false;
+			}
+
 			user->print(user, line);
 			free(line);
 			break;
@@ -297,6 +302,11 @@ static bool luadebug_user_remote_server_session(int fd, struct luadebug_user *us
 		case 'h':
 		{
 			char *line = read_string(fd);
+			if (!line) {
+				messagef(HAKA_LOG_ERROR, MODULE, L"remote communication error: %s", errno_error(errno));
+				return false;
+			}
+
 			user->addhistory(user, line);
 			free(line);
 			break;
@@ -305,8 +315,18 @@ static bool luadebug_user_remote_server_session(int fd, struct luadebug_user *us
 		case 'r':
 		{
 			char *line = read_string(fd);
+			if (!line) {
+				messagef(HAKA_LOG_ERROR, MODULE, L"remote communication error: %s", errno_error(errno));
+				return false;
+			}
 
 			char *rdline = user->readline(user, line);
+			if (!rdline) {
+				messagef(HAKA_LOG_ERROR, MODULE, L"remote communication error: %s", errno_error(errno));
+				free(line);
+				return false;
+			}
+
 			free(line);
 
 			command = '1';
@@ -338,6 +358,11 @@ void luadebug_user_remote_server(int fd, struct luadebug_user *user)
 		case 's':
 		{
 			char *line = read_string(fd);
+			if (!line) {
+				messagef(HAKA_LOG_ERROR, MODULE, L"remote communication error: %s", errno_error(errno));
+				return;
+			}
+
 			user->start(user, line);
 			free(line);
 

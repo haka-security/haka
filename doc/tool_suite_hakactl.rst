@@ -41,16 +41,16 @@ Commands
 
     Set the logging level (fatal, error, warn, info, debug).
 
-    .. seealso:: Check :lua:mod:`haka.log` to get more information about logging levels
+    .. seealso:: Check :lua:mod:`haka.log` to get more information about logging levels.
 
 .. option:: debug
 
     Debug haka rules remotely.
 
-    .. seealso:: Check the :doc:`\debug` topic to get more information about the debugger and the interactive mode
+    .. seealso:: Check the :doc:`\debug` topic to get more information about the debugger and the interactive mode.
 
 .. option:: interactive
 
     Launch the interactive mode remotely.
 
-    .. seealso:: Check the :doc:`\debug` topic to get more information about the debugger and the interactive mode
+    .. seealso:: Check the :doc:`\debug` topic to get more information about the debugger and the interactive mode.

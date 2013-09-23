@@ -26,6 +26,6 @@ do
 			fi
 		fi
 	done
-	
+
 	echo $i
 done

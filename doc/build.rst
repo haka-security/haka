@@ -90,7 +90,7 @@ To install haka, you have the following options: ::
     make install
     make localinstall
 
-Using ``localinstall`` allow to install haka in a locally under the folder ``out``. To use
+Using ``localinstall`` allow to install haka locally under the folder ``out``. To use
 this version, you will have to set a few environment variables by sourcing the generated
 file ``env.sh``: ::
 

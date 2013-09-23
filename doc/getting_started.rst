@@ -7,7 +7,7 @@ Getting started
 ``haka`` is primarily intended to be used as a daemon which is started as follows:
 
     .. code-block:: bash
-        
+
         sudo service haka start
 
 Sample Configuration

@@ -25,7 +25,6 @@ void basic_clean_exit()
 
 	if (thread_states) {
 		thread_pool_cancel(thread_states);
-
 		thread_pool_cleanup(thread_states);
 		thread_states = NULL;
 	}
@@ -76,7 +75,7 @@ const char *haka_path()
 
 void initialize()
 {
-		/* Set locale */
+	/* Set locale */
 	setlocale(LC_ALL, "");
 
 	/* Install signal handler */

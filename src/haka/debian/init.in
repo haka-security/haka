@@ -33,7 +33,7 @@ stop)   log_daemon_msg "Stopping $DESCRIPTION" "$NAME"
             log_end_msg 255
         fi
         ;;
-restart) log_daemon_msg "Restarting $DESCRIPTION" "$NAME" 
+restart) log_daemon_msg "Restarting $DESCRIPTION" "$NAME"
         $0 stop
         $0 start
         ;;

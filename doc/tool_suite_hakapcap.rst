@@ -9,7 +9,7 @@ hakapcap
 It takes as input a pcap file, a lua policy file and a list of options:
 
     .. code-block:: bash
-        
+
          hakatool [options] <pcapfile> <config>
 
 Options
@@ -24,9 +24,9 @@ Options
     Display version information.
 
 .. option:: -d, --debug
-    
+
     Display debug output.
-         
+
 .. option:: --pass-through
 
     Run in pass-through mode (probe mode).

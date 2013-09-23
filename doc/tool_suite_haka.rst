@@ -119,25 +119,25 @@ It is possible to launch ``haka`` as a service. When started, ``haka`` loads the
 * Starting haka service
 
     .. code-block:: bash
-    
+
         sudo service haka start
 
 * Stopping haka service
 
     .. code-block:: bash
-            
+
         sudo service haka stop
 
 
 * Restarting haka service
 
     .. code-block:: bash
-            
+
         sudo service haka restart
 
 
 * Getting status of haka service
 
     .. code-block:: bash
-            
+
         sudo service haka status

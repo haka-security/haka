@@ -6,7 +6,7 @@
 if [ $? -eq 0 ]; then
 	@CMAKE_INSTALL_PREFIX@/etc/init.d/haka stop
 	rm -f @HAKA_PID_FILE@
-	
+
 	if [ "$1" = "upgrade" ]; then
 		echo "restart" > @HAKA_PID_FILE@
 	fi

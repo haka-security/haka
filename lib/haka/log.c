@@ -147,7 +147,7 @@ bool remove_logger(struct logger *logger)
 	}
 
 	if (!iter) {
-		error(L"Log modules is not registered");
+		error(L"Log module is not registered");
 		return false;
 	}
 
@@ -195,8 +195,9 @@ const char *level_to_str(log_level level)
 log_level str_to_level(const char *str)
 {
 	int level = 0;
-	while ((level < HAKA_LOG_LEVEL_LAST) && (strcmp(str_level[level], str) != 0))
+	while ((level < HAKA_LOG_LEVEL_LAST) && (strcmp(str_level[level], str) != 0)) {
 		level++;
+	}
 	return level;
 }
 
@@ -291,7 +292,7 @@ void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...)
 }
 
 struct module_level {
-	wchar_t              *module;
+	wchar_t             *module;
 	log_level            level;
 	struct module_level *next;
 };

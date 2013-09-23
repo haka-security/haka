@@ -21,10 +21,10 @@ static int run_status(int fd, int argc, char *argv[])
 }
 
 struct command command_status = {
-		"status",
-		"status:             Show haka status",
-		0,
-		run_status
+	"status",
+	"status:             Show haka status",
+	0,
+	run_status
 };
 
 /*
@@ -53,10 +53,10 @@ static int run_stop(int fd, int argc, char *argv[])
 }
 
 struct command command_stop = {
-		"stop",
-		"stop:               Stop haka",
-		0,
-		run_stop
+	"stop",
+	"stop:               Stop haka",
+	0,
+	run_stop
 };
 
 
@@ -116,10 +116,10 @@ static int run_logs(int fd, int argc, char *argv[])
 }
 
 struct command command_logs = {
-		"logs",
-		"logs:               Show haka logs in realtime",
-		0,
-		run_logs
+	"logs",
+	"logs:               Show haka logs in realtime",
+	0,
+	run_logs
 };
 
 
@@ -165,10 +165,10 @@ static int run_loglevel(int fd, int argc, char *argv[])
 }
 
 struct command command_loglevel = {
-		"loglevel",
-		"loglevel <level>:   Change haka logging level",
-		1,
-		run_loglevel
+	"loglevel",
+	"loglevel <level>:   Change haka logging level",
+	1,
+	run_loglevel
 };
 
 
@@ -216,10 +216,10 @@ static int run_debug(int fd, int argc, char *argv[])
 }
 
 struct command command_debug = {
-		"debug",
-		"debug:              Attach a remote lua debugger to haka",
-		0,
-		run_debug
+	"debug",
+	"debug:              Attach a remote lua debugger to haka",
+	0,
+	run_debug
 };
 
 
@@ -234,8 +234,8 @@ static int run_interactive(int fd, int argc, char *argv[])
 }
 
 struct command command_interactive = {
-		"interactive",
-		"interactive:        Attach an interactive session to haka",
-		0,
-		run_interactive
+	"interactive",
+	"interactive:        Attach an interactive session to haka",
+	0,
+	run_interactive
 };

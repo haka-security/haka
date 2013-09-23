@@ -95,6 +95,10 @@ wchar_t *ctl_recv_wchars(int fd)
 	if (check_error()) {
 		return NULL;
 	}
+	if (len < 0) {
+		error(L"communication error");
+		return NULL;
+	}
 
 	str = malloc(sizeof(wchar_t)*(len+1));
 	if (!str) {
@@ -131,6 +135,10 @@ bool ctl_expect_chars(int fd, const char *str)
 	bool ret = true;
 	const int32 len = ctl_recv_int(fd);
 	if (check_error()) {
+		return false;
+	}
+	if (len < 0) {
+		error(L"communication error");
 		return false;
 	}
 

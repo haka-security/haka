@@ -228,6 +228,7 @@ bool prepare_ctl_server()
 {
 	struct sockaddr_un addr;
 	socklen_t len;
+	int err;
 
 	mutex_init(&ctl_server.lock, true);
 
@@ -243,20 +244,22 @@ bool prepare_ctl_server()
 
 	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
-	while (bind(ctl_server.fd, (struct sockaddr *)&addr, len)) {
-		if (errno == EADDRINUSE) {
-			/* TODO: Should check if another haka process is running */
-			if (unlink(HAKA_CTL_SOCKET_FILE)) {
-				messagef(HAKA_LOG_FATAL, MODULE, L"cannot remove ctl server socket: %s", errno_error(errno));
-				ctl_server_cleanup(&ctl_server);
-				return false;
-			}
-		}
-		else {
-			messagef(HAKA_LOG_FATAL, MODULE, L"cannot bind ctl server socket: %s", errno_error(errno));
+	err = bind(ctl_server.fd, (struct sockaddr *)&addr, len);
+	if (err && errno == EADDRINUSE) {
+		/* TODO: Should check if another haka process is running */
+		if (unlink(HAKA_CTL_SOCKET_FILE)) {
+			messagef(HAKA_LOG_FATAL, MODULE, L"cannot remove ctl server socket: %s", errno_error(errno));
 			ctl_server_cleanup(&ctl_server);
 			return false;
 		}
+
+		err = bind(ctl_server.fd, (struct sockaddr *)&addr, len);
+	}
+
+	if (err) {
+		messagef(HAKA_LOG_FATAL, MODULE, L"cannot bind ctl server socket: %s", errno_error(errno));
+		ctl_server_cleanup(&ctl_server);
+		return false;
 	}
 
 	ctl_server.binded = true;

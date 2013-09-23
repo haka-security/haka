@@ -11,10 +11,10 @@ function haka.dissector(d)
 			d.enable = true
 			__dissectors[d.name] = d
 			haka.log.info("core", "registering new dissector: '%s'", d.name)
-			
+
 			__hooks[d.name .. "-up"] = true
 			__hooks[d.name .. "-down"] = true
-			
+
 			if d.hooks then
 				for _, hook in pairs(d.hooks) do
 					__hooks[hook] = true
@@ -179,27 +179,27 @@ function haka.filter(pkt)
 				pkt:drop()
 				break
 			end
-	
+
 			if not nextpkt then
 				break
 			end
-	
+
 			pkt = nextpkt
 			if not pkt:valid() then
 				break
 			end
-			
+
 			local err, msg = xpcall(function () eval_rules(dissect.name .. '-up', pkt) end, debug.format_error)
 			if not err then
 				haka.log.error("core", msg)
 				pkt:drop()
 				break
 			end
-	
+
 			if not pkt:valid() then
 				break
 			end
-	
+
 			dissect = nil
 			if pkt.next_dissector then
 				dissect = get_dissector(pkt.next_dissector)
