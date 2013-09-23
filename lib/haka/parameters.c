@@ -102,10 +102,7 @@ static bool parameters_check_key(struct parameters *params, const char *key)
 	}
 
 	if (params->section[0] != 0) {
-		strncpy(params->key, params->section, MAX_SECTION_LEN - 1);
-		params->key[MAX_SECTION_LEN - 1] = '\0';
-		strncat(params->key, ":", 1);
-		strncat(params->key, key, MAX_KEY_LEN - 1);
+		snprintf(params->key, MAX_FULLKEY_LEN, "%s:%s", params->section, key);
 	}
 	else {
 		strncpy(params->key, key, MAX_FULLKEY_LEN - 1);
