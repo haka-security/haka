@@ -78,7 +78,8 @@ int parameters_open_section(struct parameters *params, const char *section)
 		return 1;
 	}
 
-	strncpy(params->section, section, MAX_SECTION_LEN);
+	strncpy(params->section, section, MAX_SECTION_LEN - 1);
+	params->section[MAX_SECTION_LEN - 1] = '\0';
 	return 0;
 }
 
@@ -101,12 +102,14 @@ static bool parameters_check_key(struct parameters *params, const char *key)
 	}
 
 	if (params->section[0] != 0) {
-		strncpy(params->key, params->section, MAX_FULLKEY_LEN);
-		strncat(params->key, ":", MAX_FULLKEY_LEN);
-		strncat(params->key, key, MAX_FULLKEY_LEN);
+		strncpy(params->key, params->section, MAX_SECTION_LEN - 1);
+		params->key[MAX_SECTION_LEN - 1] = '\0';
+		strncat(params->key, ":", 1);
+		strncat(params->key, key, MAX_KEY_LEN - 1);
 	}
 	else {
-		strncpy(params->key, key, MAX_FULLKEY_LEN);
+		strncpy(params->key, key, MAX_FULLKEY_LEN - 1);
+		params->key[MAX_FULLKEY_LEN - 1] = '\0';
 	}
 
 	return true;

@@ -105,11 +105,12 @@ void initialize()
 			exit(1);
 		}
 
-		strncpy(path, haka_path_s, path_len);
-		strncat(path, HAKA_CORE_PATH, path_len);
-		strncat(path, ";", path_len);
-		strncat(path, haka_path_s, path_len);
-		strncat(path, HAKA_MODULE_PATH, path_len);
+		strncpy(path, haka_path_s, path_len - 1);
+		path[path_len - 1] = '\0';
+		strncat(path, HAKA_CORE_PATH, strlen(HAKA_CORE_PATH));
+		strncat(path, ";", 1);
+		strncat(path, haka_path_s, path_len - strlen(haka_path_s) - 1);
+		strncat(path, HAKA_MODULE_PATH, strlen(HAKA_MODULE_PATH));
 
 		module_set_path(path);
 
