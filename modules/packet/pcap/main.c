@@ -29,6 +29,7 @@ struct packet_module_state {
 	pcap_t                     *pd;
 	pcap_dumper_t              *pf;
 	int                         link_type;
+	uint64                      packet_id;
 	struct pcap_packet         *sent_head;
 	struct pcap_packet         *sent_tail;
 };
@@ -39,6 +40,7 @@ struct pcap_packet {
 	struct packet_module_state *state;
 	struct pcap_pkthdr          header;
 	u_char                     *data;
+	uint64                      id;
 	bool                        captured;
 };
 
@@ -184,6 +186,8 @@ static struct packet_module_state *init_state(int thread_id)
 		return NULL;
 	}
 
+	state->packet_id = 0;
+
 	return state;
 }
 
@@ -241,6 +245,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			packet->header = *header;
 			packet->state = state;
 			packet->captured = true;
+			packet->id = state->packet_id++;
 
 			if (packet->header.caplen < packet->header.len)
 				messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
@@ -385,7 +390,7 @@ static int packet_do_resize(struct packet *orig_pkt, size_t size)
 static uint64 packet_get_id(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	return (((uint64)pkt->header.ts.tv_sec) << 32) + pkt->header.ts.tv_usec;
+	return pkt->id;
 }
 
 static void packet_do_release(struct packet *orig_pkt)
@@ -427,9 +432,14 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	memset(packet, 0, sizeof(struct pcap_packet));
 
 	list_init(packet);
-	gettimeofday(&packet->header.ts, NULL);
 	packet->state = state;
 	packet->captured = false;
+
+	{
+		const time_us timestamp = time_gettimestamp();
+		packet->header.ts.tv_sec = timestamp / 1000000;
+		packet->header.ts.tv_usec = timestamp % 1000000;
+	}
 
 	get_protocol(packet, &data_offset);
 	size += data_offset;
@@ -445,6 +455,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 	packet->header.len = size;
 	packet->header.caplen = size;
+	packet->id = state->packet_id++;
 
 	switch (state->link_type)
 	{
@@ -495,6 +506,12 @@ static size_t get_mtu(struct packet *pkt)
 	return 1500;
 }
 
+static time_us get_timestamp(struct packet *orig_pkt)
+{
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+	return (((time_us)pkt->header.ts.tv_sec)*1000000) + pkt->header.ts.tv_usec;
+}
+
 
 struct packet_module HAKA_MODULE = {
 	module: {
@@ -521,5 +538,6 @@ struct packet_module HAKA_MODULE = {
 	packet_getstate: packet_getstate,
 	new_packet:      new_packet,
 	send_packet:     send_packet,
-	get_mtu:         get_mtu
+	get_mtu:         get_mtu,
+	get_timestamp:   get_timestamp
 };

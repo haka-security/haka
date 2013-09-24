@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include <haka/types.h>
+#include <haka/time.h>
 #include <haka/thread.h>
 #include <haka/lua/object.h>
 
@@ -27,6 +28,7 @@ void               packet_addref(struct packet *pkt);
 bool               packet_release(struct packet *pkt);
 struct packet     *packet_new(size_t size);
 size_t             packet_length(struct packet *pkt);
+time_us            packet_timestamp(struct packet *pkt);
 const uint8       *packet_data(struct packet *pkt);
 const char        *packet_dissector(struct packet *pkt);
 uint8             *packet_data_modifiable(struct packet *pkt);

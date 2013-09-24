@@ -256,6 +256,13 @@ size_t packet_mtu(struct packet *pkt)
 	return packet_module->get_mtu(pkt);
 }
 
+time_us packet_timestamp(struct packet *pkt)
+{
+	assert(packet_module);
+	assert(pkt);
+	return packet_module->get_timestamp(pkt);
+}
+
 void packet_set_mode(enum packet_mode mode)
 {
 	global_packet_mode = mode;

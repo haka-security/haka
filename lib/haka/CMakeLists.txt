@@ -13,6 +13,7 @@ add_library(libhaka SHARED
 	thread.c
 	parameters.c
 	colors.c
+	time.c
 	container/list.c)
 
 LUA_LINK(libhaka)
@@ -21,6 +22,7 @@ target_link_libraries(libhaka ${DL_LIBRARIES})
 target_link_libraries(libhaka ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(libhaka libhaka-lua)
 target_link_libraries(libhaka libiniparser)
+target_link_libraries(libhaka rt)
 
 set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 

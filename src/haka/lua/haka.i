@@ -19,6 +19,7 @@ char *module_suffix = HAKA_MODULE_SUFFIX;
 
 %include "haka/lua/swig.si"
 %include "haka/lua/stream.si"
+%include "time.si"
 
 %nodefaultctor;
 %nodefaultdtor;
@@ -36,6 +37,15 @@ char *module_suffix;
 struct stream {
 };
 BASIC_STREAM(stream)
+
+struct time_lua {
+	int    seconds;
+	int    micro_seconds;
+
+	~time_lua() {
+		free($self);
+	}
+};
 
 %luacode {
 	haka = unpack({...})

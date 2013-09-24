@@ -59,8 +59,9 @@ struct nfqueue_packet {
 	struct packet_module_state *state;
 	int                         id; /* nfq identifier */
 	size_t                      length;
+	time_us                     timestamp;
 	int                         modified:1;
-	uint8                       *data;
+	uint8                      *data;
 };
 
 bool use_multithreading = true;
@@ -226,6 +227,7 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 		return 0;
 	}
 
+	state->current_packet->timestamp = time_gettimestamp();
 	state->current_packet->length = packet_len;
 	state->current_packet->modified = 0;
 	state->current_packet->id = ntohl(packet_hdr->packet_id);
@@ -536,7 +538,8 @@ static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt)
 		mutex_lock(&pcap->mutex);
 
 		hdr.caplen = hdr.len = pkt->length;
-		gettimeofday(&hdr.ts, NULL);
+		hdr.ts.tv_sec = pkt->timestamp / 1000000;
+		hdr.ts.tv_usec = pkt->timestamp % 1000000;
 		pcap_dump((u_char *)pcap->pf, &hdr, pkt->data);
 
 		mutex_unlock(&pcap->mutex);
@@ -728,6 +731,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	packet->id = -1;
 	packet->length = size;
 	packet->state = state;
+	packet->timestamp = time_gettimestamp();
 
 	return (struct packet *)packet;
 }
@@ -750,6 +754,13 @@ static size_t get_mtu(struct packet *pkt)
 	// TODO
 	return 1500;
 }
+
+static time_us get_timestamp(struct packet *orig_pkt)
+{
+	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
+	return pkt->timestamp;
+}
+
 
 struct packet_module HAKA_MODULE = {
 	module: {
@@ -776,5 +787,6 @@ struct packet_module HAKA_MODULE = {
 	packet_getstate: packet_getstate,
 	new_packet:      new_packet,
 	send_packet:     send_packet,
-	get_mtu:         get_mtu
+	get_mtu:         get_mtu,
+	get_timestamp:   get_timestamp
 };

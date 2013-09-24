@@ -1,0 +1,9 @@
+
+%{
+
+struct time_lua {
+	int   seconds;
+	int   micro_seconds;
+};
+
+%}

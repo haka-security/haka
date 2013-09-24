@@ -34,6 +34,7 @@ struct packet_module {
 	struct packet *(*new_packet)(struct packet_module_state *state, size_t size);
 	bool           (*send_packet)(struct packet *pkt);
 	size_t         (*get_mtu)(struct packet *pkt);
+	time_us        (*get_timestamp)(struct packet *pkt);
 };
 
 #endif /* _HAKA_PACKET_MODULE_H */
