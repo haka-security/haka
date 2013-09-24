@@ -399,10 +399,14 @@ static void dump_source(struct luadebug_debugger *session, lua_Debug *ar, unsign
 	if (ar->source[0] == '@') {
 		int line = 1;
 		FILE *file = fopen(ar->source+1, "r");
+		if (file) {
+			while (print_file_line(session->L, file, line++, ar->currentline, start, end, breakpoints, session->user));
 
-		while (print_file_line(session->L, file, line++, ar->currentline, start, end, breakpoints, session->user));
-
-		fclose(file);
+			fclose(file);
+		}
+		else {
+			session->user->print(session->user, RED "cannot open '%s'\n" CLEAR, ar->source+1);
+		}
 	}
 	else if (ar->source[0] == '=') {
 		session->user->print(session->user, "%s\n", ar->source+1);
