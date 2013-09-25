@@ -103,7 +103,7 @@ void lua_luadebug_debugger_break();
 
 				for key, value in pairs(obj) do
 					if not hidden or not hidden(key) then
-						__pprint(value, indent .. "  ", key, visited, hidden, depth-1, out)
+						__pprint(value, indent .. "  ", tostring(key), visited, hidden, depth-1, out)
 					end
 				end
 
