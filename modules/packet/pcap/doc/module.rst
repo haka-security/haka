@@ -18,12 +18,14 @@ Parameters
 
 .. describe:: interfaces
 
-    Selected interface
+    Selected interfaces.
 
-    Example of possible values : ::
+    Example of possible values: ::
 
         # Capture loopback traffic
         interfaces = "lo"
+        # Capture loopback traffic and eth0
+        # interfaces = "lo,eth0"
         # Capture on all interfaces
         # interfaces = "any"
 
@@ -35,7 +37,7 @@ Parameters
 
     Save unfiltered packets to the specified pcap output file.
 
-    Example of capturing packets from a pcap file and saving unfiltered ones in a pcap output file : ::
+    Example of capturing packets from a pcap file and saving unfiltered ones in a pcap output file: ::
 
         file = "/tmp/input.pcap"
         output = "/tmp/output.pcap"
