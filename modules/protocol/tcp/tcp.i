@@ -288,7 +288,7 @@ unsigned int stream_lastseq_get(struct stream *s) { return tcp_stream_lastseq(s)
 %luacode {
 	local this = unpack({...})
 
-	haka.dissector {
+	haka.register_dissector {
 		name = "tcp",
 		dissect = this.dissect
 	}

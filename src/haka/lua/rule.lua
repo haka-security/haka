@@ -3,7 +3,7 @@ local __dissectors = {}
 local __rule_groups = {}
 local __hooks = {}
 
-function haka.dissector(d)
+function haka.register_dissector(d)
 	if d.name == nil or d.dissect == nil then
 		haka.log.error("core", "registering invalid dissector: '%s'", d.name)
 	else

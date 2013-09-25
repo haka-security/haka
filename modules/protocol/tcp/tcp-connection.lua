@@ -160,7 +160,7 @@ local function dissect(pkt)
 	end
 end
 
-haka.dissector {
+haka.register_dissector {
 	name = "tcp-connection",
 	hooks = { "tcp-connection-new" },
 	dissect = dissect

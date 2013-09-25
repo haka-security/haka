@@ -99,5 +99,10 @@ struct time_lua {
 	package.cpath = addpath(package.cpath, haka.module_path(), { haka.module_prefix .. '?' .. haka.module_suffix })
 	package.path = addpath(package.path, haka.module_path(), { '?.bc', '?.lua' })
 
+	require('class')
+
 	require('rule')
+	require('dissector')
+	require('grammar')
+	require('state_machine')
 }

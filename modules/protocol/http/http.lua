@@ -286,65 +286,112 @@ local function parse(http, context, f, name, next_state)
 	end
 end
 
-haka.dissector {
-	name = "http",
-	hooks = { "http-request", "http-response" },
-	dissect = function (stream)
 
-		if not stream.connection.data._http then
-			local http = {}
-			http.dissector = "http"
-			http.next_dissector = nil
-			http.valid = function (self)
-				return self._tcp_stream:valid()
-			end
-			http.drop = function (self)
-				return self._tcp_stream:drop()
-			end
-			http.reset = function (self)
-				return self._tcp_stream:reset()
-			end
-			http.forge = forge
-			http._state = 0
-			http.connection = stream.connection
+local http = haka.dissector.new('http', { 'http-request', 'http-response' })
 
-			stream.connection.data._http = http
-		end
-
-		local http = stream.connection.data._http
-		http._tcp_stream = stream
-
-		if stream.direction then
-			if http._state == 0 or http._state == 1 then
-				if stream.stream:available() > 0 then
-					if http._state == 0 then
-						http.request = {}
-						http.response = nil
-						http._state = 1
-					end
-
-					parse(http, http.request, parse_request, "request", 2)
-				end
-			elseif http.request then
-				http.next_dissector = http.request.next_dissector
-			end
-		else
-			if http._state == 3 or http._state == 4 then
-				if stream.stream:available() > 0 then
-					if http._state == 3 then
-						http.response = {}
-						http._state = 4
-					end
-
-					parse(http, http.response, parse_response, "response", 5)
-				end
-			elseif http.response then
-				http.next_dissector = http.response.next_dissector
-			end
-		end
-
-		return http
+static(http).getdata = function (cls, stream)
+	local data = stream.connection.data._http
+	if not data then
+		data = cls:new(stream)
+		stream.connection.data._http = data
 	end
-}
+
+	data._tcp_stream = stream
+	return data
+end
+
+function http:__init(stream)
+	self.__super.__init(self)
+	self.connection = stream.connection
+	self._state = 0
+end
+
+function http:valid()
+	return self._tcp_stream:valid()
+end
+
+function http:drop()
+	return self._tcp_stream:drop()
+end
+
+function http:reset()
+	return self._tcp_stream:reset()
+end
+
+function http:forge()
+	local tcp = self._tcp_stream
+	if tcp then
+		if self._state == 2 and tcp.direction then
+			self._state = 3
+
+			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
+				tcp.stream:seek(self.request._mark, true)
+				self.request._mark = nil
+
+				tcp.stream:erase(self.request._length)
+				tcp.stream:insert(self.request.method)
+				tcp.stream:insert(" ")
+				tcp.stream:insert(self.request.uri)
+				tcp.stream:insert(" ")
+				tcp.stream:insert(self.request.version)
+				tcp.stream:insert("\r\n")
+				build_headers(tcp.stream, self.request.headers, self.request._headers_order)
+				tcp.stream:insert("\r\n")
+			end
+
+		elseif self._state == 5 and not tcp.direction then
+			self._state = 0
+
+			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
+				tcp.stream:seek(self.response._mark, true)
+				self.response._mark = nil
+
+				tcp.stream:erase(self.response._length)
+				tcp.stream:insert(self.response.version)
+				tcp.stream:insert(" ")
+				tcp.stream:insert(self.response.status)
+				tcp.stream:insert(" ")
+				tcp.stream:insert(self.response.reason)
+				tcp.stream:insert("\r\n")
+				build_headers(tcp.stream, self.response.headers, self.response._headers_order)
+				tcp.stream:insert("\r\n")
+			end
+		end
+
+		self._tcp_stream = nil
+	end
+	return tcp
+end
+
+function http:dissect()
+	if self._tcp_stream.direction then
+		if self._state == 0 or self._state == 1 then
+			if self._tcp_stream.stream:available() > 0 then
+				if self._state == 0 then
+					self.request = {}
+					self.response = nil
+					self._state = 1
+				end
+
+				parse(self, self.request, parse_request, "request", 2)
+			end
+		elseif self.request then
+			self.next_dissector = self.request.next_dissector
+		end
+	else
+		if self._state == 3 or self._state == 4 then
+			if self._tcp_stream.stream:available() > 0 then
+				if self._state == 3 then
+					self.response = {}
+					self._state = 4
+				end
+
+				parse(self, self.response, parse_response, "response", 5)
+			end
+		elseif self.response then
+			self.next_dissector = self.response.next_dissector
+		end
+	end
+end
 
 return module

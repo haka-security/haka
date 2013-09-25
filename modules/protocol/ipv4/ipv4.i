@@ -348,7 +348,7 @@ void ipv4_register_proto_dissector(int proto, const char *dissector);
 %luacode {
 	local this = unpack({...})
 
-	haka.dissector {
+	haka.register_dissector {
 		name = "ipv4",
 		dissect = this.dissect
 	}
