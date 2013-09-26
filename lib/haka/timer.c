@@ -11,6 +11,7 @@
 #include <haka/timer.h>
 #include <haka/error.h>
 #include <haka/thread.h>
+#include <haka/log.h>
 #include <haka/compiler.h>
 
 
@@ -32,21 +33,22 @@ static void timer_handler(int sig, siginfo_t *si, void *uc)
 
 INIT static void _timer_init()
 {
-	timer_init_thread();
-}
-
-bool timer_init_thread()
-{
 	struct sigaction sa;
-	sigset_t mask;
 
 	sa.sa_flags = SA_SIGINFO;
 	sa.sa_sigaction = timer_handler;
 	sigemptyset(&sa.sa_mask);
 	if (sigaction(SIGALRM, &sa, NULL) == -1) {
-		error(L"%s", errno_error(errno));
-		return false;
+		messagef(HAKA_LOG_FATAL, L"timer", L"%s", errno_error(errno));
+		abort();
 	}
+
+	timer_init_thread();
+}
+
+bool timer_init_thread()
+{
+	sigset_t mask;
 
 	sigfillset(&mask);
 	sigaddset(&mask, SIGALRM);

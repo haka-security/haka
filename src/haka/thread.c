@@ -197,7 +197,10 @@ static void *thread_main_loop(void *_state)
 			return NULL;
 		}
 
-		timer_init_thread();
+		if (!timer_init_thread()) {
+			message(HAKA_LOG_FATAL, L"core", clear_error());
+			return NULL;
+		}
 
 		/* To make sure we can still cancel even if some thread are locked in
 		 * infinite loops */
