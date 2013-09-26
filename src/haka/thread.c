@@ -207,7 +207,7 @@ static void *thread_main_loop(void *_state)
 		}
 	}
 
-	thread_set_id(state->thread_id);
+	thread_setid(state->thread_id);
 
 	packet_init(state->capture);
 

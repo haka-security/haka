@@ -24,8 +24,8 @@ char *module_suffix = HAKA_MODULE_SUFFIX;
 %nodefaultctor;
 %nodefaultdtor;
 
-%rename(current_thread) thread_get_id;
-int thread_get_id();
+%rename(current_thread) thread_getid;
+int thread_getid();
 
 %rename(module_path) module_get_path;
 const char *module_get_path();

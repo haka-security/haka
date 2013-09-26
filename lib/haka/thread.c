@@ -39,12 +39,12 @@ INIT static void thread_id_init()
 	assert(ret);
 }
 
-int thread_get_id()
+int thread_getid()
 {
 	return (ptrdiff_t)local_storage_get(&thread_id_key);
 }
 
-void thread_set_id(int id)
+void thread_setid(int id)
 {
 	local_storage_set(&thread_id_key, (void*)(ptrdiff_t)id);
 }

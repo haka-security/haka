@@ -25,8 +25,8 @@ bool     thread_create(thread_t *thread, void *(*main)(void*), void *param);
 bool     thread_join(thread_t thread, void **ret);
 bool     thread_cancel(thread_t thread);
 
-int      thread_get_id();
-void     thread_set_id(int id);
+int      thread_getid();
+void     thread_setid(int id);
 
 bool     thread_sigmask(int how, sigset_t *set, sigset_t *oldset);
 
