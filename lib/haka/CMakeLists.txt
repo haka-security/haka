@@ -14,7 +14,8 @@ add_library(libhaka SHARED
 	parameters.c
 	colors.c
 	time.c
-	container/list.c)
+	container/list.c
+	container/vector.c)
 
 LUA_LINK(libhaka)
 find_package(DL REQUIRED)
