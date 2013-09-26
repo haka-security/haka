@@ -19,7 +19,6 @@ char *module_suffix = HAKA_MODULE_SUFFIX;
 
 %include "haka/lua/swig.si"
 %include "haka/lua/stream.si"
-%include "time.si"
 
 %nodefaultctor;
 %nodefaultdtor;
@@ -38,14 +37,40 @@ struct stream {
 };
 BASIC_STREAM(stream)
 
-struct time_lua {
-	int    seconds;
-	int    micro_seconds;
+struct time {
+	int    secs;
+	int    nsecs;
 
-	~time_lua() {
-		free($self);
+	%extend {
+		time(double ts) {
+			struct time *t = malloc(sizeof(struct time));
+			if (!t) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			time_build(t, ts);
+			return t;
+		}
+
+		~time() {
+			free($self);
+		}
+
+		%immutable;
+		double seconds;
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(time);
+
+%{
+
+double time_seconds_get(struct time *t) {
+	return time_sec(t);
+}
+
+%}
 
 %luacode {
 	haka = unpack({...})

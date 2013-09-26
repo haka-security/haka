@@ -93,13 +93,13 @@ void timer_destroy(struct timer *timer)
 	free(timer);
 }
 
-bool timer_once(struct timer *timer, time_us delay)
+bool timer_once(struct timer *timer, struct time *delay)
 {
 	struct itimerspec ts;
 	memset(&ts, 0, sizeof(ts));
 
-	ts.it_value.tv_sec = delay / 1000000;
-	ts.it_value.tv_nsec = (delay % 1000000) * 1000;
+	ts.it_value.tv_sec = delay->secs;
+	ts.it_value.tv_nsec = delay->nsecs;
 
 	if (timer_settime(timer->id, 0, &ts, NULL)) {
 		error(L"%s", errno_error(errno));
@@ -108,12 +108,12 @@ bool timer_once(struct timer *timer, time_us delay)
 	return true;
 }
 
-bool timer_repeat(struct timer *timer, time_us delay)
+bool timer_repeat(struct timer *timer, struct time *delay)
 {
 	struct itimerspec ts;
 
-	ts.it_value.tv_sec = delay / 1000000;
-	ts.it_value.tv_nsec = (delay % 1000000) * 1000;
+	ts.it_value.tv_sec = delay->secs;
+	ts.it_value.tv_nsec = delay->nsecs;
 	ts.it_interval = ts.it_value;
 
 	if (timer_settime(timer->id, 0, &ts, NULL)) {

@@ -25,6 +25,7 @@ target_link_libraries(libhaka ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(libhaka libhaka-lua)
 target_link_libraries(libhaka libiniparser)
 target_link_libraries(libhaka rt)
+target_link_libraries(libhaka m)
 
 set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 

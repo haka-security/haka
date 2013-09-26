@@ -4,12 +4,19 @@
 
 #include <haka/types.h>
 
-typedef uint64   time_us; /* time in micro-seconds since the Epoch */
-typedef int64    difftime_us;
+#include <time.h>
 
-#define INVALID_TIME    0
 
-time_us          time_gettimestamp();
-difftime_us      time_diff(time_us t1, time_us t2);
+struct time {
+	time_t       secs;
+	uint32       nsecs;
+};
+
+void       time_build(struct time *t, double secs);
+bool       time_gettimestamp(struct time *t);
+void       time_add(struct time *t1, const struct time *t2);
+double     time_diff(const struct time *t1, const struct time *t2);
+int        time_cmp(const struct time *t1, const struct time *t2);
+double     time_sec(const struct time *t);
 
 #endif /* _HAKA_TIME_H */

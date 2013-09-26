@@ -37,6 +37,7 @@ struct packet_module_state {
 struct pcap_packet {
 	struct packet               core_packet;
 	struct list                 list;
+	struct time                 timestamp;
 	struct packet_module_state *state;
 	struct pcap_pkthdr          header;
 	u_char                     *data;
@@ -246,6 +247,8 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			packet->state = state;
 			packet->captured = true;
 			packet->id = state->packet_id++;
+			packet->timestamp.secs = header->ts.tv_sec;
+			packet->timestamp.nsecs = header->ts.tv_usec*1000;
 
 			if (packet->header.caplen < packet->header.len)
 				messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
@@ -434,12 +437,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	list_init(packet);
 	packet->state = state;
 	packet->captured = false;
-
-	{
-		const time_us timestamp = time_gettimestamp();
-		packet->header.ts.tv_sec = timestamp / 1000000;
-		packet->header.ts.tv_usec = timestamp % 1000000;
-	}
+	time_gettimestamp(&packet->timestamp);
 
 	get_protocol(packet, &data_offset);
 	size += data_offset;
@@ -506,10 +504,10 @@ static size_t get_mtu(struct packet *pkt)
 	return 1500;
 }
 
-static time_us get_timestamp(struct packet *orig_pkt)
+static const struct time *get_timestamp(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	return (((time_us)pkt->header.ts.tv_sec)*1000000) + pkt->header.ts.tv_usec;
+	return &pkt->timestamp;
 }
 
 

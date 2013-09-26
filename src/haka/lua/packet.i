@@ -20,8 +20,6 @@ void lua_pushppacket(lua_State *L, struct packet *pkt)
 
 %}
 
-%include "time.si"
-
 %rename(ACCEPT) FILTER_ACCEPT;
 %rename(DROP) FILTER_DROP;
 
@@ -31,13 +29,12 @@ enum filter_result { FILTER_ACCEPT, FILTER_DROP };
 %nodefaultdtor;
 
 %newobject packet::forge;
-%newobject packet::timestamp;
 
 struct packet {
 	%extend {
 		%immutable;
 		size_t length;
-		struct time_lua *timestamp;
+		const struct time *timestamp;
 		const char *dissector;
 		const char *next_dissector;
 
@@ -103,17 +100,8 @@ size_t packet_length_get(struct packet *pkt) {
 	return packet_length(pkt);
 }
 
-struct time_lua *packet_timestamp_get(struct packet *pkt) {
-	struct time_lua *t = malloc(sizeof(struct time_lua));
-	if (!t) {
-		error(L"memory error");
-		return NULL;
-	}
-
-	const time_us ts = packet_timestamp(pkt);
-	t->seconds = ts / 1000000;
-	t->micro_seconds = ts % 1000000;
-	return t;
+const struct time *packet_timestamp_get(struct packet *pkt) {
+	return packet_timestamp(pkt);
 }
 
 const char *packet_dissector_get(struct packet *pkt) {

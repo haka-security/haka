@@ -256,7 +256,7 @@ size_t packet_mtu(struct packet *pkt)
 	return packet_module->get_mtu(pkt);
 }
 
-time_us packet_timestamp(struct packet *pkt)
+const struct time *packet_timestamp(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
