@@ -14,6 +14,7 @@ add_library(libhaka SHARED
 	parameters.c
 	colors.c
 	time.c
+	timer.c
 	container/list.c
 	container/vector.c)
 

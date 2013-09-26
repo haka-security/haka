@@ -11,6 +11,7 @@
 #include <haka/packet_module.h>
 #include <haka/error.h>
 #include <haka/thread.h>
+#include <haka/timer.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
 #include <luadebug/debugger.h>
@@ -195,6 +196,8 @@ static void *thread_main_loop(void *_state)
 			message(HAKA_LOG_FATAL, L"core", clear_error());
 			return NULL;
 		}
+
+		timer_init_thread();
 
 		/* To make sure we can still cancel even if some thread are locked in
 		 * infinite loops */
