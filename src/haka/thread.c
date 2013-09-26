@@ -218,6 +218,8 @@ static void *thread_main_loop(void *_state)
 			pkt = NULL;
 		}
 
+		lua_state_runinterrupt(state->lua);
+
 		if (state->pool->attach_debugger > state->attach_debugger) {
 			luadebug_debugger_start(state->lua->L, true);
 			state->attach_debugger = state->pool->attach_debugger;

@@ -13,23 +13,30 @@
 #include <haka/lua/object.h>
 #include <haka/log.h>
 #include <haka/compiler.h>
+#include <haka/error.h>
+#include <haka/container/vector.h>
 #include <luadebug/debugger.h>
 
 
-#define STATE_TABLE "__haka_state"
-
+#define STATE_TABLE      "__haka_state"
 
 
 struct lua_state_ext {
 	struct lua_state       state;
+	bool                   hook_installed;
+	lua_hook               debug_hook;
+	struct vector          interrupts;
+	bool                   has_interrupts;
 	struct lua_state_ext  *next;
 };
+
+static void lua_dispatcher_hook(lua_State *L, lua_Debug *ar);
 
 
 static int panic(lua_State *L)
 {
 	messagef(HAKA_LOG_FATAL, L"lua", L"lua panic: %s", lua_tostring(L, -1));
-	raise(SIGTERM);
+	raise(SIGQUIT);
 	return 0;
 }
 
@@ -307,6 +314,10 @@ struct lua_state *lua_state_init()
 	}
 
 	ret->state.L = L;
+	ret->hook_installed = false;
+	ret->debug_hook = NULL;
+	ret->has_interrupts = false;
+	vector_create_reserve(&ret->interrupts, lua_function, 20, NULL);
 	ret->next = NULL;
 
 	lua_atpanic(L, panic);
@@ -337,10 +348,15 @@ struct lua_state *lua_state_init()
 	return &ret->state;
 }
 
-void lua_state_close(struct lua_state *state)
+void lua_state_close(struct lua_state *_state)
 {
-	lua_close(state->L);
-	state->L = NULL;
+	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+
+	vector_destroy(&state->interrupts);
+	state->has_interrupts = false;
+
+	lua_close(state->state.L);
+	state->state.L = NULL;
 }
 
 FINI_P(2000) static void lua_state_cleanup()
@@ -362,7 +378,7 @@ bool lua_state_isvalid(struct lua_state *state)
 	return (state->L != NULL);
 }
 
-struct lua_state *lua_state_get(lua_State *L)
+static struct lua_state_ext *lua_state_getext(lua_State *L)
 {
 	const void *p;
 
@@ -371,5 +387,101 @@ struct lua_state *lua_state_get(lua_State *L)
 	p = lua_topointer(L, -1);
 	lua_pop(L, 1);
 
-	return (struct lua_state *)p;
+	return (struct lua_state_ext *)p;
+}
+
+struct lua_state *lua_state_get(lua_State *L)
+{
+	return &lua_state_getext(L)->state;
+}
+
+static void lua_interrupt_call(struct lua_state_ext *state)
+{
+	int i;
+
+	for (i=0; i<vector_count(&state->interrupts); ++i) {
+		lua_function func = vector_get(&state->interrupts, lua_function, i);
+		assert(func);
+
+		lua_pushcfunction(state->state.L, func);
+		if (lua_pcall(state->state.L, 0, 0, 0)) {
+			lua_state_print_error(state->state.L, L"lua");
+		}
+	}
+
+	vector_resize(&state->interrupts, 0);
+	state->has_interrupts = false;
+}
+
+static void lua_update_hook(struct lua_state_ext *state)
+{
+	if (state->debug_hook || state->has_interrupts) {
+		if (!state->hook_installed) {
+			lua_sethook(state->state.L, &lua_dispatcher_hook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
+			state->hook_installed = true;
+		}
+	}
+	else {
+		if (state->hook_installed) {
+			lua_sethook(state->state.L, &lua_dispatcher_hook, 0, 1);
+			state->hook_installed = false;
+		}
+	}
+}
+
+static void lua_dispatcher_hook(lua_State *L, lua_Debug *ar)
+{
+	struct lua_state_ext *state = lua_state_getext(L);
+	if (state) {
+		if (state->debug_hook) {
+			state->debug_hook(L, ar);
+		}
+
+		if (state->has_interrupts)
+		{
+			lua_interrupt_call(state);
+			lua_update_hook(state);
+		}
+	}
+}
+
+bool lua_state_setdebugger_hook(struct lua_state *_state, lua_hook hook)
+{
+	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+
+	state->debug_hook = hook;
+	lua_update_hook(state);
+
+	return true;
+}
+
+bool lua_state_interrupt(struct lua_state *_state, lua_function func)
+{
+	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+
+	if (!lua_state_isvalid(&state->state)) {
+		error(L"invalid lua state");
+		return false;
+	}
+
+	assert(func);
+	vector_push(&state->interrupts, lua_function, func);
+	state->has_interrupts = true;
+	lua_update_hook(state);
+
+	return true;
+}
+
+bool lua_state_runinterrupt(struct lua_state *_state)
+{
+	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+
+	if (!vector_isempty(&state->interrupts)) {
+		state->has_interrupts = false;
+		lua_update_hook(state);
+
+		lua_interrupt_call(state);
+	}
+
+	return true;
 }

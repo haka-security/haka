@@ -939,13 +939,18 @@ static void lua_debug_hook(lua_State *L, lua_Debug *ar)
 static void luadebug_debugger_activate(struct luadebug_debugger *session)
 {
 	if (!session->active) {
+		struct lua_state *state;
+
 #if HAKA_LUAJIT
 		luaJIT_setmode(session->top_L, 0, LUAJIT_MODE_OFF);
 #endif
 
 		atomic_inc(&running_debugger);
 
-		lua_sethook(session->top_L, &lua_debug_hook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
+		state = lua_state_get(session->top_L);
+		assert(state);
+
+		lua_state_setdebugger_hook(state, &lua_debug_hook);
 
 		session->active = true;
 
@@ -997,7 +1002,10 @@ struct luadebug_debugger *luadebug_debugger_create(struct lua_State *L, bool bre
 static void luadebug_debugger_deactivate(struct luadebug_debugger *session, bool release)
 {
 	if (session->active) {
-		lua_sethook(session->top_L, &lua_debug_hook, 0, 0);
+		struct lua_state *state = lua_state_get(session->top_L);
+		assert(state);
+
+		lua_state_setdebugger_hook(state, NULL);
 
 #if HAKA_LUAJIT
 		luaJIT_setmode(session->top_L, 0, LUAJIT_MODE_ON);
