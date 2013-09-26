@@ -551,7 +551,9 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	const int rv = recv(state->fd, state->receive_buffer,
 			sizeof(state->receive_buffer), 0);
 	if (rv < 0) {
-		messagef(HAKA_LOG_ERROR, MODULE_NAME, L"packet reception failed, %s", errno_error(errno));
+		if (errno != EINTR) {
+			messagef(HAKA_LOG_ERROR, MODULE_NAME, L"packet reception failed, %s", errno_error(errno));
+		}
 		return 0;
 	}
 

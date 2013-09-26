@@ -103,7 +103,6 @@ static bool start(struct luadebug_user *_user, const char *name)
 static char *my_readline(struct luadebug_user *_user, const char *prompt)
 {
 	struct luadebug_remote_user *user = (struct luadebug_remote_user*)_user;
-	char command;
 
 	if (write(user->fd, "r", 1) != 1 ||
 		!write_string(user->fd, prompt)) {
@@ -111,8 +110,17 @@ static char *my_readline(struct luadebug_user *_user, const char *prompt)
 		return NULL;
 	}
 
-	while (read(user->fd, &command, 1) == 1 && command != '1') {
-		if (command == 'c') {
+	while (true) {
+		char command;
+		const int rc = read(user->fd, &command, 1);
+
+		if (rc != 1) {
+			if (rc == -1 && errno != EINTR) {
+				report_error(user, errno);
+				return NULL;
+			}
+		}
+		else if (command == 'c') {
 			/* completion request */
 			generator_callback *generator;
 			char *line;
@@ -148,6 +156,9 @@ static char *my_readline(struct luadebug_user *_user, const char *prompt)
 				report_error(user, errno);
 				return NULL;
 			}
+		}
+		else if (command == '1') {
+			break;
 		}
 		else {
 			report_error(user, errno);
