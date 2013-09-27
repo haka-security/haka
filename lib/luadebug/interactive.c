@@ -197,7 +197,7 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 			lua_pop(L, 1);
 		}
 		else {
-			execute_print(L, session.user);
+			execute_print(L, session.user, false, "hide_underscore");
 			lua_pop(L, 1);
 
 			if (is_return) {

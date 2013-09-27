@@ -8,7 +8,7 @@ struct lua_State;
 struct luadebug_user;
 
 void pprint(struct lua_State *L, struct luadebug_user *user, int index, bool full, const char *hide);
-int execute_print(struct lua_State *L, struct luadebug_user *user);
+int execute_print(struct lua_State *L, struct luadebug_user *user, bool full, const char *hide);
 int capture_env(struct lua_State *L, int frame);
 
 #endif /* _LUADEBUG_UTILS_H */

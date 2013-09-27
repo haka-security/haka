@@ -483,7 +483,7 @@ static bool print_exp(struct luadebug_debugger *session, const char *option)
 		lua_pushvalue(session->L, session->env_index);
 		lua_setfenv(session->L, -2);
 
-		execute_print(session->L, session->user);
+		execute_print(session->L, session->user, true, NULL);
 		lua_pop(session->L, 1);
 	}
 

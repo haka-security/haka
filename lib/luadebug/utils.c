@@ -98,7 +98,7 @@ void pprint(lua_State *L, struct luadebug_user *user, int index, bool full, cons
 
 	/* hide */
 	if (hide) {
-		lua_getfield(L, h, "hide_underscore");
+		lua_getfield(L, h, hide);
 	}
 	else {
 		lua_pushnil(L);
@@ -122,7 +122,7 @@ void pprint(lua_State *L, struct luadebug_user *user, int index, bool full, cons
 	LUA_STACK_CHECK(L, 0);
 }
 
-int execute_print(lua_State *L, struct luadebug_user *user)
+int execute_print(lua_State *L, struct luadebug_user *user, bool full, const char *hide)
 {
 	int i, g, h, status;
 	LUA_STACK_MARK(L);
@@ -133,7 +133,7 @@ int execute_print(lua_State *L, struct luadebug_user *user)
 
 	for (i = h; i > 0; --i) {
 		user->print(user, "  #%d\t", h-i+1);
-		pprint(L, user, -i, true, "hide_underscore");
+		pprint(L, user, -i, full, hide);
 	}
 
 	lua_settop(L, g);
