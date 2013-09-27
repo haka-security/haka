@@ -89,7 +89,7 @@ end
 
 function grammar.Array._options.untilcond(self, condition)
 	self.more = function (self, array)
-		if #array > 0 then return true
+		if #array > 0 then return false
 		else return condition(array[#array]) end
 	end
 end

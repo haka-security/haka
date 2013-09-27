@@ -155,7 +155,7 @@ grammar.status = haka.grammar.record{
 	haka.grammar.re('[0-9]{3}'):as('_num'),
 }:extra{
 	num = function (self)
-		return toint(self._num)
+		return tonumber(self._num)
 	end
 }
 
@@ -184,9 +184,14 @@ grammar.header = haka.grammar.record{
 	haka.grammar.re('[^\r\n]+'):as('value'),
 	grammar.CRLF
 }:extra{
-	function (self, header)
-		if string.lower(header.name) == 'content_length' then
-			self.content_length = toint(header.value)
+	function (self, context)
+		local hdr_name = string.lower(self.name)
+		if hdr_name == 'content_length' then
+			context.content_length = tonumber(self.value)
+			context.mode = 'content'
+		elseif hdr_name == 'transfer-encoding' and
+		       self.value == 'chunked' then
+			context.mode = 'chunked'
 		end
 	end
 }
@@ -196,11 +201,34 @@ grammar.headers = haka.grammar.record{
 	grammar.CRLF
 }
 
-grammar.body = haka.grammar.record{
+grammar.chunk = haka.grammar.record{
+	haka.grammar.re('[0-9a-fA-F]+'):as('_chunk_size'),
+	grammar.CRLF,
 	haka.grammar.bytes():options{
-		'chunked',
-		count=function (self) return self.content_length end
+		count = function (self, context) return self.count end
 	}
+}:extra{
+	count = function (self) return tonumber(self._chunk_size, 16) end
+}
+
+grammar.chunks = haka.grammar.record{
+	haka.grammar.array(grammar.chunk):options{
+		untilcond = function (elem) return elem.count == 0 end
+	},
+	grammar.headers
+}
+
+grammar.body = haka.grammar.record{
+	haka.grammar.branch(
+		{
+			content = haka.grammar.bytes():options{
+				'chunked',
+				count = function (self, context) return context.content_length end
+			},
+			chunked = grammar.chunks
+		}, 
+		function (context) return context.mode end
+	)
 }
 
 grammar.message = haka.grammar.record{
