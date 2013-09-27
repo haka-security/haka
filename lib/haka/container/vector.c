@@ -101,7 +101,7 @@ void *_vector_get(struct vector *v, size_t elemsize, int index)
 
 static bool vector_grow(struct vector *v)
 {
-	return vector_reserve(v, v->count*2);
+	return vector_reserve(v, v->count*2+1);
 }
 
 void *_vector_push(struct vector *v, size_t elemsize)

@@ -400,7 +400,7 @@ static void lua_interrupt_call(struct lua_state_ext *state)
 	int i;
 
 	for (i=0; i<vector_count(&state->interrupts); ++i) {
-		lua_function func = vector_get(&state->interrupts, lua_function, i);
+		lua_function func = vector_getvalue(&state->interrupts, lua_function, i);
 		assert(func);
 
 		lua_pushcfunction(state->state.L, func);
@@ -465,7 +465,7 @@ bool lua_state_interrupt(struct lua_state *_state, lua_function func)
 	}
 
 	assert(func);
-	vector_push(&state->interrupts, lua_function, func);
+	vector_pushvalue(&state->interrupts, lua_function, func);
 	state->has_interrupts = true;
 	lua_update_hook(state);
 
