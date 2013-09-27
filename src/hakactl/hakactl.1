@@ -1,0 +1,42 @@
+.TH HAKACTL 1 "2013" "Haka" Commandes
+.SH NAME
+hakactl \- Haka daemon control interface
+.SH SYNOPSIS
+\fBhakactl\fP [\fIoptions\fP] <\fIcommand\fP> [\fIarguments\fP]
+.SH DESCRIPTION
+.PP 
+hakactl is a frontend for controlling haka dameon.
+.SH OPTIONS
+Following options are supported
+.TP
+\fB\-h\fP, \fB\-\-help\fP
+Display help
+.TP
+\fB\-\-version\fP
+Display version
+.SH COMMANDS
+.TP
+\fBstatus\fP
+Show haka status
+.TP
+\fBstop\fP
+Stop haka
+.TP
+\fBlogs\fP
+Display haka logs in real time
+.TP
+\fBloglevel <level>\fP
+Change haka logging level
+.TP
+\fBdebug\fP
+Attach a remote lua debugger to haka
+.TP
+\fBinteractive\fP
+Attach an interactive session to haka
+.SH FILES
+\fB/var/run/haka-ctl.sock\fP is the socket used by hakactl to control 
+haka daemon
+.SH AUTEURS
+Team HAKA - Arkoon
+.SH COPYRIGHT
+not defined yet

@@ -32,6 +32,8 @@ install(TARGETS haka RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/sbin)
 configure_file(haka.conf.in ${CMAKE_CURRENT_BINARY_DIR}/haka.conf)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/haka.conf DESTINATION ${HAKA_INSTALL_PREFIX}/etc/haka)
 
+install(FILES haka.1 hakapcap.1 DESTINATION ${HAKA_INSTALL_PREFIX}/share/man/man1)
+
 # Build hakapcap program
 add_executable(hakapcap
 	hakapcap.c)
