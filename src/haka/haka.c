@@ -6,6 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include <getopt.h>
+#include <signal.h>
 
 #include <haka/error.h>
 #include <haka/version.h>
@@ -216,11 +217,38 @@ int read_configuration(const char *file)
 	return -1;
 }
 
+static bool haka_started = false;
+
 void clean_exit()
 {
 	stop_ctl_server();
 
+	if (haka_started) {
+		unlink(HAKA_PID_FILE);
+	}
+
 	basic_clean_exit();
+}
+
+bool check_running_haka()
+{
+	pid_t pid;
+	FILE *pid_file = fopen(HAKA_PID_FILE, "r");
+	if (!pid_file) {
+		return false;
+	}
+
+	if (fscanf(pid_file, "%i", &pid) != 1) {
+		message(HAKA_LOG_WARNING, L"core", L"malformed pid file");
+		return false;
+	}
+
+	if (!kill(pid, 0) && errno == ESRCH) {
+		return false;
+	}
+
+	message(HAKA_LOG_FATAL, L"core", L"an instance of haka is already running");
+	return true;
 }
 
 int main(int argc, char *argv[])
@@ -237,12 +265,19 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
+	if (check_running_haka()) {
+		clean_exit();
+		return 5;
+	}
+
 	ret = read_configuration(config);
 	free(config);
 	if (ret >= 0) {
 		clean_exit();
 		return ret;
 	}
+
+	haka_started = true;
 
 	if (!prepare_ctl_server()) {
 		clean_exit();

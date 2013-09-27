@@ -246,7 +246,6 @@ bool prepare_ctl_server()
 
 	err = bind(ctl_server.fd, (struct sockaddr *)&addr, len);
 	if (err && errno == EADDRINUSE) {
-		/* TODO: Should check if another haka process is running */
 		if (unlink(HAKA_CTL_SOCKET_FILE)) {
 			messagef(HAKA_LOG_FATAL, MODULE, L"cannot remove ctl server socket: %s", errno_error(errno));
 			ctl_server_cleanup(&ctl_server);
