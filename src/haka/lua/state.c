@@ -15,6 +15,7 @@
 extern int luaopen_haka(lua_State *L);
 extern int luaopen_log(lua_State *L);
 extern int luaopen_packet(lua_State *L);
+extern int luaopen_state_machine(lua_State *L);
 
 typedef struct {
 	lua_CFunction open;
@@ -22,9 +23,10 @@ typedef struct {
 } swig_module;
 
 swig_module swig_builtins[] = {
-	{ luaopen_packet, "packet" },
 	{ luaopen_log, "log" },
 	{ luaopen_luadebug, "debug" },
+	{ luaopen_packet, "packet" },
+	{ luaopen_state_machine, "state_machine" },
 	{NULL, NULL}
 };
 

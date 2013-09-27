@@ -129,5 +129,4 @@ double time_seconds_get(struct time *t) {
 	require('rule')
 	require('dissector')
 	require('grammar')
-	require('state_machine')
 }

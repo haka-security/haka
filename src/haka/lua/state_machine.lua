@@ -2,31 +2,7 @@
 local states = {}
 
 
-states.State = class()
-
-function states.State:__init()
-	self.transitions = {}
-end
-
-function states.State:addtransition(reason, func)
-	assert(isa(reason, states.Transition), "key must be a transition")
-	assert(type(func) == 'function', "value must be a function")
-	
-	self.transitions[reason] = func
-end
-
 states.Transition = class()
-
-function states.state(transitions)
-	local state = states.State:new()
-
-	for t, f in pairs(transitions) do
-		state.addtransition(t, f)
-	end
-
-	return state
-end
-
 
 function states.on_input(value)
 	local transition = states.Transition:new()
@@ -52,26 +28,44 @@ end
 states.StateMachine = class()
 
 function states.StateMachine:__init()
-	self._states = {}
+	self._state_machine = haka.state_machine.state_machine()
 end
 
 function states.StateMachine:state(transitions)
-	local state = states.State:new()
+	local state = self._state_machine:create_state()
 
 	for t, f in pairs(transitions) do
-		state:addtransition(t, f)
+		assert(isa(t, states.Transition), "key must be a transition")
+		assert(type(f) == 'function', "value must be a function")
+		
+		if t.type == 'TIMEOUT' then
+			state:transition_timeout(t.timeout, self, f)
+		elseif t.type == 'ERROR' then
+			state:transition_error(self, f)
+		elseif t.type == 'INPUT' then
+			state:transition_input(self, f)
+		else
+			error("invalid state transition type")
+		end
 	end
 
-	table.insert(self._states, state)
 	return state
 end
 
+property(states.StateMachine, 'set').initial = function (self, initial)
+	self._state_machine.initial = initial
+end
+
+property(states.StateMachine, 'get').initial = function (self)
+	return self._state_machine.initial
+end
+
 function states.StateMachine:instanciate()
-	return { state = self.initial }
+	return self._state_machine:instanciate()
 end
 
 function states.new()
 	return states.StateMachine:new()
 end
 
-haka.state_machine = states
+return states

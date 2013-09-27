@@ -15,6 +15,7 @@ add_library(libhaka SHARED
 	colors.c
 	time.c
 	timer.c
+	state_machine.c
 	container/list.c
 	container/vector.c)
 
