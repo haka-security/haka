@@ -14,12 +14,19 @@
 #include <haka/log.h>
 #include <haka/compiler.h>
 #include <haka/error.h>
+#include <haka/lua/lua.h>
 #include <haka/container/vector.h>
 #include <luadebug/debugger.h>
 
 
 #define STATE_TABLE      "__haka_state"
 
+
+struct lua_interrupt_data {
+	lua_function          function;
+	void                 *data;
+	void                (*destroy)(void *);
+};
 
 struct lua_state_ext {
 	struct lua_state       state;
@@ -85,33 +92,6 @@ int lua_state_error_formater(lua_State *L)
 		lua_pushvalue(L, -1);
 		return 1;
 	}
-}
-
-
-/*
- * Redefine the luaL_tolstring (taken from Lua 5.2)
- */
-const char *lua_converttostring(struct lua_State *L, int idx, size_t *len)
-{
-	if (!luaL_callmeta(L, idx, "__tostring")) {  /* no metafield? */
-		switch (lua_type(L, idx)) {
-			case LUA_TNUMBER:
-			case LUA_TSTRING:
-				lua_pushvalue(L, idx);
-				break;
-			case LUA_TBOOLEAN:
-				lua_pushstring(L, (lua_toboolean(L, idx) ? "true" : "false"));
-				break;
-			case LUA_TNIL:
-				lua_pushliteral(L, "nil");
-				break;
-			default:
-				lua_pushfstring(L, "%s: %p", luaL_typename(L, idx),
-						lua_topointer(L, idx));
-				break;
-		}
-	}
-	return lua_tolstring(L, -1, len);
 }
 
 static int lua_print(lua_State* L)
@@ -300,6 +280,14 @@ static int str_format(lua_State *L)
 
 static struct lua_state_ext *allocated_state = NULL;
 
+static void lua_interrupt_data_destroy(void *_data)
+{
+	struct lua_interrupt_data *data = (struct lua_interrupt_data *)_data;
+	if (data->destroy) {
+		data->destroy(data->data);
+	}
+}
+
 struct lua_state *lua_state_init()
 {
 	struct lua_state_ext *ret;
@@ -317,7 +305,7 @@ struct lua_state *lua_state_init()
 	ret->hook_installed = false;
 	ret->debug_hook = NULL;
 	ret->has_interrupts = false;
-	vector_create_reserve(&ret->interrupts, lua_function, 20, NULL);
+	vector_create_reserve(&ret->interrupts, struct lua_interrupt_data, 20, lua_interrupt_data_destroy);
 	ret->next = NULL;
 
 	lua_atpanic(L, panic);
@@ -400,11 +388,17 @@ static void lua_interrupt_call(struct lua_state_ext *state)
 	int i;
 
 	for (i=0; i<vector_count(&state->interrupts); ++i) {
-		lua_function func = vector_getvalue(&state->interrupts, lua_function, i);
+		struct lua_interrupt_data *func = vector_get(&state->interrupts, struct lua_interrupt_data, i);
 		assert(func);
 
-		lua_pushcfunction(state->state.L, func);
-		if (lua_pcall(state->state.L, 0, 0, 0)) {
+		lua_pushcfunction(state->state.L, func->function);
+
+		if (func->data)
+			lua_pushlightuserdata(state->state.L, func->data);
+		else
+			lua_pushnil(state->state.L);
+
+		if (lua_pcall(state->state.L, 1, 0, 0)) {
 			lua_state_print_error(state->state.L, L"lua");
 		}
 	}
@@ -455,9 +449,10 @@ bool lua_state_setdebugger_hook(struct lua_state *_state, lua_hook hook)
 	return true;
 }
 
-bool lua_state_interrupt(struct lua_state *_state, lua_function func)
+bool lua_state_interrupt(struct lua_state *_state, lua_function func, void *data, void (*destroy)(void *))
 {
 	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+	struct lua_interrupt_data *func_data;
 
 	if (!lua_state_isvalid(&state->state)) {
 		error(L"invalid lua state");
@@ -465,7 +460,11 @@ bool lua_state_interrupt(struct lua_state *_state, lua_function func)
 	}
 
 	assert(func);
-	vector_pushvalue(&state->interrupts, lua_function, func);
+	func_data = vector_push(&state->interrupts, struct lua_interrupt_data);
+	func_data->function = func;
+	func_data->data = data;
+	func_data->destroy = destroy;
+
 	state->has_interrupts = true;
 	lua_update_hook(state);
 

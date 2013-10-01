@@ -3,6 +3,8 @@
 #define _HAKA_LUA_LUA_H
 
 #include <assert.h>
+#include <wchar.h>
+#include <haka/types.h>
 
 
 #ifndef NDEBUG
@@ -21,6 +23,9 @@
 #endif
 
 
+struct lua_State;
+
 const char *lua_converttostring(struct lua_State *L, int idx, size_t *len);
+bool lua_pushwstring(struct lua_State *L, const wchar_t *str);
 
 #endif /* _HAKA_LUA_LUA_H */

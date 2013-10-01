@@ -18,7 +18,7 @@ typedef void (*lua_hook)(struct lua_State *L, struct lua_Debug *ar);
 struct lua_state *lua_state_init();
 void lua_state_close(struct lua_state *state);
 bool lua_state_isvalid(struct lua_state *state);
-bool lua_state_interrupt(struct lua_state *state, lua_function func);
+bool lua_state_interrupt(struct lua_state *state, lua_function func, void *data, void (*destroy)(void *));
 bool lua_state_runinterrupt(struct lua_state *state);
 bool lua_state_setdebugger_hook(struct lua_state *state, lua_hook hook);
 

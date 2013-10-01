@@ -1,6 +1,7 @@
 %{
 	#include <haka/error.h>
 	#include <haka/lua/lua.h>
+	#include <haka/lua/state.h>
 
 	#include <stdlib.h>
 
@@ -52,25 +53,11 @@
 	const wchar_t *error;
 	$action
 	if ((error = clear_error())) {
-		int size;
-		char *errormb;
-
-		size = wcstombs(NULL, error, 0);
-		if (size == (size_t)-1) {
-			lua_pushstring(L, "unknown error");
-			SWIG_execfail;
+		if (!lua_pushwstring(L, error)) {
+			if (!lua_pushwstring(L, clear_error())) {
+				lua_pushstring(L, "unknown error");
+			}
 		}
-
-		errormb = malloc(size+1);
-		if (!errormb) {
-			lua_pushstring(L, "memory error");
-			SWIG_execfail;
-		}
-
-		wcstombs(errormb, error, size+1);
-		lua_pushstring(L, errormb);
-		free(errormb);
-
 		SWIG_execfail;
 	}
 %}

@@ -21,6 +21,8 @@ enum transition_type {
 	TRANSITION_ERROR,
 	TRANSITION_TIMEOUT,
 	TRANSITION_INPUT,
+	TRANSITION_ENTER,
+	TRANSITION_LEAVE,
 	TRANSITION_NONE
 };
 
@@ -34,6 +36,8 @@ struct state {
 	char                   *name;
 	struct transition       error;
 	struct transition       input;
+	struct transition       enter;
+	struct transition       leave;
 	struct vector           timeouts;
 };
 
@@ -90,7 +94,7 @@ static bool state_compile(struct state *state)
 
 struct state *state_machine_create_state(struct state_machine *state_machine, const char *name)
 {
-	struct state *state = malloc(sizeof(struct state));
+	struct state *state = vector_push(&state_machine->states, struct state);
 	if (!state) {
 		error(L"memory error");
 		return NULL;
@@ -112,6 +116,10 @@ struct state *state_machine_create_state(struct state_machine *state_machine, co
 	state->error.callback = NULL;
 	state->input.type = TRANSITION_NONE;
 	state->input.callback = NULL;
+	state->enter.type = TRANSITION_NONE;
+	state->enter.callback = NULL;
+	state->leave.type = TRANSITION_NONE;
+	state->leave.callback = NULL;
 	vector_create(&state->timeouts, struct transition, transition_destroy);
 
 	return state;
@@ -137,6 +145,20 @@ bool state_set_input_transition(struct state *state, struct transition_data *dat
 {
 	state->error.type = TRANSITION_INPUT;
 	state->error.callback = data;
+	return true;
+}
+
+bool state_set_enter_transition(struct state *state, struct transition_data *data)
+{
+	state->enter.type = TRANSITION_ENTER;
+	state->enter.callback = data;
+	return true;
+}
+
+bool state_set_leave_transition(struct state *state, struct transition_data *data)
+{
+	state->leave.type = TRANSITION_LEAVE;
+	state->leave.callback = data;
 	return true;
 }
 
@@ -167,6 +189,7 @@ struct state_machine *state_machine_create()
 void state_machine_destroy(struct state_machine *machine)
 {
 	vector_destroy(&machine->states);
+	free(machine);
 }
 
 bool state_machine_compile(struct state_machine *machine)
@@ -205,9 +228,18 @@ void timeout_data_destroy(void *_elem)
 	timer_destroy(elem->timer);
 }
 
-static void state_machine_leave_state(struct state_machine_instance *instance)
+static struct state *do_transition(struct state_machine_instance *instance, struct transition *trans)
+{
+	if (trans->callback && trans->callback->callback) {
+		return trans->callback->callback(instance, trans->callback);
+	}
+	return NULL;
+}
+
+static struct state *state_machine_leave_state(struct state_machine_instance *instance)
 {
 	if (instance->current) {
+		struct state *newstate;
 		int i;
 		for (i=0; i<instance->used_timer; ++i) {
 			struct timeout_data *t = vector_get(&instance->timers, struct timeout_data, i);
@@ -215,15 +247,13 @@ static void state_machine_leave_state(struct state_machine_instance *instance)
 			timer_stop(t->timer);
 		}
 
-		instance->current = NULL;
-	}
-}
+		newstate = do_transition(instance, &instance->current->leave);
 
-static void do_transition(struct state_machine_instance *instance, struct transition *trans)
-{
-	if (trans->callback && trans->callback->callback) {
-		trans->callback->callback(instance, trans->callback);
+		instance->current = NULL;
+
+		return newstate;
 	}
+	return NULL;
 }
 
 static void transition_timeout(int count, void *_data)
@@ -234,24 +264,43 @@ static void transition_timeout(int count, void *_data)
 	assert(data->timer_index < data->instance->used_timer);
 
 	if (!data->instance->in_transition) {
+		struct state *newstate;
+		assert(data->instance->current);
+
 		trans = vector_get(&data->instance->current->timeouts, struct transition, data->timer_index);
 		assert(trans);
 
-		do_transition(data->instance, trans);
+		newstate = do_transition(data->instance, trans);
+		if (newstate) {
+			state_machine_instance_update(data->instance, newstate);
+		}
 	}
 }
 
 static void state_machine_enter_state(struct state_machine_instance *instance, struct state *state)
 {
+	const bool was_in_transition = instance->in_transition;
 	instance->in_transition = true;
 
 	if (instance->current != state) {
-		state_machine_leave_state(instance);
+		struct state *newstate = state_machine_leave_state(instance);
+		if (newstate) {
+			state_machine_instance_update(instance, newstate);
+			instance->in_transition = was_in_transition;
+			return;
+		}
 
 		if (state) {
 			const int count = vector_count(&state->timeouts);
 
 			instance->current = state;
+
+			newstate = do_transition(instance, &instance->current->enter);
+			if (newstate) {
+				state_machine_instance_update(instance, newstate);
+				instance->in_transition = was_in_transition;
+				return;
+			}
 
 			/* Create missing timers */
 			{
@@ -301,7 +350,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 		}
 	}
 
-	instance->in_transition = false;
+	instance->in_transition = was_in_transition;
 }
 
 struct state_machine_instance *state_machine_instance(struct state_machine *state_machine)
@@ -323,10 +372,16 @@ struct state_machine_instance *state_machine_instance(struct state_machine *stat
 	return instance;
 }
 
-void state_machine_instance_destroy(struct state_machine_instance *instance)
+void state_machine_instance_finish(struct state_machine_instance *instance)
 {
 	state_machine_leave_state(instance);
+}
+
+void state_machine_instance_destroy(struct state_machine_instance *instance)
+{
+	state_machine_instance_finish(instance);
 	vector_destroy(&instance->timers);
+	free(instance);
 }
 
 void state_machine_instance_update(struct state_machine_instance *instance, struct state *newstate)
@@ -336,14 +391,22 @@ void state_machine_instance_update(struct state_machine_instance *instance, stru
 
 void state_machine_instance_error(struct state_machine_instance *instance)
 {
+	struct state *newstate;
 	assert(instance->current);
-	do_transition(instance, &instance->current->error);
+	newstate = do_transition(instance, &instance->current->error);
+	if (newstate) {
+		state_machine_instance_update(instance, newstate);
+	}
 }
 
 void state_machine_instance_input(struct state_machine_instance *instance, void *input)
 {
+	struct state *newstate;
 	assert(instance->current);
-	do_transition(instance, &instance->current->input);
+	newstate = do_transition(instance, &instance->current->input);
+	if (newstate) {
+		state_machine_instance_update(instance, newstate);
+	}
 }
 
 struct state_machine *state_machine_instance_get(struct state_machine_instance *instance)

@@ -6,6 +6,7 @@ swig_add_module(libhaka-lua lua STATIC
 	object.i
 	ref.c
 	state.c
+	lua.c
 	)
 
 # Lua dependency
