@@ -10,7 +10,7 @@
 #include <haka/container/vector.h>
 
 
-#define MODULE    L"state"
+#define MODULE    L"state machine"
 
 
 /*
@@ -33,6 +33,7 @@ struct transition {
 };
 
 struct state {
+	struct list             list;
 	char                   *name;
 	struct transition       error;
 	struct transition       input;
@@ -42,8 +43,9 @@ struct state {
 };
 
 struct state_machine {
+	char                   *name;
 	bool                    compiled;
-	struct vector           states;
+	struct state           *states;
 	struct state           *initial;
 };
 
@@ -74,9 +76,8 @@ static void transition_destroy(void *_transition)
 	}
 }
 
-static void state_destroy(void *_state)
+static void state_destroy(struct state *state)
 {
-	struct state *state = (struct state *)_state;
 	vector_destroy(&state->timeouts);
 	transition_destroy(&state->error);
 	transition_destroy(&state->input);
@@ -94,11 +95,13 @@ static bool state_compile(struct state *state)
 
 struct state *state_machine_create_state(struct state_machine *state_machine, const char *name)
 {
-	struct state *state = vector_push(&state_machine->states, struct state);
+	struct state *state = malloc(sizeof(struct state));
 	if (!state) {
 		error(L"memory error");
 		return NULL;
 	}
+
+	list_init(state);
 
 	if (name) {
 		state->name = strdup(name);
@@ -121,6 +124,8 @@ struct state *state_machine_create_state(struct state_machine *state_machine, co
 	state->leave.type = TRANSITION_NONE;
 	state->leave.callback = NULL;
 	vector_create(&state->timeouts, struct transition, transition_destroy);
+
+	list_insert_before(state, NULL, &state_machine->states, NULL);
 
 	return state;
 }
@@ -162,54 +167,90 @@ bool state_set_leave_transition(struct state *state, struct transition_data *dat
 	return true;
 }
 
+static struct state _state_machine_error_state = {
+	name: "ERROR",
+	error: {0},
+	input: {0},
+	enter: {0},
+	leave: {0},
+	timeouts: VECTOR_INIT(struct transition, transition_destroy)
+};
+struct state * const state_machine_error_state = &_state_machine_error_state;
+
+static struct state _state_machine_finish_state = {
+	name: "FINISH",
+	error: {0},
+	input: {0},
+	enter: {0},
+	leave: {0},
+	timeouts: VECTOR_INIT(struct transition, transition_destroy)
+};
+struct state * const state_machine_finish_state = &_state_machine_finish_state;
+
+bool state_machine_set_initial(struct state_machine *machine, struct state *initial)
+{
+	machine->initial = initial;
+	return true;
+}
 
 /*
  * State machine
  */
 
-struct state_machine *state_machine_create()
+struct state_machine *state_machine_create(const char *name)
 {
-	struct state_machine *machine = malloc(sizeof(struct state_machine));
+	struct state_machine *machine;
+
+	assert(name);
+
+	machine = malloc(sizeof(struct state_machine));
 	if (!machine) {
 		error(L"memory error");
 		return NULL;
 	}
 
-	machine->compiled = false;
-	machine->initial = NULL;
-	vector_create(&machine->states, struct state, state_destroy);
-	if (check_error()) {
+	machine->name = strdup(name);
+	if (!machine->name) {
+		error(L"memory error");
 		free(machine);
 		return NULL;
 	}
+
+	machine->compiled = false;
+	machine->initial = NULL;
+	machine->states = NULL;
 
 	return machine;
 }
 
 void state_machine_destroy(struct state_machine *machine)
 {
-	vector_destroy(&machine->states);
+	struct state *iter = machine->states;
+	while (iter) {
+		struct state *current = iter;
+		iter = list_next(iter);
+		state_destroy(current);
+	}
+
+	free(machine->name);
 	free(machine);
 }
 
 bool state_machine_compile(struct state_machine *machine)
 {
 	if (!machine->compiled) {
-		int i, count;
-
-		vector_reserve(&machine->states, vector_count(&machine->states));
-		if (check_error()) {
-			return false;
-		}
-
-		count = vector_count(&machine->states);
-		for (i=0; i<count; ++i) {
-			struct state *state = vector_get(&machine->states, struct state, i);
-			assert(state);
-
-			if (!state_compile(state)) {
+		struct state *iter = machine->states;
+		while (iter) {
+			if (!state_compile(iter)) {
 				return false;
 			}
+
+			iter = list_next(iter);
+		}
+
+		if (!machine->initial) {
+			messagef(HAKA_LOG_ERROR, MODULE, L"%s: no initial state", machine->name);
+			return false;
 		}
 
 		machine->compiled = true;
@@ -272,7 +313,7 @@ static void transition_timeout(int count, void *_data)
 
 		newstate = do_transition(data->instance, trans);
 		if (newstate) {
-			state_machine_instance_update(data->instance, newstate);
+			state_machine_instance_update(data->instance, newstate, "timeout trigger");
 		}
 	}
 }
@@ -285,7 +326,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 	if (instance->current != state) {
 		struct state *newstate = state_machine_leave_state(instance);
 		if (newstate) {
-			state_machine_instance_update(instance, newstate);
+			state_machine_instance_update(instance, newstate, "state leave transition");
 			instance->in_transition = was_in_transition;
 			return;
 		}
@@ -297,7 +338,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 
 			newstate = do_transition(instance, &instance->current->enter);
 			if (newstate) {
-				state_machine_instance_update(instance, newstate);
+				state_machine_instance_update(instance, newstate, "state enter transition");
 				instance->in_transition = was_in_transition;
 				return;
 			}
@@ -367,13 +408,18 @@ struct state_machine_instance *state_machine_instance(struct state_machine *stat
 	instance->used_timer = 0;
 	instance->in_transition = false;
 
-	state_machine_enter_state(instance, state_machine->initial);
+	state_machine_instance_update(instance, state_machine->initial, "initial state");
 
 	return instance;
 }
 
 void state_machine_instance_finish(struct state_machine_instance *instance)
 {
+	if (instance->current) {
+		messagef(HAKA_LOG_DEBUG, MODULE, L"%s: finish from state '%s'",
+				instance->state_machine->name, instance->current->name);
+	}
+
 	state_machine_leave_state(instance);
 }
 
@@ -384,9 +430,41 @@ void state_machine_instance_destroy(struct state_machine_instance *instance)
 	free(instance);
 }
 
-void state_machine_instance_update(struct state_machine_instance *instance, struct state *newstate)
+void state_machine_instance_update(struct state_machine_instance *instance, struct state *newstate,
+		const char *reason)
 {
-	state_machine_enter_state(instance, newstate);
+	assert(newstate);
+
+	if (newstate == state_machine_error_state) {
+		state_machine_instance_error(instance);
+	}
+	else if (newstate == state_machine_finish_state) {
+		state_machine_instance_finish(instance);
+	}
+	else {
+		if (reason) {
+			if (instance->current) {
+				messagef(HAKA_LOG_DEBUG, MODULE, L"%s: %s, transition from state '%s' to state '%s'",
+						instance->state_machine->name, reason, instance->current->name, newstate->name);
+			}
+			else {
+				messagef(HAKA_LOG_DEBUG, MODULE, L"%s: %s, enter state '%s'",
+						instance->state_machine->name, reason, newstate->name);
+			}
+		}
+		else {
+			if (instance->current) {
+				messagef(HAKA_LOG_DEBUG, MODULE, L"%s: transition from state '%s' to state '%s'",
+						instance->state_machine->name, instance->current->name, newstate->name);
+			}
+			else {
+				messagef(HAKA_LOG_DEBUG, MODULE, L"%s: enter state '%s'",
+						instance->state_machine->name, newstate->name);
+			}
+		}
+
+		state_machine_enter_state(instance, newstate);
+	}
 }
 
 void state_machine_instance_error(struct state_machine_instance *instance)
@@ -395,7 +473,7 @@ void state_machine_instance_error(struct state_machine_instance *instance)
 	assert(instance->current);
 	newstate = do_transition(instance, &instance->current->error);
 	if (newstate) {
-		state_machine_instance_update(instance, newstate);
+		state_machine_instance_update(instance, newstate, "error transition");
 	}
 }
 
@@ -405,7 +483,7 @@ void state_machine_instance_input(struct state_machine_instance *instance, void 
 	assert(instance->current);
 	newstate = do_transition(instance, &instance->current->input);
 	if (newstate) {
-		state_machine_instance_update(instance, newstate);
+		state_machine_instance_update(instance, newstate, "input transition");
 	}
 }
 

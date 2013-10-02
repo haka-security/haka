@@ -4,6 +4,7 @@
 #include <haka/state_machine.h>
 #include <haka/time.h>
 #include <haka/error.h>
+#include <haka/log.h>
 #include <haka/lua/lua.h>
 #include <haka/lua/ref.h>
 #include <haka/lua/state.h>
@@ -14,7 +15,6 @@ struct lua_transition_data {
 	struct lua_ref           states;
 	struct lua_ref           function;
 };
-
 
 struct state *lua_transition_callback(struct state_machine_instance *state_machine, struct transition_data *_data)
 {
@@ -30,8 +30,8 @@ struct state *lua_transition_callback(struct state_machine_instance *state_machi
 	//SWIG_NewPointerObj(L, state_machine, SWIGTYPE_p_state_machine, 0);
 	lua_call(L, 1, 1);
 
-	if (SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
-		printf("%p\n", newstate);
+	if (!SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
+		message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
 	}
 
 	lua_pop(L, 1);
@@ -59,7 +59,7 @@ int lua_transition_deferred(lua_State *L)
 
 	newstate = lua_transition_callback(data->state_machine, &data->data->data);
 	if (newstate) {
-		state_machine_instance_update(data->state_machine, newstate);
+		state_machine_instance_update(data->state_machine, newstate, "timeout trigger");
 	}
 
 	if (check_error()) {
@@ -170,13 +170,21 @@ struct state {
 	}
 };
 
+STRUCT_UNKNOWN_KEY_ERROR(state);
+
+
 %newobject state_machine::instanciate;
 
 struct state_machine {
 	%extend {
-		state_machine()
+		state_machine(const char *name)
 		{
-			return state_machine_create();
+			if (!name) {
+				error(L"missing name parameter");
+				return NULL;
+			}
+
+			return state_machine_create(name);
 		}
 
 		~state_machine()
@@ -185,17 +193,32 @@ struct state_machine {
 		}
 
 		%rename(create_state) _create_state;
-		struct state *_create_state()
+		struct state *_create_state(const char *name)
 		{
-			return state_machine_create_state($self, NULL);
+			return state_machine_create_state($self, name);
+		}
+
+		%rename(compile) _compile;
+		void _compile()
+		{
+			state_machine_compile($self);
 		}
 
 		struct state_machine_instance *instanciate()
 		{
 			return state_machine_instance($self);
 		}
+
+		struct state *initial;
+
+		%immutable;
+		struct state *error_state;
+		struct state *finish_state;
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(state_machine);
+
 
 struct state_machine_instance {
 	%extend {
@@ -207,7 +230,7 @@ struct state_machine_instance {
 		%rename(update) _update;
 		void _update(struct state *state)
 		{
-			state_machine_instance_update($self, state);
+			state_machine_instance_update($self, state, NULL);
 		}
 
 		%rename(finish) _finish;
@@ -218,6 +241,24 @@ struct state_machine_instance {
 	}
 };
 
+STRUCT_UNKNOWN_KEY_ERROR(state_machine_instance);
+
+
+%{
+
+struct state *state_machine_initial_get(struct state_machine *machine)
+	{ return NULL; }
+
+void state_machine_initial_set(struct state_machine *machine, struct state *initial)
+	{ state_machine_set_initial(machine, initial); }
+
+struct state *state_machine_error_state_get(struct state_machine *machine)
+	{ return state_machine_error_state; }
+
+struct state *state_machine_finish_state_get(struct state_machine *machine)
+	{ return state_machine_finish_state; }
+
+%}
 
 %luacode {
 	local this = unpack({...})
@@ -228,4 +269,6 @@ struct state_machine_instance {
 	this.on_input = state_machine_lua.on_input
 	this.on_timeout = state_machine_lua.on_timeout
 	this.on_error = state_machine_lua.on_error
+	this.on_enter = state_machine_lua.on_enter
+	this.on_leave = state_machine_lua.on_leave
 }
