@@ -73,7 +73,7 @@ int lua_transition_deferred(lua_State *L)
 
 	newstate = lua_transition_callback(data->state_machine, &data->data->data);
 	if (newstate) {
-		state_machine_instance_update(data->state_machine, newstate, "timeout trigger");
+		state_machine_instance_update(data->state_machine, newstate);
 	}
 
 	if (check_error()) {
@@ -251,7 +251,7 @@ struct state_machine_instance {
 		%rename(update) _update;
 		void _update(struct state *state)
 		{
-			state_machine_instance_update($self, state, NULL);
+			state_machine_instance_update($self, state);
 		}
 
 		%rename(finish) _finish;

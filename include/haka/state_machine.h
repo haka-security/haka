@@ -41,7 +41,7 @@ struct state_machine *state_machine_instance_get(struct state_machine_instance *
 struct state_machine_context *state_machine_instance_context(struct state_machine_instance *instance);
 void                  state_machine_instance_finish(struct state_machine_instance *instance);
 void                  state_machine_instance_destroy(struct state_machine_instance *instance);
-void                  state_machine_instance_update(struct state_machine_instance *instance, struct state *newstate, const char *reason);
+void                  state_machine_instance_update(struct state_machine_instance *instance, struct state *newstate);
 void                  state_machine_instance_error(struct state_machine_instance *instance);
 void                  state_machine_instance_input(struct state_machine_instance *instance, void *input);
 
