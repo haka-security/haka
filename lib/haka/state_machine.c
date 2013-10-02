@@ -52,6 +52,7 @@ struct state_machine {
 struct state_machine_instance {
 	struct state_machine  *state_machine;
 	struct state          *current;
+	struct state_machine_context *context;
 	struct vector          timers;
 	int                    used_timer;
 	bool                   in_transition;
@@ -394,7 +395,8 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 	instance->in_transition = was_in_transition;
 }
 
-struct state_machine_instance *state_machine_instance(struct state_machine *state_machine)
+struct state_machine_instance *state_machine_instance(struct state_machine *state_machine,
+		struct state_machine_context *context)
 {
 	struct state_machine_instance *instance = malloc(sizeof(struct state_machine_instance));
 	if (!instance) {
@@ -404,6 +406,7 @@ struct state_machine_instance *state_machine_instance(struct state_machine *stat
 
 	instance->state_machine = state_machine;
 	instance->current = NULL;
+	instance->context = context;
 	vector_create(&instance->timers, struct timeout_data, timeout_data_destroy);
 	instance->used_timer = 0;
 	instance->in_transition = false;
@@ -426,6 +429,11 @@ void state_machine_instance_finish(struct state_machine_instance *instance)
 void state_machine_instance_destroy(struct state_machine_instance *instance)
 {
 	state_machine_instance_finish(instance);
+
+	if (instance->context) {
+		instance->context->destroy(instance->context);
+	}
+
 	vector_destroy(&instance->timers);
 	free(instance);
 }
@@ -490,4 +498,9 @@ void state_machine_instance_input(struct state_machine_instance *instance, void 
 struct state_machine *state_machine_instance_get(struct state_machine_instance *instance)
 {
 	return instance->state_machine;
+}
+
+struct state_machine_context *state_machine_instance_context(struct state_machine_instance *instance)
+{
+	return instance->context;
 }

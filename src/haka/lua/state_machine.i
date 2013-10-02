@@ -12,23 +12,37 @@
 
 struct lua_transition_data {
 	struct transition_data   data;
-	struct lua_ref           states;
 	struct lua_ref           function;
 };
+
+struct lua_state_machine_context {
+	struct state_machine_context   super;
+	struct lua_ref                 states;
+	struct lua_ref                 context;
+};
+
+void lua_state_machine_context_destroy(struct state_machine_context *_context)
+{
+	struct lua_state_machine_context *context = (struct lua_state_machine_context *)_context;
+	lua_ref_clear(&context->states);
+	lua_ref_clear(&context->context);
+	free(context);
+}
 
 struct state *lua_transition_callback(struct state_machine_instance *state_machine, struct transition_data *_data)
 {
 	struct lua_transition_data *data = (struct lua_transition_data *)_data;
+	struct lua_state_machine_context *context = (struct lua_state_machine_context *)state_machine_instance_context(state_machine);
 	struct state *newstate = NULL;
 	lua_State *L = data->function.state->L;
 
-	assert(lua_ref_isvalid(&data->states));
+	assert(lua_ref_isvalid(&context->states));
 	assert(lua_ref_isvalid(&data->function));
 
 	lua_ref_push(L, &data->function);
-	lua_ref_push(L, &data->states);
-	//SWIG_NewPointerObj(L, state_machine, SWIGTYPE_p_state_machine, 0);
-	lua_call(L, 1, 1);
+	lua_ref_push(L, &context->states);
+	lua_ref_push(L, &context->context);
+	lua_call(L, 2, 1);
 
 	if (!SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
 		message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
@@ -92,13 +106,11 @@ struct state *lua_transition_timeout_callback(struct state_machine_instance *sta
 static void lua_transition_data_destroy(struct transition_data *_data)
 {
 	struct lua_transition_data *data = (struct lua_transition_data *)_data;
-	lua_ref_clear(&data->states);
 	lua_ref_clear(&data->function);
 	free(_data);
 }
 
-static struct transition_data *lua_transition_data_new(struct lua_ref *states, struct lua_ref *func,
-		bool timeout)
+static struct transition_data *lua_transition_data_new(struct lua_ref *func, bool timeout)
 {
 	struct lua_transition_data *ret = malloc(sizeof(struct lua_transition_data));
 	if (!ret) {
@@ -108,7 +120,6 @@ static struct transition_data *lua_transition_data_new(struct lua_ref *states, s
 
 	ret->data.callback = timeout ? lua_transition_timeout_callback : lua_transition_callback;
 	ret->data.destroy = lua_transition_data_destroy;
-	ret->states = *states;
 	ret->function = *func;
 
 	return &ret->data;
@@ -126,43 +137,43 @@ static struct transition_data *lua_transition_data_new(struct lua_ref *states, s
 
 struct state {
 	%extend {
-		void transition_timeout(double secs, struct lua_ref states, struct lua_ref func)
+		void transition_timeout(double secs, struct lua_ref func)
 		{
 			struct time timeout;
-			struct transition_data *trans = lua_transition_data_new(&states, &func, true);
+			struct transition_data *trans = lua_transition_data_new(&func, true);
 			if (!trans) return;
 
 			time_build(&timeout, secs);
 			state_add_timeout_transition($self, &timeout, trans);
 		}
 
-		void transition_error(struct lua_ref states, struct lua_ref func)
+		void transition_error(struct lua_ref func)
 		{
-			struct transition_data *trans = lua_transition_data_new(&states, &func, false);
+			struct transition_data *trans = lua_transition_data_new(&func, false);
 			if (!trans) return;
 
 			state_set_error_transition($self, trans);
 		}
 
-		void transition_input(struct lua_ref states, struct lua_ref func)
+		void transition_input(struct lua_ref func)
 		{
-			struct transition_data *trans = lua_transition_data_new(&states, &func, false);
+			struct transition_data *trans = lua_transition_data_new(&func, false);
 			if (!trans) return;
 
 			state_set_input_transition($self, trans);
 		}
 
-		void transition_leave(struct lua_ref states, struct lua_ref func)
+		void transition_leave(struct lua_ref func)
 		{
-			struct transition_data *trans = lua_transition_data_new(&states, &func, false);
+			struct transition_data *trans = lua_transition_data_new(&func, false);
 			if (!trans) return;
 
 			state_set_leave_transition($self, trans);
 		}
 
-		void transition_enter(struct lua_ref states, struct lua_ref func)
+		void transition_enter(struct lua_ref func)
 		{
-			struct transition_data *trans = lua_transition_data_new(&states, &func, false);
+			struct transition_data *trans = lua_transition_data_new(&func, false);
 			if (!trans) return;
 
 			state_set_enter_transition($self, trans);
@@ -204,9 +215,19 @@ struct state_machine {
 			state_machine_compile($self);
 		}
 
-		struct state_machine_instance *instanciate()
+		struct state_machine_instance *instanciate(struct lua_ref states, struct lua_ref contextref)
 		{
-			return state_machine_instance($self);
+			struct lua_state_machine_context *context = malloc(sizeof(struct lua_state_machine_context));
+			if (!context) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			context->super.destroy = lua_state_machine_context_destroy;
+			context->states = states;
+			context->context = contextref;
+
+			return state_machine_instance($self, &context->super);
 		}
 
 		struct state *initial;

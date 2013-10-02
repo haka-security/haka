@@ -71,15 +71,15 @@ function states.StateMachine:compile()
 				
 				for t, f in pairs(state.transitions) do
 					if t.type == 'TIMEOUT' then
-						new_state:transition_timeout(t.timeout, state_table, f)
+						new_state:transition_timeout(t.timeout, f)
 					elseif t.type == 'ERROR' then
-						new_state:transition_error(state_table, f)
+						new_state:transition_error(f)
 					elseif t.type == 'INPUT' then
-						new_state:transition_input(state_table, f)
+						new_state:transition_input(f)
 					elseif t.type == 'ENTER' then
-						new_state:transition_enter(state_table, f)
+						new_state:transition_enter(f)
 					elseif t.type == 'LEAVE' then
-						new_state:transition_leave(state_table, f)
+						new_state:transition_leave(f)
 					else
 						error("invalid state transition type")
 					end
@@ -100,12 +100,13 @@ function states.StateMachine:compile()
 		state_machine:compile()
 		
 		self._state_machine = state_machine
+		self._state_table = state_table
 	end
 end
 
-function states.StateMachine:instanciate()
+function states.StateMachine:instanciate(context)
 	self:compile()
-	return self._state_machine:instanciate()
+	return self._state_machine:instanciate(self._state_table, context)
 end
 
 function states.new(name)
