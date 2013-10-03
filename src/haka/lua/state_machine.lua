@@ -4,37 +4,25 @@ local states = {}
 
 states.Transition = class()
 
+function states.Transition:__init(type)
+	self.type = type
+end
+
 function states.on_input(value)
-	local transition = states.Transition:new()
-	transition.type = 'INPUT'
+	local transition = states.Transition:new('INPUT')
 	transition.input = value
 	return transition
 end
 
 function states.on_timeout(timeout)
-	local transition = states.Transition:new()
-	transition.type = 'TIMEOUT'
+	local transition = states.Transition:new('TIMEOUT')
 	transition.timeout = timeout
 	return transition
 end
 
-function states.on_error()
-	local transition = states.Transition:new()
-	transition.type = 'ERROR'
-	return transition
-end
-
-function states.on_enter()
-	local transition = states.Transition:new()
-	transition.type = 'ENTER'
-	return transition
-end
-
-function states.on_leave()
-	local transition = states.Transition:new()
-	transition.type = 'LEAVE'
-	return transition
-end
+states.on_error = states.Transition:new('ERROR')
+states.on_enter = states.Transition:new('ENTER')
+states.on_leave = states.Transition:new('LEAVE')
 
 
 states.State = class()

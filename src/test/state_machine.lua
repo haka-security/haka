@@ -7,7 +7,7 @@ require('protocol/ipv4')
 local machine = haka.state_machine.new("test")
 
 machine.state1 = machine:state {
-	[haka.state_machine.on_enter()] = function (states, context)
+	[haka.state_machine.on_enter] = function (states, context)
 		context.state = "state1"
 		context.count = 0
 	end,
@@ -23,10 +23,10 @@ machine.state1 = machine:state {
 }
 
 machine.state2 = machine:state {
-	[haka.state_machine.on_enter()] = function (states, context)
+	[haka.state_machine.on_enter] = function (states, context)
 		return states.ERROR
 	end,
-	[haka.state_machine.on_error()] = function (states, context)
+	[haka.state_machine.on_error] = function (states, context)
 		return states.FINISH
 	end
 }
@@ -38,7 +38,7 @@ machine.state3 = machine:state {
 	[haka.state_machine.on_timeout(1)] = function (states, context)
 		return states.state1
 	end,
-	[haka.state_machine.on_leave()] = function (states, context)
+	[haka.state_machine.on_leave] = function (states, context)
 		context.state = nil
 		return states.state2
 	end,
