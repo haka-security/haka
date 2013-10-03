@@ -1,0 +1,37 @@
+.TH HAKA 1 "2013" "Haka" Commands
+.SH NAME
+haka \- Launch haka daemon
+.SH SYNOPSIS
+\fBhaka\fP [\fIoptions\fP]
+.SH DESCRIPTION
+.PP 
+Launch haka daemon
+.SH OPTIONS
+Following options are supported
+.TP
+\fB\-h\fP, \fB\-\-help\fP
+Display help.
+.TP
+\fB\-\-version\fP
+Display version.
+.TP
+\fB\-c\fP, \fB\-\-config <conf>\fP
+Load a specific configuration file (default:
+\fB/opt/haka/etc/haka/haka.conf\fP)
+.TP
+\fB\-d\fP, \fB\-\-debug\fP
+Display debug output.
+.TP
+\fB\-\-luadebug\fP
+Attach lua debugger (and keep haka in foreground).
+.TP
+\fB\-\-no\-daemon\fP
+Do no run in the background
+.SH FILES
+\fB/var/run/haka.pid\fP records the pid of haka.
+.br
+\fB/var/run/haka-ctl.sock\fP is a socket used by hakactl(1).
+.SH AUTHORS
+Team HAKA - Arkoon
+.SH COPYRIGHT
+not defined yet

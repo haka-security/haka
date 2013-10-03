@@ -443,6 +443,12 @@ static int init(struct parameters *args)
 		}
 
 		interfaces_buf = strdup(interfaces);
+		if (!interfaces_buf) {
+			error(L"memory error");
+			cleanup();
+			return 1;
+		}
+
 		++count;
 	}
 
@@ -458,7 +464,7 @@ static int init(struct parameters *args)
 
 	{
 		int index = 0;
-		char *str, *ptr;
+		char *str, *ptr = NULL;
 		for (index = 0, str = interfaces_buf; index < count; index++, str = NULL) {
 			char *token = strtok_r(str, ",", &ptr);
 			assert(token != NULL);

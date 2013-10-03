@@ -25,11 +25,17 @@
 
 struct pcap_packet;
 
+struct pcap_capture {
+	pcap_t       *pd;
+	int           link_type;
+};
+
 struct packet_module_state {
-	pcap_t                     *pd;
+	uint32                      pd_count;
+	struct pcap_capture        *pd;
 	pcap_dumper_t              *pf;
-	int                         link_type;
 	uint64                      packet_id;
+	int                         link_type;
 	struct pcap_packet         *sent_head;
 	struct pcap_packet         *sent_tail;
 };
@@ -42,6 +48,7 @@ struct pcap_packet {
 	struct pcap_pkthdr          header;
 	u_char                     *data;
 	uint64                      id;
+	int                         link_type;
 	bool                        captured;
 };
 
@@ -59,39 +66,101 @@ struct linux_sll_header {
 
 
 /* Init parameters */
-static char *input_file;
-static char *input_iface;
-static char *output_file;
+static int    input_count;
+static char **inputs;
+static bool   input_is_iface;
+static char  *output_file;
 
 
 static void cleanup()
 {
-	free(input_iface);
-	free(input_file);
+	int i;
+
+	for (i=0; i<input_count; ++i) {
+		free(inputs[i]);
+	}
+
+	free(inputs);
 	free(output_file);
 }
 
 static int init(struct parameters *args)
 {
-	const char *input, *output, *interface;
+	const char *input, *output, *interfaces;
 
-	interface = parameters_get_string(args, "interfaces", NULL);
+	interfaces = parameters_get_string(args, "interfaces", NULL);
 	input = parameters_get_string(args, "file", NULL);
 
-	if ((interface && input) || !(interface || input)) {
+	if (interfaces) {
+		int count, i;
+		const char *iter;
+		char *interfaces_buf, *str, *ptr = NULL;
+
+		for (count = 0, iter = interfaces; *iter; ++iter) {
+			if (*iter == ',')
+				++count;
+		}
+
+		++count;
+
+		interfaces_buf = strdup(interfaces);
+		if (!interfaces_buf) {
+			error(L"memory error");
+			cleanup();
+			return 1;
+		}
+
+		input_count = count;
+		inputs = malloc(sizeof(char *)*count);
+		if (!inputs) {
+			free(interfaces_buf);
+			error(L"memory error");
+			cleanup();
+			return 1;
+		}
+
+		for (i = 0, str = interfaces_buf; i < count; i++, str=NULL) {
+			char *token = strtok_r(str, ",", &ptr);
+			assert(token != NULL);
+			inputs[i] = strdup(token);
+			if (!inputs[i]) {
+				free(interfaces_buf);
+				cleanup();
+				return 1;
+			}
+		}
+
+		free(interfaces_buf);
+
+		input_is_iface = true;
+	}
+	else if (input) {
+		input_count = 1;
+		inputs = malloc(sizeof(char *));
+		if (!inputs) {
+			error(L"memory error");
+			cleanup();
+			return 1;
+		}
+
+		inputs[0] = strdup(input);
+		if (!inputs[0]) {
+			error(L"memory error");
+			cleanup();
+			return 1;
+		}
+
+		input_is_iface = false;
+	}
+	else {
 		messagef(HAKA_LOG_ERROR, L"pcap", L"specifiy either a device or a pcap filename");
 		cleanup();
 		return 1;
 	}
 
-	if (interface)
-		input_iface = strdup(interface);
-
-	if (input)
-		input_file = strdup(input);
-
-	if ((output = parameters_get_string(args, "output", NULL)))
+	if ((output = parameters_get_string(args, "output", NULL))) {
 		output_file = strdup(output);
+	}
 
 	return 0;
 }
@@ -103,74 +172,59 @@ static bool multi_threaded()
 
 static void cleanup_state(struct packet_module_state *state)
 {
+	int i;
+
 	if (state->pf) {
 		pcap_dump_close(state->pf);
 		state->pf = NULL;
 	}
 
-	if (state->pd) {
-		pcap_close(state->pd);
-		state->pd = NULL;
+	for (i=0; i<state->pd_count; ++i) {
+		if (state->pd[i].pd) {
+			pcap_close(state->pd[i].pd);
+			state->pd[i].pd = NULL;
+		}
 	}
 
+	free(state->pd);
 	free(state);
 }
 
-static struct packet_module_state *init_state(int thread_id)
+static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 {
-	struct packet_module_state *state;
 	char errbuf[PCAP_ERRBUF_SIZE];
-
-	state = malloc(sizeof(struct packet_module_state));
-	if (!state) {
-		return NULL;
-	}
-
-	bzero(state, sizeof(struct packet_module_state));
 	bzero(errbuf, PCAP_ERRBUF_SIZE);
 
-	/* get a pcap descriptor from device */
-	if (input_iface) {
-		state->pd = pcap_open_live(input_iface, SNAPLEN, 1, 0, errbuf);
-		if (state->pd && (strlen(errbuf) > 0)) {
+	assert(input);
+
+	if (isiface) {
+		messagef(HAKA_LOG_INFO, L"pcap", L"listening on device %s", input);
+
+		pd->pd = pcap_open_live(input, SNAPLEN, 1, 0, errbuf);
+		if (pd->pd && (strlen(errbuf) > 0)) {
 			messagef(HAKA_LOG_WARNING, L"pcap", L"%s", errbuf);
 		}
 	}
-	/* get a pcap descriptor from a pcap file */
-	else if (state) {
-		state->pd = pcap_open_offline(input_file, errbuf);
-	}
 	else {
-		/* This case should never be reached */
-		assert(0);
+		messagef(HAKA_LOG_INFO, L"pcap", L"openning file '%s'", input);
+
+		pd->pd = pcap_open_offline(input, errbuf);
 	}
 
-	if (!state->pd) {
+	if (!pd->pd) {
 		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errbuf);
-		cleanup_state(state);
-		return NULL;
-	}
-
-	if (output_file) {
-		/* open pcap savefile */
-		state->pf = pcap_dump_open(state->pd, output_file);
-		if (!state->pf) {
-			cleanup_state(state);
-			messagef(HAKA_LOG_ERROR, L"pcap", L"unable to dump on %s", output_file);
-			return NULL;
-		}
+		return false;
 	}
 
 	/* Determine the datalink layer type. */
-	if ((state->link_type = pcap_datalink(state->pd)) < 0)
+	if ((pd->link_type = pcap_datalink(pd->pd)) < 0)
 	{
-		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(state->pd));
-		cleanup_state(state);
-		return NULL;
+		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(pd->pd));
+		return false;
 	}
 
 	/* Check for supported datalink layer. */
-	switch (state->link_type)
+	switch (pd->link_type)
 	{
 	case DLT_EN10MB:
 	case DLT_NULL:
@@ -183,8 +237,54 @@ static struct packet_module_state *init_state(int thread_id)
 	case DLT_PPP:
 	default:
 		messagef(HAKA_LOG_ERROR, L"pcap", L"%s", "unsupported data link");
-		cleanup_state(state);
+		return false;
+	}
+
+	return true;
+}
+
+static struct packet_module_state *init_state(int thread_id)
+{
+	struct packet_module_state *state;
+	int i;
+
+	assert(input_count > 0);
+
+	state = malloc(sizeof(struct packet_module_state));
+	if (!state) {
+		error(L"memory error");
 		return NULL;
+	}
+
+	bzero(state, sizeof(struct packet_module_state));
+
+	state->pd = malloc(sizeof(struct pcap_capture)*input_count);
+	if (!state->pd) {
+		error(L"memory error");
+		free(state);
+		return NULL;
+	}
+
+	state->pd_count = input_count;
+	bzero(state->pd, sizeof(struct pcap_capture)*input_count);
+
+	for (i=0; i<input_count; ++i) {
+		if (!open_pcap(&state->pd[i], inputs[i], input_is_iface)) {
+			cleanup_state(state);
+			return NULL;
+		}
+	}
+
+	state->link_type = state->pd[0].link_type;
+
+	if (output_file) {
+		/* open pcap savefile */
+		state->pf = pcap_dump_open(state->pd[0].pd, output_file);
+		if (!state->pf) {
+			cleanup_state(state);
+			messagef(HAKA_LOG_ERROR, L"pcap", L"unable to dump on %s", output_file);
+			return NULL;
+		}
 	}
 
 	state->packet_id = 0;
@@ -194,10 +294,6 @@ static struct packet_module_state *init_state(int thread_id)
 
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
-	struct pcap_pkthdr *header;
-	const u_char *p;
-	int ret;
-
 	/* first check if a packet is waiting in the sent queue */
 	if (state->sent_head) {
 		struct pcap_packet *packet = state->sent_head;
@@ -209,52 +305,94 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		return 0;
 	}
 	else {
-		/* read packet */
-		ret = pcap_next_ex(state->pd, &header, &p);
+		int i;
+		int ret;
+		fd_set read_set;
+		int max_fd = -1;
 
-		if(ret == -1) {
-			/* error while reading packet */
-			messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(state->pd));
-			return 1;
+		/* read packet */
+		FD_ZERO(&read_set);
+
+		for (i=0; i<state->pd_count; ++i) {
+			const int fd = pcap_get_selectable_fd(state->pd[i].pd);
+			if (fd < 0) {
+				messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errno_error(errno));
+				return 1;
+			}
+			else {
+				FD_SET(fd, &read_set);
+				if (fd > max_fd) max_fd = fd;
+			}
 		}
-		else if (ret == -2) {
-			/* end of pcap file */
+
+		ret = select(max_fd+1, &read_set, NULL, NULL, NULL);
+		if (ret < 0) {
+			messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errno_error(errno));
 			return 1;
 		}
 		else if (ret == 0) {
-			/* Timeout expired. */
 			return 0;
 		}
 		else {
-			struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
-			if (!packet) {
-				return ENOMEM;
+			struct pcap_capture *pd = NULL;
+			struct pcap_pkthdr *header;
+			const u_char *p;
+
+			for (i=0; i<state->pd_count; ++i) {
+				const int fd = pcap_get_selectable_fd(state->pd[i].pd);
+				if (FD_ISSET(fd, &read_set)) {
+					pd = &state->pd[i];
+					break;
+				}
 			}
 
-			memset(packet, 0, sizeof(struct pcap_packet));
+			assert(pd);
 
-			list_init(packet);
-
-			packet->data = malloc(header->caplen);
-			if (!packet->data) {
-				free(packet);
-				return ENOMEM;
+			ret = pcap_next_ex(pd->pd, &header, &p);
+			if (ret == -1) {
+				messagef(HAKA_LOG_ERROR, L"pcap", L"%s", pcap_geterr(pd->pd));
+				return 1;
 			}
+			else if (ret == -2) {
+				/* end of pcap file */
+				return 1;
+			}
+			else if (ret == 0) {
+				/* Timeout expired. */
+				return 0;
+			}
+			else {
+				struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
+				if (!packet) {
+					return ENOMEM;
+				}
 
-			/* fill packet data structure */
-			memcpy(packet->data, p, header->caplen);
-			packet->header = *header;
-			packet->state = state;
-			packet->captured = true;
-			packet->id = state->packet_id++;
-			packet->timestamp.secs = header->ts.tv_sec;
-			packet->timestamp.nsecs = header->ts.tv_usec*1000;
+				memset(packet, 0, sizeof(struct pcap_packet));
 
-			if (packet->header.caplen < packet->header.len)
-				messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
+				list_init(packet);
 
-			*pkt = (struct packet *)packet;
-			return 0;
+				packet->data = malloc(header->caplen);
+				if (!packet->data) {
+					free(packet);
+					return ENOMEM;
+				}
+
+				/* fill packet data structure */
+				memcpy(packet->data, p, header->caplen);
+				packet->header = *header;
+				packet->state = state;
+				packet->captured = true;
+				packet->link_type = pd->link_type;
+				packet->id = state->packet_id++;
+				packet->timestamp.secs = header->ts.tv_sec;
+				packet->timestamp.nsecs = header->ts.tv_usec*1000;
+
+				if (packet->header.caplen < packet->header.len)
+					messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
+
+				*pkt = (struct packet *)packet;
+				return 0;
+			}
 		}
 	}
 }
@@ -275,7 +413,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 
 static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 {
-	switch (pkt->state->link_type)
+	switch (pkt->link_type)
 	{
 	case DLT_LINUX_SLL:
 		{
@@ -437,6 +575,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	list_init(packet);
 	packet->state = state;
 	packet->captured = false;
+	packet->link_type = state->link_type;
 	time_gettimestamp(&packet->timestamp);
 
 	get_protocol(packet, &data_offset);
