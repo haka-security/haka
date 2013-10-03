@@ -1,7 +1,6 @@
 
 local states = {}
 
-
 states.Transition = class()
 
 function states.Transition:__init(type)
@@ -29,7 +28,7 @@ states.State = class()
 
 function states.State:__init(transitions)
 	self.transitions = transitions
-	
+
 	for t, f in pairs(transitions) do
 		assert(isa(t, states.Transition), "key must be a transition")
 		assert(type(f) == 'function', "value must be a function")
@@ -52,11 +51,11 @@ function states.StateMachine:compile()
 	if not self._state_machine then
 		local state_machine = haka.state_machine.state_machine(self._name)
 		local state_table = {}
-	
+
 		for name, state in pairs(self) do
 			if name ~= "INITIAL" and isa(state, states.State) then
 				local new_state = state_machine:create_state(name)
-				
+
 				for t, f in pairs(state.transitions) do
 					if t.type == 'TIMEOUT' then
 						new_state:transition_timeout(t.timeout, f)
@@ -72,9 +71,9 @@ function states.StateMachine:compile()
 						error("invalid state transition type")
 					end
 				end
-				
+
 				state_table[name] = new_state
-				
+
 				if state == self.INITIAL then
 					state_machine.initial = new_state
 					state_table.INITIAL = new_state
@@ -84,9 +83,9 @@ function states.StateMachine:compile()
 
 		state_table.ERROR = state_machine.error_state
 		state_table.FINISH = state_machine.finish_state
-		
+
 		state_machine:compile()
-		
+
 		self._state_machine = state_machine
 		self._state_table = state_table
 	end

@@ -12,7 +12,7 @@ end
 
 static(grammar.Entity).getoption = function (cls, opt)
 	local v
-	
+
 	if cls._options then
 		v = cls._options[opt]
 		if v then return v end

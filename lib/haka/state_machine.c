@@ -50,12 +50,12 @@ struct state_machine {
 };
 
 struct state_machine_instance {
-	struct state_machine  *state_machine;
-	struct state          *current;
+	struct state_machine         *state_machine;
+	struct state                 *current;
 	struct state_machine_context *context;
-	struct vector          timers;
-	int                    used_timer;
-	bool                   in_transition;
+	struct vector                 timers;
+	int                           used_timer;
+	bool                          in_transition;
 };
 
 struct timeout_data {
@@ -297,8 +297,9 @@ static struct state *do_transition(struct state_machine_instance *instance, stru
 
 static struct state *state_machine_leave_state(struct state_machine_instance *instance)
 {
+	struct state *newstate = NULL;
+
 	if (instance->current) {
-		struct state *newstate = NULL;
 		int i;
 		for (i=0; i<instance->used_timer; ++i) {
 			struct timeout_data *t = vector_get(&instance->timers, struct timeout_data, i);
@@ -314,10 +315,8 @@ static struct state *state_machine_leave_state(struct state_machine_instance *in
 		}
 
 		instance->current = NULL;
-
-		return newstate;
 	}
-	return NULL;
+	return newstate;
 }
 
 static void transition_timeout(int count, void *_data)
@@ -386,8 +385,8 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 				for (i=tcount; i<count; ++i) {
 					struct timeout_data *timer = vector_push(&instance->timers, struct timeout_data);
 					if (!timer) {
-						error(L"memory error");
-						// TODO
+						message(HAKA_LOG_ERROR, MODULE, clear_error());
+						state_machine_leave_state(instance);
 						return;
 					}
 
@@ -396,8 +395,10 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 
 					timer->timer = timer_init(transition_timeout, timer);
 					if (!timer->timer) {
+						vector_pop(&instance->timers);
 						assert(check_error());
-						// TODO
+						message(HAKA_LOG_ERROR, MODULE, clear_error());
+						state_machine_leave_state(instance);
 						return;
 					}
 				}

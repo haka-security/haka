@@ -69,7 +69,7 @@ function class(super)
 		for c in class_hierarchy(self.__class) do
 			v = rawget(c, key)
 			if v then return v end
-			
+
 			v = c.__property.get[key]
 			if v then return v(self) end
 		end
@@ -80,7 +80,7 @@ function class(super)
 			v = c.__property.set[key]
 			if v then return v(self, value) end
 		end
-		
+
 		rawset(self, key, value)
 	end
 	cls.__static = {}

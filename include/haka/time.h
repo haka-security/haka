@@ -8,8 +8,8 @@
 
 
 struct time {
-	time_t       secs;
-	uint32       nsecs;
+	time_t       secs;   /* seconds */
+	uint32       nsecs;  /* nano-seconds */
 };
 
 void       time_build(struct time *t, double secs);

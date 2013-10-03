@@ -108,8 +108,6 @@ void *_vector_push(struct vector *v, size_t elemsize)
 {
 	if (v->count == v->allocated_count) {
 		if (!vector_grow(v)) {
-			// TODO: need better handling of this error
-			assert(0);
 			return NULL;
 		}
 	}
