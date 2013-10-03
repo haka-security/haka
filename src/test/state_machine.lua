@@ -11,8 +11,9 @@ machine.state1 = machine:state {
 		context.state = "state1"
 		context.count = 0
 	end,
-	[haka.state_machine.on_input()] = function (states, context)
-		return states.state2
+	[haka.state_machine.on_input()] = function (states, context, input)
+		print("input received:", input)
+		return states.state4
 	end,
 	[haka.state_machine.on_timeout(0.5)] = function (states, context)
 		context.count = context.count + 1
@@ -44,21 +45,29 @@ machine.state3 = machine:state {
 	end,
 }
 
+machine.state4 = machine:state {
+	[haka.state_machine.on_enter] = function (states, context)
+		return states.state1
+	end
+}
+
 machine.INITIAL = machine.state1
 
 local context = {}
 local instance = machine:instanciate(context)
 
--- Sleep utility function
-local clock = os.clock
-function sleep(n)  -- seconds
-	local t0 = clock()
-	while clock() - t0 <= n do end
-end
-
 haka.rule {
 	hooks = { 'ipv4-up' },
 	eval = function (self, pkt)
-		sleep(0.2)
+		if not context.input then
+			instance:input(string.format("hello from state '%s'", instance.state))
+			context.input = true
+		else
+			local count = 0
+			while instance.state do
+				-- busy wait
+				count = count+1
+			end
+		end
 	end
 }

@@ -18,12 +18,12 @@
  */
 
 enum transition_type {
+	TRANSITION_NONE = 0,
 	TRANSITION_ERROR,
 	TRANSITION_TIMEOUT,
 	TRANSITION_INPUT,
 	TRANSITION_ENTER,
-	TRANSITION_LEAVE,
-	TRANSITION_NONE
+	TRANSITION_LEAVE
 };
 
 struct transition {
@@ -140,6 +140,7 @@ bool state_add_timeout_transition(struct state *state, struct time *timeout, str
 	trans->type = TRANSITION_TIMEOUT;
 	trans->timeout = *timeout;
 	trans->callback = data;
+	assert(data->callback);
 	return true;
 }
 
@@ -147,13 +148,15 @@ bool state_set_error_transition(struct state *state, struct transition_data *dat
 {
 	state->error.type = TRANSITION_ERROR;
 	state->error.callback = data;
+	assert(data->callback);
 	return true;
 }
 
 bool state_set_input_transition(struct state *state, struct transition_data *data)
 {
-	state->error.type = TRANSITION_INPUT;
-	state->error.callback = data;
+	state->input.type = TRANSITION_INPUT;
+	state->input.callback = data;
+	assert(data->input_callback);
 	return true;
 }
 
@@ -161,6 +164,7 @@ bool state_set_enter_transition(struct state *state, struct transition_data *dat
 {
 	state->enter.type = TRANSITION_ENTER;
 	state->enter.callback = data;
+	assert(data->callback);
 	return true;
 }
 
@@ -168,6 +172,7 @@ bool state_set_leave_transition(struct state *state, struct transition_data *dat
 {
 	state->leave.type = TRANSITION_LEAVE;
 	state->leave.callback = data;
+	assert(data->callback);
 	return true;
 }
 
@@ -191,11 +196,11 @@ static struct state _state_machine_finish_state = {
 };
 struct state * const state_machine_finish_state = &_state_machine_finish_state;
 
-bool state_machine_set_initial(struct state_machine *machine, struct state *initial)
+const char *state_name(struct state *state)
 {
-	machine->initial = initial;
-	return true;
+	return state->name;
 }
+
 
 /*
  * State machine
@@ -259,6 +264,12 @@ bool state_machine_compile(struct state_machine *machine)
 
 		machine->compiled = true;
 	}
+	return true;
+}
+
+bool state_machine_set_initial(struct state_machine *machine, struct state *initial)
+{
+	machine->initial = initial;
 	return true;
 }
 
@@ -503,15 +514,17 @@ void state_machine_instance_error(struct state_machine_instance *instance)
 void state_machine_instance_input(struct state_machine_instance *instance, void *input)
 {
 	struct state *newstate;
-	assert(instance->current);
+	struct transition *trans = &instance->current->input;
 
-	if (have_transition(instance, &instance->current->input)) {
-		messagef(HAKA_LOG_DEBUG, MODULE, L"%s: input transition on state '%s'",
-				instance->state_machine->name, instance->current->name);
+	if (instance->current) {
+		if (trans->callback && trans->callback->input_callback) {
+			messagef(HAKA_LOG_DEBUG, MODULE, L"%s: input transition on state '%s'",
+					instance->state_machine->name, instance->current->name);
 
-		newstate = do_transition(instance, &instance->current->input);
-		if (newstate) {
-			state_machine_instance_update(instance, newstate);
+			newstate = trans->callback->input_callback(instance, trans->callback, input);
+			if (newstate) {
+				state_machine_instance_update(instance, newstate);
+			}
 		}
 	}
 }
@@ -524,4 +537,9 @@ struct state_machine *state_machine_instance_get(struct state_machine_instance *
 struct state_machine_context *state_machine_instance_context(struct state_machine_instance *instance)
 {
 	return instance->context;
+}
+
+struct state *state_machine_instance_state(struct state_machine_instance *instance)
+{
+	return instance->current;
 }
