@@ -66,10 +66,10 @@ local function string_compare(a, b)
 			elseif a:byte(i) > b:byte(i) then
 				return false
 			end
-			
+
 			i = i+1
 		end
-		
+
 		return false
 	else
 		return a < b
@@ -215,6 +215,116 @@ local function build_headers(stream, headers, headers_order)
 	end
 end
 
+
+function uri_split(uri)
+	local splitted_uri = {}
+	local args = {}
+	local requested_uri = nil
+
+	-- uri = _request_uri [ ?query ] [ #fragment ]
+	requested_uri, splitted_uri.query, splitted_uri.fragment =
+	    string.match(uri, '([^?]*)[%?]*([^#]*)[#]*(.*)')
+
+	-- args
+	if (splitted_uri.query) then
+		string.gsub(splitted_uri.query, '([^=&]+)=([^&?]*)&?',
+		    function(p, q) args[p] = q return '' end)
+	end
+	splitted_uri.args = args
+
+	-- scheme
+	local temp = string.gsub(requested_uri, '^(%a*)://',
+	    function(p) splitted_uri.scheme = p return '' end)
+
+	-- authority and path
+	if (splitted_uri.scheme) then
+		splitted_uri.authority, splitted_uri.path = string.match(temp, '([^/]*)(/.*)$')
+	else
+		splitted_uri.path = requested_uri
+	end
+
+	-- authority = [ userinfo @ ] host [ : port ]
+	local auth = splitted_uri.authority
+	if not auth then return splitted_uri end
+
+	-- userinfo
+	auth = string.gsub(auth, "^([^@]*)@",
+	   function(p) splitted_uri.userinfo = p return '' end)
+
+	-- port
+	auth = string.gsub(auth, ":([^:]*)$",
+	   function(p) splitted_uri.port = p return '' end)
+
+	-- host
+	if auth ~= '' then splitted_uri.host = host end
+
+	-- userinfo = user : password (deprecated usage)
+	if not splitted_uri.userinfo then return splitted_uri end
+	local user, pass = string.match(splitted_uri.userinfo, '(.*):(.*)')
+	if user then
+		splitted_uri.user = user
+		splitted_uri.pass = pass
+	end
+
+	return splitted_uri
+end
+
+function uri_rebuild(splitted_uri)
+	local uri = ''
+
+	-- fragment
+	if (splitted_uri.fragment) then uri = '#' .. splitted_uri.fragment .. uri end
+
+	-- query
+	if (splitted_uri.query) then
+		local q = ''
+		for k, v in pairs(splitted_uri.args) do
+			q = q .. k .. '=' .. v .. '&'
+		end
+		if q ~= '' then q = q:sub(1, q:len()-1) end
+		uri = '?' .. q .. uri
+	end
+
+	-- path
+	if (splitted_uri.path) then uri = splitted_uri.path .. uri end
+
+	-- authority
+	local userinfo = ''
+	if (splitted_uri.user and splitted_uri.pass) then
+		userinfo = splitted_uri.user .. ':' .. splitted_uri.pass .. '@'
+	end
+
+	local port = ''
+	if splitted_uri.port then port = ':' .. splitted_uri.port end
+
+	local authority = ''
+	if splitted_uri.host then
+		authority = userinfo .. host .. port
+	end
+
+	-- scheme
+	if (splitted_uri.scheme and splitted_uri.authority) then
+		uri = uri .. splitted_uri.scheme .. '://' .. auhtority
+	end
+
+	return uri
+end
+
+function cookies_split(cookie_line)
+	local cookies = {}
+	if cookie_line then
+		string.gsub(cookie_line, '([^=;]+)=([^;?]*);?',
+		    function(p, q) cookies[p] = q return '' end)
+	end
+	return cookies
+end
+
+
+module.uri = {}
+module.cookies = {}
+module.uri.split = uri_split
+module.cookies.split = cookies_split
+
 local function forge(http)
 	local tcp = http._tcp_stream
 	if tcp then
@@ -319,10 +429,30 @@ haka.dissector {
 				if stream.stream:available() > 0 then
 					if http._state == 0 then
 						http.request = {}
+						http.request.split_uri = function (self)
+							if self._splitted_uri then
+								return self._splitted_uri
+							else
+								self._splitted_uri = uri_split(self.uri)
+								self._splitted_uri.to_string = function (self)
+									return uri_rebuild(self)
+								end
+								return self._splitted_uri
+							end
+						end
+
+						http.request.split_cookies = function (self)
+							if self._cookies then
+								return self._cookies
+							else
+								self._cookies = cookies_split(self.headers['Cookie'])
+								return self._cookies
+							end
+						end
+
 						http.response = nil
 						http._state = 1
 					end
-
 					parse(http, http.request, parse_request, "request", 2)
 				end
 			elseif http.request then
