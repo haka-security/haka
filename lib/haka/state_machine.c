@@ -273,7 +273,7 @@ bool state_machine_compile(struct state_machine *machine)
 		}
 
 		if (!machine->initial) {
-			messagef(HAKA_LOG_ERROR, MODULE, L"%s: no initial state", machine->name);
+			error(L"%s: no initial state", machine->name);
 			return false;
 		}
 
