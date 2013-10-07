@@ -327,8 +327,13 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 		ret = select(max_fd+1, &read_set, NULL, NULL, NULL);
 		if (ret < 0) {
-			messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errno_error(errno));
-			return 1;
+			if (errno == EINTR) {
+				return 0;
+			}
+			else {
+				messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errno_error(errno));
+				return 1;
+			}
 		}
 		else if (ret == 0) {
 			return 0;
