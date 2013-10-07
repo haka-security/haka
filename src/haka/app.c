@@ -38,9 +38,8 @@ static void fatal_error_signal(int sig)
 {
 	static volatile sig_atomic_t fatal_error_in_progress = 0;
 
-	printf("\n");
-
 	if (sig == SIGINT) {
+		printf("\n");
 		if (luadebug_debugger_breakall()) {
 			message(HAKA_LOG_FATAL, L"debug", L"break (hit ^C again to kill)");
 			return;
@@ -150,7 +149,8 @@ void prepare(int threadcount, bool attach_debugger)
 	}
 
 	thread_states = thread_pool_create(threadcount, packet_module, attach_debugger);
-	if (check_error()) {
+	if (!thread_states) {
+		assert(check_error());
 		message(HAKA_LOG_FATAL, L"core", clear_error());
 		clean_exit();
 		exit(1);

@@ -1,5 +1,8 @@
 
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -243,7 +246,7 @@ bool check_running_haka()
 		return false;
 	}
 
-	if (!kill(pid, 0) && errno == ESRCH) {
+	if (kill(pid, 0) == -1 && errno == ESRCH) {
 		return false;
 	}
 
@@ -251,10 +254,16 @@ bool check_running_haka()
 	return true;
 }
 
+static void terminate()
+{
+	_exit(2);
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;
 	FILE *pid_file = NULL;
+	pid_t parent = getpid();
 
 	initialize();
 
@@ -297,6 +306,30 @@ int main(int argc, char *argv[])
 		luadebug_user_release(&user);
 	}
 
+	if (daemonize) {
+		pid_t child;
+
+		child = fork();
+		if (child == -1) {
+			message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
+			fclose(pid_file);
+			clean_exit();
+			return 1;
+		}
+
+		if (child != 0) {
+			int status;
+
+			signal(SIGTERM, terminate);
+			signal(SIGINT, terminate);
+			signal(SIGQUIT, terminate);
+			signal(SIGHUP, terminate);
+
+			wait(&status);
+			_exit(2);
+		}
+	}
+
 	prepare(-1, lua_debugger);
 
 	pid_file = fopen(HAKA_PID_FILE, "w");
@@ -304,20 +337,6 @@ int main(int argc, char *argv[])
 		message(HAKA_LOG_FATAL, L"core", L"cannot create pid file");
 		clean_exit();
 		return 1;
-	}
-
-	if (daemonize) {
-		message(HAKA_LOG_INFO, L"core", L"switch to background");
-
-		if (daemon(1, 0)) {
-			message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
-			fclose(pid_file);
-			clean_exit();
-			return 1;
-		}
-
-		luadebug_debugger_user(NULL);
-		luadebug_interactive_user(NULL);
 	}
 
 	if (!start_ctl_server()) {
@@ -330,6 +349,32 @@ int main(int argc, char *argv[])
 		fprintf(pid_file, "%i\n", pid);
 		fclose(pid_file);
 		pid_file = NULL;
+	}
+
+	if (daemonize) {
+		luadebug_debugger_user(NULL);
+		luadebug_interactive_user(NULL);
+
+		message(HAKA_LOG_INFO, L"core", L"switch to background");
+		enable_stdout_logging(false);
+
+		{
+			const int nullfd = open("/dev/null", O_RDONLY);
+			if (nullfd == -1) {
+				message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
+				fclose(pid_file);
+				clean_exit();
+				return 1;
+			}
+
+			dup2(nullfd, STDOUT_FILENO);
+			dup2(nullfd, STDERR_FILENO);
+			close(STDIN_FILENO);
+
+			enable_stdout_logging(false);
+		}
+
+		kill(parent, SIGHUP);
 	}
 
 	start();
