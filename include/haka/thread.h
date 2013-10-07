@@ -103,6 +103,15 @@ bool semaphore_wait(semaphore_t *semaphore);
 bool semaphore_post(semaphore_t *semaphore);
 
 
+/* Barrier */
+
+typedef pthread_barrier_t barrier_t;
+
+bool barrier_init(barrier_t *barrier, uint32 count);
+bool barrier_destroy(barrier_t *barrier);
+bool barrier_wait(barrier_t *barrier);
+
+
 /* Thread local storage */
 
 typedef pthread_key_t local_storage_t;

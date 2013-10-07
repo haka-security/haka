@@ -322,6 +322,41 @@ bool semaphore_post(semaphore_t *semaphore)
 
 
 /*
+ * Barrier
+ */
+
+bool barrier_init(barrier_t *barrier, uint32 count)
+{
+	const int err = pthread_barrier_init(barrier, NULL, count);
+	if (err) {
+		error(L"barrier error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool barrier_destroy(barrier_t *barrier)
+{
+	const int err = pthread_barrier_destroy(barrier);
+	if (err) {
+		error(L"barrier error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool barrier_wait(barrier_t *barrier)
+{
+	const int err = pthread_barrier_wait(barrier);
+	if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
+		error(L"barrier error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+
+/*
  * Thread local storage.
  */
 
