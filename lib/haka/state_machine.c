@@ -22,6 +22,7 @@ enum transition_type {
 	TRANSITION_ERROR,
 	TRANSITION_TIMEOUT,
 	TRANSITION_INPUT,
+	TRANSITION_OUTPUT,
 	TRANSITION_ENTER,
 	TRANSITION_LEAVE
 };
@@ -37,6 +38,7 @@ struct state {
 	char                   *name;
 	struct transition       error;
 	struct transition       input;
+	struct transition       output;
 	struct transition       enter;
 	struct transition       leave;
 	struct vector           timeouts;
@@ -82,6 +84,7 @@ static void state_destroy(struct state *state)
 	vector_destroy(&state->timeouts);
 	transition_destroy(&state->error);
 	transition_destroy(&state->input);
+	transition_destroy(&state->output);
 	transition_destroy(&state->enter);
 	transition_destroy(&state->leave);
 	free(state->name);
@@ -123,6 +126,8 @@ struct state *state_machine_create_state(struct state_machine *state_machine, co
 	state->error.callback = NULL;
 	state->input.type = TRANSITION_NONE;
 	state->input.callback = NULL;
+	state->output.type = TRANSITION_NONE;
+	state->output.callback = NULL;
 	state->enter.type = TRANSITION_NONE;
 	state->enter.callback = NULL;
 	state->leave.type = TRANSITION_NONE;
@@ -160,6 +165,14 @@ bool state_set_input_transition(struct state *state, struct transition_data *dat
 	return true;
 }
 
+bool state_set_output_transition(struct state *state, struct transition_data *data)
+{
+	state->output.type = TRANSITION_OUTPUT;
+	state->output.callback = data;
+	assert(data->input_callback);
+	return true;
+}
+
 bool state_set_enter_transition(struct state *state, struct transition_data *data)
 {
 	state->enter.type = TRANSITION_ENTER;
@@ -180,6 +193,7 @@ static struct state _state_machine_error_state = {
 	name: "ERROR",
 	error: {0},
 	input: {0},
+	output: {0},
 	enter: {0},
 	leave: {0},
 	timeouts: VECTOR_INIT(struct transition, transition_destroy)
@@ -190,6 +204,7 @@ static struct state _state_machine_finish_state = {
 	name: "FINISH",
 	error: {0},
 	input: {0},
+	output: {0},
 	enter: {0},
 	leave: {0},
 	timeouts: VECTOR_INIT(struct transition, transition_destroy)
@@ -496,38 +511,45 @@ void state_machine_instance_update(struct state_machine_instance *instance, stru
 	}
 }
 
-void state_machine_instance_error(struct state_machine_instance *instance)
+static void _state_machine_instance_transition(struct state_machine_instance *instance,
+		struct transition *trans, bool input_callback, const char *type, void *arg)
 {
 	struct state *newstate;
-	assert(instance->current);
 
-	if (have_transition(instance, &instance->current->error)) {
-		messagef(HAKA_LOG_DEBUG, MODULE, L"%s: error transition on state '%s'",
-				instance->state_machine->name, instance->current->name);
+	if (instance->current) {
+		if (trans->callback) {
+			if (input_callback ? trans->callback->input_callback != NULL : trans->callback->callback != NULL) {
+				messagef(HAKA_LOG_DEBUG, MODULE, L"%s: %s transition on state '%s'",
+						instance->state_machine->name, type, instance->current->name);
 
-		newstate = do_transition(instance, &instance->current->error);
-		if (newstate) {
-			state_machine_instance_update(instance, newstate);
+				if (input_callback) {
+					newstate = trans->callback->input_callback(instance, trans->callback, arg);
+				}
+				else {
+					newstate = trans->callback->callback(instance, trans->callback);
+				}
+
+				if (newstate) {
+					state_machine_instance_update(instance, newstate);
+				}
+			}
 		}
 	}
 }
 
+void state_machine_instance_error(struct state_machine_instance *instance)
+{
+	_state_machine_instance_transition(instance, &instance->current->error, false, "error", NULL);
+}
+
 void state_machine_instance_input(struct state_machine_instance *instance, void *input)
 {
-	struct state *newstate;
-	struct transition *trans = &instance->current->input;
+	_state_machine_instance_transition(instance, &instance->current->input, true, "input", input);
+}
 
-	if (instance->current) {
-		if (trans->callback && trans->callback->input_callback) {
-			messagef(HAKA_LOG_DEBUG, MODULE, L"%s: input transition on state '%s'",
-					instance->state_machine->name, instance->current->name);
-
-			newstate = trans->callback->input_callback(instance, trans->callback, input);
-			if (newstate) {
-				state_machine_instance_update(instance, newstate);
-			}
-		}
-	}
+void state_machine_instance_output(struct state_machine_instance *instance, void *output)
+{
+	_state_machine_instance_transition(instance, &instance->current->output, true, "output", output);
 }
 
 struct state_machine *state_machine_instance_get(struct state_machine_instance *instance)

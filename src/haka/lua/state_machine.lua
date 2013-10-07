@@ -9,7 +9,13 @@ end
 
 function states.on_input(value)
 	local transition = states.Transition:new('INPUT')
-	transition.input = value
+	transition.datatype = value
+	return transition
+end
+
+function states.on_output(value)
+	local transition = states.Transition:new('OUTPUT')
+	transition.datatype = value
 	return transition
 end
 
@@ -63,12 +69,14 @@ function states.StateMachine:compile()
 						new_state:transition_error(f)
 					elseif t.type == 'INPUT' then
 						new_state:transition_input(f)
+					elseif t.type == 'OUTPUT' then
+						new_state:transition_output(f)
 					elseif t.type == 'ENTER' then
 						new_state:transition_enter(f)
 					elseif t.type == 'LEAVE' then
 						new_state:transition_leave(f)
 					else
-						error("invalid state transition type")
+						error(string.format("invalid state transition type '%s'", t.type))
 					end
 				end
 

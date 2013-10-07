@@ -46,7 +46,8 @@ machine.state3 = machine:state {
 }
 
 machine.state4 = machine:state {
-	[haka.state_machine.on_enter] = function (states, context)
+	[haka.state_machine.on_output()] = function (states, context, output)
+		print("output received:", output)
 		return states.state1
 	end
 }
@@ -62,6 +63,9 @@ haka.rule {
 		if not context.input then
 			instance:input(string.format("hello from state '%s'", instance.state))
 			context.input = true
+		elseif not context.output then
+			instance:output(string.format("hello from state '%s'", instance.state))
+			context.output = true
 		else
 			local count = 0
 			while instance.state do

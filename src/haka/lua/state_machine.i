@@ -189,6 +189,14 @@ struct state {
 			state_set_input_transition($self, trans);
 		}
 
+		void transition_output(struct lua_ref func)
+		{
+			struct transition_data *trans = lua_transition_data_new(&func, INPUT_TRANSITION);
+			if (!trans) return;
+
+			state_set_output_transition($self, trans);
+		}
+
 		void transition_leave(struct lua_ref func)
 		{
 			struct transition_data *trans = lua_transition_data_new(&func, OTHER_TRANSITION);
@@ -296,6 +304,13 @@ struct state_machine_instance {
 			lua_ref_clear(&input);
 		}
 
+		%rename(output) _output;
+		void _output(struct lua_ref output)
+		{
+			state_machine_instance_output($self, &output);
+			lua_ref_clear(&output);
+		}
+
 		%immutable;
 		const char *state;
 	}
@@ -337,6 +352,7 @@ struct state *state_machine_finish_state_get(struct state_machine *machine)
 
 	this.new = state_machine_lua.new
 	this.on_input = state_machine_lua.on_input
+	this.on_output = state_machine_lua.on_output
 	this.on_timeout = state_machine_lua.on_timeout
 	this.on_error = state_machine_lua.on_error
 	this.on_enter = state_machine_lua.on_enter
