@@ -55,20 +55,23 @@ machine.state4 = machine:state {
 machine.INITIAL = machine.state1
 
 local context = {}
-local instance = machine:instanciate(context)
 
 haka.rule {
 	hooks = { 'ipv4-up' },
 	eval = function (self, pkt)
+		if not context.instance then
+			context.instance = machine:instanciate(context)
+		end
+
 		if not context.input then
-			instance:input(string.format("hello from state '%s'", instance.state))
+			context.instance:input(string.format("hello from state '%s'", context.instance.state))
 			context.input = true
 		elseif not context.output then
-			instance:output(string.format("hello from state '%s'", instance.state))
+			context.instance:output(string.format("hello from state '%s'", context.instance.state))
 			context.output = true
 		else
 			local count = 0
-			while instance.state do
+			while context.instance.state do
 				-- busy wait
 				count = count+1
 			end

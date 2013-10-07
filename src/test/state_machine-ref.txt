@@ -1,3 +1,5 @@
+debug state machine: test: enter transition on state 'state1'
+debug state machine: test: initial state 'state1'
 debug state machine: test: input transition on state 'state1'
 input received: hello from state 'state1'
 debug state machine: test: transition from state 'state1' to state 'state4'
