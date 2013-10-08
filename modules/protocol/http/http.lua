@@ -3,6 +3,18 @@ local module = {}
 
 local str = string.char
 
+function contains(table, elem)
+	return table[elem] ~= nil
+end
+
+function dict(table)
+	local ret = {}
+	for _, v in pairs(table) do
+		ret[v] = true
+	end
+	return ret
+end
+
 local function getchar(stream)
 	local char
 
@@ -236,12 +248,7 @@ function uri_split(uri)
 	local temp = string.gsub(requested_uri, '^(%a*)://',
 	    function(p) splitted_uri.scheme = p return '' end)
 
-	-- authority and path
-	if (splitted_uri.scheme) then
-		splitted_uri.authority, splitted_uri.path = string.match(temp, '([^/]*)(/.*)$')
-	else
-		splitted_uri.path = requested_uri
-	end
+		splitted_uri.authority, splitted_uri.path = string.match(temp, '([^/]*)([/]*.*)$')
 
 	-- authority = [ userinfo @ ] host [ : port ]
 	local auth = splitted_uri.authority
@@ -256,7 +263,7 @@ function uri_split(uri)
 	   function(p) splitted_uri.port = p return '' end)
 
 	-- host
-	if auth ~= '' then splitted_uri.host = host end
+	if auth ~= '' then splitted_uri.host = auth end
 
 	-- userinfo = user : password (deprecated usage)
 	if not splitted_uri.userinfo then return splitted_uri end
@@ -273,10 +280,12 @@ function uri_rebuild(splitted_uri)
 	local uri = ''
 
 	-- fragment
-	if (splitted_uri.fragment) then uri = '#' .. splitted_uri.fragment .. uri end
+	if (splitted_uri.fragment and splitted_uri.fragment ~= '') then
+		uri = '#' .. splitted_uri.fragment .. uri
+	end
 
 	-- query
-	if (splitted_uri.query) then
+	if (splitted_uri.query and splitted_uri.query ~= '') then
 		local q = ''
 		for k, v in pairs(splitted_uri.args) do
 			q = q .. k .. '=' .. v .. '&'
@@ -299,12 +308,12 @@ function uri_rebuild(splitted_uri)
 
 	local authority = ''
 	if splitted_uri.host then
-		authority = userinfo .. host .. port
+		authority = userinfo .. splitted_uri.host .. port
 	end
 
 	-- scheme
 	if (splitted_uri.scheme and splitted_uri.authority) then
-		uri = uri .. splitted_uri.scheme .. '://' .. auhtority
+		uri = splitted_uri.scheme .. '://' .. authority .. uri
 	end
 
 	return uri
@@ -320,9 +329,92 @@ function cookies_split(cookie_line)
 end
 
 
+local _prefixes = {{'%.%./', ''}, {'%./', ''}, {'/%.%./', '/'}, {'/%.%.', '/'}, {'/%./', '/'}, {'/%.', '/'}}
+
+function remove_dot_segments(path)
+	output = {}
+	slash = ''
+	nb = 0
+	if path:sub(1,1) == '/' then slash = '/' end
+	while (path ~= '') do
+		index = 0
+		for _, prefix in pairs(_prefixes) do
+			path, nb = path:gsub('^' .. prefix[1], prefix[2])
+			if nb > 0 then
+				if index == 2 or index == 3 then
+					table.remove(output, #output)
+				end
+				break
+			end
+			index = index + 1
+		end
+		if nb == 0 then
+			if path:sub(1,1) == '/' then path = path:sub(2) end
+			left, right = path:match('([^/]*)([/]?.*)')
+			table.insert(output, left)
+			path = right
+		end
+	end
+	return slash .. table.concat(output, '/')
+end
+
+local _unreserved = dict({45, 46, 95, 126})
+
+function uri_safe_decode(uri)
+	uri = string.gsub(uri, '%%(%x%x)',
+	    function(p)
+			local val = tonumber(p, 16)
+			if (val > 47 and val < 58) or
+			   (val > 64 and val < 91) or
+			   (val > 96 and val < 123) or
+			   (contains(_unreserved, val)) then
+				return str(val)
+			else
+				return '%' .. string.upper(p)
+		    end
+	    end)
+	return uri
+end
+
+function uri_normalize(uri)
+
+	-- decode percent-encoded octets of unresserved chars
+	-- capitalize letters in escape sequences
+	uri = uri_safe_decode(uri)
+
+	-- split uri
+	splitted_uri = uri_split(uri)
+
+	-- use http as default scheme
+	if (not splitted_uri.scheme) and splitted_uri.authority then
+		splitted_uri.scheme = 'http'
+	end
+
+	-- scheme and host are not case sensitive
+	if splitted_uri.scheme then splitted_uri.scheme = string.lower(splitted_uri.scheme) end
+	if splitted_uri.host then splitted_uri.host = string.lower(splitted_uri.host) end
+
+	-- remove default port
+	if splitted_uri.port and splitted_uri.port == '80' then
+		splitted_uri.port = nil
+	end
+
+	-- add '/' to path
+	if splitted_uri.scheme == 'http' and (not splitted_uri.path or splitted_uri.path == '') then
+		splitted_uri.path = '/'
+	end
+
+	-- normalize path according to rfc 3986
+	if splitted_uri.path then splitted_uri.path = remove_dot_segments(splitted_uri.path) end
+
+	-- putting all together
+	return uri_rebuild(splitted_uri)
+end
+
 module.uri = {}
 module.cookies = {}
 module.uri.split = uri_split
+module.uri.normalize = uri_normalize
 module.cookies.split = cookies_split
 
 local function forge(http)
