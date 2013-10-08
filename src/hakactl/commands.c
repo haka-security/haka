@@ -86,6 +86,9 @@ static bool display_log_line(int fd)
 
 	stdout_message(level, module, msg);
 
+	/* Force a fflush in case with are redirected to a file */
+	fflush(stdout);
+
 	free(module);
 	free(msg);
 
