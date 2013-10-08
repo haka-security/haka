@@ -25,6 +25,8 @@ enum {
 	STATE_ERROR,
 	STATE_FINISHED,
 	STATE_RUNNING,
+	STATE_CANCELED,
+	STATE_JOINED,
 };
 
 struct thread_state {
@@ -143,6 +145,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 
 	state->thread_id = thread_id;
 	state->packet_module = packet_module;
+	state->state = STATE_NOTSARTED;
 
 	messagef(HAKA_LOG_INFO, L"core", L"initializing thread %d", thread_id);
 
@@ -393,9 +396,11 @@ void thread_pool_wait(struct thread_pool *pool)
 	int i;
 
 	for (i=0; i<pool->count; ++i) {
-		if (pool->threads[i] && pool->threads[i]->state > STATE_NOTSARTED) {
+		if (pool->threads[i] && pool->threads[i]->state != STATE_NOTSARTED &&
+		    pool->threads[i]->state != STATE_JOINED) {
 			void *ret;
 			thread_join(pool->threads[i]->thread, &ret);
+			pool->threads[i]->state = STATE_JOINED;
 		}
 	}
 }
@@ -408,6 +413,7 @@ void thread_pool_cancel(struct thread_pool *pool)
 		for (i=0; i<pool->count; ++i) {
 			if (pool->threads[i] && pool->threads[i]->state == STATE_RUNNING) {
 				thread_cancel(pool->threads[i]->thread);
+				pool->threads[i]->state = STATE_CANCELED;
 			}
 		}
 
