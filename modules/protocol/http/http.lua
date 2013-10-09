@@ -231,48 +231,59 @@ end
 function uri_split(uri)
 	local splitted_uri = {}
 	local args = {}
-	local requested_uri = nil
+	local core_uri = nil
+	local query, fragment, path, authority
 
-	-- uri = _request_uri [ ?query ] [ #fragment ]
-	requested_uri, splitted_uri.query, splitted_uri.fragment =
+	-- uri = core_uri [ ?query ] [ #fragment ]
+	core_uri, query, fragment =
 	    string.match(uri, '([^?]*)[%?]*([^#]*)[#]*(.*)')
 
-	-- args
-	if (splitted_uri.query) then
+	-- query (+ split params)
+	if (query and query ~= '') then
+		splitted_uri.query = query
 		string.gsub(splitted_uri.query, '([^=&]+)=([^&?]*)&?',
 		    function(p, q) args[p] = q return '' end)
+		splitted_uri.args = args
 	end
-	splitted_uri.args = args
+
+	-- fragment
+	if (fragment and fragment ~= '') then
+		splitted_uri.fragment = fragment
+	end
 
 	-- scheme
-	local temp = string.gsub(requested_uri, '^(%a*)://',
-	    function(p) splitted_uri.scheme = p return '' end)
+	local temp = string.gsub(core_uri, '^(%a*)://',
+	    function(p) if p ~= '' then splitted_uri.scheme = p end return '' end)
 
-		splitted_uri.authority, splitted_uri.path = string.match(temp, '([^/]*)([/]*.*)$')
+	-- authority and path
+	authority, path = string.match(temp, '([^/]*)([/]*.*)$')
 
-	-- authority = [ userinfo @ ] host [ : port ]
-	local auth = splitted_uri.authority
-	if not auth then return splitted_uri end
-
-	-- userinfo
-	auth = string.gsub(auth, "^([^@]*)@",
-	   function(p) splitted_uri.userinfo = p return '' end)
-
-	-- port
-	auth = string.gsub(auth, ":([^:]*)$",
-	   function(p) splitted_uri.port = p return '' end)
-
-	-- host
-	if auth ~= '' then splitted_uri.host = auth end
-
-	-- userinfo = user : password (deprecated usage)
-	if not splitted_uri.userinfo then return splitted_uri end
-	local user, pass = string.match(splitted_uri.userinfo, '(.*):(.*)')
-	if user then
-		splitted_uri.user = user
-		splitted_uri.pass = pass
+	if (path and path ~= '') then
+		splitted_uri.path = path
 	end
 
+	-- authority = [ userinfo @ ] host [ : port ]
+	if not authority or authority == '' then
+		return splitted_uri
+	else
+		splitted_uri.authority = authority
+		-- userinfo
+		authority = string.gsub(authority, "^([^@]*)@",
+		    function(p) if p ~= '' then splitted_uri.userinfo = p end return '' end)
+		-- port
+		authority = string.gsub(authority, ":([^:]*)$",
+		    function(p) if p ~= '' then splitted_uri.port = p end return '' end)
+		-- host
+		if authority ~= '' then splitted_uri.host = authority end
+		-- userinfo = user : password (deprecated usage)
+		if not splitted_uri.userinfo then return splitted_uri end
+
+		local user, pass = string.match(splitted_uri.userinfo, '(.*):(.*)')
+		if user and user ~= '' then
+			splitted_uri.user = user
+			splitted_uri.pass = pass
+		end
+	end
 	return splitted_uri
 end
 
@@ -280,12 +291,12 @@ function uri_rebuild(splitted_uri)
 	local uri = ''
 
 	-- fragment
-	if (splitted_uri.fragment and splitted_uri.fragment ~= '') then
+	if (splitted_uri.fragment) then
 		uri = '#' .. splitted_uri.fragment .. uri
 	end
 
 	-- query
-	if (splitted_uri.query and splitted_uri.query ~= '') then
+	if (splitted_uri.query) then
 		local q = ''
 		for k, v in pairs(splitted_uri.args) do
 			q = q .. k .. '=' .. v .. '&'

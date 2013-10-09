@@ -14,4 +14,5 @@ if success then
 else
 	print("UNIT TEST FAILED")
 	print(msg)
+	error("Test failed")
 end
