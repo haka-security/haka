@@ -3,11 +3,11 @@ local module = {}
 
 local str = string.char
 
-function contains(table, elem)
+local function contains(table, elem)
 	return table[elem] ~= nil
 end
 
-function dict(table)
+local function dict(table)
 	local ret = {}
 	for _, v in pairs(table) do
 		ret[v] = true
@@ -227,27 +227,188 @@ local function build_headers(stream, headers, headers_order)
 	end
 end
 
+local _unreserved = dict({45, 46, 95, 126})
 
-function uri_split(uri)
+local function uri_safe_decode(uri)
+	local uri = string.gsub(uri, '%%(%x%x)',
+	    function(p)
+			local val = tonumber(p, 16)
+			if (val > 47 and val < 58) or
+			   (val > 64 and val < 91) or
+			   (val > 96 and val < 123) or
+			   (contains(_unreserved, val)) then
+				return str(val)
+			else
+				return '%' .. string.upper(p)
+		    end
+	    end)
+	return uri
+end
+
+local function uri_safe_decode_split(tab)
+	for k, v in pairs(tab) do
+		if type(v) == 'table' then
+			uri_safe_decode_split(v)
+		else
+			tab[k] = uri_safe_decode(v)
+		end
+	end
+end
+
+local _prefixes = {{'^%.%./', ''}, {'^%./', ''}, {'^/%.%./', '/'}, {'^/%.%.', '/'}, {'^/%./', '/'}, {'^/%.', '/'}}
+
+local function remove_dot_segments(path)
+	local output = {}
+	local slash = ''
+	local nb = 0
+	if path:sub(1,1) == '/' then slash = '/' end
+	while path ~= '' do
+		local index = 0
+		for _, prefix in ipairs(_prefixes) do
+			path, nb = path:gsub(prefix[1], prefix[2])
+			if nb > 0 then
+				if index == 2 or index == 3 then
+					table.remove(output, #output)
+				end
+				break
+			end
+			index = index + 1
+		end
+		if nb == 0 then
+			if path:sub(1,1) == '/' then path = path:sub(2) end
+			local left, right = path:match('([^/]*)([/]?.*)')
+			table.insert(output, left)
+			path = right
+		end
+	end
+	return slash .. table.concat(output, '/')
+end
+
+local mt_uri = {}
+mt_uri.__index = mt_uri
+
+local function mt_uri:__tostring()
+	if not self then return nil end
+	local uri = {}
+
+	-- fragment
+	if self.fragment then
+		table.insert(uri, '#')
+		table.insert(uri, self.fragment)
+	end
+
+	-- query
+	if self.query then
+		local query = {}
+		for k, v in pairs(self.args) do
+			local q = {}
+			table.insert(q, k)
+			table.insert(q, v)
+			table.insert(query, table.concat(q, '='))
+		end
+
+		if #query > 0 then
+			table.insert(uri, 1, table.concat(query, '#'))
+			table.insert(uri, 1, '?')
+		end
+	end
+
+	-- path
+	if self.path then
+		table.insert(uri, 1, self.path)
+	end
+
+	-- authority components
+	local auth = {}
+
+	-- host
+	if self.host then
+		table.insert(auth, self.host)
+
+		-- userinfo
+		if self.user and self.pass then
+			table.insert(auth, 1, '@')
+			table.insert(auth, 1, self.pass)
+			table.insert(auth, 1, ':')
+			table.insert(auth, 1, self.user)
+		end
+
+		--port
+		if self.port then
+			table.insert(auth, self.port)
+			table.insert(auth, ':')
+		end
+	end
+
+	-- scheme and authority
+	if #auth > 0 then
+		if self.scheme then
+			table.insert(uri, 1, table.concat(auth))
+			table.insert(uri, 1, '://')
+			table.insert(uri, 1, self.scheme)
+		else
+			table.insert(uri, 1, table.concat(auth))
+		end
+	end
+
+	return table.concat(uri)
+end
+
+local function mt_uri:normalize()
+	if not self then return nil end
+
+	-- use http as default scheme
+	if not self.scheme and self.authority then
+		self.scheme = 'http'
+	end
+
+	-- scheme and host are not case sensitive
+	if self.scheme then self.scheme = string.lower(self.scheme) end
+	if self.host then self.host = string.lower(self.host) end
+
+	-- remove default port
+	if self.port and self.port == '80' then
+		self.port = nil
+	end
+
+	-- add '/' to path
+	if self.scheme == 'http' and (not self.path or self.path == '') then
+		self.path = '/'
+	end
+
+	-- normalize path according to rfc 3986
+	if self.path then self.path = remove_dot_segments(self.path) end
+
+	-- decode percent-encoded octets of unresserved chars
+	-- capitalize letters in escape sequences
+	uri_safe_decode_split(self)
+end
+
+
+local function uri_split(uri)
+	if not uri then return nil end
+
 	local splitted_uri = {}
-	local args = {}
-	local core_uri = nil
+	local core_uri
 	local query, fragment, path, authority
+
+	setmetatable(splitted_uri, mt_uri)
 
 	-- uri = core_uri [ ?query ] [ #fragment ]
 	core_uri, query, fragment =
-	    string.match(uri, '([^?]*)[%?]*([^#]*)[#]*(.*)')
+	    string.match(uri, '([^#?]*)[%?]*([^#]*)[#]*(.*)')
 
 	-- query (+ split params)
-	if (query and query ~= '') then
+	if query and query ~= '' then
 		splitted_uri.query = query
+		local args = {}
 		string.gsub(splitted_uri.query, '([^=&]+)=([^&?]*)&?',
 		    function(p, q) args[p] = q return '' end)
 		splitted_uri.args = args
 	end
 
 	-- fragment
-	if (fragment and fragment ~= '') then
+	if fragment and fragment ~= '' then
 		splitted_uri.fragment = fragment
 	end
 
@@ -263,15 +424,13 @@ function uri_split(uri)
 	end
 
 	-- authority = [ userinfo @ ] host [ : port ]
-	if not authority or authority == '' then
-		return splitted_uri
-	else
+	if authority and authority ~= '' then
 		splitted_uri.authority = authority
 		-- userinfo
 		authority = string.gsub(authority, "^([^@]*)@",
 		    function(p) if p ~= '' then splitted_uri.userinfo = p end return '' end)
 		-- port
-		authority = string.gsub(authority, ":([^:]*)$",
+		authority = string.gsub(authority, ":([^:][%d]+)$",
 		    function(p) if p ~= '' then splitted_uri.port = p end return '' end)
 		-- host
 		if authority ~= '' then splitted_uri.host = authority end
@@ -287,139 +446,36 @@ function uri_split(uri)
 	return splitted_uri
 end
 
-function uri_rebuild(splitted_uri)
-	local uri = ''
-
-	-- fragment
-	if (splitted_uri.fragment) then
-		uri = '#' .. splitted_uri.fragment .. uri
-	end
-
-	-- query
-	if (splitted_uri.query) then
-		local q = ''
-		for k, v in pairs(splitted_uri.args) do
-			q = q .. k .. '=' .. v .. '&'
-		end
-		if q ~= '' then q = q:sub(1, q:len()-1) end
-		uri = '?' .. q .. uri
-	end
-
-	-- path
-	if (splitted_uri.path) then uri = splitted_uri.path .. uri end
-
-	-- authority
-	local userinfo = ''
-	if (splitted_uri.user and splitted_uri.pass) then
-		userinfo = splitted_uri.user .. ':' .. splitted_uri.pass .. '@'
-	end
-
-	local port = ''
-	if splitted_uri.port then port = ':' .. splitted_uri.port end
-
-	local authority = ''
-	if splitted_uri.host then
-		authority = userinfo .. splitted_uri.host .. port
-	end
-
-	-- scheme
-	if (splitted_uri.scheme and splitted_uri.authority) then
-		uri = splitted_uri.scheme .. '://' .. authority .. uri
-	end
-
-	return uri
+local function uri_normalize(uri)
+	local splitted_uri = uri_split(uri)
+	mt_uri.normalize(splitted_uri)
+	return tostring(splitted_uri)
 end
 
-function cookies_split(cookie_line)
+local mt_cookie = {}
+mt_cookie.__index = mt_cookie
+
+local function mt_cookie:__tostring()
+	if self then
+		local cookie = {}
+		for k, v in pairs(self) do
+			local ck = {}
+			table.insert(ck, k)
+			table.insert(ck, v)
+			table.insert(cookie, table.concat(ck, '='))
+		end
+		return table.concat(cookie, ';')
+	end
+end
+
+local function cookies_split(cookie_line)
 	local cookies = {}
 	if cookie_line then
 		string.gsub(cookie_line, '([^=;]+)=([^;?]*);?',
 		    function(p, q) cookies[p] = q return '' end)
 	end
+	setmetatable(cookies, mt_cookie)
 	return cookies
-end
-
-
-local _prefixes = {{'%.%./', ''}, {'%./', ''}, {'/%.%./', '/'}, {'/%.%.', '/'}, {'/%./', '/'}, {'/%.', '/'}}
-
-function remove_dot_segments(path)
-	output = {}
-	slash = ''
-	nb = 0
-	if path:sub(1,1) == '/' then slash = '/' end
-	while (path ~= '') do
-		index = 0
-		for _, prefix in pairs(_prefixes) do
-			path, nb = path:gsub('^' .. prefix[1], prefix[2])
-			if nb > 0 then
-				if index == 2 or index == 3 then
-					table.remove(output, #output)
-				end
-				break
-			end
-			index = index + 1
-		end
-		if nb == 0 then
-			if path:sub(1,1) == '/' then path = path:sub(2) end
-			left, right = path:match('([^/]*)([/]?.*)')
-			table.insert(output, left)
-			path = right
-		end
-	end
-	return slash .. table.concat(output, '/')
-end
-
-local _unreserved = dict({45, 46, 95, 126})
-
-function uri_safe_decode(uri)
-	uri = string.gsub(uri, '%%(%x%x)',
-	    function(p)
-			local val = tonumber(p, 16)
-			if (val > 47 and val < 58) or
-			   (val > 64 and val < 91) or
-			   (val > 96 and val < 123) or
-			   (contains(_unreserved, val)) then
-				return str(val)
-			else
-				return '%' .. string.upper(p)
-		    end
-	    end)
-	return uri
-end
-
-function uri_normalize(uri)
-
-	-- decode percent-encoded octets of unresserved chars
-	-- capitalize letters in escape sequences
-	uri = uri_safe_decode(uri)
-
-	-- split uri
-	splitted_uri = uri_split(uri)
-
-	-- use http as default scheme
-	if (not splitted_uri.scheme) and splitted_uri.authority then
-		splitted_uri.scheme = 'http'
-	end
-
-	-- scheme and host are not case sensitive
-	if splitted_uri.scheme then splitted_uri.scheme = string.lower(splitted_uri.scheme) end
-	if splitted_uri.host then splitted_uri.host = string.lower(splitted_uri.host) end
-
-	-- remove default port
-	if splitted_uri.port and splitted_uri.port == '80' then
-		splitted_uri.port = nil
-	end
-
-	-- add '/' to path
-	if splitted_uri.scheme == 'http' and (not splitted_uri.path or splitted_uri.path == '') then
-		splitted_uri.path = '/'
-	end
-
-	-- normalize path according to rfc 3986
-	if splitted_uri.path then splitted_uri.path = remove_dot_segments(splitted_uri.path) end
-
-	-- putting all together
-	return uri_rebuild(splitted_uri)
 end
 
 module.uri = {}
@@ -537,9 +593,6 @@ haka.dissector {
 								return self._splitted_uri
 							else
 								self._splitted_uri = uri_split(self.uri)
-								self._splitted_uri.to_string = function (self)
-									return uri_rebuild(self)
-								end
 								return self._splitted_uri
 							end
 						end
