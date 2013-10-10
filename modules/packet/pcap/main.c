@@ -443,15 +443,6 @@ static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 		*data_offset = 0;
 		return ETH_P_IP;
 
-		{
-			*data_offset = 16;
-			struct ethhdr *eh = (struct ethhdr *)pkt->data;
-			*data_offset = sizeof(struct ethhdr);
-			if (eh) return ntohs(eh->h_proto);
-			else return 0;
-		}
-		break;
-
 	case DLT_NULL:
 		*data_offset = 4;
 		if (*(uint32 *)pkt->data == PF_INET) {
