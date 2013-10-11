@@ -240,7 +240,7 @@ local function uri_safe_decode(uri)
 				return str(val)
 			else
 				return '%' .. string.upper(p)
-		    end
+			end
 	    end)
 	return uri
 end
@@ -284,17 +284,49 @@ local function remove_dot_segments(path)
 	return slash .. table.concat(output, '/')
 end
 
+-- register methods on splitted uri object
 local mt_uri = {}
 mt_uri.__index = mt_uri
 
-local function mt_uri:__tostring()
-	if not self then return nil end
+function mt_uri:__tostring()
 	local uri = {}
 
-	-- fragment
-	if self.fragment then
-		table.insert(uri, '#')
-		table.insert(uri, self.fragment)
+	-- authority components
+	local auth = {}
+
+	-- host
+	if self.host then
+		-- userinfo
+		if self.user and self.pass then
+			table.insert(auth, self.user)
+			table.insert(auth, ':')
+			table.insert(auth, self.pass)
+			table.insert(auth, '@')
+		end
+
+		table.insert(auth, self.host)
+
+		--port
+		if self.port then
+			table.insert(auth, ':')
+			table.insert(auth, self.port)
+		end
+	end
+
+	-- scheme and authority
+	if #auth > 0 then
+		if self.scheme then
+			table.insert(uri, self.scheme)
+			table.insert(uri, '://')
+			table.insert(uri, table.concat(auth))
+		else
+			table.insert(uri, table.concat(auth))
+		end
+	end
+
+	-- path
+	if self.path then
+		table.insert(uri, self.path)
 	end
 
 	-- query
@@ -308,53 +340,22 @@ local function mt_uri:__tostring()
 		end
 
 		if #query > 0 then
-			table.insert(uri, 1, table.concat(query, '#'))
-			table.insert(uri, 1, '?')
+			table.insert(uri, '?')
+			table.insert(uri, table.concat(query, '&'))
 		end
 	end
 
-	-- path
-	if self.path then
-		table.insert(uri, 1, self.path)
-	end
-
-	-- authority components
-	local auth = {}
-
-	-- host
-	if self.host then
-		table.insert(auth, self.host)
-
-		-- userinfo
-		if self.user and self.pass then
-			table.insert(auth, 1, '@')
-			table.insert(auth, 1, self.pass)
-			table.insert(auth, 1, ':')
-			table.insert(auth, 1, self.user)
-		end
-
-		--port
-		if self.port then
-			table.insert(auth, self.port)
-			table.insert(auth, ':')
-		end
-	end
-
-	-- scheme and authority
-	if #auth > 0 then
-		if self.scheme then
-			table.insert(uri, 1, table.concat(auth))
-			table.insert(uri, 1, '://')
-			table.insert(uri, 1, self.scheme)
-		else
-			table.insert(uri, 1, table.concat(auth))
-		end
+	-- fragment
+	if self.fragment then
+		table.insert(uri, '#')
+		table.insert(uri, self.fragment)
 	end
 
 	return table.concat(uri)
 end
 
-local function mt_uri:normalize()
+
+function mt_uri:normalize()
 	if not self then return nil end
 
 	-- use http as default scheme
@@ -448,24 +449,25 @@ end
 
 local function uri_normalize(uri)
 	local splitted_uri = uri_split(uri)
-	mt_uri.normalize(splitted_uri)
+	splitted_uri:normalize()
 	return tostring(splitted_uri)
 end
 
-local mt_cookie = {}
+
+-- register methods on splitted cookie list
+mt_cookie = {}
 mt_cookie.__index = mt_cookie
 
-local function mt_cookie:__tostring()
-	if self then
-		local cookie = {}
-		for k, v in pairs(self) do
-			local ck = {}
-			table.insert(ck, k)
-			table.insert(ck, v)
-			table.insert(cookie, table.concat(ck, '='))
-		end
-		return table.concat(cookie, ';')
+function mt_cookie:__tostring()
+	assert(self)
+	local cookie = {}
+	for k, v in pairs(self) do
+		local ck = {}
+		table.insert(ck, k)
+		table.insert(ck, v)
+		table.insert(cookie, table.concat(ck, '='))
 	end
+	return table.concat(cookie, ';')
 end
 
 local function cookies_split(cookie_line)
