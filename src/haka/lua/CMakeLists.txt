@@ -18,6 +18,8 @@ lua_compile(NAME haka-lua FILES
 	rule.lua
 	color.lua
 	class.lua
+	events.lua
+	context.lua
 	state_machine.lua
 	grammar.lua
 	dissector.lua)

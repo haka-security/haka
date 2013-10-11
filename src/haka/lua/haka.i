@@ -72,6 +72,16 @@ double time_seconds_get(struct time *t) {
 
 %}
 
+%native(_getswigclassmetatable) int _getswigclassmetatable(struct lua_State *L);
+
+%{
+int _getswigclassmetatable(struct lua_State *L)
+{
+	SWIG_Lua_get_class_registry(L);
+	return 1;
+}
+%}
+
 %luacode {
 	haka = unpack({...})
 
@@ -124,9 +134,31 @@ double time_seconds_get(struct time *t) {
 	package.cpath = addpath(package.cpath, haka.module_path(), { haka.module_prefix .. '?' .. haka.module_suffix })
 	package.path = addpath(package.path, haka.module_path(), { '?.bc', '?.lua' })
 
-	require('class')
+	swig = {}
+	function swig.getclassmetatable(name)
+		local ret = haka._getswigclassmetatable()[name]
+		assert(ret, string.format("unknown swig class '%s'", name))
+		return ret
+	end
 
-	require('rule')
-	require('dissector')
-	require('grammar')
+	function haka.pcall(func, ...)
+		local args = {...}
+		local ret, msg = xpcall(function () func(unpack(args)) end, debug.format_error)
+		if not ret then
+			haka.log.error("core", msg)
+			return false
+		else
+			return true
+		end
+	end
+
+	function haka.initialize()
+		require('class')
+
+		require('events')
+		require('context')
+		require('rule')
+		require('dissector')
+		require('grammar')
+	end
 }

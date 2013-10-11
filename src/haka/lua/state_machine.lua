@@ -1,9 +1,12 @@
 
+require('class')
+
+
 local states = {}
 
-states.Transition = class()
+states.Transition = class('Transition')
 
-function states.Transition:__init(type)
+function states.Transition.method:__init(type)
 	self.type = type
 end
 
@@ -30,9 +33,9 @@ states.on_enter = states.Transition:new('ENTER')
 states.on_leave = states.Transition:new('LEAVE')
 
 
-states.State = class()
+states.State = class('State')
 
-function states.State:__init(transitions)
+function states.State.method:__init(transitions)
 	self.transitions = transitions
 
 	for t, f in pairs(transitions) do
@@ -42,18 +45,18 @@ function states.State:__init(transitions)
 end
 
 
-states.StateMachine = class()
+states.StateMachine = class('StateMachine')
 
-function states.StateMachine:__init(name)
+function states.StateMachine.method:__init(name)
 	self._states = {}
 	self._name = name
 end
 
-function states.StateMachine:state(transitions)
+function states.StateMachine.method:state(transitions)
 	return states.State:new(transitions)
 end
 
-function states.StateMachine:compile()
+function states.StateMachine.method:compile()
 	if not self._state_machine then
 		local state_machine = haka.state_machine.state_machine(self._name)
 		local state_table = {}
@@ -99,7 +102,7 @@ function states.StateMachine:compile()
 	end
 end
 
-function states.StateMachine:instanciate(context)
+function states.StateMachine.method:instanciate(context)
 	self:compile()
 	return self._state_machine:instanciate(self._state_table, context)
 end

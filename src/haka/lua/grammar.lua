@@ -2,15 +2,15 @@
 local grammar = {}
 
 
-grammar.Entity = class()
+grammar.Entity = class('Entity')
 
-function grammar.Entity:as(name)
+function grammar.Entity.method:as(name)
 	local clone = self:clone()
 	clone.named = name
 	return clone
 end
 
-static(grammar.Entity).getoption = function (cls, opt)
+function grammar.Entity.getoption(cls, opt)
 	local v
 
 	if cls._options then
@@ -29,7 +29,7 @@ static(grammar.Entity).getoption = function (cls, opt)
 	end
 end
 
-function grammar.Entity:options(options)
+function grammar.Entity.method:options(options)
 	local clone = self:clone()
 	for k, v in pairs(options) do
 		if type(k) == 'string' then
@@ -48,15 +48,15 @@ function grammar.Entity:options(options)
 end
 
 
-grammar.Record = class(grammar.Entity)
+grammar.Record = class('Record', grammar.Entity)
 
-function grammar.Record:__init(entities)
+function grammar.Record.method:__init(entities)
 	self.entities = entities
 	self.extra_entities = {}
 	self.on_finish = {}
 end
 
-function grammar.Record:extra(functions)
+function grammar.Record.method:extra(functions)
 	for name, func in pairs(functions) do
 		if type(name) == 'string' then self.extra_entities[name] = func
 		else table.insert(self.on_finish, func) end
@@ -65,17 +65,17 @@ function grammar.Record:extra(functions)
 end
 
 
-grammar.Branch = class(grammar.Entity)
+grammar.Branch = class('Branch', grammar.Entity)
 
-function grammar.Branch:__init(cases, select)
+function grammar.Branch.method:__init(cases, select)
 	self.selector = select
 	self.cases = cases
 end
 
 
-grammar.Array = class(grammar.Entity)
+grammar.Array = class('Array', grammar.Entity)
 
-function grammar.Array:__init(entity)
+function grammar.Array.method:__init(entity)
 	self.entity = entity
 end
 
@@ -95,9 +95,9 @@ function grammar.Array._options.untilcond(self, condition)
 end
 
 
-grammar.Regex = class(grammar.Entity)
+grammar.Regex = class('Regex', grammar.Entity)
 
-function grammar.Regex:__init(regex)
+function grammar.Regex.method:__init(regex)
 	self.regex = regex
 end
 
@@ -105,9 +105,9 @@ grammar.Regex._options = {}
 function grammar.Regex._options.maxsize(self, size) self.maxsize = size end
 
 
-grammar.Integer = class(grammar.Entity)
+grammar.Integer = class('Integer', grammar.Entity)
 
-function grammar.Integer:__init(bits)
+function grammar.Integer.method:__init(bits)
 	self.bits = bits
 end
 
@@ -115,7 +115,7 @@ grammar.Integer._options = {}
 function grammar.Regex._options.endianness(self, endian) self.endian = endian end
 
 
-grammar.Bytes = class(grammar.Entity)
+grammar.Bytes = class('Bytes', grammar.Entity)
 
 grammar.Bytes._options = {}
 function grammar.Bytes._options.chunked(self) self.chunked = true end

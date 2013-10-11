@@ -169,7 +169,7 @@ function haka.rule_hook(name, pkt)
 	return pkt:valid()
 end
 
-function haka.filter(pkt)
+--[[function haka.filter(pkt)
 	local dissect = get_dissector(pkt.next_dissector)
 	while dissect do
 		if dissect.enable then
@@ -214,7 +214,7 @@ function haka.filter(pkt)
 	end
 
 	filter_down(pkt)
-end
+end]]
 
 -- Load interactive.lua as a different file to allow to compile it
 -- with the debugging information
