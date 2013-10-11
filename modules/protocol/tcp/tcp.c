@@ -121,6 +121,7 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 			tcp_set_window_size(rem_tcp, tcp_get_window_size(tcp));
 			tcp_set_urgent_pointer(rem_tcp, tcp_get_urgent_pointer(tcp));
 			tcp_set_flags(rem_tcp, tcp_get_flags(tcp));
+			tcp_set_flags_fin(tcp, false);
 			tcp_set_seq(rem_tcp, tcp_get_seq(tcp) + size);
 			tcp_set_ack_seq(rem_tcp, tcp_get_ack_seq(tcp));
 
