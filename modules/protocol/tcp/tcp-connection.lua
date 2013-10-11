@@ -1,17 +1,145 @@
 
 local ipv4 = require("protocol/ipv4")
-local tcp = tcp
+local tcp = require("protocol/tcp")
 
-local function forge_reset(conn, inv)
-	tcprst = haka.packet.new()
+local tcp_connection_dissector = haka.dissector.new{
+	type = haka.dissector.FlowDissector,
+	name = 'tcp-connection'
+}
+
+tcp_connection_dissector:register_event(
+	'new_connection',
+	function (self) return self:continue() end
+)
+
+function tcp_connection_dissector.receive(pkt)
+	local connection, direction, dropped = pkt:getconnection()
+	if not connection then
+		if pkt.flags.syn and not pkt.flags.ack then
+			if not haka.pcall(haka.context.signal, haka.context, pkt, tcp_connection_dissector.events.new_connection) then
+				return pkt:drop()
+			end
+
+			if not pkt:continue() then
+				return
+			end
+
+			connection = pkt:newconnection()
+			connection.data = haka.context.newlocal()
+			connection.data:createnamespace('tcp-connection', tcp_connection_dissector:new(connection))
+			direction = true
+		else
+			if not dropped then
+				haka.log.error("tcp-connection", "no connection found")
+				haka.log.debug("tcp-connection", "no connection found %s:%d -> %s:%d", pkt.ip.src,
+					pkt.srcport, pkt.ip.dst, pkt.dstport)
+			end
+			return pkt:drop()
+		end
+	end
+
+	haka.context:scope(connection.data, function ()
+		local dissector = connection.data:namespace('tcp-connection')
+		return dissector:emit(pkt, direction)
+	end)
+end
+
+function tcp_connection_dissector.method:__init(connection)
+	self.connection = connection
+	self.stream = {}
+	self.stream[true] = self.connection:stream(true)
+	self.stream[false] = self.connection:stream(false)
+	self.state = 0
+end
+
+function tcp_connection_dissector.method:emit(pkt, direction)
+	local stream = self.stream[direction]
+	if pkt.flags.syn then
+		stream:init(pkt.seq+1)
+		return pkt:send()
+	elseif pkt.flags.rst then
+		self:_sendpkt(direction, pkt)
+		return self:drop()
+	elseif self.state >= 2 then
+		if pkt.flags.ack then
+			self.state = self.state + 1
+		end
+
+		self:_sendpkt(direction, pkt)
+
+		if self.state >= 3 then
+			return self:close()
+		else
+			return
+		end
+	elseif pkt.flags.fin then
+		self.state = self.state+1
+		return self:_sendpkt(direction, pkt)
+	else
+		stream:push(pkt)
+	end
+
+	if stream:available() > 0 then
+		if not haka.pcall(haka.context.signal, haka.context, self, tcp_connection_dissector.events.data_available, stream) then
+			return self:drop()
+		end
+	end
+
+	self:_send(direction)
+end
+
+function tcp_connection_dissector.method:continue()
+	return self.connection ~= nil
+end
+
+function tcp_connection_dissector.method:_sendpkt(direction, pkt)
+	self:_send(direction)
+	
+	self.stream[direction]:seq(pkt)
+	self.stream[not self.direction]:ack(pkt)
+	pkt:send()
+end
+
+function tcp_connection_dissector.method:_send(direction)
+	local stream = self.stream[direction]
+	local other_stream = self.stream[not direction]
+
+	local pkt = stream:pop()
+	while pkt do
+		other_stream:ack(pkt)
+		pkt:send()
+
+		pkt = stream:pop()
+	end
+end
+
+function tcp_connection_dissector.method:send()
+	self:_send(false)
+	self:_send(true)
+end
+
+function tcp_connection_dissector.method:drop()
+	self.connection:drop()
+	self.stream = nil
+	self.connection = nil
+end
+
+function tcp_connection_dissector.method:close()
+	self.connection:close()
+	self.stream = nil
+	self.connection = nil
+end
+
+function tcp_connection_dissector.method:_forgereset(inv)
+	local tcprst = haka.packet.new()
 	tcprst = ipv4.create(tcprst)
 
 	if inv then
-		tcprst.src = conn.dstip
-		tcprst.dst = conn.srcip
+		tcprst.src = self.connection.dstip
+		tcprst.dst = self.connection.srcip
 	else
-		tcprst.src = conn.srcip
-		tcprst.dst = conn.dstip
+		tcprst.src = self.connection.srcip
+		tcprst.dst = self.connection.dstip
 	end
 
 	tcprst.ttl = 64
@@ -19,149 +147,37 @@ local function forge_reset(conn, inv)
 	tcprst = tcp.create(tcprst)
 
 	if inv then
-		tcprst.srcport = conn.dstport
-		tcprst.dstport = conn.srcport
+		tcprst.srcport = self.connection.dstport
+		tcprst.dstport = self.connection.srcport
 	else
-		tcprst.srcport = conn.srcport
-		tcprst.dstport = conn.dstport
+		tcprst.srcport = self.connection.srcport
+		tcprst.dstport = self.connection.dstport
 	end
 
-	tcprst.seq = conn:stream(not inv).lastseq
+	tcprst.seq = self.stream[not inv].lastseq
 
 	tcprst.flags.rst = true
 
 	return tcprst
 end
 
-local function forge(self)
-	if not self.connection then
-		return nil
-	end
+function tcp_connection_dissector.method:reset()
+	local rst
 
-	if self.__reset ~= nil then
-		local pkt = forge_reset(self.connection, self.__reset==1)
-		self.__reset = self.__reset-1
+	rst = self:_forgereset(true)
+	rst:send()
 
-		if self.__reset == 0 then
-			self.connection:drop()
-			self.connection = nil
-		end
+	rst = self:_forgereset(false)
+	rst:send()
 
-		return pkt
-	else
-		local pkt = self.stream:pop()
-		if not pkt then
-			pkt = table.remove(self.connection.data._queue)
-			if pkt then
-				self.connection:stream(self.direction):seq(pkt)
-			end
-		end
-
-		if pkt then
-			self.connection:stream(not self.direction):ack(pkt)
-		end
-
-		if self.__drop then
-			if self.__droppkt and pkt then
-				pkt:drop()
-			end
-
-			self.connection:drop()
-			self.connection = nil
-		elseif self.__close then
-			self.connection:close()
-			self.connection = nil
-		end
-
-		return pkt
-	end
+	self:drop()
 end
 
-local function drop(self)
-	self.__drop = true
-	self.__droppkt = true
+function tcp_connection_dissector.method:halfreset()
+	local rst
+
+	rst = self:_forgereset(true)
+	rst:send()
+
+	self:drop()
 end
-
-local function reset(self)
-	self.__reset = 2
-end
-
-local function dissect(pkt)
-	local stream_dir, dropped
-
-	local newpkt = {}
-	newpkt.connection, newpkt.direction, dropped = pkt:getconnection()
-	newpkt.dissector = "tcp-connection"
-	newpkt.next_dissector = nil
-	newpkt.valid = function (self)
-		return not self.__close and not self.__drop
-	end
-	newpkt.drop = drop
-	newpkt.forge = forge
-	newpkt.reset = reset
-
-	if not newpkt.connection then
-		-- new connection
-		if pkt.flags.syn and not pkt.flags.ack then
-			newpkt.tcp = pkt
-			newpkt.connection = pkt:newconnection()
-			newpkt.connection.data = {}
-
-			if not haka.rule_hook("tcp-connection-new", newpkt) then
-				newpkt.connection:drop()
-				newpkt.connection = nil
-				pkt:drop()
-				return nil
-			end
-
-			newpkt.connection.data._next_dissector = newpkt.next_dissector
-			newpkt.connection.data._state = 0
-			newpkt.connection.data._queue = {}
-			newpkt.direction = true
-		else
-			if not dropped then
-				haka.log.error("tcp-connection", "no connection found")
-				haka.log.debug("tcp-connection", "no connection found %s:%d -> %s:%d", pkt.ip.src,
-					pkt.srcport, pkt.ip.dst, pkt.dstport)
-			end
-			pkt:drop()
-			return nil
-		end
-	end
-
-	newpkt.stream = newpkt.connection:stream(newpkt.direction)
-
-	if pkt.flags.syn then
-		newpkt.stream:init(pkt.seq+1)
-		return nil
-	elseif pkt.flags.rst then
-		newpkt.__drop = true
-		table.insert(newpkt.connection.data._queue, pkt)
-		return newpkt
-	elseif newpkt.connection.data._state >= 2 then
-		if pkt.flags.ack then
-			newpkt.connection.data._state = newpkt.connection.data._state + 1
-		end
-
-		if newpkt.connection.data._state >= 3 then
-			newpkt.__close = true
-		end
-
-		table.insert(newpkt.connection.data._queue, pkt)
-		return newpkt
-	elseif pkt.flags.fin then
-		newpkt.connection.data._state = newpkt.connection.data._state+1
-		table.insert(newpkt.connection.data._queue, pkt)
-		return newpkt
-	else
-		newpkt.stream:push(pkt)
-		newpkt.next_dissector = newpkt.connection.data._next_dissector
-		return newpkt
-	end
-end
-
-haka.register_dissector {
-	name = "tcp-connection",
-	hooks = { "tcp-connection-new" },
-	dissect = dissect
-}

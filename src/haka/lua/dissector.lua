@@ -42,6 +42,10 @@ function dissector.Dissector.property.get:name()
 	return classof(self).name
 end
 
+function dissector.Dissector.receive(pkt)
+	error("not implemented")
+end
+
 
 --
 -- Packet base dissector
@@ -58,10 +62,6 @@ dissector.PacketDissector:register_event(
 	'sending_packet',
 	function (self) self:continue() end
 )
-
-function dissector.PacketDissector.receive(pkt)
-	error("not implemented")
-end
 
 function dissector.PacketDissector.method:continue()
 	error("not implemented")
@@ -82,17 +82,6 @@ dissector.FlowDissector:register_event(
 	'data_available',
 	function (self) return self:continue() end
 )
-
---static(dissector.FlowDissector).get = function (cls, context)
-function dissector.FlowDissector.get(cls, context)
-	local instance = context.dissectors[cls]
-	if not instance then
-		instance = cls:new()
-		context.dissectors[cls] = instance
-	end
-
-	return instance
-end
 
 function dissector.FlowDissector.method:connections()
 	if self:class().connections then
@@ -165,7 +154,7 @@ end
 --
 dissector.behavior = {}
 
-dissector.behavior.drop_unknown_dissector = true
+dissector.behavior.drop_unknown_dissector = false --true
 
 
 haka.dissector = dissector

@@ -30,7 +30,6 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	ip->header = (struct ipv4_header*)(packet_data(packet));
 	ip->modified = false;
 	ip->invalid_checksum = false;
-	ip->drop = false;
 
 	return ip;
 }
@@ -59,7 +58,6 @@ struct ipv4 *ipv4_create(struct packet *packet)
 
 	ip->modified = true;
 	ip->invalid_checksum = true;
-	ip->drop = false;
 
 	ipv4_set_version(ip, 4);
 	ipv4_set_checksum(ip, 0);
@@ -73,21 +71,12 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 {
 	struct packet *packet = ip->packet;
 	if (packet) {
-		if (ip->drop) {
-			ip->packet = NULL;
-			ip->header = NULL;
-			packet_drop(packet);
-			packet_release(packet);
-			return NULL;
-		}
-		else {
-			if (ip->invalid_checksum)
-				ipv4_compute_checksum(ip);
+		if (ip->invalid_checksum)
+			ipv4_compute_checksum(ip);
 
-			ip->packet = NULL;
-			ip->header = NULL;
-			return packet;
-		}
+		ip->packet = NULL;
+		ip->header = NULL;
+		return packet;
 	}
 	else {
 		return NULL;
@@ -219,56 +208,11 @@ uint8 *ipv4_resize_payload(struct ipv4 *ip, size_t size)
 	return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip);
 }
 
-static char *ipv4_proto_dissector[256];
-
-void ipv4_register_proto_dissector(uint8 proto, const char *dissector)
-{
-	if (ipv4_proto_dissector[proto] != NULL) {
-		if (strcmp(ipv4_proto_dissector[proto], dissector) == 0) {
-			return;
-		}
-		else {
-			error(L"IPv4 protocol %d dissector already registered", proto);
-			return;
-		}
-	}
-
-	ipv4_proto_dissector[proto] = strdup(dissector);
-}
-
-const char *ipv4_get_proto_dissector(struct ipv4 *ip)
-{
-	IPV4_CHECK(ip, NULL);
-	return ipv4_proto_dissector[ipv4_get_proto(ip)];
-}
-
-static FINI void ipv4_dissector_cleanup()
-{
-	int i;
-	for (i = 0; i < 256; ++i) {
-		free(ipv4_proto_dissector[i]);
-		ipv4_proto_dissector[i] = NULL;
-	}
-}
-
 void ipv4_action_drop(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip);
-	ip->drop = true;
-}
-
-void ipv4_action_send(struct ipv4 *ip)
-{
-	struct packet *packet;
-
-	IPV4_CHECK(ip);
-
-	while ((packet = ipv4_forge(ip))) {
-		packet_send(packet);
-	}
-}
-
-bool ipv4_valid(struct ipv4 *ip)
-{
-	return !ip->drop;
+	packet_drop(ip->packet);
+	packet_release(ip->packet);
+	ip->packet = NULL;
+	ip->header = NULL;
 }

@@ -107,7 +107,8 @@ void packet__send(struct packet *pkt) {
 
 	switch (packet_state(pkt)) {
 	case STATUS_FORGED:
-		packet_send(pkt);
+		packet_accept(pkt);
+		//packet_send(pkt);
 		break;
 
 	case STATUS_NORMAL:

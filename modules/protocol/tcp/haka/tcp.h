@@ -76,8 +76,6 @@ uint8 *tcp_get_payload_modifiable(struct tcp *packet);
 size_t tcp_get_payload_length(const struct tcp *packet);
 uint8 *tcp_resize_payload(struct tcp *packet, size_t size);
 void tcp_action_drop(struct tcp *packet);
-void tcp_action_send(struct tcp *packet);
-bool tcp_valid(struct tcp *packet);
 
 
 #define TCP_GETSET_FIELD(type, field) \

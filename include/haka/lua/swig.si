@@ -30,6 +30,25 @@
 
 	#define _STR_TO_WCS(str)   L##str
 	#define STR_TO_WCS(str)   _STR_TO_WCS(str)
+
+	/* We need to override SWIG to avoid overriding a struct metatable. We let user dynamically
+	 * add Lua function in this metatable. This is going to be lost if it gets overwritten.
+	 */
+	SWIGINTERN void  SWIG_Lua_class_register_custom(lua_State* L,swig_lua_class* clss)
+	{
+		/* Check if the metatable is already registered */
+		SWIG_Lua_get_class_registry(L);
+		lua_getfield(L, -1, clss->name);
+		if (!lua_isnil(L, -1)) {
+			lua_pop(L, 2);
+			return;
+		}
+		lua_pop(L, 2);
+
+		SWIG_Lua_class_register(L, clss);
+	}
+
+	#define SWIG_Lua_class_register SWIG_Lua_class_register_custom
 %}
 
 %insert("init") %{

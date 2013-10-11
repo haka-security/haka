@@ -281,22 +281,5 @@ void tcp_action_drop(struct tcp *tcp)
 {
 	TCP_CHECK(tcp);
 	ipv4_action_drop(tcp->packet);
-}
-
-void tcp_action_send(struct tcp *tcp)
-{
-	struct ipv4 *packet;
-
-	TCP_CHECK(tcp);
-
-	while ((packet = tcp_forge(tcp))) {
-		ipv4_action_send(packet);
-		ipv4_release(packet);
-	}
-}
-
-bool tcp_valid(struct tcp *tcp)
-{
-	TCP_CHECK(tcp, false);
-	return ipv4_valid(tcp->packet);
+	tcp->packet = NULL;
 }
