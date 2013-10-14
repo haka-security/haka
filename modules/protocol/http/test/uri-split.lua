@@ -35,6 +35,18 @@ local _test = {
 		query = 'a=1',
 	},
 
+	['/page?a=1&b=2'] = {
+		args = {a = '1', b='2'},
+		path = '/page',
+		query = 'a=1&b=2',
+	},
+
+	['/page?a=1&a=2'] = {
+		args = {a = '1', a='2'},
+		path = '/page',
+		query = 'a=1&a=2',
+	},
+
 	['http://www.example.com/#'] = {
 		scheme = 'http',
 		authority = 'www.example.com',
