@@ -15,6 +15,10 @@ function haka.rule_summary()
 end
 
 function haka.rule(r)
+	if not r.hook then
+		error("no hook defined for rule")
+	end
+
 	haka.context.connections:register(r.hook, r.eval)
 end
 
