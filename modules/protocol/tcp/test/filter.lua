@@ -7,7 +7,7 @@ require("protocol/tcp-connection")
 
 haka.rule {
 	hook = haka.event('tcp-connection', 'new_connection'),
-	eval = function (pkt)
+	eval = function (flow, pkt)
 		if pkt.dstport ~= 80 then
 			pkt:drop()
 		end

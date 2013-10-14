@@ -1,19 +1,10 @@
-require("protocol/ipv4")
-require("protocol/tcp")
-require("protocol/http")
+local http = require("protocol/http")
+
+http.install_tcp_rule(80)
 
 haka.rule {
-	hooks = { "tcp-connection-new" },
-	eval = function (self, pkt)
-		if pkt.tcp.dstport == 80 then
-			pkt.next_dissector = "http"
-		end
-	end
-}
-
-haka.rule {
-	hooks = { "http-request" },
-	eval = function (self, http)
+	hook = haka.event('http', 'request'),
+	eval = function (http, request)
 		print(string.format("Ip source %s port source %s", http.connection.ipsrc, http.connection.prtsrc))
 	end
 }

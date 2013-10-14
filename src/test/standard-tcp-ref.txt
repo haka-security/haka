@@ -1,7 +1,5 @@
-debug tcp-connection: opening connection 192.168.10.1:52110 -> 192.168.20.1:443
 debug filter: entering packet filetring rules : 52110 --> 443
 error filter: packet dropped : drop by default
-debug tcp-connection: dropping connection 192.168.10.1:52110 -> 192.168.20.1:443
 error tcp-connection: no connection found
 debug tcp-connection: no connection found 192.168.10.1:52110 -> 192.168.20.1:80
 error filter: Xmas attack detected !!!
@@ -14,34 +12,26 @@ error filter: Xmas attack detected !!!
 error filter: Xmas attack detected !!!
 error filter: Xmas attack detected !!!
 error filter: Xmas attack detected !!!
-debug tcp-connection: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
 debug filter: entering packet filetring rules : 50706 --> 80
 warn filter: authorizing http traffic
+debug tcp-connection: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
 debug tcp-connection: closing connection 192.168.10.1:50706 -> 192.168.20.1:80
-debug tcp-connection: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug filter: entering packet filetring rules : 51584 --> 80
 error filter: packet dropped : drop by default
-debug tcp-connection: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
-debug tcp-connection: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug filter: entering packet filetring rules : 51584 --> 80
 error filter: packet dropped : drop by default
-debug tcp-connection: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
-debug tcp-connection: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
 debug filter: entering packet filetring rules : 37017 --> 22
 warn filter: authorizing ssh traffic
 warn filter: no available dissector for ssh
+debug tcp-connection: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
 debug tcp-connection: closing connection 192.168.10.1:37017 -> 192.168.20.1:22
-debug tcp-connection: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug filter: entering packet filetring rules : 34191 --> 22
 error filter: packet dropped : drop by default
-debug tcp-connection: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
-debug tcp-connection: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug filter: entering packet filetring rules : 34191 --> 22
 error filter: packet dropped : drop by default
-debug tcp-connection: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
-debug tcp-connection: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
 debug filter: entering packet filetring rules : 50710 --> 80
 warn filter: authorizing http traffic
+debug tcp-connection: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
 error filter: /bin/sh shellcode detected !!!
 error filter: /bin/sh shellcode detected !!!
 error filter: /bin/sh shellcode detected !!!

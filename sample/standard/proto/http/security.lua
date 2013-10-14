@@ -4,8 +4,8 @@
 
 -- detect malicious web scanners
 haka.rule {
-	hooks = {"http-request"},
-	eval = function (self, http)
+	hook = haka.event('http', 'request'),
+	eval = function (http, request)
 		--user-agent patterns of known web scanners
 		local http_useragent = { 
 			nikto	= '.+%(Nikto%/.+%)%s%(Evasions:.+%)%s%(Test:.+%)',
@@ -16,8 +16,8 @@ haka.rule {
 			grabber	= '^Grabber.*'
 		}
 
-		if (http.request.headers['User-Agent']) then
-			local user_agent = http.request.headers['User-Agent']
+		if request.headers['User-Agent'] then
+			local user_agent = request.headers['User-Agent']
 			for scanner, pattern in pairs(http_useragent) do
 				if user_agent:match(pattern) then
 					haka.log.error("filter", "'%s' scan detected !!!", scanner)

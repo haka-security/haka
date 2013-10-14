@@ -4,7 +4,7 @@
 
 haka.rule {
 	hook = haka.event('tcp', 'receive_packet'),
-	eval = function (self, pkt)
+	eval = function (pkt)
 		--Xmas scan, as made by nmap -sX <IP>
 		if pkt.flags.psh and pkt.flags.fin and pkt.flags.urg then
 			haka.log.error("filter", "Xmas attack detected !!!")
@@ -27,7 +27,7 @@ local bindshell = string_convert({0xeb, 0x1f, 0x5e, 0x89, 0x76, 0x08, 0x31, 0xc0
 
 haka.rule {
 	hook = haka.event('tcp', 'receive_packet'),
-	eval = function (self, pkt)
+	eval = function (pkt)
 		if #pkt.payload > 0 then
 			-- reconstruct payload
 			payload = getpayload(pkt.payload)

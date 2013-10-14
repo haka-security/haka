@@ -2,11 +2,12 @@
 -- HTTP compliance
 ------------------------------------
 -- check http method value
+local http_methods = dict({ 'get', 'post', 'head', 'put', 'trace', 'delete', 'options' })
+
 haka.rule {
-	hooks = {"http-request"},
-	eval = function (self, http)
-		local http_methods = dict({ 'get', 'post', 'head', 'put', 'trace', 'delete', 'options' })
-		local method = http.request.method:lower()
+	hook = haka.event('http', 'request'),
+	eval = function (http, request)
+		local method = request.method:lower()
 		if not contains(http_methods, method) then
 			haka.log.error("filter", "non authorized http method '%s'", method)
 			http:drop()
@@ -15,12 +16,13 @@ haka.rule {
 }
 
 -- check http version value
+local http_versions = dict({ '0.9', '1.0', '1.1' })
+
 haka.rule {
-	hooks = {"http-request"},
-	eval = function (self, http)
-		local http_versions = dict({ '0.9', '1.0', '1.1' })
-		local protocol = http.request.version:sub(1,4)
-		local version = http.request.version:sub(6)
+	hook = haka.event('http', 'request'),
+	eval = function (http, request)
+		local protocol = request.version:sub(1,4)
+		local version = request.version:sub(6)
 		if not protocol == "HTTP" or not contains(http_versions, version) then
 			haka.log.error("filter", "unsupported http version '%s/%s'", protocol, version)
 			http:drop()
@@ -30,9 +32,9 @@ haka.rule {
 
 -- check content length value
 haka.rule {
-	hooks = {"http-response"},
-	eval = function (self, http)
-		local content_length = http.request.headers["Content-Length"]
+	hook = haka.event('http', 'request'),
+	eval = function (http, request)
+		local content_length = request.headers["Content-Length"]
 		if content_length then
 			content_length = tonumber(content_length)
 			if content_length == nil or content_length < 0 then

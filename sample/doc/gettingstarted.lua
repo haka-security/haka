@@ -32,7 +32,7 @@ haka.rule {
 -- connections
 haka.rule {
 	hook = haka.event('tcp-connection', 'new_connection'),
-	eval = function (pkt)
+	eval = function (flow, pkt)
 		if pkt.ip.dst == ipv4.addr("192.168.20.1") and pkt.dstport == 80 then
 			haka.log.warning("filter","Traffic on HTTP port from %s", pkt.ip.src)
 		end
