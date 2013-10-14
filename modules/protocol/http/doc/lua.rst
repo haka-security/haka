@@ -14,7 +14,7 @@ Types
     .. lua:data:: scheme
 
         URI scheme.
-    
+
     .. lua:data:: authority
 
         URI authority.
@@ -22,7 +22,7 @@ Types
     .. lua:data:: host
 
         URI host.
-    
+
     .. lua:data:: userinfo
 
         URI userinfo.
@@ -30,7 +30,7 @@ Types
     .. lua:data:: user
 
         URI user (from userinfo).
-    
+
     .. lua:data:: pass
 
         URI password (from userinfo).
@@ -40,15 +40,15 @@ Types
     .. lua:data:: port
 
         URI port.
-    
-    .. lua:data::path
+
+    .. lua:data:: path
 
         URI path.
 
     .. lua:data:: query
 
         URI query.
-    
+
     .. lua:class :: args
 
         URI query's parameters.
@@ -56,8 +56,6 @@ Types
     .. lua:data:: fragment
 
         URI fragment.
-    
-    .. note:: all these fields are read-only.
 
     .. lua:function:: tostring(uri.split)
 
@@ -83,7 +81,7 @@ Types
 
 .. lua:class:: uri.cookies(str)
 
-	Store cookies as a list of key-value pairs	
+	Store cookies as a list of key-value pairs.
 
 Functions
 ---------

@@ -231,7 +231,7 @@ local _unreserved = dict({45, 46, 95, 126})
 
 local function uri_safe_decode(uri)
 	local uri = string.gsub(uri, '%%(%x%x)',
-	    function(p)
+		function(p)
 			local val = tonumber(p, 16)
 			if (val > 47 and val < 58) or
 			   (val > 64 and val < 91) or
@@ -241,7 +241,7 @@ local function uri_safe_decode(uri)
 			else
 				return '%' .. string.upper(p)
 			end
-	    end)
+		end)
 	return uri
 end
 
@@ -255,7 +255,7 @@ local function uri_safe_decode_split(tab)
 	end
 end
 
-local _prefixes = {{'^%.%./', ''}, {'^%./', ''}, {'^/%.%./', '/'}, {'^/%.%.', '/'}, {'^/%./', '/'}, {'^/%.', '/'}}
+local _prefixes = {{'^%.%./', ''}, {'^%./', ''}, {'^/%.%./', '/'}, {'^/%.%.$', '/'}, {'^/%./', '/'}, {'^/%.$', '/'}}
 
 local function remove_dot_segments(path)
 	local output = {}
@@ -274,6 +274,7 @@ local function remove_dot_segments(path)
 			end
 			index = index + 1
 		end
+		print('nb================',nb)
 		if nb == 0 then
 			if path:sub(1,1) == '/' then path = path:sub(2) end
 			local left, right = path:match('([^/]*)([/]?.*)')
@@ -358,6 +359,10 @@ end
 function mt_uri:normalize()
 	if not self then return nil end
 
+	-- decode percent-encoded octets of unresserved chars
+	-- capitalize letters in escape sequences
+	uri_safe_decode_split(self)
+
 	-- use http as default scheme
 	if not self.scheme and self.authority then
 		self.scheme = 'http'
@@ -380,9 +385,6 @@ function mt_uri:normalize()
 	-- normalize path according to rfc 3986
 	if self.path then self.path = remove_dot_segments(self.path) end
 
-	-- decode percent-encoded octets of unresserved chars
-	-- capitalize letters in escape sequences
-	uri_safe_decode_split(self)
 end
 
 
@@ -455,7 +457,7 @@ end
 
 
 -- register methods on splitted cookie list
-mt_cookie = {}
+local mt_cookie = {}
 mt_cookie.__index = mt_cookie
 
 function mt_cookie:__tostring()
