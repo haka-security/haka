@@ -960,7 +960,7 @@ struct tcp *tcp_stream_pop(struct stream *s)
 			}
 		}
 
-		if (tcp) {
+		if (tcp && tcp->packet) {
 			tcp_stream_seq(s, tcp);
 		}
 
