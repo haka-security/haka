@@ -200,6 +200,8 @@ struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction
 		}
 	}
 	else {
+		if (direction_in) *direction_in = true; /* This is the direction of this connection
+												   if is created from this packet */
 		if (_dropped) *_dropped = false;
 		return NULL;
 	}

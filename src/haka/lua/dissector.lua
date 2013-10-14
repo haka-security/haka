@@ -8,21 +8,29 @@ local dissector = {}
 
 dissector.Dissector = class('Dissector')
 
-function events(name)
-	local dissec = dissector.get(name)
-	if dissec then
-		return dissec.events
+function haka.event(dname, name)
+	local dissec = dissector.get(dname)
+	if not dissec then
+		error(string.format("unknown dissector '%s'", dname))
 	end
+
+	local event = dissec.events[name]
+	if not event then
+		error(string.format("unknown event '%s' on dissector '%s'", name, dname))
+	end
+	
+	return event
 end
 
 function dissector.Dissector.__class_init(self, cls)
 	self.super:__class_init(cls)
 	cls.events = {}
 	self.inherit_events(cls)
+	cls.options = {}
 end
 
 function dissector.Dissector.register_event(cls, name, continue)
-	cls.events[name] = haka.events.Event:new(name, continue)
+	cls.events[name] = haka.events.Event:new(string.format('%s:%s', cls.name, name), continue)
 end
 
 function dissector.Dissector.inherit_events(cls)
@@ -31,6 +39,7 @@ function dissector.Dissector.inherit_events(cls)
 		local events = cls.events
 		for name, event in pairs(parent_events) do
 			events[name] = event:clone()
+			events[name].name = string.format('%s:%s', cls.name, name)
 		end
 	end
 end
@@ -54,12 +63,12 @@ end
 dissector.PacketDissector = class('PacketDissector', dissector.Dissector)
 
 dissector.PacketDissector:register_event(
-	'packet_received',
+	'receive_packet',
 	function (self) self:continue() end
 )
 
 dissector.PacketDissector:register_event(
-	'sending_packet',
+	'send_packet',
 	function (self) self:continue() end
 )
 
@@ -79,7 +88,12 @@ end
 dissector.FlowDissector = class('FlowDissector', dissector.Dissector)
 
 dissector.FlowDissector:register_event(
-	'data_available',
+	'receive_data',
+	function (self) return self:continue() end
+)
+
+dissector.FlowDissector:register_event(
+	'send_data',
 	function (self) return self:continue() end
 )
 
@@ -139,6 +153,7 @@ end
 local dissectors = {}
 
 function dissector.new(args)
+	haka.log.info("dissector", "register new dissector '%s'", args.name)
 	local d = class(args.name, args.type or dissector.Dissector)
 	dissectors[args.name] = d
 	return d
@@ -147,14 +162,6 @@ end
 function dissector.get(name)
 	return dissectors[name]
 end
-
-
---
--- Options
---
-dissector.behavior = {}
-
-dissector.behavior.drop_unknown_dissector = false --true
 
 
 haka.dissector = dissector

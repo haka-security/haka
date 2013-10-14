@@ -85,9 +85,9 @@ STRUCT_UNKNOWN_KEY_ERROR(tcp_payload);
 
 LUA_OBJECT(struct tcp);
 LUA_OBJECT(struct tcp_connection);
-LUA_OBJECT(struct stream);
+LUA_OBJECT_CAST(struct tcp_stream, struct stream);
 
-%newobject stream::pop;
+%newobject tcp_stream::_pop;
 
 struct tcp_stream
 {
@@ -176,7 +176,7 @@ struct tcp {
 		bool continue()
 		{
 			assert($self);
-			return packet_state($self->packet->packet) != STATUS_SENT;
+			return $self->packet != NULL;
 		}
 	}
 };
@@ -299,7 +299,7 @@ unsigned int tcp_stream_lastseq_get(struct tcp_stream *s) { return tcp_stream_la
 	}
 
 	function tcp_dissector.method:emit()
-		if not haka.pcall(haka.context.signal, haka.context, self, tcp_dissector.events.packet_received) then
+		if not haka.pcall(haka.context.signal, haka.context, self, tcp_dissector.events.receive_packet) then
 			return self:drop()
 		end
 
@@ -325,7 +325,7 @@ unsigned int tcp_stream_lastseq_get(struct tcp_stream *s) { return tcp_stream_la
 	end
 
 	function tcp_dissector.method:send()
-		if not haka.pcall(haka.context.signal, haka.context, self, tcp_dissector.events.sending_packet) then
+		if not haka.pcall(haka.context.signal, haka.context, self, tcp_dissector.events.send_packet) then
 			return self:drop()
 		end
 
@@ -340,8 +340,17 @@ unsigned int tcp_stream_lastseq_get(struct tcp_stream *s) { return tcp_stream_la
 		end
 	end
 
+	function tcp_dissector.method:inject()
+		local pkt = this._forge(self)
+		while pkt do
+			pkt:inject()
+			pkt = this._forge(self)
+		end
+	end
+
 	swig.getclassmetatable('tcp')['.fn'].send = tcp_dissector.method.send
 	swig.getclassmetatable('tcp')['.fn'].emit = tcp_dissector.method.emit
+	swig.getclassmetatable('tcp')['.fn'].inject = tcp_dissector.method.inject
 
 	local ipv4 = require("protocol/ipv4")
 	ipv4.register_protocol(6, tcp_dissector)

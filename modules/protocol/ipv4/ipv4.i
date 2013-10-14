@@ -271,7 +271,7 @@ struct ipv4 {
 		bool _continue()
 		{
 			assert($self);
-			return packet_state($self->packet) != STATUS_SENT;
+			return $self->packet != NULL;
 		}
 	}
 };
@@ -353,7 +353,7 @@ struct packet *ipv4_forge(struct ipv4 *pkt);
 	}
 
 	function ipv4_dissector.method:emit()
-		if not haka.pcall(haka.context.signal, haka.context, self, ipv4_dissector.events.packet_received) then
+		if not haka.pcall(haka.context.signal, haka.context, self, ipv4_dissector.events.receive_packet) then
 			return self:drop()
 		end
 
@@ -365,13 +365,7 @@ struct packet *ipv4_forge(struct ipv4 *pkt);
 		if next_dissector then
 			return next_dissector.receive(self)
 		else
-			if haka.dissector.behavior.drop_unknown_dissector then
-				haka.log.error("ipv4", "dissector for protocol %d is unknown", self.proto)
-				return self:drop()
-			else
-				haka.log.warning("ipv4", "dissector for protocol %d is unknown", self.proto)
-				return self:send()
-			end
+			return self:send()
 		end
 	end
 
@@ -385,7 +379,7 @@ struct packet *ipv4_forge(struct ipv4 *pkt);
 	end
 
 	function ipv4_dissector.method:send()
-		if not haka.pcall(haka.context.signal, haka.context, self, ipv4_dissector.events.sending_packet) then
+		if not haka.pcall(haka.context.signal, haka.context, self, ipv4_dissector.events.send_packet) then
 			return self:drop()
 		end
 
@@ -397,6 +391,12 @@ struct packet *ipv4_forge(struct ipv4 *pkt);
 		return pkt:send()
 	end
 
+	function ipv4_dissector.method:inject()
+		local pkt = this._forge(self)
+		return pkt:inject()
+	end
+
 	swig.getclassmetatable('ipv4')['.fn'].send = ipv4_dissector.method.send
 	swig.getclassmetatable('ipv4')['.fn'].emit = ipv4_dissector.method.emit
+	swig.getclassmetatable('ipv4')['.fn'].inject = ipv4_dissector.method.inject
 }

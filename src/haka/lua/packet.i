@@ -83,7 +83,10 @@ enum packet_mode packet_mode();
 struct packet *packet_new(int size = 0);
 
 %rename(_send) packet__send;
-void packet__send(struct packet *DISOWN_SUCCESS_ONLY);
+void packet__send(struct packet *pkt);
+
+%rename(_inject) packet__inject;
+void packet__inject(struct packet *pkt);
 
 %{
 size_t packet_length_get(struct packet *pkt) {
@@ -102,19 +105,36 @@ const char *packet_name_get(struct packet *pkt) {
 	return "raw";
 }
 
-void packet__send(struct packet *pkt) {
+void packet__send(struct packet *pkt)
+{
 	assert(pkt);
 
 	switch (packet_state(pkt)) {
 	case STATUS_FORGED:
-		packet_accept(pkt);
-		//packet_send(pkt);
-		break;
-
 	case STATUS_NORMAL:
 		packet_accept(pkt);
 		break;
 
+	case STATUS_SENT:
+		error(L"operation not supported");
+		return;
+
+	default:
+		assert(0);
+		return;
+	}
+}
+
+void packet__inject(struct packet *pkt)
+{
+	assert(pkt);
+
+	switch (packet_state(pkt)) {
+	case STATUS_FORGED:
+		packet_send(pkt);
+		break;
+
+	case STATUS_NORMAL:
 	case STATUS_SENT:
 		error(L"operation not supported");
 		return;
@@ -140,8 +160,10 @@ bool packet__continue(struct packet *pkt)
 		name = 'raw'
 	}
 
+	raw_dissector.options.drop_unknown_dissector = false
+
 	function raw_dissector.method:emit()
-		if not haka.pcall(haka.context.signal, haka.context, self, raw_dissector.events.packet_received) then
+		if not haka.pcall(haka.context.signal, haka.context, self, raw_dissector.events.receive_packet) then
 			return self:drop()
 		end
 
@@ -155,11 +177,10 @@ bool packet__continue(struct packet *pkt)
 			if next_dissector then
 				return next_dissector.receive(self)
 			else
-				if haka.dissector.behavior.drop_unknown_dissector then
+				if raw_dissector.options.drop_unknown_dissector then
 					haka.log.error("raw", "dissector '%s' is unknown", dissector)
 					return self:drop()
 				else
-					haka.log.warning("raw", "dissector '%s' is unknown", dissector)
 					return self:send()
 				end
 			end
@@ -173,11 +194,11 @@ bool packet__continue(struct packet *pkt)
 	end
 
 	function raw_dissector.create(size)
-		return this._create(size)
+		return this._create(size or 0)
 	end
 
 	function raw_dissector.method:send()
-		if not haka.pcall(haka.context.signal, haka.context, self, raw_dissector.events.sending_packet) then
+		if not haka.pcall(haka.context.signal, haka.context, self, raw_dissector.events.send_packet) then
 			return self:drop()
 		end
 
@@ -188,8 +209,13 @@ bool packet__continue(struct packet *pkt)
 		return this._send(self)
 	end
 
+	function raw_dissector.method:inject()
+		return this._inject(self)
+	end
+
 	swig.getclassmetatable('packet')['.fn'].send = raw_dissector.method.send
 	swig.getclassmetatable('packet')['.fn'].emit = raw_dissector.method.emit
+	swig.getclassmetatable('packet')['.fn'].inject = raw_dissector.method.inject
 
 	function haka.filter(pkt)
 		raw_dissector.receive(pkt)

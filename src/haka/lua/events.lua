@@ -35,7 +35,7 @@ end
 function events.EventConnections.method:signal(emitter, event, ...)
 	local listeners = self[event]
 	if listeners then
-		haka.log.debug("event", "signal '%s:%s'", emitter.name, event.name)
+		haka.log.debug("event", "signal '%s'", event.name)
 
 		for _, listener in ipairs(listeners) do
 			self:_signal(listener, emitter, ...)

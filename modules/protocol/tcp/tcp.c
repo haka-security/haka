@@ -282,5 +282,6 @@ void tcp_action_drop(struct tcp *tcp)
 {
 	TCP_CHECK(tcp);
 	ipv4_action_drop(tcp->packet);
+	ipv4_release(tcp->packet);
 	tcp->packet = NULL;
 }

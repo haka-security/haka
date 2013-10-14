@@ -1,6 +1,6 @@
 
-local ipv4 = require("protocol/ipv4")
-local tcp = require("protocol/tcp")
+require("protocol/ipv4")
+require("protocol/tcp")
 
 local tcp_connection_dissector = haka.dissector.new{
 	type = haka.dissector.FlowDissector,
@@ -58,14 +58,14 @@ function tcp_connection_dissector.method:emit(pkt, direction)
 		stream:init(pkt.seq+1)
 		return pkt:send()
 	elseif pkt.flags.rst then
-		self:_sendpkt(direction, pkt)
+		self:_sendpkt(pkt, direction)
 		return self:drop()
 	elseif self.state >= 2 then
 		if pkt.flags.ack then
 			self.state = self.state + 1
 		end
 
-		self:_sendpkt(direction, pkt)
+		self:_sendpkt(pkt, direction)
 
 		if self.state >= 3 then
 			return self:close()
@@ -74,35 +74,41 @@ function tcp_connection_dissector.method:emit(pkt, direction)
 		end
 	elseif pkt.flags.fin then
 		self.state = self.state+1
-		return self:_sendpkt(direction, pkt)
+		return self:_sendpkt(pkt, direction)
 	else
 		stream:push(pkt)
 	end
 
 	if stream:available() > 0 then
-		if not haka.pcall(haka.context.signal, haka.context, self, tcp_connection_dissector.events.data_available, stream) then
+		if not haka.pcall(haka.context.signal, haka.context, self, tcp_connection_dissector.events.receive_data, stream, direction) then
 			return self:drop()
 		end
 	end
 
-	self:_send(direction)
+	if self:continue() then
+		self:_send(direction)
+	end
 end
 
 function tcp_connection_dissector.method:continue()
 	return self.connection ~= nil
 end
 
-function tcp_connection_dissector.method:_sendpkt(direction, pkt)
+function tcp_connection_dissector.method:_sendpkt(pkt, direction)
 	self:_send(direction)
 	
 	self.stream[direction]:seq(pkt)
-	self.stream[not self.direction]:ack(pkt)
+	self.stream[not direction]:ack(pkt)
 	pkt:send()
 end
 
 function tcp_connection_dissector.method:_send(direction)
 	local stream = self.stream[direction]
 	local other_stream = self.stream[not direction]
+
+	if not haka.pcall(haka.context.signal, haka.context, self, tcp_connection_dissector.events.send_data, stream, direction) then
+		return self:drop()
+	end
 
 	local pkt = stream:pop()
 	while pkt do
@@ -114,8 +120,8 @@ function tcp_connection_dissector.method:_send(direction)
 end
 
 function tcp_connection_dissector.method:send()
-	self:_send(false)
 	self:_send(true)
+	self:_send(false)
 end
 
 function tcp_connection_dissector.method:drop()
@@ -131,8 +137,8 @@ function tcp_connection_dissector.method:close()
 end
 
 function tcp_connection_dissector.method:_forgereset(inv)
-	local tcprst = haka.packet.new()
-	tcprst = ipv4.create(tcprst)
+	local tcprst = haka.dissector.get('raw').create()
+	tcprst = haka.dissector.get('ipv4').create(tcprst)
 
 	if inv then
 		tcprst.src = self.connection.dstip
@@ -144,7 +150,7 @@ function tcp_connection_dissector.method:_forgereset(inv)
 
 	tcprst.ttl = 64
 
-	tcprst = tcp.create(tcprst)
+	tcprst = haka.dissector.get('tcp').create(tcprst)
 
 	if inv then
 		tcprst.srcport = self.connection.dstport
@@ -164,10 +170,10 @@ end
 function tcp_connection_dissector.method:reset()
 	local rst
 
-	rst = self:_forgereset(true)
+	rst = self:_forgereset(false)
 	rst:send()
 
-	rst = self:_forgereset(false)
+	rst = self:_forgereset(true)
 	rst:send()
 
 	self:drop()
