@@ -3,7 +3,7 @@
 ------------------------------------
 
 haka.rule {
-	hooks = { "tcp-up" },
+	hook = haka.event('tcp', 'receive_packet'),
 	eval = function (self, pkt)
 		--Xmas scan, as made by nmap -sX <IP>
 		if pkt.flags.psh and pkt.flags.fin and pkt.flags.urg then
@@ -26,7 +26,7 @@ local bindshell = string_convert({0xeb, 0x1f, 0x5e, 0x89, 0x76, 0x08, 0x31, 0xc0
 	0xdc, 0xff, 0xff, 0xff, "/bin/sh"})
 
 haka.rule {
-	hooks = { "tcp-up" },
+	hook = haka.event('tcp', 'receive_packet'),
 	eval = function (self, pkt)
 		if #pkt.payload > 0 then
 			-- reconstruct payload

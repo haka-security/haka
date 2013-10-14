@@ -3,7 +3,7 @@
 ------------------------------------
 
 haka.rule {
-	hooks = { "ipv4-up" },
+	hook = haka.event('ipv4', 'receive_packet'),
 	eval = function (self, pkt)
 		-- bad IP checksum
 		if not pkt:verify_checksum() then

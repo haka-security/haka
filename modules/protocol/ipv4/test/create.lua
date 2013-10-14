@@ -3,11 +3,11 @@
 local ipv4 = require("protocol/ipv4")
 
 haka.rule {
-	hooks = { "ipv4-up" },
-	eval = function (self, pkt)
+	hook = haka.event('ipv4', 'receive_packet'),
+	eval = function (pkt)
 		if pkt.proto ~= 20 then
-			local npkt = haka.packet.new()
-			npkt = ipv4.create(npkt)
+			local npkt = haka.dissector.get('raw').create()
+			npkt = haka.dissector.get('ipv4').create(npkt)
 			npkt.version = 4
 			npkt.id = 0xbeef
 			npkt.flags.rb = true
@@ -18,7 +18,7 @@ haka.rule {
 			npkt.proto = 20
 			npkt.src = ipv4.addr(192, 168, 0, 1)
 			npkt.dst = ipv4.addr("192.168.0.2")
-			npkt:send()
+			npkt:inject()
 		end
 	end
 }

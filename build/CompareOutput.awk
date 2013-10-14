@@ -27,7 +27,7 @@ $0 ~ /^debug packet:/ {
 	next;
 }
 
-$0 ~ /^debug rule:/ {
+$0 ~ /^debug event: signal/ {
 	next;
 }
 

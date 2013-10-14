@@ -23,8 +23,8 @@ require("protocol/ipv4")
 require("protocol/tcp")
 
 haka.rule {
-	hooks = { "tcp-up" },
-	eval = function (self, pkt)
+	hook = haka.event('tcp', 'receive_packet'),
+	eval = function (pkt)
 		local good, bad = checks(pkt)
 		print(string.format( "----------TCP HEADER ---------"))
 		print(string.format( "TCP Source Port: %d", pkt.srcport))

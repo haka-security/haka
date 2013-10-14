@@ -57,7 +57,7 @@ machine.INITIAL = machine.state1
 local context = {}
 
 haka.rule {
-	hooks = { 'ipv4-up' },
+	hook = haka.event('ipv4', 'receive_packet'),
 	eval = function (self, pkt)
 		if not context.instance then
 			context.instance = machine:instanciate(context)

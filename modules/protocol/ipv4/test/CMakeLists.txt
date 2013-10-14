@@ -3,7 +3,6 @@
 include(TestPcap)
 include(TestUnit)
 
-TEST_PCAP(ipv4 hook-unknown-rule)
 TEST_PCAP(ipv4 setbadfields)
 TEST_PCAP(ipv4 hook-up-rule)
 TEST_PCAP(ipv4 hook-down-rule)

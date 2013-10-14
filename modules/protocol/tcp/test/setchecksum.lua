@@ -5,8 +5,8 @@ require("protocol/ipv4")
 require("protocol/tcp")
 
 haka.rule {
-	hooks = { "tcp-up" },
-	eval = function (self, pkt)
+	hook = haka.event('tcp', 'receive_packet'),
+	eval = function (pkt)
 		pkt:compute_checksum()
 	end
 }

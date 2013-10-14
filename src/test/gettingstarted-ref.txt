@@ -1,5 +1,5 @@
-debug tcp-connection: opening connection 192.168.10.1:50683 -> 192.168.20.1:80
 warn filter: Traffic on HTTP port from 192.168.10.1
+debug tcp-connection: opening connection 192.168.10.1:50683 -> 192.168.20.1:80
 debug tcp-connection: closing connection 192.168.10.1:50683 -> 192.168.20.1:80
 error filter: Bad TCP checksum
 error filter: Bad TCP checksum

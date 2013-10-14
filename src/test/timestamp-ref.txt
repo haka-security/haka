@@ -1,5 +1,4 @@
 info timestamp: packet timestamp is 1370872913.511316 seconds
-debug tcp-connection: opening connection 10.0.0.4:41298 -> 10.0.0.47:80
 info timestamp: packet timestamp is 1370872913.512176 seconds
 info timestamp: packet timestamp is 1370872913.512194 seconds
 info timestamp: packet timestamp is 1370872915.222042 seconds
@@ -9,9 +8,7 @@ info timestamp: packet timestamp is 1370872915.260631 seconds
 info timestamp: packet timestamp is 1370872915.260639 seconds
 info timestamp: packet timestamp is 1370872915.260737 seconds
 info timestamp: packet timestamp is 1370872915.261536 seconds
-debug tcp-connection: closing connection 10.0.0.4:41298 -> 10.0.0.47:80
 info timestamp: packet timestamp is 1370872971.718859 seconds
-debug tcp-connection: opening connection 10.0.0.4:41299 -> 10.0.0.47:80
 info timestamp: packet timestamp is 1370872971.719695 seconds
 info timestamp: packet timestamp is 1370872971.719712 seconds
 info timestamp: packet timestamp is 1370872974.237775 seconds
@@ -21,9 +18,7 @@ info timestamp: packet timestamp is 1370872974.238986 seconds
 info timestamp: packet timestamp is 1370872974.238993 seconds
 info timestamp: packet timestamp is 1370872974.239095 seconds
 info timestamp: packet timestamp is 1370872974.239337 seconds
-debug tcp-connection: closing connection 10.0.0.4:41299 -> 10.0.0.47:80
 info timestamp: packet timestamp is 1370872977.454756 seconds
-debug tcp-connection: opening connection 10.0.0.4:41300 -> 10.0.0.47:80
 info timestamp: packet timestamp is 1370872977.454969 seconds
 info timestamp: packet timestamp is 1370872977.454987 seconds
 info timestamp: packet timestamp is 1370872979.341534 seconds
@@ -33,4 +28,3 @@ info timestamp: packet timestamp is 1370872979.342730 seconds
 info timestamp: packet timestamp is 1370872979.342737 seconds
 info timestamp: packet timestamp is 1370872979.342839 seconds
 info timestamp: packet timestamp is 1370872979.343062 seconds
-debug tcp-connection: closing connection 10.0.0.4:41300 -> 10.0.0.47:80

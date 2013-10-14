@@ -4,8 +4,8 @@
 local ipv4 = require("protocol/ipv4")
 
 haka.rule {
-	hooks = { "ipv4-up" },
-	eval = function (self, pkt)
+	hook = haka.event('ipv4', 'receive_packet'),
+	eval = function (pkt)
 		pkt.version = 4
 		pkt.hdr_len = 20
 		pkt.len = 84
