@@ -115,3 +115,47 @@ for k, v in pairs(_test) do
 		error('missing and/or extra components while splitting uri')
 	end
 end
+
+local _cookie = {
+	[ 'a=3;b=5' ] = 
+		{a = '3', b='5'},
+
+	[ 'a=3' ] = 
+		{a = '3'},
+
+	[ 'login=administrateur;password=pass;utm__z=0124645648645646' ] =
+		{login = 'administrateur', password='pass', utm__z='0124645648645646'},
+
+	[ '' ] = 
+		{ },
+
+	[ 'a=2%3bb=c' ] = 
+		{ a = '2%3bb=c'},
+
+	[ 'a=t t;b=c' ] = 
+		{ a = 't t'; b='c'},
+
+	[ 'a=2;;b=3' ] = 
+		{a='2', b='3'},
+
+	[ ';a=2' ] = 
+		{a = '2'},
+
+	[ 'a=2;' ] = 
+		{a = '2'}
+
+}
+
+for k, v in pairs(_cookie) do
+	local split = http.cookies.split(k)
+	print('splitting cookie:', k)
+	dump_table(split)
+	if compare_table(split, v) then
+	else
+		print('----> expected:')
+		dump_table(v)
+		print('----> got:')
+		dump_table(split)
+		error('missing and/or extra components while splitting cookie')
+	end
+end
