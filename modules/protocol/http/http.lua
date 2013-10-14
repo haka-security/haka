@@ -1,4 +1,6 @@
 
+require("protocol/tcp-connection")
+
 local module = {}
 
 local str = string.char
@@ -260,12 +262,12 @@ local function forge(http)
 	return tcp
 end
 
-local function parse(http, context, f, name, next_state)
+local function parse(http, stream, context, f, signal, next_state)
 	if not context._co then
 		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-			context._mark = http._tcp_stream.stream:mark()
+			context._mark = stream:mark()
 		end
-		context._co = coroutine.create(function () f(http._tcp_stream.stream, context) end)
+		context._co = coroutine.create(function () f(stream, context) end)
 	end
 
 	coroutine.resume(context._co)
@@ -273,125 +275,141 @@ local function parse(http, context, f, name, next_state)
 	if coroutine.status(context._co) == "dead" then
 		if not context._invalid then
 			http._state = next_state
-			if not haka.rule_hook("http-".. name, http) then
-				return nil
+			
+			if not haka.pcall(haka.context.signal, haka.context, http, signal, context) then
+				http:drop()
+				return false
 			end
 
-			context.next_dissector = http.next_dissector
+			return true
 		else
 			haka.log.error("http", "%s", context._invalid)
-			http._tcp_stream:drop()
-			return nil
+			http:drop()
+			return false
 		end
 	end
 end
 
 
-local http = haka.dissector.new('http', { 'http-request', 'http-response' })
+local http_dissector = haka.dissector.new{
+	type = haka.dissector.FlowDissector,
+	name = 'http'
+}
 
-static(http).getdata = function (cls, stream)
-	local data = stream.connection.data._http
-	if not data then
-		data = cls:new(stream)
-		stream.connection.data._http = data
+http_dissector:register_event('request')
+http_dissector:register_event('response')
+
+function http_dissector.method:__init(flow)
+	super(self).__init(self)
+	self.flow = flow
+	if flow then
+		self.connection = flow.connection
 	end
-
-	data._tcp_stream = stream
-	return data
-end
-
-function http:__init(stream)
-	self.__super.__init(self)
-	self.connection = stream.connection
 	self._state = 0
 end
 
-function http:valid()
-	return self._tcp_stream:valid()
+function http_dissector.method:connections()
+	return haka.events.ObjectEventConnections:new(self, http_dissector.connections)
 end
 
-function http:drop()
-	return self._tcp_stream:drop()
+function http_dissector.method:continue()
+	return self.flow ~= nil
 end
 
-function http:reset()
-	return self._tcp_stream:reset()
+function http_dissector.method:drop()
+	self.flow:drop()
+	self.flow = nil
 end
 
-function http:forge()
-	local tcp = self._tcp_stream
-	if tcp then
-		if self._state == 2 and tcp.direction then
-			self._state = 3
-
-			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-				tcp.stream:seek(self.request._mark, true)
-				self.request._mark = nil
-
-				tcp.stream:erase(self.request._length)
-				tcp.stream:insert(self.request.method)
-				tcp.stream:insert(" ")
-				tcp.stream:insert(self.request.uri)
-				tcp.stream:insert(" ")
-				tcp.stream:insert(self.request.version)
-				tcp.stream:insert("\r\n")
-				build_headers(tcp.stream, self.request.headers, self.request._headers_order)
-				tcp.stream:insert("\r\n")
-			end
-
-		elseif self._state == 5 and not tcp.direction then
-			self._state = 0
-
-			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-				tcp.stream:seek(self.response._mark, true)
-				self.response._mark = nil
-
-				tcp.stream:erase(self.response._length)
-				tcp.stream:insert(self.response.version)
-				tcp.stream:insert(" ")
-				tcp.stream:insert(self.response.status)
-				tcp.stream:insert(" ")
-				tcp.stream:insert(self.response.reason)
-				tcp.stream:insert("\r\n")
-				build_headers(tcp.stream, self.response.headers, self.response._headers_order)
-				tcp.stream:insert("\r\n")
-			end
-		end
-
-		self._tcp_stream = nil
-	end
-	return tcp
+function http_dissector.method:reset()
+	self.flow:reset()
+	self.flow = nil
 end
 
-function http:dissect()
-	if self._tcp_stream.direction then
+function http_dissector.method:receive(flow, stream, direction)
+	assert(flow == self.flow)
+
+	if direction then
 		if self._state == 0 or self._state == 1 then
-			if self._tcp_stream.stream:available() > 0 then
-				if self._state == 0 then
-					self.request = {}
-					self.response = nil
-					self._state = 1
-				end
-
-				parse(self, self.request, parse_request, "request", 2)
+			if self._state == 0 then
+				self.request = {}
+				self.response = nil
+				self._state = 1
 			end
-		elseif self.request then
-			self.next_dissector = self.request.next_dissector
+
+			if parse(self, stream, self.request, parse_request, http_dissector.events.request, 2) then
+				return self:send(stream, direction)
+			end
 		end
 	else
 		if self._state == 3 or self._state == 4 then
-			if self._tcp_stream.stream:available() > 0 then
-				if self._state == 3 then
-					self.response = {}
-					self._state = 4
-				end
-
-				parse(self, self.response, parse_response, "response", 5)
+			if self._state == 3 then
+				self.response = {}
+				self._state = 4
 			end
-		elseif self.response then
-			self.next_dissector = self.response.next_dissector
+
+			if parse(self, stream, self.response, parse_response, http_dissector.events.response, 5) then
+				return self:send(stream, direction)
+			end
 		end
 	end
 end
+
+function http_dissector.method:send(stream, direction)
+	if not self:continue() then
+		return
+	end
+
+	if self._state == 2 and direction then
+		self._state = 3
+
+		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
+			stream:seek(self.request._mark, true)
+			self.request._mark = nil
+
+			stream:erase(self.request._length)
+			stream:insert(self.request.method)
+			stream:insert(" ")
+			stream:insert(self.request.uri)
+			stream:insert(" ")
+			stream:insert(self.request.version)
+			stream:insert("\r\n")
+			build_headers(stream, self.request.headers, self.request._headers_order)
+			stream:insert("\r\n")
+		end
+
+	elseif self._state == 5 and not direction then
+		self._state = 0
+
+		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
+			stream:seek(self.response._mark, true)
+			self.response._mark = nil
+
+			stream:erase(self.response._length)
+			stream:insert(self.response.version)
+			stream:insert(" ")
+			stream:insert(self.response.status)
+			stream:insert(" ")
+			stream:insert(self.response.reason)
+			stream:insert("\r\n")
+			build_headers(stream, self.response.headers, self.response._headers_order)
+			stream:insert("\r\n")
+		end
+	end
+end
+
+function module.install_tcp_rule(port)
+	haka.rule{
+		hook = haka.event('tcp-connection', 'new_connection'),
+		eval = function (flow, pkt)
+			if pkt.dstport == port then
+				haka.context:install_dissector(http_dissector:new(flow))
+			end
+		end
+	}
+end
+
+http_dissector.connections = haka.events.StaticEventConnections:new()
+http_dissector.connections:register(haka.event('tcp-connection', 'receive_data'), http_dissector.method.receive)
 
 return module

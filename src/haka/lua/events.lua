@@ -12,10 +12,26 @@ end
 
 events.EventConnections = class('EventConnections')
 
-function events.EventConnections.method:__init(name)
+function events.EventConnections.method:signal(emitter, event, ...)
+	local listeners = self:_get(event)
+	if listeners then
+		haka.log.debug("event", "signal '%s'", event.name)
+
+		for _, listener in ipairs(listeners) do
+			self:_signal(listener, emitter, ...)
+	
+			if not event.continue(emitter) then
+				return true
+			end
+		end
+	end
+	return true
 end
 
-function events.EventConnections.method:register(event, func)
+
+events.StaticEventConnections = class('StaticEventConnections', events.EventConnections)
+
+function events.StaticEventConnections.method:register(event, func)
 	assert(isa(event, events.Event), "event expected")
 	assert(type(func) == 'function', "function expected")
 
@@ -28,36 +44,30 @@ function events.EventConnections.method:register(event, func)
 	table.insert(listeners, func)
 end
 
-function events.EventConnections.method:_signal(listener, emitter, ...)
+function events.StaticEventConnections.method:_signal(listener, emitter, ...)
 	listener(emitter, ...)
 end
 
-function events.EventConnections.method:signal(emitter, event, ...)
-	local listeners = self[event]
-	if listeners then
-		haka.log.debug("event", "signal '%s'", event.name)
-
-		for _, listener in ipairs(listeners) do
-			self:_signal(listener, emitter, ...)
-
-			if not event.continue(emitter, ...) then
-				return false
-			end
-		end
-	end
-	return true
+function events.StaticEventConnections.method:_get(event)
+	return self[event]
 end
 
 
 events.ObjectEventConnections = class('ObjectEventConnections', events.EventConnections)
 
 function events.ObjectEventConnections.method:__init(object, connections)
+	assert(object)
+	assert(connections)
 	self.object = object
 	self.connections = connections
 end
 
 function events.ObjectEventConnections.method:_signal(listener, emitter, ...)
 	listener(self.object, emitter, ...)
+end
+
+function events.ObjectEventConnections.method:_get(event)
+	return self.connections[event]
 end
 
 haka.events = events

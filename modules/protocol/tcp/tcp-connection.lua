@@ -7,27 +7,29 @@ local tcp_connection_dissector = haka.dissector.new{
 	name = 'tcp-connection'
 }
 
-tcp_connection_dissector:register_event(
-	'new_connection',
-	function (self) return self:continue() end
-)
+tcp_connection_dissector:register_event('new_connection')
 
 function tcp_connection_dissector.receive(pkt)
 	local connection, direction, dropped = pkt:getconnection()
 	if not connection then
 		if pkt.flags.syn and not pkt.flags.ack then
-			if not haka.pcall(haka.context.signal, haka.context, pkt, tcp_connection_dissector.events.new_connection) then
-				return pkt:drop()
-			end
+			local data = haka.context.newscope()
+			local self = tcp_connection_dissector:new()
 
+			haka.context:scope(data, function ()
+				if not haka.pcall(haka.context.signal, haka.context, self, tcp_connection_dissector.events.new_connection, pkt) then
+					return pkt:drop()
+				end
+			end)
+	
 			if not pkt:continue() then
 				return
 			end
 
 			connection = pkt:newconnection()
-			connection.data = haka.context.newlocal()
-			connection.data:createnamespace('tcp-connection', tcp_connection_dissector:new(connection))
-			direction = true
+			connection.data = data
+			self:init(connection)
+			data:createnamespace('tcp-connection', self)
 		else
 			if not dropped then
 				haka.log.error("tcp-connection", "no connection found")
@@ -44,7 +46,7 @@ function tcp_connection_dissector.receive(pkt)
 	end)
 end
 
-function tcp_connection_dissector.method:__init(connection)
+function tcp_connection_dissector.method:init(connection)
 	self.connection = connection
 	self.stream = {}
 	self.stream[true] = self.connection:stream(true)
@@ -112,8 +114,10 @@ function tcp_connection_dissector.method:_send(direction)
 
 	local pkt = stream:pop()
 	while pkt do
-		other_stream:ack(pkt)
-		pkt:send()
+		if pkt:continue() then
+			other_stream:ack(pkt)
+			pkt:send()
+		end
 
 		pkt = stream:pop()
 	end

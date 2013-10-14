@@ -30,6 +30,7 @@ function dissector.Dissector.__class_init(self, cls)
 end
 
 function dissector.Dissector.register_event(cls, name, continue)
+	continue = continue or function (self) return self:continue() end
 	cls.events[name] = haka.events.Event:new(string.format('%s:%s', cls.name, name), continue)
 end
 
@@ -62,15 +63,8 @@ end
 
 dissector.PacketDissector = class('PacketDissector', dissector.Dissector)
 
-dissector.PacketDissector:register_event(
-	'receive_packet',
-	function (self) self:continue() end
-)
-
-dissector.PacketDissector:register_event(
-	'send_packet',
-	function (self) self:continue() end
-)
+dissector.PacketDissector:register_event('receive_packet')
+dissector.PacketDissector:register_event('send_packet')
 
 function dissector.PacketDissector.method:continue()
 	error("not implemented")
@@ -87,15 +81,8 @@ end
 
 dissector.FlowDissector = class('FlowDissector', dissector.Dissector)
 
-dissector.FlowDissector:register_event(
-	'receive_data',
-	function (self) return self:continue() end
-)
-
-dissector.FlowDissector:register_event(
-	'send_data',
-	function (self) return self:continue() end
-)
+dissector.FlowDissector:register_event('receive_data')
+dissector.FlowDissector:register_event('send_data')
 
 function dissector.FlowDissector.method:connections()
 	if self:class().connections then
@@ -104,6 +91,10 @@ function dissector.FlowDissector.method:connections()
 end
 
 function dissector.FlowDissector.method:continue()
+	error("not implemented")
+end
+
+function dissector.FlowDissector.method:receive(stream)
 	error("not implemented")
 end
 

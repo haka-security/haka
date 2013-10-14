@@ -3,6 +3,7 @@ local LocalContext = class()
 
 function LocalContext.method:__init()
 	self._connections = {}
+	self._dissector_connections = {}
 end
 
 function LocalContext.method:createnamespace(ref, data)
@@ -17,7 +18,7 @@ end
 local Context = class()
 
 function Context.method:__init()
-	self.connections = haka.events.EventConnections:new()
+	self.connections = haka.events.StaticEventConnections:new()
 end
 
 function Context.method:signal(emitter, event, ...)
@@ -31,12 +32,18 @@ function Context.method:signal(emitter, event, ...)
 				return false
 			end
 		end
+
+		for _, connections in ipairs(self.context._dissector_connections) do
+			if not connections:signal(emitter, event, ...) then
+				return false
+			end
+		end
 	end
 
 	return true
 end
 
-function Context.method:newlocal()
+function Context.method:newscope()
 	return LocalContext:new()
 end
 
@@ -50,19 +57,12 @@ end
 
 function Context.method:install_dissector(dissector)
 	if self.context then
-		local instance = dissector:get(self.context)
-		if not instance then
-			error(string.format("unknown dissector '%s'", dissector.name))
-		end
-
-		table.insert(self.context.dissectors, instance)
-		
-		local connections = instance:connections()
+		local connections = dissector:connections()
 		if connections then
-			table.insert(self.context.connections, connections)
+			table.insert(self.context._dissector_connections, connections)
 		end
 	else
-		error(string.format("unknown dissector '%s'", dissector.name))
+		error("invalid context")
 	end
 end
 

@@ -18,7 +18,7 @@ function rule_group.method:eval(...)
 	for _, rule in ipairs(self.rules) do
 		local ret = rule(...)
 
-		if not self.continue(..., ret) then
+		if not self.continue(ret, ...) then
 			return
 		end
 	end
