@@ -72,19 +72,26 @@ struct lua_state *haka_init_state()
 
 int run_file(struct lua_State *L, const char *filename, int argc, char *argv[])
 {
-	int i;
+	int i, h;
+
+	lua_pushcfunction(L, lua_state_error_formater);
+	h = lua_gettop(L);
+
 	if (luaL_loadfile(L, filename)) {
 		lua_state_print_error(L, NULL);
+		lua_pop(L, 1);
 		return 1;
 	}
 	for (i = 1; i <= argc; i++) {
 		lua_pushstring(L, argv[i-1]);
 	}
-	if (lua_pcall(L, argc, 0, 0)) {
+	if (lua_pcall(L, argc, 0, h)) {
 		lua_state_print_error(L, NULL);
+		lua_pop(L, 1);
 		return 1;
 	}
 
+	lua_pop(L, 1);
 	return 0;
 }
 

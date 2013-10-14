@@ -67,7 +67,7 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 	lua_pushppacket(state->lua->L, pkt);
 
 	if (lua_pcall(state->lua->L, 1, 0, h)) {
-		lua_state_print_error(state->lua->L, L"filter function");
+		lua_state_print_error(state->lua->L, L"filter");
 		packet_drop(pkt);
 	}
 
@@ -168,6 +168,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 
 static bool init_thread_lua_state(struct thread_state *state)
 {
+	int h;
 	LUA_STACK_MARK(state->lua->L);
 
 	if (state->pool->attach_debugger > state->attach_debugger) {
@@ -175,24 +176,30 @@ static bool init_thread_lua_state(struct thread_state *state)
 	}
 	state->pool->attach_debugger = state->attach_debugger;
 
+	lua_pushcfunction(state->lua->L, lua_state_error_formater);
+	h = lua_gettop(state->lua->L);
+
 	lua_getglobal(state->lua->L, "require");
 	lua_pushstring(state->lua->L, "rule");
-	if (lua_pcall(state->lua->L, 1, 0, 0)) {
-		lua_state_print_error(state->lua->L, NULL);
+	if (lua_pcall(state->lua->L, 1, 0, h)) {
+		lua_state_print_error(state->lua->L, L"init");
+		lua_pop(state->lua->L, 1);
 		return false;
 	}
 
 	if (run_file(state->lua->L, get_configuration_script(), 0, NULL)) {
+		lua_pop(state->lua->L, 1);
 		return false;
 	}
 
 	lua_getglobal(state->lua->L, "haka");
 	lua_getfield(state->lua->L, -1, "rule_summary");
-	if (lua_pcall(state->lua->L, 0, 0, 0)) {
-		lua_state_print_error(state->lua->L, NULL);
+	if (lua_pcall(state->lua->L, 0, 0, h)) {
+		lua_state_print_error(state->lua->L, L"init");
+		lua_pop(state->lua->L, 1);
 		return false;
 	}
-	lua_pop(state->lua->L, 1);
+	lua_pop(state->lua->L, 2);
 
 	LUA_STACK_CHECK(state->lua->L, 0);
 	return true;
