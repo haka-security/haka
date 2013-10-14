@@ -52,7 +52,7 @@
 %}
 
 %insert("init") %{
-	if (luaL_loadstring(L, SWIG_LUACODE)) {
+	if (luaL_loadbuffer(L, SWIG_LUACODE, strlen(SWIG_LUACODE), SWIG_name)) {
 		luaL_error(L, lua_tostring(L, -1));
 		lua_pop(L, 1);
 		return;
