@@ -159,6 +159,7 @@ int _getswigclassmetatable(struct lua_State *L)
 		require('events')
 		require('context')
 		require('rule')
+		require('rule_group')
 		require('dissector')
 		require('grammar')
 	end

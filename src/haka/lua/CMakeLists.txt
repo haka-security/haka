@@ -16,6 +16,7 @@ target_link_libraries(haka-liblua libluadebug)
 
 lua_compile(NAME haka-lua FILES
 	rule.lua
+	rule_group.lua
 	color.lua
 	class.lua
 	events.lua
