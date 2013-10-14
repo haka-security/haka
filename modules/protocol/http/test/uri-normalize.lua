@@ -47,11 +47,3 @@ for k, v in pairs(_test) do
 	end
 end
 
-local _split = {
-	['http://site/p?a=3'] = '3'
-}
-
-for k, v in pairs(_split) do
-	local split = http.uri.split(k)
-	print('normal =', '[' .. ]
-
