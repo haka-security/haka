@@ -21,7 +21,7 @@ haka.rule {
 		--All fields is accessible through accessors
 		--following wireshark/tcpdump semantics
 		--Documentation list all accessors
-		print(string.format("Hello packet from %s to %s", pkt.src, pkt.dst))
+		haka.log("debug","Hello packet from %s to %s", pkt.src, pkt.dst)
 	end
 }
 
@@ -31,6 +31,6 @@ haka.rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
 		--Fields from previous layer is accessible too
-		print(string.format("Hello TCP connection from %s:%d to %s:%d", pkt.tcp.ip.src, pkt.tcp.srcport, pkt.tcp.ip.dst, pkt.tcp.dstport))
+		haka.log("debug","Hello TCP connection from %s:%d to %s:%d", pkt.tcp.ip.src, pkt.tcp.srcport, pkt.tcp.ip.dst, pkt.tcp.dstport)
 	end
 }
