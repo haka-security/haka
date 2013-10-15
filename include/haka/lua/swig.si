@@ -124,8 +124,21 @@ void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
 
 %include "typemaps.i"
 
-%apply bool *OUTPUT { bool *OUTPUT1 };
-%apply bool *OUTPUT { bool *OUTPUT2 };
-%apply bool *OUTPUT { bool *OUTPUT3 };
-%apply bool *OUTPUT { bool *OUTPUT4 };
-%apply bool *OUTPUT { bool *OUTPUT5 };
+%define APPLY_OUTPUT(type)
+
+	%apply type *OUTPUT { type *OUTPUT1 };
+	%apply type *OUTPUT { type *OUTPUT2 };
+	%apply type *OUTPUT { type *OUTPUT3 };
+	%apply type *OUTPUT { type *OUTPUT4 };
+	%apply type *OUTPUT { type *OUTPUT5 };
+
+%enddef
+
+%typemap(in, numinputs=0) const char **OUTPUT (char *temp)
+%{ $1 = &temp; %}
+
+%typemap(argout) const char **OUTPUT
+%{ lua_pushstring(L, *$1); SWIG_arg++;%}
+
+APPLY_OUTPUT(bool)
+APPLY_OUTPUT(const char *)

@@ -154,5 +154,14 @@ function dissector.get(name)
 	return dissectors[name]
 end
 
+local other_direction = {
+	up = 'down',
+	down = 'up'
+};
+
+function dissector.other_direction(dir)
+	return other_direction[dir]
+end
+
 
 haka.dissector = dissector

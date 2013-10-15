@@ -162,9 +162,13 @@ struct tcp {
 			return tcp_connection_new($self);
 		}
 
-		struct tcp_connection *getconnection(bool *OUTPUT1, bool *OUTPUT2)
+		struct tcp_connection *getconnection(const char **OUTPUT1, bool *OUTPUT2)
 		{
-			return tcp_connection_get($self, OUTPUT1, OUTPUT2);
+			struct tcp_connection *ret;
+			bool direction;
+			ret = tcp_connection_get($self, &direction, OUTPUT2);
+			*OUTPUT1 = direction ? "up" : "down";
+			return ret;
 		}
 
 		void drop()
@@ -205,8 +209,9 @@ struct tcp_connection {
 		void close();
 		void drop();
 
-		struct tcp_stream *stream(bool direction_in)
+		struct tcp_stream *stream(const char *direction)
 		{
+			const bool direction_in = strcmp(direction, "up") == 0;
 			return (struct tcp_stream *)tcp_connection_get_stream($self, direction_in);
 		}
 	}

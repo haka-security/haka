@@ -284,7 +284,7 @@ end
 function http_dissector.method:receive(flow, stream, direction)
 	assert(flow == self.flow)
 
-	if direction then
+	if direction == 'up' then
 		if self._state == 0 or self._state == 1 then
 			if self._state == 0 then
 				self.request = {}
@@ -315,7 +315,7 @@ function http_dissector.method:send(stream, direction)
 		return
 	end
 
-	if self._state == 2 and direction then
+	if self._state == 2 and direction == 'up' then
 		self._state = 3
 
 		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
@@ -333,7 +333,7 @@ function http_dissector.method:send(stream, direction)
 			stream:insert("\r\n")
 		end
 
-	elseif self._state == 5 and not direction then
+	elseif self._state == 5 and direction == 'down' then
 		self._state = 0
 
 		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then

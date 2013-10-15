@@ -49,8 +49,8 @@ end
 function tcp_connection_dissector.method:init(connection)
 	self.connection = connection
 	self.stream = {}
-	self.stream[true] = self.connection:stream(true)
-	self.stream[false] = self.connection:stream(false)
+	self.stream['up'] = self.connection:stream('up')
+	self.stream['down'] = self.connection:stream('down')
 	self.state = 0
 end
 
@@ -100,13 +100,13 @@ function tcp_connection_dissector.method:_sendpkt(pkt, direction)
 	self:_send(direction)
 	
 	self.stream[direction]:seq(pkt)
-	self.stream[not direction]:ack(pkt)
+	self.stream[haka.dissector.other_direction(direction)]:ack(pkt)
 	pkt:send()
 end
 
 function tcp_connection_dissector.method:_send(direction)
 	local stream = self.stream[direction]
-	local other_stream = self.stream[not direction]
+	local other_stream = self.stream[haka.dissector.other_direction(direction)]
 
 	if not haka.pcall(haka.context.signal, haka.context, self, tcp_connection_dissector.events.send_data, stream, direction) then
 		return self:drop()
@@ -140,31 +140,31 @@ function tcp_connection_dissector.method:close()
 	self.connection = nil
 end
 
-function tcp_connection_dissector.method:_forgereset(inv)
+function tcp_connection_dissector.method:_forgereset(direction)
 	local tcprst = haka.dissector.get('raw').create()
 	tcprst = haka.dissector.get('ipv4').create(tcprst)
 
-	if inv then
-		tcprst.src = self.connection.dstip
-		tcprst.dst = self.connection.srcip
-	else
+	if direction == 'up' then
 		tcprst.src = self.connection.srcip
 		tcprst.dst = self.connection.dstip
+	else
+		tcprst.src = self.connection.dstip
+		tcprst.dst = self.connection.srcip
 	end
 
 	tcprst.ttl = 64
 
 	tcprst = haka.dissector.get('tcp').create(tcprst)
 
-	if inv then
-		tcprst.srcport = self.connection.dstport
-		tcprst.dstport = self.connection.srcport
-	else
+	if direction == 'up' then
 		tcprst.srcport = self.connection.srcport
 		tcprst.dstport = self.connection.dstport
+	else
+		tcprst.srcport = self.connection.dstport
+		tcprst.dstport = self.connection.srcport
 	end
 
-	tcprst.seq = self.stream[not inv].lastseq
+	tcprst.seq = self.stream[direction].lastseq
 
 	tcprst.flags.rst = true
 
@@ -174,10 +174,10 @@ end
 function tcp_connection_dissector.method:reset()
 	local rst
 
-	rst = self:_forgereset(false)
+	rst = self:_forgereset('down')
 	rst:send()
 
-	rst = self:_forgereset(true)
+	rst = self:_forgereset('up')
 	rst:send()
 
 	self:drop()
@@ -186,7 +186,7 @@ end
 function tcp_connection_dissector.method:halfreset()
 	local rst
 
-	rst = self:_forgereset(true)
+	rst = self:_forgereset('down')
 	rst:send()
 
 	self:drop()
