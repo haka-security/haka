@@ -21,6 +21,14 @@ Contents:
    doc/api/c/main.rst
    doc/debug.rst
 
+Tutorials:
+
+.. toctree::
+   :maxdepth: 3
+   :numbered:
+
+   doc/tutorial/hellopacket/hellopacket.rst
+
 Indices and tables
 ==================
 
