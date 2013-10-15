@@ -159,25 +159,25 @@ find_package(Check REQUIRED)
 include_directories(${CHECK_INCLUDE_DIRS})
 set(TEST_RUNDIR ${CMAKE_CURRENT_BINARY_DIR}/_Test/${CMAKE_INSTALL_PREFIX})
 
-add_custom_target(pre-tests-build
+add_custom_target(pretests-build
 	COMMAND $(MAKE) all
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	VERBATIM
 )
 
-add_custom_target(pre-tests
+add_custom_target(pretests
 	COMMAND $(MAKE) install/fast DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/_Test > /dev/null
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Preparing tests environment..." VERBATIM
 	VERBATIM
-	DEPENDS pre-tests-build
+	DEPENDS pretests-build
 )
 
 add_custom_target(tests
 	COMMAND ctest -j${CPU_COUNT} $(CTEST_ARGS)
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Run all tests" VERBATIM
-	DEPENDS pre-tests
+	DEPENDS pretests
 )
 
 # Add sub directories)

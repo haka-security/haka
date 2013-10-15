@@ -113,7 +113,7 @@ You can also pass some arguments to ctest by using the variable ``CTEST_ARGS``. 
 
 This command will install locally the project and run the tests in ths folder. If you need
 to run the tests manually using the command ctest, you can prepare the environment with the
-command ``make pre-tests``.
+command ``make pretests``.
 
 Packaging
 ^^^^^^^^^
