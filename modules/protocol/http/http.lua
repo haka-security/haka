@@ -274,7 +274,6 @@ local function remove_dot_segments(path)
 			end
 			index = index + 1
 		end
-		print('nb================',nb)
 		if nb == 0 then
 			if path:sub(1,1) == '/' then path = path:sub(2) end
 			local left, right = path:match('([^/]*)([/]?.*)')
@@ -357,8 +356,7 @@ end
 
 
 function mt_uri:normalize()
-	if not self then return nil end
-
+	assert(self)
 	-- decode percent-encoded octets of unresserved chars
 	-- capitalize letters in escape sequences
 	uri_safe_decode_split(self)
@@ -384,6 +382,8 @@ function mt_uri:normalize()
 
 	-- normalize path according to rfc 3986
 	if self.path then self.path = remove_dot_segments(self.path) end
+
+	return self
 
 end
 
