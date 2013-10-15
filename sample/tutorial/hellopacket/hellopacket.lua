@@ -20,7 +20,7 @@ haka.rule {
 	eval = function (self, pkt)
 		--All fields is accessible through accessors
 		--following wireshark/tcpdump semantics
-		--Documentation list all accessors
+		--Documentation give the complet list of accessors
 		haka.log("debug","Hello packet from %s to %s", pkt.src, pkt.dst)
 	end
 }
