@@ -2,38 +2,6 @@
 require('httpconfig')
 
 ------------------------------------
--- Transformation Methods
-------------------------------------
-
--- remove sequences between /* */ comments
-local function uncomments(uri)
-	return string.gsub(uri, '/%*.-%*/', '')
-end
-
--- remove null byte
-local function nonulls(uri)
-	return string.gsub(uri, "%z", '')
-end
-
--- compress white space
-local function nospaces(uri)
-	return string.gsub(uri, "%s+", " ")
-end
-
--- percent decode
-local function decode(uri)
-	uri = string.gsub (uri, '+', ' ')
-	uri = string.gsub (uri, '%%(%x%x)',
-	function(h) return string.char(tonumber(h,16)) end)
-	return uri
-end
-
-local function decode_all(uri)
-	return uncomments(nospaces(nonulls(decode(uri)))):lower()
-end
-
-
-------------------------------------
 -- Malicious Patterns
 ------------------------------------
 
@@ -56,8 +24,8 @@ haka.rule {
 		where['args'].value = http.uri.split(uri).args
 		where['cookies'].value = http.cookies.split(ck)
 
-		for	_, key in ipairs(keywords) do
-			for k, _ in pairs(where) do
+		for _, key in ipairs(keywords) do
+			for k, v in pairs(where) do
 				for param, value in pairs(where[k].value) do
 					if value:find(key) then
 						where[k].score = where[k].score + 4

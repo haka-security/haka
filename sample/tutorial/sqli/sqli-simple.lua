@@ -18,15 +18,14 @@ haka.rule {
 	eval = function (self, http)
 		local score = 0
 		local uri = http.request.uri
-		for	_, key in ipairs(keywords) do
+		for _, key in ipairs(keywords) do
 			if uri:find(key) then
 				score = score + 4
 				if score >= 8 then
-					haka.log.error("filter", "SQLi attack detected !!!")
+					haka.log.error('filter", "SQLi attack detected !!!')
 					http:drop()
 				end
 			end
 		end
 	end
 }
-

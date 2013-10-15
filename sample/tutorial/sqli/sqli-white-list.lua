@@ -2,40 +2,6 @@
 require('httpconfig')
 
 ------------------------------------
--- Transformation Methods
-------------------------------------
-
-local transformations = {
-
-	nothing = function(uri)
-		return uri
-	end,
-
-	uncomments = function(uri)
-		return string.gsub(uri, '/%*.-%*/', ' ')
-	end,
-
-	nonulls = function(uri)
-		return string.gsub(uri, "%z", '')
-	end,
-
-	nospaces = function(uri)
-		return string.gsub(uri, "%s+", " ")
-	end,
-
-	decode = function(uri)
-		uri = string.gsub (uri, '+', ' ')
-		uri = string.gsub (uri, '%%(%x%x)',
-			function(h) return string.char(tonumber(h,16)) end)
-		return uri
-	end,
-
-	lower = function(uri)
-		return uri:lower()
-	end
-}
-
-------------------------------------
 -- Malicious patterns
 ------------------------------------
 
@@ -43,26 +9,21 @@ local comments = { '%-%-', '#', '%z', '/%*.-%*/'}
 
 local probing = { "^[\"'`´’‘;]", "[\"'`´’‘;]$"}
 
---local encodings = "([%W])'0x'[%x]^+3 ![%a]"
-
-local sql_keywords = {	"select", "show", "top", "'distinct",
-						"from", "dual", "where'", "offset",
-						"order by", "group by", "having",
-						"limit", "union", "rownum", "%([%s]case",
-						"insert into", "drop", "update", "null"
+local sql_keywords = { 'select','insert','update','delete', 'union',
+						-- to be extended ...
 					 }
 
-local sql_functions = { "ascii", "char", "length", "concat",
-						"substring", "substr", "benchmark", "compress",
-						"load_file", "version", "uncompress",
-						-- TODO to be continued ...
+local sql_functions = { 'ascii', 'char', 'length', 'concat', 'substring',
+						-- to be extended ...
 					  }
 
+------------------------------------
+-- White List ressources
+------------------------------------
 
-
-local location = { 'args', 'cookies' }
-
-local safe_ressource = { '/site/page1', '/site/page2'}
+local safe_ressources = { '/site/page1', '/site/page2',
+						-- to be extended ...
+					  }
 
 ------------------------------------
 -- SQLi Rule Group
@@ -75,29 +36,11 @@ sqli = haka.rule_group {
 		request = http.request
 		request.cookies = http.request:split_cookies()
 		request.args = http.request:split_uri().args
-		request.sqli = {}
-		for _, where in ipairs(location) do
-			request.sqli[where] = {}
-			request.sqli[where].score = 0
-			request.sqli[where].msg = {}
-		end
-	end,
-
-	fini = function (self, pkt)
+		request.where =  {args = {score = 0}, cookies = {score = 0}}
 	end,
 
 	continue = function (self, http, ret)
-		if ret then
-			if type(ret) == 'string' then
-				haka.log("filter", ret)
-				return false
-			elseif ret.score >= 8  then
-				haka.log.error("filter", "SQLi attack detected !!! \n%s", table.concat(ret.msg, '\n'))
-				http:drop()
-				return nil
-			end
-		end
-		return true
+		if ret and ret == -1 then return false end
 	end
 }
 
@@ -109,55 +52,44 @@ sqli:rule {
 	hooks = { 'http-request' },
 	eval = function (self, http)
 		local splitted_uri = http.request:split_uri():normalize()
-		for	_, res in ipairs(safe_ressource) do
-			print(splitted_uri.path)
-			if splitted_uri.path == res then 
-				return 'Skip SQLi detection (White list rule triggered)'
+		for	_, res in ipairs(safe_ressources) do
+			if splitted_uri.path == res then
+				haka.log.warning('filter', 'Skip SQLi detection (White list rule)')
+				return -1
 			end
 		end
 	end
 }
 
 ------------------------------------
--- SQLi RuLes
+-- SQLi Rules
 ------------------------------------
 
-local function check_sqli(where, pattern, score, msg, trans)
+local function check_sqli(patterns, score, trans)
 	sqli:rule {
 		hooks = { 'http-request' },
 		eval = function (self, http)
-			if http.request[where] then
-				local sqli = http.request.sqli
-				for _, val in pairs(http.request[where]) do
-						for t = 1, #trans do
-							val = transformations[trans[t]](val)
+			for _, pattern in ipairs(patterns) do
+				for k, v in pairs(request.where) do
+					for _, val in pairs(http.request[k]) do
+						for _, f in ipairs(trans) do
+							val = f(val)
 						end
 						if val:find(pattern) then
-							sqli[where].score = sqli[where].score + score
-							table.insert(sqli[where].msg, msg)
+							v.score = v.score + score
+							haka.log.error('filter', 'SQLi attack detected')
+							http:drop()
 						end
+					end
 				end
-				return sqli[where]
 			end
 			return nil
 		end
 	}
 end
 
-for loc = 1, #location do
-	for key = 1, #comments do
-		check_sqli(location[loc], comments[key], 4, 'SQL comments in ' .. location[loc], {'decode', 'lower'})
-	end
+check_sqli(comments, 4, { decode, lower })
+check_sqli(probing, 2, { decode, lower })
+check_sqli(sql_keywords, 4, { decode, lower, uncomments, nospaces })
+check_sqli(sql_functions, 4, { decode, lower, uncomments, nospaces })
 
-	for key = 1, #probing do
-		check_sqli(location[loc], probing[key], 2, 'SQL probing in ' .. location[loc], {'decode', 'lower'})
-	end
-
-	for key = 1, #sql_keywords do
-		check_sqli(location[loc], sql_keywords[key], 4, 'SQL keywords in ' .. location[loc], {'decode', 'lower', 'uncomments', 'nospaces'})
-	end
-
-	for key = 1, #sql_functions do
-		check_sqli(location[loc], "[%s'\"`´’‘%(%)]+" .. sql_functions[key] .. "[%s]*%(", 4, 'SQL function calls in ' .. location[loc], {'decode', 'lower', 'uncomments', 'nospaces'})
-	end
-end
