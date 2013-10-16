@@ -12,11 +12,9 @@ struct transition_data;
 struct state_machine_instance;
 
 typedef struct state *(*transition_callback)(struct state_machine_instance *state_machine, struct transition_data *data);
-typedef struct state *(*transition_input_callback)(struct state_machine_instance *state_machine, struct transition_data *data, void *input);
 
 struct transition_data {
 	transition_callback        callback;
-	transition_input_callback  input_callback;
 	void                     (*destroy)(struct transition_data *data);
 };
 
@@ -34,8 +32,6 @@ bool                  state_machine_set_initial(struct state_machine *machine, s
 
 bool                  state_add_timeout_transition(struct state *state, struct time *timeout, struct transition_data *data);
 bool                  state_set_error_transition(struct state *state, struct transition_data *data);
-bool                  state_set_input_transition(struct state *state, struct transition_data *data);
-bool                  state_set_output_transition(struct state *state, struct transition_data *data);
 bool                  state_set_enter_transition(struct state *state, struct transition_data *data);
 bool                  state_set_leave_transition(struct state *state, struct transition_data *data);
 const char           *state_name(struct state *state);
@@ -47,8 +43,6 @@ void                  state_machine_instance_finish(struct state_machine_instanc
 void                  state_machine_instance_destroy(struct state_machine_instance *instance);
 void                  state_machine_instance_update(struct state_machine_instance *instance, struct state *newstate);
 void                  state_machine_instance_error(struct state_machine_instance *instance);
-void                  state_machine_instance_input(struct state_machine_instance *instance, void *input);
-void                  state_machine_instance_output(struct state_machine_instance *instance, void *output);
 struct state         *state_machine_instance_state(struct state_machine_instance *instance);
 
 #endif /* _STATE_MACHINE_H */

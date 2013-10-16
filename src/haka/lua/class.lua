@@ -99,11 +99,19 @@ function class(name, super)
 	cls.__index = function (self, key)
 		local v
 		for c in class_hierarchy(classof(self)) do
-			v = rawget(c, 'method')[key]
+			local method = rawget(c, 'method')
+
+			v = method[key]
 			if v then return v end
 
 			v = rawget(c, 'property').get[key]
 			if v then return v(self) end
+
+			v = method['__index']
+			if v then
+				local v = v(self, key)
+				if v then return v end
+			end
 		end
 	end
 	cls.__newindex = function (self, key, value)

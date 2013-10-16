@@ -18,18 +18,16 @@ struct lua_transition_data {
 struct lua_state_machine_context {
 	struct state_machine_context   super;
 	struct lua_ref                 states;
-	struct lua_ref                 context;
 };
 
 void lua_state_machine_context_destroy(struct state_machine_context *_context)
 {
 	struct lua_state_machine_context *context = (struct lua_state_machine_context *)_context;
 	lua_ref_clear(&context->states);
-	lua_ref_clear(&context->context);
 	free(context);
 }
 
-struct state *lua_transition_input_callback(struct state_machine_instance *state_machine, struct transition_data *_data, void *input)
+struct state *lua_transition_callback(struct state_machine_instance *state_machine, struct transition_data *_data)
 {
 	struct lua_transition_data *data = (struct lua_transition_data *)_data;
 	struct lua_state_machine_context *context = (struct lua_state_machine_context *)state_machine_instance_context(state_machine);
@@ -41,27 +39,33 @@ struct state *lua_transition_input_callback(struct state_machine_instance *state
 
 	lua_ref_push(L, &data->function);
 	lua_ref_push(L, &context->states);
-	lua_ref_push(L, &context->context);
+	lua_call(L, 1, 1);
 
-	if (input) {
-		lua_ref_push(L, (struct lua_ref *)input);
-		lua_call(L, 3, 1);
+	if (!lua_isnil(L, -1)) {
+		if (SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
+			lua_pop(L, 1);
+		}
+		else {
+			if (!lua_istable(L, -1)) {
+				message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
+			}
+			else {
+				lua_getfield(L, -1, "_state");
+				assert(!lua_isnil(L, -1));
+
+				if (!SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
+					message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
+				}
+
+				lua_pop(L, 2);
+			}
+		}
 	}
 	else {
-		lua_call(L, 2, 1);
+		lua_pop(L, 1);
 	}
 
-	if (!SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
-		message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
-	}
-
-	lua_pop(L, 1);
 	return newstate;
-}
-
-struct state *lua_transition_callback(struct state_machine_instance *state_machine, struct transition_data *_data)
-{
-	return lua_transition_input_callback(state_machine, _data, NULL);
 }
 
 struct lua_transtion_deferred_data {
@@ -124,7 +128,6 @@ static void lua_transition_data_destroy(struct transition_data *_data)
 
 enum lua_transition_type {
 	TIMEOUT_TRANSITION,
-	INPUT_TRANSITION,
 	OTHER_TRANSITION,
 };
 
@@ -140,7 +143,6 @@ static struct transition_data *lua_transition_data_new(struct lua_ref *func, enu
 
 	switch (type) {
 	case TIMEOUT_TRANSITION: ret->data.callback = lua_transition_timeout_callback; break;
-	case INPUT_TRANSITION:   ret->data.input_callback = lua_transition_input_callback; break;
 	case OTHER_TRANSITION:   ret->data.callback = lua_transition_callback; break;
 	default:                 assert(0); break;
 	}
@@ -179,22 +181,6 @@ struct state {
 			if (!trans) return;
 
 			state_set_error_transition($self, trans);
-		}
-
-		void transition_input(struct lua_ref func)
-		{
-			struct transition_data *trans = lua_transition_data_new(&func, INPUT_TRANSITION);
-			if (!trans) return;
-
-			state_set_input_transition($self, trans);
-		}
-
-		void transition_output(struct lua_ref func)
-		{
-			struct transition_data *trans = lua_transition_data_new(&func, INPUT_TRANSITION);
-			if (!trans) return;
-
-			state_set_output_transition($self, trans);
 		}
 
 		void transition_leave(struct lua_ref func)
@@ -252,7 +238,7 @@ struct state_machine {
 			state_machine_compile($self);
 		}
 
-		struct state_machine_instance *instanciate(struct lua_ref states, struct lua_ref contextref)
+		struct state_machine_instance *instanciate(struct lua_ref states)
 		{
 			struct lua_state_machine_context *context = malloc(sizeof(struct lua_state_machine_context));
 			if (!context) {
@@ -262,7 +248,6 @@ struct state_machine {
 
 			context->super.destroy = lua_state_machine_context_destroy;
 			context->states = states;
-			context->context = contextref;
 
 			return state_machine_instance($self, &context->super);
 		}
@@ -295,20 +280,6 @@ struct state_machine_instance {
 		void _finish()
 		{
 			state_machine_instance_finish($self);
-		}
-
-		%rename(input) _input;
-		void _input(struct lua_ref input)
-		{
-			state_machine_instance_input($self, &input);
-			lua_ref_clear(&input);
-		}
-
-		%rename(output) _output;
-		void _output(struct lua_ref output)
-		{
-			state_machine_instance_output($self, &output);
-			lua_ref_clear(&output);
 		}
 
 		%immutable;
@@ -351,10 +322,4 @@ struct state *state_machine_finish_state_get(struct state_machine *machine)
 	local state_machine_lua = require('state_machine')
 
 	this.new = state_machine_lua.new
-	this.on_input = state_machine_lua.on_input
-	this.on_output = state_machine_lua.on_output
-	this.on_timeout = state_machine_lua.on_timeout
-	this.on_error = state_machine_lua.on_error
-	this.on_enter = state_machine_lua.on_enter
-	this.on_leave = state_machine_lua.on_leave
 }
