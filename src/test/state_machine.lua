@@ -59,7 +59,7 @@ machine.state4 = machine:state {
 	end
 }
 
-machine.INITIAL = machine.state1
+machine.initial = machine.state1
 
 local context = {}
 

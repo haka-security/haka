@@ -15,6 +15,14 @@ function states.State.method:__init(transitions)
 	end
 end
 
+function states.State.method:merge(transitions)
+	for k, f in pairs(transitions) do
+		if not self[k] then
+			self[k] = f
+		end
+	end
+end
+
 
 states.CompiledState = class('CompiledState')
 
@@ -39,11 +47,16 @@ function states.CompiledState.method:__init(state_machine, state, name)
 			elseif n == 'leave' then
 				self._state:transition_leave(f)
 			else
-				self[n] = function (self, ...)
+				self[n] = f
+				self['_internal_' .. n] = function (self, ...)
 					haka.log.debug("state machine", "%s: %s transition on state '%s'", self._state_machine.name, n, name)
 					local newstate = f(self, ...)
 					if newstate then
-						return self._instance:update(newstate._state)
+						if isa(newstate, states.CompiledState) then
+							return self._instance:update(newstate._state)
+						else
+							return self._instance:update(newstate)
+						end
 					end
 				end
 			end
@@ -61,10 +74,12 @@ function states.StateMachine.method:__init(name)
 end
 
 function states.StateMachine.method:state(transitions)
+	assert(isa(self, states.StateMachine))
 	return states.State:new(transitions)
 end
 
 function states.StateMachine.method:default(transitions)
+	assert(isa(self, states.StateMachine))
 	self._default = transitions
 end
 
@@ -72,24 +87,32 @@ function states.StateMachine.method:compile()
 	if not self._state_machine then
 		local state_machine = haka.state_machine.state_machine(self.name)
 		local state_table = {}
+		local initial
 
 		for name, state in pairs(self) do
-			if name ~= "INITIAL" and isa(state, states.State) then
-				for k, f in pairs(self._default) do
-					if not state[k] then
-						state[k] = f
-					end
-				end
-
+			if name ~= 'initial' and isa(state, states.State) then
+				state:merge(self._default)
 				local new_state = states.CompiledState:new(state_machine, state, name)
 				state_table[name] = new_state
 
-				if state == self.INITIAL then
-					state_machine.initial = new_state._state
-					state_table.INITIAL = new_state
+				if state == self.initial then
+					initial = new_state
 				end
 			end
 		end
+
+		if not initial then
+			if isa(self.initial, states.State) then
+				self.initial:merge(self._default)
+				initial = states.CompiledState:new(state_machine, self.initial, 'initial')
+				state_table['initial'] = initial
+			else
+				error("state machine must have in initial state")
+			end
+		end
+
+		state_machine.initial = initial._state
+		state_table.initial = initial
 
 		state_table.ERROR = state_machine.error_state
 		state_table.FINISH = state_machine.finish_state
@@ -121,7 +144,7 @@ function states.StateMachineInstance.method:__init(state_machine)
 end
 
 function states.StateMachineInstance.method:__index(name)
-	local trans = self.state[name]
+	local trans = self.state['_internal_' .. name]
 	if not trans then
 		error(string.format("no transition named '%s' on state '%s'", name, self.state.name))
 	end
