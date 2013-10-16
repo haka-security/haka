@@ -6,6 +6,12 @@ require('protocol/ipv4')
 
 local machine = haka.state_machine.new("test")
 
+machine:default {
+	error = function (self)
+		return self.states.FINISH
+	end
+}
+
 machine.state1 = machine:state {
 	enter = function (self)
 		self.mystate = "state1"
@@ -28,9 +34,6 @@ machine.state1 = machine:state {
 machine.state2 = machine:state {
 	enter = function (self)
 		return self.states.ERROR
-	end,
-	error = function (self)
-		return self.states.FINISH
 	end
 }
 

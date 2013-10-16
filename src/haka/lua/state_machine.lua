@@ -57,10 +57,15 @@ states.StateMachine = class('StateMachine')
 function states.StateMachine.method:__init(name)
 	self._states = {}
 	self.name = name
+	self._default = {}
 end
 
 function states.StateMachine.method:state(transitions)
 	return states.State:new(transitions)
+end
+
+function states.StateMachine.method:default(transitions)
+	self._default = transitions
 end
 
 function states.StateMachine.method:compile()
@@ -70,6 +75,12 @@ function states.StateMachine.method:compile()
 
 		for name, state in pairs(self) do
 			if name ~= "INITIAL" and isa(state, states.State) then
+				for k, f in pairs(self._default) do
+					if not state[k] then
+						state[k] = f
+					end
+				end
+
 				local new_state = states.CompiledState:new(state_machine, state, name)
 				state_table[name] = new_state
 
