@@ -15,8 +15,9 @@ haka.rule {
 	--The hooks tells where this rule is applied
 	hooks = {"ipv4-up"},
 	--Each rule have an eval function
-	--Function is always build with (self, name)
-	--The name is later use for action
+	--Eval function is always build with (self, name)
+		--First parameter, self, is mandatory
+		--Second parameter can be named whatever you want
 	eval = function (self, pkt)
 		--All fields is accessible through accessors
 		--following wireshark/tcpdump semantics
@@ -27,7 +28,7 @@ haka.rule {
 
 --Any number of rule is authorized
 haka.rule {
-	--The hooks is place on the TCP connection
+	--The rule is evaluated at TCP connection establishment
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
 		--Fields from previous layer is accessible too
