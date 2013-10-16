@@ -9,3 +9,4 @@ TEST_PCAP(core gettingstarted CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share
 TEST_PCAP(core standard-http CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/standard/config.lua)
 TEST_PCAP(core standard-ipv4 CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/standard/config.lua)
 TEST_PCAP(core standard-tcp CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/standard/config.lua)
+TEST_PCAP(core hellopacket CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/hellopacket/hellopacket.lua)
