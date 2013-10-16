@@ -8,3 +8,4 @@ debug filter: received stream len=24
 debug filter: received stream len=17
 222222
 
+debug tcp-connection: closing connection 10.2.96.127:45036 -> 10.2.104.129:4444

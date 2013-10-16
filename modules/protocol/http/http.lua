@@ -144,10 +144,6 @@ function http_dissector.method:__init(flow)
 	self._state = 0
 end
 
-function http_dissector.method:connections()
-	return haka.events.ObjectEventConnections:new(self, http_dissector.connections)
-end
-
 function http_dissector.method:continue()
 	return self.flow ~= nil
 end

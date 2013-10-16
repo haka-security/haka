@@ -46,40 +46,220 @@ function tcp_connection_dissector.receive(pkt)
 	end)
 end
 
+tcp_connection_dissector.states = haka.state_machine.new("tcp")
+
+tcp_connection_dissector.states:default{
+	error = function (context)
+		return context.states.reset
+	end,
+	update = function (context, direction, pkt)
+		if pkt.flags.rst then
+			return context.states.reset
+		end
+
+		if direction == context.input then
+			return context.state.input(context, pkt)
+		else
+			assert(direction == context.output)
+			return context.state.output(context, pkt)
+		end
+	end,
+	input = function (context)
+		return context.states.ERROR
+	end,
+	output = function (context)
+		return context.states.ERROR
+	end,
+	finish = function (context)
+		context.flow.stream = nil
+		context.flow.connection:close()
+		context.flow.connection = nil
+		context.flow.states = nil
+	end,
+	reset = function (context)
+		return context.states.reset
+	end
+}
+
+tcp_connection_dissector.states.reset = tcp_connection_dissector.states:state{
+	enter = function (context)
+		context.flow.stream = nil
+		context.flow.connection:drop()
+	end,
+	timeouts = {
+		[60] = function (context)
+			return context.states.FINISH
+		end
+	}
+}
+
+tcp_connection_dissector.states.initial = tcp_connection_dissector.states:state{
+	init = function (context)
+		context.input = 'up'
+		context.output = 'down'
+	end,
+	input = function (context, pkt)
+		if pkt.flags.syn then
+			context.flow.stream[context.input]:init(pkt.seq+1)
+			pkt:send()
+			return context.states.syn_sent
+		else 
+			return context.states.ERROR
+		end
+	end
+}
+
+tcp_connection_dissector.states.syn_sent = tcp_connection_dissector.states:state{
+	output = function (context, pkt)
+		if pkt.flags.syn and pkt.flags.ack then
+			context.flow.stream[context.output]:init(pkt.seq+1)
+			pkt:send()
+			return context.states.syn_received
+		else 
+			return context.states.ERROR
+		end
+	end,
+	input = function (context, pkt)
+		if not pkt.flags.syn then
+			return context.states.ERROR
+		else
+			pkt:send()
+		end
+	end
+}
+
+tcp_connection_dissector.states.syn_received = tcp_connection_dissector.states:state{
+	input = function (context, pkt)
+		if pkt.flags.ack then
+			context.flow:push(pkt, context.input)
+			return context.states.established
+		elseif pkt.flags.fin then
+			context.flow:push(pkt, context.input)
+			return context.states.fin_wait_1
+		else
+			return context.states.ERROR
+		end
+	end,
+	output = function (context, pkt)
+		if not pkt.flags.syn or not pkt.flags.ack then
+			return context.states.ERROR
+		else
+			context.flow:push(pkt, context.output)
+		end
+	end
+}
+
+tcp_connection_dissector.states.established = tcp_connection_dissector.states:state{
+	input = function (context, pkt)
+		if pkt.flags.fin then
+			context.flow:push(pkt, context.input)
+			return context.states.fin_wait_1
+		else
+			context.flow:push(pkt, context.input)
+		end
+	end,
+	output = function (context, pkt)
+		if pkt.flags.fin then
+			context.flow:push(pkt, context.output)
+			context.input, context.output = context.output, context.input
+			return context.states.fin_wait_1
+		else
+			context.flow:push(pkt, context.output)
+		end
+	end
+}
+
+tcp_connection_dissector.states.fin_wait_1 = tcp_connection_dissector.states:state{
+	output = function (context, pkt)
+		if pkt.flags.fin then
+			if pkt.flags.ack then
+				context.flow:_sendpkt(pkt, context.output)
+				return context.states.closing
+			else
+				context.flow:_sendpkt(pkt, context.output)
+				return context.states.timed_wait
+			end
+		elseif pkt.flags.ack then
+			context.flow:push(pkt, context.output)
+			return context.states.fin_wait_2
+		else
+			return context.states.ERROR
+		end
+	end,
+	input = function (context, pkt)
+		if pkt.flags.fin then
+			if pkt.flags.ack then
+				context.flow:_sendpkt(pkt, context.input)
+				return context.states.closing
+			end
+		end
+		context.flow:_sendpkt(pkt, context.input)
+	end
+}
+
+tcp_connection_dissector.states.fin_wait_2 = tcp_connection_dissector.states:state{
+	output = function (context, pkt)
+		if pkt.flags.fin then
+			context.flow:_sendpkt(pkt, context.output)
+			return context.states.timed_wait
+		else
+			return context.states.ERROR
+		end
+	end,
+}
+
+tcp_connection_dissector.states.closing = tcp_connection_dissector.states:state{
+	input = function (context, pkt)
+		if pkt.flags.ack then
+			context.flow:_sendpkt(pkt, context.input)
+			return context.states.timed_wait
+		elseif not pkt.flags.fin then
+			return context.states.ERROR
+		else
+			context.flow:_sendpkt(pkt, context.input)
+		end
+	end,
+	output = function (context, pkt)
+		if not pkt.flags.ack then
+			return context.states.ERROR
+		else
+			context.flow:_sendpkt(pkt, context.output)
+		end
+	end,
+}
+
+tcp_connection_dissector.states.timed_wait = tcp_connection_dissector.states:state{
+	input = function (context, pkt)
+		if not pkt.flags.ack then
+			return context.states.ERROR
+		else
+			context.flow:_sendpkt(pkt, context.input)
+		end
+	end,
+	timeouts = {
+		[60] = function (context)
+			return context.states.FINISH
+		end
+	}
+}
+
 function tcp_connection_dissector.method:init(connection)
 	self.connection = connection
 	self.stream = {}
 	self.stream['up'] = self.connection:stream('up')
 	self.stream['down'] = self.connection:stream('down')
-	self.state = 0
+	self.states = tcp_connection_dissector.states:instanciate()
+	self.states.flow = self
 end
 
 function tcp_connection_dissector.method:emit(pkt, direction)
+	self.states:update(direction, pkt)
+end
+
+function tcp_connection_dissector.method:push(pkt, direction)
 	local stream = self.stream[direction]
-	if pkt.flags.syn then
-		stream:init(pkt.seq+1)
-		return pkt:send()
-	elseif pkt.flags.rst then
-		self:_sendpkt(pkt, direction)
-		return self:drop()
-	elseif self.state >= 2 then
-		if pkt.flags.ack then
-			self.state = self.state + 1
-		end
 
-		self:_sendpkt(pkt, direction)
-
-		if self.state >= 3 then
-			return self:close()
-		else
-			return
-		end
-	elseif pkt.flags.fin then
-		self.state = self.state+1
-		return self:_sendpkt(pkt, direction)
-	else
-		stream:push(pkt)
-	end
+	stream:push(pkt)
 
 	if stream:available() > 0 then
 		if not haka.pcall(haka.context.signal, haka.context, self, tcp_connection_dissector.events.receive_data, stream, direction) then
@@ -88,12 +268,12 @@ function tcp_connection_dissector.method:emit(pkt, direction)
 	end
 
 	if self:continue() then
-		self:_send(direction)
+		return self:_send(direction)
 	end
 end
 
 function tcp_connection_dissector.method:continue()
-	return self.connection ~= nil
+	return self.stream ~= nil
 end
 
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
@@ -124,20 +304,12 @@ function tcp_connection_dissector.method:_send(direction)
 end
 
 function tcp_connection_dissector.method:send()
-	self:_send(true)
-	self:_send(false)
+	self:_send('up')
+	self:_send('down')
 end
 
 function tcp_connection_dissector.method:drop()
-	self.connection:drop()
-	self.stream = nil
-	self.connection = nil
-end
-
-function tcp_connection_dissector.method:close()
-	self.connection:close()
-	self.stream = nil
-	self.connection = nil
+	self.states:reset()
 end
 
 function tcp_connection_dissector.method:_forgereset(direction)

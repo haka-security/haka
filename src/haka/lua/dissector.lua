@@ -85,56 +85,14 @@ dissector.FlowDissector:register_event('receive_data')
 dissector.FlowDissector:register_event('send_data')
 
 function dissector.FlowDissector.method:connections()
-	if self:class().connections then
-		return self:class().connections
+	local connections = classof(self).connections
+	if connections then
+		return haka.events.ObjectEventConnections:new(self, connections)
 	end
 end
 
 function dissector.FlowDissector.method:continue()
 	error("not implemented")
-end
-
-function dissector.FlowDissector.method:receive(stream)
-	error("not implemented")
-end
-
-function dissector.FlowDissector.method:send()
-	error("not implemented")
-end
-
-
---
--- Statefull flow dissectors
---
-
-dissector.StatefullFlowDissector = class('StatefullFlowDissector', dissector.FlowDissector)
-
-function dissector.StatefullFlowDissector:__init()
-	self.state = self:class().states:instanciate(self)
-end
-
-function dissector.StatefullFlowDissector:update_state(data, direction)
-	if direction == 'up' then
-		self.state:input(data)
-	else
-		self.state:output(data)
-	end
-end
-
-
-dissector.StatefullUpDownFlowDissector = class('StatefullUpDownFlowDissector', dissector.FlowDissector)
-
-function dissector.StatefullUpDownFlowDissector:__init()
-	self.state_up = self:class().states:instanciate(self)
-	self.state_down = self:class().states:instanciate(self)
-end
-
-function dissector.StatefullUpDownFlowDissector:update_state(data, direction)
-	if direction == 'up' then
-		self.state_up:input(data)
-	else
-		self.state_up:output(data)
-	end
 end
 
 

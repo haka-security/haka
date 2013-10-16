@@ -20,3 +20,6 @@ debug filter: received stream len=7
 debug filter: received stream len=7
 debug filter: received stream len=11
 debug tcp-connection: dropping connection 127.0.0.1:34004 -> 127.0.0.1:4444
+debug tcp-connection: closing connection 127.0.0.1:34004 -> 127.0.0.1:4444
+debug tcp-connection: closing connection 127.0.0.1:34003 -> 127.0.0.1:4444
+debug tcp-connection: closing connection 127.0.0.1:34001 -> 127.0.0.1:4444

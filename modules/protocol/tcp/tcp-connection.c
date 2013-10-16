@@ -114,8 +114,6 @@ static void tcp_connection_remove(struct ctable **head, struct ctable *elem)
 
 static void tcp_connection_release(struct ctable *elem, bool freemem)
 {
-	lua_ref_clear(&elem->tcp_conn.lua_table);
-
 	if (elem->tcp_conn.stream_input) {
 		stream_destroy(elem->tcp_conn.stream_input);
 		elem->tcp_conn.stream_input = NULL;
@@ -127,11 +125,11 @@ static void tcp_connection_release(struct ctable *elem, bool freemem)
 	}
 
 	if (freemem) {
+		lua_ref_clear(&elem->tcp_conn.lua_table);
 		lua_object_release(&elem->tcp_conn, &elem->tcp_conn.lua_object);
 		free(elem);
 	}
 }
-
 
 struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 {

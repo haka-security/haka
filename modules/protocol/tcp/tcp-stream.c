@@ -791,7 +791,7 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 		iter = *start;
 		assert(iter);
 
-		while (iter && iter->start_seq < chunk->start_seq) {
+		while (iter && iter->start_seq <= chunk->start_seq) {
 			prev = iter;
 			iter = list_next(iter);
 		}
