@@ -34,6 +34,8 @@ bool                  state_add_timeout_transition(struct state *state, struct t
 bool                  state_set_error_transition(struct state *state, struct transition_data *data);
 bool                  state_set_enter_transition(struct state *state, struct transition_data *data);
 bool                  state_set_leave_transition(struct state *state, struct transition_data *data);
+bool                  state_set_init_transition(struct state *state, struct transition_data *data);
+bool                  state_set_finish_transition(struct state *state, struct transition_data *data);
 const char           *state_name(struct state *state);
 
 struct state_machine_instance *state_machine_instance(struct state_machine *machine, struct state_machine_context *context);

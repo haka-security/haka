@@ -9,10 +9,16 @@ local machine = haka.state_machine.new("test")
 machine:default {
 	error = function (self)
 		return self.states.FINISH
+	end,
+	finish = function (self)
+		print("finished", self.hello)
 	end
 }
 
 machine.state1 = machine:state {
+	init = function (self)
+		print("initialize")
+	end,
 	enter = function (self)
 		self.mystate = "state1"
 		self.count = 0

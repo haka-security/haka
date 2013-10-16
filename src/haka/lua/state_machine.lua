@@ -46,10 +46,13 @@ function states.CompiledState.method:__init(state_machine, state, name)
 				self._state:transition_enter(f)
 			elseif n == 'leave' then
 				self._state:transition_leave(f)
+			elseif n == 'init' then
+				self._state:transition_init(f)
+			elseif n == 'finish' then
+				self._state:transition_finish(f)
 			else
 				self[n] = f
 				self['_internal_' .. n] = function (self, ...)
-					haka.log.debug("state machine", "%s: %s transition on state '%s'", self._state_machine.name, n, name)
 					local newstate = f(self, ...)
 					if newstate then
 						if isa(newstate, states.CompiledState) then
@@ -144,11 +147,16 @@ function states.StateMachineInstance.method:__init(state_machine)
 end
 
 function states.StateMachineInstance.method:__index(name)
-	local trans = self.state['_internal_' .. name]
+	local current = rawget(self, 'states')[self._instance.state]
+	local trans = current['_internal_' .. name]
 	if not trans then
 		error(string.format("no transition named '%s' on state '%s'", name, self.state.name))
 	end
 	return trans
+end
+
+function states.StateMachineInstance.method:finish()
+	self._instance:finish()
 end
 
 

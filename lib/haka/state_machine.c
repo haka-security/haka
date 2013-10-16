@@ -10,7 +10,7 @@
 #include <haka/container/vector.h>
 
 
-#define MODULE    L"state machine"
+#define MODULE    L"state-machine"
 
 
 /*
@@ -22,7 +22,9 @@ enum transition_type {
 	TRANSITION_ERROR,
 	TRANSITION_TIMEOUT,
 	TRANSITION_ENTER,
-	TRANSITION_LEAVE
+	TRANSITION_LEAVE,
+	TRANSITION_INIT,
+	TRANSITION_FINISH
 };
 
 struct transition {
@@ -37,6 +39,8 @@ struct state {
 	struct transition       error;
 	struct transition       enter;
 	struct transition       leave;
+	struct transition       init;
+	struct transition       finish;
 	struct vector           timeouts;
 };
 
@@ -81,6 +85,8 @@ static void state_destroy(struct state *state)
 	transition_destroy(&state->error);
 	transition_destroy(&state->enter);
 	transition_destroy(&state->leave);
+	transition_destroy(&state->init);
+	transition_destroy(&state->finish);
 	free(state->name);
 	free(state);
 }
@@ -122,6 +128,10 @@ struct state *state_machine_create_state(struct state_machine *state_machine, co
 	state->enter.callback = NULL;
 	state->leave.type = TRANSITION_NONE;
 	state->leave.callback = NULL;
+	state->init.type = TRANSITION_NONE;
+	state->init.callback = NULL;
+	state->finish.type = TRANSITION_NONE;
+	state->finish.callback = NULL;
 	vector_create(&state->timeouts, struct transition, transition_destroy);
 
 	list_insert_before(state, NULL, &state_machine->states, NULL);
@@ -163,11 +173,29 @@ bool state_set_leave_transition(struct state *state, struct transition_data *dat
 	return true;
 }
 
+bool state_set_init_transition(struct state *state, struct transition_data *data)
+{
+	state->init.type = TRANSITION_INIT;
+	state->init.callback = data;
+	assert(data->callback);
+	return true;
+}
+
+bool state_set_finish_transition(struct state *state, struct transition_data *data)
+{
+	state->finish.type = TRANSITION_FINISH;
+	state->finish.callback = data;
+	assert(data->callback);
+	return true;
+}
+
 static struct state _state_machine_error_state = {
 	name: "ERROR",
 	error: {0},
 	enter: {0},
 	leave: {0},
+	init: {0},
+	finish: {0},
 	timeouts: VECTOR_INIT(struct transition, transition_destroy)
 };
 struct state * const state_machine_error_state = &_state_machine_error_state;
@@ -177,6 +205,8 @@ static struct state _state_machine_finish_state = {
 	error: {0},
 	enter: {0},
 	leave: {0},
+	init: {0},
+	finish: {0},
 	timeouts: VECTOR_INIT(struct transition, transition_destroy)
 };
 struct state * const state_machine_finish_state = &_state_machine_finish_state;
@@ -427,10 +457,17 @@ struct state_machine_instance *state_machine_instance(struct state_machine *stat
 	instance->used_timer = 0;
 	instance->in_transition = false;
 
-	state_machine_enter_state(instance, state_machine->initial);
-
 	messagef(HAKA_LOG_DEBUG, MODULE, L"%s: initial state '%s'",
 			instance->state_machine->name, state_machine->initial->name);
+
+	state_machine_enter_state(instance, state_machine->initial);
+
+	if (have_transition(instance, &instance->current->init)) {
+		messagef(HAKA_LOG_DEBUG, MODULE, L"%s: init transition on state '%s'",
+				instance->state_machine->name, instance->current->name);
+
+		do_transition(instance, &instance->current->init);
+	}
 
 	return instance;
 }
@@ -440,6 +477,13 @@ void state_machine_instance_finish(struct state_machine_instance *instance)
 	if (instance->current) {
 		messagef(HAKA_LOG_DEBUG, MODULE, L"%s: finish from state '%s'",
 				instance->state_machine->name, instance->current->name);
+
+		if (have_transition(instance, &instance->current->finish)) {
+			messagef(HAKA_LOG_DEBUG, MODULE, L"%s: finish transition on state '%s'",
+					instance->state_machine->name, instance->current->name);
+
+			do_transition(instance, &instance->current->finish);
+		}
 	}
 
 	state_machine_leave_state(instance);

@@ -199,6 +199,22 @@ struct state {
 			state_set_enter_transition($self, trans);
 		}
 
+		void transition_init(struct lua_ref func)
+		{
+			struct transition_data *trans = lua_transition_data_new(&func, OTHER_TRANSITION);
+			if (!trans) return;
+
+			state_set_init_transition($self, trans);
+		}
+
+		void transition_finish(struct lua_ref func)
+		{
+			struct transition_data *trans = lua_transition_data_new(&func, OTHER_TRANSITION);
+			if (!trans) return;
+
+			state_set_finish_transition($self, trans);
+		}
+
 		%immutable;
 		const char *name;
 	}
