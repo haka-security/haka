@@ -460,7 +460,14 @@ struct state_machine_instance *state_machine_instance(struct state_machine *stat
 	messagef(HAKA_LOG_DEBUG, MODULE, L"%s: initial state '%s'",
 			instance->state_machine->name, state_machine->initial->name);
 
-	state_machine_enter_state(instance, state_machine->initial);
+	return instance;
+}
+
+void state_machine_instance_init(struct state_machine_instance *instance)
+{
+	assert(!instance->current);
+
+	state_machine_enter_state(instance, instance->state_machine->initial);
 
 	if (have_transition(instance, &instance->current->init)) {
 		messagef(HAKA_LOG_DEBUG, MODULE, L"%s: init transition on state '%s'",
@@ -468,8 +475,6 @@ struct state_machine_instance *state_machine_instance(struct state_machine *stat
 
 		do_transition(instance, &instance->current->init);
 	}
-
-	return instance;
 }
 
 void state_machine_instance_finish(struct state_machine_instance *instance)

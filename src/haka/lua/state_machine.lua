@@ -144,10 +144,11 @@ function states.StateMachineInstance.method:__init(state_machine)
 	self._state_machine = state_machine
 	self.states = state_machine._state_table
 	self._instance = state_machine._state_machine:instanciate(self)
+	self._instance:init()
 end
 
 function states.StateMachineInstance.method:__index(name)
-	local current = rawget(self, 'states')[self._instance.state]
+	local current = rawget(self, 'states')[rawget(self, '_instance').state]
 	local trans = current['_internal_' .. name]
 	if not trans then
 		error(string.format("no transition named '%s' on state '%s'", name, self.state.name))

@@ -286,6 +286,12 @@ struct state_machine_instance {
 			state_machine_instance_destroy($self);
 		}
 
+		%rename(init) _init;
+		void _init()
+		{
+			state_machine_instance_init($self);
+		}
+
 		%rename(update) _update;
 		void _update(struct state *state)
 		{

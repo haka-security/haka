@@ -27,6 +27,10 @@ $0 ~ /^debug packet:/ {
 	next;
 }
 
+$0 ~ /^debug state-machine:/ {
+	next;
+}
+
 $0 ~ /^debug event: signal/ {
 	next;
 }
