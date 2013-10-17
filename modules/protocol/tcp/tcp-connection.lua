@@ -8,6 +8,7 @@ local tcp_connection_dissector = haka.dissector.new{
 }
 
 tcp_connection_dissector:register_event('new_connection')
+tcp_connection_dissector:register_event('end_connection')
 
 function tcp_connection_dissector.receive(pkt)
 	local connection, direction, dropped = pkt:getconnection()
@@ -74,10 +75,8 @@ tcp_connection_dissector.states:default{
 		return context.states.ERROR
 	end,
 	finish = function (context)
-		context.flow.stream = nil
-		context.flow.connection:close()
-		context.flow.connection = nil
-		context.flow.states = nil
+		haka.pcall(haka.context.signal, haka.context, context.flow, tcp_connection_dissector.events.end_connection)
+		context.flow:_close()
 	end,
 	reset = function (context)
 		return context.states.reset
@@ -86,6 +85,8 @@ tcp_connection_dissector.states:default{
 
 tcp_connection_dissector.states.reset = tcp_connection_dissector.states:state{
 	enter = function (context)
+		haka.pcall(haka.context.signal, haka.context, context.flow, tcp_connection_dissector.events.end_connection)
+
 		context.flow.stream = nil
 		context.flow.connection:drop()
 	end,
@@ -93,7 +94,10 @@ tcp_connection_dissector.states.reset = tcp_connection_dissector.states:state{
 		[60] = function (context)
 			return context.states.FINISH
 		end
-	}
+	},
+	finish = function (context)
+		context.flow:_close()
+	end
 }
 
 tcp_connection_dissector.states.initial = tcp_connection_dissector.states:state{
@@ -249,6 +253,11 @@ tcp_connection_dissector.states.closing = tcp_connection_dissector.states:state{
 }
 
 tcp_connection_dissector.states.timed_wait = tcp_connection_dissector.states:state{
+	enter = function (context)
+		if not haka.pcall(haka.context.signal, haka.context, context.flow, tcp_connection_dissector.events.end_connection) then
+			return context.states.ERROR
+		end
+	end,
 	input = function (context, pkt)
 		if not pkt.flags.ack then
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
@@ -261,7 +270,10 @@ tcp_connection_dissector.states.timed_wait = tcp_connection_dissector.states:sta
 		[60] = function (context)
 			return context.states.FINISH
 		end
-	}
+	},
+	finish = function (context)
+		context.flow:_close()
+	end
 }
 
 function tcp_connection_dissector.method:__init()
@@ -278,6 +290,13 @@ end
 
 function tcp_connection_dissector.method:emit(pkt, direction)
 	self.states:update(direction, pkt)
+end
+
+function tcp_connection_dissector.method:_close()
+	self.stream = nil
+	self.connection:close()
+	self.connection = nil
+	self.states = nil
 end
 
 function tcp_connection_dissector.method:push(pkt, direction)
