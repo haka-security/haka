@@ -1,3 +1,4 @@
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 127.0.0.1:42075 -> 127.0.0.1:80
 HTTP REQUEST
  _headers_order
@@ -27,5 +28,4 @@ HTTP RESPONSE
  reason = Request-URI Too Large
  status = 414
  version = HTTP/1.1
-debug tcp-connection: dropping connection 127.0.0.1:42075 -> 127.0.0.1:80
 debug tcp-connection: closing connection 127.0.0.1:42075 -> 127.0.0.1:80

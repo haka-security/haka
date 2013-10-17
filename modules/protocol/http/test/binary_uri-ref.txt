@@ -1,3 +1,4 @@
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 127.0.0.1:42072 -> 127.0.0.1:80
 HTTP REQUEST
  _headers_order
