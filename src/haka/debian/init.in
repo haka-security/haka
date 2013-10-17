@@ -34,6 +34,7 @@ stop)   log_daemon_msg "Stopping $DESCRIPTION" "$NAME"
         fi
         ;;
 restart) log_daemon_msg "Restarting $DESCRIPTION" "$NAME"
+        echo
         $0 stop
         $0 start
         ;;
@@ -44,4 +45,3 @@ status)
         exit 2
         ;;
 esac
-exit 0

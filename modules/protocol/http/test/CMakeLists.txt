@@ -1,5 +1,6 @@
 # Tests
 include(TestPcap)
+include(TestUnitLua)
 
 TEST_PCAP(http request-response)
 TEST_PCAP(http keepalive)
@@ -17,3 +18,6 @@ TEST_PCAP(http binary_header)
 TEST_PCAP(http long_uri)
 TEST_PCAP(http long_header)
 TEST_PCAP(http long_header_key)
+TEST_PCAP(http uri-split-pcap)
+TEST_UNIT_LUA(http uri-normalize)
+TEST_UNIT_LUA(http uri-split)
