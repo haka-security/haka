@@ -259,6 +259,11 @@ static void terminate()
 	_exit(2);
 }
 
+static void terminate_ok()
+{
+	_exit(0);
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;
@@ -323,7 +328,7 @@ int main(int argc, char *argv[])
 			signal(SIGTERM, terminate);
 			signal(SIGINT, terminate);
 			signal(SIGQUIT, terminate);
-			signal(SIGHUP, terminate);
+			signal(SIGHUP, terminate_ok);
 
 			wait(&status);
 			_exit(2);
@@ -356,10 +361,9 @@ int main(int argc, char *argv[])
 		luadebug_interactive_user(NULL);
 
 		message(HAKA_LOG_INFO, L"core", L"switch to background");
-		enable_stdout_logging(false);
 
 		{
-			const int nullfd = open("/dev/null", O_RDONLY);
+			const int nullfd = open("/dev/null", O_RDWR);
 			if (nullfd == -1) {
 				message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
 				fclose(pid_file);
@@ -369,7 +373,7 @@ int main(int argc, char *argv[])
 
 			dup2(nullfd, STDOUT_FILENO);
 			dup2(nullfd, STDERR_FILENO);
-			close(STDIN_FILENO);
+			dup2(nullfd, STDIN_FILENO);
 
 			enable_stdout_logging(false);
 		}
