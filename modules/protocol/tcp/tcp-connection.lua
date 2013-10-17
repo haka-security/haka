@@ -54,6 +54,7 @@ tcp_connection_dissector.states:default{
 	end,
 	update = function (context, direction, pkt)
 		if pkt.flags.rst then
+			context.flow:_sendpkt(pkt, direction)
 			return context.states.reset
 		end
 
@@ -65,9 +66,11 @@ tcp_connection_dissector.states:default{
 		end
 	end,
 	input = function (context)
+		haka.log.error('tcp-connection', "unexpected tcp packet")
 		return context.states.ERROR
 	end,
 	output = function (context)
+		haka.log.error('tcp-connection', "unexpected tcp packet")
 		return context.states.ERROR
 	end,
 	finish = function (context)
@@ -104,6 +107,7 @@ tcp_connection_dissector.states.initial = tcp_connection_dissector.states:state{
 			pkt:send()
 			return context.states.syn_sent
 		else 
+			haka.log.error('tcp-connection', "invalid tcp hand-shake")
 			return context.states.ERROR
 		end
 	end
@@ -116,11 +120,13 @@ tcp_connection_dissector.states.syn_sent = tcp_connection_dissector.states:state
 			pkt:send()
 			return context.states.syn_received
 		else 
+			haka.log.error('tcp-connection', "invalid tcp hand-shake")
 			return context.states.ERROR
 		end
 	end,
 	input = function (context, pkt)
 		if not pkt.flags.syn then
+			haka.log.error('tcp-connection', "invalid tcp hand-shake")
 			return context.states.ERROR
 		else
 			pkt:send()
@@ -243,9 +249,12 @@ tcp_connection_dissector.states.timed_wait = tcp_connection_dissector.states:sta
 	}
 }
 
+function tcp_connection_dissector.method:__init()
+	self.stream = {}
+end
+
 function tcp_connection_dissector.method:init(connection)
 	self.connection = connection
-	self.stream = {}
 	self.stream['up'] = self.connection:stream('up')
 	self.stream['down'] = self.connection:stream('down')
 	self.states = tcp_connection_dissector.states:instanciate()

@@ -15,7 +15,7 @@ events.EventConnections = class('EventConnections')
 function events.EventConnections.method:signal(emitter, event, ...)
 	local listeners = self:_get(event)
 	if listeners then
-		haka.log.debug("event", "signal '%s'", event.name)
+		haka.log.debug("event", "signal '%s', %d listeners", event.name, #listeners)
 
 		for _, listener in ipairs(listeners) do
 			self:_signal(listener, emitter, ...)

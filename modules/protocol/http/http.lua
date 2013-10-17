@@ -655,6 +655,7 @@ function module.install_tcp_rule(port)
 		hook = haka.event('tcp-connection', 'new_connection'),
 		eval = function (flow, pkt)
 			if pkt.dstport == port then
+				haka.log.debug('http', "selecting http dissector on flow")
 				haka.context:install_dissector(http_dissector:new(flow))
 			end
 		end
