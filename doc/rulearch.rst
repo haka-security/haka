@@ -2,8 +2,22 @@
 Rule architecture
 =================
 
+Flow
+----
+
+The flows that go on the network and through Haka can be named using the following conventions:
+
+.. image:: flow.png
+
+* *Up*/*Down*: Direction of the flow from the client to the server.
+* *Input*/*Output*: Direction of the flow regarding the Haka router.
+
+
 Dissectors
 ----------
+
+.. deprecated:: 1.0
+    The section will need to be updated
 
 The configuration will define a list of dissector. Each dissector is described by:
 
@@ -33,6 +47,9 @@ assigned to some `hooks`. A rule need the following fields:
 
 Rule hooks
 ----------
+
+.. deprecated:: 1.0
+    The section will need to be updated
 
 The hooks are the points where the user can install rules. When the system will reach a hook
 point, all the rules installed on it will be called. The order of the rule execution matches
