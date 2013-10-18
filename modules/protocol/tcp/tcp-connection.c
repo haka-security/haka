@@ -23,7 +23,16 @@ static void tcp_connection_release(struct ctable *elem, bool freemem);
 
 static struct ctable *ct_head = NULL;
 
-mutex_t ct_mutex = PTHREAD_MUTEX_INITIALIZER;
+mutex_t ct_mutex;
+
+static INIT void tcp_connection_init()
+{
+	/* Init a recursive mutex to avoid dead-lock on signal handling when
+	 * running in single thread mode.
+	 */
+	UNUSED bool ret = mutex_init(&ct_mutex, true);
+	assert(ret);
+}
 
 static FINI void tcp_connection_fini()
 {
@@ -38,6 +47,8 @@ static FINI void tcp_connection_fini()
 	}
 
 	ct_head = NULL;
+
+	mutex_destroy(&ct_mutex);
 }
 
 void tcp_connection_insert(struct ctable **head, struct ctable *elem)
