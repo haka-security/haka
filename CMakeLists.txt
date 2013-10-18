@@ -81,7 +81,7 @@ else()
 endif()
 
 add_custom_target(localinstall
-	COMMAND $(MAKE) install DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/out
+	COMMAND $(MAKE) install DESTDIR=${CMAKE_BINARY_DIR}/out
 	COMMAND echo "export LD_LIBRARY_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/lib\"; export HAKA_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka\"" > ${CMAKE_CURRENT_BINARY_DIR}/out/env.sh
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Install locally..." VERBATIM
@@ -157,16 +157,16 @@ include_directories(include)
 enable_testing()
 find_package(Check REQUIRED)
 include_directories(${CHECK_INCLUDE_DIRS})
-set(TEST_RUNDIR ${CMAKE_CURRENT_BINARY_DIR}/_Test/${CMAKE_INSTALL_PREFIX})
+set(TEST_RUNDIR ${CMAKE_BINARY_DIR}/test/${CMAKE_INSTALL_PREFIX})
 
 add_custom_target(pre-tests-build
 	COMMAND $(MAKE) all
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 	VERBATIM
 )
 
 add_custom_target(pre-tests
-	COMMAND $(MAKE) install/fast DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/_Test > /dev/null
+	COMMAND $(MAKE) install/fast DESTDIR=${CMAKE_BINARY_DIR}/test > /dev/null
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Preparing tests environment..." VERBATIM
 	VERBATIM
@@ -175,7 +175,7 @@ add_custom_target(pre-tests
 
 add_custom_target(tests
 	COMMAND ctest -j${CPU_COUNT} $(CTEST_ARGS)
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 	COMMENT "Run all tests" VERBATIM
 	DEPENDS pre-tests
 )

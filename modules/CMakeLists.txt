@@ -1,5 +1,6 @@
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_HAKA_INSTALL_PREFIX}/lib")
+set(MODULE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 macro(SWIG_FIX_ENTRYPOINT target type)
 	set_target_properties(${target} PROPERTIES LINK_FLAGS "-Wl,--defsym=luaopen_${type}/${target}=luaopen_${target}")
@@ -14,7 +15,7 @@ set(CMAKE_SHARED_LIBRARY_SUFFIX "${HAKA_MODULE_SUFFIX}")
 set(MODULE_INSTALL_PATH ${HAKA_INSTALL_PREFIX}/share/haka/modules)
 
 macro(INCLUDE_MODULE name type)
-	include_directories(${CMAKE_SOURCE_DIR}/modules/${type}/${name})
+	include_directories(${MODULE_SOURCE_DIR}/${type}/${name})
 endmacro(INCLUDE_MODULE)
 
 macro(DEPENDS_MODULE target name type)
