@@ -20,3 +20,18 @@ haka.rule {
 	end
 }
 
+-----------------------------------
+-- Dumping request info
+-----------------------------------
+
+function dump_request(http)
+	haka.log("sqli", "receiving http request")
+	local uri = http.request.uri
+	haka.log("sqli", "    uri: %s", uri)
+	local cookies = http.request.headers['Cookie']
+	if cookies then
+		haka.log("sqli", "    cookies: %s", cookies)
+	end
+end
+
+

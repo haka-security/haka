@@ -13,6 +13,8 @@ local keywords = {
 haka.rule {
 	hooks = { 'http-request' },
 	eval = function (self, http)
+		dump_request(http)
+
 		local score = 0
 		local uri = http.request.uri
 		-- apply all decoding functions on uri (percent-decode, uncomments, etc.)
@@ -21,7 +23,7 @@ haka.rule {
 			if uri:find(key) then
 				score = score + 4
 				if score >= 8 then
-					haka.log.error("filter", "SQLi attack detected !!!")
+					haka.log.error("sqli", "    SQLi attack detected !!!")
 					http:drop()
 				end
 			end

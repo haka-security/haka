@@ -17,6 +17,8 @@ haka.rule {
 	-- evalution applies on upcoming requests
 	hooks = { 'http-request' },
 	eval = function (self, http)
+		dump_request(http)
+
 		local score = 0
 		-- http fileds (uri, headers) are available through 'request' field
 		local uri = http.request.uri
@@ -26,7 +28,7 @@ haka.rule {
 				-- update the score and raise an error if the score exceeds a threshold
 				score = score + 4
 				if score >= 8 then
-					haka.log.error("filter", "SQLi attack detected !!!")
+					haka.log.error("sqli", "    SQLi attack detected !!!")
 					http:drop()
 				end
 			end

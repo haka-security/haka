@@ -16,7 +16,7 @@ local sql_keywords = {
 	-- you can extent this list with other sql keywords
 }
 
-local sql_functions = { 
+local sql_functions = {
 	'ascii', 'char', 'length', 'concat', 'substring',
 	-- you can extend this list with other sql functions
 }
@@ -30,10 +30,12 @@ sqli = haka.rule_group {
 	name = 'sqli',
 	-- initilize some values before evaluation any security rule
 	init = function (self, http)
+		dump_request(http)
+
 		request = http.request
 		-- another way to split cookie header value and query's arguments
-		request.cookies = http.request:split_cookies()
-		request.args = http.request:split_uri().args
+		request.cookies = request:split_cookies()
+		request.args = request:split_uri().args
 		request.where =  {args = {score = 0}, cookies = {score = 0}}
 	end,
 }
@@ -43,16 +45,19 @@ local function check_sqli(patterns, score, trans)
 		hooks = { 'http-request' },
 		eval = function (self, http)
 			for k, v in pairs(request.where) do
-				for _, val in pairs(http.request[k]) do
-					for _, pattern in ipairs(patterns) do
+				if http.request[k] then
+					for _, val in pairs(http.request[k]) do
 						for _, f in ipairs(trans) do
 							val = f(val)
-						end
-						if val:find(pattern) then
-							v.score = v.score + score
-							if v.score >= 8 then
-								haka.log.error("filter", "SQLi attack detected !!!")
-								http:drop()
+							for _, pattern in ipairs(patterns) do
+								if val:find(pattern) then
+									v.score = v.score + score
+									if v.score >= 8 then
+										haka.log.error("sqli", "    SQLi attack detected !!!")
+										http:drop()
+										return
+									end
+								end
 							end
 						end
 					end

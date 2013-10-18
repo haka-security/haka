@@ -1,10 +1,10 @@
 
-SQLi attack tetection
+SQLi attack detection
 =====================
 
 Introduction
 ------------
-This tutorial shows how tu use Haka in order to detect SQL injection attacks (SQLi). Note that our goal is not to block 100% of SQLi attacks (with 0% false-positive rate). 
+This tutorial shows how tu use Haka in order to detect SQL injection attacks (SQLi). Note that our goal is not to block 100% of SQLi attacks (with 0% false-positive rate).
 
 How-to
 ------
@@ -19,7 +19,7 @@ All the samples are self-documented.
 
 Writing http rules
 ------------------
-To write http rules, we need first to load the ipv4, tcp and http dissectors and set the next dissector to `http` when the tcp port is equal to 80 (this is done on connection establishment thanks to the `tcp-connection-new` hook). This is the purpose of the ``httpconfig.lua`` which is required by all the samples given in this tutorial. 
+To write http rules, we need first to load the ipv4, tcp and http dissectors and set the next dissector to `http` when the tcp port is equal to 80 (this is done on connection establishment thanks to the `tcp-connection-new` hook). This is the purpose of the ``httpconfig.lua`` which is required by all the samples given in this tutorial.
 
 .. highlightlang:: lua
 
@@ -27,7 +27,7 @@ To write http rules, we need first to load the ipv4, tcp and http dissectors and
 
 My first naive rule
 -------------------
-The first example presents a naive rule which checks some malicious patterns against the whole uri. A score is update whenever an sqli keywords is found. An alert is raised if the socre exceeds a predefined threshold. 
+The first example presents a naive rule which checks some malicious patterns against the whole uri. A score is update whenever an sqli keywords is found. An alert is raised if the socre exceeds a predefined threshold.
 
 .. literalinclude:: ../../../sample/tutorial/sqli/sqli-simple.lua
 
@@ -45,7 +45,7 @@ All the above rules check the malicious patterns against the whole uri. The purp
 
 Mutliple rules
 --------------
-The script file introduces additional malicious patterns and use the rule_group feature to define multiple anti-sqli security rules. Each rule focus on the detection of a particular pattern (sql keywords, sql comments, etc.) 
+The script file introduces additional malicious patterns and use the rule_group feature to define multiple anti-sqli security rules. Each rule focus on the detection of a particular pattern (sql keywords, sql comments, etc.)
 
 .. literalinclude:: ../../../sample/tutorial/sqli/sqli-groups.lua
 

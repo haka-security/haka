@@ -17,6 +17,8 @@ local keywords = {
 haka.rule {
 	hooks = { 'http-request' },
 	eval = function (self, pkt)
+		dump_request(pkt)
+
 		-- apply decoding functions on uri and cookie header
 		local uri = decode_all(pkt.request.uri)
 		local ck = decode_all(pkt.request.headers['Cookie'])
@@ -32,12 +34,14 @@ haka.rule {
 		for _, key in ipairs(keywords) do
 			for k, v in pairs(where) do
 				-- loop on each query param | cookie value
-				for param, value in pairs(v.value) do
-					if value:find(key) then
-						v.score = v.score + 4
-						if v.score >= 8 then
-							haka.log.error("filter", "SQLi attack detected !!!")
-							pkt:drop()
+				if v.value then
+					for param, value in pairs(v.value) do
+						if value:find(key) then
+							v.score = v.score + 4
+							if v.score >= 8 then
+								haka.log.error("sqli", "    SQLi attack detected !!!")
+								pkt:drop()
+							end
 						end
 					end
 				end
