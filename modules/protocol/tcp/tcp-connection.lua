@@ -112,6 +112,7 @@ tcp_connection_dissector.states.initial = tcp_connection_dissector.states:state{
 			return context.states.syn_sent
 		else 
 			haka.log.error('tcp-connection', "invalid tcp establishment handshake")
+			pkt:drop()
 			return context.states.ERROR
 		end
 	end
@@ -125,12 +126,14 @@ tcp_connection_dissector.states.syn_sent = tcp_connection_dissector.states:state
 			return context.states.syn_received
 		else 
 			haka.log.error('tcp-connection', "invalid tcp establishment handshake")
+			pkt:drop()
 			return context.states.ERROR
 		end
 	end,
 	input = function (context, pkt)
 		if not pkt.flags.syn then
 			haka.log.error('tcp-connection', "invalid tcp establishment handshake")
+			pkt:drop()
 			return context.states.ERROR
 		else
 			pkt:send()
@@ -148,12 +151,14 @@ tcp_connection_dissector.states.syn_received = tcp_connection_dissector.states:s
 			return context.states.fin_wait_1
 		else
 			haka.log.error('tcp-connection', "invalid tcp establishment handshake")
+			pkt:drop()
 			return context.states.ERROR
 		end
 	end,
 	output = function (context, pkt)
 		if not pkt.flags.syn or not pkt.flags.ack then
 			haka.log.error('tcp-connection', "invalid tcp establishment handshake")
+			pkt:drop()
 			return context.states.ERROR
 		else
 			context.flow:push(pkt, context.output)
@@ -196,6 +201,7 @@ tcp_connection_dissector.states.fin_wait_1 = tcp_connection_dissector.states:sta
 			return context.states.fin_wait_2
 		else
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
+			pkt:drop()
 			return context.states.ERROR
 		end
 	end,
@@ -217,6 +223,7 @@ tcp_connection_dissector.states.fin_wait_2 = tcp_connection_dissector.states:sta
 			return context.states.timed_wait
 		else
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
+			pkt:drop()
 			return context.states.ERROR
 		end
 	end,
@@ -225,6 +232,7 @@ tcp_connection_dissector.states.fin_wait_2 = tcp_connection_dissector.states:sta
 			context.flow:_sendpkt(pkt, context.input)
 		else
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
+			pkt:drop()
 			return context.states.ERROR
 		end
 	end
@@ -237,6 +245,7 @@ tcp_connection_dissector.states.closing = tcp_connection_dissector.states:state{
 			return context.states.timed_wait
 		elseif not pkt.flags.fin then
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
+			pkt:drop()
 			return context.states.ERROR
 		else
 			context.flow:_sendpkt(pkt, context.input)
@@ -245,6 +254,7 @@ tcp_connection_dissector.states.closing = tcp_connection_dissector.states:state{
 	output = function (context, pkt)
 		if not pkt.flags.ack then
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
+			pkt:drop()
 			return context.states.ERROR
 		else
 			context.flow:_sendpkt(pkt, context.output)
@@ -261,6 +271,7 @@ tcp_connection_dissector.states.timed_wait = tcp_connection_dissector.states:sta
 	input = function (context, pkt)
 		if not pkt.flags.ack then
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
+			pkt:drop()
 			return context.states.ERROR
 		else
 			context.flow:_sendpkt(pkt, context.input)
