@@ -8,11 +8,11 @@ This tutorial shows how tu use Haka in order to detect SQL injection attacks (SQ
 
 How-to
 ------
-This tutorial introduces a set of lua script files located at ``<install-path>/share/haka/sample/tutorial/sqli`` and which could be run using the ``hakapcap`` tool:
+This tutorial introduces a set of lua script files located at |haka_install_path|/share/haka/sample/tutorial/sqli and which could be run using the ``hakapcap`` tool:
 
-.. code-block:: bash
+.. parsed-literal::
 
-    $ cd <install-path>/share/haka/sample/tutorial/sqli
+    $ cd |haka_install_path|/share/haka/sample/tutorial/sqli
     $ hakapcap sqli.pcap sqli-sample.lua
 
 All the samples are self-documented.

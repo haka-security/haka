@@ -13,16 +13,15 @@ This "hellopacket" reads a pcap file, then print some tcp/ip packet fields.
 How to use hellopacket
 ----------------------
 Launch ``hakapcap`` with pcapfile and lua script file as arguments.
-Pcapfile and lua script file are installed at ``<install-path>/share/haka/sample/tutorial/hellopacket``
 
-.. code-block:: bash
+.. parsed-literal::
 
-    $ cd <install-path>/share/haka/sample/tutorial/hellopacket
+    $ cd |haka_install_path|/share/haka/sample/tutorial/hellopacket
     $ hakapcap hellopacket.pcap hellopacket.lua
 
 Hakacap will process the pcap file accordingly to lua configfile, you will see at
 first some infos about the starting of haka, then the packets and stream found in
-pcap file.:
+pcap file:
 
 .. code-block:: bash
 
@@ -70,3 +69,4 @@ All the fields are similar to wireshark syntax. For example, you can see the IP 
 simply by using ``pkt.version``, ``pkt.ttl`` or ``pkt.proto``
 
     .. seealso:: Check :lua:mod:`ipv4` to get more information about
+
