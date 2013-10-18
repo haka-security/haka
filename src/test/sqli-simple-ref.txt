@@ -1,0 +1,27 @@
+debug tcp-connection: opening connection 192.168.10.1:32838 -> 192.168.20.1:80
+info sqli: receiving http request
+info sqli: uri: /index.php
+debug tcp-connection: closing connection 192.168.10.1:32838 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:32839 -> 192.168.20.1:80
+info sqli: receiving http request
+info sqli: uri: /index.php?id=-1%20union%20all%20select%201,2,3
+error sqli: SQLi attack detected !!!
+debug tcp-connection: dropping connection 192.168.10.1:32839 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:32840 -> 192.168.20.1:80
+info sqli: receiving http request
+info sqli: uri: /index.php?id=-1%20uni/*somehting*/on%20all%20select%201,2,3
+debug tcp-connection: closing connection 192.168.10.1:32840 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:32841 -> 192.168.20.1:80
+info sqli: receiving http request
+info sqli: uri: http://192.168.20.1/index.php
+info sqli: cookies: session=active;id=-1%20union%20all%20select%201,2
+debug tcp-connection: closing connection 192.168.10.1:32841 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:32842 -> 192.168.20.1:80
+info sqli: receiving http request
+info sqli: uri: /index.php?id='this%20o/*something*/r%202=2%23
+debug tcp-connection: closing connection 192.168.10.1:32842 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:32843 -> 192.168.20.1:80
+info sqli: receiving http request
+info sqli: uri: /action.php?group=o'brian%25union&action=select
+error sqli: SQLi attack detected !!!
+debug tcp-connection: dropping connection 192.168.10.1:32843 -> 192.168.20.1:80

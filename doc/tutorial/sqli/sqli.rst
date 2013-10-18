@@ -4,7 +4,7 @@ SQLi attack detection
 
 Introduction
 ------------
-This tutorial shows how tu use Haka in order to detect SQL injection attacks (SQLi). Note that our goal is not to block 100% of SQLi attacks (with 0% false-positive rate).
+This tutorial shows how tu use Haka in order to detect SQL injection attacks (SQLi). Note that our goal is not to block 100% of SQLi attacks (with 0% false-positive rate) but to show how to build iteratively an sqli filtering policy thanks to haka capabilities. 
 
 How-to
 ------
@@ -27,7 +27,7 @@ To write http rules, we need first to load the ipv4, tcp and http dissectors and
 
 My first naive rule
 -------------------
-The first example presents a naive rule which checks some malicious patterns against the whole uri. A score is update whenever an sqli keywords is found. An alert is raised if the socre exceeds a predefined threshold.
+The first example presents a naive rule which checks some malicious patterns against the whole uri. A score is updated whenever an sqli keywords is found (`select`, `update`, etc.). An alert is raised if the socre exceeds a predefined threshold.
 
 .. literalinclude:: ../../../sample/tutorial/sqli/sqli-simple.lua
 
@@ -53,7 +53,7 @@ The script file introduces additional malicious patterns and use the rule_group 
 
 White list
 ----------
-All the defined rules are too general and will therefore raise many alerts. In the example given hereafter we show how we could skip evalation of rules if the uri matches some conditions (for instance do not evaluate anti-sqli rules when the requested ressource is equal to `/site/page1.php`). This is shows another advantage of using rules group feature.
+All the defined rules are too general and will therefore raise many alerts. In the example given hereafter we show how we could skip evalation of rules if the uri matches some conditions (for instance do not evaluate anti-sqli rules when the requested ressource is equal to `/foo/bar/safepage.php`). This is shows another advantage of using rules group feature.
 
 .. note:: The check is done after uri normalisation
 

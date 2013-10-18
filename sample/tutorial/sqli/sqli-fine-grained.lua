@@ -41,6 +41,7 @@ haka.rule {
 							if v.score >= 8 then
 								haka.log.error("sqli", "    SQLi attack detected !!!")
 								pkt:drop()
+								return
 							end
 						end
 					end

@@ -12,7 +12,7 @@ local sql_comments = { '%-%-', '#', '%z', '/%*.-%*/' }
 local probing = { "^[\"'`´’‘;]", "[\"'`´’‘;]$" }
 
 local sql_keywords = {
-	'select','insert','update','delete', 'union',
+	'select', 'insert', 'update', 'delete', 'union',
 	-- you can extent this list with other sql keywords
 }
 
@@ -28,7 +28,7 @@ local sql_functions = {
 -- define a security rule group related to SQLi attacks
 sqli = haka.rule_group {
 	name = 'sqli',
-	-- initilize some values before evaluation any security rule
+	-- initialize some values before evaluating any security rule
 	init = function (self, http)
 		dump_request(http)
 

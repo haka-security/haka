@@ -25,6 +25,7 @@ haka.rule {
 				if score >= 8 then
 					haka.log.error("sqli", "    SQLi attack detected !!!")
 					http:drop()
+					return
 				end
 			end
 		end
