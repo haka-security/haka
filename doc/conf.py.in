@@ -249,3 +249,7 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+# -- Local variables -----------------------------------------------------------
+#haka_install_path = '@CMAKE_HAKA_INSTALL_PREFIX@'
+rst_prolog = '.. |haka_install_path| replace:: @CMAKE_HAKA_INSTALL_PREFIX@' 
