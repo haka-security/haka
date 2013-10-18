@@ -85,6 +85,7 @@ Example
 ^^^^^^^
 
 .. literalinclude:: ../sample/doc/gettingstarted.conf
+    :tab-width: 4
 
 Modules
 -------

@@ -57,6 +57,7 @@ The lua config file is self-documented:
 
 .. literalinclude:: ../../../sample/tutorial/hellopacket/hellopacket.lua
    :language: lua
+   :tab-width: 4
 
 Haka is very powerful because all of these fields can be used through the lua programming language
 without any limit.

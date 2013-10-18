@@ -175,3 +175,4 @@ Example
 
 .. literalinclude:: ../../../../sample/standard/proto/tcp/rules.lua
     :language: lua
+    :tab-width: 4
