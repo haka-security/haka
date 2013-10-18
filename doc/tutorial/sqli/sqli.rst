@@ -27,7 +27,7 @@ To write http rules, we need first to load the ipv4, tcp and http dissectors and
 
 My first naive rule
 -------------------
-The first example presents a naive rule which checks some malicious patterns against the whole uri. A score is updated whenever an sqli keywords is found (`select`, `update`, etc.). An alert is raised if the socre exceeds a predefined threshold.
+The first example presents a naive rule which checks some malicious patterns against the whole uri. A score is updated whenever an sqli keywords is found (`select`, `update`, etc.). An alert is raised if the score exceeds a predefined threshold.
 
 .. literalinclude:: ../../../sample/tutorial/sqli/sqli-simple.lua
 
