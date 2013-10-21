@@ -5,7 +5,7 @@
 
 require('protocol/ipv4')
 require('protocol/tcp')
-http = require('protocol/http')
+httplib = require('protocol/http')
 
 ------------------------------------
 -- Setting next dissector
@@ -33,5 +33,3 @@ function dump_request(http)
 		haka.log("sqli", "    cookies: %s", cookies)
 	end
 end
-
-

@@ -10,11 +10,13 @@ local sql_comments = { '%-%-', '#', '%z', '/%*.-%*/' }
 
 local probing = { "^[\"'`´’‘;]", "[\"'`´’‘;]$" }
 
-local sql_keywords = { 'select', 'insert', 'update', 'delete', 'union',
+local sql_keywords = {
+	'select', 'insert', 'update', 'delete', 'union',
 	-- you can extend this list with other sql keywords
 }
 
-local sql_functions = { 'ascii', 'char', 'length', 'concat', 'substring',
+local sql_functions = {
+	'ascii', 'char', 'length', 'concat', 'substring',
 	-- you can extend this list with other sql functions
 }
 
@@ -35,10 +37,19 @@ sqli = haka.rule_group {
 	name = 'sqli',
 	-- initialisation
 	init = function (self, http)
-		request = http.request
-		request.cookies = http.request:split_cookies()
-		request.args = http.request:split_uri().args
-		request.where =  {args = {score = 0}, cookies = {score = 0}}
+		dump_request(http)
+
+		-- another way to split cookie header value and query's arguments
+		http.sqli = {
+			cookies = {
+				value = http.request:split_cookies(),
+				score = 0
+			},
+			args = {
+				value = http.request:split_uri().args,
+				score = 0
+			}
+		}
 	end,
 
 	-- continue will be executed after evaluation of
@@ -58,7 +69,6 @@ sqli = haka.rule_group {
 sqli:rule {
 	hooks = { 'http-request' },
 	eval = function (self, http)
-		dump_request(http)
 		-- split uri into subparts and normalize it
 		local splitted_uri = http.request:split_uri():normalize()
 		for	_, res in ipairs(safe_ressources) do
@@ -80,22 +90,24 @@ local function check_sqli(patterns, score, trans)
 	sqli:rule {
 		hooks = { 'http-request' },
 		eval = function (self, http)
-			for k, v in pairs(request.where) do
-				if http.request[k] then
-					for _, val in pairs(http.request[k]) do
+			for k, v in pairs(http.sqli) do
+				if v.value then
+					for _, val in pairs(v.value) do
 						for _, f in ipairs(trans) do
 							val = f(val)
-							for _, pattern in ipairs(patterns) do
-								if val:find(pattern) then
-									v.score = v.score + score
-									if v.score >= 8 then
-										haka.log.error("sqli", "    SQLi attack detected !!!")
-										http:drop()
-										return
-									end
-								end
+						end
+
+						for _, pattern in ipairs(patterns) do
+							if val:find(pattern) then
+								v.score = v.score + score
 							end
 						end
+					end
+
+					if v.score >= 8 then
+						haka.log.error("sqli", "    SQLi attack detected in %s with score %d", k, v.score)
+						http:drop()
+						return
 					end
 				end
 			end
@@ -107,4 +119,3 @@ check_sqli(sql_comments, 4, { decode, lower })
 check_sqli(probing, 2, { decode, lower })
 check_sqli(sql_keywords, 4, { decode, lower, uncomments, nospaces })
 check_sqli(sql_functions, 4, { decode, lower, uncomments, nospaces })
-

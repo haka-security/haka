@@ -16,36 +16,45 @@ local keywords = {
 
 haka.rule {
 	hooks = { 'http-request' },
-	eval = function (self, pkt)
-		dump_request(pkt)
+	eval = function (self, http)
+		dump_request(http)
 
 		-- apply decoding functions on uri and cookie header
-		local uri = decode_all(pkt.request.uri)
-		local ck = decode_all(pkt.request.headers['Cookie'])
+		local uri = decode_all(http.request.uri)
+		local ck = decode_all(http.request.headers['Cookie'])
 
 		-- initialize the score for query's argument and cookies list
 		-- could be extend to check patterns in other http fields
-		local where = {args = {score = 0}, cookies = {score = 0}}
-		-- split query into list of (param-name, param-value) pairs
-		where['args'].value = http.uri.split(uri).args
-		-- split comma-separated cookies into a list of (key, value) pairs
-		where['cookies'].value = http.cookies.split(ck)
+		local where = {
+			args = {
+				-- split query into list of (param-name, param-value) pairs
+				value = httplib.uri.split(uri).args,
+				score = 0
+			},
+			cookies = {
+				-- split comma-separated cookies into a list of (key, value)
+				-- pairs
+				value = httplib.cookies.split(ck),
+				score = 0
+			}
+		}
 
-		for _, key in ipairs(keywords) do
-			for k, v in pairs(where) do
+		for k, v in pairs(where) do
+			if v.value then
+				for _, key in ipairs(keywords) do
 				-- loop on each query param | cookie value
-				if v.value then
 					for param, value in pairs(v.value) do
 						if value:find(key) then
 							v.score = v.score + 4
-							if v.score >= 8 then
-								haka.log.error("sqli", "    SQLi attack detected !!!")
-								pkt:drop()
-								return
-							end
 						end
 					end
 				end
+			end
+
+			if v.score >= 8 then
+				haka.log.error("sqli", "    SQLi attack detected in %s with score %d", k, v.score)
+				http:drop()
+				return
 			end
 		end
 	end
