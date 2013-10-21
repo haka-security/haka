@@ -17,6 +17,7 @@ The previous command will load the default configuration file ``haka.conf`` whic
 
 .. literalinclude:: ../sample/doc/gettingstarted.conf
     :language: ini
+    :tab-width: 4
 
 First Lua Policy File
 ---------------------
@@ -24,6 +25,7 @@ This is a fully functional commented configuration file.
 
 .. literalinclude:: ../sample/doc/gettingstarted.lua
     :language: lua
+    :tab-width: 4
 
 Sample Lua Policy File
 ----------------------

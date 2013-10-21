@@ -124,3 +124,4 @@ Example
 
 .. literalinclude:: ../../../../sample/standard/proto/ipv4/security.lua
     :language: lua
+    :tab-width: 4

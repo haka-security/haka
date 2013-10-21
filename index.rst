@@ -15,6 +15,7 @@ Contents:
    doc/intro.rst
    doc/build.rst
    doc/getting_started.rst
+   doc/tutorial.rst
    doc/tool_suite.rst
    doc/rulearch.rst
    doc/api/lua/main.rst
