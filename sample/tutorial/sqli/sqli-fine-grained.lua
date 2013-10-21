@@ -19,9 +19,8 @@ haka.rule {
 	eval = function (self, http)
 		dump_request(http)
 
-		-- apply decoding functions on uri and cookie header
-		local uri = decode_all(http.request.uri)
-		local ck = decode_all(http.request.headers['Cookie'])
+		local uri = http.request.uri
+		local ck = http.request.headers['Cookie']
 
 		-- initialize the score for query's argument and cookies list
 		-- could be extend to check patterns in other http fields
@@ -41,10 +40,11 @@ haka.rule {
 
 		for k, v in pairs(where) do
 			if v.value then
-				for _, key in ipairs(keywords) do
 				-- loop on each query param | cookie value
-					for param, value in pairs(v.value) do
-						if value:find(key) then
+				for param, value in pairs(v.value) do
+					local decoded = decode_all(value)
+					for _, key in ipairs(keywords) do
+						if decoded:find(key) then
 							v.score = v.score + 4
 						end
 					end
