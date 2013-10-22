@@ -7,4 +7,5 @@ Tutorials
 
    tutorial/hellopacket/hellopacket.rst
    tutorial/sqli/sqli.rst
+   tutorial/filter/filter.rst
 
