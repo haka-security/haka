@@ -65,7 +65,8 @@
 		return;
 	}
 
-	return;
+	/* Avoid the default swig behavior to be used */
+	#define SWIG_Lua_dostring(...)
 %}
 
 %exception %{
