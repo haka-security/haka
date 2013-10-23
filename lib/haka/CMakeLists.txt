@@ -16,6 +16,7 @@ add_library(libhaka SHARED
 	time.c
 	timer.c
 	state_machine.c
+	vbuffer.c
 	container/list.c
 	container/vector.c)
 

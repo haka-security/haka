@@ -20,6 +20,8 @@ char *module_suffix = HAKA_MODULE_SUFFIX;
 %include "haka/lua/swig.si"
 %include "haka/lua/stream.si"
 
+%include "vbuffer.i"
+
 %nodefaultctor;
 %nodefaultdtor;
 

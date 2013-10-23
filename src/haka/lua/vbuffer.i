@@ -1,0 +1,189 @@
+
+%{
+#include <string.h>
+#include <haka/vbuffer.h>
+#include <haka/error.h>
+
+#define SUBBUFFER_TABLE "__haka_subbuffer"
+
+/*static struct vsubbuffer *_vsubbuffer_sub(lua_State *L, struct vsubbuffer *self, int offset, int length)
+{
+	struct vsubbuffer *sub = malloc(sizeof(struct vsubbuffer));
+	if (!sub) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	vsubbuffer_sub(self, offset, length, sub);
+
+	lua_getfield(L, LUA_REGISTRYINDEX, SUBBUFFER_TABLE);
+	lua_pushlightuserdata(L, self);
+	lua_gettable(L, -2);
+	assert(!lua_isnil(L, -1));
+	lua_pushlightuserdata(L, sub);
+	lua_pushvalue(L, -2);
+	lua_settable(L, -3);
+	lua_pop(L, 2);
+
+	return sub;
+}
+
+#define vsubbuffer_sub(self, off, len) _vsubbuffer_sub(L, self, off, len)*/
+
+static struct vsubbuffer *_vbuffer_sub(lua_State *L, struct vbuffer *self, int offset, int length)
+{
+	struct vsubbuffer *sub = malloc(sizeof(struct vsubbuffer));
+	if (!sub) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	vbuffer_sub(self, offset, length, sub);
+
+	lua_getfield(L, LUA_REGISTRYINDEX, SUBBUFFER_TABLE);
+	lua_pushlightuserdata(L, sub);
+	SWIG_NewPointerObj(L, self, SWIGTYPE_p_vbuffer, 0);
+	lua_settable(L, -3);
+	lua_pop(L, 1);
+
+	return sub;
+}
+
+#define vbuffer_sub(self, off, len) _vbuffer_sub(L, self, off, len)
+#define vbuffer_left(self, off) _vbuffer_sub(L, self, off, -1)
+
+static void _vsubbuffer___gc(lua_State* L)
+{
+	swig_lua_userdata* usr;
+	assert(lua_isuserdata(L,-1));
+	usr=(swig_lua_userdata*)lua_touserdata(L,-1);
+	if (usr->own) /* if must be destroyed */
+	{
+		lua_getfield(L, LUA_REGISTRYINDEX, SUBBUFFER_TABLE);
+		lua_pushlightuserdata(L, usr->ptr);
+		lua_pushnil(L);
+		lua_settable(L, -3);
+		lua_pop(L, 1);
+
+		free(usr->ptr);
+	}
+}
+
+#define vsubbuffer___gc(self) _vsubbuffer___gc(L)
+
+%}
+
+%insert("init") %{
+	lua_newtable(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, SUBBUFFER_TABLE);
+%}
+
+%include "haka/lua/swig.si"
+
+%nodefaultctor;
+%nodefaultdtor;
+
+%newobject vsubbuffer::sub;
+
+struct vsubbuffer {
+	%extend {
+		void __gc();
+		//struct vsubbuffer *sub(int offset, int length);
+
+		size_t __len(void *dummy)
+		{
+			return $self->length;
+		}
+
+		int __getitem(int index)
+		{
+			return vsubbuffer_getbyte($self, index-1);
+		}
+
+		void __setitem(int index, int value)
+		{
+			return vsubbuffer_setbyte($self, index-1, value);
+		}
+
+		int asnumber()
+		{
+			return vsubbuffer_asnumber($self, true);
+		}
+
+		int asnumber(const char *endian)
+		{
+			return vsubbuffer_asnumber($self, strcmp(endian, "big") == 0);
+		}
+
+		void setnumber(int num)
+		{
+			return vsubbuffer_setnumber($self, true, num);
+		}
+
+		void setnumber(int num, const char *endian)
+		{
+			return vsubbuffer_setnumber($self, strcmp(endian, "big") == 0, num);
+		}
+
+		%rename(asstring) _asstring;
+		temporary_string _asstring()
+		{
+			char *str = malloc($self->length+1);
+			if (!str) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			vsubbuffer_asstring($self, str, $self->length);
+			str[$self->length] = 0;
+			return str;
+		}
+
+		%rename(setfixedstring) _setfixedstring;
+		void _setfixedstring(const char *str)
+		{
+			vsubbuffer_setfixedstring($self, str, strlen(str));
+		}
+
+		%rename(setstring) _setstring;
+		void _setstring(const char *str)
+		{
+			vsubbuffer_setstring($self, str, strlen(str));
+		}
+	}
+};
+
+%newobject vbuffer::sub;
+%newobject vbuffer::left;
+
+struct vbuffer {
+	%extend {
+		vbuffer(size_t size)
+		{
+			return vbuffer_create_new(size);
+		}
+
+		~vbuffer()
+		{
+			vbuffer_free($self);
+		}
+
+		size_t __len(void *dummy)
+		{
+			return vbuffer_size($self);
+		}
+
+		int __getitem(int index)
+		{
+			return vbuffer_getbyte($self, index-1);
+		}
+
+		void __setitem(int index, int value)
+		{
+			return vbuffer_setbyte($self, index-1, value);
+		}
+
+		struct vsubbuffer *sub(int offset, int length);
+		struct vsubbuffer *left(int offset);
+	}
+};
