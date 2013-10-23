@@ -18,12 +18,13 @@ Basic IP and TCP filtering
 --------------------------
 In order to do some basic IP filtering you can read the self documented lua config file:
 
-.. literal-include:: ../../../sample/tutorial/filter/ipfilter.lua
+.. literalinclude:: ../../../sample/tutorial/filter/ipfilter.lua
    :language: lua
    :tab-width: 4
 
 And TCP filtering goes the same 
-.. literal-include:: ../../../sample/tutorial/filter/tcpfilter.lua
+
+.. literalinclude:: ../../../sample/tutorial/filter/tcpfilter.lua
    :language: lua
    :tab-width: 4
 
@@ -40,38 +41,37 @@ hook itself at startup to the raw nfqueue table in order to inspect, modify,
 create and delete packets in real time.
 
 For the rest of this tutorial, we will assume that you've installed
-haka package on a router with two NIC (eth1, eth2), like this
-setup:
-
-(TODO: make a real png image)
-client -- (eth0)haka router(eth1) -- server
+haka package on a host with an interface named eth0.
 
 This is the configuration of the daemon:
 
-.. literal-include:: ../../../sample/tutorial/filter/daemon.conf
+.. literalinclude:: ../../../sample/tutorial/filter/daemon.conf
    :language: lua
    :tab-width: 4
 
-which start with:
-.. parsed-literal:: 
-   # haka -c |haka-install-path|/share/haka/sample/tutorial/filter/daemon.conf \
-          -f |haka-install-path|/share/haka/sample/tutorial/filter/ipfilter.conf
+In order to start haka, you have to be root. The ``--no-daemon`` option
+won't send haka daemon on background.
+
+.. parsed-literal::
+   # cd |haka_install_path|/share/haka/sample/tutorial/filter/
+   # haka daemon.conf --no-daemon
 
 The filtering will be done according to the .lua configuration file seen
 previously.
 
-.. literal-include:: ../../../sample/tutorial/filter/ipfilter.lua
+.. literalinclude:: ../../../sample/tutorial/filter/ipfilter.lua
    :language: lua
    :tab-width: 4
 
-You can adapt the IP/ports/services accordingly and check that packet
-are effectively blocked/accepted.
+You can adapt the IP accordingly and check that packet
+are effectively blocked/accepted. You can also use modify the ``daemon.conf``
+file in order to use the ``tcpfilter.lua`` file.
 
 Advanced HTTP filtering
 -----------------------
 You can filter through all HTTP fields, thanks to http module:
 
-.. literal-include:: ../../../sample/tutorial/filter/httpfilter.lua
+.. literalinclude:: ../../../sample/tutorial/filter/httpfilter.lua
    :language: lua
    :tab-width: 4
 
@@ -84,7 +84,7 @@ User-Agent. More, we want to be able to replace content by a message
 telling user that its browser is obsolete, and only authorize requests
 to updates sites based on their domain name.
 
-.. literal-include:: ../../../sample/tutorial/filter/httpadvancedfilter.lua
+.. literalinclude:: ../../../sample/tutorial/filter/httpadvancedfilter.lua
    :language: lua
    :tab-width: 4
 
