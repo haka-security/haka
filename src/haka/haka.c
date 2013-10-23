@@ -217,6 +217,8 @@ int read_configuration(const char *file)
 		}
 	}
 
+	parameters_free(config);
+
 	return -1;
 }
 
