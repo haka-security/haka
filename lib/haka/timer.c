@@ -73,6 +73,7 @@ struct timer *timer_init(timer_callback callback, void *user)
 	timer->callback = callback;
 	timer->data = user;
 
+	memset(&sev, 0, sizeof(sev));
 	sev.sigev_notify = SIGEV_THREAD_ID;
 	sev.sigev_signo = SIGALRM;
 	sev.sigev_value.sival_ptr = timer;
