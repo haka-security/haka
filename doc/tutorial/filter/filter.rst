@@ -28,10 +28,13 @@ And TCP filtering goes the same
    :language: lua
    :tab-width: 4
 
-.. code-block:: bash
+A pcapfile is provided in order to see the effects of these two config files.
 
-    hakapcap trace.pcap ipfilter.lua
-    hakapcap trace.pcap tcpfilter.lua
+.. parsed-literal::
+
+    $ cd |haka_install_path|/share/haka/sample/tutorial/filter/
+    $ hakapcap trace.pcap ipfilter.lua
+    $ hakapcap trace.pcap tcpfilter.lua
 
 
 Using nfqueue and IP / TCP filtering
@@ -54,7 +57,7 @@ won't send haka daemon on background.
 
 .. parsed-literal::
    # cd |haka_install_path|/share/haka/sample/tutorial/filter/
-   # haka daemon.conf --no-daemon
+   # haka -c daemon.conf --no-daemon
 
 The filtering will be done according to the .lua configuration file seen
 previously.
