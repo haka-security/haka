@@ -133,7 +133,7 @@ bool vbuffer_recreate_from(struct vbuffer *buf, struct vbuffer_data *data, size_
 
 static struct vbuffer *vbuffer_get(struct vbuffer *buf, size_t *off, bool keeplast)
 {
-	struct vbuffer *iter = buf, *last;
+	struct vbuffer *iter = buf, *last = NULL;
 	while (iter) {
 		last = iter;
 		if (iter->length + keeplast > *off) {
@@ -426,35 +426,38 @@ bool vbuffer_compact(struct vbuffer *buf)
 bool vbuffer_flatten(struct vbuffer *buf)
 {
 	if (!vbuffer_isflat(buf)) {
-		struct vbuffer *iter = buf;
-		const size_t size = vbuffer_size(buf);
-		struct vbuffer_data_basic *flat;
-		uint8 *ptr;
+		vbuffer_compact(buf);
+		if (!vbuffer_isflat(buf)) {
+			struct vbuffer *iter = buf;
+			const size_t size = vbuffer_size(buf);
+			struct vbuffer_data_basic *flat;
+			uint8 *ptr;
 
-		flat = vbuffer_data_basic(size);
-		if (!flat) {
-			return false;
+			flat = vbuffer_data_basic(size);
+			if (!flat) {
+				return false;
+			}
+
+			ptr = flat->buffer;
+
+			while (iter) {
+				memcpy(ptr, vbuffer_get_data(iter, false), iter->length);
+				ptr += iter->length;
+				iter = iter->next;
+			}
+
+			if (buf->next) {
+				vbuffer_free(buf->next);
+				buf->next = NULL;
+			}
+
+			buf->data->ops->release(buf->data);
+			buf->data = &flat->super;
+			flat->super.ops->addref(&flat->super);
+
+			buf->offset = 0;
+			buf->length = size;
 		}
-
-		ptr = flat->buffer;
-
-		while (iter) {
-			memcpy(ptr, vbuffer_get_data(iter, false), iter->length);
-			ptr += iter->length;
-			iter = iter->next;
-		}
-
-		if (buf->next) {
-			vbuffer_free(buf->next);
-			buf->next = NULL;
-		}
-
-		buf->data->ops->release(buf->data);
-		buf->data = &flat->super;
-		flat->super.ops->addref(&flat->super);
-
-		buf->offset = 0;
-		buf->length = size;
 	}
 	return true;
 }
@@ -822,16 +825,22 @@ void vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num)
 		}
 	}
 	else {
-		uint8 temp[8];
+		union {
+			int8  i8;
+			int16 i16;
+			int32 i32;
+			int64 i64;
+			uint8 data[8];
+		} temp;
 		struct vbuffer *buffer = buf->position.buffer;
 		size_t offset = buf->position.offset;
 		int i;
 
 		switch (buf->length) {
-		case 1: *(int8*)temp = num; break;
-		case 2: *(int16*)temp = bigendian ? SWAP_TO_BE(int16, (int16)num) : SWAP_TO_LE(int16, (int16)num); break;
-		case 4: *(int32*)temp = bigendian ? SWAP_TO_BE(int32, (int32)num) : SWAP_TO_LE(int32, (int32)num); break;
-		case 8: *(int64*)temp = bigendian ? SWAP_TO_BE(int64, num) : SWAP_TO_LE(int64, num); break;
+		case 1: temp.i8 = num; break;
+		case 2: temp.i16 = bigendian ? SWAP_TO_BE(int16, (int16)num) : SWAP_TO_LE(int16, (int16)num); break;
+		case 4: temp.i32 = bigendian ? SWAP_TO_BE(int32, (int32)num) : SWAP_TO_LE(int32, (int32)num); break;
+		case 8: temp.i64 = bigendian ? SWAP_TO_BE(int64, num) : SWAP_TO_LE(int64, num); break;
 		default:
 			error(L"unsupported size");
 			return;
@@ -851,7 +860,7 @@ void vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num)
 				return;
 			}
 
-			*(ptr + offset) = temp[i];
+			*(ptr + offset) = temp.data[i];
 		}
 	}
 }

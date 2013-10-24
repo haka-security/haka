@@ -153,6 +153,8 @@ struct vsubbuffer {
 	}
 };
 
+STRUCT_UNKNOWN_KEY_ERROR(vsubbuffer);
+
 %newobject vbuffer::sub;
 %newobject vbuffer::left;
 
@@ -187,3 +189,5 @@ struct vbuffer {
 		struct vsubbuffer *left(int offset);
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
