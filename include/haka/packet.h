@@ -6,13 +6,15 @@
 #include <haka/types.h>
 #include <haka/time.h>
 #include <haka/thread.h>
+#include <haka/vbuffer.h>
 #include <haka/lua/object.h>
 
 
 /* Opaque packet structure. */
 struct packet {
-	struct lua_object lua_object;
-	atomic_t          ref;
+	struct lua_object        lua_object;
+	atomic_t                 ref;
+	struct vbuffer          *payload;
 };
 
 struct packet_module_state;
@@ -27,12 +29,10 @@ bool               packet_init(struct packet_module_state *state);
 void               packet_addref(struct packet *pkt);
 bool               packet_release(struct packet *pkt);
 struct packet     *packet_new(size_t size);
-size_t             packet_length(struct packet *pkt);
 const struct time *packet_timestamp(struct packet *pkt);
-const uint8       *packet_data(struct packet *pkt);
+struct vbuffer    *packet_payload(struct packet *pkt);
 const char        *packet_dissector(struct packet *pkt);
-uint8             *packet_data_modifiable(struct packet *pkt);
-int                packet_resize(struct packet *pkt, size_t size);
+bool               packet_is_modifiable(struct packet *pkt);
 void               packet_drop(struct packet *pkt);
 void               packet_accept(struct packet *pkt);
 bool               packet_send(struct packet *pkt);

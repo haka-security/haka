@@ -26,10 +26,10 @@ void lua_pushppacket(lua_State *L, struct packet *pkt)
 struct packet {
 	%extend {
 		%immutable;
-		size_t length;
 		const struct time *timestamp;
 		const char *dissector;
 		const char *name;
+		struct vbuffer *payload;
 
 		~packet()
 		{
@@ -38,32 +38,6 @@ struct packet {
 			}
 		}
 
-		size_t __len(void *dummy)
-		{
-			return packet_length($self);
-		}
-
-		int __getitem(int index)
-		{
-			--index;
-			if (index < 0 || index >= packet_length($self)) {
-				error(L"out-of-bound index");
-				return 0;
-			}
-			return packet_data($self)[index];
-		}
-
-		void __setitem(int index, int value)
-		{
-			--index;
-			if (index < 0 || index >= packet_length($self)) {
-				error(L"out-of-bound index");
-				return;
-			}
-			packet_data_modifiable($self)[index] = value;
-		}
-
-		void resize(int size);
 		void drop();
 		%rename(continue) _continue;
 		bool _continue();
@@ -89,10 +63,6 @@ void packet__send(struct packet *pkt);
 void packet__inject(struct packet *pkt);
 
 %{
-size_t packet_length_get(struct packet *pkt) {
-	return packet_length(pkt);
-}
-
 const struct time *packet_timestamp_get(struct packet *pkt) {
 	return packet_timestamp(pkt);
 }
@@ -103,6 +73,10 @@ const char *packet_dissector_get(struct packet *pkt) {
 
 const char *packet_name_get(struct packet *pkt) {
 	return "raw";
+}
+
+struct vbuffer *packet_payload_get(struct packet *pkt) {
+	return packet_payload(pkt);
 }
 
 void packet__send(struct packet *pkt)

@@ -1,8 +1,11 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #include <haka/packet.h>
+#include <haka/vbuffer.h>
 #include <haka/error.h>
 #include <haka/log.h>
 #include <haka/packet_module.h>
@@ -71,20 +74,6 @@ static struct packet_module_state *get_capture_state()
 	return state;
 }
 
-size_t packet_length(struct packet *pkt)
-{
-	assert(packet_module);
-	assert(pkt);
-	return packet_module->get_length(pkt);
-}
-
-const uint8 *packet_data(struct packet *pkt)
-{
-	assert(packet_module);
-	assert(pkt);
-	return packet_module->get_data(pkt);
-}
-
 const char *packet_dissector(struct packet *pkt)
 {
 	assert(packet_module);
@@ -92,7 +81,7 @@ const char *packet_dissector(struct packet *pkt)
 	return packet_module->get_dissector(pkt);
 }
 
-static bool packet_is_modifiable(struct packet *pkt)
+bool packet_is_modifiable(struct packet *pkt)
 {
 	switch (global_packet_mode) {
 	case MODE_NORMAL:
@@ -124,25 +113,10 @@ static bool packet_is_modifiable(struct packet *pkt)
 	return true;
 }
 
-uint8 *packet_data_modifiable(struct packet *pkt)
+struct vbuffer *packet_payload(struct packet *pkt)
 {
-	assert(packet_module);
-	assert(pkt);
-
-	if (packet_is_modifiable(pkt))
-		return packet_module->make_modifiable(pkt);
-	else
-		return NULL;
-}
-
-int packet_resize(struct packet *pkt, size_t size)
-{
-	assert(packet_module);
-
-	if (packet_is_modifiable(pkt))
-		return packet_module->resize(pkt, size);
-	else
-		return -1;
+	assert(pkt->payload);
+	return pkt->payload;
 }
 
 int packet_receive(struct packet **pkt)
@@ -154,8 +128,9 @@ int packet_receive(struct packet **pkt)
 	if (!ret && *pkt) {
 		lua_object_init(&(*pkt)->lua_object);
 		atomic_set(&(*pkt)->ref, 1);
-		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%lli, len=%zu",
-				packet_module->get_id(*pkt), packet_length(*pkt));
+		assert((*pkt)->payload);
+		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%lli",
+				packet_module->get_id(*pkt));
 	}
 
 	return ret;
@@ -165,8 +140,9 @@ void packet_drop(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	messagef(HAKA_LOG_DEBUG, L"packet", L"dropping packet id=%lli, len=%zu",
-			packet_module->get_id(pkt), packet_length(pkt));
+	messagef(HAKA_LOG_DEBUG, L"packet", L"dropping packet id=%lli",
+			packet_module->get_id(pkt));
+
 	packet_module->verdict(pkt, FILTER_DROP);
 }
 
@@ -174,8 +150,10 @@ void packet_accept(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%lli, len=%zu",
-			packet_module->get_id(pkt), packet_length(pkt));
+
+	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%lli",
+			packet_module->get_id(pkt));
+
 	packet_module->verdict(pkt, FILTER_ACCEPT);
 }
 
@@ -190,6 +168,10 @@ bool packet_release(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 	if (atomic_dec(&pkt->ref) == 0) {
+		if (pkt->payload) {
+			vbuffer_free(pkt->payload);
+			pkt->payload = NULL;
+		}
 		lua_object_release(pkt, &pkt->lua_object);
 		packet_module->release_packet(pkt);
 		return true;
@@ -213,6 +195,7 @@ struct packet *packet_new(size_t size)
 
 	lua_object_init(&pkt->lua_object);
 	atomic_set(&pkt->ref, 1);
+	assert(pkt->payload);
 
 	return pkt;
 }
@@ -237,7 +220,7 @@ bool packet_send(struct packet *pkt)
 	}
 
 	messagef(HAKA_LOG_DEBUG, L"packet", L"sending packet id=%lli, len=%zu",
-		packet_module->get_id(pkt), packet_length(pkt));
+		packet_module->get_id(pkt));
 
 	return packet_module->send_packet(pkt);
 }
