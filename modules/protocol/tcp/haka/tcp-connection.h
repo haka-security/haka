@@ -19,8 +19,8 @@ struct tcp_connection {
 	struct stream       *stream_output;
 };
 
-struct tcp_connection *tcp_connection_new(const struct tcp *tcp);
-struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction_in, bool *dropped);
+struct tcp_connection *tcp_connection_new(struct tcp *tcp);
+struct tcp_connection *tcp_connection_get(struct tcp *tcp, bool *direction_in, bool *dropped);
 
 INLINE struct stream *tcp_connection_get_stream(struct tcp_connection *conn, bool direction_in)
 {

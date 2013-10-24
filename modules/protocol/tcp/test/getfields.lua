@@ -48,8 +48,5 @@ haka.rule {
 		print(string.format( "    %s", bad))
 		print(string.format( "TCP Urgent Pointer: 0x%04x", pkt.urgent_pointer))
 		print()
-
-		-- We should drop it to avoid error detected by tcp-connection
-		pkt:drop()
 	end
 }

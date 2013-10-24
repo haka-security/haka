@@ -62,7 +62,7 @@ void tcp_connection_insert(struct ctable **head, struct ctable *elem)
 	mutex_unlock(&ct_mutex);
 }
 
-static struct ctable *tcp_connection_find(struct ctable *head, const struct tcp *tcp,
+static struct ctable *tcp_connection_find(struct ctable *head, struct tcp *tcp,
 		bool *direction_in, bool *dropped)
 {
 	struct ctable *ptr;
@@ -142,7 +142,7 @@ static void tcp_connection_release(struct ctable *elem, bool freemem)
 	}
 }
 
-struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
+struct tcp_connection *tcp_connection_new(struct tcp *tcp)
 {
 	struct ctable *ptr;
 	bool dropped;
@@ -193,7 +193,7 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 	return &ptr->tcp_conn;
 }
 
-struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction_in,
+struct tcp_connection *tcp_connection_get(struct tcp *tcp, bool *direction_in,
 		bool *_dropped)
 {
 	bool dropped;
