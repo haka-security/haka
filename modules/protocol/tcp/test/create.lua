@@ -4,10 +4,18 @@ require("protocol/ipv4")
 require("protocol/tcp")
 require("protocol/tcp-connection")
 
+-- just to be safe, to avoid the test to run in an infinite loop
+local counter = 10
+
 haka.rule {
 	hook = haka.event('tcp', 'receive_packet'),
 	eval = function (pkt)
 		if pkt.dstport == 4444 or pkt.srcport == 4444 then
+			if counter == 0 then
+				error("loop detected")
+			end
+			counter = counter-1
+
 			local npkt = haka.dissector.get('raw').create()
 			npkt = haka.dissector.get('ipv4').create(npkt)
 			npkt.ttl = pkt.ip.ttl
