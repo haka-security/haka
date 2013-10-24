@@ -18,6 +18,5 @@ macro(TEST_UNIT_LUA module name)
 		-DSRC=${CTEST_MODULE_DIR}/empty.pcap
 		-DDST=${name}-out
 		-DDIFF=${DIFF_COMMAND}
-		-DVALGRIND=${VALGRIND_COMMAND}
 		-P ${CTEST_MODULE_DIR}/TestUnitLuaRun.cmake)
 endmacro(TEST_UNIT_LUA)
