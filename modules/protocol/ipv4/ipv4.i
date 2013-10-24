@@ -191,48 +191,6 @@ struct ipv4_flags {
 
 STRUCT_UNKNOWN_KEY_ERROR(ipv4_flags);
 
-LUA_OBJECT_CAST(struct ipv4_payload, struct ipv4);
-
-struct ipv4_payload {
-	%extend {
-		size_t __len(void *dummy)
-		{
-			return ipv4_get_payload_length((struct ipv4 *)$self);
-		}
-
-		int __getitem(int index)
-		{
-			const size_t size = ipv4_get_payload_length((struct ipv4 *)$self);
-
-			--index;
-			if (index < 0 || index >= size) {
-				error(L"out-of-bound index");
-				return 0;
-			}
-			return ipv4_get_payload((struct ipv4 *)$self)[index];
-		}
-
-		void __setitem(int index, int value)
-		{
-			const size_t size = ipv4_get_payload_length((struct ipv4 *)$self);
-
-			--index;
-			if (index < 0 || index >= size) {
-				error(L"out-of-bound index");
-				return;
-			}
-			ipv4_get_payload_modifiable((struct ipv4 *)$self)[index] = value;
-		}
-
-		void resize(int size)
-		{
-			ipv4_resize_payload((struct ipv4 *)$self, size);
-		}
-	}
-};
-
-STRUCT_UNKNOWN_KEY_ERROR(ipv4_payload);
-
 LUA_OBJECT(struct ipv4);
 %newobject ipv4::src;
 %newobject ipv4::dst;
@@ -261,7 +219,7 @@ struct ipv4 {
 		const char *name;
 		struct packet *raw;
 		struct ipv4_flags *flags;
-		struct ipv4_payload *payload;
+		struct vbuffer *payload;
 
 		bool verify_checksum();
 		void compute_checksum();
@@ -314,7 +272,7 @@ struct packet *ipv4_forge(struct ipv4 *pkt);
 
 	const char *ipv4_name_get(struct ipv4 *ip) { return "ipv4"; }
 
-	struct ipv4_payload *ipv4_payload_get(struct ipv4 *ip) { return (struct ipv4_payload *)ip; }
+	struct vbuffer *ipv4_payload_get(struct ipv4 *ip) { return ip->payload; }
 
 	struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
 
