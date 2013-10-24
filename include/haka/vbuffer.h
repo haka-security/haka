@@ -31,6 +31,7 @@ void            vbuffer_free(struct vbuffer *buf);
 bool            vbuffer_insert(struct vbuffer *buf, size_t offset, struct vbuffer *data);
 bool            vbuffer_erase(struct vbuffer *buf, size_t offset, size_t len);
 bool            vbuffer_flatten(struct vbuffer *buf);
+bool            vbuffer_compact(struct vbuffer *buf);
 bool            vbuffer_isflat(struct vbuffer *buf);
 size_t          vbuffer_size(struct vbuffer *buf);
 bool            vbuffer_checksize(struct vbuffer *buf, size_t minsize);
@@ -68,6 +69,7 @@ struct vsubbuffer {
 bool            vbuffer_sub(struct vbuffer *buf, size_t offset, size_t length, struct vsubbuffer *sub);
 bool            vsubbuffer_sub(struct vsubbuffer *buf, size_t offset, size_t length, struct vsubbuffer *sub);
 bool            vsubbuffer_isflat(struct vsubbuffer *buf);
+bool            vsubbuffer_flatten(struct vsubbuffer *buf);
 size_t          vsubbuffer_size(struct vsubbuffer *buf);
 uint8          *vsubbuffer_mmap(struct vsubbuffer *buf, void **iter, size_t *remlen, size_t *len, bool write);
 int64           vsubbuffer_asnumber(struct vsubbuffer *buf, bool bigendian);

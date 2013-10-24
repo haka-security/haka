@@ -131,11 +131,12 @@ bool vbuffer_recreate_from(struct vbuffer *buf, struct vbuffer_data *data, size_
 	return true;
 }
 
-static struct vbuffer *vbuffer_get(struct vbuffer *buf, size_t *off)
+static struct vbuffer *vbuffer_get(struct vbuffer *buf, size_t *off, bool keeplast)
 {
-	struct vbuffer *iter = buf;
+	struct vbuffer *iter = buf, *last;
 	while (iter) {
-		if (iter->length > *off) {
+		last = iter;
+		if (iter->length + keeplast > *off) {
 			return iter;
 		}
 
@@ -143,7 +144,8 @@ static struct vbuffer *vbuffer_get(struct vbuffer *buf, size_t *off)
 		iter = iter->next;
 	}
 
-	return NULL;
+	*off = last->length;
+	return last;
 }
 
 static struct vbuffer *vbuffer_split_force(struct vbuffer *buf, size_t off)
@@ -190,7 +192,7 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len)
 {
 	struct vbuffer *begin, *iter, *end;
 
-	begin = vbuffer_get(buf, &off);
+	begin = vbuffer_get(buf, &off, true);
 	if (!begin) {
 		error(L"invalid offset");
 		return NULL;
@@ -202,33 +204,58 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len)
 	}
 
 	if (len == 0) {
-		iter = vbuffer_split_force(iter, 0);
+		if (iter) {
+			iter = vbuffer_split_force(iter, 0);
+		}
+		else {
+			iter = vbuffer_split_force(begin, begin->length);
+		}
+
 		if (!iter && check_error()) {
 			return NULL;
 		}
+
+		assert(iter != buf);
 		return iter;
 	}
 	else {
 		end = NULL;
 
-		while (iter) {
-			if (len < iter->length) {
-				end = vbuffer_split(iter, len);
-				if (!iter && check_error()) {
-					return NULL;
+		if (len != (size_t)-1) {
+			assert(iter);
+
+			while (iter) {
+				if (len < iter->length) {
+					end = vbuffer_split(iter, len);
+					if (!iter && check_error()) {
+						return NULL;
+					}
+
+					iter->next = NULL;
+					break;
 				}
 
-				iter->next = NULL;
-				break;
+				len -= iter->length;
+				iter = iter->next;
 			}
 
-			len -= iter->length;
-			iter = iter->next;
+			iter = begin->next;
+			begin->next = end;
+			assert(iter != buf);
+			return iter;
 		}
+		else {
+			if (!iter) {
+				iter = vbuffer_split_force(begin, begin->length);
+			}
+			else if (off == 0) {
+				iter = vbuffer_split_force(iter, 0);
+			}
 
-		iter = begin->next;
-		begin->next = end;
-		return iter;
+			begin->next = NULL;
+			assert(iter != buf);
+			return iter;
+		}
 	}
 }
 
@@ -258,7 +285,7 @@ static uint8 *vbuffer_get_data(struct vbuffer *buf, bool write)
 
 uint8 vbuffer_getbyte(struct vbuffer *buf, size_t offset)
 {
-	struct vbuffer *iter = vbuffer_get(buf, &offset);
+	struct vbuffer *iter = vbuffer_get(buf, &offset, false);
 	if (!iter) {
 		error(L"invalid offset");
 		return 0;
@@ -270,7 +297,7 @@ uint8 vbuffer_getbyte(struct vbuffer *buf, size_t offset)
 void vbuffer_setbyte(struct vbuffer *buf, size_t offset, uint8 byte)
 {
 	uint8 *ptr;
-	struct vbuffer *iter = vbuffer_get(buf, &offset);
+	struct vbuffer *iter = vbuffer_get(buf, &offset, false);
 	if (!iter) {
 		error(L"invalid offset");
 		return;
@@ -289,8 +316,9 @@ static struct vbuffer *_vbuffer_insert(struct vbuffer *buf, size_t off, struct v
 	struct vbuffer *iter, *end;
 
 	assert(data);
+	assert(buf != data);
 
-	iter = vbuffer_get(buf, &off);
+	iter = vbuffer_get(buf, &off, true);
 	if (!iter) {
 		error(L"invalid offset");
 		return NULL;
@@ -309,11 +337,14 @@ static struct vbuffer *_vbuffer_insert(struct vbuffer *buf, size_t off, struct v
 		if (end == data) end = iter;
 
 		end->next = data;
+		assert(end->next != end);
 	}
 	else {
 		vbuffer_split(iter, off);
 		end->next = iter->next;
+		assert(end->next != end);
 		iter->next = data;
+		assert(iter->next != iter);
 	}
 
 	return end;
@@ -369,6 +400,29 @@ bool vbuffer_checksize(struct vbuffer *buf, size_t minsize)
 	return false;
 }
 
+bool vbuffer_compact(struct vbuffer *buf)
+{
+	struct vbuffer *iter = buf, *next;
+	while (iter) {
+		next = iter->next;
+		assert(next != iter);
+		if (next) {
+			if (next->data == iter->data) {
+				if (iter->offset + iter->length == next->offset) {
+					iter->length += next->length;
+					iter->next = next->next;
+					next->next = NULL;
+					vbuffer_free(next);
+					next = iter;
+				}
+			}
+		}
+
+		iter = next;
+	}
+	return true;
+}
+
 bool vbuffer_flatten(struct vbuffer *buf)
 {
 	if (!vbuffer_isflat(buf)) {
@@ -413,21 +467,27 @@ bool vbuffer_isflat(struct vbuffer *buf)
 uint8 *vbuffer_mmap(struct vbuffer *buf, void **_iter, size_t *len, bool write)
 {
 	struct vbuffer **iter = (struct vbuffer **)_iter;
-	assert(iter);
+	assert(buf);
 
-	if (!*iter) {
-		*iter = buf;
+	if (iter) {
+		if (!*iter) {
+			*iter = buf;
+		}
+		else {
+			*iter = (*iter)->next;
+		}
+
+		if (*iter) {
+			if (len) *len = (*iter)->length;
+			return vbuffer_get_data(*iter, write);
+		}
+		else {
+			return NULL;
+		}
 	}
 	else {
-		*iter = (*iter)->next;
-	}
-
-	if (*iter) {
-		*len = (*iter)->length;
-		return vbuffer_get_data(*iter, write);
-	}
-	else {
-		return NULL;
+		if (len) *len = buf->length;
+		return vbuffer_get_data(buf, write);
 	}
 }
 
@@ -628,6 +688,29 @@ bool vsubbuffer_isflat(struct vsubbuffer *buf)
 	return (buf->position.buffer->length >= buf->position.offset + buf->length);
 }
 
+bool vsubbuffer_flatten(struct vsubbuffer *buf)
+{
+	if (!vsubbuffer_isflat(buf)) {
+		struct vbuffer_iterator iter = buf->position;
+		struct vbuffer *flat;
+		uint8 *ptr;
+		UNUSED size_t len;
+
+		flat = vbuffer_create_new(buf->length);
+		if (!flat) {
+			return false;
+		}
+
+		ptr = vbuffer_mmap(flat, NULL, NULL, true);
+		len = vbuffer_iterator_read(&iter, ptr, buf->length);
+		assert(len == buf->length);
+
+		vbuffer_erase(iter.buffer, iter.offset, buf->length);
+		vbuffer_insert(iter.buffer, iter.offset, flat);
+	}
+	return true;
+}
+
 size_t vsubbuffer_size(struct vsubbuffer *buf)
 {
 	return buf->length;
@@ -696,7 +779,7 @@ int64 vsubbuffer_asnumber(struct vsubbuffer *buf, bool bigendian)
 		int i;
 
 		for (i=0; i<buf->length; ++i, ++offset) {
-			buffer = vbuffer_get(buffer, &offset);
+			buffer = vbuffer_get(buffer, &offset, false);
 			if (!buffer) {
 				error(L"invalid sub buffer");
 				return 0;
@@ -757,7 +840,7 @@ void vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num)
 		for (i=0; i<buf->length; ++i, ++offset) {
 			uint8 *ptr;
 
-			buffer = vbuffer_get(buffer, &offset);
+			buffer = vbuffer_get(buffer, &offset, false);
 			if (!buffer) {
 				error(L"invalid sub buffer");
 				return;
@@ -788,7 +871,7 @@ size_t vsubbuffer_asstring(struct vsubbuffer *buf, char *str, size_t len)
 	}
 
 	for (i=0; i<len; ++i, ++offset) {
-		buffer = vbuffer_get(buffer, &offset);
+		buffer = vbuffer_get(buffer, &offset, false);
 		if (!buffer) {
 			error(L"invalid sub buffer");
 			return 0;
@@ -816,7 +899,7 @@ size_t vsubbuffer_setfixedstring(struct vsubbuffer *buf, const char *str, size_t
 
 	for (i=0; i<len; ++i, ++offset) {
 		uint8 *ptr;
-		buffer = vbuffer_get(buffer, &offset);
+		buffer = vbuffer_get(buffer, &offset, false);
 		if (!buffer) {
 			error(L"invalid sub buffer");
 			return 0;
@@ -835,8 +918,6 @@ size_t vsubbuffer_setfixedstring(struct vsubbuffer *buf, const char *str, size_t
 void vsubbuffer_setstring(struct vsubbuffer *buf, const char *str, size_t len)
 {
 	struct vbuffer *modif;
-	void *iter = NULL;
-	size_t size;
 	uint8 *ptr;
 
 	vbuffer_erase(buf->position.buffer, buf->position.offset, buf->length);
@@ -846,7 +927,7 @@ void vsubbuffer_setstring(struct vsubbuffer *buf, const char *str, size_t len)
 		return;
 	}
 
-	ptr = vbuffer_mmap(modif, &iter, &size, true);
+	ptr = vbuffer_mmap(modif, NULL, NULL, true);
 	assert(ptr);
 	memcpy(ptr, str, len);
 
