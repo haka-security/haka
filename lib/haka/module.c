@@ -27,17 +27,18 @@ struct module *module_load(const char *module_name, struct parameters *args)
 	void *module_handle = NULL;
 	struct module *module = NULL;
 	char *full_module_name;
+	size_t module_name_len;
 
 	assert(module_name);
 
-	full_module_name = malloc(strlen(HAKA_MODULE_PREFIX) + strlen(module_name) + strlen(HAKA_MODULE_SUFFIX) + 1);
+	module_name_len = strlen(HAKA_MODULE_PREFIX) + strlen(module_name) + strlen(HAKA_MODULE_SUFFIX) + 1;
+	full_module_name = malloc(module_name_len);
 	if (!full_module_name) {
 		return NULL;
 	}
 
-	strcpy(full_module_name, HAKA_MODULE_PREFIX);
-	strcpy(full_module_name+strlen(HAKA_MODULE_PREFIX), module_name);
-	strcpy(full_module_name+strlen(HAKA_MODULE_PREFIX)+strlen(module_name), HAKA_MODULE_SUFFIX);
+	snprintf(full_module_name, module_name_len+1, "%s%s%s", HAKA_MODULE_PREFIX, module_name, HAKA_MODULE_SUFFIX);
+	assert(strlen(full_module_name)+1 == module_name_len);
 
 	{
 		char *current_path = modules_path, *iter;
@@ -45,15 +46,16 @@ struct module *module_load(const char *module_name, struct parameters *args)
 
 		while ((iter = strchr(current_path, '*')) != NULL) {
 			const int len = iter - current_path;
+			const size_t full_path_len = len + strlen(full_module_name) + 1;
 
-			full_path = malloc(len + strlen(full_module_name) + 1);
+			full_path = malloc(full_path_len);
 			if (!full_path) {
 				return NULL;
 			}
 
-			strncpy(full_path, current_path, len);
-			full_path[len] = 0;
-			strcat(full_path, full_module_name);
+			snprintf(full_path, full_path_len, "%.*s%s", len, current_path, full_module_name);
+			assert(strlen(full_path)+1 == full_path_len);
+
 			module_handle = dlopen(full_path, RTLD_NOW);
 
 			current_path = iter+1;
