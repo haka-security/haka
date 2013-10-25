@@ -87,7 +87,8 @@ struct time_lua {
 	haka._on_exit = {}
 
 	function haka._exiting()
-		for _, f in pairs(haka._on_exit) do
+		for k, f in pairs(haka._on_exit) do
+			haka._on_exit[k] = nil
 			f()
 		end
 	end
