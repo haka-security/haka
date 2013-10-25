@@ -162,7 +162,11 @@ struct vbuffer {
 	%extend {
 		vbuffer(size_t size)
 		{
-			return vbuffer_create_new(size);
+			struct vbuffer *buf = vbuffer_create_new(size);
+			if (!buf) return NULL;
+
+			vbuffer_zero(buf, true);
+			return buf;
 		}
 
 		~vbuffer()
@@ -187,6 +191,12 @@ struct vbuffer {
 
 		struct vsubbuffer *sub(int offset, int length);
 		struct vsubbuffer *left(int offset);
+
+		%rename(insert) _insert;
+		void _insert(int offset, struct vbuffer *DISOWN)
+		{
+			vbuffer_insert($self, offset, DISOWN, true);
+		}
 
 		%immutable;
 		bool modified;

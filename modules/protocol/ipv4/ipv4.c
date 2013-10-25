@@ -194,7 +194,7 @@ void ipv4_release(struct ipv4 *ip)
 
 /* compute tcp checksum RFC #1071 */
 //TODO: To be optimized
-int32 inet_checksum_partial(uint16 *ptr, uint16 size)
+int32 inet_checksum_partial(uint16 *ptr, size_t size)
 {
 	register long sum = 0;
 
@@ -222,20 +222,23 @@ int16 inet_checksum_reduce(int32 sum)
 	return ~sum;
 }
 
-int16 inet_checksum(uint16 *ptr, uint16 size)
+int16 inet_checksum(uint16 *ptr, size_t size)
 {
-	return inet_checksum_reduce(inet_checksum_partial(ptr, size));
+	const int32 sum = inet_checksum_partial(ptr, size);
+	return inet_checksum_reduce(sum);
 }
 
 int32 inet_checksum_vbuffer_partial(struct vbuffer *buf)
 {
+	int32 sum = 0;
 	void *iter = NULL;
 	uint8 *data;
 	size_t len;
-	uint32 sum = 0;
 
 	while ((data = vbuffer_mmap(buf, &iter, &len, false))) {
-		sum += (uint16)~inet_checksum((uint16 *)data, len);
+		if (len > 0) {
+			sum += inet_checksum_partial((uint16 *)data, len);
+		}
 	}
 
 	return sum;
@@ -243,7 +246,8 @@ int32 inet_checksum_vbuffer_partial(struct vbuffer *buf)
 
 int16 inet_checksum_vbuffer(struct vbuffer *buf)
 {
-	return inet_checksum_reduce(inet_checksum_vbuffer_partial(buf));
+	const int32 sum = inet_checksum_vbuffer_partial(buf);
+	return inet_checksum_reduce(sum);
 }
 
 bool ipv4_verify_checksum(struct ipv4 *ip)

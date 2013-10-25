@@ -138,6 +138,27 @@ struct vbuffer *vbuffer_create_from(struct vbuffer_data *data, size_t length)
 	return ret;
 }
 
+bool vbuffer_zero(struct vbuffer *buf, bool mark_modified)
+{
+	void *iter = NULL;
+	uint8 *data;
+	size_t len;
+
+	if (mark_modified) {
+		if (!vbuffer_check_writeable(buf)) {
+			return false;
+		}
+
+		vbuffer_mark_modified(buf);
+	}
+
+	while ((data = vbuffer_mmap(buf, &iter, &len, false))) {
+		memset(data, 0, len);
+	}
+
+	return true;
+}
+
 void vbuffer_setmode(struct vbuffer *buf, bool readonly)
 {
 	buf->flags.writable = !readonly;

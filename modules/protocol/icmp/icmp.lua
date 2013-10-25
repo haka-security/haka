@@ -94,4 +94,10 @@ function icmp_dissector.method:inject()
 	self.pkt:inject()
 end
 
+function icmp_dissector.create(pkt)
+	pkt.payload:insert(0, haka.vbuffer(8))
+	pkt.proto = 1
+	return icmp_dissector:new(pkt)
+end
+
 ipv4.register_protocol(1, icmp_dissector)

@@ -42,6 +42,8 @@ uint8           vbuffer_getbyte(struct vbuffer *buf, size_t offset);
 void            vbuffer_setbyte(struct vbuffer *buf, size_t offset, uint8 byte);
 bool            vbuffer_ismodified(struct vbuffer *buf);
 void            vbuffer_clearmodified(struct vbuffer *buf);
+bool            vbuffer_zero(struct vbuffer *buf, bool mark_modified);
+
 
 /*
  * Iterator

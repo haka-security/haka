@@ -719,7 +719,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 		return NULL;
 	}
 
-	memset(vbuffer_mmap(packet->core_packet.payload, NULL, NULL, true), 0, size);
+	vbuffer_zero(packet->core_packet.payload, true);
 
 	packet->id = -1;
 	packet->state = state;
