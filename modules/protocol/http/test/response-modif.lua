@@ -26,10 +26,10 @@ haka.rule {
 		print("HTTP RESPONSE")
 		http.response:dump()
 
-		http.response.headers["ETag"] = nil
+		http.response.headers["Server"] = nil
 		http.response.headers["Haka"] = "Done"
 
 		print("HTTP MODIFIED RESPONSE")
-		http.request:dump()
+		http.response:dump()
 	end
 }
