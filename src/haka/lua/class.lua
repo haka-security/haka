@@ -70,10 +70,7 @@ local BaseObject = {
 			return c
 		end
 	},
-	property = {
-		get = {},
-		set = {}
-	}
+	property = {}
 }
 BaseObject.__index = BaseObject
 BaseObject.__view = BaseClass.view(BaseObject)
@@ -104,8 +101,8 @@ function class(name, super)
 			v = method[key]
 			if v then return v end
 
-			v = rawget(c, 'property').get[key]
-			if v then return v(self) end
+			v = rawget(c, 'property')[key]
+			if v and v.get then return v.get(self) end
 
 			v = method['__index']
 			if v then
@@ -117,17 +114,14 @@ function class(name, super)
 	cls.__newindex = function (self, key, value)
 		local v
 		for c in class_hierarchy(classof(self)) do
-			v = rawget(c, 'property').set[key]
-			if v then return v(self, value) end
+			v = rawget(c, 'property')[key]
+			if v and v.set then return v.set(self, value) end
 		end
 
 		rawset(self, key, value)
 	end
 	cls.method = {}
-	cls.property = {
-		get = {},
-		set = {}
-	}
+	cls.property = {}
 
 	setmetatable(cls, BaseClass)
 

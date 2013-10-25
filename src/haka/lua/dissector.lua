@@ -48,9 +48,9 @@ end
 function dissector.Dissector.method:__init()
 end
 
-function dissector.Dissector.property.get:name()
-	return classof(self).name
-end
+dissector.Dissector.property.name = {
+	get = function (self) return classof(self).name end
+}
 
 function dissector.Dissector.receive(pkt)
 	error("not implemented")

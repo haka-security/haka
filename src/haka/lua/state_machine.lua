@@ -135,10 +135,11 @@ end
 
 states.StateMachineInstance = class('StateMachineInstance')
 
-function states.StateMachineInstance.property.get:state()
-	local current = self.states[self._instance.state]
-	return current
-end
+states.StateMachineInstance.property.state = {
+	get = function (self)
+		return self.states[self._instance.state]
+	end
+}
 
 function states.StateMachineInstance.method:__init(state_machine)
 	self._state_machine = state_machine

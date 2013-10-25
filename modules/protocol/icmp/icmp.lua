@@ -17,29 +17,32 @@ function icmp_dissector.method:__init(pkt)
 	self.payload = pkt.payload
 end
 
-function icmp_dissector.property.get:type()
-	return self.payload:sub(0, 1):asnumber('big')
-end
+icmp_dissector.property.type = {
+	get = function (self) 
+		return self.payload:sub(0, 1):asnumber('big')
+	end,
+	set = function (self, num)
+		return self.payload:sub(0, 1):setnumber(num, 'big')
+	end
+}
 
-function icmp_dissector.property.set:type(num)
-	return self.payload:sub(0, 1):setnumber(num, 'big')
-end
+icmp_dissector.property.code = {
+	get = function (self) 
+		return self.payload:sub(1, 1):asnumber('big')
+	end,
+	set = function (self, num)
+		return self.payload:sub(1, 1):setnumber(num, 'big')
+	end
+}
 
-function icmp_dissector.property.get:code()
-	return self.payload:sub(1, 1):asnumber('big')
-end
-
-function icmp_dissector.property.set:code(num)
-	return self.payload:sub(1, 1):setnumber(num, 'big')
-end
-
-function icmp_dissector.property.get:checksum()
-	return self.payload:sub(2, 2):asnumber('big')
-end
-
-function icmp_dissector.property.set:checksum(num)
-	return self.payload:sub(2, 2):setnumber(num, 'big')
-end
+icmp_dissector.property.checksum = {
+	get = function (self) 
+		return self.payload:sub(2, 2):asnumber('big')
+	end,
+	set = function (self, num)
+		return self.payload:sub(2, 2):setnumber(num, 'big')
+	end
+}
 
 function icmp_dissector.method:verify_checksum()
 	return ipv4.inet_checksum(self.pkt.payload) == 0
