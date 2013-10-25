@@ -41,6 +41,10 @@ HTTP MODIFIED RESPONSE
    4 = Connection
  _length = 127
  headers
+   Accept = */*
+   Connection = Keep-Alive
+   Host = 10.2.104.129
+   User-Agent = Wget/1.13.4 (linux-gnu)
  method = GET
  uri = /twiki/bin/view/
  version = HTTP/1.1
