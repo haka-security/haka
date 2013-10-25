@@ -32,7 +32,6 @@ struct packet     *packet_new(size_t size);
 const struct time *packet_timestamp(struct packet *pkt);
 struct vbuffer    *packet_payload(struct packet *pkt);
 const char        *packet_dissector(struct packet *pkt);
-bool               packet_is_modifiable(struct packet *pkt);
 void               packet_drop(struct packet *pkt);
 void               packet_accept(struct packet *pkt);
 bool               packet_send(struct packet *pkt);

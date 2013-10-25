@@ -88,6 +88,15 @@ struct vbuffer {
 	struct vbuffer_flags    flags;
 };
 
+INLINE bool vbuffer_check_writeable(struct vbuffer *buf)
+{
+	if (!buf->flags.writable) {
+		error(L"read only buffer");
+		return false;
+	}
+	return true;
+}
+
 INLINE void vbuffer_mark_modified(struct vbuffer *buf)
 {
 	buf->flags.modified = true;
@@ -129,20 +138,9 @@ struct vbuffer *vbuffer_create_from(struct vbuffer_data *data, size_t length)
 	return ret;
 }
 
-bool vbuffer_recreate_from(struct vbuffer *buf, struct vbuffer_data *data, size_t length)
+void vbuffer_setmode(struct vbuffer *buf, bool readonly)
 {
-	if (buf->next) {
-		vbuffer_free(buf->next);
-		buf->next = NULL;
-	}
-
-	buf->data->ops->release(buf->data);
-	buf->data = data;
-	buf->data->ops->addref(buf->data);
-	buf->offset = 0;
-	buf->length = length;
-	vbuffer_mark_modified(buf);
-	return true;
+	buf->flags.writable = !readonly;
 }
 
 static struct vbuffer *vbuffer_get(struct vbuffer *buf, size_t *off, bool keeplast)
@@ -207,6 +205,10 @@ static struct vbuffer *vbuffer_split(struct vbuffer *buf, size_t off)
 struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, bool mark_modified)
 {
 	struct vbuffer *begin, *iter, *end;
+
+	if (mark_modified && !vbuffer_check_writeable(buf)) {
+		return NULL;
+	}
 
 	begin = vbuffer_get(buf, &off, true);
 	if (!begin) {
@@ -295,12 +297,19 @@ void vbuffer_free(struct vbuffer *buf)
 
 static uint8 *vbuffer_get_data(struct vbuffer *buf, bool write)
 {
-	uint8 *ptr = buf->data->ops->get(buf->data, write);
+	uint8 *ptr;
+
+	if (write && !vbuffer_check_writeable(buf)) {
+		return NULL;
+	}
+
+	ptr = buf->data->ops->get(buf->data, write);
 	if (!ptr) {
 		assert(write); /* read should always be successful */
 		assert(check_error());
 		return NULL;
 	}
+
 	if (write) vbuffer_mark_modified(buf);
 	return ptr + buf->offset;
 }
@@ -339,6 +348,10 @@ static struct vbuffer *_vbuffer_insert(struct vbuffer *buf, size_t off, struct v
 
 	assert(data);
 	assert(buf != data);
+
+	if (mark_modified && !vbuffer_check_writeable(buf)) {
+		return NULL;
+	}
 
 	iter = vbuffer_get(buf, &off, true);
 	if (!iter) {
@@ -438,7 +451,8 @@ bool vbuffer_compact(struct vbuffer *buf)
 				if (iter->offset + iter->length == next->offset) {
 					iter->length += next->length;
 					iter->next = next->next;
-					iter->flags.modified = iter->flags.modified || next->flags.modified;
+					iter->flags.modified |= next->flags.modified;
+					iter->flags.writable &= next->flags.writable;
 					next->next = NULL;
 					vbuffer_free(next);
 					next = iter;
@@ -485,7 +499,6 @@ bool vbuffer_flatten(struct vbuffer *buf)
 
 			buf->offset = 0;
 			buf->length = size;
-			vbuffer_mark_modified(buf);
 		}
 	}
 	return true;
@@ -500,6 +513,10 @@ uint8 *vbuffer_mmap(struct vbuffer *buf, void **_iter, size_t *len, bool write)
 {
 	struct vbuffer **iter = (struct vbuffer **)_iter;
 	assert(buf);
+
+	if (write && !vbuffer_check_writeable(buf)) {
+		return NULL;
+	}
 
 	if (iter) {
 		if (!*iter) {

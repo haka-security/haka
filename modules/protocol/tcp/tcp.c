@@ -148,18 +148,19 @@ static void tcp_recompute_checksum(struct tcp *tcp)
 	}
 }
 
-struct ipv4 *tcp_forge(struct tcp *tcp)
+struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 {
 	struct ipv4 *packet = tcp->packet;
 	if (packet) {
 		const size_t mtu = packet_mtu(packet->packet) - ipv4_get_hdr_len(packet) - tcp_get_hdr_len(tcp);
 
-		if (packet_mode() != MODE_PASSTHROUGH && vbuffer_checksize(tcp->payload, mtu+1)) {
+		if (split && packet_mode() != MODE_PASSTHROUGH && vbuffer_checksize(tcp->payload, mtu+1)) {
 			struct vbuffer *rem_payload;
 			struct packet *rem_pkt;
 			struct ipv4 *rem_ip;
 			struct ipv4_header ipheader;
 			struct tcp_header tcpheader;
+			struct tcp_header *header;
 
 			rem_payload = vbuffer_extract(tcp->payload, mtu, ALL, true);
 			if (!rem_payload) {
@@ -205,7 +206,10 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 			ipv4_set_id(rem_ip, 0);
 
 			tcp->packet = rem_ip;
-			*tcp_header(tcp, true) = tcpheader;
+
+			header = tcp_header(tcp, true);
+			assert(header);
+			*header = tcpheader;
 
 			tcp_set_seq(tcp, SWAP_FROM_TCP(uint32, tcpheader.seq) + mtu);
 			tcp_set_hdr_len(tcp, sizeof(struct tcp_header));
@@ -227,20 +231,34 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 	}
 }
 
+struct ipv4 *tcp_forge(struct tcp *tcp)
+{
+	return _tcp_forge(tcp, true);
+}
+
 struct tcp_header *tcp_header(struct tcp *tcp, bool write)
 {
 	struct tcp_header *header;
 	size_t len;
 	header = (struct tcp_header *)vbuffer_mmap(tcp->packet->payload, NULL, &len, write);
+	if (!header) {
+		assert(write); /* should always work in read mode */
+		assert(check_error());
+		return NULL;
+	}
+
+	if (write) {
+		tcp->invalid_checksum = true;
+	}
+
 	assert(len >= sizeof(struct tcp_header));
-	assert(header);
 	return header;
 }
 
 static void tcp_flush(struct tcp *tcp)
 {
 	struct ipv4 *packet;
-	while ((packet = tcp_forge(tcp))) {
+	while ((packet = _tcp_forge(tcp, false))) {
 		ipv4_release(packet);
 	}
 }
@@ -254,21 +272,6 @@ void tcp_release(struct tcp *tcp)
 		tcp->payload = NULL;
 	}
 	free(tcp);
-}
-
-int tcp_pre_modify(struct tcp *tcp)
-{
-	if (!tcp->modified) {
-		if (!packet_is_modifiable(tcp->packet->packet)) {
-			assert(check_error());
-			return -1;
-		}
-
-		tcp->modified = true;
-	}
-
-	tcp->invalid_checksum = true;
-	return 0;
 }
 
 int16 tcp_checksum(struct tcp *tcp)
@@ -318,8 +321,8 @@ bool tcp_verify_checksum(struct tcp *tcp)
 void tcp_compute_checksum(struct tcp *tcp)
 {
 	TCP_CHECK(tcp);
-	if (!tcp_pre_modify(tcp)) {
-		struct tcp_header *header = tcp_header(tcp, true);
+	struct tcp_header *header = tcp_header(tcp, true);
+	if (header) {
 		header->checksum = 0;
 		header->checksum = tcp_checksum(tcp);
 		tcp->invalid_checksum = false;
@@ -336,10 +339,8 @@ const uint8 *tcp_get_payload(struct tcp *tcp)
 uint8 *tcp_get_payload_modifiable(struct tcp *tcp)
 {
 	TCP_CHECK(tcp, NULL);
-	if (!tcp_pre_modify(tcp))
-		return (uint8 *)tcp_get_payload(tcp);
-	else
-		return NULL;
+	vbuffer_flatten(tcp->payload);
+	return vbuffer_mmap(tcp->payload, NULL, NULL, true);
 }
 
 size_t tcp_get_payload_length(struct tcp *tcp)
@@ -375,7 +376,5 @@ uint8 *tcp_resize_payload(struct tcp *tcp, size_t size)
 void tcp_action_drop(struct tcp *tcp)
 {
 	TCP_CHECK(tcp);
-	ipv4_action_drop(tcp->packet);
-	ipv4_release(tcp->packet);
-	tcp->packet = NULL;
+	tcp_flush(tcp);
 }

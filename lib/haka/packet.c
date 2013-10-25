@@ -81,38 +81,6 @@ const char *packet_dissector(struct packet *pkt)
 	return packet_module->get_dissector(pkt);
 }
 
-bool packet_is_modifiable(struct packet *pkt)
-{
-	switch (global_packet_mode) {
-	case MODE_NORMAL:
-		break;
-
-	case MODE_PASSTHROUGH:
-		error(L"operation not supported (pass-through mode)");
-		return false;
-
-	default:
-		assert(0);
-		return false;
-	}
-
-	switch (packet_state(pkt)) {
-	case STATUS_NORMAL:
-	case STATUS_FORGED:
-		break;
-
-	case STATUS_SENT:
-		error(L"operation not supported (packet already sent)");
-		return false;
-
-	default:
-		assert(0);
-		return false;
-	}
-
-	return true;
-}
-
 struct vbuffer *packet_payload(struct packet *pkt)
 {
 	assert(pkt->payload);

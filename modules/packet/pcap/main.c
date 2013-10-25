@@ -457,6 +457,8 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 					return ENOMEM;
 				}
 
+				vbuffer_setmode(packet->data, passthrough);
+
 				/* fill packet data structure */
 				memcpy(vbuffer_mmap(packet->data, NULL, NULL, false), p, header->caplen);
 				packet->header = *header;
@@ -647,6 +649,11 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 static bool send_packet(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+
+	if (passthrough) {
+		error(L"sending is not supported in pass-through");
+		return false;
+	}
 
 	assert(pkt->data);
 	assert(!list_next(pkt) && !list_prev(pkt));

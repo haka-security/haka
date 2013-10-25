@@ -53,7 +53,6 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	}
 
 	ip->packet = packet;
-	ip->modified = false;
 	ip->invalid_checksum = false;
 
 	if (!payload) {
@@ -96,7 +95,6 @@ struct ipv4 *ipv4_create(struct packet *packet)
 	}
 
 	ip->packet = packet;
-	ip->modified = true;
 	ip->invalid_checksum = true;
 
 	payload = packet_payload(packet);
@@ -164,8 +162,17 @@ struct ipv4_header *ipv4_header(struct ipv4 *ip, bool write)
 	struct ipv4_header *header;
 	size_t len;
 	header = (struct ipv4_header *)vbuffer_mmap(ip->packet->payload, NULL, &len, write);
+	if (!header) {
+		assert(write); /* should always work in read mode */
+		assert(check_error());
+		return NULL;
+	}
+
+	if (write) {
+		ip->invalid_checksum = true;
+	}
+
 	assert(len >= sizeof(struct ipv4_header));
-	assert(header);
 	return header;
 }
 
@@ -183,28 +190,6 @@ void ipv4_release(struct ipv4 *ip)
 	lua_object_release(ip, &ip->lua_object);
 	ipv4_flush(ip);
 	free(ip);
-}
-
-bool ipv4_pre_modify(struct ipv4 *ip)
-{
-	if (!ip->modified) {
-		if (!packet_is_modifiable(ip->packet)) {
-			assert(check_error());
-			return false;
-		}
-
-		ip->modified = true;
-	}
-	return true;
-}
-
-bool ipv4_pre_modify_header(struct ipv4 *ip)
-{
-	const bool ret = ipv4_pre_modify(ip);
-	if (!ret) return ret;
-
-	ip->invalid_checksum = true;
-	return true;
 }
 
 /* compute tcp checksum RFC #1071 */
@@ -241,9 +226,8 @@ bool ipv4_verify_checksum(struct ipv4 *ip)
 void ipv4_compute_checksum(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip);
-	if (ipv4_pre_modify_header(ip)) {
-		struct ipv4_header *header = ipv4_header(ip, true);
-
+	struct ipv4_header *header = ipv4_header(ip, true);
+	if (header) {
 		header->checksum = 0;
 		header->checksum = inet_checksum((uint16 *)header, ipv4_get_hdr_len(ip));
 		ip->invalid_checksum = false;
@@ -255,7 +239,6 @@ size_t ipv4_get_payload_length(struct ipv4 *ip)
 	IPV4_CHECK(ip, 0);
 	return vbuffer_size(ip->payload);
 }
-
 
 void ipv4_action_drop(struct ipv4 *ip)
 {

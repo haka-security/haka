@@ -27,8 +27,8 @@ struct vbuffer_data {
 
 struct vbuffer *vbuffer_create_new(size_t size);
 struct vbuffer *vbuffer_create_from(struct vbuffer_data *data, size_t length);
-bool            vbuffer_recreate_from(struct vbuffer *buf, struct vbuffer_data *data, size_t length);
 struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t offset, size_t length, bool mark_modified);
+void            vbuffer_setmode(struct vbuffer *buf, bool readonly);
 void            vbuffer_free(struct vbuffer *buf);
 bool            vbuffer_insert(struct vbuffer *buf, size_t offset, struct vbuffer *data, bool mark_modified);
 bool            vbuffer_erase(struct vbuffer *buf, size_t offset, size_t len);

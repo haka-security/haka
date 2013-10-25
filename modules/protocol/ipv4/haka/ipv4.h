@@ -53,7 +53,6 @@ struct ipv4 {
 	struct packet       *packet;
 	struct lua_object    lua_object;
 	struct vbuffer      *payload;
-	bool                 modified:1;
 	bool                 invalid_checksum:1;
 };
 
@@ -62,8 +61,6 @@ struct ipv4 *ipv4_create(struct packet *packet);
 struct packet *ipv4_forge(struct ipv4 *ip);
 struct ipv4_header *ipv4_header(struct ipv4 *ip, bool write);
 void ipv4_release(struct ipv4 *ip);
-bool ipv4_pre_modify(struct ipv4 *ip);
-bool ipv4_pre_modify_header(struct ipv4 *ip);
 bool ipv4_verify_checksum(struct ipv4 *ip);
 void ipv4_compute_checksum(struct ipv4 *ip);
 int16 inet_checksum(uint16 *ptr, uint16 size);
@@ -75,7 +72,8 @@ void ipv4_action_drop(struct ipv4 *ip);
 
 #define IPV4_GETSET_FIELD(type, field) \
 		INLINE type ipv4_get_##field(struct ipv4 *ip) { IPV4_CHECK(ip, 0); return SWAP_FROM_IPV4(type, ipv4_header(ip, false)->field); } \
-		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { IPV4_CHECK(ip); if (ipv4_pre_modify_header(ip)) ipv4_header(ip, true)->field = SWAP_TO_IPV4(type, v); }
+		INLINE void ipv4_set_##field(struct ipv4 *ip, type v) { IPV4_CHECK(ip); \
+			struct ipv4_header *header = ipv4_header(ip, true); if (header) { header->field = SWAP_TO_IPV4(type, v); } }
 
 IPV4_GETSET_FIELD(uint8, version);
 IPV4_GETSET_FIELD(uint8, tos);
@@ -96,7 +94,8 @@ INLINE uint8 ipv4_get_hdr_len(struct ipv4 *ip)
 INLINE void ipv4_set_hdr_len(struct ipv4 *ip, uint8 v)
 {
 	IPV4_CHECK(ip);
-	if (ipv4_pre_modify_header(ip))
+	struct ipv4_header *header = ipv4_header(ip, true);
+	if (header)
 		ipv4_header(ip, true)->hdr_len = v >> IPV4_HDR_LEN_OFFSET;
 }
 
@@ -111,10 +110,9 @@ INLINE uint16 ipv4_get_frag_offset(struct ipv4 *ip)
 INLINE void ipv4_set_frag_offset(struct ipv4 *ip, uint16 v)
 {
 	IPV4_CHECK(ip);
-	if (ipv4_pre_modify_header(ip)) {
-		struct ipv4_header *header = ipv4_header(ip, true);
+	struct ipv4_header *header = ipv4_header(ip, true);
+	if (header)
 		header->fragment = IPV4_SET_BITS(uint16, header->fragment, IPV4_FRAGMENTOFFSET_BITS, v >> IPV4_FRAGMENTOFFSET_OFFSET);
-	}
 }
 
 INLINE uint16 ipv4_get_flags(struct ipv4 *ip)
@@ -128,10 +126,9 @@ INLINE uint16 ipv4_get_flags(struct ipv4 *ip)
 INLINE void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 {
 	IPV4_CHECK(ip);
-	if (ipv4_pre_modify_header(ip)) {
-		struct ipv4_header *header = ipv4_header(ip, true);
+	struct ipv4_header *header = ipv4_header(ip, true);
+	if (header)
 		header->fragment = IPV4_SET_BITS(uint16, header->fragment, IPV4_FLAG_BITS, v);
-	}
 }
 
 #define IPV4_GETSET_FLAG(name, flag) \
@@ -143,8 +140,8 @@ INLINE void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 		} \
 		INLINE void ipv4_set_flags_##name(struct ipv4 *ip, bool v) { \
 			IPV4_CHECK(ip); \
-			if (ipv4_pre_modify_header(ip)) { \
-				struct ipv4_header *header = ipv4_header(ip, true); \
+			struct ipv4_header *header = ipv4_header(ip, true); \
+			if (header) { \
 				header->fragment = IPV4_SET_BIT(uint16, header->fragment, flag, v); \
 			} \
 		}
