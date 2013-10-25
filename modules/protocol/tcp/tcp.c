@@ -279,9 +279,7 @@ int16 tcp_checksum(struct tcp *tcp)
 	TCP_CHECK(tcp, 0);
 
 	struct tcp_pseudo_header tcp_pseudo_h;
-	void *iter = NULL;
-	uint8 *data;
-	size_t len;
+	int32 sum;
 
 	/* fill tcp pseudo header */
 	struct ipv4_header *ipheader = ipv4_header(tcp->packet, false);
@@ -292,23 +290,10 @@ int16 tcp_checksum(struct tcp *tcp)
 	tcp_pseudo_h.len = SWAP_TO_IPV4(uint16, ipv4_get_payload_length(tcp->packet) + tcp_get_payload_length(tcp));
 
 	/* compute checksum */
-	long sum;
-
-	sum = (uint16)~inet_checksum((uint16 *)&tcp_pseudo_h, sizeof(struct tcp_pseudo_header));
-
-	while ((data = vbuffer_mmap(tcp->packet->payload, &iter, &len, false))) {
-		sum += (uint16)~inet_checksum((uint16 *)data, len);
-	}
-
-	while ((data = vbuffer_mmap(tcp->payload, &iter, &len, false))) {
-		sum += (uint16)~inet_checksum((uint16 *)data, len);
-	}
-
-	while (sum >> 16)
-		sum = (sum & 0xffff) + (sum >> 16);
-	sum = ~sum;
-
-	return sum;
+	sum = inet_checksum_partial((uint16 *)&tcp_pseudo_h, sizeof(struct tcp_pseudo_header));
+	sum += inet_checksum_vbuffer_partial(tcp->packet->payload);
+	sum += inet_checksum_vbuffer_partial(tcp->payload);
+	return inet_checksum_reduce(sum);
 }
 
 

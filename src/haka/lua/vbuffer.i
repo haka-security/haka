@@ -187,7 +187,14 @@ struct vbuffer {
 
 		struct vsubbuffer *sub(int offset, int length);
 		struct vsubbuffer *left(int offset);
+
+		%immutable;
+		bool modified;
 	}
 };
 
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
+
+%{
+	bool vbuffer_modified_get(struct vbuffer *buf) { return vbuffer_ismodified(buf); }
+%}

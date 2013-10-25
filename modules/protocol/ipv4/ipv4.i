@@ -25,6 +25,11 @@
 		ret->addr = a;
 		return ret;
 	}
+
+	static int lua_inet_checksum(struct vbuffer *buf)
+	{
+		return SWAP_FROM_IPV4(int16, inet_checksum_vbuffer(buf));
+	}
 %}
 
 %include "haka/lua/swig.si"
@@ -247,6 +252,9 @@ struct ipv4 *ipv4_create(struct packet *DISOWN_SUCCESS_ONLY);
 %rename(_forge) ipv4_forge;
 %newobject ipv4_forge;
 struct packet *ipv4_forge(struct ipv4 *pkt);
+
+%rename(inet_checksum) lua_inet_checksum;
+int lua_inet_checksum(struct vbuffer *buf);
 
 %{
 	#define IPV4_INT_GETSET(field) \
