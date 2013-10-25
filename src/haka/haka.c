@@ -28,8 +28,6 @@
 #define HAKA_CONFIG "/etc/haka/haka.conf"
 
 
-extern void packet_set_mode(enum packet_mode mode);
-
 static void usage(FILE *output, const char *program)
 {
 	fprintf(stdout, "Usage: %s [options]\n", program);
@@ -199,11 +197,6 @@ int read_configuration(const char *file)
 
 	/* Other options */
 	parameters_open_section(config, "general");
-
-	if (parameters_get_boolean(config, "pass-through", false)) {
-		messagef(HAKA_LOG_INFO, L"core", L"setting packet mode to pass-through\n");
-		packet_set_mode(MODE_PASSTHROUGH);
-	}
 
 	{
 		const char *configuration = parameters_get_string(config, "configuration", NULL);

@@ -70,6 +70,7 @@ static int    input_count;
 static char **inputs;
 static bool   input_is_iface;
 static char  *output_file;
+static bool   passthrough = true;
 
 
 static void cleanup()
@@ -162,12 +163,19 @@ static int init(struct parameters *args)
 		output_file = strdup(output);
 	}
 
+	passthrough = parameters_get_boolean(args, "pass-through", true);
+
 	return 0;
 }
 
 static bool multi_threaded()
 {
 	return false;
+}
+
+static bool pass_through()
+{
+	return passthrough;
 }
 
 static void cleanup_state(struct packet_module_state *state)
@@ -671,6 +679,7 @@ struct packet_module HAKA_MODULE = {
 		cleanup:     cleanup
 	},
 	multi_threaded:  multi_threaded,
+	pass_through:    pass_through,
 	init_state:      init_state,
 	cleanup_state:   cleanup_state,
 	receive:         packet_do_receive,

@@ -13,9 +13,9 @@ endif()
 macro(VALGRIND name)
 	if (DO_VALGRIND)
 		execute_process(COMMAND ${VALGRIND_COMMAND} --gen-suppressions=all --suppressions=${CTEST_MODULE_DIR}/Valgrind.sup
-			--log-file=${name}-valgrind.txt ${EXE} -d ${ARGN})
+			--log-file=${name}-valgrind.txt ${ARGN})
 	else()
-		execute_process(COMMAND ${EXE} -d ${ARGN})
+		execute_process(COMMAND ${ARGN})
 	endif()
 endmacro(VALGRIND)
 

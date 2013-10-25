@@ -532,6 +532,11 @@ static bool multi_threaded()
 	return use_multithreading;
 }
 
+static bool pass_through()
+{
+	return false;
+}
+
 static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt,
 		uint8 *data, size_t len)
 {
@@ -772,6 +777,7 @@ struct packet_module HAKA_MODULE = {
 		cleanup:	 cleanup
 	},
 	multi_threaded:  multi_threaded,
+	pass_through:    pass_through,
 	init_state:      init_state,
 	cleanup_state:   cleanup_state,
 	receive:         packet_do_receive,

@@ -7,9 +7,6 @@ configuration = "@CMAKE_HAKA_INSTALL_PREFIX@/share/haka/sample/empty.lua"
 # will be used.
 #thread = 4
 
-# Pass-through mode
-pass-through = no
-
 [packet]
 #Select the capture model, nfqueue or pcap
 module = "packet/nfqueue"

@@ -19,6 +19,7 @@ struct packet_module {
 	struct module    module;
 
 	bool           (*multi_threaded)();
+	bool           (*pass_through)();
 	struct packet_module_state *(*init_state)(int thread_id);
 	void           (*cleanup_state)(struct packet_module_state *state);
 	int            (*receive)(struct packet_module_state *state, struct packet **pkt);

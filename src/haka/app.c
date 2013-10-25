@@ -17,6 +17,7 @@
 
 static struct thread_pool *thread_states;
 static char *configuration_file;
+extern void packet_set_mode(enum packet_mode mode);
 
 
 void basic_clean_exit()
@@ -122,6 +123,11 @@ void prepare(int threadcount, bool attach_debugger)
 		if (!packet_module->multi_threaded()) {
 			threadcount = 1;
 		}
+	}
+
+	if (packet_module->pass_through()) {
+		messagef(HAKA_LOG_INFO, L"core", L"setting packet mode to pass-through\n");
+		packet_set_mode(MODE_PASSTHROUGH);
 	}
 
 	messagef(HAKA_LOG_INFO, L"core", L"loading rule file '%s'", configuration_file);
