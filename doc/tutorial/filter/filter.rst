@@ -16,7 +16,8 @@ flow as it passes by.
 
 Basic IP and TCP filtering
 --------------------------
-In order to do some basic IP filtering you can read the self documented lua config file:
+In order to do some basic IP filtering you can read the self
+documented lua config file:
 
 .. literalinclude:: ../../../sample/tutorial/filter/ipfilter.lua
    :language: lua
@@ -28,7 +29,8 @@ And TCP filtering goes the same
    :language: lua
    :tab-width: 4
 
-A pcapfile is provided in order to see the effects of these two config files.
+A pcapfile is provided in order to see the effects of these two
+config files.
 
 .. parsed-literal::
 
@@ -39,9 +41,9 @@ A pcapfile is provided in order to see the effects of these two config files.
 
 Using nfqueue and IP / TCP filtering
 ------------------------------------
-The lua configuration files can be used with nfqueue and haka daemin. Haka will 
-hook itself at startup to the raw nfqueue table in order to inspect, modify, 
-create and delete packets in real time.
+The lua configuration files can be used with nfqueue and haka daemon.
+Haka will hook itself at startup to the raw nfqueue table in order to
+inspect, modify, create and delete packets in real time.
 
 For the rest of this tutorial, we will assume that you've installed
 haka package on a host with an interface named eth0.
@@ -67,8 +69,8 @@ previously.
    :tab-width: 4
 
 You can adapt the IP accordingly and check that packet
-are effectively blocked/accepted. You can also use modify the ``daemon.conf``
-file in order to use the ``tcpfilter.lua`` file.
+are effectively blocked/accepted. You can also use modify the
+``daemon.conf`` file in order to use the ``tcpfilter.lua`` file.
 
 Advanced HTTP filtering
 -----------------------
@@ -81,17 +83,23 @@ You can filter through all HTTP fields, thanks to http module:
 
 Packet injection and modifying http data
 ----------------------------------------
-Haka can also alter stream and create packet/data to modify behavior.
-We want to be able to filter all obsolete Web browser by their
-User-Agent. More, we want to be able to replace content by a message
-telling user that its browser is obsolete, and only authorize requests
-to updates sites based on their domain name.
+Haka can also alter data sent by webserver. We want to be able to
+filter all obsolete Web browser by their User-Agent. More, we want
+to force these obsolete browsers to go only to update websites. 
+Haka will check User-Agent, and if the User-Agent is considered
+obsolete, it will change HTTP response to redirect to a safer
+site (web site of the browser). The interesting part is that in
+no place an IP address is used. So, even if browser uses CDN to
+update, it will work. 
 
-.. literalinclude:: ../../../sample/tutorial/filter/httpadvancedfilter.lua
+.. literalinclude:: ../../../sample/tutorial/filter/httpmodif.lua
    :language: lua
    :tab-width: 4
 
 
 Going further
 -------------
-
+This sample could go further. We can filter for any fields, and
+modify any part of the response. We can extend the browser list
+to match all of major browser version (IE, Chrome, Opera, Safari
+and so on).
