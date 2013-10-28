@@ -1,7 +1,7 @@
 --The require lines tolds Haka which dissector
 --it has to register. Those dissectors gives hook
 --to interfere with it.
-require("protocol/ipv4")
+local ipv4 = require("protocol/ipv4")
 
 --This is a rule
 haka.rule {
@@ -16,14 +16,11 @@ haka.rule {
                 --following wireshark/tcpdump semantics
                 --Documentation give the complet list of accessors
 				--You can choose to let the packet flow, or block it.
-				if ip.src == ipv4addr("192.168.10.10") then
+				if pkt.src == ipv4.addr("192.168.10.10") then
 					-- We want to block this IP
-					ip:drop()
-					haka.log.info("Filter","Filtering IP 192.168.10.10")
+					pkt:drop()
+					haka.log.info("Filter", "Filtering IP 192.168.10.10")
 				end
-				if ip.src == ipv4addr("192.168.10.1") then
-					-- We want to authorize this IP
-					ip:accept()
-				end
+				--All other packets will be accepted
         end
 }
