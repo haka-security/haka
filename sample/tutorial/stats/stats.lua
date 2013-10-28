@@ -82,14 +82,21 @@ function mt_stats:top(field, nb)
 	end
 end
 
-function mt_stats:dump()
+function mt_stats:dump(nb)
 	local max = self:list()
+	nb = nb or #self
+	local iter = 1
 	for _, entry in ipairs(self) do
-		local content = {}
-		for k, v in pairs(entry) do
-			table.insert(content, string.format("%-" .. tostring(max[k]) .. "s", v))
+		if iter <= nb then
+			local content = {}
+			for k, v in pairs(entry) do
+				table.insert(content, string.format("%-" .. tostring(max[k]) .. "s", v))
+			end
+			print("| " .. table.concat(content, " | ") .. " |")
+		else
+			break
 		end
-		print("| " .. table.concat(content, " | ") .. " |")
+		iter = iter + 1
 	end
 end
 

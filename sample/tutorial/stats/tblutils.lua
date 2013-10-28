@@ -29,7 +29,7 @@ function max_length_field(tab)
 	for _, entry in ipairs(tab) do
 		for k, v in pairs(entry) do
 			local size = v:len()
-			if size > max[k] then
+			if size > max[k] and size < 100 then
 				max[k] = size
 			end
 		end
