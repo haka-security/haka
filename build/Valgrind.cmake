@@ -25,7 +25,7 @@ macro(CHECK_VALGRIND name)
 		list(GET VALGRIND_OUT 0 VALGRIND_ERROR)
 		list(GET VALGRIND_OUT 1 VALGRIND_LEAK)
 		list(GET VALGRIND_OUT 2 VALGRIND_REACHABLE)
-	
+
 		message("")
 		message("-- Memory error check")
 		message("Valgrind log is at ${CMAKE_CURRENT_SOURCE_DIR}/${name}-valgrind.txt")
@@ -33,7 +33,7 @@ macro(CHECK_VALGRIND name)
 			message(FATAL_ERROR "Memory error detected: ${VALGRIND_ERROR} error found")
 		endif()
 		message("No error detected")
-	
+
 		message("-- Memory leak check")
 		message("Valgrind log is at ${CMAKE_CURRENT_SOURCE_DIR}/${name}-valgrind.txt")
 		if(VALGRIND_LEAK GREATER 0)

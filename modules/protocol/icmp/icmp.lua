@@ -18,7 +18,7 @@ function icmp_dissector.method:__init(pkt)
 end
 
 icmp_dissector.property.type = {
-	get = function (self) 
+	get = function (self)
 		return self.payload:sub(0, 1):asnumber('big')
 	end,
 	set = function (self, num)
@@ -27,7 +27,7 @@ icmp_dissector.property.type = {
 }
 
 icmp_dissector.property.code = {
-	get = function (self) 
+	get = function (self)
 		return self.payload:sub(1, 1):asnumber('big')
 	end,
 	set = function (self, num)
@@ -36,7 +36,7 @@ icmp_dissector.property.code = {
 }
 
 icmp_dissector.property.checksum = {
-	get = function (self) 
+	get = function (self)
 		return self.payload:sub(2, 2):asnumber('big')
 	end,
 	set = function (self, num)
