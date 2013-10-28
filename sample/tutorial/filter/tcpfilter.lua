@@ -19,12 +19,13 @@ haka.rule {
                 --following wireshark/tcpdump semantics
                 --Documentation give the complet list of accessors
 				--You can choose to let the packet flow, or block it.
-				if pkt.dstport ~= 80 then
-					-- We want to block this connexion
+				if pkt.dstport == 80 or pkt.srcport == 80 then
+					-- We want to accept this connexion
+					-- It's either a request to a website or a response
+					haka.log.info("Filter", "Authorizing trafic on port 80")
+				else
 					pkt:drop()
-					haka.log.info("Filter","This is not port 80")
-					haka.log.info("Filter","The TCP destination port is %s",pkt.dstport)
+					haka.log.info("Filter", "This is not port 80")
 				end
-				--All other packets will be accepted
         end
 }
