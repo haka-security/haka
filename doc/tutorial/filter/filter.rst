@@ -80,6 +80,12 @@ You can filter through all HTTP fields, thanks to http module:
    :language: lua
    :tab-width: 4
 
+Use a daemon configuration file to use with this file:
+
+.. parsed-literal::
+   # cd |haka_install_path|/share/haka/sample/tutorial/filter/
+   # haka -c httpfilter.conf --no-daemon
+
 
 Packet injection and modifying http data
 ----------------------------------------
@@ -96,6 +102,11 @@ update, it will work.
    :language: lua
    :tab-width: 4
 
+Use a daemon configuration file to use with this file:
+
+.. parsed-literal::
+   # cd |haka_install_path|/share/haka/sample/tutorial/filter/
+   # haka -c httpmodif.conf --no-daemon
 
 Going further
 -------------
