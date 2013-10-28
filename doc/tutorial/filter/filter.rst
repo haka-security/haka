@@ -5,11 +5,11 @@ Filter
 Introduction
 ------------
 Haka is a tool which can filter packet and streams, based on any fields or
-combination of fields in the packet or the streams..
+combination of fields in the packet or the streams.
 
 How to use filter
 -----------------
-This tutorial is divided in two parts. The fisrt one rely with hakapcap
+This tutorial is divided in two parts. The fisrt one rely on with hakapcap
 tool and pcap file, in order to show how to do basic filtering.
 The second one uses the nfqueue interface in order to manipulate the
 flow as it passes by.
@@ -23,7 +23,7 @@ documented lua config file:
    :language: lua
    :tab-width: 4
 
-And TCP filtering goes the same 
+And TCP filtering goes the same
 
 .. literalinclude:: ../../../sample/tutorial/filter/tcpfilter.lua
    :language: lua
@@ -55,7 +55,8 @@ This is the configuration of the daemon:
    :tab-width: 4
 
 In order to start haka, you have to be root. The ``--no-daemon`` option
-won't send haka daemon on background.
+won't send haka daemon on background. Plus, all logs messages are 
+printed on output, instead of syslogd.
 
 .. parsed-literal::
    # cd |haka_install_path|/share/haka/sample/tutorial/filter/
@@ -63,10 +64,6 @@ won't send haka daemon on background.
 
 The filtering will be done according to the .lua configuration file seen
 previously.
-
-.. literalinclude:: ../../../sample/tutorial/filter/ipfilter.lua
-   :language: lua
-   :tab-width: 4
 
 You can adapt the IP accordingly and check that packet
 are effectively blocked/accepted. You can also use modify the
@@ -87,16 +84,16 @@ Use a daemon configuration file to use with this file:
    # haka -c httpfilter.conf --no-daemon
 
 
-Packet injection and modifying http data
-----------------------------------------
+Modifying http responses
+------------------------
 Haka can also alter data sent by webserver. We want to be able to
 filter all obsolete Web browser by their User-Agent. More, we want
-to force these obsolete browsers to go only to update websites. 
+to force these obsolete browsers to go only to update websites.
 Haka will check User-Agent, and if the User-Agent is considered
 obsolete, it will change HTTP response to redirect to a safer
 site (web site of the browser). The interesting part is that in
 no place an IP address is used. So, even if browser uses CDN to
-update, it will work. 
+update, it will work.
 
 .. literalinclude:: ../../../sample/tutorial/filter/httpmodif.lua
    :language: lua
