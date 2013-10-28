@@ -1,0 +1,6 @@
+debug tcp-connection: opening connection 192.168.20.99:48225 -> 192.168.20.1:80
+info Filter: User-Agent Mozilla detected
+debug tcp-connection: closing connection 192.168.20.99:48225 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.20.99:48226 -> 192.168.20.1:80
+info Filter: Only Mozilla User-Agent authorized
+debug tcp-connection: dropping connection 192.168.20.99:48226 -> 192.168.20.1:80

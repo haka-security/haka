@@ -15,3 +15,7 @@ TEST_PCAP(core sqli-decode CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/ha
 TEST_PCAP(core sqli-fine-grained CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/sqli/sqli-fine-grained.lua)
 TEST_PCAP(core sqli-groups CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/sqli/sqli-groups.lua)
 TEST_PCAP(core sqli-white-list CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/sqli/sqli-white-list.lua)
+TEST_PCAP(core ipfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/ipfilter.lua)
+TEST_PCAP(core tcpfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/tcpfilter.lua)
+TEST_PCAP(core httpfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/httpfilter.lua)
+TEST_PCAP(core httpmodif CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/httpmodif.lua)

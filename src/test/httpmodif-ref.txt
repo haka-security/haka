@@ -1,0 +1,59 @@
+debug tcp-connection: opening connection 192.168.20.99:48229 -> 192.168.20.1:80
+info Filter: Domain requested: mozilla.org
+info Filter: Update domain: go for it
+debug tcp-connection: closing connection 192.168.20.99:48229 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.20.99:48230 -> 192.168.20.1:80
+info Filter: Domain requested: server
+ _headers_order
+   1 = Host
+   2 = User-Agent
+   3 = Connection
+ _length = 136
+ headers
+   Connection = Close
+   Host = server
+   User-Agent = Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0
+ method = GET
+ uri = /
+ version = HTTP/1.1
+info Filter: UA detected: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0
+info Filter: Firefox version:24
+debug tcp-connection: closing connection 192.168.20.99:48230 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.20.99:48231 -> 192.168.20.1:80
+info Filter: Domain requested: server
+ _headers_order
+   1 = Host
+   2 = User-Agent
+   3 = Connection
+ _length = 136
+ headers
+   Connection = Close
+   Host = server
+   User-Agent = Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/22.0
+ method = GET
+ uri = /
+ version = HTTP/1.1
+info Filter: UA detected: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/22.0
+info Filter: Firefox version:22
+info Filter: Firefox is outdated, please upgrade
+ _headers_order
+   1 = Date
+   2 = Server
+   3 = X-Powered-By
+   4 = Content-Length
+   5 = Connection
+   6 = Content-Type
+ _length = 195
+ headers
+   Connection = Close
+   Content-Length = 0
+   Content-Type = text/html
+   Date = Mon, 28 Oct 2013 16:14:15 GMT
+   Location = http://www.mozilla.org
+   Proxy-Connection = Close
+   Server = A patchy server
+   X-Powered-By = PHP/5.2.4-2ubuntu5.10
+ reason = Moved Temporarily
+ status = 307
+ version = HTTP/1.1
+debug tcp-connection: closing connection 192.168.20.99:48231 -> 192.168.20.1:80
