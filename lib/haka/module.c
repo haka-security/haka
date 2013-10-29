@@ -37,7 +37,7 @@ struct module *module_load(const char *module_name, struct parameters *args)
 		return NULL;
 	}
 
-	snprintf(full_module_name, module_name_len+1, "%s%s%s", HAKA_MODULE_PREFIX, module_name, HAKA_MODULE_SUFFIX);
+	snprintf(full_module_name, module_name_len, "%s%s%s", HAKA_MODULE_PREFIX, module_name, HAKA_MODULE_SUFFIX);
 	assert(strlen(full_module_name)+1 == module_name_len);
 
 	{
