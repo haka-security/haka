@@ -1,14 +1,23 @@
 
 require('stats')
 
+-- run some stats at exit on collected
+-- http info
 haka.on_exit(function ()
-	print("top 5 of requested http host")
-	stats:top('host', 5)
 	print("top 10 (by default) of useragent header")
 	stats:top('useragent')
-    print("dump selected entries of stats table")
-	stats:select_table({'method', 'host', 'ip'}):dump()
-	print("top ten of http ressources that generatged the most 404 status error")
+	print("")
+
+	print("show selected columns of stats table")
+	stats:select_table({'ip', 'method', 'ressource'}):dump(5)
+	print("")
+
+	print("list of ip source that use a (relative) old useragent header")
+	stats:select_table({'ip', 'useragent'},
+	    function(elem) return elem.useragent:find('Mozilla/2.0') end):dump(5)
+	print("")
+
+	print("top ten of http ressources that generated the most 404 status error")
 	stats:select_table({'ressource', 'status'},
 	   function(elem) return elem.status == '404' end):top('ressource')
 end)
