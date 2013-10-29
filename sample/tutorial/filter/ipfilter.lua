@@ -1,26 +1,26 @@
---The require lines tolds Haka which dissector
---it has to register. Those dissectors gives hook
---to interfere with it.
-local ipv4 = require("protocol/ipv4")
+------------------------------------
+-- Loading dissectors
+------------------------------------
 
---This is a rule
+-- We assign ipv4 because we'll need some function
+-- provided by dissector later in a security rule
+local ipv4 = require('protocol/ipv4')
+
+------------------------------------
+-- Security rule
+------------------------------------
 haka.rule {
-        --The hooks tells where this rule is applied
-        hooks = {"ipv4-up"},
-        --Each rule have an eval function
-        --Eval function is always build with (self, name)
-                --First parameter, self, is mandatory
-                --Second parameter can be named whatever you want
+        -- This rule is applied on each IP incoming packet
+        hooks = {'ipv4-up'},
         eval = function (self, pkt)
-                --All fields is accessible through accessors
-                --following wireshark/tcpdump semantics
-                --Documentation give the complet list of accessors
-				--You can choose to let the packet flow, or block it.
-				if pkt.src == ipv4.addr("192.168.10.10") then
-					-- We want to block this IP
-					pkt:drop()
-					haka.log.info("Filter", "Filtering IP 192.168.10.10")
-				end
-				--All other packets will be accepted
+			-- We assign a variable to an IP address thanks to 
+			-- the ipv4.addr function
+			local bad_ip = ipv4.addr('192.168.10.10')
+			if pkt.src == bad_ip then
+				-- We want to block this IP
+				pkt:drop()
+				haka.log.info("Filter", "Filtering IP 192.168.10.10")
+			end
+			-- All other packets will be accepted
         end
 }
