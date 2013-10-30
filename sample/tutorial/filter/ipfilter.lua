@@ -19,7 +19,7 @@ haka.rule {
 			if pkt.src == bad_ip then
 				-- We want to block this IP
 				pkt:drop()
-				haka.log.info("Filter", "Filtering IP 192.168.10.10")
+				haka.log.info("Filter", "Filtering IP %s", bad_ip)
 			end
 			-- All other packets will be accepted
         end

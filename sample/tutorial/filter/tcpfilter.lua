@@ -12,7 +12,7 @@ haka.rule {
 	-- The hooks tells where this rule is applied
 	-- Only TCP packets will be concerned by this rule
 	-- Other protocol will flow
-	hooks = {'tcp-up'},
+	hooks = { 'tcp-up' },
 		eval = function (self, pkt)
 			-- We want to accept connection to or from
 			-- TCP port 80 (request/response)
