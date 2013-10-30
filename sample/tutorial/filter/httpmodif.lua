@@ -9,7 +9,7 @@ http = require('protocol/http')
 -- Firefox Version and website
 -- Be sure to update to last version
 ------------------------------------
-local last_firefox_version = tonumber(24.0)
+local last_firefox_version = 24.0
 local firefox_web_site = 'http://www.mozilla.org'
 
 -------------------------------------
@@ -81,7 +81,7 @@ safe_update:rule {
 		local UA = http.request.headers["User-Agent"]
 		haka.log("Filter", "UA detected: %s", UA)
 		local version = tonumber(string.sub(UA, string.find(UA, "Firefox/")+8))
-		haka.log("Filter", "Firefox version:%d",version)
+		haka.log("Filter", "Firefox version: %d",version)
 		if version < last_firefox_version then
 			haka.log.info("Filter", "Firefox is outdated, please upgrade")
 			-- We modify some fields of the response on the fly
