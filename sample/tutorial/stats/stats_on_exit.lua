@@ -12,7 +12,7 @@ haka.on_exit(function ()
 	stats:select_table({'ip', 'method', 'ressource'}):dump(5)
 	print("")
 
-	print("list of source ip using 'Mozilla/2.0 as user-gent'")
+	print("list of source ip using 'Mozilla/2.0' as user-gent'")
 	stats:select_table({'ip', 'useragent'},
 	    function(elem) return elem.useragent:find('Mozilla/2.0') end):dump(5)
 	print("")

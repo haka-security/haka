@@ -3,7 +3,7 @@ local function group_by(tab, field)
 	local ret = {}
 	for _, entry in ipairs(tab) do
 		local value = entry[field]
-		assert(value, "stats are not available on field %s", field)
+		assert(value, string.format("stats are not available on field %s", field))
 		if not ret[value] then
 			ret[value] = {}
 		end
@@ -27,8 +27,8 @@ local function max_length_field(tab)
 		for k, v in pairs(entry) do
 			local size = v:len()
 			if size > 99 then
-			-- Lua formating limits width to 99
-			size = 99
+				-- Lua formating limits width to 99
+				size = 99
 			end
 			local cmax = max[k] or 0
 			if size > cmax then
@@ -46,10 +46,14 @@ local function print_columns(tab)
 		for k, _ in pairs(tab[1]) do
 			table.insert(columns, string.format("%-" .. tostring(max[k]) .. "s", k))
 		end
-	print("| " .. table.concat(columns, " | ") .. " |")
+		print("| " .. table.concat(columns, " | ") .. " |")
 	end
 	return max
 end
+
+-- metatable for storing 'sql-like' table and
+-- methods.  Intended to be used to store 'stats'
+-- data and to provide methods to request them
 
 local table_mt = {}
 table_mt.__index = table_mt
@@ -77,7 +81,7 @@ function table_mt:top(field, nb)
 
 	for _, entry in ipairs(sorted) do
 		if nb <= 0 then break end
-		print(entry[1], "(", #entry[2], ")")
+		print(entry[1], ":", #entry[2])
 		nb = nb - 1
 	end
 end
@@ -95,7 +99,7 @@ function table_mt:dump(nb)
 		print("| " .. table.concat(content, " | ") .. " |")
 		iter = iter -1
 	end
-	if (#self ~= nb) then
+	if #self ~= nb then
 		print("... " .. tostring(#self - nb) .. " remaining entries")
 	end
 end
