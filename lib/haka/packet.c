@@ -187,7 +187,7 @@ bool packet_send(struct packet *pkt)
 		return false;
 	}
 
-	messagef(HAKA_LOG_DEBUG, L"packet", L"sending packet id=%lli, len=%zu",
+	messagef(HAKA_LOG_DEBUG, L"packet", L"sending packet id=%lli",
 		packet_module->get_id(pkt));
 
 	return packet_module->send_packet(pkt);
