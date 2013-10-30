@@ -9,17 +9,16 @@ require('protocol/http')
 local tbl = require('tblutils')
 
 -- each entry of stats table will store
--- info about http request/response (method, 
+-- info about http request/response (method,
 -- host, ressource, status, etc.)
-local mt_stats = {}
-stats = tbl.new(mt_stats)
+stats = tbl.new()
 
 --------------------------
 -- Setting next dissector
 --------------------------
 
 haka.rule {
-    hooks = { "tcp-connection-new" },
+    hooks = { 'tcp-connection-new' },
     eval = function(self, pkt)
         local tcp = pkt.tcp
 		if tcp.dstport == 80 then
