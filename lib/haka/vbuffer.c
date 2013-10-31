@@ -181,6 +181,16 @@ static struct vbuffer *vbuffer_get(struct vbuffer *buf, size_t *off, bool keepla
 	return last;
 }
 
+static struct vbuffer *vbuffer_getlast(struct vbuffer *buf)
+{
+	struct vbuffer *iter = buf, *last = NULL;
+	while (iter) {
+		last = iter;
+		iter = iter->next;
+	}
+	return last;
+}
+
 static struct vbuffer *vbuffer_split_force(struct vbuffer *buf, size_t off)
 {
 	struct vbuffer *newbuf;
@@ -413,7 +423,14 @@ static struct vbuffer *_vbuffer_insert(struct vbuffer *buf, size_t off, struct v
 
 bool vbuffer_insert(struct vbuffer *buf, size_t off, struct vbuffer *data, bool mark_modified)
 {
-	return _vbuffer_insert(buf, off, data, mark_modified) != NULL;
+	if (off == ALL) {
+		struct vbuffer *last = vbuffer_getlast(buf);
+		assert(last);
+		return _vbuffer_insert(last, last->length, data, mark_modified) != NULL;
+	}
+	else {
+		return _vbuffer_insert(buf, off, data, mark_modified) != NULL;
+	}
 }
 
 bool vbuffer_erase(struct vbuffer *buf, size_t off, size_t len)

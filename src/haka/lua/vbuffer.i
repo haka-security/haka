@@ -200,6 +200,11 @@ struct vbuffer {
 			vbuffer_insert($self, offset, DISOWN, true);
 		}
 
+		void append(struct vbuffer *DISOWN)
+		{
+			vbuffer_insert($self, ALL, DISOWN, true);
+		}
+
 		%rename(erase) _erase;
 		void _erase(int offset, int size)
 		{

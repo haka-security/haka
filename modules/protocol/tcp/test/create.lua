@@ -30,10 +30,12 @@ haka.rule {
 			npkt.flags.all = pkt.flags.all
 			npkt.dstport = pkt.dstport+10
 			npkt.srcport = pkt.srcport+10
-			npkt.payload:resize(#pkt.payload)
+			
+			local payload = haka.vbuffer(#pkt.payload)
 			for i=1,#pkt.payload do
-				npkt.payload[i] = pkt.payload[i]
+				payload[i] = pkt.payload[i]
 			end
+			npkt.payload:append(payload)
 			npkt:inject()
 		end
 	end

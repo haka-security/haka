@@ -41,48 +41,6 @@ struct tcp_flags {
 
 STRUCT_UNKNOWN_KEY_ERROR(tcp_flags);
 
-LUA_OBJECT_CAST(struct tcp_payload, struct tcp);
-
-struct tcp_payload {
-	%extend {
-		size_t __len(void *dummy)
-		{
-			return tcp_get_payload_length((struct tcp *)$self);
-		}
-
-		int __getitem(int index)
-		{
-			const size_t size = tcp_get_payload_length((struct tcp *)$self);
-
-			--index;
-			if (index < 0 || index >= size) {
-				error(L"out-of-bound index");
-				return 0;
-			}
-			return tcp_get_payload((struct tcp *)$self)[index];
-		}
-
-		void __setitem(int index, int value)
-		{
-			const size_t size = tcp_get_payload_length((struct tcp *)$self);
-
-			--index;
-			if (index < 0 || index >= size) {
-				error(L"out-of-bound index");
-				return;
-			}
-			tcp_get_payload_modifiable((struct tcp *)$self)[index] = value;
-		}
-
-		void resize(int size)
-		{
-			tcp_resize_payload((struct tcp *)$self, size);
-		}
-	}
-};
-
-STRUCT_UNKNOWN_KEY_ERROR(tcp_payload);
-
 LUA_OBJECT(struct tcp);
 LUA_OBJECT(struct tcp_connection);
 LUA_OBJECT_CAST(struct tcp_stream, struct stream);
@@ -150,7 +108,7 @@ struct tcp {
 
 		%immutable;
 		struct tcp_flags *flags;
-		struct tcp_payload *payload;
+		struct vbuffer *payload;
 		struct ipv4 *ip;
 		const char *name;
 
@@ -267,7 +225,7 @@ TCP_INT_GETSET(window_size);
 TCP_INT_GETSET(checksum);
 TCP_INT_GETSET(urgent_pointer);
 
-struct tcp_payload *tcp_payload_get(struct tcp *tcp) { return (struct tcp_payload *)tcp; }
+struct vbuffer *tcp_payload_get(struct tcp *tcp) { return tcp->payload; }
 
 struct tcp_flags *tcp_flags_get(struct tcp *tcp) { return (struct tcp_flags *)tcp; }
 
