@@ -50,7 +50,8 @@ static struct vsubbuffer *_vbuffer_sub(lua_State *L, struct vbuffer *self, int o
 }
 
 #define vbuffer_sub(self, off, len) _vbuffer_sub(L, self, off, len)
-#define vbuffer_left(self, off) _vbuffer_sub(L, self, off, -1)
+#define vbuffer_left(self, off) _vbuffer_sub(L, self, 0, off)
+#define vbuffer_right(self, off) _vbuffer_sub(L, self, off, -1)
 
 static void _vsubbuffer___gc(lua_State* L)
 {
@@ -190,12 +191,19 @@ struct vbuffer {
 		}
 
 		struct vsubbuffer *sub(int offset, int length);
+		struct vsubbuffer *right(int offset);
 		struct vsubbuffer *left(int offset);
 
 		%rename(insert) _insert;
 		void _insert(int offset, struct vbuffer *DISOWN)
 		{
 			vbuffer_insert($self, offset, DISOWN, true);
+		}
+
+		%rename(erase) _erase;
+		void _erase(int offset, int size)
+		{
+			vbuffer_erase($self, offset, size);
 		}
 
 		%immutable;
