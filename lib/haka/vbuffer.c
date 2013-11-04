@@ -237,7 +237,13 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, boo
 		return NULL;
 	}
 
-	iter = vbuffer_split(begin, off);
+	if (begin == buf) {
+		iter = vbuffer_split_force(begin, off);
+	}
+	else {
+		iter = vbuffer_split(begin, off);
+	}
+
 	if (!iter && check_error()) {
 		return NULL;
 	}
