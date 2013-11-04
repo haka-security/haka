@@ -24,6 +24,7 @@ haka.rule {
 				haka.log.info("Filter", "This is not TCP port 80")
 			end
         end
+}
 
 local group = haka.rule_group {
 	-- The hooks tells where this rule is applied
