@@ -160,6 +160,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vsubbuffer);
 LUA_OBJECT(struct vbuffer);
 %newobject vbuffer::sub;
 %newobject vbuffer::left;
+%newobject vbuffer::right;
 
 struct vbuffer {
 	%extend {
