@@ -4,12 +4,12 @@ Filter
 
 Introduction
 ------------
-Haka is a tool which can filter packet and streams, based on any fields or
+Haka is a tool which can filter packets and streams, based on any fields or
 combination of fields in the packet or the streams.
 
 How to use filter
 -----------------
-This tutorial is divided in two parts. The fisrt one rely on with hakapcap
+This tutorial is divided in two parts. The first one relies on hakapcap
 tool and pcap file, in order to show how to do basic filtering.
 The second one uses the nfqueue interface in order to manipulate the
 flow as it passes by.
@@ -17,27 +17,47 @@ flow as it passes by.
 Basic IP and TCP filtering
 --------------------------
 In order to do some basic IP filtering you can read the self
-documented lua config file:
+documented lua script file:
 
 .. literalinclude:: ../../../sample/tutorial/filter/ipfilter.lua
    :language: lua
    :tab-width: 4
 
-And TCP filtering goes the same
+A pcap file is provided in order to run the above lua script file
+
+.. parsed-literal::
+
+    $ cd |haka_install_path|/share/haka/sample/tutorial/filter/
+    $ hakapcap ipfilter.pcap ipfilter.lua
+
+Hereafter, a second lua script file allowing to filter tcp packets based
+on destination port.
 
 .. literalinclude:: ../../../sample/tutorial/filter/tcpfilter.lua
    :language: lua
    :tab-width: 4
 
-A pcapfile is provided in order to see the effects of these two
-config files.
+If we try to launch this script, we will notice that it will fail to
+run successfully. Actually, we deliberately introduced an error into the code.
+Haka will raise an 'unknown error'. More precisely, there is no field named 'destport'.
+
+As shown in section :doc:`\../../debug`, Haka is featured with debugging capabilities allowing
+to get more details about errors. The debugger mode is available through the ``--luadebug`` option:
 
 .. parsed-literal::
 
     $ cd |haka_install_path|/share/haka/sample/tutorial/filter/
-    $ hakapcap trace.pcap ipfilter.lua
-    $ hakapcap trace.pcap tcpfilter.lua
+    $ hakapcap tcpfilter.pcap tcpfilter.lua --luadebug
 
+.. note:: type ``help`` to get the list of available commands.
+
+At the debug prompt, type ``continue`` to immediately break into the erroneous code.
+Jump to frame #3 (``frame 3``) and list the lua code (``list``) to get the line number
+that generated the error.
+
+Printing the `pkt` table will show that we misspelled the `dstport` field.
+
+.. note:: Press CTRL-C to quit
 
 Using nfqueue and IP / TCP filtering
 ------------------------------------
