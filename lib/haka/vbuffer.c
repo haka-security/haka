@@ -258,7 +258,7 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, boo
 
 	if (len != ALL) {
 		while (iter) {
-			if (len < iter->length) {
+			if (len <= iter->length) {
 				end = vbuffer_split(iter, len);
 				if (!iter && check_error()) {
 					return NULL;
