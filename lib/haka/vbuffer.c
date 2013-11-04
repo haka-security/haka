@@ -75,19 +75,6 @@ static struct vbuffer_data_basic *vbuffer_data_basic(size_t size)
  * Buffer
  */
 
-struct vbuffer_flags {
-	bool                    modified:1;
-	bool                    writable:1;
-};
-
-struct vbuffer {
-	struct vbuffer         *next;
-	size_t                  length;
-	size_t                  offset;
-	struct vbuffer_data    *data;
-	struct vbuffer_flags    flags;
-};
-
 INLINE bool vbuffer_check_writeable(struct vbuffer *buf)
 {
 	if (!buf->flags.writable) {
@@ -127,6 +114,7 @@ struct vbuffer *vbuffer_create_from(struct vbuffer_data *data, size_t length)
 		return NULL;
 	}
 
+	lua_object_init(&ret->lua_object);
 	ret->next = NULL;
 	ret->length = length;
 	ret->offset = 0;
@@ -202,6 +190,8 @@ static struct vbuffer *vbuffer_split_force(struct vbuffer *buf, size_t off)
 		error(L"memory error");
 		return NULL;
 	}
+
+	lua_object_init(&newbuf->lua_object);
 
 	newbuf->data = buf->data;
 	newbuf->data->ops->addref(newbuf->data);
@@ -315,6 +305,8 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, boo
 
 void vbuffer_free(struct vbuffer *buf)
 {
+	lua_object_release(buf, &buf->lua_object);
+
 	struct vbuffer *iter = buf;
 	while (iter) {
 		struct vbuffer *cur = iter;
@@ -379,6 +371,7 @@ static struct vbuffer *_vbuffer_insert(struct vbuffer *buf, size_t off, struct v
 
 	assert(data);
 	assert(buf != data);
+	assert(!lua_object_ownedbylua(&data->lua_object));
 
 	if (mark_modified && !vbuffer_check_writeable(buf)) {
 		return NULL;
@@ -389,6 +382,8 @@ static struct vbuffer *_vbuffer_insert(struct vbuffer *buf, size_t off, struct v
 		error(L"invalid offset");
 		return NULL;
 	}
+
+	lua_object_release(data, &data->lua_object);
 
 	end = data;
 	while (end->next) {

@@ -552,7 +552,6 @@ static void packet_do_release(struct packet *orig_pkt)
 		packet_verdict(orig_pkt, FILTER_DROP);
 	}
 
-	vbuffer_free(pkt->data);
 	free(pkt);
 }
 

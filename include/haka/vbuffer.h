@@ -3,6 +3,7 @@
 #define _HAKA_VBUFFER_H
 
 #include <haka/types.h>
+#include <haka/lua/object.h>
 
 
 /*
@@ -10,8 +11,6 @@
  */
 
 #define ALL   (size_t)-1
-
-struct vbuffer;
 
 struct vbuffer_data;
 
@@ -24,6 +23,21 @@ struct vbuffer_data_ops {
 struct vbuffer_data {
 	struct vbuffer_data_ops  *ops;
 };
+
+struct vbuffer_flags {
+	bool                    modified:1;
+	bool                    writable:1;
+};
+
+struct vbuffer {
+	struct lua_object       lua_object;
+	struct vbuffer         *next;
+	size_t                  length;
+	size_t                  offset;
+	struct vbuffer_data    *data;
+	struct vbuffer_flags    flags;
+};
+
 
 struct vbuffer *vbuffer_create_new(size_t size);
 struct vbuffer *vbuffer_create_from(struct vbuffer_data *data, size_t length);

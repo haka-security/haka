@@ -681,9 +681,6 @@ static void packet_do_release(struct packet *orig_pkt)
 		packet_verdict(orig_pkt, FILTER_DROP);
 	}
 
-	vbuffer_free(orig_pkt->payload);
-	orig_pkt->payload = NULL;
-
 	free(pkt);
 }
 

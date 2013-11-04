@@ -27,6 +27,38 @@ void lua_object_initialize(lua_State *L)
 	lua_setfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
 }
 
+bool lua_object_ownedbylua(struct lua_object *obj)
+{
+	assert(obj);
+
+	if (!obj->state) {
+		return false;
+	}
+
+	{
+		LUA_STACK_MARK(obj->state->L);
+
+		lua_getfield(obj->state->L, LUA_REGISTRYINDEX, OBJECT_TABLE);
+		lua_pushlightuserdata(obj->state->L, obj);
+		lua_gettable(obj->state->L, -2);
+		if (lua_isnil(obj->state->L, -1)) {
+			lua_pop(obj->state->L, 2);
+			LUA_STACK_CHECK(obj->state->L, 0);
+			return false;
+		}
+
+		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(obj->state->L, -1);
+		lua_pop(obj->state->L, 2);
+		LUA_STACK_CHECK(obj->state->L, 0);
+
+		if (usr) {
+			return usr->own == 1;
+		}
+
+		return false;
+	}
+}
+
 void lua_object_init(struct lua_object *obj)
 {
 	obj->state = NULL;

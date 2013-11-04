@@ -136,10 +136,6 @@ bool packet_release(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 	if (atomic_dec(&pkt->ref) == 0) {
-		if (pkt->payload) {
-			vbuffer_free(pkt->payload);
-			pkt->payload = NULL;
-		}
 		lua_object_release(pkt, &pkt->lua_object);
 		packet_module->release_packet(pkt);
 		return true;

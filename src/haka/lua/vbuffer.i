@@ -80,6 +80,7 @@ static void _vsubbuffer___gc(lua_State* L)
 %}
 
 %include "haka/lua/swig.si"
+%include "haka/lua/object.si"
 
 %nodefaultctor;
 %nodefaultdtor;
@@ -156,6 +157,7 @@ struct vsubbuffer {
 
 STRUCT_UNKNOWN_KEY_ERROR(vsubbuffer);
 
+LUA_OBJECT(struct vbuffer);
 %newobject vbuffer::sub;
 %newobject vbuffer::left;
 
@@ -172,7 +174,8 @@ struct vbuffer {
 
 		~vbuffer()
 		{
-			vbuffer_free($self);
+			if ($self)
+				vbuffer_free($self);
 		}
 
 		size_t __len(void *dummy)
@@ -195,14 +198,14 @@ struct vbuffer {
 		struct vsubbuffer *left(int offset);
 
 		%rename(insert) _insert;
-		void _insert(int offset, struct vbuffer *DISOWN)
+		void _insert(int offset, struct vbuffer *DISOWN_SUCCESS_ONLY)
 		{
-			vbuffer_insert($self, offset, DISOWN, true);
+			vbuffer_insert($self, offset, DISOWN_SUCCESS_ONLY, true);
 		}
 
-		void append(struct vbuffer *DISOWN)
+		void append(struct vbuffer *DISOWN_SUCCESS_ONLY)
 		{
-			vbuffer_insert($self, ALL, DISOWN, true);
+			vbuffer_insert($self, ALL, DISOWN_SUCCESS_ONLY, true);
 		}
 
 		%rename(erase) _erase;
