@@ -30,6 +30,14 @@ A pcap file is provided in order to run the above lua script file
     $ cd |haka_install_path|/share/haka/sample/tutorial/filter/
     $ hakapcap ipfilter.pcap ipfilter.lua
 
+You can save the pcap in an output file in order to see the
+modification or deletion of packets:
+
+.. parsed-literal::
+
+    $ cd |haka_install_path|/share/haka/sample/tutorial/filter/
+    $ hakapcap trace.pcap ipfilter.lua -o output.pcap
+
 Hereafter, a second lua script file allowing to filter tcp packets based
 on destination port.
 
@@ -97,11 +105,21 @@ You can filter through all HTTP fields, thanks to http module:
    :language: lua
    :tab-width: 4
 
-Use a daemon configuration file to use with this file:
+Modify the ``dameon.conf`` in order to load the httpfilter lua
+configuration file:
+
+.. code-block:: lua
+
+    [general]
+    # Select the haka configuration file to use.
+    configuration = "httpfilter.lua"
+    (...)
+
+And start it
 
 .. parsed-literal::
    # cd |haka_install_path|/share/haka/sample/tutorial/filter/
-   # haka -c httpfilter.conf --no-daemon
+   # haka -c dameon.conf --no-daemon
 
 
 Modifying http responses
@@ -119,11 +137,21 @@ update, it will work.
    :language: lua
    :tab-width: 4
 
-Use a daemon configuration file to use with this file:
+Modify the ``dameon.conf`` in order to load the httpmodif lua
+configuration file:
+
+.. code-block:: lua
+
+    [general]
+    # Select the haka configuration file to use.
+    configuration = "httpmodif.lua"
+    (...)
+
+And start it
 
 .. parsed-literal::
    # cd |haka_install_path|/share/haka/sample/tutorial/filter/
-   # haka -c httpmodif.conf --no-daemon
+   # haka -c dameon.conf --no-daemon
 
 Going further
 -------------
