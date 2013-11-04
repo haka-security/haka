@@ -231,13 +231,17 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, boo
 		return NULL;
 	}
 
+	if (len == 0) {
+		return NULL;
+	}
+
 	begin = vbuffer_get(buf, &off, true);
 	if (!begin) {
 		error(L"invalid offset");
 		return NULL;
 	}
 
-	if (begin == buf) {
+	if (begin == buf && off == 0) {
 		iter = vbuffer_split_force(begin, off);
 	}
 	else {
@@ -250,65 +254,44 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, boo
 
 	if (mark_modified) vbuffer_mark_modified(begin);
 
-	if (len == 0) {
-		if (iter) {
-			iter = vbuffer_split_force(iter, 0);
-		}
-		else {
-			iter = vbuffer_split_force(begin, begin->length);
+	end = NULL;
+
+	if (len != ALL) {
+		while (iter) {
+			if (len < iter->length) {
+				end = vbuffer_split(iter, len);
+				if (!iter && check_error()) {
+					return NULL;
+				}
+
+				iter->next = NULL;
+				break;
+			}
+
+			len -= iter->length;
+			iter = iter->next;
 		}
 
-		if (!iter && check_error()) {
+		if (!iter && len > 0) {
+			error(L"invalid size");
 			return NULL;
 		}
 
+		iter = begin->next;
+		begin->next = end;
 		assert(iter != buf);
 		if (mark_modified) vbuffer_mark_modified(iter);
 		return iter;
 	}
 	else {
-		end = NULL;
-
-		if (len != ALL) {
-			while (iter) {
-				if (len < iter->length) {
-					end = vbuffer_split(iter, len);
-					if (!iter && check_error()) {
-						return NULL;
-					}
-
-					iter->next = NULL;
-					break;
-				}
-
-				len -= iter->length;
-				iter = iter->next;
-			}
-
-			if (!iter) {
-				error(L"invalid size");
-				return NULL;
-			}
-
-			iter = begin->next;
-			begin->next = end;
-			assert(iter != buf);
-			if (mark_modified) vbuffer_mark_modified(iter);
-			return iter;
+		if (!iter) {
+			iter = vbuffer_split_force(begin, begin->length);
 		}
-		else {
-			if (!iter) {
-				iter = vbuffer_split_force(begin, begin->length);
-			}
-			else if (off == 0) {
-				iter = vbuffer_split_force(iter, 0);
-			}
 
-			begin->next = NULL;
-			assert(iter != buf);
-			if (mark_modified) vbuffer_mark_modified(iter);
-			return iter;
-		}
+		begin->next = NULL;
+		assert(iter != buf);
+		if (mark_modified) vbuffer_mark_modified(iter);
+		return iter;
 	}
 }
 
