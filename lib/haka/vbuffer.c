@@ -270,8 +270,6 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, boo
 		end = NULL;
 
 		if (len != ALL) {
-			assert(iter);
-
 			while (iter) {
 				if (len < iter->length) {
 					end = vbuffer_split(iter, len);
@@ -285,6 +283,11 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, boo
 
 				len -= iter->length;
 				iter = iter->next;
+			}
+
+			if (!iter) {
+				error(L"invalid size");
+				return NULL;
 			}
 
 			iter = begin->next;
