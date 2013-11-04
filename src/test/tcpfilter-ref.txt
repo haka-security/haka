@@ -1,4 +1,6 @@
-info Filter: This is not TCP port 80
-info Filter: This is not TCP port 80
-info Filter: This is not TCP port 80
-info Filter: This is not TCP port 80
+error core: unknown field 'tcp'
+error core: unknown field 'tcp'
+error core: unknown field 'tcp'
+error core: unknown field 'tcp'
+error core: unknown field 'tcp'
+error core: unknown field 'tcp'
