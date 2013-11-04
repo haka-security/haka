@@ -41,7 +41,7 @@ safe_update = haka.rule_group {
 	name = 'safe_update',
 	-- Initialization
 	init = function (self, http)
-		haka.log.info("Filter", "Domain requested: %s", http.request.headers['Host'])
+		haka.log("Filter", "Domain requested: %s", http.request.headers['Host'])
 	end,
 
 	-- Continue is called after evaluation of each security rule
@@ -63,7 +63,7 @@ safe_update:rule {
 	eval = function (self, http)
 		for _, dom in ipairs(update_domains) do
 			if string.find(http.request.headers['Host'], dom) then
-				haka.log.info("Filter", "Update domain: go for it", dom)
+				haka.log("Filter", "Update domain: go for it", dom)
 				return true
 			end
 		end
@@ -78,23 +78,29 @@ safe_update:rule {
 	eval = function (self, http)
 		-- Dump the request helps to debug
 		http.request:dump()
-		local UA = http.request.headers["User-Agent"]
+		local UA = http.request.headers["User-Agent"] or "No User-Agent header"
 		haka.log("Filter", "UA detected: %s", UA)
-		local version = tonumber(string.sub(UA, string.find(UA, "Firefox/")+8))
-		haka.log("Filter", "Firefox version: %d",version)
-		if version < last_firefox_version then
-			haka.log.info("Filter", "Firefox is outdated, please upgrade")
-			-- We modify some fields of the response on the fly
-			-- We redirect the browser to a safe place
-			-- where updates will be made
-			http.response.status = "307"
-			http.response.reason = "Moved Temporarily"
-			http.response.headers["Content-Length"] = "0"
-			http.response.headers["Location"] = firefox_web_site
-			http.response.headers["Server"] = "A patchy server"
-			http.response.headers["Connection"] = "Close"
-			http.response.headers["Proxy-Connection"] = "Close"
-			http.response:dump()
+		local FF_UA = (string.find(UA, "Firefox/"))
+		-- If FF_UA is nil, the browser is not Firefx
+		if FF_UA then
+			local version = tonumber(string.sub(UA, FF_UA+8))
+			haka.log("Filter", "Firefox version: %d",version)
+			if version < last_firefox_version then
+				haka.log("Filter", "Firefox is outdated, please upgrade")
+				-- We modify some fields of the response on the fly
+				-- We redirect the browser to a safe place
+				-- where updates will be made
+				http.response.status = "307"
+				http.response.reason = "Moved Temporarily"
+				http.response.headers["Content-Length"] = "0"
+				http.response.headers["Location"] = firefox_web_site
+				http.response.headers["Server"] = "A patchy server"
+				http.response.headers["Connection"] = "Close"
+				http.response.headers["Proxy-Connection"] = "Close"
+				http.response:dump()
+			end
+		else
+			haka.log("Filter", "Unknown or absent User-Agent")
 		end
 	end
 }
