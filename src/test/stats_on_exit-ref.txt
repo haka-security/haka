@@ -39,9 +39,8 @@ select columns 'ip, 'method' and 'ressource' from the stats table
 | method | ip           | ressource |
 | GET   | 192.168.10.1 | / |
 | TRACE | 192.168.10.1 | / |
-... -3 remaining entries
 
 list of source ip using 'Mozilla/2.0' as user-gent'
-... -5 remaining entries
 
 top ten of http ressources that generated the most 404 status error
+
