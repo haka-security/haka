@@ -99,7 +99,7 @@ function table_mt:dump(nb)
 		print("| " .. table.concat(content, " | ") .. " |")
 		iter = iter -1
 	end
-	if #self ~= nb then
+	if #self > nb then
 		print("... " .. tostring(#self - nb) .. " remaining entries")
 	end
 end

@@ -20,4 +20,5 @@ haka.on_exit(function ()
 	print("top ten of http ressources that generated the most 404 status error")
 	stats:select_table({'ressource', 'status'},
 	   function(elem) return elem.status == '404' end):top('ressource')
+	print("")
 end)
