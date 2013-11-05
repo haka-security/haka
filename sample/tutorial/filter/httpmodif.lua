@@ -19,11 +19,11 @@ local firefox_web_site = 'http://www.mozilla.org'
 local update_domains = {
 	'mozilla.org',
 	'mozilla.net',
-	-- You can extend this list to other domains
+	-- You can extend this list with other domains
 }
 
 -------------------------------------
--- Security rule loading http dissector
+-- Setting http dissector
 -------------------------------------
 haka.rule {
 	hooks = { 'tcp-connection-new' },
@@ -41,11 +41,14 @@ safe_update = haka.rule_group {
 	name = 'safe_update',
 	-- Initialization
 	init = function (self, http)
-		haka.log("Filter", "Domain requested: %s", http.request.headers['Host'])
+		local host = http.request.headers['Host']
+		if host then
+			haka.log("Filter", "Domain requested: %s", host)
+		end
 	end,
 
 	-- Continue is called after evaluation of each security rule
-	-- the ret parameter decide wether to read next rule or skip
+	-- the ret parameter decide whether to read next rule or skip
 	-- the evaluation of the other rules in the group
 	continue = function (self, http, ret)
 		return not ret
@@ -55,15 +58,17 @@ safe_update = haka.rule_group {
 -------------------------------------
 -- Security rules
 -------------------------------------
+
 -- This rule allow access to update sites
 -- whatever the User-Agent version is
 -- It's a kind of white listing
 safe_update:rule {
 	hooks = { 'http-response' },
 	eval = function (self, http)
+		local host = http.request.headers['Host'] or ''
 		for _, dom in ipairs(update_domains) do
-			if string.find(http.request.headers['Host'], dom) then
-				haka.log("Filter", "Update domain: go for it", dom)
+			if string.find(host, dom) then
+				haka.log("Filter", "Update domain: go for it")
 				return true
 			end
 		end
@@ -81,11 +86,10 @@ safe_update:rule {
 		local UA = http.request.headers["User-Agent"] or "No User-Agent header"
 		haka.log("Filter", "UA detected: %s", UA)
 		local FF_UA = (string.find(UA, "Firefox/"))
-		-- If FF_UA is nil, the browser is not Firefx
+		-- If FF_UA is nil, the browser is not Firefox
 		if FF_UA then
 			local version = tonumber(string.sub(UA, FF_UA+8))
-			haka.log("Filter", "Firefox version: %d",version)
-			if version < last_firefox_version then
+			if not version or version < last_firefox_version then
 				haka.log("Filter", "Firefox is outdated, please upgrade")
 				-- We modify some fields of the response on the fly
 				-- We redirect the browser to a safe place
@@ -100,8 +104,7 @@ safe_update:rule {
 				http.response:dump()
 			end
 		else
-			haka.log("Filter", "Unknown or absent User-Agent")
+			haka.log("Filter", "Unknown or missing User-Agent")
 		end
 	end
 }
-

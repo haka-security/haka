@@ -164,19 +164,15 @@ printed on output, instead of syslogd.
 The filtering will be done according to the .lua configuration file seen
 previously.
 
-You can adapt the IP accordingly and check that packet
-are effectively blocked/accepted. You can also use modify the
-``daemon.conf`` file in order to use the ``tcpfilter.lua`` file.
-
 HTTP filtering
 ^^^^^^^^^^^^^^
-You can filter through all HTTP fields, thanks to http module:
+You can filter through all HTTP fields thanks to http module:
 
 .. literalinclude:: ../../../sample/tutorial/filter/httpfilter.lua
    :language: lua
    :tab-width: 4
 
-Modify the ``dameon.conf`` in order to load the httpfilter lua
+Modify the ``dameon.conf`` in order to load the ``httpfilter.lua``
 configuration file:
 
 .. code-block:: lua
@@ -196,19 +192,17 @@ And start it
 Modifying HTTP responses
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Haka can also alter data sent by webserver. We want to be able to
-filter all obsolete Web browser by their User-Agent. More, we want
-to force these obsolete browsers to go only to update websites.
+filter all obsolete Web browser based on the User-Agent header.
+More, we want to force these obsolete browsers to go only to update websites.
 Haka will check User-Agent, and if the User-Agent is considered
-obsolete, it will change HTTP response to redirect to a safer
-site (web site of the browser). The interesting part is that in
-no place an IP address is used. So, even if browser uses CDN to
-update, it will work.
+obsolete, it will change HTTP response to redirect request to a safer
+site (web site of the browser).
 
 .. literalinclude:: ../../../sample/tutorial/filter/httpmodif.lua
    :language: lua
    :tab-width: 4
 
-Modify the ``dameon.conf`` in order to load the httpmodif lua
+Modify the ``dameon.conf`` in order to load the ``httpmodif.lua``
 configuration file:
 
 .. code-block:: lua
@@ -223,10 +217,3 @@ And start it
 .. parsed-literal::
    # cd |haka_install_path|/share/haka/sample/tutorial/filter/
    # haka -c dameon.conf --no-daemon
-
-Going further
--------------
-This sample could go further. We can filter for any fields, and
-modify any part of the response. We can extend the browser list
-to match all of major browser version (IE, Chrome, Opera, Safari
-and so on).

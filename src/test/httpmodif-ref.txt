@@ -17,7 +17,6 @@ info Filter: Domain requested: server
  uri = /
  version = HTTP/1.1
 info Filter: UA detected: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0
-info Filter: Firefox version: 24
 debug tcp-connection: closing connection 192.168.20.99:48230 -> 192.168.20.1:80
 debug tcp-connection: opening connection 192.168.20.99:48231 -> 192.168.20.1:80
 info Filter: Domain requested: server
@@ -34,7 +33,6 @@ info Filter: Domain requested: server
  uri = /
  version = HTTP/1.1
 info Filter: UA detected: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/22.0
-info Filter: Firefox version: 22
 info Filter: Firefox is outdated, please upgrade
  _headers_order
    1 = Date

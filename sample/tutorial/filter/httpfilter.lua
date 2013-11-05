@@ -15,14 +15,13 @@ haka.rule {
 			pkt.next_dissector = 'http'
 		else
 			haka.log("Filter", "Dropping TCP connection: tcp dstpport=%d", pkt.tcp.dstport)
-			-- The keyword reset() sends a TCP RST packet to 
-			-- both client and server
+			-- Send a TCP RST packet to both sides: client and server
 			pkt:reset()
 		end
 	end
 }
 
---This rule will handle HTTP communication
+--This rule will handle HTTP requests
 haka.rule {
 	hooks = { 'http-request' },
 	eval = function (self, http)

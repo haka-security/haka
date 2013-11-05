@@ -18,8 +18,8 @@ haka.rule {
 			local bad_ip = ipv4.addr('192.168.10.10')
 			if pkt.src == bad_ip then
 				-- We want to block this IP
+				haka.log("Filter", "Filtering IP %s", bad_ip)
 				pkt:drop()
-				haka.log.info("Filter", "Filtering IP %s", bad_ip)
 			end
 			-- All other packets will be accepted
         end

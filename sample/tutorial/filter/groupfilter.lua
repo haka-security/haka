@@ -11,12 +11,12 @@ require('protocol/tcp')
 
 -- Here, we create a group rule
 -- A group have an init function (self explanatory)
--- then a continue function wich tell what to do after each
+-- then a continue function wich tells what to do after each
 -- rule. As written here, it says that if a rule return true, it will 
--- stop the evaluation of other rules. If false, it continue to the next rule.
+-- stop the evaluation of other rules. If false, it continues to the next rule.
 -- The fini function is the last evaluation made by the group.
 -- For this test, it permits us to do a "Default drop" with haka and
--- authorize only packets with rules
+-- authorize only connection to specific ports (ssh and http)
 
 local group = haka.rule_group {
 	-- The hooks tells where this rule is applied
@@ -24,10 +24,10 @@ local group = haka.rule_group {
 	-- other protocol will flow
 	name = "group",
 	init = function (self, pkt)
-		haka.log.debug("filter", "entering packet filtering rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
+		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
 	end,
 	fini = function (self, pkt)
-		haka.log.error("filter", "packet dropped : drop by default")
+		haka.log.error("filter", "Packet dropped : drop by default")
 		pkt:drop()
 	end,
 	continue = function (self, pkt, ret)
@@ -41,10 +41,9 @@ local group = haka.rule_group {
 group:rule {
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
-		-- We want to accept connection to or from
-		-- TCP port 80 (request/response)
+		-- Accept connection to TCP port 80
 		if pkt.dstport == 80 then
-			haka.log("Filter", "Authorizing trafic on port 80")
+			haka.log("Filter", "Authorizing traffic on port 80")
 			return true
 		end
 	end
@@ -53,10 +52,9 @@ group:rule {
 group:rule {
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
-		-- We want to accept connection to or from
-		-- TCP port 22 (request/response)
+		-- Accept connection to TCP port 22
 		if pkt.dstport == 22 then
-			haka.log("Filter", "Authorizing trafic on port 22")
+			haka.log("Filter", "Authorizing traffic on port 22")
 			return true
 		end
 	end
