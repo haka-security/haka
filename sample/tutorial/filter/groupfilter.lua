@@ -6,8 +6,17 @@ require('protocol/ipv4')
 require('protocol/tcp')
 
 ------------------------------------
--- Security group rule
+-- Security group
 ------------------------------------
+
+-- Here, we create a group rule
+-- A group have an init function (self explanatory)
+-- then a continue function wich tell what to do after each
+-- rule. As written here, it says that if a rule return true, it will 
+-- stop the evaluation of other rules. If false, it continue to the next rule.
+-- The fini function is the last evaluation made by the group.
+-- For this test, it permits us to do a "Default drop" with haka and
+-- authorize only packets with rules
 
 local group = haka.rule_group {
 	-- The hooks tells where this rule is applied
@@ -26,6 +35,9 @@ local group = haka.rule_group {
 	end
 }
 
+------------------------------------
+-- Security group rule
+------------------------------------
 group:rule {
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
