@@ -12,12 +12,12 @@ local probing = { "^[\"'`´’‘;]", "[\"'`´’‘;]$" }
 
 local sql_keywords = {
 	'select', 'insert', 'update', 'delete', 'union',
-	-- you can extend this list with other sql keywords
+	-- You can extend this list with other sql keywords
 }
 
 local sql_functions = {
 	'ascii', 'char', 'length', 'concat', 'substring',
-	-- you can extend this list with other sql functions
+	-- You can extend this list with other sql functions
 }
 
 ------------------------------------
@@ -26,7 +26,7 @@ local sql_functions = {
 
 local safe_ressources = {
 	'/foo/bar/safepage.php', '/action.php',
-	-- you can extend this list with other white list ressources
+	-- You can extend this list with other white list ressources
 }
 
 ------------------------------------
@@ -35,11 +35,11 @@ local safe_ressources = {
 
 sqli = haka.rule_group {
 	name = 'sqli',
-	-- initialisation
+	-- Initialisation
 	init = function (self, http)
 		dump_request(http)
 
-		-- another way to split cookie header value and query's arguments
+		-- Another way to split cookie header value and query's arguments
 		http.sqli = {
 			cookies = {
 				value = http.request:split_cookies(),
@@ -52,9 +52,9 @@ sqli = haka.rule_group {
 		}
 	end,
 
-	-- continue will be executed after evaluation of
+	-- Continue will be executed after evaluation of
 	-- each security rule.
-	-- here we check the return value ret to decide
+	-- Here we check the return value ret to decide
 	-- if we skip the evaluation of the rest of the
 	-- rule.
 	continue = function (self, http, ret)
@@ -69,10 +69,10 @@ sqli = haka.rule_group {
 sqli:rule {
 	hooks = { 'http-request' },
 	eval = function (self, http)
-		-- split uri into subparts and normalize it
+		-- Split uri into subparts and normalize it
 		local splitted_uri = http.request:split_uri():normalize()
 		for	_, res in ipairs(safe_ressources) do
-			-- skip evaluation if the normalized path (without dot-segments)
+			-- Skip evaluation if the normalized path (without dot-segments)
 			-- is in the list of safe ressources
 			if splitted_uri.path == res then
 				haka.log.warning("sqli", "    skip SQLi detection (white list rule)")

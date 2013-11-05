@@ -18,7 +18,7 @@ haka.rule {
 		local score = 0
 		local uri = http.request.uri
 
-		-- apply all decoding functions on uri (percent-decode, uncomments, etc.)
+		-- Apply all decoding functions on uri (percent-decode, uncomments, etc.)
 		uri = decode_all(uri)
 		for _, key in ipairs(keywords) do
 			if uri:find(key) then

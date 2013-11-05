@@ -8,7 +8,7 @@ require('protocol/http')
 
 local tbl = require('tblutils')
 
--- each entry of stats table will store
+-- Each entry of stats table will store
 -- info about http request/response (method,
 -- host, ressource, status, etc.)
 stats = tbl.new()

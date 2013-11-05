@@ -51,7 +51,7 @@ local function print_columns(tab)
 	return max
 end
 
--- metatable for storing 'sql-like' table and
+-- Metatable for storing 'sql-like' table and
 -- methods.  Intended to be used to store 'stats'
 -- data and to provide methods to request them
 

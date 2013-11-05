@@ -1,7 +1,7 @@
 
 require('stats')
 
--- run some stats at exit on collected
+-- Run some stats at exit on collected
 -- http info
 haka.on_exit(function ()
 	print("top 10 (by default) of useragent header")

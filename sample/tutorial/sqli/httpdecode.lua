@@ -3,22 +3,22 @@
 -- Transformation Methods
 ------------------------------------
 
--- remove sequences between /* */ comments
+-- Remove sequences between /* */ comments
 function uncomments(uri)
 	if uri then return string.gsub(uri, '/%*.-%*/', '') end
 end
 
--- remove null byte
+-- Remove null byte
 function nonulls(uri)
 	if uri then return string.gsub(uri, "%z", '') end
 end
 
--- compress white space
+-- Compress white space
 function nospaces(uri)
 	if uri then return string.gsub(uri, "%s+", " ") end
 end
 
--- percent decode
+-- Percent decode
 function decode(uri)
 	if uri then
 		uri = string.gsub (uri, '+', ' ')
@@ -28,12 +28,12 @@ function decode(uri)
 	end
 end
 
--- lower case
+-- Lower case
 lower = function(uri)
 	if uri then return uri:lower() end
 end
 
--- apply all transformation methods
+-- Apply all transformation methods
 decode_all = function(uri)
 	if uri then
 		return lower(uncomments(nospaces(nonulls(decode(uri)))))
