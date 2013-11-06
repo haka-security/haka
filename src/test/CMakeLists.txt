@@ -19,4 +19,5 @@ TEST_PCAP(core ipfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/
 TEST_PCAP(core groupfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/groupfilter.lua)
 TEST_PCAP(core httpfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/httpfilter.lua)
 TEST_PCAP(core httpmodif CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/httpmodif.lua)
+TEST_PCAP(core tcpfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/tcpfilter.lua)
 TEST_PCAP(core stats_on_exit CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/stats/stats_on_exit.lua)
