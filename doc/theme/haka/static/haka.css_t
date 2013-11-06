@@ -1,6 +1,8 @@
 
 @import url("default.css");
 
+@import url("ansi.css");
+
 th {
 	background-color: #FFFFFF;
 }

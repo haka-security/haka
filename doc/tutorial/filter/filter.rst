@@ -64,66 +64,75 @@ to get more details about errors. The debugger mode is available through the ``-
 
 When the debugger starts, it automatically breaks at the first lua line:
 
-.. parsed-literal::
+.. ansi-block::
+    :string_escape:
 
-   info  debugger: lua debugger activated
-   5=> require('protocol/ipv4')
-   debug>
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdebugger:\x1b[0m \x1b[0mlua debugger activated
+    \x1b[0m\x1b[31m   5\x1b[1m=> \x1b[0mrequire('protocol/ipv4')
+    \x1b[32mdebug\x1b[1m>
+
 
 At the debug prompt, type ``continue`` to immediately break into the erroneous code. When a lua error code occurs, the debugger breaks and outputs the error and a backtrace.
 
-.. parsed-literal::
-   ...
-   entering debugger: unknown field 'destport'
-   Backtrace
-   =>0    [C]: in function '(null)'
-    #1    [C]: in function '(null)'
-    #2    [C]: in function '__index'
-    #3    tcpfilter.lua:21: in function 'eval'
-    #4    /opt/haka/share/haka/core/rule.bc:0: in the main chunk
-    #5    /opt/haka/share/haka/core/rule.bc:0: in the main chunk
-    #6    /opt/haka/share/haka/core/rule.bc:0: in the main chunk
-    #7    [C]: in function 'xpcall'
-    #8    /opt/haka/share/haka/core/rule.bc:0: in the main chunk
-   ...
+.. ansi-block::
+    :string_escape:
+
+    \x1b[32mdebug\x1b[1m>  \x1b[0mcontinue
+    ...
+    \x1b[0m\x1b[32mentering debugger\x1b[0m: unknown field 'destport'
+    Backtrace
+    \x1b[31m\x1b[1m=>\x1b[0m0    \x1b[36m[C]\x1b[0m: in function '\x1b[35m(null)\x1b[0m'
+     #1    \x1b[36m[C]\x1b[0m: in function '\x1b[35m(null)\x1b[0m'
+     #2    \x1b[36m[C]\x1b[0m: in function '\x1b[35m__index\x1b[0m'
+     #3    \x1b[36mtcpfilter.lua:21\x1b[0m: in function '\x1b[35meval\x1b[0m'
+     #4    \x1b[36m/opt/haka/share/haka/core/rule.bc:0\x1b[0m: in the main chunk
+     #5    \x1b[36m/opt/haka/share/haka/core/rule.bc:0\x1b[0m: in the main chunk
+     #6    \x1b[36m/opt/haka/share/haka/core/rule.bc:0\x1b[0m: in the main chunk
+     #7    \x1b[36m[C]\x1b[0m: in function '\x1b[35mxpcall\x1b[0m'
+     #8    \x1b[36m/opt/haka/share/haka/core/rule.bc:0\x1b[0m: in the main chunk
+    ...
 
 As we are interested in debugging lua code, we skip the first frames and jump directly to the frame #3 (type ``frame 3``). To get the line number that generated the error, we simply list the lua source code using the ``list`` command.
 
-.. parsed-literal::
+.. ansi-block::
+    :string_escape:
 
-    16:  hooks = { 'tcp-up' },
-    17:      eval = function (self, pkt)
-    18:          -- The next line will generate a lua error:
-    19:          -- there is no 'destport' field. replace 'destport'
-    20:          -- by 'dstport'.
-    21=>         if pkt.destport == 80 or pkt.srcport == 80 then
-    22:              haka.log("Filter", "Authorizing trafic on port 80")
-    23:          else
-    24:              haka.log("Filter", "Trafic not authorized on port %d", pkt.dstport)
-    25:              pkt:drop()
-    26:          end
-
+    \x1b[32mdebug\x1b[1m>  \x1b[0mlist
+    \x1b[33m  16:  \x1b[0mhooks = { 'tcp-up' },
+    \x1b[33m  17:  \x1b[0m    eval = function (self, pkt)
+    \x1b[33m  18:  \x1b[0m        -- The next line will generate a lua error:
+    \x1b[33m  19:  \x1b[0m        -- there is no 'destport' field. replace 'destport'
+    \x1b[33m  20:  \x1b[0m        -- by 'dstport'.
+    \x1b[31m  21\x1b[1m=> \x1b[0m        if pkt.destport == 80 or pkt.srcport == 80 then
+    \x1b[33m  22:  \x1b[0m            haka.log("Filter", "Authorizing trafic on port 80")
+    \x1b[33m  23:  \x1b[0m        else
+    \x1b[33m  24:  \x1b[0m            haka.log("Filter", "Trafic not authorized on port %d", pkt.dstport)
+    \x1b[33m  25:  \x1b[0m            pkt:drop()
+    \x1b[33m  26:  \x1b[0m        end
 
 Printing the `pkt` table (``print pkt``) will show that we misspelled the `dstport` field.
 
-.. parsed-literal::
-  #1    userdata tcp {
-          ...
-          checksum : 417
-          res : 0
-          next_dissector : "tcp-connection"
-          srcport : 37542
-          payload : userdata tcp_payload
-          ip : userdata ipv4 {
-                ...
-          }
-          flags : userdata tcp_flags {
+.. ansi-block::
+    :string_escape:
+
+    \x1b[32mdebug\x1b[1m>  \x1b[0mprint pkt
+      #1  \x1b[34muserdata\x1b[0m tcp {
               ...
-          }
-          ack_seq : 0
-          seq : 3827050607
-          dstport : 80
-          hdr_len : 40
+            \x1b[34mchecksum\x1b[0m : 417
+            \x1b[34mres\x1b[0m : 0
+            \x1b[34mnext_dissector\x1b[0m : \x1b[35m"tcp-connection"\x1b[0m
+            \x1b[34msrcport\x1b[0m : 37542
+            \x1b[34mpayload\x1b[0m : \x1b[35muserdata\x1b[0m tcp_payload
+            \x1b[34mip\x1b[0m : \x1b[36muserdata\x1b[0m ipv4 {
+              ...
+            }
+            \x1b[34mflags\x1b[0m : \x1b[36muserdata\x1b[0m tcp_flags {
+              ...
+            }
+            \x1b[34mack_seq\x1b[0m : 0
+            \x1b[34mseq\x1b[0m : 3827050607
+            \x1b[34mdstport\x1b[0m : 80
+            \x1b[34mhdr_len\x1b[0m : 40
         }
 
 Press CTRL^C to quit or type ``help`` to get the list of available commands.
@@ -154,7 +163,7 @@ This is the configuration of the daemon:
    :tab-width: 4
 
 In order to start haka, you have to be root. The ``--no-daemon`` option
-won't send haka daemon on background. Plus, all logs messages are 
+won't send haka daemon on background. Plus, all logs messages are
 printed on output, instead of syslogd.
 
 .. parsed-literal::
