@@ -7,7 +7,7 @@ warn tcp-connection: retransmit packet (ignored)
 debug tcp-connection: closing connection 192.168.10.1:50693 -> 192.168.20.1:80
 debug tcp-connection: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
 warn tcp-connection: retransmit packet (ignored)
-info alert: id = 1
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -20,7 +20,7 @@ info alert: id = 1
 	}
 warn tcp-connection: retransmit packet (ignored)
 debug tcp-connection: closing connection 192.168.10.1:50694 -> 192.168.20.1:80
-info alert: id = 2
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -31,7 +31,7 @@ info alert: id = 2
 		address: 192.168.10.1
 		service: tcp/50694
 	}
-info alert: id = 3
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -44,7 +44,7 @@ info alert: id = 3
 	}
 debug tcp-connection: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
 debug tcp-connection: closing connection 192.168.10.1:50695 -> 192.168.20.1:80
-info alert: id = 4
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -55,7 +55,7 @@ info alert: id = 4
 		address: 192.168.20.1
 		service: tcp/80
 	}
-info alert: id = 5
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -66,7 +66,7 @@ info alert: id = 5
 		address: 192.168.10.1
 		service: tcp/50694
 	}
-info alert: id = 6
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -78,7 +78,7 @@ info alert: id = 6
 		service: tcp/50693
 	}
 debug tcp-connection: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
-info alert: id = 7
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -92,7 +92,7 @@ info alert: id = 7
 warn tcp-connection: retransmit packet (ignored)
 warn tcp-connection: retransmit packet (ignored)
 warn tcp-connection: retransmit packet (ignored)
-info alert: id = 8
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {

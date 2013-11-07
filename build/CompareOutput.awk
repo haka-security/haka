@@ -37,12 +37,21 @@ $0 ~ /^stack traceback:$/ {
 	next;
 }
 
-$0 ~ /^info alert/ {
-	alert = 1
+$0 ~ /^info alert: update id = / {
+	alert = 1;
+	print($1 " " $2 " " $3 " " $4 " = <>");
+	next;
+}
+
+$0 ~ /^info alert:/ {
+	alert = 1;
+	print($1 " " $2 " " $3 " = <>");
+	next;
 }
 
 $0 ~ /^\ttime = / {
-	if (!alert) next;
+	if (!alert) print;
+	next;
 }
 
 $0 ~ /^[^ \t]/ {

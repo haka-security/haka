@@ -2,7 +2,7 @@ debug tcp-connection: opening connection 192.168.10.1:52110 -> 192.168.20.1:443
 debug filter: entering packet filtering rules : 52110 --> 443
 error filter: packet dropped : drop by default
 debug tcp-connection: dropping connection 192.168.10.1:52110 -> 192.168.20.1:443
-info alert: id = 1
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {

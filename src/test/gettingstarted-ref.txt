@@ -3,7 +3,7 @@ warn filter: Traffic on HTTP port from 192.168.10.1
 debug tcp-connection: closing connection 192.168.10.1:50683 -> 192.168.20.1:80
 error filter: Bad TCP checksum
 error filter: Bad TCP checksum
-info alert: id = 1
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -14,7 +14,7 @@ info alert: id = 1
 		address: 192.168.20.1
 		service: tcp/0
 	}
-info alert: id = 2
+info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
