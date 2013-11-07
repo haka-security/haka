@@ -44,7 +44,7 @@ modification or deletion of packets:
 Interactive rule debugging
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Hereafter, a second lua script file allowing to filter tcp packets based
-on destination port.
+on destination port.AAAAAAAAAAAAA
 
 .. literalinclude:: ../../../sample/tutorial/filter/tcpfilter.lua
    :language: lua
@@ -116,23 +116,23 @@ Printing the `pkt` table (``print pkt``) will show that we misspelled the `dstpo
     :string_escape:
 
     \x1b[32mdebug\x1b[1m>  \x1b[0mprint pkt
-      #1  \x1b[34muserdata\x1b[0m tcp {
+      #1  \x1b[34;1muserdata\x1b[0m tcp {
               ...
-            \x1b[34mchecksum\x1b[0m : 417
-            \x1b[34mres\x1b[0m : 0
-            \x1b[34mnext_dissector\x1b[0m : \x1b[35m"tcp-connection"\x1b[0m
-            \x1b[34msrcport\x1b[0m : 37542
-            \x1b[34mpayload\x1b[0m : \x1b[35muserdata\x1b[0m tcp_payload
-            \x1b[34mip\x1b[0m : \x1b[36muserdata\x1b[0m ipv4 {
-              ...
-            }
-            \x1b[34mflags\x1b[0m : \x1b[36muserdata\x1b[0m tcp_flags {
+            \x1b[34;1mchecksum\x1b[0m : 417
+            \x1b[34;1mres\x1b[0m : 0
+            \x1b[34;1mnext_dissector\x1b[0m : \x1b[35;1m"tcp-connection"\x1b[0m
+            \x1b[34;1msrcport\x1b[0m : 37542
+            \x1b[34;1mpayload\x1b[0m : \x1b[35;1muserdata\x1b[0m tcp_payload
+            \x1b[34;1mip\x1b[0m : \x1b[36;1muserdata\x1b[0m ipv4 {
               ...
             }
-            \x1b[34mack_seq\x1b[0m : 0
-            \x1b[34mseq\x1b[0m : 3827050607
-            \x1b[34mdstport\x1b[0m : 80
-            \x1b[34mhdr_len\x1b[0m : 40
+            \x1b[34;1mflags\x1b[0m : \x1b[36;1muserdata\x1b[0m tcp_flags {
+              ...
+            }
+            \x1b[34;1mack_seq\x1b[0m : 0
+            \x1b[34;1mseq\x1b[0m : 3827050607
+            \x1b[34;1mdstport\x1b[0m : 80
+            \x1b[34;1mhdr_len\x1b[0m : 40
         }
 
 Press CTRL^C to quit or type ``help`` to get the list of available commands.
