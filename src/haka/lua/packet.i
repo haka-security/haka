@@ -104,16 +104,7 @@ size_t packet_length_get(struct packet *pkt) {
 }
 
 struct time_lua *packet_timestamp_get(struct packet *pkt) {
-	struct time_lua *t = malloc(sizeof(struct time_lua));
-	if (!t) {
-		error(L"memory error");
-		return NULL;
-	}
-
-	const time_us ts = packet_timestamp(pkt);
-	t->seconds = ts / 1000000;
-	t->micro_seconds = ts % 1000000;
-	return t;
+	return mk_lua_time(packet_timestamp(pkt));
 }
 
 const char *packet_dissector_get(struct packet *pkt) {

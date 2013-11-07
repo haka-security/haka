@@ -124,6 +124,19 @@ void thread_testcancel()
 
 
 /*
+ * Atomic counter (64 bits)
+ */
+
+void atomic64_init(atomic64_t *v, uint64 x)
+{
+	atomic64_set(v, x);
+}
+
+void atomic64_destroy(atomic64_t *v)
+{
+}
+
+/*
  * Mutex
  */
 

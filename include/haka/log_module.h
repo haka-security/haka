@@ -22,4 +22,3 @@ struct log_module {
 struct logger *log_module_logger(struct module *module, struct parameters *args);
 
 #endif /* _HAKA_LOG_MODULE_H */
-

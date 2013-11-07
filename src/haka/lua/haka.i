@@ -1,5 +1,7 @@
 %module haka
 
+%include "time.si"
+
 %{
 #include <stdint.h>
 #include <wchar.h>
@@ -10,16 +12,29 @@
 #include <haka/thread.h>
 #include <haka/module.h>
 #include <haka/stream.h>
+#include <haka/alert.h>
 #include <haka/config.h>
 
 char *module_prefix = HAKA_MODULE_PREFIX;
 char *module_suffix = HAKA_MODULE_SUFFIX;
 
+struct time_lua *mk_lua_time(time_us ts)
+{
+	struct time_lua *t = malloc(sizeof(struct time_lua));
+	if (!t) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	t->seconds = ts / 1000000;
+	t->micro_seconds = ts % 1000000;
+	return t;
+}
+
 %}
 
 %include "haka/lua/swig.si"
 %include "haka/lua/stream.si"
-%include "time.si"
 
 %nodefaultctor;
 %nodefaultdtor;
@@ -38,12 +53,44 @@ struct stream {
 };
 BASIC_STREAM(stream)
 
+%rename(time) time_lua;
 struct time_lua {
 	int    seconds;
 	int    micro_seconds;
 
-	~time_lua() {
-		free($self);
+	%extend {
+		time_lua() {
+			return mk_lua_time(time_gettimestamp());
+		}
+
+		~time_lua() {
+			free($self);
+		}
+
+		double toseconds()
+		{
+			return ((double)$self->seconds) + $self->micro_seconds / 1000000.;
+		}
+
+		temporary_string __tostring()
+		{
+			time_us ts;
+			char *ret = malloc(TIME_BUFSIZE);
+			if (!ret) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			ts = $self->seconds*1000000LL + $self->micro_seconds;
+
+			if (!time_tostring(ts, ret)) {
+				assert(check_error());
+				free(ret);
+				return NULL;
+			}
+
+			return ret;
+		}
 	}
 };
 

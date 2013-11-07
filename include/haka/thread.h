@@ -40,7 +40,7 @@ bool     thread_setcanceltype(enum thread_cancel_t type);
 void     thread_testcancel();
 
 
-/* Atomic counter */
+/* Atomic counter (32 bits) */
 
 typedef volatile uint32 atomic_t;
 
@@ -60,6 +60,34 @@ INLINE uint32 atomic_get(atomic_t *v)
 }
 
 INLINE void atomic_set(atomic_t *v, uint32 x)
+{
+	*v = x;
+}
+
+
+/* Atomic counter (64 bits) */
+
+typedef volatile uint64 atomic64_t;
+
+void atomic64_init(atomic64_t *v, uint64 x);
+void atomic64_destroy(atomic64_t *v);
+
+INLINE uint64 atomic64_inc(atomic64_t *v)
+{
+	return __sync_add_and_fetch(v, 1);
+}
+
+INLINE uint64 atomic64_dec(atomic64_t *v)
+{
+	return __sync_sub_and_fetch(v, 1);
+}
+
+INLINE uint64 atomic64_get(atomic64_t *v)
+{
+	return *v;
+}
+
+INLINE void atomic64_set(atomic64_t *v, uint64 x)
 {
 	*v = x;
 }
