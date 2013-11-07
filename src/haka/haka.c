@@ -9,6 +9,8 @@
 #include <signal.h>
 
 #include <haka/error.h>
+#include <haka/alert.h>
+#include <haka/alert_module.h>
 #include <haka/version.h>
 #include <haka/lua/state.h>
 #include <luadebug/debugger.h>
@@ -167,6 +169,42 @@ int read_configuration(const char *file)
 			}
 
 			module_release(logger_module);
+		}
+	}
+
+	/* Alert module */
+	{
+		const char *module;
+
+		parameters_open_section(config, "alert");
+		module = parameters_get_string(config, "module", NULL);
+		if (module) {
+			struct alerter *alerter;
+
+			struct module *alerter_module = module_load(module, config);
+			if (!alerter_module) {
+				message(HAKA_LOG_FATAL, L"core", L"cannot load alert module");
+				clean_exit();
+				return 1;
+			}
+
+			alerter = alert_module_alerter(alerter_module, config);
+			if (!alerter) {
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot initialize alert module: %s", clear_error());
+				module_release(alerter_module);
+				clean_exit();
+				return 1;
+			}
+
+			if (!add_alerter(alerter)) {
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot install alert module: %s", clear_error());
+				alerter->destroy(alerter);
+				module_release(alerter_module);
+				clean_exit();
+				return 1;
+			}
+
+			module_release(alerter_module);
 		}
 	}
 

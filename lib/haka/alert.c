@@ -54,7 +54,7 @@ bool add_alerter(struct alerter *alerter)
 	assert(alerter);
 
 	rwlock_writelock(&alert_module_lock);
-	list_insert_before(alerter, alerter, &alerters, NULL);
+	list_insert_before(alerter, alerters, &alerters, NULL);
 	rwlock_unlock(&alert_module_lock);
 
 	return true;
