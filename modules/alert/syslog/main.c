@@ -27,12 +27,7 @@ static void cleanup()
 
 static bool post(uint64 id, time_us time, struct alert *alert, bool update)
 {
-	if (update) {
-		syslog(LOG_NOTICE, "alert update: %ls", alert_tostring(id, time, alert, "", " "));
-	}
-	else {
-		syslog(LOG_NOTICE, "alert: %ls", alert_tostring(id, time, alert, "", " "));
-	}
+	syslog(LOG_NOTICE, "alert: %s%ls", update ? "update " : "", alert_tostring(id, time, alert, "", " "));
 	return true;
 }
 
