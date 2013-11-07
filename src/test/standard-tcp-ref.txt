@@ -2,8 +2,17 @@ debug tcp-connection: opening connection 192.168.10.1:52110 -> 192.168.20.1:443
 debug filter: entering packet filtering rules : 52110 --> 443
 error filter: packet dropped : drop by default
 debug tcp-connection: dropping connection 192.168.10.1:52110 -> 192.168.20.1:443
-error tcp-connection: no connection found
-debug tcp-connection: no connection found 192.168.10.1:52110 -> 192.168.20.1:80
+info alert: id = 1
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.10.1
+		service: tcp/52110
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/80
+	}
 error filter: Xmas attack detected !!!
 error filter: Xmas attack detected !!!
 error filter: Xmas attack detected !!!
