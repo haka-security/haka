@@ -10,6 +10,7 @@
 #include <haka/error.h>
 #include <haka/thread.h>
 #include <haka/log.h>
+#include <haka/alert.h>
 #include <haka/container/list.h>
 #include <luadebug/user.h>
 #include <luadebug/debugger.h>
@@ -294,6 +295,19 @@ void stop_ctl_server()
  * Command code
  */
 
+int redirect_message(int fd, log_level level, const wchar_t *module, const wchar_t *message)
+{
+	if (fd > 0) {
+		if (!ctl_send_int(fd, level) ||
+			!ctl_send_wchars(fd, module) ||
+			!ctl_send_wchars(fd, message)) {
+			clear_error();
+			return false;
+		}
+	}
+	return true;
+}
+
 struct redirect_logger {
 	struct logger    logger;
 	int              fd;
@@ -302,27 +316,18 @@ struct redirect_logger {
 int redirect_logger_message(struct logger *_logger, log_level level, const wchar_t *module, const wchar_t *message)
 {
 	struct redirect_logger *logger = (struct redirect_logger *)_logger;
-
-	if (logger->fd > 0) {
-		if (!ctl_send_int(logger->fd, level) ||
-			!ctl_send_wchars(logger->fd, module) ||
-			!ctl_send_wchars(logger->fd, message)) {
-			clear_error();
-			logger->logger.mark_for_remove = true;
-		}
+	if (!redirect_message(logger->fd, level, module, message)) {
+		logger->logger.mark_for_remove = true;
 	}
-
 	return 1;
 }
 
 void redirect_logger_destroy(struct logger *_logger)
 {
 	struct redirect_logger *logger = (struct redirect_logger *)_logger;
-
 	if (logger->fd > 0) {
 		close(logger->fd);
 	}
-
 	free(logger);
 }
 
@@ -343,6 +348,56 @@ struct redirect_logger *redirect_logger_create(d)
 	return logger;
 }
 
+struct redirect_alerter {
+	struct alerter   alerter;
+	int              fd;
+};
+
+bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, time_us time, struct alert *alert)
+{
+	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
+	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "", "\n\t"))) {
+		alerter->alerter.mark_for_remove = true;
+	}
+	return true;
+}
+
+bool redirect_alerter_update(struct alerter *_alerter, uint64 id, time_us time, struct alert *alert)
+{
+	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
+	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "update ", "\n\t"))) {
+		alerter->alerter.mark_for_remove = true;
+	}
+	return true;
+}
+
+void redirect_alerter_destroy(struct alerter *_alerter)
+{
+	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
+	if (alerter->fd > 0) {
+		close(alerter->fd);
+	}
+	free(alerter);
+}
+
+struct redirect_alerter *redirect_alerter_create(d)
+{
+	struct redirect_alerter *alerter = malloc(sizeof(struct redirect_alerter));
+	if (!alerter) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	list_init(&alerter->alerter);
+	alerter->alerter.alert = redirect_alerter_alert;
+	alerter->alerter.update = redirect_alerter_update;
+	alerter->alerter.destroy = redirect_alerter_destroy;
+	alerter->alerter.mark_for_remove = false;
+	alerter->fd = -1;
+
+	return alerter;
+}
+
 static bool ctl_client_process_command(struct ctl_client_state *state, const char *command)
 {
 	if (strcmp(command, "STATUS") == 0) {
@@ -355,19 +410,25 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 	}
 	else if (strcmp(command, "LOGS") == 0) {
 		struct redirect_logger *logger = redirect_logger_create(state->fd);
-		if (!logger) {
+		struct redirect_alerter *alerter = redirect_alerter_create(state->fd);
+		if (!logger || !alerter) {
 			ctl_send_chars(state->fd, "ERROR");
+			if (logger) logger->logger.destroy(&logger->logger);
+			if (alerter) alerter->alerter.destroy(&alerter->alerter);
 			return true;
 		}
 
-		if (!add_logger(&logger->logger)) {
+		if (!add_logger(&logger->logger) ||
+		    !add_alerter(&alerter->alerter)) {
 			ctl_send_chars(state->fd, "ERROR");
 			logger->logger.destroy(&logger->logger);
+			alerter->alerter.destroy(&alerter->alerter);
 			return true;
 		}
 
 		ctl_send_chars(state->fd, "OK");
 		logger->fd = state->fd;
+		alerter->fd = state->fd;
 		state->fd = -1;
 	}
 	else if (strcmp(command, "LOGLEVEL") == 0) {
