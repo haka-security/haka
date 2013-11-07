@@ -26,7 +26,8 @@ haka.rule {
 			method = {
 				ref = "cve/255-45"
 			},
-			ref = { myalert }
+			sources = haka.alert.address(pkt.src),
+			ref = myalert
 		})
 	end
 }

@@ -245,7 +245,7 @@ struct alert_id *_post(struct alert *_alert)
 	local function check_any(key, value) return value end
 	local function check_string(key, value) return tostring(value) end
 
-	local valid_level =  {
+	local valid_level = {
 		low = true,
 		medium = true,
 		high = true
@@ -277,7 +277,7 @@ struct alert_id *_post(struct alert *_alert)
 
 	local function check_array(key, value)
 		if type(value) ~= 'table' then
-			value = { value }
+			value = { value }
 		end
 		return value
 	end
@@ -309,8 +309,8 @@ struct alert_id *_post(struct alert *_alert)
 	}
 
 	local function check_sources(key, values)
-		if type(values) ~= 'table' then
-			values = { values }
+		if type(values) ~= 'table' or values.type then
+			values = { values }
 		end
 
 		for i, value in ipairs(values) do
