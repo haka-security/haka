@@ -2,6 +2,7 @@
 BEGIN {
 	show = 0
 	trace = 0
+	alert = 0
 }
 
 $0 ~ /^[^ ]+[ ]+[^:]+:[ ]+.*$/ {
@@ -36,8 +37,17 @@ $0 ~ /^stack traceback:$/ {
 	next;
 }
 
+$0 ~ /^info alert/ {
+	alert = 1
+}
+
+$0 ~ /^\ttime = / {
+	if (!alert) next;
+}
+
 $0 ~ /^[^ \t]/ {
 	trace = 0;
+	alert = 0;
 }
 
 {
