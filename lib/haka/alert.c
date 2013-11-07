@@ -136,7 +136,7 @@ static void alert_remove_pass()
 	rwlock_unlock(&alert_module_lock);
 }
 
-uint64 alert(struct alert *alert)
+uint64 alert(const struct alert *alert)
 {
 	const uint64 id = atomic64_inc(&alert_id);
 	struct alerter *iter;
@@ -159,7 +159,7 @@ uint64 alert(struct alert *alert)
 	return id;
 }
 
-bool alert_update(uint64 id, struct alert *alert)
+bool alert_update(uint64 id, const struct alert *alert)
 {
 	bool remove_pass;
 	struct alerter *iter;
@@ -271,7 +271,7 @@ static void alert_nodes_append(wchar_t **buffer, size_t *len, struct alert_node 
 	alert_string_append(buffer, len, L"%s}", indent);
 }
 
-const wchar_t *alert_tostring(uint64 id, time_us time, struct alert *alert, const char *header, const char *indent)
+const wchar_t *alert_tostring(uint64 id, time_us time, const struct alert *alert, const char *header, const char *indent)
 {
 	wchar_t *buffer = alert_string_context();
 	wchar_t *iter = buffer;

@@ -25,18 +25,18 @@ static void cleanup()
 	closelog();
 }
 
-static bool post(uint64 id, time_us time, struct alert *alert, bool update)
+static bool post(uint64 id, time_us time, const struct alert *alert, bool update)
 {
 	syslog(LOG_NOTICE, "alert: %s%ls", update ? "update " : "", alert_tostring(id, time, alert, "", " "));
 	return true;
 }
 
-static bool do_alert(struct alerter *state, uint64 id, time_us time, struct alert *alert)
+static bool do_alert(struct alerter *state, uint64 id, time_us time, const struct alert *alert)
 {
 	return post(id, time, alert, false);
 }
 
-static bool do_alert_update(struct alerter *state, uint64 id, time_us time, struct alert *alert)
+static bool do_alert_update(struct alerter *state, uint64 id, time_us time, const struct alert *alert)
 {
 	return post(id, time, alert, true);
 }

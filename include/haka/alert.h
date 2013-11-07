@@ -54,16 +54,39 @@ struct alert {
 	uint64             *alert_ref;
 };
 
-uint64          alert(struct alert *alert);
-bool            alert_update(uint64 id, struct alert *alert);
-const wchar_t  *alert_tostring(uint64 id, time_us time, struct alert *alert, const char *header, const char *indent);
+#define ALERT(name, src, dst) \
+	struct alert_node *_sources[src+1] = {0}; \
+	struct alert_node *_targets[dst+1] = {0}; \
+	struct alert name = { \
+		sources: src==0 ? NULL : _sources, \
+		targets: dst==0 ? NULL : _targets,
+
+#define ENDALERT };
+
+#define ALERT_NODE(a, name, index, type, ...) \
+	struct alert_node _node##name##index = { type }; \
+	a.name[index] = &_node##name##index; \
+	wchar_t *_node##name##index_list[] = { __VA_ARGS__, NULL }; \
+	_node##name##index.list = _node##name##index_list
+
+#define ALERT_REF(a, ...) \
+	uint64 _alert_ref[] = { __VA_ARGS__, 0 }; \
+	a.alert_ref = _alert_ref
+
+#define ALERT_METHOD_REF(a, ...) \
+	wchar_t *_method_ref[] = { __VA_ARGS__, NULL }; \
+	a.method_ref = _method_ref
+
+uint64          alert(const struct alert *alert);
+bool            alert_update(uint64 id, const struct alert *alert);
+const wchar_t  *alert_tostring(uint64 id, time_us time, const struct alert *alert, const char *header, const char *indent);
 void            enable_stdout_alert(bool enable);
 
 struct alerter {
 	struct list   list;
 	void        (*destroy)(struct alerter *state);
-	bool        (*alert)(struct alerter *state, uint64 id, time_us time, struct alert *alert);
-	bool        (*update)(struct alerter *state, uint64 id, time_us time, struct alert *alert);
+	bool        (*alert)(struct alerter *state, uint64 id, time_us time, const struct alert *alert);
+	bool        (*update)(struct alerter *state, uint64 id, time_us time, const struct alert *alert);
 	bool          mark_for_remove;
 };
 

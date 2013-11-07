@@ -353,7 +353,7 @@ struct redirect_alerter {
 	int              fd;
 };
 
-bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, time_us time, struct alert *alert)
+bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, time_us time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
 	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "", "\n\t"))) {
@@ -362,7 +362,7 @@ bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, time_us time, s
 	return true;
 }
 
-bool redirect_alerter_update(struct alerter *_alerter, uint64 id, time_us time, struct alert *alert)
+bool redirect_alerter_update(struct alerter *_alerter, uint64 id, time_us time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
 	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "update ", "\n\t"))) {

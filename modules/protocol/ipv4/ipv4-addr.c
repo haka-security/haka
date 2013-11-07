@@ -25,7 +25,6 @@ void ipv4_addr_to_string(ipv4addr addr, char *string, size_t size)
 	inet_ntop(AF_INET, &addr, string, size);
 }
 
-
 ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d)
 {
 	ipv4addr addr;
