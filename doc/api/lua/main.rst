@@ -52,42 +52,55 @@ Log :lua:mod:`haka.log`
 Log :lua:mod:`haka.alert`
 -------------------------
 
-.. lua:module:: haka.alert
+.. lua:function:: haka.alert{param1=value1, param2=value2, etc...}
 
-.. lua:function:: address: a list of strings of address, network, ...
-                  service: a list of strings of services, proto, ...
-
-    create a table of strings
-
-.. lua:data:: message
-
-    Log a message. All parameters are optional.
+    Raise an alert. All parameters are optional. Return an alert object.
 
     :param start_time: date in raw.timestamp format
     :param end_time: date in raw.timestamp format
     :param description: string
     :param severity: one of 'low', 'medium' or 'high' string
-    :param confidence: a string or number
-    :param completion: 'failed' if attack has been blocked
+    :param confidence: 'low', 'medium', 'high' or number
+    :param completion: 'failed' or 'successful' string
     :param method: a table, made of a description (string) and a ref (table of strings)
-    :param sources: a table of haka.alert.address and/or haka.alert.services
+    :param sources: a table of haka.alert.address and/or haka.alert.service
+
+.. lua:module:: haka.alert
+
+.. lua:function:: address(object1, object2, ...)
+                  service(object1, object2, ...)
+
+    Set a table for address and service accordingly.
 
 Example: ::
 
     haka.alert{
             start_time = pkt.raw.timestamp,
             end_time = pkt.raw.timestamp,
-            description = string.format("filtering IP %s", pkt.src),
+            description = string.format("Source IP %s", pkt.src),
             severity = 'medium',
-            confidence = 7,
+            confidence = 'high',
             completion = 'failed',
             method = {
-                description = "packet sent on the network",
-                ref = { "cve/255-45", "http://...", "cwe:dff" }
+                description = "Packet sent on the network",
+                ref = { "cve:2O13-XXX", "http://intranet/vulnid?id=115", "cwe:809" }
             },
-            sources = { haka.alert.address(pkt.src, "local.org", "network", 33), haka.alert.service(22, "ssh") },
-            targets = { haka.alert.address(ipv4.network(pkt.dst, 22)), haka.alert.address(pkt.dst) }
+            sources = { haka.alert.address(pkt.src, "evil.host.fqdn") },
+            targets = { haka.alert.address(pkt.dst), haka.alert.service("tcp", 22, "ssh") }
         }
+
+
+.. lua:function:: update(my_alert, {param1=value1, param2=value2, ... } )
+
+    Update the alert `my_alert`. The parameters are the same for the alerts.
+
+    :param my_alert: an alert object previously defined
+    :param param1,2,..: Same names/values of alert
+
+Example: ::
+
+    local my_alert = haka.alert{ severity = 'low', sources = { haka.alert.address(pkt.src) } }
+    haka.alert.update(my_alert, {completion = 'failed' } )
 
 Packet :lua:mod:`haka.packet`
 -----------------------------
