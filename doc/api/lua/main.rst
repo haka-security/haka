@@ -15,29 +15,13 @@ Log :lua:mod:`haka.log`
 
 .. lua:module:: haka.log
 
-.. lua:data:: FATAL
-              ERROR
-              WARNING
-              INFO
-              DEBUG
-
-    Logging levels.
-
-.. lua:function:: message(level, module, fmt, ...)
-
-    Log a message.
-
-    :param level: One of the known logging level.
-    :param module: Module name.
-    :param fmt: Message format.
-
 .. lua:function:: fatal(module, fmt, ...)
                   error(module, fmt, ...)
                   warning(module, fmt, ...)
                   info(module, fmt, ...)
                   debug(module, fmt, ...)
 
-    Aliases to log a message in various levels.
+    Log a message in various levels.
 
 .. lua:function:: haka.log(module, fmt, ...)
 
