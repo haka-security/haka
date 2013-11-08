@@ -31,10 +31,9 @@ Before making statisctics, we need first to collect data. This is the purpose of
 
 .. note:: While the security rule 'hooks' on `http-response` we still get access to http request fields (via `request` accessor) and ip header fields (through `connection` accessor)
 
-.. highlightlang:: lua
-
 .. literalinclude:: ../../../sample/tutorial/stats/stats.lua
     :tab-width: 4
+    :language: lua
 
 Stats API
 ---------
@@ -70,6 +69,7 @@ The first lua script (``stats_on_exit``) gives an usage of the above api.
 
 .. literalinclude:: ../../../sample/tutorial/stats/stats_on_exit.lua
     :tab-width: 4
+    :language: lua
 
 The script will output some statistics on collected http trafic after parsing all packets in the provided pcap file (i.e. at haka exit). Below, a snippet output generated while running the lua script file on the DARPA pcap file:
 
@@ -91,6 +91,7 @@ The second script (``stats_interactive``) fills the `stats` table with http info
 
 .. literalinclude:: ../../../sample/tutorial/stats/stats_interactive.lua
     :tab-width: 4
+    :language: lua
 
 Hereafter, hakapcap output when entering the interactive mode:
 
