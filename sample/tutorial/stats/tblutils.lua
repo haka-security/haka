@@ -25,13 +25,15 @@ local function max_length_field(tab)
 	local max = {}
 	for _, entry in ipairs(tab) do
 		for k, v in pairs(entry) do
-			local size = v:len()
+			local size = #v
 			if size > 99 then
 				-- Lua formating limits width to 99
 				size = 99
 			end
-			local cmax = max[k] or 0
-			if size > cmax then
+			if not max[k] then
+				max[k] = #k
+			end
+			if size > max[k] then
 				max[k] = size
 			end
 		end

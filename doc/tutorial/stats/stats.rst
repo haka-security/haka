@@ -100,7 +100,7 @@ Hereafter, hakapcap output when entering the interactive mode:
     Statistics are available through 'stats' variable. Run
         - stats:list() to get the list of column names
         - stats:top(column) to get the top 10 of selected field
-        - stats:select_dump(nb) to dump 'nb' entries of stats table
+        - stats:dump(nb) to dump 'nb' entries of stats table
         - stats:select_table({column_1, column_2, etc.}, cond_func)) to select some columns and filter them based on 'cond_func' function
     Examples:
         - stats:top('useragent')
