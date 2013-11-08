@@ -1,0 +1,46 @@
+debug tcp-connection: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:50692 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
+warn tcp-connection: retransmit packet (ignored)
+warn tcp-connection: retransmit packet (ignored)
+warn tcp-connection: retransmit packet (ignored)
+debug tcp-connection: closing connection 192.168.10.1:50693 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
+warn tcp-connection: retransmit packet (ignored)
+error tcp-connection: no connection found
+debug tcp-connection: no connection found 192.168.20.1:80 -> 192.168.10.1:50693
+warn tcp-connection: retransmit packet (ignored)
+debug tcp-connection: closing connection 192.168.10.1:50694 -> 192.168.20.1:80
+error tcp-connection: no connection found
+debug tcp-connection: no connection found 192.168.20.1:80 -> 192.168.10.1:50694
+error tcp-connection: no connection found
+debug tcp-connection: no connection found 192.168.10.1:50693 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:50695 -> 192.168.20.1:80
+error tcp-connection: no connection found
+debug tcp-connection: no connection found 192.168.10.1:50694 -> 192.168.20.1:80
+error tcp-connection: no connection found
+debug tcp-connection: no connection found 192.168.20.1:80 -> 192.168.10.1:50694
+error tcp-connection: no connection found
+debug tcp-connection: no connection found 192.168.20.1:80 -> 192.168.10.1:50693
+debug tcp-connection: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
+error tcp-connection: no connection found
+debug tcp-connection: no connection found 192.168.10.1:50694 -> 192.168.20.1:80
+warn tcp-connection: retransmit packet (ignored)
+warn tcp-connection: retransmit packet (ignored)
+warn tcp-connection: retransmit packet (ignored)
+error tcp-connection: no connection found
+debug tcp-connection: no connection found 192.168.10.1:50693 -> 192.168.20.1:80
+top 10 (by default) of useragent header
+Wget/1.13.4 (linux-gnu) : 1
+ : 1
+
+select columns 'ip, 'method' and 'ressource' from the stats table
+| method | ip           | ressource |
+| GET   | 192.168.10.1 | / |
+| TRACE | 192.168.10.1 | / |
+
+list of source ip using 'Mozilla/2.0' as user-gent'
+
+top ten of http ressources that generated the most 404 status error
+

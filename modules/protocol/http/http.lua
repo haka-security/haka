@@ -208,17 +208,15 @@ local function build_headers(stream, headers, headers_order)
 	for _, name in pairs(headers_order) do
 		local value = headers[name]
 		if value then
-			headers[name] = nil
-
 			stream:insert(name)
 			stream:insert(": ")
 			stream:insert(value)
 			stream:insert("\r\n")
 		end
 	end
-
+	local headers_copy = dict(headers_order)
 	for name, value in pairs(headers) do
-		if value then
+		if value and not contains(headers_copy, name) then
 			stream:insert(name)
 			stream:insert(": ")
 			stream:insert(value)
@@ -531,6 +529,7 @@ local function forge(http)
 		http._tcp_stream = nil
 	end
 	return tcp
+
 end
 
 local function parse(http, context, f, name, next_state)

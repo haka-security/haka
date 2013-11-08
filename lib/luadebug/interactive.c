@@ -114,7 +114,7 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 	current_session = &session;
 	LUA_STACK_MARK(L);
 
-	session.user->print(session.user, GREEN "entering interactive session" CLEAR ": %s", msg);
+	session.user->print(session.user, GREEN "entering interactive session" CLEAR ": %s\n", msg);
 
 	session.L = L;
 	session.env_index = capture_env(L, 1);

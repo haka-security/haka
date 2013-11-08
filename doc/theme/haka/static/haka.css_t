@@ -1,0 +1,13 @@
+
+@import url("default.css");
+
+@import url("ansi.css");
+
+th {
+	background-color: #FFFFFF;
+}
+
+div.seealso {
+	background-color: #EEEEEE;
+	border: 1px solid #CCCCCC;
+}

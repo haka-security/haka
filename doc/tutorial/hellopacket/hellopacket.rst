@@ -10,8 +10,8 @@ Haka is a language, therefore here is its own helloworld called
 
 This "hellopacket" reads a pcap file, then print some tcp/ip packet fields.
 
-How to use hellopacket
-----------------------
+How-to
+------
 Launch ``hakapcap`` with pcapfile and lua script file as arguments.
 
 .. parsed-literal::

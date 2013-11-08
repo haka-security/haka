@@ -22,16 +22,16 @@ haka.rule {
 		local uri = http.request.uri
 		local ck = http.request.headers['Cookie']
 
-		-- initialize the score for query's argument and cookies list
-		-- could be extend to check patterns in other http fields
+		-- Initialize the score for query's argument and cookies list
+		-- Could be extend to check patterns in other http fields
 		local where = {
 			args = {
-				-- split query into list of (param-name, param-value) pairs
+				-- Split query into list of (param-name, param-value) pairs
 				value = httplib.uri.split(uri).args,
 				score = 0
 			},
 			cookies = {
-				-- split comma-separated cookies into a list of (key, value)
+				-- Split comma-separated cookies into a list of (key, value)
 				-- pairs
 				value = httplib.cookies.split(ck),
 				score = 0
@@ -40,7 +40,7 @@ haka.rule {
 
 		for k, v in pairs(where) do
 			if v.value then
-				-- loop on each query param | cookie value
+				-- Loop on each query param | cookie value
 				for param, value in pairs(v.value) do
 					local decoded = decode_all(value)
 					for _, key in ipairs(keywords) do

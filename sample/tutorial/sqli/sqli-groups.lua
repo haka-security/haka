@@ -8,31 +8,31 @@ require('httpdecode')
 
 local sql_comments = { '%-%-', '#', '%z', '/%*.-%*/' }
 
--- common pattern used in intial attack stage to ckeck for SQLi vulnerabilites
+-- Common pattern used in intial attack stage to ckeck for SQLi vulnerabilites
 local probing = { "^[\"'`´’‘;]", "[\"'`´’‘;]$" }
 
 local sql_keywords = {
 	'select', 'insert', 'update', 'delete', 'union',
-	-- you can extent this list with other sql keywords
+	-- You can extent this list with other sql keywords
 }
 
 local sql_functions = {
 	'ascii', 'char', 'length', 'concat', 'substring',
-	-- you can extend this list with other sql functions
+	-- You can extend this list with other sql functions
 }
 
 ------------------------------------
 -- SQLi Rule Group
 ------------------------------------
 
--- define a security rule group related to SQLi attacks
+-- Define a security rule group related to SQLi attacks
 sqli = haka.rule_group {
 	name = 'sqli',
-	-- initialize some values before evaluating any security rule
+	-- Initialize some values before evaluating any security rule
 	init = function (self, http)
 		dump_request(http)
 
-		-- another way to split cookie header value and query's arguments
+		-- Another way to split cookie header value and query's arguments
 		http.sqli = {
 			cookies = {
 				value = http.request:split_cookies(),
@@ -75,7 +75,7 @@ local function check_sqli(patterns, score, trans)
 	}
 end
 
--- generate a security rule for each malicious pattern class
+-- Generate a security rule for each malicious pattern class
 -- (sql_keywords, sql_functions, etc.)
 check_sqli(sql_comments, 4, { decode, lower })
 check_sqli(probing, 2, { decode, lower })

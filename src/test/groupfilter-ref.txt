@@ -1,0 +1,12 @@
+debug tcp-connection: opening connection 192.168.10.1:37542 -> 192.168.10.99:80
+debug filter: Entering packet filtering rules : 37542 --> 80
+error filter: Packet dropped : drop by default
+debug tcp-connection: dropping connection 192.168.10.1:37542 -> 192.168.10.99:80
+debug tcp-connection: opening connection 192.168.10.1:47617 -> 192.168.10.99:31337
+debug filter: Entering packet filtering rules : 47617 --> 31337
+error filter: Packet dropped : drop by default
+debug tcp-connection: dropping connection 192.168.10.1:47617 -> 192.168.10.99:31337
+debug tcp-connection: opening connection 192.168.10.10:35321 -> 192.168.10.99:8000
+debug filter: Entering packet filtering rules : 35321 --> 8000
+error filter: Packet dropped : drop by default
+debug tcp-connection: dropping connection 192.168.10.10:35321 -> 192.168.10.99:8000
