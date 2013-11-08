@@ -8,7 +8,15 @@ haka.rule {
 		local http_methods = dict({ 'get', 'post', 'head', 'put', 'trace', 'delete', 'options' })
 		local method = http.request.method:lower()
 		if not contains(http_methods, method) then
-			haka.log.error("filter", "non authorized http method '%s'", method)
+			local conn = http.connection
+			haka.alert{
+				description = string.format("non authorized http method '%s'", method),
+				sources = haka.alert.address(conn.srcip),
+				targets = {
+					haka.alert.address(conn.dstip),
+					haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
+				},
+			}
 			http:drop()
 		end
 	end
@@ -22,7 +30,15 @@ haka.rule {
 		local protocol = http.request.version:sub(1,4)
 		local version = http.request.version:sub(6)
 		if not protocol == "HTTP" or not contains(http_versions, version) then
-			haka.log.error("filter", "unsupported http version '%s/%s'", protocol, version)
+			local conn = http.connection
+			haka.alert{
+				description = string.format("unsupported http version '%s/%s'", protocol, version),
+				sources = haka.alert.address(conn.srcip),
+				targets = {
+					haka.alert.address(conn.dstip),
+					haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
+				},
+			}
 			http:drop()
 		end
 	end
@@ -36,7 +52,15 @@ haka.rule {
 		if content_length then
 			content_length = tonumber(content_length)
 			if content_length == nil or content_length < 0 then
-				haka.log.error("filter", "corrupted content-length header value")
+				local conn = http.connection
+				haka.alert{
+					description = "corrupted content-length header value",
+					sources = haka.alert.address(conn.srcip),
+					targets = {
+						haka.alert.address(conn.dstip),
+						haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
+					},
+				}
 				http:drop()
 			end
 		end

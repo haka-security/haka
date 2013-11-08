@@ -7,7 +7,11 @@ haka.rule {
 	eval = function (self, pkt)
 		-- bad IP checksum
 		if not pkt:verify_checksum() then
-			haka.log.error("filter", "Bad IP checksum")
+			haka.alert{
+				description = "Bad IP checksum",
+				sources = { haka.alert.address(pkt.src) },
+				targets = { haka.alert.address(pkt.dst) },
+			}
 			pkt:drop()
 		end
 	end

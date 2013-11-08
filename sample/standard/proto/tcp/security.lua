@@ -7,7 +7,11 @@ haka.rule {
 	eval = function (self, pkt)
 		--Xmas scan, as made by nmap -sX <IP>
 		if pkt.flags.psh and pkt.flags.fin and pkt.flags.urg then
-			haka.log.error("filter", "Xmas attack detected !!!")
+			haka.alert{
+				description = "Xmas attack detected",
+				sources = haka.alert.address(pkt.ip.src),
+				targets = haka.alert.address(pkt.ip.dst)
+			}
 			pkt:drop()
 		end
 	end
@@ -33,8 +37,12 @@ haka.rule {
 			payload = getpayload(pkt.payload)
 			-- test if shellcode is present in data
 			if string.find(payload, bindshell) then
-				haka.log.error("filter", "/bin/sh shellcode detected !!!")
-				pkt:drop()
+			haka.alert{
+				description = "/bin/sh shellcode detected",
+				sources = haka.alert.address(pkt.ip.src),
+				targets = haka.alert.address(pkt.ip.dst)
+			}
+			pkt:drop()
 			end
 		end
 	end
