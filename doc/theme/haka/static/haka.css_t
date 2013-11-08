@@ -7,7 +7,15 @@ th {
 	background-color: #FFFFFF;
 }
 
-div.seealso {
-	background-color: #EEEEEE;
-	border: 1px solid #CCCCCC;
+div.seealso, div.note {
+	background-color: #e3dbd1;
+	border: 1px solid #c9beb1;
+}
+
+pre {
+	border-color: #c9beb1 -moz-use-text-color;
+}
+
+dt:target, .highlighted {
+	background-color: #ffc465;
 }
