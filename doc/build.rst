@@ -12,8 +12,6 @@ Required
 * cmake
 * swig
 * python-sphinx
-* python-pip
-* sphinxcontrib-ansi
 * liblua5.1
 * tshark
 * check
@@ -24,9 +22,7 @@ Required
 
 Debian: ::
 
-    sudo apt-get install build-essential cmake swig python-sphinx python-pip liblua5.1 tshark check rsync libpcap-dev gawk libedit-dev
-
-    sudo pip install sphinxcontrib-ansi
+    sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 tshark check rsync libpcap-dev gawk libedit-dev
 
 Optional
 ^^^^^^^^
