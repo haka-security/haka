@@ -7,7 +7,7 @@ local type = {
 }
 
 local function bool(b)
-	if b then return "[correct"
+	if b then return "[correct]"
 	else return "[incorrect]" end
 end
 
@@ -19,7 +19,7 @@ haka.rule {
 		print(string.format("Internet Control Message Protocol"))
 		print(string.format("    Type: %d (%s)", pkt.type, type[pkt.type]))
 		print(string.format("    Code: %d", pkt.code))
-		print(string.format("    Checksum: 0x%04x [correct]", pkt.checksum, bool(pkt:verify_checksum())))
+		print(string.format("    Checksum: 0x%04x %s", pkt.checksum, bool(pkt:verify_checksum())))
 		print()
 	end
 }
