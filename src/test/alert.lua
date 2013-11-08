@@ -18,7 +18,7 @@ haka.rule {
 			sources = { haka.alert.address(pkt.src, "local.org", "blalvla", 33), haka.alert.service(22, "ssh") },
 			targets = { haka.alert.address(ipv4.network(pkt.dst, 22)), haka.alert.address(pkt.dst) },
 		}
-		
+
 		haka.alert.update(myalert, {
 			severity = 'high',
 			description = string.format("filtering IP %s", pkt.src),
