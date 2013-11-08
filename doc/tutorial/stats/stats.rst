@@ -92,7 +92,7 @@ The second script (``stats_interactive``) fills the `stats` table with http info
 .. literalinclude:: ../../../sample/tutorial/stats/stats_interactive.lua
     :tab-width: 4
 
-Herefter, hakapcap output when entering the interactive mode:
+Hereafter, hakapcap output when entering the interactive mode:
 
 .. parsed-literal::
 

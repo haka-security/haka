@@ -44,7 +44,7 @@ modification or deletion of packets:
 Interactive rule debugging
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Hereafter, a second lua script file allowing to filter tcp packets based
-on destination port.AAAAAAAAAAAAA
+on destination port.
 
 .. literalinclude:: ../../../sample/tutorial/filter/tcpfilter.lua
    :language: lua
