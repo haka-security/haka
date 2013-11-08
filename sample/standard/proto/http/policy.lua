@@ -25,7 +25,6 @@ haka.rule {
 					haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
 				},
 			}
-			haka.log.warning("filter", "forbidden http method '%s'", method)
 		end
 	end
 }

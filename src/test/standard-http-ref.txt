@@ -40,7 +40,6 @@ info alert: id = <>
 		address: 192.168.20.1
 		service: tcp/80, http
 	}
-warn filter: forbidden http method 'trace'
 debug tcp-connection: closing connection 192.168.10.1:50695 -> 192.168.20.1:80
 debug tcp-connection: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 50696 --> 80
