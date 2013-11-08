@@ -27,7 +27,10 @@ local group = haka.rule_group {
 		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
 	end,
 	fini = function (self, pkt)
-		haka.log.error("filter", "Packet dropped : drop by default")
+		haka.alert{
+			description = "Packet dropped : drop by default",
+			targets = { haka.alert.service("tcp", pkt.tcp.dstport) }
+		}
 		pkt:drop()
 	end,
 	continue = function (self, pkt, ret)
@@ -42,7 +45,7 @@ group:rule {
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 		-- Accept connection to TCP port 80
-		if pkt.dstport == 80 then
+		if pkt.tcp.dstport == 80 then
 			haka.log("Filter", "Authorizing traffic on port 80")
 			return true
 		end
@@ -53,7 +56,7 @@ group:rule {
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 		-- Accept connection to TCP port 22
-		if pkt.dstport == 22 then
+		if pkt.tcp.dstport == 22 then
 			haka.log("Filter", "Authorizing traffic on port 22")
 			return true
 		end
