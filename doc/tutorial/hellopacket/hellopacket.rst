@@ -23,32 +23,35 @@ Hakacap will process the pcap file accordingly to lua configfile, you will see a
 first some infos about the starting of haka, then the packets and stream found in
 pcap file:
 
-.. code-block:: bash
+.. ansi-block::
+    :string_escape:
 
-    info  core: load module 'packet/pcap.ho'
+    \x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mload module 'packet/pcap.ho'
         Pcap Module, Arkoon Network Security
-    info  core: loading rule file 'hellopacket.lua'
-    info  core: initializing thread 0
-    info  pcap: openning file 'hellopacket.pcap'
-    info  core: registering new dissector: 'ipv4'
-    info  core: registering new dissector: 'tcp'
-    info  core: registering new dissector: 'tcp-connection'
-    info  core: 1 rule(s) on hook 'ipv4-up'
-    info  core: 1 rule(s) on hook 'tcp-connection-new'
-    info  core: 2 rule(s) registered
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mloading rule file 'hellopacket.lua'
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0minitializing thread 0
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mpcap:\x1b[0m \x1b[0mopenning file 'hellopacket.pcap'
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mregistering new dissector: 'ipv4'
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mregistering new dissector: 'tcp'
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mregistering new dissector: 'tcp-connection'
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m1 rule(s) on hook 'ipv4-up'
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m1 rule(s) on hook 'tcp-connection-new'
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m2 rule(s) registered
     
-    info  core: starting single threaded processing
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mstarting single threaded processing
     
-    info  debug: Hello packet from 192.168.10.1 to 192.168.10.99
-    info  debug: Hello TCP connection from 192.168.10.1:47161 to 192.168.10.99:3000
-    info  debug: Hello packet from 192.168.10.99 to 192.168.10.1
-    info  debug: Hello packet from 192.168.10.1 to 192.168.10.99
-    info  debug: Hello packet from 192.168.10.1 to 192.168.10.99
-    info  debug: Hello packet from 192.168.10.99 to 192.168.10.1
-    info  debug: Hello packet from 192.168.10.1 to 192.168.10.99
-    info  debug: Hello packet from 192.168.10.99 to 192.168.10.1
-    info  debug: Hello packet from 192.168.10.1 to 192.168.10.99
-    info  core:  unload module 'Pcap Module'
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.1 to 192.168.10.99
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mTCP connection from 192.168.10.1:47161 to 192.168.10.99:3000
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.99 to 192.168.10.1
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.1 to 192.168.10.99
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.1 to 192.168.10.99
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.99 to 192.168.10.1
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.1 to 192.168.10.99
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.99 to 192.168.10.1
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.1 to 192.168.10.99
+    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m  \x1b[0munload module 'Pcap Module'
+    \x1b[0m
+
 
 We can see each packet and TCP connection saying hello to the world.
 You can open the pcap file with wireshark or any other network tool to see the same informations.
