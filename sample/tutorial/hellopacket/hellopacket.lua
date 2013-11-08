@@ -41,5 +41,10 @@ haka.rule {
 	eval = function (self, pkt)
 		-- Fields from previous layer is accessible too
 		haka.log("Hello", "TCP connection from %s:%d to %s:%d", pkt.tcp.ip.src, pkt.tcp.srcport, pkt.tcp.ip.dst, pkt.tcp.dstport)
+		-- We can raise an alert too
+		haka.alert{
+			description = "A simple alert",
+			severity = "low"
+		}
 	end
 }
