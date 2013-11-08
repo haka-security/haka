@@ -15,7 +15,7 @@ This tutorial introduces two lua script files: ``stats_on_exit`` and ``stats_int
     $ cd |haka_install_path|/share/haka/sample/tutorial/stats
     $ hakapcap <pcap_file> <script_stat_file>
 
-.. note:: The tutorial provides in |haka_install_path|/share/haka/sample/tutorial/stats a pre-processed pcap file originated from the DARPA-99 dataset and which could be retrieved from http://www.ll.mit.edu/mission/communications/cyber/CSTcorpora/ideval/data/1999/training/week1/monday/outside.tcpdump.gz).
+.. note:: In this tutorial we use a pre-processed pcap file originated from the DARPA-99 dataset and which could be retrieved from http://www.ll.mit.edu/mission/communications/cyber/CSTcorpora/ideval/data/1999/training/week1/monday/outside.tcpdump.gz). We filtered out all packets not belonging to a tcp connection.
 
 Collecting data
 ---------------
