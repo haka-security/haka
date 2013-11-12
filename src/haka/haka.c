@@ -183,21 +183,21 @@ int read_configuration(const char *file)
 
 			struct module *alerter_module = module_load(module, config);
 			if (!alerter_module) {
-				message(HAKA_LOG_FATAL, L"core", L"cannot load alert module");
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot load alert module: %ls", clear_error());
 				clean_exit();
 				return 1;
 			}
 
 			alerter = alert_module_alerter(alerter_module, config);
 			if (!alerter) {
-				messagef(HAKA_LOG_FATAL, L"core", L"cannot initialize alert module: %s", clear_error());
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot initialize alert module: %ls", clear_error());
 				module_release(alerter_module);
 				clean_exit();
 				return 1;
 			}
 
 			if (!add_alerter(alerter)) {
-				messagef(HAKA_LOG_FATAL, L"core", L"cannot install alert module: %s", clear_error());
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot install alert module: %ls", clear_error());
 				alerter->destroy(alerter);
 				module_release(alerter_module);
 				clean_exit();
