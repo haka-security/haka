@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 		args = NULL;
 
 		if (!pcap) {
-			message(HAKA_LOG_FATAL, L"core", L"cannot load packet module");
+			messagef(HAKA_LOG_FATAL, L"core", L"cannot load packet module: %ls", clear_error());
 			clean_exit();
 			return 1;
 		}

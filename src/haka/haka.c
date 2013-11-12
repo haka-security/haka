@@ -145,21 +145,21 @@ int read_configuration(const char *file)
 
 			struct module *logger_module = module_load(module, config);
 			if (!logger_module) {
-				message(HAKA_LOG_FATAL, L"core", L"cannot load logging module");
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot load logging module: %ls", clear_error());
 				clean_exit();
 				return 1;
 			}
 
 			logger = log_module_logger(logger_module, config);
 			if (!logger) {
-				messagef(HAKA_LOG_FATAL, L"core", L"cannot initialize logging module: %s", clear_error());
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot initialize logging module: %ls", clear_error());
 				module_release(logger_module);
 				clean_exit();
 				return 1;
 			}
 
 			if (!add_logger(logger)) {
-				messagef(HAKA_LOG_FATAL, L"core", L"cannot install logging module: %s", clear_error());
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot install logging module: %ls", clear_error());
 				logger->destroy(logger);
 				module_release(logger_module);
 				clean_exit();
@@ -179,7 +179,7 @@ int read_configuration(const char *file)
 		if (module) {
 			struct module *packet = module_load(module, config);
 			if (!packet) {
-				message(HAKA_LOG_FATAL, L"core", L"cannot load packet module");
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot load packet module: %ls", clear_error());
 				clean_exit();
 				return 1;
 			}
