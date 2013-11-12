@@ -35,12 +35,12 @@ top 10 (by default) of useragent header
 Wget/1.13.4 (linux-gnu) : 1
  : 1
 
-select columns 'ip, 'method' and 'ressource' from the stats table
-| method | ip           | ressource |
-| GET    | 192.168.10.1 | /         |
-| TRACE  | 192.168.10.1 | /         |
+select columns 'ip, 'method' and 'resource' from the stats table
+| resource | method | ip           |
+| /        | GET    | 192.168.10.1 |
+| /        | TRACE  | 192.168.10.1 |
 
 list of source ip using 'Mozilla/2.0' as user-gent'
 
-top ten of http ressources that generated the most 404 status error
+top ten of http resources that generated the most 404 status error
 

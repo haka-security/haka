@@ -23,6 +23,7 @@ end
 
 local function max_length_field(tab, nb)
 	local max = {}
+	if nb > #tab then nb = #tab end
 	for iter = 1, nb do
 		for k, v in pairs(tab[iter]) do
 			local size = #v
