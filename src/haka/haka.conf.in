@@ -26,5 +26,9 @@ interfaces = "eth0"
 #dump_drop = "/tmp/drop.pcap"
 
 [log]
-#Select the log module
+# Select the log module
 module = "log/syslog"
+
+[alert]
+# Select the alert module
+module = "alert/syslog"

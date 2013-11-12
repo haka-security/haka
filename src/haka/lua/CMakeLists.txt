@@ -5,6 +5,7 @@ include(UseSWIG)
 swig_add_module(haka-liblua lua STATIC
 	haka.i
 	log.i
+	alert.i
 	packet.i
 	state.c)
 

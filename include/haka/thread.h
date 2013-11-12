@@ -40,31 +40,6 @@ bool     thread_setcanceltype(enum thread_cancel_t type);
 void     thread_testcancel();
 
 
-/* Atomic counter */
-
-typedef volatile uint32 atomic_t;
-
-INLINE uint32 atomic_inc(atomic_t *v)
-{
-	return __sync_add_and_fetch(v, 1);
-}
-
-INLINE uint32 atomic_dec(atomic_t *v)
-{
-	return __sync_sub_and_fetch(v, 1);
-}
-
-INLINE uint32 atomic_get(atomic_t *v)
-{
-	return *v;
-}
-
-INLINE void atomic_set(atomic_t *v, uint32 x)
-{
-	*v = x;
-}
-
-
 /* Mutex */
 
 typedef pthread_mutex_t mutex_t;
@@ -76,6 +51,17 @@ bool mutex_destroy(mutex_t *mutex);
 bool mutex_lock(mutex_t *mutex);
 bool mutex_trylock(mutex_t *mutex);
 bool mutex_unlock(mutex_t *mutex);
+
+
+/* Spinlock */
+
+typedef pthread_spinlock_t spinlock_t;
+
+bool spinlock_init(spinlock_t *lock);
+bool spinlock_destroy(spinlock_t *lock);
+bool spinlock_lock(spinlock_t *lock);
+bool spinlock_trylock(spinlock_t *lock);
+bool spinlock_unlock(spinlock_t *lock);
 
 
 /* Read-Write Locks */
@@ -112,5 +98,44 @@ bool local_storage_destroy(local_storage_t *key);
 void *local_storage_get(local_storage_t *key);
 bool local_storage_set(local_storage_t *key, const void *value);
 
+
+/* Atomic counter (32 bits) */
+
+typedef volatile uint32 atomic_t;
+
+INLINE uint32 atomic_inc(atomic_t *v) { return __sync_add_and_fetch(v, 1); }
+INLINE uint32 atomic_dec(atomic_t *v) { return __sync_sub_and_fetch(v, 1); }
+INLINE uint32 atomic_get(atomic_t *v) { return *v; }
+INLINE void atomic_set(atomic_t *v, uint32 x) { *v = x; }
+
+
+/* Atomic counter (64 bits) */
+
+#ifdef __x86_64__
+
+typedef volatile uint64 atomic64_t;
+
+INLINE void atomic64_set(atomic64_t *v, uint64 x) { *v = x; }
+INLINE void atomic64_init(atomic64_t *v, uint64 x) { atomic64_set(v, x); }
+INLINE void atomic64_destroy(atomic64_t *v) { }
+INLINE uint64 atomic64_inc(atomic64_t *v) { return __sync_add_and_fetch(v, 1); }
+INLINE uint64 atomic64_dec(atomic64_t *v) { return __sync_sub_and_fetch(v, 1); }
+INLINE uint64 atomic64_get(atomic64_t *v) { return *v; }
+
+#else
+
+typedef struct {
+	uint64      value;
+	spinlock_t  spinlock;
+} atomic64_t;
+
+void atomic64_init(atomic64_t *v, uint64 x);
+void atomic64_destroy(atomic64_t *v);
+uint64 atomic64_inc(atomic64_t *v);
+uint64 atomic64_dec(atomic64_t *v);
+INLINE uint64 atomic64_get(atomic64_t *v) { return v->value; }
+void atomic64_set(atomic64_t *v, uint64 x);
+
+#endif
 
 #endif /* _HAKA_THREAD_H */

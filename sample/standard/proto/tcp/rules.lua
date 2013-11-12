@@ -11,7 +11,11 @@ local group = haka.rule_group {
 		haka.log.debug("filter", "entering packet filtering rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
 	end,
 	fini = function (self, pkt)
-		haka.log.error("filter", "packet dropped : drop by default")
+		haka.alert{
+			description = "Packet dropped : drop by default",
+			sources = haka.alert.address(pkt.tcp.ip.src, pkt.tcp.srcport),
+			targets = haka.alert.address(pkt.tcp.ip.dst, pkt.tcp.dstport)
+		}
 		pkt:drop()
 	end,
 	continue = function (self, pkt, ret)

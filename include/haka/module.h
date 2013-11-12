@@ -16,6 +16,7 @@ struct module {
 		MODULE_UNKNOWN,
 		MODULE_PACKET,
 		MODULE_LOG,
+		MODULE_ALERT,
 		MODULE_EXTENSION,
 	} type;
 

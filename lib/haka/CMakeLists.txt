@@ -8,6 +8,8 @@ add_library(libhaka SHARED
 	packet.c
 	log.c
 	log_module.c
+	alert.c
+	alert_module.c
 	module.c
 	error.c
 	thread.c

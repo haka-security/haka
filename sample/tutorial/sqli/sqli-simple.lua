@@ -32,8 +32,12 @@ haka.rule {
 		end
 		
 		if score >= 8 then
-			-- Raise an error if the score exceeds a fixed threshold 
-			haka.log.error("sqli", "    SQLi attack detected with score %d", score)
+			-- Raise an alert if the score exceeds a fixed threshold (compact format)
+			haka.alert{
+				description = string.format("SQLi attack detected with score %d", score),
+				severity = 'high',
+				confidence = 'low',
+			}
 			http:drop()
 			return
 		end

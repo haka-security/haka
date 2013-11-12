@@ -124,6 +124,50 @@ void thread_testcancel()
 
 
 /*
+ * Atomic counter (64 bits)
+ */
+
+#ifndef __x86_64__
+
+void atomic64_init(atomic64_t *v, uint64 x)
+{
+	spinlock_init(&v->spinlock);
+	atomic64_set(v, x);
+}
+
+void atomic64_destroy(atomic64_t *v)
+{
+	spinlock_destroy(&v->spinlock);
+}
+
+uint64 atomic64_inc(atomic64_t *v)
+{
+	uint64 r;
+	spinlock_lock(&v->spinlock);
+	r = ++v->value;
+	spinlock_unlock(&v->spinlock);
+	return r;
+}
+
+uint64 atomic64_dec(atomic64_t *v)
+{
+	uint64 r;
+	spinlock_lock(&v->spinlock);
+	r = --v->value;
+	spinlock_unlock(&v->spinlock);
+	return r;
+}
+
+void atomic64_set(atomic64_t *v, uint64 x)
+{
+	spinlock_lock(&v->spinlock);
+	v->value = x;
+	spinlock_unlock(&v->spinlock);
+}
+
+#endif
+
+/*
  * Mutex
  */
 
@@ -193,6 +237,62 @@ bool mutex_unlock(mutex_t *mutex)
 	const int err = pthread_mutex_unlock(mutex);
 	if (err) {
 		error(L"mutex error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+
+/*
+ * Spin lock
+ */
+
+bool spinlock_init(spinlock_t *lock)
+{
+	const int err = pthread_spin_init(lock, PTHREAD_PROCESS_PRIVATE);
+	if (err) {
+		error(L"spinlock error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool spinlock_destroy(spinlock_t *lock)
+{
+	const int err = pthread_spin_destroy(lock);
+	if (err) {
+		error(L"spinlock error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool spinlock_lock(spinlock_t *lock)
+{
+	const int err = pthread_spin_lock(lock);
+	if (err) {
+		error(L"spinlock error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool spinlock_trylock(spinlock_t *lock)
+{
+	const int err = pthread_spin_trylock(lock);
+	if (err == 0) return true;
+	else if (err == EBUSY) return false;
+	else {
+		error(L"spinlock error: %s", errno_error(err));
+		return false;
+	}
+}
+
+bool spinlock_unlock(spinlock_t *lock)
+{
+	const int err = pthread_spin_unlock(lock);
+	if (err) {
+		error(L"spinlock error: %s", errno_error(err));
 		return false;
 	}
 	return true;

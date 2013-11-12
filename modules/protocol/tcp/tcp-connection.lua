@@ -120,9 +120,18 @@ local function dissect(pkt)
 			newpkt.direction = true
 		else
 			if not dropped then
-				haka.log.error("tcp-connection", "no connection found")
-				haka.log.debug("tcp-connection", "no connection found %s:%d -> %s:%d", pkt.ip.src,
-					pkt.srcport, pkt.ip.dst, pkt.dstport)
+				haka.alert{
+					severity = 'low',
+					description = "no connection found for tcp packet",
+					sources = {
+						haka.alert.address(pkt.ip.src),
+						haka.alert.service(string.format("tcp/%d", pkt.srcport))
+					},
+					targets = {
+						haka.alert.address(pkt.ip.dst),
+						haka.alert.service(string.format("tcp/%d", pkt.dstport))
+					}
+				}
 			end
 			pkt:drop()
 			return nil

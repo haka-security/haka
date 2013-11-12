@@ -52,7 +52,18 @@ haka.rule {
 			end
 
 			if v.score >= 8 then
-				haka.log.error("sqli", "    SQLi attack detected in %s with score %d", k, v.score)
+				local conn = http.connection
+				-- Report an alert (more info in alert)
+				haka.alert{
+					description = string.format("SQLi attack detected in %s with score %d", k, v.score),
+					severity = 'high',
+					confidence = 'medium',
+					sources = haka.alert.address(conn.srcip),
+					targets = {
+						haka.alert.address(conn.dstip),
+						haka.alert.service(string.format("tcp/%d", conn.dstport), "http") 
+					},
+				}
 				http:drop()
 				return
 			end
