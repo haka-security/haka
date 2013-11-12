@@ -11,6 +11,6 @@ haka.on_exit(function()
 	    "\n\t- stats:select_table({column_1, column_2, etc.}, cond_func)) to select some columns and filter them based on 'cond_func' function" ..
 	    "\n\nExamples:" ..
 	    "\n\t- stats:top('useragent')" ..
-	    "\n\t- stats:select_table({'ressource', 'status'}, function(elem) return elem.status == '404' end):top('ressource')")
+	    "\n\t- stats:select_table({'resource', 'status'}, function(elem) return elem.status == '404' end):top('resource')")
 end)
 

@@ -21,10 +21,10 @@ local function order_by(tab, order)
 	return ret
 end
 
-local function max_length_field(tab)
+local function max_length_field(tab, nb)
 	local max = {}
-	for _, entry in ipairs(tab) do
-		for k, v in pairs(entry) do
+	for iter = 1, nb do
+		for k, v in pairs(tab[iter]) do
 			local size = #v
 			if size > 99 then
 				-- Lua formating limits width to 99
@@ -41,8 +41,8 @@ local function max_length_field(tab)
 	return max
 end
 
-local function print_columns(tab)
-	local max = max_length_field(tab)
+local function print_columns(tab, nb)
+	local max = max_length_field(tab, nb)
 	if #tab > 0 then
 		local columns = {}
 		for k, _ in pairs(tab[1]) do
@@ -89,8 +89,9 @@ function table_mt:top(field, nb)
 end
 
 function table_mt:dump(nb)
-	local max = print_columns(self)
 	nb = nb or #self
+	assert(nb > 0, "illegal negative value")
+	local max = print_columns(self, nb)
 	local iter = nb
 	for _, entry in ipairs(self) do
 		if iter <= 0 then break end

@@ -24,7 +24,7 @@ Before making statisctics, we need first to collect data. This is the purpose of
 - ip: source ip
 - method: http request method (`get`, `post`, etc.)
 - host: http host
-- ressource: normalized path
+- resource: normalized path
 - referer: referer header
 - usergant: user-agent header
 - status: response status code
@@ -105,7 +105,7 @@ Hereafter, hakapcap output when entering the interactive mode:
         - stats:select_table({column_1, column_2, etc.}, cond_func)) to select some columns and filter them based on 'cond_func' function
     Examples:
         - stats:top('useragent')
-        - stats:select_table({'ressource', 'status'}, function(elem) return elem.status == '404' end):top('ressource')
+        - stats:select_table({'resource', 'status'}, function(elem) return elem.status == '404' end):top('resource')
    >
 
 .. note:: Press CTRL-D to leave the interactive mode

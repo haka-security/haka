@@ -10,7 +10,7 @@ local tbl = require('tblutils')
 
 -- Each entry of stats table will store
 -- info about http request/response (method,
--- host, ressource, status, etc.)
+-- host, resource, status, etc.)
 stats = tbl.new()
 
 --------------------------
@@ -41,7 +41,7 @@ haka.rule {
 		local entry = {}
 		entry.ip = tostring(conn.srcip)
 		entry.method = request.method
-		entry.ressource = split_uri.path or ''
+		entry.resource = split_uri.path or ''
 		entry.host = split_uri.host or ''
 		entry.useragent = request.headers['User-Agent'] or ''
 		entry.referer = request.headers['Referer'] or ''
