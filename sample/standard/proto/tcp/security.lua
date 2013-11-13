@@ -37,12 +37,12 @@ haka.rule {
 			payload = getpayload(pkt.payload)
 			-- test if shellcode is present in data
 			if string.find(payload, bindshell) then
-			haka.alert{
-				description = "/bin/sh shellcode detected",
-				sources = haka.alert.address(pkt.ip.src),
-				targets = haka.alert.address(pkt.ip.dst)
-			}
-			pkt:drop()
+				haka.alert{
+					description = "/bin/sh shellcode detected",
+					sources = haka.alert.address(pkt.ip.src),
+					targets = haka.alert.address(pkt.ip.dst)
+				}
+				pkt:drop()
 			end
 		end
 	end
