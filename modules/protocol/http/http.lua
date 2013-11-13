@@ -418,6 +418,13 @@ local http_dissector = haka.dissector.new{
 http_dissector:register_event('request')
 http_dissector:register_event('response')
 
+http_dissector.property.connection = {
+	get = function (self)
+		self.connection = self.flow.connection
+		return self.connection
+	end
+}
+
 function http_dissector.method:__init(flow)
 	super(self).__init(self)
 	self.flow = flow
