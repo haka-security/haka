@@ -1,22 +1,10 @@
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53440 -> 192.168.20.1:80
 info Filter: Domain requested: server
- _headers_order
-   1 = User-Agent
-   2 = Accept
-   3 = Host
-   4 = Connection
- _length = 103
- headers
-   Accept = */*
-   Connection = Keep-Alive
-   Host = server
-   User-Agent = Mozilla Firefox/12.0
- method = GET
- uri = /
- version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox/12.0
-info Filter: Firefox is outdated, please upgrade
+info alert: id = <>
+	severity = medium
+	description = Firefox is outdated, please upgrade
  _headers_order
    1 = Date
    2 = Server
@@ -43,40 +31,14 @@ debug tcp-connection: dropping connection 192.168.10.1:53440 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53441 -> 192.168.20.1:80
 info Filter: Domain requested: server
- _headers_order
-   1 = User-Agent
-   2 = Accept
-   3 = Host
-   4 = Connection
- _length = 103
- headers
-   Accept = */*
-   Connection = Keep-Alive
-   Host = server
-   User-Agent = Mozilla Firefox/28.0
- method = GET
- uri = /
- version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox/28.0
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53442 -> 192.168.20.1:80
 info Filter: Domain requested: server
- _headers_order
-   1 = User-Agent
-   2 = Accept
-   3 = Host
-   4 = Connection
- _length = 103
- headers
-   Accept = */*
-   Connection = Keep-Alive
-   Host = server
-   User-Agent = Mozilla Firefox/plop
- method = GET
- uri = /
- version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox/plop
-info Filter: Firefox is outdated, please upgrade
+info alert: id = <>
+	severity = medium
+	description = Firefox is outdated, please upgrade
  _headers_order
    1 = Date
    2 = Server
@@ -103,22 +65,10 @@ debug tcp-connection: dropping connection 192.168.10.1:53442 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53443 -> 192.168.20.1:80
 info Filter: Domain requested: server
- _headers_order
-   1 = User-Agent
-   2 = Accept
-   3 = Host
-   4 = Connection
- _length = 99
- headers
-   Accept = */*
-   Connection = Keep-Alive
-   Host = server
-   User-Agent = Mozilla Firefox/
- method = GET
- uri = /
- version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox/
-info Filter: Firefox is outdated, please upgrade
+info alert: id = <>
+	severity = medium
+	description = Firefox is outdated, please upgrade
  _headers_order
    1 = Date
    2 = Server
@@ -145,61 +95,23 @@ debug tcp-connection: dropping connection 192.168.10.1:53443 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53444 -> 192.168.20.1:80
 info Filter: Domain requested: server
- _headers_order
-   1 = User-Agent
-   2 = Accept
-   3 = Host
-   4 = Connection
- _length = 98
- headers
-   Accept = */*
-   Connection = Keep-Alive
-   Host = server
-   User-Agent = Mozilla Firefox
- method = GET
- uri = /
- version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox
 info Filter: Unknown or missing User-Agent
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53445 -> 192.168.20.1:80
 info Filter: Domain requested: server
- _headers_order
-   1 = Accept
-   2 = Host
-   3 = Connection
- _length = 69
- headers
-   Accept = */*
-   Connection = Keep-Alive
-   Host = server
- method = GET
- uri = /
- version = HTTP/1.1
 info Filter: UA detected: No User-Agent header
 info Filter: Unknown or missing User-Agent
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53446 -> 192.168.20.1:80
- _headers_order
- _length = 18
- headers
- method = GET
- uri = /
- version = HTTP/1.1
 info Filter: UA detected: No User-Agent header
 info Filter: Unknown or missing User-Agent
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53447 -> 192.168.20.1:80
- _headers_order
-   1 = User-Agent
- _length = 52
- headers
-   User-Agent = Mozilla Firefox/18.0
- method = GET
- uri = /
- version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox/18.0
-info Filter: Firefox is outdated, please upgrade
+info alert: id = <>
+	severity = medium
+	description = Firefox is outdated, please upgrade
  _headers_order
    1 = Date
    2 = Server
@@ -220,14 +132,6 @@ info Filter: Firefox is outdated, please upgrade
  version = HTTP/1.1
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53448 -> 192.168.20.1:80
- _headers_order
-   1 = User-Agent
- _length = 52
- headers
-   User-Agent = Mozilla Firefox/28.0
- method = GET
- uri = /
- version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox/28.0
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53449 -> 192.168.20.1:80

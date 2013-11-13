@@ -72,7 +72,8 @@ safe_update:rule(
 safe_update:rule(
 	function (http, response)
 		-- Dump the request helps to debug
-		http.request:dump()
+		-- uncomment next line
+		-- http.request:dump()
 		local UA = http.request.headers["User-Agent"] or "No User-Agent header"
 		haka.log("Filter", "UA detected: %s", UA)
 		local FF_UA = (string.find(UA, "Firefox/"))
@@ -80,7 +81,10 @@ safe_update:rule(
 		if FF_UA then
 			local version = tonumber(string.sub(UA, FF_UA+8))
 			if not version or version < last_firefox_version then
-				haka.log("Filter", "Firefox is outdated, please upgrade")
+				haka.alert{
+					description= "Firefox is outdated, please upgrade",
+					severity= 'medium'
+				}
 				-- We modify some fields of the response on the fly
 				-- We redirect the browser to a safe place
 				-- where updates will be made
