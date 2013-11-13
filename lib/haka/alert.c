@@ -140,7 +140,7 @@ uint64 alert(const struct alert *alert)
 {
 	const uint64 id = atomic64_inc(&alert_id);
 	struct alerter *iter;
-	bool remove_pass;
+	bool remove_pass = false;
 	struct time time;
 
 	time_gettimestamp(&time);
@@ -152,7 +152,7 @@ uint64 alert(const struct alert *alert)
 	rwlock_readlock(&alert_module_lock);
 	for (iter=alerters; iter; iter = list_next(iter)) {
 		iter->alert(iter, id, &time, alert);
-		remove_pass &= iter->mark_for_remove;
+		remove_pass |= iter->mark_for_remove;
 	}
 	rwlock_unlock(&alert_module_lock);
 
@@ -163,7 +163,7 @@ uint64 alert(const struct alert *alert)
 
 bool alert_update(uint64 id, const struct alert *alert)
 {
-	bool remove_pass;
+	bool remove_pass = false;
 	struct alerter *iter;
 	struct time time;
 
@@ -176,7 +176,7 @@ bool alert_update(uint64 id, const struct alert *alert)
 	rwlock_readlock(&alert_module_lock);
 	for (iter=alerters; iter; iter = list_next(iter)) {
 		iter->update(iter, id, &time, alert);
-		remove_pass &= iter->mark_for_remove;
+		remove_pass |= iter->mark_for_remove;
 	}
 	rwlock_unlock(&alert_module_lock);
 

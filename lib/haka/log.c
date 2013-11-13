@@ -250,7 +250,7 @@ void message(log_level level, const wchar_t *module, const wchar_t *message)
 			for (iter=loggers; iter; iter = list_next(iter)) {
 				iter->message(iter, level, module, message);
 
-				remove_pass &= iter->mark_for_remove;
+				remove_pass |= iter->mark_for_remove;
 			}
 			rwlock_unlock(&log_module_lock);
 
