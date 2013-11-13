@@ -2,6 +2,7 @@
 BEGIN {
 	show = 0
 	trace = 0
+	alert = 0
 }
 
 $0 ~ /^[^ \t]+[ \t]+[^:]+:[ ]+.*$/ {
@@ -40,8 +41,26 @@ $0 ~ /^stack traceback:$/ {
 	next;
 }
 
+$0 ~ /^info alert: update id = / {
+	alert = 1;
+	print($1 " " $2 " " $3 " " $4 " = <>");
+	next;
+}
+
+$0 ~ /^info alert:/ {
+	alert = 1;
+	print($1 " " $2 " " $3 " = <>");
+	next;
+}
+
+$0 ~ /^\ttime = / {
+	if (!alert) print;
+	next;
+}
+
 $0 ~ /^[^ \t]/ {
 	trace = 0;
+	alert = 0;
 }
 
 {

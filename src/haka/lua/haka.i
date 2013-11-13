@@ -10,6 +10,7 @@
 #include <haka/thread.h>
 #include <haka/module.h>
 #include <haka/stream.h>
+#include <haka/alert.h>
 #include <haka/config.h>
 
 char *module_prefix = HAKA_MODULE_PREFIX;
@@ -61,6 +62,23 @@ struct time {
 
 		%immutable;
 		double seconds;
+
+		temporary_string __tostring()
+		{
+			char *ret = malloc(TIME_BUFSIZE);
+			if (!ret) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!time_tostring($self, ret, TIME_BUFSIZE)) {
+				assert(check_error());
+				free(ret);
+				return NULL;
+			}
+
+			return ret;
+		}
 	}
 };
 
@@ -124,7 +142,8 @@ int _getswigclassmetatable(struct lua_State *L)
 	haka._on_exit = {}
 
 	function haka._exiting()
-		for _, f in pairs(haka._on_exit) do
+		for k, f in pairs(haka._on_exit) do
+			haka._on_exit[k] = nil
 			f()
 		end
 	end

@@ -9,6 +9,8 @@ HTTP REQUEST
  method = GET
  uri = /Ž™ÿ
  version = HTTP/1.1
-error http: invalid header '<html><head>'
+info alert: id = <>
+	severity = low
+	description = invalid http header '<html><head>'
 debug tcp-connection: dropping connection 127.0.0.1:42072 -> 127.0.0.1:80
 debug tcp-connection: closing connection 127.0.0.1:42072 -> 127.0.0.1:80

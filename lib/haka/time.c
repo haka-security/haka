@@ -2,6 +2,8 @@
 #include <time.h>
 #include <errno.h>
 #include <math.h>
+#include <assert.h>
+#include <string.h>
 
 #include <haka/time.h>
 #include <haka/error.h>
@@ -16,7 +18,7 @@ void time_build(struct time *t, double secs)
 bool time_gettimestamp(struct time *t)
 {
 	struct timespec time;
-	if (clock_gettime(CLOCK_MONOTONIC, &time)) {
+	if (clock_gettime(CLOCK_REALTIME, &time)) {
 		error(L"time error: %s", errno_error(errno));
 		return false;
 	}
@@ -69,4 +71,23 @@ int time_cmp(const struct time *t1, const struct time *t2)
 			return 0;
 		}
 	}
+}
+
+bool time_tostring(const struct time *t, char *buffer, size_t len)
+{
+	assert(len >= TIME_BUFSIZE);
+
+	if (!ctime_r(&t->secs, buffer)) {
+		error(L"time convertion error");
+		return false;
+	}
+
+	assert(strlen(buffer) > 0);
+	buffer[strlen(buffer)-1] = 0; /* remove trailing '\n' */
+	return true;
+}
+
+bool time_isvalid(const struct time *t)
+{
+	return t->secs != 0 || t->nsecs != 0;
 }

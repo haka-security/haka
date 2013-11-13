@@ -5,7 +5,10 @@
 #include <assert.h>
 
 #include <haka/log.h>
+#include <haka/alert.h>
 #include <haka/error.h>
+#include <haka/string.h>
+
 
 struct tcp_pseudo_header {
 	ipv4addr       src;
@@ -47,7 +50,20 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	}
 
 	if (!vbuffer_checksize(packet->payload, sizeof(struct tcp_header))) {
-		error(L"TCP header length should have a minimum size of %d", sizeof(struct tcp_header));
+		TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
+		TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
+		ALERT(invalid_packet, 1, 1)
+
+			description: L"invalid tcp packet, size is too small",
+			severity: HAKA_ALERT_LOW,
+		ENDALERT
+
+		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
+		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
+
+		alert(&invalid_packet);
+
+		ipv4_action_drop(packet);
 		return NULL;
 	}
 

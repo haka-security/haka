@@ -766,7 +766,7 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 	if (chunk->start_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset ||
 		chunk->end_seq < tcp_s->current_position.chunk_seq + tcp_s->current_position.chunk_offset) {
 		message(HAKA_LOG_WARNING, L"tcp-connection", L"retransmit packet (ignored)");
-		tcp_action_drop(tcp);
+		tcp_release(tcp);
 		free(chunk);
 		return false;
 	}
@@ -798,7 +798,7 @@ bool tcp_stream_push(struct stream *s, struct tcp *tcp)
 
 		if (iter && chunk->end_seq > iter->start_seq) {
 			message(HAKA_LOG_WARNING, L"tcp-connection", L"retransmit packet (ignored)");
-			tcp_action_drop(tcp);
+			tcp_release(tcp);
 			free(chunk);
 			return false;
 		}

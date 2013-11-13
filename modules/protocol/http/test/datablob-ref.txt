@@ -1,5 +1,7 @@
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 127.0.0.1:42069 -> 127.0.0.1:80
-error http: invalid request '\xf8\xf9D\x1aO\xd8\xa5\xa7\xd8\xe6\x87P(\x90\xfd4<)\xa3\x9aM$?\xf7\x1\x9c\xa0\x95\xeb\xda\xe6\xeav\xa9q0\xf6\xc9'
+info alert: id = <>
+	severity = low
+	description = invalid http request '\xf8\xf9D\x1aO\xd8\xa5\xa7\xd8\xe6\x87P(\x90\xfd4<)\xa3\x9aM$?\xf7\x1\x9c\xa0\x95\xeb\xda\xe6\xeav\xa9q0\xf6\xc9'
 debug tcp-connection: dropping connection 127.0.0.1:42069 -> 127.0.0.1:80
 debug tcp-connection: closing connection 127.0.0.1:42069 -> 127.0.0.1:80

@@ -1,9 +1,29 @@
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 10.2.96.127:57861 -> 10.2.104.129:80
-error http: invalid request 'GET /_HTTP/1.1'
+info alert: id = <>
+	severity = low
+	description = invalid http request 'GET /_HTTP/1.1'
 debug tcp-connection: dropping connection 10.2.96.127:57861 -> 10.2.104.129:80
-error tcp-connection: no connection found
-debug tcp-connection: no connection found 10.2.104.129:80 -> 10.2.96.127:57859
-error tcp-connection: no connection found
-debug tcp-connection: no connection found 10.2.96.127:57859 -> 10.2.104.129:80
+info alert: id = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.104.129
+		service: tcp/80
+	}
+	targets = {
+		address: 10.2.96.127
+		service: tcp/57859
+	}
+info alert: id = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.96.127
+		service: tcp/57859
+	}
+	targets = {
+		address: 10.2.104.129
+		service: tcp/80
+	}
 debug tcp-connection: closing connection 10.2.96.127:57861 -> 10.2.104.129:80

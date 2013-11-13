@@ -12,6 +12,8 @@
 #include <signal.h>
 
 #include <haka/error.h>
+#include <haka/alert.h>
+#include <haka/alert_module.h>
 #include <haka/version.h>
 #include <haka/lua/state.h>
 #include <luadebug/debugger.h>
@@ -146,21 +148,21 @@ int read_configuration(const char *file)
 
 			struct module *logger_module = module_load(module, config);
 			if (!logger_module) {
-				message(HAKA_LOG_FATAL, L"core", L"cannot load logging module");
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot load logging module: %ls", clear_error());
 				clean_exit();
 				return 1;
 			}
 
 			logger = log_module_logger(logger_module, config);
 			if (!logger) {
-				messagef(HAKA_LOG_FATAL, L"core", L"cannot initialize logging module: %s", clear_error());
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot initialize logging module: %ls", clear_error());
 				module_release(logger_module);
 				clean_exit();
 				return 1;
 			}
 
 			if (!add_logger(logger)) {
-				messagef(HAKA_LOG_FATAL, L"core", L"cannot install logging module: %s", clear_error());
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot install logging module: %ls", clear_error());
 				logger->destroy(logger);
 				module_release(logger_module);
 				clean_exit();
@@ -168,6 +170,42 @@ int read_configuration(const char *file)
 			}
 
 			module_release(logger_module);
+		}
+	}
+
+	/* Alert module */
+	{
+		const char *module;
+
+		parameters_open_section(config, "alert");
+		module = parameters_get_string(config, "module", NULL);
+		if (module) {
+			struct alerter *alerter;
+
+			struct module *alerter_module = module_load(module, config);
+			if (!alerter_module) {
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot load alert module: %ls", clear_error());
+				clean_exit();
+				return 1;
+			}
+
+			alerter = alert_module_alerter(alerter_module, config);
+			if (!alerter) {
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot initialize alert module: %ls", clear_error());
+				module_release(alerter_module);
+				clean_exit();
+				return 1;
+			}
+
+			if (!add_alerter(alerter)) {
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot install alert module: %ls", clear_error());
+				alerter->destroy(alerter);
+				module_release(alerter_module);
+				clean_exit();
+				return 1;
+			}
+
+			module_release(alerter_module);
 		}
 	}
 
@@ -180,7 +218,7 @@ int read_configuration(const char *file)
 		if (module) {
 			struct module *packet = module_load(module, config);
 			if (!packet) {
-				message(HAKA_LOG_FATAL, L"core", L"cannot load packet module");
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot load packet module: %ls", clear_error());
 				clean_exit();
 				return 1;
 			}

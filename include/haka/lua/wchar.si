@@ -36,4 +36,11 @@ static wchar_t* str2wstr(const char *str, int len)
 	free($1);
 %}
 
+%typemap(memberin) wchar_t *
+%{
+	free($1);
+	$1 = $input;
+	$input = NULL;
+%}
+
 %typemap(typecheck) wchar_t * = char *;

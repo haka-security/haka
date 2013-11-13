@@ -4,21 +4,54 @@ debug tcp-connection: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
 debug filter: entering packet filetring rules : 50693 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
-error filter: non authorized http method 'wrong'
+info alert: id = <>
+	description = non authorized http method 'wrong'
+	sources = {
+		address: 192.168.10.1
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/80, http
+	}
 debug tcp-connection: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
 debug filter: entering packet filetring rules : 50694 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
-error filter: unsupported http version 'HTTP/2.1'
+info alert: id = <>
+	description = unsupported http version 'HTTP/2.1'
+	sources = {
+		address: 192.168.10.1
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/80, http
+	}
 debug tcp-connection: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
 debug filter: entering packet filetring rules : 50695 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
-warn filter: forbidden http method 'trace'
+info alert: id = <>
+	description = forbidden http method 'trace'
+	sources = {
+		address: 192.168.10.1
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/80, http
+	}
 debug filter: entering packet filetring rules : 50696 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
-error filter: 'sqlmap' scan detected !!!
+info alert: id = <>
+	severity = low
+	description = 'sqlmap' scan detected
+	sources = {
+		address: 192.168.10.1
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/80, http
+	}
 debug tcp-connection: dropping connection 192.168.10.1:50696 -> 192.168.20.1:80
 debug tcp-connection: closing connection 192.168.10.1:50696 -> 192.168.20.1:80
 debug tcp-connection: closing connection 192.168.10.1:50695 -> 192.168.20.1:80
