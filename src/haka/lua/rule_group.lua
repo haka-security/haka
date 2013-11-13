@@ -1,11 +1,12 @@
 
 local rule_group = class('RuleGroup')
 
-function rule_group.method:__init(args)
+function rule_group.method:__init(args, continue)
 	self.rules = {}
-	self.init = args.init
-	self.continue = args.continue
-	self.fini = args.fini
+	self.init = args.init or function () end
+	self.continue = args.continue or function () return true end
+	self.fini = args.fini or function () end
+	self.event_continue = continue
 end
 
 function rule_group.method:rule(eval)
@@ -18,7 +19,8 @@ function rule_group.method:eval(...)
 	for _, rule in ipairs(self.rules) do
 		local ret = rule(...)
 
-		if not self.continue(ret, ...) then
+		if not self.event_continue(...) or
+		   not self.continue(ret, ...) then
 			return
 		end
 	end
@@ -32,7 +34,7 @@ function haka.rule_group(args)
 		error("no hook defined for rule group")
 	end
 
-	local group = rule_group:new(args)
+	local group = rule_group:new(args, args.hook.continue)
 	haka.context.connections:register(args.hook, function (...) group:eval(...) end)
 	return group
 end
