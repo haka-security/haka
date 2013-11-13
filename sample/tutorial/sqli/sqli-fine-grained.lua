@@ -15,12 +15,12 @@ local keywords = {
 ------------------------------------
 
 haka.rule {
-	hooks = { 'http-request' },
-	eval = function (self, http)
-		dump_request(http)
+	hook = haka.event('http', 'request'),
+	eval = function (http, request)
+		dump_request(request)
 
-		local uri = http.request.uri
-		local ck = http.request.headers['Cookie']
+		local uri = request.uri
+		local ck = request.headers['Cookie']
 
 		-- Initialize the score for query's argument and cookies list
 		-- Could be extend to check patterns in other http fields

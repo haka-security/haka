@@ -34,19 +34,20 @@ local safe_ressources = {
 ------------------------------------
 
 sqli = haka.rule_group {
+	hook = haka.event('http', 'request'),
 	name = 'sqli',
 	-- Initialisation
-	init = function (self, http)
-		dump_request(http)
+	init = function (http, request)
+		dump_request(request)
 
 		-- Another way to split cookie header value and query's arguments
 		http.sqli = {
 			cookies = {
-				value = http.request:split_cookies(),
+				value = request:split_cookies(),
 				score = 0
 			},
 			args = {
-				value = http.request:split_uri().args,
+				value = request:split_uri().args,
 				score = 0
 			}
 		}
@@ -57,7 +58,7 @@ sqli = haka.rule_group {
 	-- Here we check the return value ret to decide
 	-- if we skip the evaluation of the rest of the
 	-- rule.
-	continue = function (self, http, ret)
+	continue = function (ret)
 		return not ret
 	end
 }
@@ -66,11 +67,10 @@ sqli = haka.rule_group {
 -- SQLi White List Rule
 ------------------------------------
 
-sqli:rule {
-	hooks = { 'http-request' },
-	eval = function (self, http)
+sqli:rule(
+	function (http, request)
 		-- Split uri into subparts and normalize it
-		local splitted_uri = http.request:split_uri():normalize()
+		local splitted_uri = request:split_uri():normalize()
 		for	_, res in ipairs(safe_ressources) do
 			-- Skip evaluation if the normalized path (without dot-segments)
 			-- is in the list of safe ressources
@@ -80,16 +80,15 @@ sqli:rule {
 			end
 		end
 	end
-}
+)
 
 ------------------------------------
 -- SQLi Rules
 ------------------------------------
 
 local function check_sqli(patterns, score, trans)
-	sqli:rule {
-		hooks = { 'http-request' },
-		eval = function (self, http)
+	sqli:rule(
+		function (http, request)
 			for k, v in pairs(http.sqli) do
 				if v.value then
 					for _, val in pairs(v.value) do
@@ -127,7 +126,7 @@ local function check_sqli(patterns, score, trans)
 				end
 			end
 		end
-	}
+	)
 end
 
 check_sqli(sql_comments, 4, { decode, lower })

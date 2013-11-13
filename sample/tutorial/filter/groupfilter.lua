@@ -4,6 +4,7 @@
 
 require('protocol/ipv4')
 require('protocol/tcp')
+require('protocol/tcp-connection')
 
 ------------------------------------
 -- Security group
@@ -22,18 +23,18 @@ local group = haka.rule_group {
 	-- The hooks tells where this rule is applied
 	-- only TCP packets will be concerned by this rule
 	-- other protocol will flow
-	name = "group",
-	init = function (self, pkt)
-		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
+	hook = haka.event('tcp-connection', 'new_connection'),
+	init = function (flow, pkt)
+		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d", pkt.srcport, pkt.dstport)
 	end,
-	fini = function (self, pkt)
+	fini = function (flow, pkt)
 		haka.alert{
 			description = "Packet dropped : drop by default",
-			targets = { haka.alert.service("tcp", pkt.tcp.dstport) }
+			targets = { haka.alert.service("tcp", pkt.dstport) }
 		}
 		pkt:drop()
 	end,
-	continue = function (self, pkt, ret)
+	continue = function (ret)
 		return not ret
 	end
 }
@@ -41,24 +42,22 @@ local group = haka.rule_group {
 ------------------------------------
 -- Security group rule
 ------------------------------------
-group:rule {
-	hooks = { 'tcp-connection-new' },
-	eval = function (self, pkt)
+group:rule(
+	function (flow, pkt)
 		-- Accept connection to TCP port 80
-		if pkt.tcp.dstport == 80 then
+		if pkt.dstport == 80 then
 			haka.log("Filter", "Authorizing traffic on port 80")
 			return true
 		end
 	end
-}
+)
 
-group:rule {
-	hooks = { 'tcp-connection-new' },
-	eval = function (self, pkt)
+group:rule(
+	function (flow, pkt)
 		-- Accept connection to TCP port 22
-		if pkt.tcp.dstport == 22 then
+		if pkt.dstport == 22 then
 			haka.log("Filter", "Authorizing traffic on port 22")
 			return true
 		end
 	end
-}
+)

@@ -1,3 +1,4 @@
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53440 -> 192.168.20.1:80
 info Filter: Domain requested: server
  _headers_order
@@ -39,6 +40,7 @@ info Filter: Firefox is outdated, please upgrade
  status = 307
  version = HTTP/1.1
 debug tcp-connection: dropping connection 192.168.10.1:53440 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53441 -> 192.168.20.1:80
 info Filter: Domain requested: server
  _headers_order
@@ -56,7 +58,7 @@ info Filter: Domain requested: server
  uri = /
  version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox/28.0
-debug tcp-connection: closing connection 192.168.10.1:53441 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53442 -> 192.168.20.1:80
 info Filter: Domain requested: server
  _headers_order
@@ -98,6 +100,7 @@ info Filter: Firefox is outdated, please upgrade
  status = 307
  version = HTTP/1.1
 debug tcp-connection: dropping connection 192.168.10.1:53442 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53443 -> 192.168.20.1:80
 info Filter: Domain requested: server
  _headers_order
@@ -139,6 +142,7 @@ info Filter: Firefox is outdated, please upgrade
  status = 307
  version = HTTP/1.1
 debug tcp-connection: dropping connection 192.168.10.1:53443 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53444 -> 192.168.20.1:80
 info Filter: Domain requested: server
  _headers_order
@@ -157,7 +161,7 @@ info Filter: Domain requested: server
  version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox
 info Filter: Unknown or missing User-Agent
-debug tcp-connection: closing connection 192.168.10.1:53444 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53445 -> 192.168.20.1:80
 info Filter: Domain requested: server
  _headers_order
@@ -174,7 +178,7 @@ info Filter: Domain requested: server
  version = HTTP/1.1
 info Filter: UA detected: No User-Agent header
 info Filter: Unknown or missing User-Agent
-debug tcp-connection: closing connection 192.168.10.1:53445 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53446 -> 192.168.20.1:80
  _headers_order
  _length = 18
@@ -184,7 +188,7 @@ debug tcp-connection: opening connection 192.168.10.1:53446 -> 192.168.20.1:80
  version = HTTP/1.1
 info Filter: UA detected: No User-Agent header
 info Filter: Unknown or missing User-Agent
-debug tcp-connection: closing connection 192.168.10.1:53446 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53447 -> 192.168.20.1:80
  _headers_order
    1 = User-Agent
@@ -214,7 +218,7 @@ info Filter: Firefox is outdated, please upgrade
  reason = Moved Temporarily
  status = 307
  version = HTTP/1.1
-debug tcp-connection: closing connection 192.168.10.1:53447 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53448 -> 192.168.20.1:80
  _headers_order
    1 = User-Agent
@@ -225,8 +229,17 @@ debug tcp-connection: opening connection 192.168.10.1:53448 -> 192.168.20.1:80
  uri = /
  version = HTTP/1.1
 info Filter: UA detected: Mozilla Firefox/28.0
-debug tcp-connection: closing connection 192.168.10.1:53448 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:53449 -> 192.168.20.1:80
 info Filter: Domain requested: mozilla.org
 info Filter: Update domain: go for it
 debug tcp-connection: closing connection 192.168.10.1:53449 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:53448 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:53447 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:53446 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:53445 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:53444 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:53443 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:53442 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:53441 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:53440 -> 192.168.20.1:80

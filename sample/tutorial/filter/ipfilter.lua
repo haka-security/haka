@@ -11,8 +11,8 @@ local ipv4 = require('protocol/ipv4')
 ------------------------------------
 haka.rule {
 	-- This rule is applied on each IP incoming packet
-	hooks = { 'ipv4-up' },
-	eval = function (self, pkt)
+	hook = haka.event('ipv4', 'receive_packet'),
+	eval = function (pkt)
 		-- We assign a variable to an IP address thanks to 
 		-- the ipv4.addr function
 		local bad_ip = ipv4.addr('192.168.10.10')
