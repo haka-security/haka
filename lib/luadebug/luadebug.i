@@ -75,7 +75,99 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	local function __pprint(obj, indent, name, visited, hidden, depth, out)
+	local __pprint
+
+	local function __pprint_swig(obj, indent, name, visited, hidden, depth, out, title, meta)
+		title = table.concat({title, color.cyan, color.bold, "userdata", color.clear})
+
+		if meta[".type"] then
+			title = table.concat({title, " ", tostring(meta[".type"])})
+		end
+
+		if meta[".fn"] and meta[".fn"].__tostring then
+			out(title, tostring(obj))
+		else
+			if depth == 0 then
+				out(title)
+			else
+				local has_value = false
+
+				for key, _ in pairs(meta[".get"]) do
+					if not hidden or not hidden(key) then
+						if not has_value then
+							out(title, "{")
+							has_value = true
+						end
+
+						local success, child_obj = pcall(function () return obj[key] end)
+						if success then
+							__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
+						else
+							local error = table.concat({indent, "  ", color.blue, color.bold, key, color.clear, " : ", color.red, child_obj, color.clear})
+							out(error)
+						end
+					end
+				end
+
+				if has_value then
+					out(indent .. "}")
+				else
+					out(title)
+				end
+			end
+		end
+	end
+
+	local function __print_table(obj, indent, name, visited, hidden, depth, out, title)
+		title = table.concat({title, color.cyan, color.bold, "table", color.clear})
+		if depth == 0 then
+			out(title)
+		else
+			out(title, "{")
+
+			for key, value in pairs(obj) do
+				if not hidden or not hidden(key) then
+					__pprint(value, indent .. "  ", tostring(key), visited, hidden, depth-1, out)
+				end
+			end
+
+			out(indent .. "}")
+		end
+	end
+
+	local function __print_class(obj, indent, name, visited, hidden, depth, out, title, meta)
+		title = table.concat({title, color.cyan, color.bold, "class", color.clear})
+
+		title = table.concat({title, " ", tostring(meta.name)})
+
+		if depth == 0 then
+			out(title)
+		else
+			out(title, "{")
+
+			for key, value in pairs(obj) do
+				if not hidden or not hidden(key) then
+					__pprint(value, indent .. "  ", tostring(key), visited, hidden, depth-1, out)
+				end
+			end
+
+			for key, _ in pairs(meta.property) do
+				if not hidden or not hidden(key) then
+					local success, child_obj = pcall(function () return obj[key] end)
+					if success then
+						__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
+					else
+						local error = table.concat({indent, "  ", color.blue, color.bold, key, color.clear, " : ", color.red, child_obj, color.clear})
+						out(error)
+					end
+				end
+			end
+
+			out(indent .. "}")
+		end
+	end
+
+	__pprint = function(obj, indent, name, visited, hidden, depth, out)
 		local type = type(obj)
 
 		local title
@@ -95,61 +187,16 @@ void lua_luadebug_debugger_break();
 		end
 
 		if type == "table" then
-			title = table.concat({title, color.cyan, color.bold, "table", color.clear})
-			if depth == 0 then
-				out(title)
+			local meta = getmetatable(obj)
+			if meta and isclass(meta) then
+				__print_class(obj, indent, name, visited, hidden, depth, out, title, meta)
 			else
-				out(title, "{")
-
-				for key, value in pairs(obj) do
-					if not hidden or not hidden(key) then
-						__pprint(value, indent .. "  ", tostring(key), visited, hidden, depth-1, out)
-					end
-				end
-
-				out(indent .. "}")
+				__print_table(obj, indent, name, visited, hidden, depth, out, title)
 			end
 		elseif type == "userdata" then
 			local meta = getmetatable(obj)
-			if meta and meta[".type"] and meta[".get"]then
-				title = table.concat({title, color.cyan, color.bold, "userdata", color.clear})
-
-				if meta[".type"] then
-					title = table.concat({title, " ", tostring(meta[".type"])})
-				end
-
-				if meta[".fn"] and meta[".fn"].__tostring then
-					out(title, tostring(obj))
-				else
-					if depth == 0 then
-						out(title)
-					else
-						local has_value = false
-
-						for key, _ in pairs(meta[".get"]) do
-							if not hidden or not hidden(key) then
-								if not has_value then
-									out(title, "{")
-									has_value = true
-								end
-
-								local success, child_obj = pcall(function () return obj[key] end)
-								if success then
-									__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
-								else
-									local error = table.concat({indent, "  ", color.blue, color.bold, key, color.clear, " : ", color.red, child_obj, color.clear})
-									out(error)
-								end
-							end
-						end
-
-						if has_value then
-							out(indent .. "}")
-						else
-							out(title)
-						end
-					end
-				end
+			if meta and meta[".type"] and meta[".get"] then
+				__pprint_swig(obj, indent, name, visited, hidden, depth, out, title, meta)
 			else
 				out(table.concat({title, color.cyan, color.bold, "userdata", color.clear}))
 			end

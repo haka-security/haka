@@ -19,7 +19,7 @@ function BaseClassView.__index(self, key)
 end
 
 function BaseClassView.__tostring(self)
-	return string.format("<class view: %s>", self.cls.__name)
+	return string.format("<class view: %s>", rawget(self, '__class').name)
 end
 
 local BaseClass = {}
@@ -32,7 +32,7 @@ function BaseClass.__index(self, key)
 end
 
 function BaseClass.__tostring(self)
-	return string.format("<class: %s>", self.__name)
+	return string.format("<class: %s>", self.name)
 end
 
 function BaseClass.view(cls)
@@ -74,7 +74,6 @@ local BaseObject = {
 }
 BaseObject.__index = BaseObject
 BaseObject.__view = BaseClass.view(BaseObject)
-
 setmetatable(BaseObject, BaseClass)
 
 function classof(instance)
@@ -140,4 +139,8 @@ function isa(instance, cls)
 		c = c.super
 	end
 	return false
+end
+
+function isclass(cls)
+	return getmetatable(cls) == BaseClass
 end
