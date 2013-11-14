@@ -68,6 +68,15 @@ local BaseObject = {
 			end
 			setmetatable(c, getmetatable(self))
 			return c
+		end,
+		addproperty = function (self, name, get, set)
+			local property = rawget(self, '__property')
+			if not property then
+				property = {}
+				rawset(self, '__property', property)
+			end
+
+			property[name] = { get = get, set = set }
 		end
 	},
 	property = {}
@@ -94,6 +103,16 @@ function class(name, super)
 	cls.__view = BaseClass.view(cls)
 	cls.__index = function (self, key)
 		local v
+
+		-- Dynamic properties
+		v = rawget(self, '__property')
+		if v then
+			v = v[key]
+			if v and v.get then
+				return v.get(self)
+			end
+		end
+
 		for c in class_hierarchy(classof(self)) do
 			local method = rawget(c, 'method')
 
@@ -112,6 +131,16 @@ function class(name, super)
 	end
 	cls.__newindex = function (self, key, value)
 		local v
+
+		-- Dynamic properties
+		v = rawget(self, '__property')
+		if v then
+			v = v[key]
+			if v and v.set then
+				return v.set(self, value)
+			end
+		end
+
 		for c in class_hierarchy(classof(self)) do
 			v = rawget(c, 'property')[key]
 			if v and v.set then return v.set(self, value) end

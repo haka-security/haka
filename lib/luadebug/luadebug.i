@@ -145,14 +145,33 @@ void lua_luadebug_debugger_break();
 		else
 			out(title, "{")
 
+			local vars = {}
+
 			for key, value in pairs(obj) do
-				if not hidden or not hidden(key) then
+				if key ~= '__property' and (not hidden or not hidden(key)) then
 					__pprint(value, indent .. "  ", tostring(key), visited, hidden, depth-1, out)
+					vars[key] = true
+				end
+			end
+
+			if obj.__property then
+				for key, _ in pairs(obj.__property) do
+					if not vars[key] and (not hidden or not hidden(key)) then
+						vars[key] = true
+						local success, child_obj = pcall(function () return obj[key] end)
+						if success then
+							__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
+						else
+							local error = table.concat({indent, "  ", color.blue, color.bold, key, color.clear, " : ", color.red, child_obj, color.clear})
+							out(error)
+						end
+					end
 				end
 			end
 
 			for key, _ in pairs(meta.property) do
-				if not hidden or not hidden(key) then
+				if not vars[key] and (not hidden or not hidden(key)) then
+					vars[key] = true
 					local success, child_obj = pcall(function () return obj[key] end)
 					if success then
 						__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
