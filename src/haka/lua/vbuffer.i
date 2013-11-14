@@ -158,7 +158,7 @@ struct vsubbuffer {
 STRUCT_UNKNOWN_KEY_ERROR(vsubbuffer);
 
 
-%newobject vbuffer_iterator::sub;
+%newobject vbuffer_iterator::_sub;
 
 struct vbuffer_iterator {
 	%extend {

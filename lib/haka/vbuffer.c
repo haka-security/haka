@@ -693,7 +693,7 @@ size_t vbuffer_iterator_advance(struct vbuffer_iterator *iterator, size_t len)
 		last = iter;
 
 		if (buflen >= clen) {
-			iterator->offset = clen;
+			iterator->offset = offset + clen;
 			iterator->buffer = iter;
 			return 0;
 		}
