@@ -7,6 +7,15 @@ local icmp_dissector = haka.dissector.new{
 	name = 'icmp'
 }
 
+icmp_dissector.grammar = haka.grammar.record{
+	haka.grammar.integer(1):as('type'),
+	haka.grammar.integer(1):as('code'),
+	haka.grammar.integer(2):as('checksum'),
+	haka.grammar.bytes():as('payload')
+}
+
+icmp_dissector.grammar = icmp_dissector.grammar:compile()
+
 function icmp_dissector.receive(pkt)
 	local icmp = icmp_dissector:new(pkt)
 	icmp:emit()
@@ -15,34 +24,9 @@ end
 function icmp_dissector.method:__init(pkt)
 	self.ip = pkt
 	self._payload = pkt.payload
+	icmp_dissector.grammar:parseall(self._payload:iter(), self)
 end
 
-icmp_dissector.property.type = {
-	get = function (self)
-		return self._payload:sub(0, 1):asnumber('big')
-	end,
-	set = function (self, num)
-		return self._payload:sub(0, 1):setnumber(num, 'big')
-	end
-}
-
-icmp_dissector.property.code = {
-	get = function (self)
-		return self._payload:sub(1, 1):asnumber('big')
-	end,
-	set = function (self, num)
-		return self._payload:sub(1, 1):setnumber(num, 'big')
-	end
-}
-
-icmp_dissector.property.checksum = {
-	get = function (self)
-		return self._payload:sub(2, 2):asnumber('big')
-	end,
-	set = function (self, num)
-		return self._payload:sub(2, 2):setnumber(num, 'big')
-	end
-}
 
 function icmp_dissector.method:verify_checksum()
 	return ipv4.inet_checksum(self._payload) == 0
