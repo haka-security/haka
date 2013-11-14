@@ -178,10 +178,12 @@ struct ipv4_header *ipv4_header(struct ipv4 *ip, bool write)
 
 static void ipv4_flush(struct ipv4 *ip)
 {
-	struct packet *packet;
-	while ((packet = ipv4_forge(ip))) {
-		packet_drop(packet);
-		packet_release(packet);
+	if (ip->packet) {
+		packet_drop(ip->packet);
+		packet_release(ip->packet);
+		vbuffer_free(ip->payload);
+		ip->payload = NULL;
+		ip->packet = NULL;
 	}
 }
 
