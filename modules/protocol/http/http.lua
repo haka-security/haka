@@ -508,7 +508,11 @@ local function forge(http)
 			end
 
 		elseif http._state == 5 and not tcp.direction then
-			http._state = 0
+			if http.request.method == 'CONNECT' then
+				http._state = 6 -- We should not expect a request nor response anymore
+			else
+				http._state = 0
+			end
 
 			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
 				tcp.stream:seek(http.response._mark, true)
