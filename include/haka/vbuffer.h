@@ -13,6 +13,7 @@
 #define ALL   (size_t)-1
 
 struct vbuffer_data;
+struct vsubbuffer;
 
 struct vbuffer_data_ops {
 	void   (*addref)(struct vbuffer_data *data);
@@ -69,6 +70,7 @@ struct vbuffer_iterator {
 };
 
 bool            vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter);
+bool            vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buffer, size_t len);
 size_t          vbuffer_iterator_read(struct vbuffer_iterator *iter, uint8 *buffer, size_t len);
 bool            vbuffer_iterator_insert(struct vbuffer_iterator *iter, struct vbuffer *data);
 bool            vbuffer_iterator_erase(struct vbuffer_iterator *iter, size_t len);

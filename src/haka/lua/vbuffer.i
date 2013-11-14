@@ -114,7 +114,7 @@ struct vsubbuffer {
 
 		int asnumber(const char *endian)
 		{
-			return vsubbuffer_asnumber($self, strcmp(endian, "big") == 0);
+			return vsubbuffer_asnumber($self, endian ? strcmp(endian, "big") == 0 : true);
 		}
 
 		void setnumber(int num)
@@ -124,7 +124,7 @@ struct vsubbuffer {
 
 		void setnumber(int num, const char *endian)
 		{
-			return vsubbuffer_setnumber($self, strcmp(endian, "big") == 0, num);
+			return vsubbuffer_setnumber($self, endian ? strcmp(endian, "big") == 0 : true, num);
 		}
 
 		%rename(asstring) _asstring;
@@ -157,10 +157,49 @@ struct vsubbuffer {
 
 STRUCT_UNKNOWN_KEY_ERROR(vsubbuffer);
 
+
+%newobject vbuffer_iterator::sub;
+
+struct vbuffer_iterator {
+	%extend {
+		~vbuffer_iterator()
+		{
+			free($self);
+		}
+
+		%rename(advance) _advance;
+		void _advance(int size)
+		{
+			vbuffer_iterator_advance($self, size);
+		}
+
+		%rename(sub) _sub;
+		struct vsubbuffer *_sub(int size)
+		{
+			struct vsubbuffer *sub = malloc(sizeof(struct vsubbuffer));
+			if (!sub) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_iterator_sub($self, sub, size)) {
+				free(sub);
+				return NULL;
+			}
+
+			return sub;
+		}
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator);
+
+
 LUA_OBJECT(struct vbuffer);
 %newobject vbuffer::sub;
 %newobject vbuffer::left;
 %newobject vbuffer::right;
+%newobject vbuffer::iter;
 
 struct vbuffer {
 	%extend {
@@ -213,6 +252,22 @@ struct vbuffer {
 		void _erase(int offset, int size)
 		{
 			vbuffer_erase($self, offset, size);
+		}
+
+		struct vbuffer_iterator *iter()
+		{
+			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+			if (!iter) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_iterator($self, iter)) {
+				free(iter);
+				return NULL;
+			}
+
+			return iter;
 		}
 
 		%immutable;

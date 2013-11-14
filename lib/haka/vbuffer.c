@@ -600,6 +600,32 @@ bool vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter)
 	return true;
 }
 
+bool vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buffer, size_t len)
+{
+	if (len != ALL) {
+		if (!vbuffer_checksize(iter->buffer, iter->offset + len)) {
+			error(L"invalid size");
+			return false;
+		}
+	}
+	else {
+		len = vbuffer_size(iter->buffer);
+		if (len < iter->offset) {
+			error(L"invalid size");
+			return false;
+		}
+
+		len -= iter->offset;
+	}
+
+	buffer->position = *iter;
+	buffer->length = len;
+
+	vbuffer_iterator_advance(iter, len);
+
+	return true;
+}
+
 size_t vbuffer_iterator_read(struct vbuffer_iterator *iterator, uint8 *buffer, size_t len)
 {
 	size_t clen = len;
