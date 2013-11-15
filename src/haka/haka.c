@@ -281,7 +281,7 @@ bool check_running_haka()
 		return false;
 	}
 
-	if (!kill(pid, 0) && errno == ESRCH) {
+	if (kill(pid, 0) || errno == ESRCH) {
 		return false;
 	}
 
