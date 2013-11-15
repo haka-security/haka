@@ -26,6 +26,7 @@ struct thread_state {
 	struct lua_state           *lua;
 	int                         lua_function;
 	thread_t                    thread;
+	bool                        canceled;
 	int32                       attach_debugger;
 	struct thread_pool         *pool;
 };
@@ -153,7 +154,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	}
 
 	if (attach_debugger) {
-		luadebug_debugger_start(state->lua->L, true);
+		luadebug_debugger_start(state->lua->L, false);
 	}
 
 	lua_getglobal(state->lua->L, "require");
@@ -306,7 +307,9 @@ void thread_pool_wait(struct thread_pool *pool)
 
 	for (i=0; i<pool->count; ++i) {
 		void *ret;
-		thread_join(pool->threads[i]->thread, &ret);
+		if (!thread_join(pool->threads[i]->thread, &ret)) {
+			message(HAKA_LOG_FATAL, L"core", clear_error());
+		}
 	}
 }
 
@@ -316,11 +319,19 @@ void thread_pool_cancel(struct thread_pool *pool)
 		int i;
 
 		for (i=0; i<pool->count; ++i) {
-			thread_cancel(pool->threads[i]->thread);
+			if (!pool->threads[i]->canceled) {
+				if (!thread_cancel(pool->threads[i]->thread)) {
+					message(HAKA_LOG_FATAL, L"core", clear_error());
+				}
+				pool->threads[i]->canceled = true;
+			}
 		}
-
-		thread_pool_wait(pool);
 	}
+}
+
+bool thread_pool_issingle(struct thread_pool *pool)
+{
+	return pool->single;
 }
 
 void thread_pool_start(struct thread_pool *pool)
