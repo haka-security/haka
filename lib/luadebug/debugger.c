@@ -789,62 +789,68 @@ static void on_user_error(struct luadebug_debugger *session)
 	luadebug_debugger_stop(session->L);
 }
 
-static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, const char *reason,
-		bool show_backtrace)
+static bool prepare_debugger(struct luadebug_debugger *session)
 {
-	char *line;
-	LUA_STACK_MARK(session->L);
+	mutex_lock(&current_user_mutex);
+	session->user = current_user;
 
-	{
-		mutex_lock(&current_user_mutex);
-		session->user = current_user;
-
-		if (!session->user) {
-			message(HAKA_LOG_ERROR, MODULE, L"no input/output handler");
-			mutex_unlock(&current_user_mutex);
-			on_user_error(session);
-			return;
-		}
-
-		luadebug_user_addref(session->user);
-
+	if (!session->user) {
 		mutex_unlock(&current_user_mutex);
+		message(HAKA_LOG_ERROR, MODULE, L"no input/output handler");
+		on_user_error(session);
+		return false;
 	}
 
-	mutex_lock(&active_session_mutex);
+	luadebug_user_addref(session->user);
 
-	current_session = session;
+	mutex_unlock(&current_user_mutex);
+	return true;
+}
 
-	session->user->completion = completion;
+struct process_debugger_data {
+	struct luadebug_debugger *session;
+	lua_Debug                *ar;
+	const char               *reason;
+	bool                      show_backtrace;
+};
 
-	if (!session->user->start(session->user, "debug")) {
-		on_user_error(session);
-		luadebug_user_release(&session->user);
-		mutex_unlock(&active_session_mutex);
+static void process_debugger(void *_data)
+{
+	struct process_debugger_data *data = _data;
+	char *line;
+	LUA_STACK_MARK(data->session->L);
+
+	data->session->user->completion = completion;
+
+	if (!data->session->user->start(data->session->user, "debug")) {
+		on_user_error(data->session);
 		return;
 	}
 
-	session->list_line = ar->currentline - LIST_DEFAULT_LINE/2;
-	session->frame = *ar;
-	session->frame_index = 0;
-	session->env_index = capture_env(session->L, 0);
-	assert(session->env_index != -1);
-	session->complete.stack_env = session->env_index;
-	session->break_immediatly = false;
-	session->break_depth = -1;
+	data->session->list_line = data->ar->currentline - LIST_DEFAULT_LINE/2;
+	data->session->frame = *data->ar;
+	data->session->frame_index = 0;
+	data->session->env_index = capture_env(data->session->L, 0);
+	assert(data->session->env_index != -1);
+	data->session->complete.stack_env = data->session->env_index;
+	data->session->break_immediatly = false;
+	data->session->break_depth = -1;
 
-	if (reason) {
-		session->user->print(session->user, GREEN "entering debugger" CLEAR ": %s\n", reason);
+	if (data->reason) {
+		data->session->user->print(data->session->user, GREEN "entering debugger" CLEAR ": %s\n",
+				data->reason);
 	}
 
-	if (show_backtrace) {
-		dump_backtrace(session, NULL);
+	data->session->user->print(data->session->user, "thread: %d\n", thread_get_id());
+
+	if (data->show_backtrace) {
+		dump_backtrace(data->session, NULL);
 	}
 
-	dump_source(session, ar, ar->currentline, ar->currentline);
+	dump_source(data->session, data->ar, data->ar->currentline, data->ar->currentline);
 
-	while ((line = session->user->readline(session->user, GREEN "debug" BOLD ">  " CLEAR))) {
-		const bool cont = process_command(session, line, true);
+	while ((line = data->session->user->readline(data->session->user, GREEN "debug" BOLD ">  " CLEAR))) {
+		const bool cont = process_command(data->session, line, true);
 		free(line);
 
 		if (cont) {
@@ -853,22 +859,44 @@ static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, con
 	}
 
 	if (!line) {
-		session->user->print(session->user, "\n");
-		session->user->print(session->user, GREEN "continue" CLEAR "\n");
+		data->session->user->print(data->session->user, "\n");
+		data->session->user->print(data->session->user, GREEN "continue" CLEAR "\n");
 	}
 
-	lua_pop(session->L, 1);
+	lua_pop(data->session->L, 1);
 
+	LUA_STACK_CHECK(data->session->L, 0);
+
+	if (!data->session->user->stop(data->session->user)) {
+		on_user_error(data->session);
+	}
+}
+
+static void process_debugger_cleanup(void *_)
+{
+	luadebug_user_release(&current_session->user);
 	current_session = NULL;
-	LUA_STACK_CHECK(session->L, 0);
+	mutex_unlock(&active_session_mutex);
+}
 
-	if (!session->user->stop(session->user)) {
-		on_user_error(session);
+static void enter_debugger(struct luadebug_debugger *session, lua_Debug *ar, const char *reason,
+		bool show_backtrace)
+{
+	struct process_debugger_data data;
+
+	if (!prepare_debugger(session)) {
+		return;
 	}
 
-	luadebug_user_release(&session->user);
+	mutex_lock(&active_session_mutex);
+	current_session = session;
 
-	mutex_unlock(&active_session_mutex);
+	data.session = session;
+	data.ar = ar;
+	data.reason = reason;
+	data.show_backtrace = show_backtrace;
+
+	thread_protect(process_debugger, &data, process_debugger_cleanup, NULL);
 }
 
 static struct luadebug_debugger *luadebug_debugger_get(struct lua_State *L)
@@ -940,7 +968,7 @@ static void luadebug_debugger_activate(struct luadebug_debugger *session)
 {
 	if (!session->active) {
 #if HAKA_LUAJIT
-		luaJIT_setmode(session->top_L, 0, LUAJIT_MODE_OFF);
+		luaJIT_setmode(session->top_L, 0, LUAJIT_MODE_ENGINE|LUAJIT_MODE_OFF);
 #endif
 
 		atomic_inc(&running_debugger);
@@ -1000,7 +1028,7 @@ static void luadebug_debugger_deactivate(struct luadebug_debugger *session, bool
 		lua_sethook(session->top_L, &lua_debug_hook, 0, 0);
 
 #if HAKA_LUAJIT
-		luaJIT_setmode(session->top_L, 0, LUAJIT_MODE_ON);
+		luaJIT_setmode(session->top_L, 0, LUAJIT_MODE_ENGINE|LUAJIT_MODE_ON);
 #endif
 
 		if (release) {
@@ -1100,6 +1128,12 @@ bool luadebug_debugger_breakall()
 	else {
 		return false;
 	}
+}
+
+bool luadebug_debugger_shutdown()
+{
+	atomic_set(&break_required, 0);
+	return true;
 }
 
 void luadebug_debbugger_error_hook(struct lua_State *L)

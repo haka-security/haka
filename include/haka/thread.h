@@ -38,6 +38,7 @@ enum thread_cancel_t {
 bool     thread_setcancelstate(bool enable);
 bool     thread_setcanceltype(enum thread_cancel_t type);
 void     thread_testcancel();
+void     thread_protect(void (*run)(void *), void *runarg, void (*finish)(void *), void *finisharg);
 
 
 /* Mutex */
