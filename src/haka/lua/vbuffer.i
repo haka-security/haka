@@ -107,24 +107,28 @@ struct vsubbuffer {
 			return vsubbuffer_setbyte($self, index-1, value);
 		}
 
-		int asnumber()
-		{
-			return vsubbuffer_asnumber($self, true);
-		}
-
-		int asnumber(const char *endian)
+		%rename(asnumber) _asnumber;
+		int _asnumber(const char *endian = "big")
 		{
 			return vsubbuffer_asnumber($self, endian ? strcmp(endian, "big") == 0 : true);
 		}
 
-		void setnumber(int num)
-		{
-			return vsubbuffer_setnumber($self, true, num);
-		}
-
-		void setnumber(int num, const char *endian)
+		%rename(setnumber) _setnumber;
+		void _setnumber(int num, const char *endian = "big")
 		{
 			return vsubbuffer_setnumber($self, endian ? strcmp(endian, "big") == 0 : true, num);
+		}
+
+		%rename(asbits) _asbits;
+		int _asbits(int offset, int size, const char *endian = "big")
+		{
+			return vsubbuffer_asbits($self, offset, size, endian ? strcmp(endian, "big") == 0 : true);
+		}
+
+		%rename(setbits) _setbits;
+		void _setbits(int num, int offset, int size, const char *endian = "big")
+		{
+			return vsubbuffer_setbits($self, offset, size, endian ? strcmp(endian, "big") == 0 : true, num);
 		}
 
 		%rename(asstring) _asstring;
@@ -174,7 +178,7 @@ struct vbuffer_iterator {
 		}
 
 		%rename(sub) _sub;
-		struct vsubbuffer *_sub(int size)
+		struct vsubbuffer *_sub(int size, bool advance = true)
 		{
 			struct vsubbuffer *sub = malloc(sizeof(struct vsubbuffer));
 			if (!sub) {
@@ -182,7 +186,7 @@ struct vbuffer_iterator {
 				return NULL;
 			}
 
-			if (!vbuffer_iterator_sub($self, sub, size)) {
+			if (!vbuffer_iterator_sub($self, sub, size, advance)) {
 				free(sub);
 				return NULL;
 			}

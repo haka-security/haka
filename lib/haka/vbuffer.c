@@ -600,7 +600,7 @@ bool vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter)
 	return true;
 }
 
-bool vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buffer, size_t len)
+bool vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buffer, size_t len, bool advance)
 {
 	if (len != ALL) {
 		if (!vbuffer_checksize(iter->buffer, iter->offset + len)) {
@@ -621,39 +621,89 @@ bool vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buff
 	buffer->position = *iter;
 	buffer->length = len;
 
-	vbuffer_iterator_advance(iter, len);
+	if (advance) {
+		vbuffer_iterator_advance(iter, len);
+	}
 
 	return true;
 }
 
-size_t vbuffer_iterator_read(struct vbuffer_iterator *iterator, uint8 *buffer, size_t len)
+size_t vbuffer_iterator_read(struct vbuffer_iterator *iterator, uint8 *buffer, size_t len, bool advance)
 {
 	size_t clen = len;
 	struct vbuffer *iter = iterator->buffer;
 	size_t offset = iterator->offset;
-	iterator->offset = 0;
 
 	if (!iter) {
 		error(L"invalid buffer iterator");
 		return (size_t)-1;
 	}
 
-	while (clen > 0) {
+	while (true) {
 		size_t buflen = iter->length - offset;
 		if (buflen > clen) {
 			buflen = clen;
-			iterator->offset = buflen;
 		}
 
 		memcpy(buffer, vbuffer_get_data(iter, false) + offset, buflen);
 		buffer += buflen;
 		clen -= buflen;
-		offset = 0;
+
+		if (clen == 0) {
+			offset += buflen;
+			break;
+		}
+		else {
+			offset = 0;
+		}
 
 		iter = iter->next;
 	}
 
-	iterator->buffer = iter;
+	if (advance) {
+		iterator->buffer = iter;
+		iterator->offset = offset;
+	}
+
+	return (len - clen);
+}
+
+size_t vbuffer_iterator_write(struct vbuffer_iterator *iterator, uint8 *buffer, size_t len, bool advance)
+{
+	size_t clen = len;
+	struct vbuffer *iter = iterator->buffer;
+	size_t offset = iterator->offset;
+
+	if (!iter) {
+		error(L"invalid buffer iterator");
+		return (size_t)-1;
+	}
+
+	while (true) {
+		size_t buflen = iter->length - offset;
+		if (buflen > clen) {
+			buflen = clen;
+		}
+
+		memcpy(vbuffer_get_data(iter, false) + offset, buffer, buflen);
+		buffer += buflen;
+		clen -= buflen;
+
+		if (clen == 0) {
+			offset += buflen;
+			break;
+		}
+		else {
+			offset = 0;
+		}
+
+		iter = iter->next;
+	}
+
+	if (advance) {
+		iterator->buffer = iter;
+		iterator->offset = offset;
+	}
 
 	return (len - clen);
 }
@@ -803,7 +853,7 @@ bool vsubbuffer_flatten(struct vsubbuffer *buf)
 		}
 
 		ptr = vbuffer_mmap(flat, NULL, NULL, true);
-		len = vbuffer_iterator_read(&iter, ptr, buf->length);
+		len = vbuffer_iterator_read(&iter, ptr, buf->length, true);
 		assert(len == buf->length);
 
 		vbuffer_erase(iter.buffer, iter.offset, buf->length);
@@ -875,20 +925,7 @@ int64 vsubbuffer_asnumber(struct vsubbuffer *buf, bool bigendian)
 		}
 	}
 	else {
-		struct vbuffer *buffer = buf->position.buffer;
-		size_t offset = buf->position.offset;
-		int i;
-
-		for (i=0; i<buf->length; ++i, ++offset) {
-			buffer = vbuffer_get(buffer, &offset, false);
-			if (!buffer) {
-				error(L"invalid sub buffer");
-				return 0;
-			}
-
-			temp[i] = *(vbuffer_get_data(buffer, false) + offset);
-		}
-
+		vbuffer_iterator_read(&buf->position, temp, buf->length, false);
 		ptr = temp;
 	}
 
@@ -930,9 +967,6 @@ void vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num)
 			int64 i64;
 			uint8 data[8];
 		} temp;
-		struct vbuffer *buffer = buf->position.buffer;
-		size_t offset = buf->position.offset;
-		int i;
 
 		switch (buf->length) {
 		case 1: temp.i8 = num; break;
@@ -944,22 +978,112 @@ void vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num)
 			return;
 		}
 
-		for (i=0; i<buf->length; ++i, ++offset) {
-			uint8 *ptr;
+		vbuffer_iterator_write(&buf->position, temp.data, buf->length, false);
+	}
+}
 
-			buffer = vbuffer_get(buffer, &offset, false);
-			if (!buffer) {
-				error(L"invalid sub buffer");
-				return;
-			}
+static uint8 getbits(uint8 x, int off, int size)
+{
+#if HAKA_LITTLEENDIAN
+	return (x >> (8-off-size)) & ((1 << size)-1);
+#else
+	return (x >> off) & ((1 << size)-1);
+#endif
+}
 
-			ptr = vbuffer_get_data(buffer, true);
-			if (!ptr) {
-				return;
-			}
+static uint8 setbits(uint8 x, int off, int size, uint8 v)
+{
+#if HAKA_LITTLEENDIAN
+	return (x & ~(((1 << size)-1) << (8-off-size))) | ((v & ((1 << size)-1)) << (8-off-size));
+#else
+	return (x & ~(((1 << size)-1) << off)) | ((v & ((1 << size)-1)) << off));
+#endif
+}
 
-			*(ptr + offset) = temp.data[i];
+int64 vsubbuffer_asbits(struct vsubbuffer *buf, size_t offset, size_t bits, bool bigendian)
+{
+#if HAKA_LITTLEENDIAN
+	if (!bigendian) {
+#else
+	if (bigendian) {
+#endif
+		int64 n = vsubbuffer_asnumber(buf, bigendian);
+		return (n >> offset) & ((1 << (bits))-1);
+	}
+	else {
+		uint8 temp[8];
+		int64 ret = 0;
+		int i, off = offset, shiftbits = 0;
+		const size_t end = (offset + bits + 7) >> 3;
+		assert(offset < 8);
+
+		if (end > 8) {
+			error(L"unsupported size");
+			return -1;
 		}
+
+		vbuffer_iterator_read(&buf->position, temp, end, false);
+
+		for (i=0; i<end; ++i) {
+			const int size = bits > 8-off ? 8-off : bits;
+
+			if (bigendian) {
+				ret = (ret << size) | getbits(temp[i], off, size);
+			}
+			else {
+				ret = ret | (getbits(temp[i], off, size) >> shiftbits);
+				shiftbits += size;
+			}
+
+			off = 0;
+			bits -= size;
+		}
+
+		return ret;
+	}
+}
+
+void vsubbuffer_setbits(struct vsubbuffer *buf, size_t offset, size_t bits, bool bigendian, int64 num)
+{
+#if HAKA_LITTLEENDIAN
+	if (!bigendian) {
+#else
+	if (bigendian) {
+#endif
+		int64 n = vsubbuffer_asnumber(buf, bigendian);
+		n &= ~(((1 << (bits))-1) << offset);
+		n |= (num & ((1 << (bits))-1)) << offset;
+		vsubbuffer_setnumber(buf, bigendian, n);
+	}
+	else {
+		uint8 temp[8];
+		int i, off = offset, shiftbits = 0;
+		const size_t end = (offset + bits + 7) >> 3;
+		assert(offset < 8);
+
+		if (end > 8) {
+			error(L"unsupported size");
+			return;
+		}
+
+		vbuffer_iterator_read(&buf->position, temp, end, false);
+
+		for (i=0; i<end; ++i) {
+			const int size = bits > 8-off ? 8-off : bits;
+
+			if (bigendian) {
+				shiftbits += size;
+				temp[i] = setbits(temp[i], off, size, num >> (bits-shiftbits));
+			}
+			else {
+				temp[i] = setbits(temp[i], off, size, num);
+				num >>= size;
+			}
+
+			off = 0;
+		}
+
+		vbuffer_iterator_write(&buf->position, temp, end, false);
 	}
 }
 

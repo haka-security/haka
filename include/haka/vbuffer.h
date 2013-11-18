@@ -70,8 +70,9 @@ struct vbuffer_iterator {
 };
 
 bool            vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter);
-bool            vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buffer, size_t len);
-size_t          vbuffer_iterator_read(struct vbuffer_iterator *iter, uint8 *buffer, size_t len);
+bool            vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buffer, size_t len, bool advance);
+size_t          vbuffer_iterator_read(struct vbuffer_iterator *iter, uint8 *buffer, size_t len, bool advance);
+size_t          vbuffer_iterator_write(struct vbuffer_iterator *iter, uint8 *buffer, size_t len, bool advance);
 bool            vbuffer_iterator_insert(struct vbuffer_iterator *iter, struct vbuffer *data);
 bool            vbuffer_iterator_erase(struct vbuffer_iterator *iter, size_t len);
 size_t          vbuffer_iterator_advance(struct vbuffer_iterator *iter, size_t len);
@@ -94,6 +95,8 @@ size_t          vsubbuffer_size(struct vsubbuffer *buf);
 uint8          *vsubbuffer_mmap(struct vsubbuffer *buf, void **iter, size_t *remlen, size_t *len, bool write);
 int64           vsubbuffer_asnumber(struct vsubbuffer *buf, bool bigendian);
 void            vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num);
+int64           vsubbuffer_asbits(struct vsubbuffer *buf, size_t offset, size_t bits, bool bigendian);
+void            vsubbuffer_setbits(struct vsubbuffer *buf, size_t offset, size_t bits, bool bigendian, int64 num);
 size_t          vsubbuffer_asstring(struct vsubbuffer *buf, char *str, size_t len);
 size_t          vsubbuffer_setfixedstring(struct vsubbuffer *buf, const char *str, size_t len);
 void            vsubbuffer_setstring(struct vsubbuffer *buf, const char *str, size_t len);
