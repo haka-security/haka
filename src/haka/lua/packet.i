@@ -60,6 +60,7 @@ struct packet *packet_new(int size = 0);
 void packet__send(struct packet *pkt);
 
 %rename(_inject) packet__inject;
+%delobject packet__inject;
 void packet__inject(struct packet *pkt);
 
 %{
