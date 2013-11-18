@@ -9,13 +9,50 @@ grammar_dg.Context = class('DGContext')
 
 grammar_dg.Entity = class('DGEntity')
 
-function grammar_dg.Entity.method:next(ctxs, input)
-	self:apply(ctxs, input)
-	return self._next
+function grammar_dg.Entity.method:next(ctxs, input, bitoffset)
+	return self._next, self:apply(ctxs, input, bitoffset) or bitoffset
 end
 
 function grammar_dg.Entity.method:add(next)
 	self._next = next
+end
+
+function grammar_dg.Entity.method:convert(converter, memoize)
+	self.converter = converter
+	self.memoize = memoize or false
+end
+
+function grammar_dg.Entity.method:genproperty(obj, name, get, set)
+	if self.converter then
+		if self.memoize then
+			local memname = '_' .. name .. 'memoize'
+			obj:addproperty(name,
+				function (this)
+					local ret = rawget(this, memname)
+					if not ret then
+						ret = self.converter.get(get(this))
+						rawset(this, memname, ret)
+					end
+					return ret
+				end,
+				function (this, newval)
+					rawset(this, memname, nil)
+					return set(this, self.converter.set(newval))
+				end
+			)
+		else
+			obj:addproperty(name,
+				function (this)
+					return self.converter.get(get(this))
+				end,
+				function (this, newval)
+					return set(this, self.converter.set(newval))
+				end
+			)
+		end
+	else
+		obj:addproperty(name, get, set)
+	end
 end
 
 function grammar_dg.Entity.method:lasts(lasts)
@@ -30,8 +67,9 @@ end
 function grammar_dg.Entity.method:parseall(input, ctx)
 	local ctxs = { ctx or grammar_dg.Context:new() }
 	local iter = self
+	local bitoffset = 0
 	while iter do
-		iter = iter:next(ctxs, input)
+		iter, bitoffset = iter:next(ctxs, input, bitoffset)
 	end
 	return ctxs[1]
 end
@@ -47,7 +85,18 @@ end
 
 function grammar_dg.ContextPush.method:apply(ctxs)
 	local new = grammar_dg.Context:new()
-	ctxs[#ctxs][self.name] = new
+	
+	if self.converter then
+		ctxs[#ctxs]:addproperty(self.name,
+			function (ctx) return self.converter.get(new) end,
+			function (ctx, newvalue) new = self.converter.set(newvalue) end
+		)
+	else
+		ctxs[#ctxs]:addproperty(self.name,
+			function (ctx) return new end
+		)
+	end
+
 	table.insert(ctxs, new)
 end
 
@@ -78,12 +127,12 @@ function grammar_dg.Branch.method:case(key, entity)
 	self.cases[key] = entity
 end
 
-function grammar_dg.Branch.method:next(ctxs, input)
+function grammar_dg.Branch.method:next(ctxs, input, bitoffset)
 	local next = self.cases[self.selector(ctxs[1])]
 	if next then
-		return next
+		return next, bitoffset
 	else
-		return self._next
+		return self._next, bitoffset
 	end
 end
 
@@ -100,33 +149,51 @@ end
 
 grammar_dg.Primitive = class('DGPrimitive', grammar_dg.Entity)
 
-function grammar_dg.Primitive.method:apply(ctxs, input)
-	self:parse(ctxs[#ctxs], input)
+function grammar_dg.Primitive.method:apply(ctxs, input, bitoffset)
+	return self:parse(ctxs[#ctxs], input, bitoffset)
 end
 
-grammar_dg.Integer = class('DGInteger', grammar_dg.Primitive)
+grammar_dg.Number = class('DGNumber', grammar_dg.Primitive)
 
-function grammar_dg.Integer.method:__init(size, endian, name)
+function grammar_dg.Number.method:__init(size, endian, name)
 	super(self).__init(self)
 	self.size = size
 	self.endian = endian
 	self.name = name
 end
 
-function grammar_dg.Integer.method:parse(ctx, input)
-	local sub = input:sub(self.size)
-
-	if self.name then
-		ctx:addproperty(self.name,
-			function (ctx)
-				return sub:asnumber(self.endian)
-			end,
-			function (ctx, newvalue)
-				return sub:setnumber(newvalue, self.endian)
-			end
-		)
+function grammar_dg.Number.method:parse(ctx, input, bitoffset)
+	local size, bit = math.ceil((bitoffset + self.size) / 8), (bitoffset + self.size) % 8
+	local sub = input:sub(size, false)
+	if bit ~= 0 then
+		input:advance(size-1)
+	else
+		input:advance(size)
 	end
+
+	if bitoffset == 0 and bit == 0 then
+		if self.name then
+			self:genproperty(ctx, self.name,
+				function (this) return sub:asnumber(self.endian) end,
+				function (this, newvalue) return sub:setnumber(newvalue, self.endian) end
+			)
+		end
+	else
+		if self.name then
+			self:genproperty(ctx, self.name,
+				function (this)
+					return sub:asbits(bitoffset, self.size, self.endian)
+				end,
+				function (this, newvalue)
+					return sub:setbits(newvalue, bitoffset, self.size, self.endian)
+				end
+			)
+		end
+	end
+
+	return bit
 end
+
 
 grammar_dg.Bytes = class('DGBytes', grammar_dg.Primitive)
 
@@ -136,26 +203,66 @@ function grammar_dg.Bytes.method:__init(size, name)
 	self.name = name
 end
 
-function grammar_dg.Bytes.method:parse(ctx, input)
+function grammar_dg.Bytes.method:parse(ctx, input, bitoffset)
+	if bitoffset ~= 0 then
+		error("byte primitive requires aligned bits")
+	end
+
 	local sub = input:sub(self.size or -1)
 
 	if self.name then
-		ctx[self.name] = sub
+		if self.converter then
+			ctx:addproperty(self.name,
+				function (ctx) return self.converter.get(sub) end,
+				function (ctx, newvalue) sub = self.converter.set(newvalue) end
+			)
+		else
+			ctx[self.name] = sub
+		end
 	end
+
+	return 0
 end
+
+
+local grammar = {}
+
+
+--
+-- Grammar converter
+--
+
+grammar.converter = {}
+
+function grammar.converter.mult(val)
+	return {
+		get = function (x) return x * val end,
+		set = function (x) return x / val end
+	}
+end
+
+grammar.converter.bool = {
+	get = function (x) return x ~= 0 end,
+	set = function (x) if x then return 1 else return 0 end end
+}
 
 
 --
 -- Grammar description
 --
 
-local grammar = {}
-
 grammar.Entity = class('Entity')
 
-function grammar.Entity.method:as(name)
+function grammar.Entity.method:_as(name)
 	local clone = self:clone()
 	clone.named = name
+	return clone
+end
+
+function grammar.Entity.method:convert(converter, memoize)
+	local clone = self:clone()
+	clone.converter = converter
+	clone.memoize = memoize or clone.memoize
 	return clone
 end
 
@@ -167,14 +274,14 @@ function grammar.Entity.getoption(cls, opt)
 		if v then return v end
 	end
 
-	local super = cls.__super
+	local super = cls.super
 	while super do
 		if super._options then
 			v = super._options[opt]
 			if v then return v end
 		end
 
-		super = super.__super
+		super = super.super
 	end
 end
 
@@ -196,6 +303,11 @@ function grammar.Entity.method:options(options)
 	return clone
 end
 
+grammar.Entity._options = {}
+
+function grammar.Entity._options.memoize(self)
+	self.memoize = true
+end
 
 grammar.Record = class('Record', grammar.Entity)
 
@@ -218,6 +330,7 @@ function grammar.Record.method:compile()
 	
 	if self.named then
 		ret = grammar_dg.ContextPush:new(self.named)
+		if self.converter then ret:convert(self.converter, self.memoize) end
 		iter = ret
 	end
 
@@ -319,24 +432,28 @@ grammar.Regex._options = {}
 function grammar.Regex._options.maxsize(self, size) self.maxsize = size end
 
 
-grammar.Integer = class('Integer', grammar.Entity)
+grammar.Number = class('Number', grammar.Entity)
 
-function grammar.Integer.method:__init(bits)
+function grammar.Number.method:__init(bits)
 	self.bits = bits
 end
 
-function grammar.Integer.method:compile()
-	return grammar_dg.Integer:new(self.bits, self.endian, self.named)
+function grammar.Number.method:compile()
+	local ret = grammar_dg.Number:new(self.bits, self.endian, self.named)
+	if self.converter then ret:convert(self.converter, self.memoize) end
+	return ret
 end
 
-grammar.Integer._options = {}
-function grammar.Regex._options.endianness(self, endian) self.endian = endian end
+grammar.Number._options = {}
+function grammar.Number._options.endianness(self, endian) self.endian = endian end
 
 
 grammar.Bytes = class('Bytes', grammar.Entity)
 
 function grammar.Bytes.method:compile()
-	return grammar_dg.Bytes:new(self.count, self.named)
+	local ret = grammar_dg.Bytes:new(self.count, self.named)
+	if self.converter then ret:convert(self.converter, self.memoize) end
+	return ret
 end
 
 grammar.Bytes._options = {}
@@ -360,12 +477,18 @@ function grammar.re(regex)
 	return grammar.Regex:new(regex)
 end
 
-function grammar.integer(bits)
-	return grammar.Integer:new(bits)
+function grammar.number(bits)
+	return grammar.Number:new(bits)
 end
+
+grammar.flag = grammar.Number:new(1):convert(grammar.converter.bool, false)
 
 function grammar.bytes()
 	return grammar.Bytes:new()
+end
+
+function grammar.field(name, field)
+	return field:_as(name)
 end
 
 
