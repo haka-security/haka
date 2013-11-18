@@ -105,8 +105,15 @@ struct ipv4_addr {
 			ipv4_addr_to_string($self->addr, buffer, IPV4_ADDR_STRING_MAXLEN + 1);
 			return buffer;
 		}
+
+		int packed;
 	}
 };
+
+%{
+	int ipv4_addr_packed_get(struct ipv4_addr *addr) { return addr->addr; }
+	void ipv4_addr_packed_set(struct ipv4_addr *addr, int packed) { addr->addr = packed; }
+%}
 
 STRUCT_UNKNOWN_KEY_ERROR(ipv4_addr);
 
