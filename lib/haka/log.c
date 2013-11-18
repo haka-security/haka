@@ -213,6 +213,8 @@ bool stdout_message(log_level lvl, const wchar_t *module, const wchar_t *message
 	const int module_size = wcslen(module);
 	FILE *fd = (lvl == HAKA_LOG_FATAL) ? stderr : stdout;
 
+	thread_setcancelstate(false);
+
 	mutex_lock(&stdout_mutex);
 
 	if (module_size > stdout_module_size) {
@@ -230,6 +232,8 @@ bool stdout_message(log_level lvl, const wchar_t *module, const wchar_t *message
 	}
 
 	mutex_unlock(&stdout_mutex);
+
+	thread_setcancelstate(true);
 
 	return true;
 }

@@ -638,7 +638,11 @@ function http_dissector.method:send(stream, direction)
 		end
 
 	elseif self._state == 5 and direction == 'down' then
-		self._state = 0
+		if self.request.method == 'CONNECT' then
+			self._state = 6 -- We should not expect a request nor response anymore
+		else
+			self._state = 0
+		end
 
 		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
 			stream:seek(self.response._mark, true)

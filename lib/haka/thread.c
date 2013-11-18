@@ -122,6 +122,14 @@ void thread_testcancel()
 	pthread_testcancel();
 }
 
+void thread_protect(void (*run)(void *), void *runarg, void (*finish)(void *), void *finisharg)
+{
+	pthread_cleanup_push(finish, finisharg);
+	run(runarg);
+	pthread_cleanup_pop(true);
+}
+
+
 
 /*
  * Atomic counter (64 bits)

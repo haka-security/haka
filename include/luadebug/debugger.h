@@ -13,5 +13,6 @@ void luadebug_debugger_stop(struct lua_State *L);
 bool luadebug_debugger_break(struct lua_State *L);
 bool luadebug_debugger_interrupt(struct lua_State *L, const char *reason);
 bool luadebug_debugger_breakall();
+bool luadebug_debugger_shutdown();
 
 #endif /* _LUADEBUG_DEBUGGER_H */

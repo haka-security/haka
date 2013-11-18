@@ -18,6 +18,7 @@
 
 static struct thread_pool *thread_states;
 static char *configuration_file;
+static int ret_rc = 0;
 extern void packet_set_mode(enum packet_mode mode);
 
 
@@ -26,7 +27,6 @@ void basic_clean_exit()
 	set_configuration_script(NULL);
 
 	if (thread_states) {
-		thread_pool_cancel(thread_states);
 		thread_pool_cleanup(thread_states);
 		thread_states = NULL;
 	}
@@ -34,7 +34,6 @@ void basic_clean_exit()
 	set_packet_module(NULL);
 	remove_all_logger();
 }
-
 
 static void fatal_error_signal(int sig)
 {
@@ -45,6 +44,9 @@ static void fatal_error_signal(int sig)
 		if (luadebug_debugger_breakall()) {
 			message(HAKA_LOG_FATAL, L"debug", L"break (hit ^C again to kill)");
 			return;
+		}
+		else {
+			luadebug_debugger_shutdown();
 		}
 	}
 
@@ -59,8 +61,20 @@ static void fatal_error_signal(int sig)
 		messagef(HAKA_LOG_INFO, L"core", L"terminate signal received");
 	}
 
-	clean_exit();
-	exit(1);
+	if (thread_states) {
+		if (thread_pool_issingle(thread_states)) {
+			clean_exit();
+			exit(1);
+		}
+		else {
+			thread_pool_cancel(thread_states);
+			ret_rc = 1;
+		}
+	}
+	else {
+		clean_exit();
+		exit(1);
+	}
 }
 
 static void handle_sighup()
@@ -179,6 +193,11 @@ void start()
 		message(HAKA_LOG_FATAL, L"core", clear_error());
 		clean_exit();
 		exit(1);
+	}
+
+	if (ret_rc) {
+		clean_exit();
+		exit(ret_rc);
 	}
 }
 

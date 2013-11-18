@@ -37,6 +37,7 @@ struct thread_state {
 	struct lua_state           *lua;
 	int                         lua_function;
 	thread_t                    thread;
+	bool                        canceled;
 	int32                       attach_debugger;
 	struct thread_pool         *pool;
 };
@@ -172,7 +173,7 @@ static bool init_thread_lua_state(struct thread_state *state)
 	LUA_STACK_MARK(state->lua->L);
 
 	if (state->pool->attach_debugger > state->attach_debugger) {
-		luadebug_debugger_start(state->lua->L, true);
+		luadebug_debugger_start(state->lua->L, false);
 	}
 	state->pool->attach_debugger = state->attach_debugger;
 
@@ -406,7 +407,9 @@ void thread_pool_wait(struct thread_pool *pool)
 		if (pool->threads[i] && pool->threads[i]->state != STATE_NOTSARTED &&
 		    pool->threads[i]->state != STATE_JOINED) {
 			void *ret;
-			thread_join(pool->threads[i]->thread, &ret);
+			if (!thread_join(pool->threads[i]->thread, &ret)) {
+				message(HAKA_LOG_FATAL, L"core", clear_error());
+			}
 			pool->threads[i]->state = STATE_JOINED;
 		}
 	}
@@ -419,13 +422,18 @@ void thread_pool_cancel(struct thread_pool *pool)
 
 		for (i=0; i<pool->count; ++i) {
 			if (pool->threads[i] && pool->threads[i]->state == STATE_RUNNING) {
-				thread_cancel(pool->threads[i]->thread);
+				if (!thread_cancel(pool->threads[i]->thread)) {
+					message(HAKA_LOG_FATAL, L"core", clear_error());
+				}
 				pool->threads[i]->state = STATE_CANCELED;
 			}
 		}
-
-		thread_pool_wait(pool);
 	}
+}
+
+bool thread_pool_issingle(struct thread_pool *pool)
+{
+	return pool->single;
 }
 
 void thread_pool_start(struct thread_pool *pool)
