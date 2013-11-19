@@ -648,7 +648,7 @@ size_t vbuffer_iterator_read(struct vbuffer_iterator *iterator, uint8 *buffer, s
 		return (size_t)-1;
 	}
 
-	while (true) {
+	while (iter) {
 		size_t buflen = iter->length - offset;
 		if (buflen > clen) {
 			buflen = clen;
@@ -688,7 +688,7 @@ size_t vbuffer_iterator_write(struct vbuffer_iterator *iterator, uint8 *buffer, 
 		return (size_t)-1;
 	}
 
-	while (true) {
+	while (iter) {
 		size_t buflen = iter->length - offset;
 		if (buflen > clen) {
 			buflen = clen;
