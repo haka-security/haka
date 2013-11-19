@@ -82,7 +82,7 @@ grammar_dg.Control = class('DGControl', grammar_dg.Entity)
 grammar_dg.RecordStart = class('DGRecordStart', grammar_dg.Entity)
 
 function grammar_dg.RecordStart.method:__init(name)
-	super(self).__init(self)
+	super(grammar_dg.RecordStart).__init(self)
 	self.name = name
 end
 
@@ -108,7 +108,7 @@ end
 grammar_dg.RecordFinish = class('DGRecordFinish', grammar_dg.Control)
 
 function grammar_dg.RecordFinish.method:__init(pop)
-	super(self).__init(self)
+	super(grammar_dg.RecordFinish).__init(self)
 	self._onfinish = {}
 	self._extra = {}
 	self._pop = pop
@@ -140,7 +140,7 @@ end
 grammar_dg.Error = class('DGError', grammar_dg.Control)
 
 function grammar_dg.Error.method:__init(msg)
-	super(self).__init(self)
+	super(grammar_dg.Error).__init(self)
 	self.msg = msg
 end
 
@@ -151,7 +151,7 @@ end
 grammar_dg.Branch = class('DGBranch', grammar_dg.Control)
 
 function grammar_dg.Branch.method:__init(selector)
-	super(self).__init(self)
+	super(grammar_dg.Branch).__init(self)
 	self.selector = selector
 	self.cases = {}
 end
@@ -170,7 +170,7 @@ function grammar_dg.Branch.method:next(ctxs, input, bitoffset)
 end
 
 function grammar_dg.Branch.method:lasts(lasts)
-	super(self).lasts(self, lasts)
+	super(grammar_dg.Branch).lasts(self, lasts)
 
 	for _, entity in pairs(self.cases) do
 		entity:lasts(lasts)
@@ -189,7 +189,7 @@ end
 grammar_dg.Number = class('DGNumber', grammar_dg.Primitive)
 
 function grammar_dg.Number.method:__init(size, endian, name)
-	super(self).__init(self)
+	super(grammar_dg.Number).__init(self)
 	self.size = size
 	self.endian = endian
 	self.name = name
@@ -231,7 +231,7 @@ end
 grammar_dg.Bytes = class('DGBytes', grammar_dg.Primitive)
 
 function grammar_dg.Bytes.method:__init(size, name)
-	super(self).__init(self)
+	super(grammar_dg.Bytes).__init(self)
 	self.size = size
 	self.name = name
 end

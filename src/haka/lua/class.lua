@@ -85,8 +85,8 @@ function classof(instance)
 	return getmetatable(instance)
 end
 
-function super(instance)
-	return rawget(classof(instance).super, '__view')
+function super(cls)
+	return rawget(cls.super, '__view')
 end
 
 
@@ -149,10 +149,7 @@ function class(name, super)
 
 	setmetatable(cls, BaseClass)
 
-	if super.__class_init then
-		super:__class_init(cls)
-	end
-
+	super:__class_init(cls)
 	return cls
 end
 

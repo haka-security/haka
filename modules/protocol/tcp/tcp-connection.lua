@@ -10,7 +10,7 @@ local tcp_connection_dissector = haka.dissector.new{
 tcp_connection_dissector:register_event('new_connection')
 tcp_connection_dissector:register_event('end_connection')
 
-function tcp_connection_dissector.receive(pkt)
+function tcp_connection_dissector:receive(pkt)
 	local connection, direction, dropped = pkt:getconnection()
 	if not connection then
 		if pkt.flags.syn and not pkt.flags.ack then
@@ -376,8 +376,8 @@ function tcp_connection_dissector.method:drop()
 end
 
 function tcp_connection_dissector.method:_forgereset(direction)
-	local tcprst = haka.dissector.get('raw').create()
-	tcprst = haka.dissector.get('ipv4').create(tcprst)
+	local tcprst = haka.dissector.get('raw'):create()
+	tcprst = haka.dissector.get('ipv4'):create(tcprst)
 
 	if direction == 'up' then
 		tcprst.src = self.connection.srcip
@@ -389,7 +389,7 @@ function tcp_connection_dissector.method:_forgereset(direction)
 
 	tcprst.ttl = 64
 
-	tcprst = haka.dissector.get('tcp').create(tcprst)
+	tcprst = haka.dissector.get('tcp'):create(tcprst)
 
 	if direction == 'up' then
 		tcprst.srcport = self.connection.srcport

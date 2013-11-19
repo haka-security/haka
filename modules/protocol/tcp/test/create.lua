@@ -16,12 +16,12 @@ haka.rule {
 			end
 			counter = counter-1
 
-			local npkt = haka.dissector.get('raw').create()
-			npkt = haka.dissector.get('ipv4').create(npkt)
+			local npkt = haka.dissector.get('raw'):create()
+			npkt = haka.dissector.get('ipv4'):create(npkt)
 			npkt.ttl = pkt.ip.ttl
 			npkt.dst = pkt.ip.dst
 			npkt.src = pkt.ip.src
-			npkt = haka.dissector.get('tcp').create(npkt)
+			npkt = haka.dissector.get('tcp'):create(npkt)
 			npkt.window_size = pkt.window_size
 			npkt.seq = pkt.seq+1000
 			if pkt.ack_seq ~= 0 then

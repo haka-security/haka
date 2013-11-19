@@ -336,18 +336,18 @@ int lua_inet_checksum(struct vbuffer *buf);
 
 		local next_dissector = ipv4_protocol_dissectors[self.proto]
 		if next_dissector then
-			return next_dissector.receive(self)
+			return next_dissector:receive(self)
 		else
 			return self:send()
 		end
 	end
 
-	function ipv4_dissector.receive(pkt)
-		local self = this._dissect(pkt)
-		return self:emit()
+	function ipv4_dissector:receive(pkt)
+		local new = this._dissect(pkt)
+		return new:emit()
 	end
 
-	function ipv4_dissector.create(pkt)
+	function ipv4_dissector:create(pkt)
 		return this._create(pkt)
 	end
 

@@ -150,7 +150,7 @@ bool packet__continue(struct packet *pkt)
 		if dissector then
 			local next_dissector = haka.dissector.get(dissector)
 			if next_dissector then
-				return next_dissector.receive(self)
+				return next_dissector:receive(self)
 			else
 				if raw_dissector.options.drop_unknown_dissector then
 					haka.log.error("raw", "dissector '%s' is unknown", dissector)
@@ -164,11 +164,11 @@ bool packet__continue(struct packet *pkt)
 		end
 	end
 
-	function raw_dissector.receive(pkt)
+	function raw_dissector:receive(pkt)
 		return pkt:emit()
 	end
 
-	function raw_dissector.create(size)
+	function raw_dissector:create(size)
 		return this._create(size or 0)
 	end
 
@@ -193,6 +193,6 @@ bool packet__continue(struct packet *pkt)
 	swig.getclassmetatable('packet')['.fn'].inject = raw_dissector.method.inject
 
 	function haka.filter(pkt)
-		raw_dissector.receive(pkt)
+		raw_dissector:receive(pkt)
 	end
 }

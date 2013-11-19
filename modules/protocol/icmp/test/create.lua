@@ -14,12 +14,12 @@ haka.rule {
 			end
 			counter = counter-1
 
-			local npkt = haka.dissector.get('raw').create()
-			npkt = haka.dissector.get('ipv4').create(npkt)
+			local npkt = haka.dissector.get('raw'):create()
+			npkt = haka.dissector.get('ipv4'):create(npkt)
 			npkt.src = ipv4.addr(192, 168, 0, 1)
 			npkt.dst = ipv4.addr("192.168.0.2")
 
-			npkt = haka.dissector.get('icmp').create(npkt)
+			npkt = haka.dissector.get('icmp'):create(npkt)
 			npkt.type = 6
 			npkt.code = 1
 

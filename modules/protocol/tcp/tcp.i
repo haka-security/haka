@@ -272,18 +272,18 @@ unsigned int tcp_stream_lastseq_get(struct tcp_stream *s) { return tcp_stream_la
 
 		local next_dissector = haka.dissector.get('tcp-connection')
 		if next_dissector then
-			return next_dissector.receive(self)
+			return next_dissector:receive(self)
 		else
 			return self:send()
 		end
 	end
 
-	function tcp_dissector.receive(pkt)
+	function tcp_dissector:receive(pkt)
 		local self = this._dissect(pkt)
 		return self:emit()
 	end
 
-	function tcp_dissector.create(pkt)
+	function tcp_dissector:create(pkt)
 		return this._create(pkt)
 	end
 

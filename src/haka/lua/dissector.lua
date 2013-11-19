@@ -52,7 +52,7 @@ dissector.Dissector.property.name = {
 	get = function (self) return classof(self).name end
 }
 
-function dissector.Dissector.receive(pkt)
+function dissector.Dissector:receive(pkt)
 	error("not implemented")
 end
 
@@ -66,12 +66,78 @@ dissector.PacketDissector = class('PacketDissector', dissector.Dissector)
 dissector.PacketDissector:register_event('receive_packet')
 dissector.PacketDissector:register_event('send_packet')
 
+function dissector.PacketDissector.method:trigger(signal)
+	if not haka.pcall(haka.context.signal, haka.context, self, classof(self).events[signal]) then
+		return self:drop()
+	end
+
+	if not self:continue() then
+		return
+	end
+
+	return true
+end
+
 function dissector.PacketDissector.method:continue()
 	error("not implemented")
 end
 
 function dissector.PacketDissector.method:send()
 	error("not implemented")
+end
+
+function dissector.PacketDissector.method:inject()
+	error("not implemented")
+end
+
+
+dissector.EncapsulatedPacketDissector = class('EncapsulatedPacketDissector', dissector.PacketDissector)
+
+function dissector.EncapsulatedPacketDissector:receive(parent)
+	local new = self:new(parent)
+	new:parse(parent)
+	return new:emit()
+end
+
+function dissector.EncapsulatedPacketDissector.method:__init(parent)
+	super(dissector.EncapsulatedPacketDissector).__init(self)
+	self._parent = parent
+end
+
+function dissector.EncapsulatedPacketDissector.method:parse(pkt)
+	error("not implemented")
+end
+
+function dissector.EncapsulatedPacketDissector.method:forge()
+	error("not implemented")
+end
+
+function dissector.EncapsulatedPacketDissector.method:continue()
+	return self._parent:continue()
+end
+
+function dissector.EncapsulatedPacketDissector.method:drop()
+	return self._parent:drop()
+end
+
+function dissector.EncapsulatedPacketDissector.method:emit()
+	if self:trigger('receive_packet') then
+		return self:send()
+	end
+end
+
+function dissector.EncapsulatedPacketDissector.method:send()
+	if self:trigger('send_packet') then
+		self:forge()
+		self._parent:send()
+		self._parent = nil
+	end
+end
+
+function dissector.EncapsulatedPacketDissector.method:inject()
+	self:forge()
+	self._parent:inject()
+	self._parent = nil
 end
 
 

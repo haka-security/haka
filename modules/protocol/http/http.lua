@@ -426,7 +426,7 @@ http_dissector.property.connection = {
 }
 
 function http_dissector.method:__init(flow)
-	super(self).__init(self)
+	super(http_dissector).__init(self)
 	self.flow = flow
 	if flow then
 		self.connection = flow.connection
