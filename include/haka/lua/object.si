@@ -8,25 +8,21 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %define LUA_OBJECT_CAST(typeptr, casttype)
 
-%typemap(check) typeptr* {
-	/* check that the object is still valid */
-	if(!$1) {
-		lua_pushstring(L,"$symname: object has been destroyed");
-		SWIG_fail;
-	}
-}
-
 %typemap(in, checkfn="SWIG_isptrtype") typeptr* %{
-#ifdef HAKA_DEBUG
-	if ($disown) {
-		if (!lua_isnil(L, $input)) {
-			swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, $input);
-			if (usr) {
-				assert(!$disown || usr->own == 1);
-			}
+	if (!lua_isnil(L, $input)) {
+		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, $input);
+		/* check that the object is still valid */
+		if (!usr) {
+			lua_pushstring(L,"$symname: object has been destroyed");
+			SWIG_fail;
 		}
-	}
+
+#ifdef HAKA_DEBUG
+		if ($disown) {
+			assert(!$disown || usr->own == 1);
+		}
 #endif
+	}
 
 	if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, $disown))){
 		SWIG_fail_ptr("$symname", $argnum, $descriptor);
@@ -34,14 +30,20 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 %}
 
 %typemap(in, checkfn="SWIG_isptrtype") typeptr* DISOWN %{
-#ifdef HAKA_DEBUG
 	if (!lua_isnil(L, $input)) {
 		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, $input);
-		if (usr) {
-			assert(usr->own == 1);
+		/* check that the object is still valid */
+		if (!usr) {
+			lua_pushstring(L,"$symname: object has been destroyed");
+			SWIG_fail;
 		}
-	}
+
+#ifdef HAKA_DEBUG
+		if ($disown) {
+			assert(!$disown || usr->own == 1);
+		}
 #endif
+	}
 
 	if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, SWIG_POINTER_DISOWN))){
 		SWIG_fail_ptr("$symname", $argnum, $descriptor);
