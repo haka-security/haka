@@ -38,7 +38,7 @@ haka.rule {
 haka.rule {
 	hook = haka.event('ipv4', 'receive_packet'),
 	eval = function (pkt)
-		pkt.payload:erase(40,8)
+		pkt.payload:sub(40, 8):erase()
 		local remain = pkt.payload:sub(40,8):asstring()
 		print("V=", remain)
 	end
@@ -47,7 +47,7 @@ haka.rule {
 haka.rule {
 	hook = haka.event('ipv4', 'receive_packet'),
 	eval = function (pkt)
-		pkt.payload:erase(0,40)
+		pkt.payload:sub(0, 40):erase()
 		local remain = pkt.payload:right(0):asstring()
 		print("V=", remain)
 	end

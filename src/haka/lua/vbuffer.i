@@ -86,6 +86,7 @@ static void _vsubbuffer___gc(lua_State* L)
 %nodefaultdtor;
 
 %newobject vsubbuffer::sub;
+%newobject vsubbuffer::extract;
 
 struct vsubbuffer {
 	%extend {
@@ -155,6 +156,25 @@ struct vsubbuffer {
 		void _setstring(const char *str)
 		{
 			vsubbuffer_setstring($self, str, strlen(str));
+		}
+
+		struct vbuffer *extract(bool modified=true)
+		{
+			struct vbuffer *ret = vbuffer_extract($self->position.buffer, $self->position.offset, $self->length, modified);
+			if (!ret) {
+				return NULL;
+			}
+
+			$self->position.buffer = ret;
+			$self->position.offset = 0;
+			return ret;
+		}
+
+		void erase()
+		{
+			vbuffer_erase($self->position.buffer, $self->position.offset, $self->length);
+			$self->position.buffer = NULL;
+			$self->length = 0;
 		}
 	}
 };
@@ -244,18 +264,22 @@ struct vbuffer {
 		%rename(insert) _insert;
 		void _insert(int offset, struct vbuffer *DISOWN_SUCCESS_ONLY)
 		{
+			if (!DISOWN_SUCCESS_ONLY) {
+				error(L"invalid parameter");
+				return;
+			}
+
 			vbuffer_insert($self, offset, DISOWN_SUCCESS_ONLY, true);
 		}
 
 		void append(struct vbuffer *DISOWN_SUCCESS_ONLY)
 		{
-			vbuffer_insert($self, ALL, DISOWN_SUCCESS_ONLY, true);
-		}
+			if (!DISOWN_SUCCESS_ONLY) {
+				error(L"invalid parameter");
+				return;
+			}
 
-		%rename(erase) _erase;
-		void _erase(int offset, int size)
-		{
-			vbuffer_erase($self, offset, size);
+			vbuffer_insert($self, ALL, DISOWN_SUCCESS_ONLY, true);
 		}
 
 		struct vbuffer_iterator *iter()
