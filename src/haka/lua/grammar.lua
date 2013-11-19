@@ -9,6 +9,9 @@ grammar_dg.Context = class('DGContext')
 
 grammar_dg.Entity = class('DGEntity')
 
+function grammar_dg.Entity.method:__init()
+end
+
 function grammar_dg.Entity.method:next(ctxs, input, bitoffset)
 	return self._next, self:apply(ctxs, input, bitoffset) or bitoffset
 end
@@ -76,39 +79,68 @@ end
 
 grammar_dg.Control = class('DGControl', grammar_dg.Entity)
 
-grammar_dg.ContextPush = class('DGContextPush', grammar_dg.Entity)
+grammar_dg.RecordStart = class('DGRecordStart', grammar_dg.Entity)
 
-function grammar_dg.ContextPush.method:__init(name)
+function grammar_dg.RecordStart.method:__init(name)
 	super(self).__init(self)
 	self.name = name
 end
 
-function grammar_dg.ContextPush.method:apply(ctxs)
-	local new = grammar_dg.Context:new()
+function grammar_dg.RecordStart.method:apply(ctxs)
+	if self.name then
+		local new = grammar_dg.Context:new()
+		
+		if self.converter then
+			ctxs[#ctxs]:addproperty(self.name,
+				function (ctx) return self.converter.get(new) end,
+				function (ctx, newvalue) new = self.converter.set(newvalue) end
+			)
+		else
+			ctxs[#ctxs]:addproperty(self.name,
+				function (ctx) return new end
+			)
+		end
 	
-	if self.converter then
-		ctxs[#ctxs]:addproperty(self.name,
-			function (ctx) return self.converter.get(new) end,
-			function (ctx, newvalue) new = self.converter.set(newvalue) end
-		)
-	else
-		ctxs[#ctxs]:addproperty(self.name,
-			function (ctx) return new end
-		)
+		table.insert(ctxs, new)
 	end
-
-	table.insert(ctxs, new)
 end
 
-grammar_dg.ContextPop = class('DGContextPop', grammar_dg.Control)
+grammar_dg.RecordFinish = class('DGRecordFinish', grammar_dg.Control)
 
-function grammar_dg.ContextPop.method:apply(ctxs)
-	ctxs[#ctxs] = nil
+function grammar_dg.RecordFinish.method:__init(pop)
+	super(self).__init(self)
+	self._onfinish = {}
+	self._extra = {}
+	self._pop = pop
+end
+
+function grammar_dg.RecordFinish.method:onfinish(f)
+	table.insert(self._onfinish, f)
+end
+
+function grammar_dg.RecordFinish.method:extra(name, f)
+	self._extra[name] = f
+end
+
+function grammar_dg.RecordFinish.method:apply(ctxs)
+	local ctx = ctxs[#ctxs]
+	if self._pop then
+		ctxs[#ctxs] = nil
+	end
+
+	for _, func in ipairs(self._onfinish) do
+		func(ctxs[1], ctx)
+	end
+
+	for name, func in pairs(self._extra) do
+		ctx[name] = func(ctxs[1], ctx)
+	end
 end
 
 grammar_dg.Error = class('DGError', grammar_dg.Control)
 
 function grammar_dg.Error.method:__init(msg)
+	super(self).__init(self)
 	self.msg = msg
 end
 
@@ -119,6 +151,7 @@ end
 grammar_dg.Branch = class('DGBranch', grammar_dg.Control)
 
 function grammar_dg.Branch.method:__init(selector)
+	super(self).__init(self)
 	self.selector = selector
 	self.cases = {}
 end
@@ -328,11 +361,9 @@ end
 function grammar.Record.method:compile()
 	local iter, ret
 	
-	if self.named then
-		ret = grammar_dg.ContextPush:new(self.named)
-		if self.converter then ret:convert(self.converter, self.memoize) end
-		iter = ret
-	end
+	ret = grammar_dg.RecordStart:new(self.named)
+	if self.converter then ret:convert(self.converter, self.memoize) end
+	iter = ret
 
 	for _, entity in ipairs(self.entities) do
 		local next = entity:compile()
@@ -348,11 +379,15 @@ function grammar.Record.method:compile()
 		end
 	end
 
-	if self.named then
-		local pop = grammar_dg.ContextPop:new()
-		for _, last in ipairs(iter:lasts({})) do
-			last:add(pop)
-		end
+	local pop = grammar_dg.RecordFinish:new(self.named)
+	for _, f in ipairs(self.on_finish) do
+		pop:onfinish(f)
+	end
+	for name, f in pairs(self.extra_entities) do
+		pop:extra(name, f)
+	end
+	for _, last in ipairs(iter:lasts({})) do
+		last:add(pop)
 	end
 
 	return ret
