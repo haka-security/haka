@@ -46,11 +46,7 @@ local function new_instance(cls, ...)
 	local instance = {}
 	setmetatable(instance, cls)
 
-	local init = cls.method.__init
-	if init then
-		init(instance, ...)
-	end
-
+	instance:__init(...)
 	return instance
 end
 
