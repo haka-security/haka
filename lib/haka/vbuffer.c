@@ -231,17 +231,26 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, boo
 		return NULL;
 	}
 
-	if (len == 0) {
-		return NULL;
-	}
-
 	begin = vbuffer_get(buf, &off, true);
 	if (!begin) {
 		error(L"invalid offset");
 		return NULL;
 	}
 
-	if (begin == buf && off == 0) {
+	if (len == 0) {
+		iter = vbuffer_split(begin, off);
+		if (!iter) {
+			iter = vbuffer_split_force(begin, off);
+			begin->next = NULL;
+		}
+		else {
+			begin->next = vbuffer_split_force(iter, 0);
+		}
+
+		iter->next = NULL;
+		return iter;
+	}
+	else if (begin == buf && off == 0) {
 		iter = vbuffer_split_force(begin, off);
 	}
 	else {
