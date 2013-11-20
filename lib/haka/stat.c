@@ -17,11 +17,11 @@ bool stat_printf(FILE *out, const char *format, ...)
 size_t format_bytes(size_t v, char *c)
 {
 	if (v > (1 << 30)) {
-		*c = 'g';
+		*c = 'G';
 		return (v / (1 << 30));
 	}
 	else if (v > (1 << 20)) {
-		*c = 'm';
+		*c = 'M';
 		return (v / (1 << 20));
 	}
 	else if (v > (1 << 10)) {
