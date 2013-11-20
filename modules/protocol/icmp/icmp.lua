@@ -13,10 +13,9 @@ icmp_dissector.grammar = haka.grammar.record{
 	haka.grammar.field('payload',  haka.grammar.bytes())
 }:compile()
 
-function icmp_dissector.method:parse(pkt)
+function icmp_dissector.method:parse_payload(pkt, payload)
 	self.ip = pkt
-	self._payload = pkt.payload
-	icmp_dissector.grammar:parseall(self._payload:iter(), self)
+	icmp_dissector.grammar:parseall(payload:iter(), self)
 end
 
 function icmp_dissector.method:verify_checksum()
@@ -28,8 +27,8 @@ function icmp_dissector.method:compute_checksum()
 	self.checksum = ipv4.inet_checksum(self._payload)
 end
 
-function icmp_dissector.method:forge()
-	if self._payload.modified then
+function icmp_dissector.method:forge_payload(pkt, payload)
+	if payload.modified then
 		self:compute_checksum()
 	end
 end

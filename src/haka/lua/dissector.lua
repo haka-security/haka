@@ -105,10 +105,21 @@ function dissector.EncapsulatedPacketDissector.method:__init(parent)
 end
 
 function dissector.EncapsulatedPacketDissector.method:parse(pkt)
+	self._payload = pkt.payload:right(0):extract(false)
+	self:parse_payload(pkt, self._payload)
+end
+
+function dissector.EncapsulatedPacketDissector.method:parse_payload(pkt, payload)
 	error("not implemented")
 end
 
-function dissector.EncapsulatedPacketDissector.method:forge()
+function dissector.EncapsulatedPacketDissector.method:forge(pkt)
+	self:forge_payload(pkt, self._payload)
+	pkt.payload:append(self._payload)
+	self._payload = nil
+end
+
+function dissector.EncapsulatedPacketDissector.method:forge_payload(pkt, payload)
 	error("not implemented")
 end
 
@@ -128,14 +139,14 @@ end
 
 function dissector.EncapsulatedPacketDissector.method:send()
 	if self:trigger('send_packet') then
-		self:forge()
+		self:forge(self._parent)
 		self._parent:send()
 		self._parent = nil
 	end
 end
 
 function dissector.EncapsulatedPacketDissector.method:inject()
-	self:forge()
+	self:forge(self._parent)
 	self._parent:inject()
 	self._parent = nil
 end
