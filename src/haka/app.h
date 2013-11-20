@@ -31,5 +31,7 @@ extern char directory[1024];
 
 const char *get_app_directory();
 
+void dump_stat(FILE *file);
+
 #endif /* _APP_H */
 

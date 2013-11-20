@@ -13,6 +13,8 @@ char *ctl_recv_chars(int fd);
 wchar_t *ctl_recv_wchars(int fd);
 int32 ctl_recv_int(int fd);
 
+void ctl_output_redirect_chars(int fd);
+
 bool ctl_expect_chars(int fd, const char *str);
 
 #endif /* _CTL_COMM_H */

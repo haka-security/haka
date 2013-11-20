@@ -442,6 +442,19 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 			ctl_send_chars(state->fd, "OK");
 		}
 	}
+	else if (strcmp(command, "STAT") == 0) {
+		FILE *file;
+		file = fdopen(state->fd, "a+");
+		if (!file) {
+			messagef(HAKA_LOG_ERROR, MODULE, L"communication error: %ls", clear_error(errno));
+			ctl_send_chars(state->fd, "ERROR");
+		}
+		else {
+			ctl_send_chars(state->fd, "OK");
+			dump_stat(file);
+			fclose(file);
+		}
+	}
 	else if (strcmp(command, "DEBUG") == 0) {
 		struct luadebug_user *remote_user = luadebug_user_remote(state->fd);
 		if (!remote_user) {

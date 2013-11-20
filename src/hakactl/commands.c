@@ -174,6 +174,37 @@ struct command command_loglevel = {
 	run_loglevel
 };
 
+/*
+ * stats
+ */
+
+static int run_stat(int fd, int argc, char *argv[])
+{
+	printf("[....] requesting statistics");
+	fflush(stdout);
+
+	if (!ctl_send_chars(fd, "STAT")) {
+		 printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		 return COMMAND_FAILED;
+	}
+
+	if (ctl_expect_chars(fd, "OK")) {
+		printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+		ctl_output_redirect_chars(fd);
+		return COMMAND_SUCCESS;
+	}
+	else {
+		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		return COMMAND_FAILED;
+	}
+}
+
+struct command command_stat = {
+	"stat",
+	"stat:               show statistics",
+	0,
+	run_stat
+};
 
 /*
  * debug
