@@ -39,6 +39,7 @@ static struct vsubbuffer *_vbuffer_sub(lua_State *L, struct vbuffer *self, int o
 	}
 
 	vbuffer_sub(self, offset, length, sub);
+	vbuffer_iterator_register(&sub->position);
 
 	lua_getfield(L, LUA_REGISTRYINDEX, SUBBUFFER_TABLE);
 	lua_pushlightuserdata(L, sub);
@@ -66,6 +67,7 @@ static void _vsubbuffer___gc(lua_State* L)
 		lua_settable(L, -3);
 		lua_pop(L, 1);
 
+		vbuffer_iterator_clear(&((struct vsubbuffer *)usr->ptr)->position);
 		free(usr->ptr);
 	}
 }
@@ -164,16 +166,13 @@ struct vsubbuffer {
 			if (!ret) {
 				return NULL;
 			}
-
-			$self->position.buffer = ret;
-			$self->position.offset = 0;
 			return ret;
 		}
 
 		void erase()
 		{
 			vbuffer_erase($self->position.buffer, $self->position.offset, $self->length);
-			$self->position.buffer = NULL;
+			vbuffer_iterator_clear(&$self->position);
 			$self->length = 0;
 		}
 	}
@@ -211,7 +210,14 @@ struct vbuffer_iterator {
 				return NULL;
 			}
 
+			vbuffer_iterator_register(&sub->position);
 			return sub;
+		}
+
+		%rename(clear) _clear;
+		void _clear()
+		{
+			vbuffer_iterator_clear($self);
 		}
 	}
 };
@@ -290,7 +296,7 @@ struct vbuffer {
 				return NULL;
 			}
 
-			if (!vbuffer_iterator($self, iter)) {
+			if (!vbuffer_iterator($self, iter, false, false)) {
 				free(iter);
 				return NULL;
 			}

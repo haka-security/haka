@@ -3,6 +3,7 @@
 #define _HAKA_VBUFFER_H
 
 #include <haka/types.h>
+#include <haka/container/list.h>
 #include <haka/lua/object.h>
 
 
@@ -12,6 +13,7 @@
 
 #define ALL   (size_t)-1
 
+struct vbuffer_iterator;
 struct vbuffer_data;
 struct vsubbuffer;
 
@@ -31,12 +33,13 @@ struct vbuffer_flags {
 };
 
 struct vbuffer {
-	struct lua_object       lua_object;
-	struct vbuffer         *next;
-	size_t                  length;
-	size_t                  offset;
-	struct vbuffer_data    *data;
-	struct vbuffer_flags    flags;
+	struct lua_object        lua_object;
+	struct vbuffer          *next;
+	size_t                   length;
+	size_t                   offset;
+	struct vbuffer_data     *data;
+	struct vbuffer_flags     flags;
+	struct vbuffer_iterator *iterators;
 };
 
 
@@ -65,11 +68,19 @@ bool            vbuffer_zero(struct vbuffer *buf, bool mark_modified);
  */
 
 struct vbuffer_iterator {
-	struct vbuffer  *buffer;
-	size_t           offset;
+	struct list     list;
+	struct vbuffer *buffer;
+	size_t          offset;
+	bool            post:1;
+	bool            readonly:1;
+	bool            registered:1;
 };
 
-bool            vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter);
+bool            vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter, bool post, bool readonly);
+bool            vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_iterator *dst);
+bool            vbuffer_iterator_register(struct vbuffer_iterator *iter);
+bool            vbuffer_iterator_unregister(struct vbuffer_iterator *iter);
+bool            vbuffer_iterator_clear(struct vbuffer_iterator *iter);
 bool            vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buffer, size_t len, bool advance);
 size_t          vbuffer_iterator_read(struct vbuffer_iterator *iter, uint8 *buffer, size_t len, bool advance);
 size_t          vbuffer_iterator_write(struct vbuffer_iterator *iter, uint8 *buffer, size_t len, bool advance);
