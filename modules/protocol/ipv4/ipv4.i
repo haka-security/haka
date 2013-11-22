@@ -56,7 +56,7 @@ struct ipv4_addr {
 			return ret;
 		}
 
-		ipv4_addr(unsigned int addr) {
+		ipv4_addr(int addr) {
 			return ipv4_addr_new(addr);
 		}
 
