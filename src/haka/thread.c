@@ -383,23 +383,50 @@ void thread_pool_attachdebugger(struct thread_pool *pool)
 	++pool->attach_debugger;
 }
 
+void pad_output_stat_bytes(FILE *f, size_t value)
+{
+	static const size_t columnsize = 20;
+	size_t len;
+	len = stat_format_bytes(f, value);
+	stat_printf(f, "%*s", columnsize-len, "");
+}
+
+void pad_output_stat_char(FILE *f, char *s)
+{
+	static const size_t columnsize = 20;
+	size_t len;
+	len = stat_printf(f, s);
+	stat_printf(f, "%*s", columnsize-len, "");
+}
+
 void thread_pool_dump_stat(struct thread_pool *pool, FILE *f)
 {
 	assert(pool);
-	int total_packets = 0, total_bytes = 0;
-	int thread_packets, thread_bytes;
-	int i;
-	char c = ' ';
+	static const size_t columnsize = 20;
+	size_t len;
+	size_t total_packets = 0, total_bytes = 0;
+	size_t thread_packets, thread_bytes;
+
 	stat_printf(f, "\n");
-	stat_printf(f, "\t\tPackets\t\t\tBytes\n");
+	stat_printf(f, "%*s", columnsize, "");
+	pad_output_stat_char(f, "Packets");
+	pad_output_stat_char(f, "Bytes");
+	stat_printf(f, "\n");
+	int i;
 	for (i = 0; i < pool->count; i++) {
+		len = stat_printf(f, "Thread %d", i+1);
+		stat_printf(f, "%*s", columnsize-len, "");
 		thread_packets = pool->threads[i]->stats.total_packets;
 		thread_bytes = pool->threads[i]->stats.total_bytes;
+		pad_output_stat_bytes(f, thread_packets);
+		pad_output_stat_bytes(f, thread_bytes);
+		stat_printf(f, "\n");
+
 		total_packets += thread_packets;
 		total_bytes += thread_bytes;
-		thread_bytes = format_bytes(thread_bytes, &c);
-		stat_printf(f, "Thread %d\t%d\t\t\t%d%c\n", i+1, thread_packets, thread_bytes, c);
 	}
-	total_bytes = format_bytes(total_bytes, &c);
-	stat_printf(f, "All Threads\t%d\t\t\t%d%c\n", total_packets, total_bytes, c);
+	pad_output_stat_char(f, "All Threads");
+	pad_output_stat_bytes(f, total_packets);
+	pad_output_stat_bytes(f, total_bytes);
+	stat_printf(f, "\n");
 }

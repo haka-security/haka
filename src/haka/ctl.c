@@ -446,7 +446,7 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 		FILE *file;
 		file = fdopen(state->fd, "a+");
 		if (!file) {
-			messagef(HAKA_LOG_ERROR, MODULE, L"communication error: %ls", clear_error(errno));
+			messagef(HAKA_LOG_ERROR, MODULE, L"cannot open socket file: %ls", errno_error(errno));
 			ctl_send_chars(state->fd, "ERROR");
 		}
 		else {
