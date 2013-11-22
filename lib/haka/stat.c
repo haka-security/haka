@@ -18,7 +18,7 @@ size_t stat_printf(FILE *out, const char *format, ...)
 
 #define UNITS_COUNT  4
 
-size_t stat_format_bytes(FILE *out, size_t v)
+size_t stat_print_formated_bytes(FILE *out, size_t v)
 {
 	static const char *units[UNITS_COUNT] = {
 		"k", "M", "G", "T"

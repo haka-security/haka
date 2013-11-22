@@ -4,7 +4,7 @@
 #include <haka/types.h>
 
 size_t stat_printf(FILE *out, const char *format, ...);
-size_t stat_format_bytes(FILE *out, size_t v);
+size_t stat_print_formated_bytes(FILE *out, size_t v);
 
 typedef bool (*stat_callback)(FILE *out);
 

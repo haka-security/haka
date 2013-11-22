@@ -10,6 +10,7 @@
 #include <haka/error.h>
 #include <haka/thread.h>
 #include <haka/log.h>
+#include <haka/stat.h>
 #include <haka/alert.h>
 #include <haka/container/list.h>
 #include <luadebug/user.h>
@@ -451,8 +452,10 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 		}
 		else {
 			ctl_send_chars(state->fd, "OK");
+			stat_printf(file, "\n");
 			dump_stat(file);
 			fclose(file);
+			state->fd = -1;
 		}
 	}
 	else if (strcmp(command, "DEBUG") == 0) {

@@ -383,39 +383,41 @@ void thread_pool_attachdebugger(struct thread_pool *pool)
 	++pool->attach_debugger;
 }
 
+static const size_t columnsize = 20;
+
 void pad_output_stat_bytes(FILE *f, size_t value)
 {
-	static const size_t columnsize = 20;
-	size_t len;
-	len = stat_format_bytes(f, value);
-	stat_printf(f, "%*s", columnsize-len, "");
+	const size_t len = stat_print_formated_bytes(f, value);
+	if (len != (size_t)-1) {
+		stat_printf(f, "%*s", columnsize-len, "");
+	}
 }
 
-void pad_output_stat_char(FILE *f, char *s)
+void pad_output_stat_chars(FILE *f, char *s)
 {
-	static const size_t columnsize = 20;
-	size_t len;
-	len = stat_printf(f, s);
-	stat_printf(f, "%*s", columnsize-len, "");
+	const size_t len = stat_printf(f, s);
+	if (len != (size_t)-1) {
+		stat_printf(f, "%*s", columnsize-len, "");
+	}
 }
 
 void thread_pool_dump_stat(struct thread_pool *pool, FILE *f)
 {
-	assert(pool);
-	static const size_t columnsize = 20;
-	size_t len;
 	size_t total_packets = 0, total_bytes = 0;
 	size_t thread_packets, thread_bytes;
 
-	stat_printf(f, "\n");
-	stat_printf(f, "%*s", columnsize, "");
-	pad_output_stat_char(f, "Packets");
-	pad_output_stat_char(f, "Bytes");
+	assert(pool);
+
+	pad_output_stat_chars(f, "");
+	pad_output_stat_chars(f, "Packets");
+	pad_output_stat_chars(f, "Bytes");
 	stat_printf(f, "\n");
 	int i;
 	for (i = 0; i < pool->count; i++) {
-		len = stat_printf(f, "Thread %d", i+1);
-		stat_printf(f, "%*s", columnsize-len, "");
+		const size_t len = stat_printf(f, "Thread %d", i+1);
+		if (len != (size_t)-1) {
+			stat_printf(f, "%*s", columnsize-len, "");
+		}
 		thread_packets = pool->threads[i]->stats.total_packets;
 		thread_bytes = pool->threads[i]->stats.total_bytes;
 		pad_output_stat_bytes(f, thread_packets);
@@ -425,7 +427,7 @@ void thread_pool_dump_stat(struct thread_pool *pool, FILE *f)
 		total_packets += thread_packets;
 		total_bytes += thread_bytes;
 	}
-	pad_output_stat_char(f, "All Threads");
+	pad_output_stat_chars(f, "All Threads");
 	pad_output_stat_bytes(f, total_packets);
 	pad_output_stat_bytes(f, total_bytes);
 	stat_printf(f, "\n");
