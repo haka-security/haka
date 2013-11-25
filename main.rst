@@ -17,9 +17,7 @@ Contents:
    doc/getting_started.rst
    doc/tutorial.rst
    doc/tool_suite.rst
-   doc/rulearch.rst
    doc/api/lua/main.rst
-   doc/api/c/main.rst
    doc/debug.rst
 
 Indices and tables
