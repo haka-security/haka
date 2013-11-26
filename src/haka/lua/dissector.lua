@@ -115,7 +115,7 @@ end
 
 function dissector.EncapsulatedPacketDissector.method:forge(pkt)
 	self:forge_payload(pkt, self._payload)
-	pkt.payload:append(self._payload)
+	pkt.payload:append(self._payload, false)
 	self._payload = nil
 end
 

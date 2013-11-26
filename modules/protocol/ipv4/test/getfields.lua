@@ -61,7 +61,7 @@ haka.rule {
 		print(string.format("    Header length: %d bytes", pkt.hdr_len))
 		print(string.format("    Total Length: %d", pkt.len))
 		print(string.format("    Identification: 0x%.04x (%d)", pkt.id, pkt.id))
-		print(string.format("    Flags: 0x%.02x%s%s", pkt.flags.all, dont, more))
+		print(string.format("    Flags:%s%s", dont, more))
 		print(string.format("        %d... .... = Reserved bit: %s", bool(pkt.flags.rb)))
 		print(string.format("        .%d.. .... = Don't fragment: %s", bool(pkt.flags.df)))
 		print(string.format("        ..%d. .... = More fragments: %s", bool(pkt.flags.mf)))

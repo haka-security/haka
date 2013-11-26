@@ -882,12 +882,17 @@ size_t vbuffer_iterator_write(struct vbuffer_iterator *iterator, uint8 *buffer, 
 	}
 
 	while (iter) {
+		uint8 *ptr = vbuffer_get_data(iter, true);
+		if (!ptr) {
+			break;
+		}
+
 		size_t buflen = iter->length - offset;
 		if (buflen > clen) {
 			buflen = clen;
 		}
 
-		memcpy(vbuffer_get_data(iter, false) + offset, buffer, buflen);
+		memcpy(ptr + offset, buffer, buflen);
 		buffer += buflen;
 		clen -= buflen;
 
@@ -1137,8 +1142,6 @@ int64 vsubbuffer_asnumber(struct vsubbuffer *buf, bool bigendian)
 	if (vsubbuffer_isflat(buf)) {
 		ptr = vbuffer_iterator_get_data(&buf->position, false);
 		if (!ptr) {
-			clear_error();
-			error(L"invalid sub buffer");
 			return 0;
 		}
 	}
@@ -1163,8 +1166,7 @@ void vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num)
 	if (vsubbuffer_isflat(buf)) {
 		uint8 *ptr = vbuffer_iterator_get_data(&buf->position, true);
 		if (!ptr) {
-			clear_error();
-			error(L"invalid sub buffer");
+			return;
 		}
 
 		switch (buf->length) {

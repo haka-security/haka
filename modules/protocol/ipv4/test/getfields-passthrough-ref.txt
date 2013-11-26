@@ -3,7 +3,7 @@ Internet Protocol Version 4, Src: 7.176.206.34 (7.176.206.34), Dst: 127.0.0.1 (1
     Header length: 20 bytes
     Total Length: 20
     Identification: 0x5b84 (23428)
-    Flags: 0x03 (Don't Fragment) (More Fragments)
+    Flags: (Don't Fragment) (More Fragments)
         0... .... = Reserved bit: Not set
         .1.. .... = Don't fragment: Set
         ..1. .... = More fragments: Set
@@ -21,7 +21,7 @@ Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0
     Header length: 20 bytes
     Total Length: 84
     Identification: 0x0000 (0)
-    Flags: 0x02 (Don't Fragment)
+    Flags: (Don't Fragment)
         0... .... = Reserved bit: Not set
         .1.. .... = Don't fragment: Set
         ..0. .... = More fragments: Not set
@@ -39,7 +39,7 @@ Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0
     Header length: 20 bytes
     Total Length: 84
     Identification: 0x82db (33499)
-    Flags: 0x00
+    Flags:
         0... .... = Reserved bit: Not set
         .0.. .... = Don't fragment: Not set
         ..0. .... = More fragments: Not set
@@ -57,7 +57,7 @@ Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0
     Header length: 20 bytes
     Total Length: 60
     Identification: 0x39ef (14831)
-    Flags: 0x02 (Don't Fragment)
+    Flags: (Don't Fragment)
         0... .... = Reserved bit: Not set
         .1.. .... = Don't fragment: Set
         ..0. .... = More fragments: Not set
@@ -75,7 +75,7 @@ Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0
     Header length: 20 bytes
     Total Length: 40
     Identification: 0x0000 (0)
-    Flags: 0x02 (Don't Fragment)
+    Flags: (Don't Fragment)
         0... .... = Reserved bit: Not set
         .1.. .... = Don't fragment: Set
         ..0. .... = More fragments: Not set
@@ -93,7 +93,7 @@ Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0
     Header length: 20 bytes
     Total Length: 84
     Identification: 0x0000 (0)
-    Flags: 0x02 (Don't Fragment)
+    Flags: (Don't Fragment)
         0... .... = Reserved bit: Not set
         .1.. .... = Don't fragment: Set
         ..0. .... = More fragments: Not set

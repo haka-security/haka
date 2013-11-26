@@ -60,6 +60,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator);
 
 LUA_OBJECT(struct vbuffer);
 %newobject vbuffer::iter;
+%newobject vbuffer::_extract;
 
 struct vbuffer {
 	%extend {
@@ -104,14 +105,14 @@ struct vbuffer {
 			vbuffer_insert($self, offset, DISOWN_SUCCESS_ONLY, true);
 		}
 
-		void append(struct vbuffer *DISOWN_SUCCESS_ONLY)
+		void append(struct vbuffer *DISOWN_SUCCESS_ONLY, bool modify = true)
 		{
 			if (!DISOWN_SUCCESS_ONLY) {
 				error(L"invalid parameter");
 				return;
 			}
 
-			vbuffer_insert($self, ALL, DISOWN_SUCCESS_ONLY, true);
+			vbuffer_insert($self, ALL, DISOWN_SUCCESS_ONLY, modify);
 		}
 
 		%rename(asnumber) _asnumber;
@@ -151,7 +152,7 @@ struct vbuffer {
 			if (!vbuffer_sub($self, off / 8, (len + 7) / 8, &sub)) {
 				return;
 			}
-			return vsubbuffer_setbits(&sub, off, len, endian ? strcmp(endian, "big") == 0 : true, num);
+			return vsubbuffer_setbits(&sub, off % 8, len, endian ? strcmp(endian, "big") == 0 : true, num);
 		}
 
 		%rename(asstring) _asstring;
