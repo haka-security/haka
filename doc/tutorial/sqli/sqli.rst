@@ -42,7 +42,7 @@ It is trivial to bypass the above rule with slight modifications on uri. For ins
 
 Fine-grained analysis
 ---------------------
-All the above rules check the malicious patterns against the whole uri. The purpose of this scenario (``sqli-fine-grained.lua``) is to leverage the :lua:mod:`http` api in order to checks the patterns against only subparts of the http request (query's argument, list of cookies).
+All the above rules check the malicious patterns against the whole uri. The purpose of this scenario (``sqli-fine-grained.lua``) is to leverage the :lua:mod:`http` api in order to check the patterns against only subparts of the http request (query's argument, list of cookies).
 
 .. literalinclude:: ../../../sample/tutorial/sqli/sqli-fine-grained.lua
     :tab-width: 4
@@ -54,11 +54,11 @@ The script file introduces additional malicious patterns and use the rule_group 
 .. literalinclude:: ../../../sample/tutorial/sqli/sqli-groups.lua
     :tab-width: 4
 
-.. note:: Decoding functions are applied depending on the pattern. It is obvious to not apply uncomment fucntion when we are looking for comments.
+.. note:: Decoding functions are applied depending on the pattern. It is obvious to not apply uncomment function when we are looking for comments.
 
 White list
 ----------
-All the defined rules are too general and will therefore raise many alerts. In the example given hereafter we show how we could skip evalation of rules if the uri matches some conditions (for instance do not evaluate anti-sqli rules when the requested ressource is equal to `/foo/bar/safepage.php`). This is shows another advantage of using rules group feature.
+All the defined rules are too general and will therefore raise many alerts. In the example given hereafter we show how we could skip evalation of rules if the uri matches some conditions (for instance do not evaluate anti-sqli rules when the requested resource is equal to `/foo/bar/safepage.php`). This is shows another advantage of using rules group feature.
 
 .. note:: The check is done after uri normalisation
 

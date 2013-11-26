@@ -21,12 +21,12 @@ local sql_functions = {
 }
 
 ------------------------------------
--- White List ressources
+-- White List resources
 ------------------------------------
 
-local safe_ressources = {
+local safe_resources = {
 	'/foo/bar/safepage.php', '/action.php',
-	-- You can extend this list with other white list ressources
+	-- You can extend this list with other white list resources
 }
 
 ------------------------------------
@@ -71,9 +71,9 @@ sqli:rule {
 	eval = function (self, http)
 		-- Split uri into subparts and normalize it
 		local splitted_uri = http.request:split_uri():normalize()
-		for	_, res in ipairs(safe_ressources) do
+		for	_, res in ipairs(safe_resources) do
 			-- Skip evaluation if the normalized path (without dot-segments)
-			-- is in the list of safe ressources
+			-- is in the list of safe resources
 			if splitted_uri.path == res then
 				haka.log("sqli", "skip SQLi detection (white list rule)")
 				return true

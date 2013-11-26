@@ -3,22 +3,28 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Haka's documentation!
-================================
+Welcome to Haka's User Guide Manual!
+====================================
 
 Contents:
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :numbered:
 
    doc/intro.rst
    doc/build.rst
    doc/getting_started.rst
-   doc/tutorial.rst
    doc/tool_suite.rst
-   doc/api/lua/main.rst
+   doc/tutorial.rst
+   doc/api/lua/rule.rst
+   doc/api/lua/log_alert.rst
+   doc/api/lua/dissector.rst
+   doc/api/lua/packet.rst
+   doc/api/lua/misc.rst
    doc/debug.rst
+   doc/api/lua/external_modules.rst
+
 
 Indices and tables
 ==================

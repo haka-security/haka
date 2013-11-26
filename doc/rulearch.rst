@@ -1,5 +1,5 @@
 
-Rule architecture
+Haka architecture
 =================
 
 Dissectors

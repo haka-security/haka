@@ -16,8 +16,11 @@ haka.rule {
 	eval = function (self, pkt)
 		-- bad IP checksum
 		if not pkt:verify_checksum() then
-			-- Logging type is described in capture-type file
-			haka.log.error("filter", "Bad TCP checksum")
+			-- raise an alert
+			haka.alert{
+				description = "Bad TCP checksum",
+			}
+			-- and drop the packet
 			pkt:drop() 
 			-- Here we drop the packet, but we could
 			-- also calculate and set the good checksum
@@ -33,7 +36,7 @@ haka.rule {
 	hooks = {"tcp-connection-new"},
 	eval = function (self, pkt)
 		if pkt.tcp.ip.dst == ipv4.addr("192.168.20.1") and pkt.tcp.dstport == 80 then
-			haka.log.warning("filter","Traffic on HTTP port from %s", pkt.tcp.ip.src)
+			haka.log.debug("filter","Traffic on HTTP port from %s", pkt.tcp.ip.src)
 		end
 	end
 }

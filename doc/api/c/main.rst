@@ -34,7 +34,7 @@ Types
              SWAP_TO_LE(type, x)
              SWAP_FROM_LE(type, x)
 
-    Byte swapping utility macro. The `type` should be the c type of the value `x`
+    Byte swapping utility macro. The `type` should be the C type of the value `x`
     (ie. :c:type:`int32`, :c:type:`uint64`...)
 
 .. c:macro:: GET_BIT(v, i)

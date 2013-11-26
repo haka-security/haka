@@ -1,6 +1,6 @@
 
-Tutorials
-=========
+Writing Haka scripts
+====================
 
 .. toctree::
    :maxdepth: 2

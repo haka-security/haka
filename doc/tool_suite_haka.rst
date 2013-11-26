@@ -5,7 +5,7 @@ haka
 
 .. program:: haka
 
-``haka`` is the main program of the suite. It allows to capture packet using either pcap or nfqueue and to filter/alter them according to the specified lua policy file.
+``haka`` is the main program of the suite. It allows to capture packets using either pcap or nfqueue and to filter/alter them according to the specified lua policy file.
 
 Options
 -------
@@ -39,7 +39,7 @@ Options
 Configuration file
 ------------------
 
-The configuration file is divided into three main topics: general, packet and log
+The configuration file is divided into three main topics: **general**, **packet** and **log**
 
 General directives
 ^^^^^^^^^^^^^^^^^^
@@ -115,7 +115,7 @@ Logging modules
 Service
 -------
 
-It is possible to launch ``haka`` as a service. When started, ``haka`` loads the default configuration file located at *TODO*
+It is possible to launch ``haka`` as a service. When started, ``haka`` loads the default configuration file ``haka.conf`` located at |haka_install_path|/etc/haka/.
 
 * Starting haka service
 

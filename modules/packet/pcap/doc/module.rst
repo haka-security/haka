@@ -6,7 +6,7 @@ Pcap  `packet/pcap`
 Description
 ^^^^^^^^^^^
 
-The module uses the library pcap to read packets from a file or from an real network
+The module uses the library pcap to read packets from a file or from a real network
 device.
 
 .. note:
@@ -18,20 +18,20 @@ Parameters
 
 .. describe:: interfaces
 
-    Selected interfaces.
+    List of comma-separated interfaces.
 
     Example of possible values: ::
 
         # Capture loopback traffic
         interfaces = "lo"
         # Capture loopback traffic and eth0
-        # interfaces = "lo,eth0"
+        # interfaces = "lo, eth0"
         # Capture on all interfaces
         # interfaces = "any"
 
 .. describe:: file
 
-    Read packets from a pcap file. ``interfaces`` must be not be useed.
+    Read packets from a pcap file. ``interfaces`` must be not be used.
 
 .. describe:: output
 

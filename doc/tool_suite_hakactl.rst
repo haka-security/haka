@@ -33,6 +33,10 @@ Commands
 
     Stop haka daemon.
 
+.. option:: stats
+
+    Show statistics on packet/bytes captured by haka.
+
 .. option:: logs
 
     Show haka logs in realtime.
@@ -46,8 +50,6 @@ Commands
 .. option:: debug
 
     Debug haka rules remotely.
-
-    .. seealso:: Check the :doc:`\debug` topic to get more information about the debugger and the interactive mode.
 
 .. option:: interactive
 

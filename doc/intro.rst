@@ -1,8 +1,8 @@
 
-Introduction
+What is HAKA
 ============
 
-Haka-Runtime is a tool that allows to capture TCP/IP packet and filter
+Haka is a suite of tool that allows to capture TCP/IP packets and filter
 them based on Lua policy files.
 
 Major features

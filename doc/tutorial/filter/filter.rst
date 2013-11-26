@@ -9,18 +9,17 @@ combination of fields in the packet or the streams.
 
 How-to
 ------
-This tutorial is divided in two parts. The first one relies on hakapcap
+This tutorial is divided into two parts. The first one relies on hakapcap
 tool and pcap file, in order to show how to do basic filtering.
-The second one uses the nfqueue interface in order to manipulate the
-flow as it passes by.
+The second one uses the nfqueue interface in order to alter tcp streams.
 
 Basic TCP/IP filtering
 ----------------------
 
 Basic IP filtering
 ^^^^^^^^^^^^^^^^^^
-In order to do some basic IP filtering you can read the self
-documented lua script file:
+In order to do some basic IP filtering you can read the self-documented
+lua script file:
 
 .. literalinclude:: ../../../sample/tutorial/filter/ipfilter.lua
    :language: lua

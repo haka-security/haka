@@ -3,13 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Haka's documentation!
-================================
+Welcome to Haka's Developer Guide Manual!
+=========================================
 
 Contents:
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :numbered:
 
    doc/rulearch.rst
