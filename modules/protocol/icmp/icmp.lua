@@ -15,7 +15,7 @@ icmp_dissector.grammar = haka.grammar.record{
 
 function icmp_dissector.method:parse_payload(pkt, payload)
 	self.ip = pkt
-	icmp_dissector.grammar:parseall(payload:iter(), self)
+	icmp_dissector.grammar:parseall(payload, self)
 end
 
 function icmp_dissector.method:verify_checksum()

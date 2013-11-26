@@ -24,9 +24,17 @@ grammar_dg.ParseContext.property.offset = {
 function grammar_dg.ParseContext.method:__init(input, topctx)
 	self._input = input
 	self._offset = 0
+	self._length = #input
 	self._bitoffset = 0
 	self._ctxs = {}
 	self:push(topctx)
+end
+
+function grammar_dg.ParseContext.method:advance(size)
+	self._offset = self._offset + size
+	if self._offset > self._length then
+		error("invalid buffer size")
+	end
 end
 
 function grammar_dg.ParseContext.method:parse(entity)
@@ -301,13 +309,11 @@ end
 function grammar_dg.Number.method:parse(cur, input, ctx)
 	local bitoffset = ctx._bitoffset
 	local size, bit = math.ceil((bitoffset + self.size) / 8), (bitoffset + self.size) % 8
-	local sub = input:sub(size, false)
+	local sub = input:sub(ctx._offset, size)
 	if bit ~= 0 then
-		input:advance(size-1)
-		ctx._offset = ctx._offset + size-1
+		ctx:advance(size-1)
 	else
-		input:advance(size)
-		ctx._offset = ctx._offset + size
+		ctx:advance(size)
 	end
 
 	ctx._bitoffset = bit
@@ -345,11 +351,9 @@ function grammar_dg.Bits.method:parse(cur, input, ctx)
 	local bitoffset = ctx._bitoffset
 	local size, bit = math.ceil((bitoffset + size) / 8), (bitoffset + size) % 8
 	if bit ~= 0 then
-		input:advance(size-1)
-		ctx._offset = ctx._offset + size-1
+		ctx:advance(size-1)
 	else
-		input:advance(size)
-		ctx._offset = ctx._offset + size
+		ctx:advance(size)
 	end
 
 	ctx._bitoffset = bit
@@ -368,8 +372,8 @@ function grammar_dg.Bytes.method:parse(cur, input, ctx)
 		error("byte primitive requires aligned bits")
 	end
 
-	local sub = input:sub(self.size(cur, ctx) or -1)
-	ctx._offset = ctx._offset + #sub
+	local sub = input:sub(ctx._offset, self.size(cur, ctx))
+	ctx:advance(#sub)
 
 	if self.name then
 		if self.converter then
