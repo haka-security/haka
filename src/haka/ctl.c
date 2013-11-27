@@ -443,7 +443,7 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 			ctl_send_chars(state->fd, "OK");
 		}
 	}
-	else if (strcmp(command, "STAT") == 0) {
+	else if (strcmp(command, "STATS") == 0) {
 		FILE *file;
 		file = fdopen(state->fd, "a+");
 		if (!file) {

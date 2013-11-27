@@ -178,12 +178,12 @@ struct command command_loglevel = {
  * stats
  */
 
-static int run_stat(int fd, int argc, char *argv[])
+static int run_stats(int fd, int argc, char *argv[])
 {
 	printf("[....] requesting statistics");
 	fflush(stdout);
 
-	if (!ctl_send_chars(fd, "STAT")) {
+	if (!ctl_send_chars(fd, "STATS")) {
 		 printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		 return COMMAND_FAILED;
 	}
@@ -199,11 +199,11 @@ static int run_stat(int fd, int argc, char *argv[])
 	}
 }
 
-struct command command_stat = {
-	"stat",
-	"stat:               show statistics",
+struct command command_stats = {
+	"stats",
+	"stats:               show statistics",
 	0,
-	run_stat
+	run_stats
 };
 
 /*
