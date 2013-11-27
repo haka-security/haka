@@ -265,6 +265,8 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 		return self.buf, off + self.off, len or self.len
 	end
 
+	subbuffer.method.repr = _sub
+
 	function subbuffer.method:sub(off, len)
 		local buf, off, len = _sub(self, off, len)
 		return subbuffer:new(buf, off, len)
@@ -283,6 +285,16 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 	function subbuffer.method:erase(off, len)
 		local buf, off, len = _sub(self, off, len)
 		return buf:erase(off, len)
+	end
+
+	function subbuffer.method:insert(off, data)
+		local buf, off = _sub(self, off)
+		return buf:insert(off, data)
+	end
+
+	function subbuffer.method:append(data)
+		local buf, off = _sub(self, off)
+		return buf:append(data)
 	end
 
 	function subbuffer.method:extract(modified, off, len)
@@ -343,7 +355,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 
 	function subbuffer:__len()
 		local buf, off, len = _sub(self, 0)
-		if len then
+		if len and len >= 0 then
 			return len
 		else
 			return #buf - off

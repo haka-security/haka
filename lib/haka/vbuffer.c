@@ -1107,7 +1107,7 @@ uint8 *vsubbuffer_mmap(struct vsubbuffer *buf, void **_iter, size_t *remlen, siz
 		offset = 0;
 	}
 
-	if (!*iter) {
+	if (*iter) {
 		uint8 *ptr = vbuffer_get_data(*iter, write);
 		if (!ptr) {
 			return NULL;

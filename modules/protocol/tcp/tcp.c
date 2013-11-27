@@ -295,6 +295,7 @@ int16 tcp_checksum(struct tcp *tcp)
 	TCP_CHECK(tcp, 0);
 
 	struct tcp_pseudo_header tcp_pseudo_h;
+	struct vsubbuffer subbuf;
 	int32 sum;
 
 	/* fill tcp pseudo header */
@@ -307,8 +308,10 @@ int16 tcp_checksum(struct tcp *tcp)
 
 	/* compute checksum */
 	sum = inet_checksum_partial((uint16 *)&tcp_pseudo_h, sizeof(struct tcp_pseudo_header));
-	sum += inet_checksum_vbuffer_partial(tcp->packet->payload);
-	sum += inet_checksum_vbuffer_partial(tcp->payload);
+	vbuffer_sub(tcp->packet->payload, 0, ALL, &subbuf);
+	sum += inet_checksum_vbuffer_partial(&subbuf);
+	vbuffer_sub(tcp->payload, 0, ALL, &subbuf);
+	sum += inet_checksum_vbuffer_partial(&subbuf);
 	return inet_checksum_reduce(sum);
 }
 

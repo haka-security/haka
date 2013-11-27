@@ -230,14 +230,14 @@ int16 inet_checksum(uint16 *ptr, size_t size)
 	return inet_checksum_reduce(sum);
 }
 
-int32 inet_checksum_vbuffer_partial(struct vbuffer *buf)
+int32 inet_checksum_vbuffer_partial(struct vsubbuffer *buf)
 {
 	int32 sum = 0;
 	void *iter = NULL;
 	uint8 *data;
-	size_t len;
+	size_t len, remlen = 0;
 
-	while ((data = vbuffer_mmap(buf, &iter, &len, false))) {
+	while ((data = vsubbuffer_mmap(buf, &iter, &remlen, &len, false))) {
 		if (len > 0) {
 			sum += inet_checksum_partial((uint16 *)data, len);
 		}
@@ -246,7 +246,7 @@ int32 inet_checksum_vbuffer_partial(struct vbuffer *buf)
 	return sum;
 }
 
-int16 inet_checksum_vbuffer(struct vbuffer *buf)
+int16 inet_checksum_vbuffer(struct vsubbuffer *buf)
 {
 	const int32 sum = inet_checksum_vbuffer_partial(buf);
 	return inet_checksum_reduce(sum);

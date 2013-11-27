@@ -65,7 +65,8 @@ local header = haka.grammar.record{
 		}),
 	haka.grammar.padding{align = 32},
 	haka.grammar.verify(function (self, ctx) return ctx.offset == self.hdr_len end,
-		"invalid ipv4 header size")
+		"invalid ipv4 header size"),
+	haka.grammar.field('payload',     haka.grammar.bytes())
 }
 
 ipv4_dissector.grammar = header:compile()
@@ -73,20 +74,15 @@ ipv4_dissector.grammar = header:compile()
 function ipv4_dissector.method:parse_payload(pkt, payload, init)
 	self.raw = pkt
 	ipv4_dissector.grammar:parseall(payload, self, init)
-	if init and init.payload then
-		self.payload = init.payload
-	else
-		self.payload = payload:right(self.hdr_len):extract(false)
-	end
 end
 
 function ipv4_dissector.method:verify_checksum()
-	return ipv4.inet_checksum(self._payload) == 0
+	return ipv4.inet_checksum(self._payload:sub(0, self.hdr_len)) == 0
 end
 
 function ipv4_dissector.method:compute_checksum()
 	self.checksum = 0
-	self.checksum = ipv4.inet_checksum(self._payload)
+	self.checksum = ipv4.inet_checksum(self._payload:sub(0, self.hdr_len))
 end
 
 function ipv4_dissector.method:next_dissector()
@@ -94,7 +90,7 @@ function ipv4_dissector.method:next_dissector()
 end
 
 function ipv4_dissector.method:forge_payload(pkt, payload)
-	local len = #payload + #self.payload
+	local len = #payload
 	if self.len ~= len then
 		self.len = len
 	end
@@ -102,9 +98,6 @@ function ipv4_dissector.method:forge_payload(pkt, payload)
 	if payload.modified then
 		self:compute_checksum()
 	end
-
-	payload:append(self.payload, false)
-	self.payload = nil
 end
 
 function ipv4_dissector:create(pkt, init)

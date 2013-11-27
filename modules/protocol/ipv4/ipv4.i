@@ -26,9 +26,13 @@
 		return ret;
 	}
 
-	static int lua_inet_checksum(struct vbuffer *buf)
+	static int lua_inet_checksum(struct vbuffer *buf, size_t offset, size_t len)
 	{
-		return SWAP_FROM_IPV4(int16, inet_checksum_vbuffer(buf));
+		struct vsubbuffer sub;
+		if (!vbuffer_sub(buf, offset, len, &sub)) {
+			return 0;
+		}
+		return SWAP_FROM_IPV4(int16, inet_checksum_vbuffer(&sub));
 	}
 %}
 
@@ -265,8 +269,8 @@ struct ipv4 *ipv4_create(struct packet *DISOWN_SUCCESS_ONLY);
 %newobject ipv4_forge;
 struct packet *ipv4_forge(struct ipv4 *pkt);
 
-%rename(inet_checksum) lua_inet_checksum;
-int lua_inet_checksum(struct vbuffer *buf);
+%rename(_inet_checksum) lua_inet_checksum;
+int lua_inet_checksum(struct vbuffer *buf, int offset = 0, int len = -1);
 
 %{
 	#define IPV4_INT_GETSET(field) \
@@ -314,6 +318,14 @@ int lua_inet_checksum(struct vbuffer *buf);
 
 %luacode {
 	local this = unpack({...})
+
+	function this.inet_checksum(buf, off, len)
+		if type(buf) == 'userdata' then
+			buf = buf:right(0)
+		end
+		local buf, off, len = buf:repr(off or 0, len)
+		return this._inet_checksum(buf, off, len)
+	end
 
 	local ipv4_protocol_dissectors = {}
 
