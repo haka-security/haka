@@ -66,8 +66,8 @@ dissector.PacketDissector = class('PacketDissector', dissector.Dissector)
 dissector.PacketDissector:register_event('receive_packet')
 dissector.PacketDissector:register_event('send_packet')
 
-function dissector.PacketDissector.method:trigger(signal)
-	if not haka.pcall(haka.context.signal, haka.context, self, classof(self).events[signal]) then
+function dissector.PacketDissector.method:trigger(signal, ...)
+	if not haka.pcall(haka.context.signal, haka.context, self, classof(self).events[signal], ...) then
 		return self:drop()
 	end
 
@@ -131,9 +131,18 @@ function dissector.EncapsulatedPacketDissector.method:drop()
 	return self._parent:drop()
 end
 
+function dissector.EncapsulatedPacketDissector.method:next_dissector()
+	return nil
+end
+
 function dissector.EncapsulatedPacketDissector.method:emit()
 	if self:trigger('receive_packet') then
-		return self:send()
+		local next_dissector = self:next_dissector()
+		if next_dissector then
+			return next_dissector:receive(self)
+		else
+			return self:send()
+		end
 	end
 end
 

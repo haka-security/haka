@@ -374,6 +374,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 	swig.getclassmetatable('ipv4')['.fn'].inject = ipv4_dissector.method.inject
 
 	-- ipv4 Lua full dissector, uncomment to enable
-	--ipv4 = this
-	--require('protocol/ipv4lua')
+	--[[ipv4 = this
+	ipv4.ipv4_protocol_dissectors = ipv4_protocol_dissectors
+	require('protocol/ipv4lua')]]
 }

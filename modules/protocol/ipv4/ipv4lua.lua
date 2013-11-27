@@ -86,6 +86,10 @@ function ipv4_dissector.method:compute_checksum()
 	self.checksum = ipv4.inet_checksum(self._payload)
 end
 
+function ipv4_dissector.method:next_dissector()
+	return ipv4.ipv4_protocol_dissectors[self.proto]
+end
+
 function ipv4_dissector.method:forge_payload(pkt, payload)
 	local len = #payload + #self.payload
 	if self.len ~= len then
