@@ -341,7 +341,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 		end
 	end
 
-	function subbuffer.method:__len()
+	function subbuffer:__len()
 		local buf, off, len = _sub(self, 0)
 		if len then
 			return len

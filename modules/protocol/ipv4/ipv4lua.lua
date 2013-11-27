@@ -17,7 +17,7 @@ local option_header  = haka.grammar.record{
 	haka.grammar.field('number',      haka.grammar.number(5)),
 }:extra{
 	iseol = function (self)
-		return self.copied == 0 and
+		return self.copy == 0 and
 			self.class == 0 and
 			self.number == 0
 	end
@@ -32,7 +32,7 @@ local option_data = haka.grammar.record{
 local option = haka.grammar.record{
 	option_header,
 	haka.grammar.optional(option_data,
-		function (self) return not self.iseof end
+		function (self) return not self.iseol end
 	)
 }
 
@@ -64,7 +64,7 @@ local header = haka.grammar.record{
 			end
 		}),
 	haka.grammar.padding{align = 32},
-	haka.grammar.verify(function (self, ctx)  return ctx.offset == self.hdr_len end,
+	haka.grammar.verify(function (self, ctx) return ctx.offset == self.hdr_len end,
 		"invalid ipv4 header size")
 }
 
