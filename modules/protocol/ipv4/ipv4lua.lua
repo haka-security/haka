@@ -102,14 +102,13 @@ function ipv4_dissector.method:forge_payload(pkt, payload)
 end
 
 function ipv4_dissector:create(pkt, init)
-	pkt.payload:append(haka.vbuffer(20))
-
 	if not init then init = {} end
 	if not init.hdr_len then init.hdr_len = 20 end
 	if not init.version then init.version = 4 end
 	if not init.checksum then init.checksum = 0 end
 	if not init.len then init.len = 0 end
-	if not init.payload then init.payload = haka.vbuffer(0) end
+
+	pkt.payload:append(haka.vbuffer(init.hdr_len))
 
 	local ip = ipv4_dissector:new(pkt)
 	ip:parse(pkt, init)

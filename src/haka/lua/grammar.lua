@@ -40,6 +40,7 @@ function grammar_dg.ParseContext.method:__init(input, topctx, init)
 
 	if init then
 		self._initctxs = { init }
+		self._initctxs_count = 1
 	end
 end
 
@@ -61,7 +62,8 @@ end
 function grammar_dg.ParseContext.method:pop()
 	self._ctxs[#self._ctxs] = nil
 	if self._initctxs then
-		self._initctxs[#self._initctxs] = nil
+		self._initctxs[self._initctxs_count] = nil
+		self._initctxs_count = self._initctxs_count-1
 	end
 end
 
@@ -70,8 +72,9 @@ function grammar_dg.ParseContext.method:push(ctx, name)
 	self._ctxs[#self._ctxs+1] = new
 	if self._initctxs then
 		local curinit = self._initctxs[#self._initctxs]
+		self._initctxs_count = self._initctxs_count+1
 		if curinit then
-			self._initctxs[#self._initctxs+1] = curinit[name]
+			self._initctxs[self._initctxs_count] = curinit[name]
 		else
 			self._initctxs[#self._initctxs+1] = nil
 		end
@@ -317,7 +320,7 @@ end
 
 function grammar_dg.ArrayPush.method:apply(ctx)
 	local cur = ctx.current
-	local new = ctx:push(nil, #cur)
+	local new = ctx:push(nil, #cur+1)
 	table.insert(cur, new)
 end
 
