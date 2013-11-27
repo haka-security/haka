@@ -15,12 +15,6 @@ local option_header  = haka.grammar.record{
 	haka.grammar.field('copy',        haka.grammar.number(1)),
 	haka.grammar.field('class',       haka.grammar.number(2)),
 	haka.grammar.field('number',      haka.grammar.number(5)),
-}:extra{
-	hasdata = function (self)
-		return self.copy == 0 and
-			self.class == 0 and
-			self.number == 1 or self.number == 0
-	end
 }
 
 local option_data = haka.grammar.record{
@@ -30,9 +24,12 @@ local option_data = haka.grammar.record{
 }
 
 local option = haka.grammar.record{
-	option_header,
+	haka.grammar.union{
+		option_header,
+		haka.grammar.field('type',    haka.grammar.number(8))
+	},
 	haka.grammar.optional(option_data,
-		function (self) return not self.hasdata end
+		function (self) return self.type ~= 0 and self.type ~= 1 end
 	)
 }
 
@@ -44,9 +41,9 @@ local header = haka.grammar.record{
 	haka.grammar.field('len',         haka.grammar.number(16)),
 	haka.grammar.field('id',          haka.grammar.number(16)),
 	haka.grammar.field('flags',       haka.grammar.record{
-		haka.grammar.field('rb', haka.grammar.flag),
-		haka.grammar.field('df', haka.grammar.flag),
-		haka.grammar.field('mf', haka.grammar.flag),
+		haka.grammar.field('rb',      haka.grammar.flag),
+		haka.grammar.field('df',      haka.grammar.flag),
+		haka.grammar.field('mf',      haka.grammar.flag),
 	}),
 	haka.grammar.field('frag_offset', haka.grammar.number(13)
 		:convert(haka.grammar.converter.mult(8))),
@@ -60,12 +57,16 @@ local header = haka.grammar.record{
 	haka.grammar.field('opt',         haka.grammar.array(option)
 		:options{
 			untilcond = function (elem, ctx)
-				return ctx.offset >= ctx.top.hdr_len or (elem and elem.iseol)
+				return ctx.offset >= ctx.top.hdr_len or
+					(elem and elem.type == 0)
 			end
 		}),
 	haka.grammar.padding{align = 32},
-	haka.grammar.verify(function (self, ctx) return ctx.offset == self.hdr_len end,
-		"invalid ipv4 header size"),
+	haka.grammar.verify(function (self, ctx)
+		if ctx.offset ~= self.hdr_len then
+			error(string.format("invalid ipv4 header size, expected %d bytes", self.hdr_len))
+		end
+	end),
 	haka.grammar.field('payload',     haka.grammar.bytes())
 }
 

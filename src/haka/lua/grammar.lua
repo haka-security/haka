@@ -34,6 +34,7 @@ function grammar_dg.ParseContext.method:__init(input, topctx, init)
 	self._offset = 0
 	self._length = #input
 	self._bitoffset = 0
+	self._marks = {}
 	self._ctxs = {}
 	self:push(topctx)
 
@@ -76,6 +77,31 @@ function grammar_dg.ParseContext.method:push(ctx, name)
 		end
 	end
 	return new
+end
+
+function grammar_dg.ParseContext.method:pushmark()
+	self._marks[#self._marks+1] = { self._offset, self._bitoffset, 0, self._bitoffset }
+end
+
+function grammar_dg.ParseContext.method:popmark()
+	local mark = self._marks[#self._marks]
+	self._offset = mark[1]
+	self:advance(mark[3])
+	self._bitoffset = mark[4]
+	self._marks[#self._marks] = nil
+end
+
+function grammar_dg.ParseContext.method:seekmark()
+	local mark = self._marks[#self._marks]
+	local len = self._offset - mark[1]
+	if len >= mark[3] then
+		mark[3] = len
+		if self._bitoffset > mark[4] then
+			mark[4] = self._bitoffset
+		end
+	end
+	self._offset = mark[1]
+	self._bitoffset = mark[2]
 end
 
 
@@ -232,6 +258,42 @@ function grammar_dg.RecordFinish.method:apply(ctx)
 	end
 end
 
+grammar_dg.UnionStart = class('DGUnionStart', grammar_dg.Control)
+
+function grammar_dg.UnionStart.method:__init(name)
+	super(grammar_dg.UnionStart).__init(self)
+	self.name = name
+end
+
+function grammar_dg.UnionStart.method:apply(ctx)
+	if self.name then
+		local cur = ctx.current
+		local new = ctx:push(nil, self.name)
+	end
+
+	ctx:pushmark()
+end
+
+grammar_dg.UnionRestart = class('DGUnionRestart', grammar_dg.Control)
+
+function grammar_dg.UnionRestart.method:apply(ctx)
+	ctx:seekmark()
+end
+
+grammar_dg.UnionFinish = class('DGUnionFinish', grammar_dg.Control)
+
+function grammar_dg.UnionFinish.method:__init(pop)
+	super(grammar_dg.UnionFinish).__init(self)
+	self._pop = pop
+end
+
+function grammar_dg.UnionFinish.method:apply(ctx)
+	if self._pop then
+		ctx:pop()
+	end
+	ctx:popmark()
+end
+
 grammar_dg.ArrayStart = class('DGArrayStart', grammar_dg.Control)
 
 function grammar_dg.ArrayStart.method:__init(name)
@@ -272,16 +334,13 @@ end
 
 grammar_dg.Check = class('DGCheck', grammar_dg.Control)
 
-function grammar_dg.Check.method:__init(check, msg)
+function grammar_dg.Check.method:__init(check)
 	super(grammar_dg.Error).__init(self)
 	self.check = check
-	self.msg = msg
 end
 
 function grammar_dg.Check.method:apply(ctx)
-	if not self.check(ctx.current, ctx) then
-		error(self.msg)
-	end
+	self.check(ctx.current, ctx)
 end
 
 grammar_dg.Branch = class('DGBranch', grammar_dg.Control)
@@ -567,6 +626,25 @@ function grammar.Record.method:compile()
 end
 
 
+grammar.Union = class('Union', grammar.Entity)
+
+function grammar.Union.method:__init(entities)
+	self.entities = entities
+end
+
+function grammar.Union.method:compile()
+	local ret = grammar_dg.UnionStart:new(self.named)
+
+	for _, value in ipairs(self.entities) do
+		ret:add(value:compile())
+		ret:add(grammar_dg.UnionRestart:new())
+	end
+	
+	ret:add(grammar_dg.UnionFinish:new(self.named))
+	return ret
+end
+
+
 grammar.Branch = class('Branch', grammar.Entity)
 
 function grammar.Branch.method:__init(cases, select)
@@ -705,18 +783,21 @@ end
 
 grammar.Verify = class('Verify', grammar.Entity)
 
-function grammar.Verify.method:__init(func, msg)
+function grammar.Verify.method:__init(func)
 	self.func = func
-	self.msg = msg
 end
 
 function grammar.Verify.method:compile()
-	return grammar_dg.Check:new(self.func, self.msg or "verification failed")
+	return grammar_dg.Check:new(self.func)
 end
 
 
 function grammar.record(entities)
 	return grammar.Record:new(entities)
+end
+
+function grammar.union(entities)
+	return grammar.Union:new(entities)
 end
 
 function grammar.branch(cases, select)
@@ -742,7 +823,7 @@ function grammar.number(bits)
 	return grammar.Number:new(bits)
 end
 
-grammar.flag = grammar.Number:new(1):convert(grammar.converter.bool, false)
+grammar.flag = grammar.number(1):convert(grammar.converter.bool, false)
 
 function grammar.bytes()
 	return grammar.Bytes:new()
@@ -768,7 +849,15 @@ function grammar.field(name, field)
 end
 
 function grammar.verify(func, msg)
-	return grammar.Verify:new(func, msg)
+	if msg then
+		return grammar.Verify:new(function (self, ctx)
+			if not func(self, ctx) then
+				error(msg)
+			end
+		end)
+	else
+		return grammar.Verify:new(func)
+	end
 end
 
 
