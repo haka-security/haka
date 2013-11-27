@@ -16,10 +16,10 @@ local option_header  = haka.grammar.record{
 	haka.grammar.field('class',       haka.grammar.number(2)),
 	haka.grammar.field('number',      haka.grammar.number(5)),
 }:extra{
-	iseol = function (self)
+	hasdata = function (self)
 		return self.copy == 0 and
 			self.class == 0 and
-			self.number == 0
+			self.number == 1 or self.number == 0
 	end
 }
 
@@ -32,7 +32,7 @@ local option_data = haka.grammar.record{
 local option = haka.grammar.record{
 	option_header,
 	haka.grammar.optional(option_data,
-		function (self) return not self.iseol end
+		function (self) return not self.hasdata end
 	)
 }
 
