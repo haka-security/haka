@@ -1163,6 +1163,17 @@ int64 vsubbuffer_asnumber(struct vsubbuffer *buf, bool bigendian)
 
 void vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num)
 {
+	if (buf->length > 8) {
+		error(L"unsupported size");
+		return;
+	}
+
+	if ((num < 0 && (-num & ((1ULL << buf->length*8)-1)) != -num) ||
+	    (num >= 0 && (num & ((1ULL << buf->length*8)-1)) != num)) {
+		error(L"invalid number, value does not fit in %d bytes", buf->length);
+		return;
+	}
+
 	if (vsubbuffer_isflat(buf)) {
 		uint8 *ptr = vbuffer_iterator_get_data(&buf->position, true);
 		if (!ptr) {
@@ -1265,6 +1276,17 @@ int64 vsubbuffer_asbits(struct vsubbuffer *buf, size_t offset, size_t bits, bool
 
 void vsubbuffer_setbits(struct vsubbuffer *buf, size_t offset, size_t bits, bool bigendian, int64 num)
 {
+	if (bits > 64) {
+		error(L"unsupported size");
+		return;
+	}
+
+	if ((num < 0 && (-num & ((1ULL << bits)-1)) != -num) ||
+	    (num >= 0 && (num & ((1ULL << bits)-1)) != num)) {
+		error(L"invalid number, value does not fit in %d bits", bits);
+		return;
+	}
+
 #if HAKA_LITTLEENDIAN
 	if (!bigendian) {
 #else

@@ -1,1 +1,7 @@
-error core: Invalid IPv4 address format
+true
+false number must not be negative
+true
+true
+false number must not be negative
+false invalid IPv4 address format
+false invalid IPv4 address format

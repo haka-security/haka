@@ -61,6 +61,11 @@ struct ipv4_addr {
 		}
 
 		ipv4_addr(unsigned int a, unsigned int b, unsigned int c, unsigned int d) {
+			if (a > 255 || b > 255 || c > 255 || d > 255) {
+				error(L"invalid IPv4 address format");
+				return NULL;
+			}
+
 			struct ipv4_addr *ret = malloc(sizeof(struct ipv4_addr));
 			if (!ret) {
 				return NULL;

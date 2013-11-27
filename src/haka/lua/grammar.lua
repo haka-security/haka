@@ -378,8 +378,8 @@ end
 
 function grammar_dg.Bits.method:parse(cur, init, input, ctx)
 	local size = self.size(cur, ctx)
-	local bitoffset = ctx._bitoffset
-	local size, bit = math.ceil((bitoffset + size) / 8), (bitoffset + size) % 8
+	local bitoffset = ctx._bitoffset + size
+	local size, bit = math.ceil(bitoffset / 8), bitoffset % 8
 	if bit ~= 0 then
 		ctx:advance(size-1)
 	else
@@ -430,7 +430,12 @@ grammar.converter = {}
 function grammar.converter.mult(val)
 	return {
 		get = function (x) return x * val end,
-		set = function (x) return x / val end
+		set = function (x)
+			if x % val ~= 0 then
+				error(string.format("invalid value, it must be a multiple of %d", val))
+			end
+			return x / val
+		end
 	}
 end
 
