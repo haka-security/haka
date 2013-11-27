@@ -420,6 +420,13 @@ function grammar_dg.Bytes.method:parse(cur, init, input, ctx)
 			cur[self.name] = sub
 		end
 	end
+
+	if self.name and init then
+		local initval = init[self.name]
+		if initval then
+			sub:replace(initval)
+		end
+	end
 end
 
 

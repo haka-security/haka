@@ -115,6 +115,17 @@ struct vbuffer {
 			vbuffer_insert($self, ALL, DISOWN_SUCCESS_ONLY, modify);
 		}
 
+		void replace(struct vbuffer *DISOWN_SUCCESS_ONLY, int off = 0, int len = -1)
+		{
+			if (!DISOWN_SUCCESS_ONLY) {
+				error(L"invalid parameter");
+				return;
+			}
+
+			vbuffer_erase($self, off, len);
+			vbuffer_insert($self, off, DISOWN_SUCCESS_ONLY, true);
+		}
+
 		%rename(asnumber) _asnumber;
 		int _asnumber(const char *endian = NULL, int off = 0, int len = -1)
 		{
@@ -295,6 +306,12 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 	function subbuffer.method:append(data)
 		local buf, off = _sub(self, off)
 		return buf:append(data)
+	end
+
+	function subbuffer.method:replace(data, off, len)
+		local buf, off, len = _sub(self, off, len)
+		buf:erase(off, len)
+		return buf:insert(off, data)
 	end
 
 	function subbuffer.method:extract(modified, off, len)
