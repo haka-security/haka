@@ -19,9 +19,8 @@ haka.rule {
 			npkt.src = ipv4.addr(192, 168, 0, 1)
 			npkt.dst = ipv4.addr("192.168.0.2")
 
-			npkt = haka.dissector.get('icmp'):create(npkt)
-			npkt.type = 6
-			npkt.code = 1
+			npkt = haka.dissector.get('icmp'):create(npkt,
+				{ type = 6, code = 1 })
 
 			npkt:inject()
 		end

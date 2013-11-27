@@ -13,9 +13,9 @@ icmp_dissector.grammar = haka.grammar.record{
 	haka.grammar.field('payload',  haka.grammar.bytes())
 }:compile()
 
-function icmp_dissector.method:parse_payload(pkt, payload)
+function icmp_dissector.method:parse_payload(pkt, payload, init)
 	self.ip = pkt
-	icmp_dissector.grammar:parseall(payload, self)
+	icmp_dissector.grammar:parseall(payload, self, init)
 end
 
 function icmp_dissector.method:verify_checksum()
@@ -33,12 +33,12 @@ function icmp_dissector.method:forge_payload(pkt, payload)
 	end
 end
 
-function icmp_dissector:create(pkt)
+function icmp_dissector:create(pkt, init)
 	pkt.payload:insert(0, haka.vbuffer(8))
 	pkt.proto = 1
 
 	local icmp = icmp_dissector:new(pkt)
-	icmp:parse(pkt)
+	icmp:parse(pkt, init)
 	return icmp
 end
 

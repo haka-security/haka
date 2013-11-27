@@ -17,17 +17,29 @@ grammar_dg.ParseContext.property.current = {
 	get = function (self) return self._ctxs[#self._ctxs] end
 }
 
+grammar_dg.ParseContext.property.current_init = {
+	get = function (self)
+		if self._initctxs then
+			return self._initctxs[#self._initctxs]
+		end
+	end
+}
+
 grammar_dg.ParseContext.property.offset = {
 	get = function (self) return self._offset end
 }
 
-function grammar_dg.ParseContext.method:__init(input, topctx)
+function grammar_dg.ParseContext.method:__init(input, topctx, init)
 	self._input = input
 	self._offset = 0
 	self._length = #input
 	self._bitoffset = 0
 	self._ctxs = {}
 	self:push(topctx)
+
+	if init then
+		self._initctxs = { init }
+	end
 end
 
 function grammar_dg.ParseContext.method:advance(size)
@@ -47,11 +59,22 @@ end
 
 function grammar_dg.ParseContext.method:pop()
 	self._ctxs[#self._ctxs] = nil
+	if self._initctxs then
+		self._initctxs[#self._initctxs] = nil
+	end
 end
 
-function grammar_dg.ParseContext.method:push(ctx)
+function grammar_dg.ParseContext.method:push(ctx, name)
 	local new = ctx or grammar_dg.Context:new()
 	self._ctxs[#self._ctxs+1] = new
+	if self._initctxs then
+		local curinit = self._initctxs[#self._initctxs]
+		if curinit then
+			self._initctxs[#self._initctxs+1] = curinit[name]
+		else
+			self._initctxs[#self._initctxs+1] = nil
+		end
+	end
 	return new
 end
 
@@ -134,8 +157,8 @@ function grammar_dg.Entity.method:genproperty(obj, name, get, set)
 	end
 end
 
-function grammar_dg.Entity.method:parseall(input, ctx)
-	local ctx = grammar_dg.ParseContext:new(input, ctx)
+function grammar_dg.Entity.method:parseall(input, ctx, init)
+	local ctx = grammar_dg.ParseContext:new(input, ctx, init)
 	return ctx:parse(self)
 end
 
@@ -161,7 +184,7 @@ end
 function grammar_dg.RecordStart.method:apply(ctx)
 	if self.name then
 		local cur = ctx.current
-		local new = ctx:push()
+		local new = ctx:push(nil, self.name)
 		
 		if self.converter then
 			cur:addproperty(self.name,
@@ -218,7 +241,7 @@ end
 
 function grammar_dg.ArrayStart.method:apply(ctx)
 	local cur = ctx.current
-	local array = ctx:push({})
+	local array = ctx:push({}, self.name)
 	if self.name then
 		cur[self.name] = array
 	end
@@ -232,7 +255,7 @@ end
 
 function grammar_dg.ArrayPush.method:apply(ctx)
 	local cur = ctx.current
-	local new = ctx:push()
+	local new = ctx:push(nil, #cur)
 	table.insert(cur, new)
 end
 
@@ -294,7 +317,7 @@ end
 grammar_dg.Primitive = class('DGPrimitive', grammar_dg.Entity)
 
 function grammar_dg.Primitive.method:apply(ctx)
-	self:parse(ctx.current, ctx._input, ctx)
+	self:parse(ctx.current, ctx.current_init, ctx._input, ctx)
 end
 
 grammar_dg.Number = class('DGNumber', grammar_dg.Primitive)
@@ -306,7 +329,7 @@ function grammar_dg.Number.method:__init(size, endian, name)
 	self.name = name
 end
 
-function grammar_dg.Number.method:parse(cur, input, ctx)
+function grammar_dg.Number.method:parse(cur, init, input, ctx)
 	local bitoffset = ctx._bitoffset
 	local size, bit = math.ceil((bitoffset + self.size) / 8), (bitoffset + self.size) % 8
 	local sub = input:sub(ctx._offset, size)
@@ -337,6 +360,13 @@ function grammar_dg.Number.method:parse(cur, input, ctx)
 			)
 		end
 	end
+
+	if self.name and init then
+		local initval = init[self.name]
+		if initval then
+			cur[self.name] = initval
+		end
+	end
 end
 
 grammar_dg.Bits = class('DGBits', grammar_dg.Primitive)
@@ -346,7 +376,7 @@ function grammar_dg.Bits.method:__init(size)
 	self.size = size
 end
 
-function grammar_dg.Bits.method:parse(cur, input, ctx)
+function grammar_dg.Bits.method:parse(cur, init, input, ctx)
 	local size = self.size(cur, ctx)
 	local bitoffset = ctx._bitoffset
 	local size, bit = math.ceil((bitoffset + size) / 8), (bitoffset + size) % 8
@@ -367,7 +397,7 @@ function grammar_dg.Bytes.method:__init(size, name)
 	self.name = name
 end
 
-function grammar_dg.Bytes.method:parse(cur, input, ctx)
+function grammar_dg.Bytes.method:parse(cur, init, input, ctx)
 	if ctx._bitoffset ~= 0 then
 		error("byte primitive requires aligned bits")
 	end
@@ -656,15 +686,15 @@ function grammar.Bits.method:compile()
 end
 
 
-grammar.Assert = class('Assert', grammar.Entity)
+grammar.Verify = class('Verify', grammar.Entity)
 
-function grammar.Assert.method:__init(func, msg)
+function grammar.Verify.method:__init(func, msg)
 	self.func = func
 	self.msg = msg
 end
 
-function grammar.Assert.method:compile()
-	return grammar_dg.Check:new(self.func, self.msg or "assert failed")
+function grammar.Verify.method:compile()
+	return grammar_dg.Check:new(self.func, self.msg or "verification failed")
 end
 
 
@@ -720,8 +750,8 @@ function grammar.field(name, field)
 	return field:_as(name)
 end
 
-function grammar.assert(func, msg)
-	return grammar.Assert:new(func, msg)
+function grammar.verify(func, msg)
+	return grammar.Verify:new(func, msg)
 end
 
 

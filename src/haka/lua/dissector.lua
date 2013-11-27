@@ -104,12 +104,12 @@ function dissector.EncapsulatedPacketDissector.method:__init(parent)
 	self._parent = parent
 end
 
-function dissector.EncapsulatedPacketDissector.method:parse(pkt)
+function dissector.EncapsulatedPacketDissector.method:parse(pkt, init)
 	self._payload = pkt.payload:right(0):extract(false)
-	self:parse_payload(pkt, self._payload)
+	self:parse_payload(pkt, self._payload, init)
 end
 
-function dissector.EncapsulatedPacketDissector.method:parse_payload(pkt, payload)
+function dissector.EncapsulatedPacketDissector.method:parse_payload(pkt, payload, init)
 	error("not implemented")
 end
 
