@@ -19,6 +19,9 @@ add_library(libhaka SHARED
 	stat.c
 	container/list.c)
 
+set_target_properties(libhaka PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}
+	SOVERSION ${HAKA_VERSION_MAJOR})
+
 LUA_LINK(libhaka)
 find_package(DL REQUIRED)
 target_link_libraries(libhaka ${DL_LIBRARIES})
