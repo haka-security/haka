@@ -74,9 +74,9 @@ The configuration with cmake supports the following options:
 
     Select the build type to be compiled (default: *Release*)
 
-.. option:: USE_LUAJIT=[YES|NO]
+.. option:: LUA=[lua51|luajit]
 
-    Compile haka with LuaJit or with the standard Lua library (default: *YES*)
+    Choose the Lua version to use (default: *luajit*)
 
 .. option:: PREFIX=PATH
 
