@@ -22,7 +22,7 @@ The previous command will load the configuration file ``gettingstarted.conf`` wh
 instructs ``haka`` to capture packets from interface eth0 using nfqueue and to filter them based on the lua
 policy script ``gettingstarted.lua``
 
-.. literalinclude:: ../sample/gettingstarted/gettingstarted.conf
+.. literalinclude:: ../../sample/gettingstarted/gettingstarted.conf
     :language: ini
     :tab-width: 4
 
@@ -31,7 +31,7 @@ First Lua policy file
 
 Below, the source code of the lua script file ``gettingstarted.conf`` :
 
-.. literalinclude:: ../sample/gettingstarted/gettingstarted.lua
+.. literalinclude:: ../../sample/gettingstarted/gettingstarted.lua
     :language: lua
     :tab-width: 4
 

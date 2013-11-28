@@ -33,7 +33,7 @@ As detailed hereater, a rule is made of a list of hooks and an evaluation functi
 
 Example:
 
-.. literalinclude:: ../../../sample/ruleset/ipv4/security.lua
+.. literalinclude:: ../../sample/ruleset/ipv4/security.lua
     :language: lua
     :tab-width: 4
 
@@ -84,6 +84,6 @@ Rule group allow to customize the rule evaluation.
 
 Example:
 
-.. literalinclude:: ../../../sample/ruleset/tcp/rules.lua
+.. literalinclude:: ../../sample/ruleset/tcp/rules.lua
     :language: lua
     :tab-width: 4

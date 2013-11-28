@@ -96,7 +96,7 @@ Log directives
 Example
 ^^^^^^^
 
-.. literalinclude:: ../sample/gettingstarted/gettingstarted.conf
+.. literalinclude:: ../../sample/gettingstarted/gettingstarted.conf
     :tab-width: 4
 
 Modules
@@ -111,7 +111,7 @@ Packet capture modules
     :maxdepth: 1
     :glob:
 
-    ../modules/packet/*/doc/module*
+    ../../modules/packet/*/doc/module*
 
 .. _alert_module_section:
 
@@ -122,7 +122,7 @@ Alert modules
     :maxdepth: 1
     :glob:
 
-    ../modules/alert/*/doc/module*
+    ../../modules/alert/*/doc/module*
 
 .. _log_module_section:
 
@@ -133,7 +133,7 @@ Logging modules
     :maxdepth: 1
     :glob:
 
-    ../modules/log/*/doc/module*
+    ../../modules/log/*/doc/module*
 
 Service
 -------

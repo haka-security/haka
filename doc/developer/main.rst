@@ -454,4 +454,4 @@ External modules
     :glob:
     :maxdepth: 1
 
-    ../../../modules/*/*/doc/c*
+    ../../modules/*/*/doc/c*

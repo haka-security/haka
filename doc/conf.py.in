@@ -41,7 +41,7 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'main'
+master_doc = 'index'
 
 # General information about the project.
 project = 'Haka runtime'
@@ -68,7 +68,7 @@ release = '@HAKA_VERSION_MAJOR@.@HAKA_VERSION_MINOR@.@HAKA_VERSION_BUILD@'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = [ 'maindev.rst' ]
+exclude_patterns = []
 
 # List of directory to ignore
 exclude_trees = [
