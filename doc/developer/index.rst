@@ -3,11 +3,12 @@ Welcome to Haka's Developer Guide!
 ==================================
 
 .. toctree::
-   :maxdepth: 2
-   :numbered: 3
+    :maxdepth: 2
+    :numbered: 3
 
-   rulearch.rst
-   main.rst
+    build.rst
+    rulearch.rst
+    main.rst
 
 Indices and tables
 ^^^^^^^^^^^^^^^^^^
