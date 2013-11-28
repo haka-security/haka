@@ -20,9 +20,11 @@ Required
 * gawk
 * libedit-dev
 
-Debian: ::
+Debian:
 
-    sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 tshark check rsync libpcap-dev gawk libedit-dev
+.. code-block:: console
+
+    $ sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 tshark check rsync libpcap-dev gawk libedit-dev
 
 Optional
 ^^^^^^^^
@@ -31,9 +33,11 @@ Optional
 * Netfilter Queue
 * Valgrind
 
-Debian: ::
+Debian:
 
-    sudo apt-get install cppcheck libnetfilter-queue-dev valgrind
+.. code-block:: console
+
+    $ sudo apt-get install cppcheck libnetfilter-queue-dev valgrind
 
 Build
 -----
@@ -41,20 +45,24 @@ Build
 Submodules
 ^^^^^^^^^^
 
-The repository uses submodules that need to be initialized and updated: ::
+The repository uses submodules that need to be initialized and updated:
 
-    git submodule init
-    git submodule update
+.. code-block:: console
+
+    $ git submodule init
+    $ git submodule update
 
 Configure
 ^^^^^^^^^
 
 It is mandatory to create a separate directory to store
-all the files generated during the build using cmake. ::
+all the files generated during the build using cmake.
 
-    mkdir make
-    cd make
-    cmake .. <options>
+.. code-block:: console
+
+    $ mkdir make
+    $ cd make
+    $ cmake .. <options>
 
 Options
 """""""
@@ -77,24 +85,30 @@ The configuration with cmake supports the following options:
 Compile
 ^^^^^^^
 
-Use make like usual to compile: ::
+Use make like usual to compile:
 
-    make
-    make clean
+.. code-block:: console
+
+    $ make clean
+    $ make
 
 Install
 ^^^^^^^
 
-To install haka, you have the following options: ::
+To install haka, you have the following options:
 
-    make install
-    make localinstall
+.. code-block:: console
+
+    $ make install
+    $ make localinstall
 
 Using ``localinstall`` allow to install haka locally under the folder ``out``. To use
 this version, you will have to set a few environment variables by sourcing the generated
-file ``env.sh``: ::
+file ``env.sh``:
 
-    . env.sh
+.. code-block:: console
+
+    $ . env.sh
 
 Documentation
 ^^^^^^^^^^^^^
@@ -107,9 +121,11 @@ Tests
 
 Run ``make tests`` to play all tests.
 
-You can also pass some arguments to ctest by using the variable ``CTEST_ARGS``. ::
+You can also pass some arguments to ctest by using the variable ``CTEST_ARGS``.
 
-    make tests CTEST_ARGS="-V"
+.. code-block:: console
+
+    $ make tests CTEST_ARGS="-V"
 
 This command will install locally the project and run the tests in the folder. If you need
 to run the tests manually using the command ctest, you can prepare the environment with the
