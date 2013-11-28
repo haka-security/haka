@@ -38,7 +38,7 @@ Options
 Configuration file
 ------------------
 
-The configuration file is divided into three main topics: **general**, **packet** and **log**
+The configuration file is divided into three main topics: **general**, **packet**, **alert** and **log**
 
 General directives
 ^^^^^^^^^^^^^^^^^^
@@ -66,6 +66,18 @@ Packet directives
     .. seealso::
 
         Check the :ref:`packet_module_section` to get the list of all available modules and
+        their options
+
+Alert directives
+^^^^^^^^^^^^^^^^
+
+.. describe:: module
+
+    Set the alert module to use.
+
+    .. seealso::
+
+        Check the :ref:`alert_module_section` to get the list of all available modules and
         their options
 
 Log directives
@@ -100,6 +112,17 @@ Packet capture modules
 
     ../modules/packet/*/doc/module*
 
+.. _alert_module_section:
+
+Alert modules
+^^^^^^^^^^^^^
+
+.. toctree::
+    :maxdepth: 1
+    :glob:
+
+    ../modules/alert/*/doc/module*
+
 .. _log_module_section:
 
 Logging modules
@@ -111,15 +134,6 @@ Logging modules
 
     ../modules/log/*/doc/module*
 
-Alert modules
-^^^^^^^^^^^^^
-
-.. toctree::
-    :maxdepth: 1
-    :glob:
-
-    ../modules/alert/*/doc/module*
-
 Service
 -------
 
@@ -127,26 +141,26 @@ It is possible to launch ``haka`` as a service. When started, ``haka`` loads the
 
 * Starting haka service
 
-    .. code-block:: bash
+    .. code-block:: console
 
-        sudo service haka start
+        $ sudo service haka start
 
 * Stopping haka service
 
-    .. code-block:: bash
+    .. code-block:: console
 
-        sudo service haka stop
+        $ sudo service haka stop
 
 
 * Restarting haka service
 
-    .. code-block:: bash
+    .. code-block:: console
 
-        sudo service haka restart
+        $ sudo service haka restart
 
 
 * Getting status of haka service
 
-    .. code-block:: bash
+    .. code-block:: console
 
-        sudo service haka status
+        $ sudo service haka status

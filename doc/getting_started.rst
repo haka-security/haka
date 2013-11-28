@@ -10,9 +10,9 @@ Running Haka
 ``haka`` is primarily intended to be used as a daemon which could be starded by providing an optional
 configaration file (using -c option).
 
-.. parsed-literal::
+.. code-block:: console
 
-    $ cd |haka_install_path|/share/haka/sample/doc
+    $ cd <haka_install_path>/share/haka/sample/doc
     $ sudo haka -c gettingstarted.conf
 
 Sample configuration

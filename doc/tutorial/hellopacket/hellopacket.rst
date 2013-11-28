@@ -14,10 +14,10 @@ How-to
 ------
 Launch ``hakapcap`` with a pcap file and a lua script file as arguments.
 
-.. parsed-literal::
+.. code-block:: console
 
+    $ cd <haka_install_path>/share/haka/sample/tutorial/hellopacket
     $ hakapcap hellopacket.pcap hellopacket.lua
-    $ cd |haka_install_path|/share/haka/sample/tutorial/hellopacket
 
 As shown below, hakapcap will first dump infos about registered dissectors and
 rules and then process the pcap file and ouput networking infos (packet source

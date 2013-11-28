@@ -1,4 +1,3 @@
-.. highlightlang:: ini
 
 hakactl
 =======
@@ -7,9 +6,9 @@ hakactl
 
 ``hakactl`` allows to control `haka` remotely.
 
-    .. code-block:: bash
+.. code-block:: console
 
-         hakactl [options] <command>
+     $ hakactl [options] <cmd>
 
 Options
 -------

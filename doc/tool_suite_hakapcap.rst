@@ -7,9 +7,9 @@ hakapcap
 ``hakapcap`` is a tool that allows to apply lua policy filters on pcap capture files.
 It takes as input a pcap file, a lua policy file and a list of options:
 
-    .. code-block:: bash
+.. code-block:: console
 
-         hakatool [options] <pcapfile> <config>
+     $ hakatool [options] <pcapfile> <config>
 
 Options
 -------

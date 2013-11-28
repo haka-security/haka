@@ -10,9 +10,9 @@ How-to
 ------
 This tutorial introduces a set of lua script files located at |haka_install_path|/share/haka/sample/tutorial/sqli and which could be run using the ``hakapcap`` tool:
 
-.. parsed-literal::
+.. code-block:: console
 
-    $ cd |haka_install_path|/share/haka/sample/tutorial/sqli
+    $ cd <haka_install_path>/share/haka/sample/tutorial/sqli
     $ hakapcap sqli.pcap sqli-sample.lua
 
 All the samples are self-documented.

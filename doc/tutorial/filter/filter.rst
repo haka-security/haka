@@ -27,17 +27,17 @@ lua script file:
 
 A pcap file is provided in order to run the above lua script file
 
-.. parsed-literal::
+.. code-block:: console
 
-    $ cd |haka_install_path|/share/haka/sample/tutorial/filter/
+    $ cd <haka_install_path>/share/haka/sample/tutorial/filter/
     $ hakapcap ipfilter.pcap ipfilter.lua
 
 You can save the pcap in an output file in order to see the
 modification or deletion of packets:
 
-.. parsed-literal::
+.. code-block:: console
 
-    $ cd |haka_install_path|/share/haka/sample/tutorial/filter/
+    $ cd <haka_install_path>/share/haka/sample/tutorial/filter/
     $ hakapcap trace.pcap ipfilter.lua -o output.pcap
 
 Interactive rule debugging
@@ -56,9 +56,9 @@ Haka will raise an error. More precisely, there is no field named ``destport``.
 As shown in section :doc:`\../../debug`, Haka is featured with debugging capabilities allowing
 to get more details about errors. The debugger mode is available through the ``--luadebug`` option:
 
-.. parsed-literal::
+.. code-block:: console
 
-    $ cd |haka_install_path|/share/haka/sample/tutorial/filter/
+    $ cd <haka_install_path>/share/haka/sample/tutorial/filter/
     $ hakapcap tcpfilter.pcap tcpfilter.lua --luadebug
 
 When the debugger starts, it automatically breaks at the first lua line:
@@ -169,8 +169,9 @@ In order to start haka, you have to be root. The ``--no-daemon`` option
 won't send haka daemon on background. Plus, all logs messages are
 printed on output, instead of syslogd.
 
-.. parsed-literal::
-   # cd |haka_install_path|/share/haka/sample/tutorial/filter/
+.. code-block:: console
+
+   # cd <haka_install_path>/share/haka/sample/tutorial/filter/
    # haka -c daemon.conf --no-daemon
 
 The filtering will be done according to the .lua configuration file seen
@@ -195,9 +196,9 @@ configuration file:
 
 And start it
 
-.. parsed-literal::
+.. code-block:: console
 
-   # cd |haka_install_path|/share/haka/sample/tutorial/filter/
+   # cd <haka_install_path>/share/haka/sample/tutorial/filter/
    # haka -c dameon.conf --no-daemon
 
 
@@ -225,7 +226,7 @@ configuration file:
 
 And start it
 
-.. parsed-literal::
+.. code-block:: console
 
-   # cd |haka_install_path|/share/haka/sample/tutorial/filter/
+   # cd <haka_install_path>/share/haka/sample/tutorial/filter/
    # haka -c dameon.conf --no-daemon

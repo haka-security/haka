@@ -10,9 +10,9 @@ How-to
 ------
 This tutorial introduces two lua script files: ``stats_on_exit`` and ``stats_interactive`` which could be run using the ``hakapcap`` tool as follows:
 
-.. parsed-literal::
+.. code-block:: console
 
-    $ cd |haka_install_path|/share/haka/sample/tutorial/stats
+    $ cd <haka_install_path>/share/haka/sample/tutorial/stats
     $ hakapcap <pcap_file> <script_stat_file>
 
 .. note:: In this tutorial we use a pre-processed pcap file originated from the DARPA-99 dataset and which could be retrieved from http://www.ll.mit.edu/mission/communications/cyber/CSTcorpora/ideval/data/1999/training/week1/monday/outside.tcpdump.gz). We filtered out all packets not belonging to a tcp connection.
@@ -73,7 +73,8 @@ The first lua script (``stats_on_exit``) gives an usage of the above api.
 
 The script will output some statistics on collected http trafic after parsing all packets in the provided pcap file (i.e. at haka exit). Below, a snippet output generated while running the lua script file on the DARPA pcap file:
 
-.. parsed-literal::
+.. code-block:: console
+
     ...
     list of source ip using 'Mozilla/2.0' as user-gent'
     | ip             | useragent                                       |
@@ -95,7 +96,7 @@ The second script (``stats_interactive``) fills the `stats` table with http info
 
 Hereafter, hakapcap output when entering the interactive mode:
 
-.. parsed-literal::
+.. code-block:: console
 
     entering interactive session: entering interactive mode for playing statistics
     Statistics are available through 'stats' variable. Run
