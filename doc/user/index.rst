@@ -4,7 +4,7 @@ Welcome to Haka's User Guide!
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
+   :numbered: 3
 
    intro.rst
    build.rst

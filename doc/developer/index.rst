@@ -4,7 +4,7 @@ Welcome to Haka's Developer Guide!
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
+   :numbered: 3
 
    rulearch.rst
    main.rst

@@ -1,6 +1,4 @@
 
-.. highlightlang:: lua
-
 External modules
 ----------------
 
