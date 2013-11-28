@@ -59,7 +59,7 @@ same informations.
 
 The lua config file is self-documented:
 
-.. literalinclude:: ../../../sample/hellopacket/hellopacket.lua
+.. literalinclude:: ../../sample/hellopacket/hellopacket.lua
    :language: lua
    :tab-width: 4
 

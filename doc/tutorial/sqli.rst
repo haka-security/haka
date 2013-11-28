@@ -23,35 +23,35 @@ To write http rules, we need first to load the ipv4, tcp and http dissectors and
 
 .. highlightlang:: lua
 
-.. literalinclude:: ../../../sample/sqli/httpconfig.lua
+.. literalinclude:: ../../sample/sqli/httpconfig.lua
     :tab-width: 4
 
 My first naive rule
 -------------------
 The first example presents a naive rule which checks some malicious patterns against the whole uri. A score is updated whenever an sqli keywords is found (`select`, `update`, etc.). An alert is raised if the score exceeds a predefined threshold.
 
-.. literalinclude:: ../../../sample/sqli/sqli-simple.lua
+.. literalinclude:: ../../sample/sqli/sqli-simple.lua
     :tab-width: 4
 
 Anti-evasion
 ------------
 It is trivial to bypass the above rule with slight modifications on uri. For instance hiding a select keyword using comments (e.g. `sel/*something*/ect`) or simply using uppercase letters will bypass our naive rule. The script file ``sqli-decode.lua`` improves detection by applying first decoding fucntions on uri. This fucntions are defined in ``httpdecode.lua`` file.
 
-.. literalinclude:: ../../../sample/sqli/sqli-decode.lua
+.. literalinclude:: ../../sample/sqli/sqli-decode.lua
     :tab-width: 4
 
 Fine-grained analysis
 ---------------------
 All the above rules check the malicious patterns against the whole uri. The purpose of this scenario (``sqli-fine-grained.lua``) is to leverage the :lua:mod:`http` api in order to check the patterns against only subparts of the http request (query's argument, list of cookies).
 
-.. literalinclude:: ../../../sample/sqli/sqli-fine-grained.lua
+.. literalinclude:: ../../sample/sqli/sqli-fine-grained.lua
     :tab-width: 4
 
 Mutliple rules
 --------------
 The script file introduces additional malicious patterns and use the rule_group feature to define multiple anti-sqli security rules. Each rule focus on the detection of a particular pattern (sql keywords, sql comments, etc.)
 
-.. literalinclude:: ../../../sample/sqli/sqli-groups.lua
+.. literalinclude:: ../../sample/sqli/sqli-groups.lua
     :tab-width: 4
 
 .. note:: Decoding functions are applied depending on the pattern. It is obvious to not apply uncomment function when we are looking for comments.
@@ -62,7 +62,7 @@ All the defined rules are too general and will therefore raise many alerts. In t
 
 .. note:: The check is done after uri normalisation
 
-.. literalinclude:: ../../../sample/sqli/sqli-white-list.lua
+.. literalinclude:: ../../sample/sqli/sqli-white-list.lua
     :tab-width: 4
 
 Going further

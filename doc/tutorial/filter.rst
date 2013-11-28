@@ -21,7 +21,7 @@ Basic IP filtering
 In order to do some basic IP filtering you can read the self-documented
 lua script file:
 
-.. literalinclude:: ../../../sample/filter/ipfilter.lua
+.. literalinclude:: ../../sample/filter/ipfilter.lua
    :language: lua
    :tab-width: 4
 
@@ -45,7 +45,7 @@ Interactive rule debugging
 Hereafter, a second lua script file allowing to filter tcp packets based
 on destination port.
 
-.. literalinclude:: ../../../sample/filter/tcpfilter.lua
+.. literalinclude:: ../../sample/filter/tcpfilter.lua
    :language: lua
    :tab-width: 4
 
@@ -53,7 +53,7 @@ If we try to launch this script, we will notice that it will fail to
 run successfully. Actually, we deliberately introduced an error into the code.
 Haka will raise an error. More precisely, there is no field named ``destport``.
 
-As shown in section :doc:`\../../debug`, Haka is featured with debugging capabilities allowing
+As shown in section :doc:`\../debug`, Haka is featured with debugging capabilities allowing
 to get more details about errors. The debugger mode is available through the ``--luadebug`` option:
 
 .. code-block:: console
@@ -143,7 +143,7 @@ Press CTRL-C to quit or type ``help`` to get the list of available commands.
 Using the rule group
 ^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../../../sample/filter/groupfilter.lua
+.. literalinclude:: ../../sample/filter/groupfilter.lua
     :language: lua
     :tab-width: 4
 
@@ -161,7 +161,7 @@ haka package on a host with an interface named eth0.
 
 This is the configuration of the daemon:
 
-.. literalinclude:: ../../../sample/filter/daemon.conf
+.. literalinclude:: ../../sample/filter/daemon.conf
    :language: ini
    :tab-width: 4
 
@@ -181,7 +181,7 @@ HTTP filtering
 ^^^^^^^^^^^^^^
 You can filter through all HTTP fields thanks to http module:
 
-.. literalinclude:: ../../../sample/filter/httpfilter.lua
+.. literalinclude:: ../../sample/filter/httpfilter.lua
    :language: lua
    :tab-width: 4
 
@@ -211,7 +211,7 @@ Haka will check User-Agent, and if the User-Agent is considered
 obsolete, it will change HTTP response to redirect request to a safer
 site (web site of the browser).
 
-.. literalinclude:: ../../../sample/filter/httpmodif.lua
+.. literalinclude:: ../../sample/filter/httpmodif.lua
    :language: lua
    :tab-width: 4
 

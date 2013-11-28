@@ -31,7 +31,7 @@ Before making statisctics, we need first to collect data. This is the purpose of
 
 .. note:: While the security rule 'hooks' on `http-response` we still get access to http request fields (via `request` accessor) and ip header fields (through `connection` accessor)
 
-.. literalinclude:: ../../../sample/stats/stats.lua
+.. literalinclude:: ../../sample/stats/stats.lua
     :tab-width: 4
     :language: lua
 
@@ -67,7 +67,7 @@ Dumping stats
 -------------
 The first lua script (``stats_on_exit``) gives an usage of the above api.
 
-.. literalinclude:: ../../../sample/stats/stats_on_exit.lua
+.. literalinclude:: ../../sample/stats/stats_on_exit.lua
     :tab-width: 4
     :language: lua
 
@@ -90,7 +90,7 @@ Getting stats in interactive mode
 ---------------------------------
 The second script (``stats_interactive``) fills the `stats` table with http info (thanks to the ``stats.lua`` script) and then launches the intercative mode after parsing all packets in the provided pcap file. Statistics are then available through the `stats` variable.
 
-.. literalinclude:: ../../../sample/stats/stats_interactive.lua
+.. literalinclude:: ../../sample/stats/stats_interactive.lua
     :tab-width: 4
     :language: lua
 
