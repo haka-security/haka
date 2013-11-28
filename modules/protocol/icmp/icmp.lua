@@ -9,7 +9,11 @@ local icmp_dissector = haka.dissector.new{
 icmp_dissector.grammar = haka.grammar.record{
 	haka.grammar.field('type',     haka.grammar.number(8)),
 	haka.grammar.field('code',     haka.grammar.number(8)),
-	haka.grammar.field('checksum', haka.grammar.number(16)),
+	haka.grammar.field('checksum', haka.grammar.number(16))
+		:validate(function (self)
+			self.checksum = 0
+			self.checksum = ipv4.inet_checksum(self._payload)
+		end),
 	haka.grammar.field('payload',  haka.grammar.bytes())
 }:compile()
 
@@ -22,15 +26,12 @@ function icmp_dissector.method:verify_checksum()
 	return ipv4.inet_checksum(self._payload) == 0
 end
 
-function icmp_dissector.method:compute_checksum()
-	self.checksum = 0
-	self.checksum = ipv4.inet_checksum(self._payload)
-end
-
 function icmp_dissector.method:forge_payload(pkt, payload)
 	if payload.modified then
-		self:compute_checksum()
+		self.checksum = nil
 	end
+
+	self:validate()
 end
 
 function icmp_dissector:create(pkt, init)

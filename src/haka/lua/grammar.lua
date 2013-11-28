@@ -25,9 +25,21 @@ grammar_dg.ParseContext.property.current_init = {
 	end
 }
 
+grammar_dg.ParseContext.property.init = {
+	get = function (self) return self._initctxs ~= nil end
+}
+
 grammar_dg.ParseContext.property.offset = {
 	get = function (self) return self._offset end
 }
+
+local function revalidate(self)
+	local validate = self._validate
+	self._validate = {}
+	for f, arg in pairs(validate) do
+		f(arg)
+	end
+end
 
 function grammar_dg.ParseContext.method:__init(input, topctx, init)
 	self._input = input
@@ -36,12 +48,15 @@ function grammar_dg.ParseContext.method:__init(input, topctx, init)
 	self._bitoffset = 0
 	self._marks = {}
 	self._ctxs = {}
+	self._validate = {}
 	self:push(topctx)
 
 	if init then
 		self._initctxs = { init }
 		self._initctxs_count = 1
 	end
+
+	self.current.validate = revalidate
 end
 
 function grammar_dg.ParseContext.method:advance(size)
@@ -69,6 +84,7 @@ end
 
 function grammar_dg.ParseContext.method:push(ctx, name)
 	local new = ctx or grammar_dg.Context:new()
+	new._validate = self._validate
 	self._ctxs[#self._ctxs+1] = new
 	if self._initctxs then
 		local curinit = self._initctxs[#self._initctxs]
@@ -153,37 +169,58 @@ function grammar_dg.Entity.method:convert(converter, memoize)
 	self.memoize = memoize or false
 end
 
+function grammar_dg.Entity.method:validate(validate)
+	self.validate = validate
+end
+
 function grammar_dg.Entity.method:genproperty(obj, name, get, set)
+	local fget, fset = get, set
+
 	if self.converter then
 		if self.memoize then
-			local memname = '_' .. name .. 'memoize'
-			obj:addproperty(name,
-				function (this)
-					local ret = rawget(this, memname)
-					if not ret then
-						ret = self.converter.get(get(this))
-						rawset(this, memname, ret)
-					end
-					return ret
-				end,
-				function (this, newval)
-					rawset(this, memname, nil)
-					return set(this, self.converter.set(newval))
+			local memname = '_' .. name .. '_memoize'
+			fget = function (this)
+				local ret = rawget(this, memname)
+				if not ret then
+					ret = self.converter.get(get(this))
+					rawset(this, memname, ret)
 				end
-			)
+				return ret
+			end
+			fset = function (this, newval)
+				rawset(this, memname, nil)
+				return set(this, self.converter.set(newval))
+			end
 		else
-			obj:addproperty(name,
-				function (this)
-					return self.converter.get(get(this))
-				end,
-				function (this, newval)
-					return set(this, self.converter.set(newval))
-				end
-			)
+			fget = function (this)
+				return self.converter.get(get(this))
+			end
+			fset = function (this, newval)
+				return set(this, self.converter.set(newval))
+			end
 		end
-	else
-		obj:addproperty(name, get, set)
 	end
+
+	if self.validate then
+		local oldget, oldset = fget, fset
+
+		fget = function (this)
+			if this._validate[self.validate] then
+				self.validate(this)
+			end
+			return oldget(this)
+		end
+		fset = function (this, newval)
+			if newval == nil then
+				this._validate[self.validate] = this
+			else
+				this._validate[self.validate] = nil
+				return oldset(this, newval)
+			end
+		end
+	end
+
+	obj:addproperty(name, fget, fset)
 end
 
 function grammar_dg.Entity.method:parseall(input, ctx, init)
@@ -423,10 +460,14 @@ function grammar_dg.Number.method:parse(cur, init, input, ctx)
 		end
 	end
 
-	if self.name and init then
-		local initval = init[self.name]
-		if initval then
-			cur[self.name] = initval
+	if self.name and ctx.init then
+		if init then
+			local initval = init[self.name]
+			if initval then
+				cur[self.name] = initval
+			end
+		else
+			cur[self.name] = nil
 		end
 	end
 end
@@ -538,6 +579,12 @@ function grammar.Entity.method:convert(converter, memoize)
 	return clone
 end
 
+function grammar.Entity.method:validate(validate)
+	local clone = self:clone()
+	clone.validate = validate
+	return clone
+end
+
 function grammar.Entity.getoption(cls, opt)
 	local v
 
@@ -602,6 +649,7 @@ function grammar.Record.method:compile()
 	
 	ret = grammar_dg.RecordStart:new(self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end
+	if self.validate then ret:validate(self.validate) end
 	iter = ret
 
 	for _, entity in ipairs(self.entities) do
@@ -743,6 +791,7 @@ end
 function grammar.Number.method:compile()
 	local ret = grammar_dg.Number:new(self.bits, self.endian, self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end
+	if self.validate then ret:validate(self.validate) end
 	return ret
 end
 
@@ -760,6 +809,7 @@ function grammar.Bytes.method:compile()
 
 	local ret = grammar_dg.Bytes:new(self.count, self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end
+	if self.validate then ret:validate(self.validate) end
 	return ret
 end
 
