@@ -13,7 +13,7 @@ For instance:
 .. code-block:: lua
 
     haka.rule{
-        hooks = { "ipv4-up" },
+        hooks = { 'ipv4-up' },
         eval = haka.interactive_rule
     }
 

@@ -12,7 +12,7 @@ This tutorial introduces two lua script files: ``stats_on_exit`` and ``stats_int
 
 .. code-block:: console
 
-    $ cd <haka_install_path>/share/haka/sample/tutorial/stats
+    $ cd <haka_install_path>/share/haka/sample/stats
     $ hakapcap <pcap_file> <script_stat_file>
 
 .. note:: In this tutorial we use a pre-processed pcap file originated from the DARPA-99 dataset and which could be retrieved from http://www.ll.mit.edu/mission/communications/cyber/CSTcorpora/ideval/data/1999/training/week1/monday/outside.tcpdump.gz). We filtered out all packets not belonging to a tcp connection.
@@ -31,7 +31,7 @@ Before making statisctics, we need first to collect data. This is the purpose of
 
 .. note:: While the security rule 'hooks' on `http-response` we still get access to http request fields (via `request` accessor) and ip header fields (through `connection` accessor)
 
-.. literalinclude:: ../../../sample/tutorial/stats/stats.lua
+.. literalinclude:: ../../../sample/stats/stats.lua
     :tab-width: 4
     :language: lua
 
@@ -67,7 +67,7 @@ Dumping stats
 -------------
 The first lua script (``stats_on_exit``) gives an usage of the above api.
 
-.. literalinclude:: ../../../sample/tutorial/stats/stats_on_exit.lua
+.. literalinclude:: ../../../sample/stats/stats_on_exit.lua
     :tab-width: 4
     :language: lua
 
@@ -90,7 +90,7 @@ Getting stats in interactive mode
 ---------------------------------
 The second script (``stats_interactive``) fills the `stats` table with http info (thanks to the ``stats.lua`` script) and then launches the intercative mode after parsing all packets in the provided pcap file. Statistics are then available through the `stats` variable.
 
-.. literalinclude:: ../../../sample/tutorial/stats/stats_interactive.lua
+.. literalinclude:: ../../../sample/stats/stats_interactive.lua
     :tab-width: 4
     :language: lua
 

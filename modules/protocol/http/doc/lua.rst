@@ -141,6 +141,6 @@ Dissector
 Example
 -------
 
-.. literalinclude:: ../../../../sample/standard/proto/http/policy.lua
+.. literalinclude:: ../../../../sample/ruleset/proto/http/policy.lua
     :language: lua
     :tab-width: 4

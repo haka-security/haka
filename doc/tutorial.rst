@@ -9,4 +9,5 @@ Writing Haka scripts
    tutorial/filter/filter.rst
    tutorial/stats/stats.rst
    tutorial/sqli/sqli.rst
+   tutorial/ruleset.rst
 

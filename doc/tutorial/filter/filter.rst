@@ -21,7 +21,7 @@ Basic IP filtering
 In order to do some basic IP filtering you can read the self-documented
 lua script file:
 
-.. literalinclude:: ../../../sample/tutorial/filter/ipfilter.lua
+.. literalinclude:: ../../../sample/filter/ipfilter.lua
    :language: lua
    :tab-width: 4
 
@@ -29,7 +29,7 @@ A pcap file is provided in order to run the above lua script file
 
 .. code-block:: console
 
-    $ cd <haka_install_path>/share/haka/sample/tutorial/filter/
+    $ cd <haka_install_path>/share/haka/sample/filter/
     $ hakapcap ipfilter.pcap ipfilter.lua
 
 You can save the pcap in an output file in order to see the
@@ -37,7 +37,7 @@ modification or deletion of packets:
 
 .. code-block:: console
 
-    $ cd <haka_install_path>/share/haka/sample/tutorial/filter/
+    $ cd <haka_install_path>/share/haka/sample/filter/
     $ hakapcap trace.pcap ipfilter.lua -o output.pcap
 
 Interactive rule debugging
@@ -45,7 +45,7 @@ Interactive rule debugging
 Hereafter, a second lua script file allowing to filter tcp packets based
 on destination port.
 
-.. literalinclude:: ../../../sample/tutorial/filter/tcpfilter.lua
+.. literalinclude:: ../../../sample/filter/tcpfilter.lua
    :language: lua
    :tab-width: 4
 
@@ -58,7 +58,7 @@ to get more details about errors. The debugger mode is available through the ``-
 
 .. code-block:: console
 
-    $ cd <haka_install_path>/share/haka/sample/tutorial/filter/
+    $ cd <haka_install_path>/share/haka/sample/filter/
     $ hakapcap tcpfilter.pcap tcpfilter.lua --luadebug
 
 When the debugger starts, it automatically breaks at the first lua line:
@@ -143,7 +143,7 @@ Press CTRL-C to quit or type ``help`` to get the list of available commands.
 Using the rule group
 ^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../../../sample/tutorial/filter/groupfilter.lua
+.. literalinclude:: ../../../sample/filter/groupfilter.lua
     :language: lua
     :tab-width: 4
 
@@ -161,7 +161,7 @@ haka package on a host with an interface named eth0.
 
 This is the configuration of the daemon:
 
-.. literalinclude:: ../../../sample/tutorial/filter/daemon.conf
+.. literalinclude:: ../../../sample/filter/daemon.conf
    :language: ini
    :tab-width: 4
 
@@ -171,7 +171,7 @@ printed on output, instead of syslogd.
 
 .. code-block:: console
 
-   # cd <haka_install_path>/share/haka/sample/tutorial/filter/
+   # cd <haka_install_path>/share/haka/sample/filter/
    # haka -c daemon.conf --no-daemon
 
 The filtering will be done according to the .lua configuration file seen
@@ -181,7 +181,7 @@ HTTP filtering
 ^^^^^^^^^^^^^^
 You can filter through all HTTP fields thanks to http module:
 
-.. literalinclude:: ../../../sample/tutorial/filter/httpfilter.lua
+.. literalinclude:: ../../../sample/filter/httpfilter.lua
    :language: lua
    :tab-width: 4
 
@@ -198,7 +198,7 @@ And start it
 
 .. code-block:: console
 
-   # cd <haka_install_path>/share/haka/sample/tutorial/filter/
+   # cd <haka_install_path>/share/haka/sample/filter/
    # haka -c dameon.conf --no-daemon
 
 
@@ -211,7 +211,7 @@ Haka will check User-Agent, and if the User-Agent is considered
 obsolete, it will change HTTP response to redirect request to a safer
 site (web site of the browser).
 
-.. literalinclude:: ../../../sample/tutorial/filter/httpmodif.lua
+.. literalinclude:: ../../../sample/filter/httpmodif.lua
    :language: lua
    :tab-width: 4
 
@@ -228,5 +228,5 @@ And start it
 
 .. code-block:: console
 
-   # cd <haka_install_path>/share/haka/sample/tutorial/filter/
+   # cd <haka_install_path>/share/haka/sample/filter/
    # haka -c dameon.conf --no-daemon

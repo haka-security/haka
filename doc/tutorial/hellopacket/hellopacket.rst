@@ -16,7 +16,7 @@ Launch ``hakapcap`` with a pcap file and a lua script file as arguments.
 
 .. code-block:: console
 
-    $ cd <haka_install_path>/share/haka/sample/tutorial/hellopacket
+    $ cd <haka_install_path>/share/haka/sample/hellopacket
     $ hakapcap hellopacket.pcap hellopacket.lua
 
 As shown below, hakapcap will first dump infos about registered dissectors and
@@ -59,7 +59,7 @@ same informations.
 
 The lua config file is self-documented:
 
-.. literalinclude:: ../../../sample/tutorial/hellopacket/hellopacket.lua
+.. literalinclude:: ../../../sample/hellopacket/hellopacket.lua
    :language: lua
    :tab-width: 4
 
@@ -72,5 +72,5 @@ are similar to wireshark syntax. For example, you can get the IP version, ttl
 or proto simply by using ``pkt.version``, ``pkt.ttl`` or ``pkt.proto`` on ipv4
 rules.
 
-    .. seealso:: Check :lua:mod:`ipv4` to get the full list of ipv4 accessors.
+.. seealso:: Check :lua:mod:`ipv4` to get the full list of ipv4 accessors.
 
