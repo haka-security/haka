@@ -173,6 +173,6 @@ TCP connection
 Example
 ^^^^^^^
 
-.. literalinclude:: ../../../../sample/ruleset/proto/tcp/rules.lua
+.. literalinclude:: ../../../../sample/ruleset/tcp/rules.lua
     :language: lua
     :tab-width: 4
