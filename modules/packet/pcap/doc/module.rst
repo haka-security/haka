@@ -1,4 +1,3 @@
-.. highlightlang:: ini
 
 Pcap  `packet/pcap`
 ===================
@@ -20,7 +19,9 @@ Parameters
 
     List of comma-separated interfaces.
 
-    Example of possible values: ::
+    Example of possible values:
+
+    .. code-block:: ini
 
         # Capture loopback traffic
         interfaces = "lo"
@@ -31,13 +32,19 @@ Parameters
 
 .. describe:: file
 
-    Read packets from a pcap file. ``interfaces`` must be not be used.
+    Read packets from a pcap file.
+
+.. note::
+
+    Only one of **interfaces** or **file** should be used.
 
 .. describe:: output
 
     Save unfiltered packets to the specified pcap output file.
 
-    Example of capturing packets from a pcap file and saving unfiltered ones in a pcap output file: ::
+    Example of capturing packets from a pcap file and saving unfiltered ones in a pcap output file:
+
+    .. code-block:: ini
 
         file = "/tmp/input.pcap"
         output = "/tmp/output.pcap"

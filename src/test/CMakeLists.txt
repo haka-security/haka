@@ -22,3 +22,4 @@ TEST_PCAP(core httpfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/hak
 TEST_PCAP(core httpmodif CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/httpmodif.lua)
 TEST_PCAP(core tcpfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/filter/tcpfilter.lua)
 TEST_PCAP(core stats_on_exit CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/tutorial/stats/stats_on_exit.lua)
+TEST_PCAP(core doc-alert CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/api/lua/alert-test.lua)

@@ -3,8 +3,8 @@
 ------------------------------------
 
 -- detect malicious web scanners
-haka.rule {
-	hooks = {"http-request"},
+haka.rule{
+	hooks = { 'http-request' },
 	eval = function (self, http)
 		--user-agent patterns of known web scanners
 		local http_useragent = {

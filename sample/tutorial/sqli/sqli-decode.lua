@@ -10,7 +10,7 @@ local keywords = {
 }
 
 -- Still naive rule
-haka.rule {
+haka.rule{
 	hooks = { 'http-request' },
 	eval = function (self, http)
 		dump_request(http)
@@ -33,7 +33,6 @@ haka.rule {
 				confidence = 'low',
 			}
 			http:drop()
-			return
 		end
 	end
 }

@@ -12,7 +12,7 @@ For instance:
 
 .. code-block:: lua
 
-    haka.rule {
+    haka.rule{
         hooks = { "ipv4-up" },
         eval = haka.interactive_rule
     }
@@ -21,7 +21,7 @@ As a result, every time this rule will be evaluated, a prompt will allow to ente
 current dissector data are available in the variable ``input``. You can use the `TAB` key to get
 completion. This can be very useful to discover the available functions and fields.
 
-When you are done, you can let Haka continue its execution by hitting `^D`.
+When you are done, you can let Haka continue its execution by hitting CTRL-D.
 
 .. note::
 

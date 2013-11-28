@@ -26,7 +26,7 @@ local sql_functions = {
 ------------------------------------
 
 -- Define a security rule group related to SQLi attacks
-sqli = haka.rule_group {
+sqli = haka.rule_group{
 	name = 'sqli',
 	-- Initialize some values before evaluating any security rule
 	init = function (self, http)
@@ -47,7 +47,7 @@ sqli = haka.rule_group {
 }
 
 local function check_sqli(patterns, score, trans)
-	sqli:rule {
+	sqli:rule{
 		hooks = { 'http-request' },
 		eval = function (self, http)
 			for k, v in pairs(http.sqli) do

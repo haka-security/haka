@@ -51,7 +51,7 @@ on destination port.
 
 If we try to launch this script, we will notice that it will fail to
 run successfully. Actually, we deliberately introduced an error into the code.
-Haka will raise an 'unknown error'. More precisely, there is no field named 'destport'.
+Haka will raise an error. More precisely, there is no field named ``destport``.
 
 As shown in section :doc:`\../../debug`, Haka is featured with debugging capabilities allowing
 to get more details about errors. The debugger mode is available through the ``--luadebug`` option:
@@ -71,7 +71,9 @@ When the debugger starts, it automatically breaks at the first lua line:
     \x1b[32mdebug\x1b[1m>
 
 
-At the debug prompt, type ``continue`` to immediately break into the erroneous code. When a lua error code occurs, the debugger breaks and outputs the error and a backtrace.
+At the debug prompt, type ``continue`` to immediately break into the erroneous
+code. When a lua error code occurs, the debugger breaks and outputs the error
+and a backtrace.
 
 .. ansi-block::
     :string_escape:
@@ -91,7 +93,10 @@ At the debug prompt, type ``continue`` to immediately break into the erroneous c
      #8    \x1b[36m/opt/haka/share/haka/core/rule.bc:0\x1b[0m: in the main chunk
     ...
 
-As we are interested in debugging lua code, we skip the first frames and jump directly to the frame #3 (type ``frame 3``). To get the line number that generated the error, we simply list the lua source code using the ``list`` command.
+As we are interested in debugging lua code, we skip the first frames and jump
+directly to the frame #3 (type ``frame 3``). To get the line number that
+generated the error, we simply list the lua source code using the ``list``
+command.
 
 .. ansi-block::
     :string_escape:
@@ -100,16 +105,15 @@ As we are interested in debugging lua code, we skip the first frames and jump di
     \x1b[33m  16:  \x1b[0mhooks = { 'tcp-up' },
     \x1b[33m  17:  \x1b[0m    eval = function (self, pkt)
     \x1b[33m  18:  \x1b[0m        -- The next line will generate a lua error:
-    \x1b[33m  19:  \x1b[0m        -- there is no 'destport' field. replace 'destport'
-    \x1b[33m  20:  \x1b[0m        -- by 'dstport'.
-    \x1b[31m  21\x1b[1m=> \x1b[0m        if pkt.destport == 80 or pkt.srcport == 80 then
-    \x1b[33m  22:  \x1b[0m            haka.log("Filter", "Authorizing trafic on port 80")
-    \x1b[33m  23:  \x1b[0m        else
-    \x1b[33m  24:  \x1b[0m            haka.log("Filter", "Trafic not authorized on port %d", pkt.dstport)
-    \x1b[33m  25:  \x1b[0m            pkt:drop()
-    \x1b[33m  26:  \x1b[0m        end
+    \x1b[33m  19:  \x1b[0m        -- there is no 'destport' field. replace 'destport' by 'dstport'
+    \x1b[31m  20\x1b[1m=> \x1b[0m        if pkt.destport == 80 or pkt.srcport == 80 then
+    \x1b[33m  21:  \x1b[0m            haka.log("Filter", "Authorizing trafic on port 80")
+    \x1b[33m  22:  \x1b[0m        else
+    \x1b[33m  23:  \x1b[0m            haka.log("Filter", "Trafic not authorized on port %d", pkt.dstport)
+    \x1b[33m  24:  \x1b[0m            pkt:drop()
+    \x1b[33m  25:  \x1b[0m        end
 
-Printing the `pkt` table (``print pkt``) will show that we misspelled the `dstport` field.
+Printing the `pkt` table (``print pkt``) will show that we misspelled the ``dstport`` field.
 
 .. ansi-block::
     :string_escape:
@@ -134,7 +138,7 @@ Printing the `pkt` table (``print pkt``) will show that we misspelled the `dstpo
             \x1b[34;1mhdr_len\x1b[0m : 40
         }
 
-Press CTRL^C to quit or type ``help`` to get the list of available commands.
+Press CTRL-C to quit or type ``help`` to get the list of available commands.
 
 Using the rule group
 ^^^^^^^^^^^^^^^^^^^^
@@ -158,7 +162,7 @@ haka package on a host with an interface named eth0.
 This is the configuration of the daemon:
 
 .. literalinclude:: ../../../sample/tutorial/filter/daemon.conf
-   :language: lua
+   :language: ini
    :tab-width: 4
 
 In order to start haka, you have to be root. The ``--no-daemon`` option
@@ -183,16 +187,16 @@ You can filter through all HTTP fields thanks to http module:
 Modify the ``dameon.conf`` in order to load the ``httpfilter.lua``
 configuration file:
 
-.. code-block:: lua
+.. code-block:: ini
 
     [general]
     # Select the haka configuration file to use.
     configuration = "httpfilter.lua"
-    (...)
 
 And start it
 
 .. parsed-literal::
+
    # cd |haka_install_path|/share/haka/sample/tutorial/filter/
    # haka -c dameon.conf --no-daemon
 
@@ -213,15 +217,15 @@ site (web site of the browser).
 Modify the ``dameon.conf`` in order to load the ``httpmodif.lua``
 configuration file:
 
-.. code-block:: lua
+.. code-block:: ini
 
     [general]
-    # Select the haka configuration file to use.
+    # Select the haka configuration file to use
     configuration = "httpmodif.lua"
-    (...)
 
 And start it
 
 .. parsed-literal::
+
    # cd |haka_install_path|/share/haka/sample/tutorial/filter/
    # haka -c dameon.conf --no-daemon

@@ -7,7 +7,8 @@ Running Haka
 
 .. program:: haka
 
-``haka`` is primarily intended to be used as a daemon which could be starded by providing an optional configaration file (using -c option).
+``haka`` is primarily intended to be used as a daemon which could be starded by providing an optional
+configaration file (using -c option).
 
 .. parsed-literal::
 
@@ -17,7 +18,9 @@ Running Haka
 Sample configuration
 --------------------
 
-The previous command will load the configuration file ``gettingstarted.conf`` which as commented hereafter instructs ``haka`` to capture packets from interface eth0 using nfqueue and to filter them based on the lua policy script ``gettingstarted.lua``
+The previous command will load the configuration file ``gettingstarted.conf`` which as commented hereafter
+instructs ``haka`` to capture packets from interface eth0 using nfqueue and to filter them based on the lua
+policy script ``gettingstarted.lua``
 
 .. literalinclude:: ../sample/doc/gettingstarted.conf
     :language: ini

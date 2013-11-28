@@ -1,7 +1,6 @@
 ------------------------------------
 -- Loading dissectors
 ------------------------------------
-
 require('protocol/ipv4')
 require('protocol/tcp')
 
@@ -11,20 +10,20 @@ require('protocol/tcp')
 
 -- Here, we create a group rule
 -- A group have an init function (self explanatory)
--- then a continue function wich tells what to do after each
--- rule. As written here, it says that if a rule return true, it will 
--- stop the evaluation of other rules. If false, it continues to the next rule.
+-- A continue function which tells what to do after each rule. As written here,
+-- it says that if a rule return true, it will stop the evaluation of other
+-- rules. If false, it continues to the next rule.
 -- The fini function is the last evaluation made by the group.
--- For this test, it permits us to do a "Default drop" with haka and
--- authorize only connection to specific ports (ssh and http)
+-- For this test, it permits us to do a "default drop" with haka and authorize
+-- only connection to specific ports (ssh and http)
 
-local group = haka.rule_group {
-	-- The hooks tells where this rule is applied
-	-- only TCP packets will be concerned by this rule
-	-- other protocol will flow
+local group = haka.rule_group{
+	-- The hooks tells where this rule is applied only TCP packets will be
+	-- concerned by this rule other protocol will flow
 	name = "group",
 	init = function (self, pkt)
-		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
+		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d",
+			pkt.tcp.srcport, pkt.tcp.dstport)
 	end,
 	fini = function (self, pkt)
 		haka.alert{
@@ -41,7 +40,8 @@ local group = haka.rule_group {
 ------------------------------------
 -- Security group rule
 ------------------------------------
-group:rule {
+
+group:rule{
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 		-- Accept connection to TCP port 80
@@ -52,7 +52,7 @@ group:rule {
 	end
 }
 
-group:rule {
+group:rule{
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 		-- Accept connection to TCP port 22

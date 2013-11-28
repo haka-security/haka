@@ -17,8 +17,6 @@ Threads
 Exit
 ----
 
-.. lua:module:: haka
-
 .. lua:function:: on_exit(exit_func)
 
 	Runs ``exit_func`` code at haka exit

@@ -8,21 +8,21 @@ local http = require('protocol/http')
 ------------------------------------
 -- Security rule
 ------------------------------------
-haka.rule {
+haka.rule{
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 		if pkt.tcp.dstport == 80 then
 			pkt.next_dissector = 'http'
 		else
-			haka.log("Filter", "Dropping TCP connection: tcp dstpport=%d", pkt.tcp.dstport)
-			-- Send a TCP RST packet to both sides: client and server
-			pkt:reset()
+			haka.log("Filter", "Dropping TCP connection: tcp dstpport=%d",
+				pkt.tcp.dstport)
+			pkt:reset() -- Send a TCP RST packet to both sides: client and server
 		end
 	end
 }
 
 --This rule will handle HTTP requests
-haka.rule {
+haka.rule{
 	hooks = { 'http-request' },
 	eval = function (self, http)
 		if string.match(http.request.headers['User-Agent'], 'Mozilla') then

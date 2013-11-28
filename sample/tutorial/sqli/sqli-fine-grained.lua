@@ -14,7 +14,7 @@ local keywords = {
 -- A Better Naive Rule ...
 ------------------------------------
 
-haka.rule {
+haka.rule{
 	hooks = { 'http-request' },
 	eval = function (self, http)
 		dump_request(http)

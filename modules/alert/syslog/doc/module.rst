@@ -1,11 +1,11 @@
 
-Syslog logging `log/syslog`
+Syslog alert `alert/syslog`
 ===========================
 
 Description
 ^^^^^^^^^^^
 
-Module that output log messages using syslog.
+Module that output alerts to syslog.
 
 By default, the message are send to the facility local0. You can adjust your
 syslogd.conf accordingly.

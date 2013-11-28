@@ -58,21 +58,11 @@ Alert :lua:mod:`haka.alert`
 
     Create an object to describe a source or a target.
 
-Example: ::
+Example:
 
-    haka.alert{
-            start_time = pkt.raw.timestamp,
-            description = "packet received",
-            severity = 'medium',
-            confidence = 'high',
-            completion = 'failed',
-            method = {
-                description = "Packet sent on the network",
-                ref = { "cve:2O13-XXX", "http://intranet/vulnid?id=115", "cwe:809" }
-            },
-            sources = { haka.alert.address(pkt.src, "evil.host.fqdn") },
-            targets = { haka.alert.address(pkt.dst), haka.alert.service("tcp/22", "ssh") }
-        }
+.. literalinclude:: alert-doc.lua
+    :language: lua
+    :tab-width: 4
 
 .. lua:function:: update(my_alert, {param1=value1, param2=value2, [...]} )
 
@@ -81,7 +71,8 @@ Example: ::
     :param my_alert: an alert object previously defined
     :param param1,param2,...: Same names/values of alert
 
-Example: ::
+Example:
 
-    local my_alert = haka.alert{ severity = 'low', sources = { haka.alert.address(pkt.src) } }
-    haka.alert.update(my_alert, {completion = 'failed' } )
+.. literalinclude:: alertupdate-doc.lua
+    :language: lua
+    :tab-width: 4

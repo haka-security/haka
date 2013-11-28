@@ -2,8 +2,8 @@
 -- IP compliance
 ------------------------------------
 
-haka.rule {
-	hooks = { "ipv4-up" },
+haka.rule{
+	hooks = { 'ipv4-up' },
 	eval = function (self, pkt)
 		-- bad IP checksum
 		if not pkt:verify_checksum() then

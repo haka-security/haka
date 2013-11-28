@@ -3,7 +3,7 @@
 ------------------------------------
 require('protocol/ipv4')
 require('protocol/tcp')
-http = require('protocol/http')
+local http = require('protocol/http')
 
 ------------------------------------
 -- Firefox Version and website
@@ -25,7 +25,7 @@ local update_domains = {
 -------------------------------------
 -- Setting http dissector
 -------------------------------------
-haka.rule {
+haka.rule{
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 		if pkt.tcp.dstport == 80 then
@@ -37,8 +37,9 @@ haka.rule {
 -------------------------------------
 -- Security group rule
 -------------------------------------
-safe_update = haka.rule_group {
+safe_update = haka.rule_group{
 	name = 'safe_update',
+
 	-- Initialization
 	init = function (self, http)
 		local host = http.request.headers['Host']
@@ -47,9 +48,9 @@ safe_update = haka.rule_group {
 		end
 	end,
 
-	-- Continue is called after evaluation of each security rule
-	-- the ret parameter decide whether to read next rule or skip
-	-- the evaluation of the other rules in the group
+	-- Continue is called after evaluation of each security rule the ret
+	-- parameter decide whether to read next rule or skip the evaluation of
+	-- the other rules in the group
 	continue = function (self, http, ret)
 		return not ret
 	end
@@ -59,10 +60,9 @@ safe_update = haka.rule_group {
 -- Security rules
 -------------------------------------
 
--- This rule allow access to update sites
--- whatever the User-Agent version is
+-- This rule allow access to update sites whatever the User-Agent version is
 -- It's a kind of white listing
-safe_update:rule {
+safe_update:rule{
 	hooks = { 'http-response' },
 	eval = function (self, http)
 		local host = http.request.headers['Host'] or ''
@@ -76,28 +76,26 @@ safe_update:rule {
 
 }
 
--- This rule will deny access to any website if User-Agent is
--- outdated.
-safe_update:rule {
+-- This rule will deny access to any website if User-Agent is outdated
+safe_update:rule{
 	hooks = { 'http-response' },
 	eval = function (self, http)
-		-- Dump the request helps to debug
-		-- uncomment next line
+		-- Uncomment to dump the request helps to debug
 		-- http.request:dump()
+
 		local UA = http.request.headers["User-Agent"] or "No User-Agent header"
 		haka.log("Filter", "UA detected: %s", UA)
 		local FF_UA = (string.find(UA, "Firefox/"))
-		-- If FF_UA is nil, the browser is not Firefox
-		if FF_UA then
+
+		if FF_UA then -- If FF_UA is nil, the browser is not Firefox
 			local version = tonumber(string.sub(UA, FF_UA+8))
 			if not version or version < last_firefox_version then
 				haka.alert{
 					description= "Firefox is outdated, please upgrade",
 					severity= 'medium'
 				}
-				-- We modify some fields of the response on the fly
-				-- We redirect the browser to a safe place
-				-- where updates will be made
+				-- We modify some fields of the response on the fly We redirect
+				-- the browser to a safe place where updates will be made
 				http.response.status = "307"
 				http.response.reason = "Moved Temporarily"
 				http.response.headers["Content-Length"] = "0"

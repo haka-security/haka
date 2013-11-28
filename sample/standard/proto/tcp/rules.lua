@@ -5,7 +5,7 @@
 local client_network = ipv4.network("192.168.10.0/25");
 local server_network = ipv4.network("192.168.20.0/25");
 
-local group = haka.rule_group {
+local group = haka.rule_group{
 	name = "group",
 	init = function (self, pkt)
 		haka.log.debug("filter", "entering packet filtering rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
@@ -24,8 +24,8 @@ local group = haka.rule_group {
 }
 
 
-group:rule {
-	hooks = {"tcp-connection-new"},
+group:rule{
+	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 
 		local tcp = pkt.tcp
@@ -41,8 +41,8 @@ group:rule {
 	end
 }
 
-group:rule {
-	hooks = {"tcp-connection-new"},
+group:rule{
+	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 
 		local tcp = pkt.tcp

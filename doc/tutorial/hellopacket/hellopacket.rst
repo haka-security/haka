@@ -16,10 +16,12 @@ Launch ``hakapcap`` with a pcap file and a lua script file as arguments.
 
 .. parsed-literal::
 
-    $ cd |haka_install_path|/share/haka/sample/tutorial/hellopacket
     $ hakapcap hellopacket.pcap hellopacket.lua
+    $ cd |haka_install_path|/share/haka/sample/tutorial/hellopacket
 
-As shown below, hakapcap will first dump infos about registered dissectors and rules and then process the pcap file and ouput networking infos (packet source and destination, connection establishment, etc.):
+As shown below, hakapcap will first dump infos about registered dissectors and
+rules and then process the pcap file and ouput networking infos (packet source
+and destination, connection establishment, etc.):
 
 .. ansi-block::
     :string_escape:
@@ -52,7 +54,8 @@ As shown below, hakapcap will first dump infos about registered dissectors and r
 
 
 We can see each packet and TCP connection saying hello to the world.
-You can open the pcap file with wireshark or any other network tool to see the same informations.
+You can open the pcap file with wireshark or any other network tool to see the
+same informations.
 
 The lua config file is self-documented:
 
@@ -64,8 +67,10 @@ The lua config file is self-documented:
 Going further
 -------------
 
-All fields from capture can be accessed, read, and/or modified. All the fields are similar to wireshark syntax. For example, you can get the IP version, ttl or proto
-simply by using ``pkt.version``, ``pkt.ttl`` or ``pkt.proto`` on ipv4 rules.
+All fields from capture can be accessed, read, and/or modified. All the fields
+are similar to wireshark syntax. For example, you can get the IP version, ttl
+or proto simply by using ``pkt.version``, ``pkt.ttl`` or ``pkt.proto`` on ipv4
+rules.
 
     .. seealso:: Check :lua:mod:`ipv4` to get the full list of ipv4 accessors.
 

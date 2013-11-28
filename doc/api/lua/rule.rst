@@ -31,16 +31,11 @@ As detailed hereater, a rule is made of a list of hooks and an evaluation functi
     :param r: Rule description.
     :paramtype r: :lua:class:`rule`
 
-Example: ::
+Example:
 
-    haka.rule {
-        hooks = { "ipv4-up" },
-        eval = function (self, pkt)
-            if pkt.src == ipv4.addr("192.168.1.2") then
-                pkt:drop()
-            end
-        end
-    }
+.. literalinclude:: ../../../sample/standard/proto/ipv4/security.lua
+    :language: lua
+    :tab-width: 4
 
 Rule group :lua:mod:`haka.rule_group`
 -------------------------------------
@@ -87,43 +82,8 @@ Rule group allow to customize the rule evaluation.
     :returns: The new group.
     :rtype: :lua:class:`rule_group`
 
-Example: ::
+Example:
 
-    local group = haka.rule_group {
-        name = "group",
-        init = function (self, pkt)
-            haka.log.debug("filter", "Entering packet filtering rules : %d --> %d", pkt.tcp.srcport, pkt.tcp.dstport)
-        end,
-        fini = function (self, pkt)
-            haka.alert{
-                description = "Packet dropped : drop by default",
-                targets = { haka.alert.service("tcp", pkt.tcp.dstport) }
-            }
-            pkt:drop()
-        end,
-        continue = function (self, pkt, ret)
-            return not ret
-        end
-    }
-
-    group:rule {
-        hooks = { 'tcp-connection-new' },
-        eval = function (self, pkt)
-            -- Accept connection to TCP port 80
-            if pkt.tcp.dstport == 80 then
-                haka.log("Filter", "Authorizing traffic on port 80")
-                return true
-            end
-        end
-    }
-
-    group:rule {
-        hooks = { 'tcp-connection-new' },
-        eval = function (self, pkt)
-            -- Accept connection to TCP port 22
-            if pkt.tcp.dstport == 22 then
-                haka.log("Filter", "Authorizing traffic on port 22")
-                return true
-            end
-        end
-    }
+.. literalinclude:: ../../../sample/standard/proto/tcp/rules.lua
+    :language: lua
+    :tab-width: 4

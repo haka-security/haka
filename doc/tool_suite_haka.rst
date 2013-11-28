@@ -1,4 +1,3 @@
-.. highlightlang:: ini
 
 haka
 ====
@@ -111,6 +110,15 @@ Logging modules
     :glob:
 
     ../modules/log/*/doc/module*
+
+Alert modules
+^^^^^^^^^^^^^
+
+.. toctree::
+    :maxdepth: 1
+    :glob:
+
+    ../modules/alert/*/doc/module*
 
 Service
 -------

@@ -11,7 +11,7 @@ httplib = require('protocol/http')
 -- Setting next dissector
 ------------------------------------
 
-haka.rule {
+haka.rule{
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 		if pkt.tcp.dstport == 80 then

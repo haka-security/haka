@@ -1,4 +1,3 @@
-.. highlightlang:: ini
 
 hakapcap
 ========

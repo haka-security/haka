@@ -2,8 +2,8 @@
 -- HTTP compliance
 ------------------------------------
 -- check http method value
-haka.rule {
-	hooks = {"http-request"},
+haka.rule{
+	hooks = { 'http-request' },
 	eval = function (self, http)
 		local http_methods = dict({ 'get', 'post', 'head', 'put', 'trace', 'delete', 'options' })
 		local method = http.request.method:lower()
@@ -23,8 +23,8 @@ haka.rule {
 }
 
 -- check http version value
-haka.rule {
-	hooks = {"http-request"},
+haka.rule{
+	hooks = { 'http-request' },
 	eval = function (self, http)
 		local http_versions = dict({ '0.9', '1.0', '1.1' })
 		local protocol = http.request.version:sub(1,4)
@@ -45,8 +45,8 @@ haka.rule {
 }
 
 -- check content length value
-haka.rule {
-	hooks = {"http-response"},
+haka.rule{
+	hooks = { 'http-response' },
 	eval = function (self, http)
 		local content_length = http.request.headers["Content-Length"]
 		if content_length then

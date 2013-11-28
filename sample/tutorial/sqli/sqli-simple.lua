@@ -13,7 +13,7 @@ local keywords = {
 -- SQLi Naive Rule
 ------------------------------------
 
-haka.rule {
+haka.rule{
 	-- Evaluation applies on upcoming requests
 	hooks = { 'http-request' },
 	eval = function (self, http)
@@ -39,7 +39,6 @@ haka.rule {
 				confidence = 'low',
 			}
 			http:drop()
-			return
 		end
 	end
 }

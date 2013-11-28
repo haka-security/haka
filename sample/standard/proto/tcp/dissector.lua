@@ -1,1 +1,1 @@
-tcp = require("protocol/tcp")
+tcp = require('protocol/tcp')

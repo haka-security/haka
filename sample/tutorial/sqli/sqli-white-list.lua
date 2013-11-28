@@ -33,7 +33,7 @@ local safe_resources = {
 -- SQLi Rule Group
 ------------------------------------
 
-sqli = haka.rule_group {
+sqli = haka.rule_group{
 	name = 'sqli',
 	-- Initialisation
 	init = function (self, http)
@@ -66,7 +66,7 @@ sqli = haka.rule_group {
 -- SQLi White List Rule
 ------------------------------------
 
-sqli:rule {
+sqli:rule{
 	hooks = { 'http-request' },
 	eval = function (self, http)
 		-- Split uri into subparts and normalize it

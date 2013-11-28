@@ -1,1 +1,1 @@
-ipv4 = require("protocol/ipv4")
+ipv4 = require('protocol/ipv4')
