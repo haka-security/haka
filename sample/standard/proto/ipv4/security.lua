@@ -8,7 +8,7 @@ haka.rule{
 		if pkt.src == pkt.dst and pkt.src ~= ipv4.addr("127.0.0.1") then
 			haka.alert{
 				description = "Land attack detected",
-				severity = 'low',
+				severity = 'high',
 				confidence = 'medium',
 				sources = { haka.alert.address(pkt.src) },
 			}

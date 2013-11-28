@@ -3,11 +3,11 @@
 ------------------------------------
 
 function getpayload(data)
-	payload = ''
+	local payload = {}
 	for i = 1, #data do
-		payload = payload .. string.char(data[i])
+		table.insert(payload, string.char(data[i]))
 	end
-	return payload
+	return table.concat(payload)
 end
 
 function contains(table, elem)

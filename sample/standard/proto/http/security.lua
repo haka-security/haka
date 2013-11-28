@@ -16,14 +16,14 @@ haka.rule{
 			grabber	= '^Grabber.*'
 		}
 
-		if (http.request.headers['User-Agent']) then
+		if http.request.headers['User-Agent'] then
 			local user_agent = http.request.headers['User-Agent']
 			for scanner, pattern in pairs(http_useragent) do
 				if user_agent:match(pattern) then
 					local conn = http.connection
 					haka.alert{
 						description = string.format("'%s' scan detected", scanner),
-						severity = 'low',
+						severity = 'high',
 						sources = haka.alert.address(conn.srcip),
 						targets = {
 							haka.alert.address(conn.dstip),
@@ -31,6 +31,7 @@ haka.rule{
 						},
 					}
 					http:drop()
+					return
 				end
 			end
 		end

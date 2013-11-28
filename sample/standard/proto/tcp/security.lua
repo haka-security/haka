@@ -34,7 +34,7 @@ haka.rule{
 	eval = function (self, pkt)
 		if #pkt.payload > 0 then
 			-- reconstruct payload
-			payload = getpayload(pkt.payload)
+			local payload = getpayload(pkt.payload)
 			-- test if shellcode is present in data
 			if string.find(payload, bindshell) then
 				haka.alert{
