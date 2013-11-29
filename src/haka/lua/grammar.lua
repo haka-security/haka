@@ -251,7 +251,7 @@ function grammar_dg.RecordStart.method:apply(ctx)
 	if self.name then
 		local cur = ctx.current
 		local new = ctx:push(nil, self.name)
-		
+
 		if self.converter then
 			cur:addproperty(self.name,
 				function (ctx) return self.converter.get(new) end,
@@ -409,7 +409,7 @@ function grammar_dg.Branch.method:_lasts(lasts, set)
 	for _, entity in pairs(self.cases) do
 		entity:_lasts(lasts, set)
 	end
-	
+
 	return super(grammar_dg.Branch)._lasts(self, lasts, set)
 end
 
@@ -646,7 +646,7 @@ end
 
 function grammar.Record.method:compile()
 	local iter, ret
-	
+
 	ret = grammar_dg.RecordStart:new(self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end
 	if self.validate then ret:validate(self.validate) end
@@ -690,7 +690,7 @@ function grammar.Union.method:compile()
 		ret:add(value:compile())
 		ret:add(grammar_dg.UnionRestart:new())
 	end
-	
+
 	ret:add(grammar_dg.UnionFinish:new(self.named))
 	return ret
 end

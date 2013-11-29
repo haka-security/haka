@@ -3,7 +3,7 @@ if(LUA STREQUAL "luajit")
 	set(HAKA_LUAJIT 1)
 	set(HAKA_LUA51 1)
 	set(LUA_DEPENDENCY luajit)
-	
+
 	if(NOT ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funwind-tables")
 	endif()
