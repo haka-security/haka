@@ -229,3 +229,8 @@ const char *get_app_directory()
 {
 	return directory;
 }
+
+void dump_stat(FILE *file)
+{
+	thread_pool_dump_stat(thread_states, file);
+}

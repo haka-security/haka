@@ -31,6 +31,7 @@ enum {
 static struct command* commands[] = {
 	&command_status,
 	&command_stop,
+	&command_stats,
 	&command_logs,
 	&command_loglevel,
 	&command_debug,
