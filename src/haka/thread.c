@@ -1,6 +1,8 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <lua.h>
 #include <semaphore.h>
 #include <string.h>
@@ -11,6 +13,7 @@
 #include <haka/packet_module.h>
 #include <haka/error.h>
 #include <haka/thread.h>
+#include <haka/stat.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
 #include <luadebug/debugger.h>
@@ -18,6 +21,11 @@
 #include "thread.h"
 #include "app.h"
 
+
+struct pkt_stats {
+	size_t                      total_packets;
+	size_t                      total_bytes;
+};
 
 struct thread_state {
 	int                         thread_id;
@@ -29,6 +37,7 @@ struct thread_state {
 	bool                        canceled;
 	int32                       attach_debugger;
 	struct thread_pool         *pool;
+	struct pkt_stats            stats;
 };
 
 struct thread_pool {
@@ -133,6 +142,8 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	memset(state, 0, sizeof(struct thread_state));
 
 	state->thread_id = thread_id;
+	state->stats.total_packets = 0;
+	state->stats.total_bytes = 0;
 	state->packet_module = packet_module;
 
 	messagef(HAKA_LOG_INFO, L"core", L"initializing thread %d", thread_id);
@@ -213,6 +224,8 @@ static void *thread_main_loop(void *_state)
 		/* The packet can be NULL in case of failure in packet receive */
 		if (pkt) {
 			filter_wrapper(state, pkt);
+			state->stats.total_packets++;
+			state->stats.total_bytes += packet_length(pkt);
 			pkt = NULL;
 		}
 
@@ -368,4 +381,54 @@ void thread_pool_attachdebugger(struct thread_pool *pool)
 {
 	assert(pool);
 	++pool->attach_debugger;
+}
+
+static const size_t columnsize = 20;
+
+void pad_output_stat_bytes(FILE *f, size_t value)
+{
+	const size_t len = stat_print_formated_bytes(f, value);
+	if (len != (size_t)-1) {
+		stat_printf(f, "%*s", columnsize-len, "");
+	}
+}
+
+void pad_output_stat_chars(FILE *f, char *s)
+{
+	const size_t len = stat_printf(f, s);
+	if (len != (size_t)-1) {
+		stat_printf(f, "%*s", columnsize-len, "");
+	}
+}
+
+void thread_pool_dump_stat(struct thread_pool *pool, FILE *f)
+{
+	size_t total_packets = 0, total_bytes = 0;
+	size_t thread_packets, thread_bytes;
+
+	assert(pool);
+
+	pad_output_stat_chars(f, "");
+	pad_output_stat_chars(f, "Packets");
+	pad_output_stat_chars(f, "Bytes");
+	stat_printf(f, "\n");
+	int i;
+	for (i = 0; i < pool->count; i++) {
+		const size_t len = stat_printf(f, "Thread %d", i+1);
+		if (len != (size_t)-1) {
+			stat_printf(f, "%*s", columnsize-len, "");
+		}
+		thread_packets = pool->threads[i]->stats.total_packets;
+		thread_bytes = pool->threads[i]->stats.total_bytes;
+		pad_output_stat_bytes(f, thread_packets);
+		pad_output_stat_bytes(f, thread_bytes);
+		stat_printf(f, "\n");
+
+		total_packets += thread_packets;
+		total_bytes += thread_bytes;
+	}
+	pad_output_stat_chars(f, "All Threads");
+	pad_output_stat_bytes(f, total_packets);
+	pad_output_stat_bytes(f, total_bytes);
+	stat_printf(f, "\n");
 }

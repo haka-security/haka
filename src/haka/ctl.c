@@ -10,6 +10,7 @@
 #include <haka/error.h>
 #include <haka/thread.h>
 #include <haka/log.h>
+#include <haka/stat.h>
 #include <haka/alert.h>
 #include <haka/container/list.h>
 #include <luadebug/user.h>
@@ -440,6 +441,21 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 			messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", level_to_str(level));
 			setlevel(level, NULL);
 			ctl_send_chars(state->fd, "OK");
+		}
+	}
+	else if (strcmp(command, "STATS") == 0) {
+		FILE *file;
+		file = fdopen(state->fd, "a+");
+		if (!file) {
+			messagef(HAKA_LOG_ERROR, MODULE, L"cannot open socket file: %ls", errno_error(errno));
+			ctl_send_chars(state->fd, "ERROR");
+		}
+		else {
+			ctl_send_chars(state->fd, "OK");
+			stat_printf(file, "\n");
+			dump_stat(file);
+			fclose(file);
+			state->fd = -1;
 		}
 	}
 	else if (strcmp(command, "DEBUG") == 0) {

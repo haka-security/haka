@@ -11,6 +11,8 @@
 
 #include "ctl_comm.h"
 
+#define SIZE 1024
+
 
 static bool ctl_check_error(int err, int expected)
 {
@@ -168,4 +170,14 @@ bool ctl_expect_chars(int fd, const char *str)
 	}
 
 	return ret;
+}
+
+void ctl_output_redirect_chars(int fd)
+{
+	char msg[SIZE];
+	int amt;
+	while ((amt = read(fd, msg, SIZE-1)) > 0) {
+		msg[amt] = '\0';
+		printf("%s", msg);
+	}
 }

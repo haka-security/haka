@@ -16,6 +16,7 @@ add_library(libhaka SHARED
 	parameters.c
 	colors.c
 	time.c
+	stat.c
 	container/list.c)
 
 LUA_LINK(libhaka)

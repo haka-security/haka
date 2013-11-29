@@ -15,6 +15,7 @@ void thread_pool_cancel(struct thread_pool *pool);
 void thread_pool_start(struct thread_pool *pool);
 void thread_pool_attachdebugger(struct thread_pool *pool);
 bool thread_pool_issingle(struct thread_pool *pool);
+void thread_pool_dump_stat(struct thread_pool *pool, FILE *file);
 
 #endif /* _THREAD_H */
 
