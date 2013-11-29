@@ -175,7 +175,11 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 
 		/* Change the chunk environment */
 		lua_pushvalue(L, session.env_index);
+#if HAKA_LUA52
+		lua_setupvalue(L, -2, 1);
+#else
 		lua_setfenv(L, -2);
+#endif
 
 		if (status == LUA_ERRSYNTAX) {
 			const char *message;

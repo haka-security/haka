@@ -484,7 +484,12 @@ static bool print_exp(struct luadebug_debugger *session, const char *option)
 	}
 	else {
 		lua_pushvalue(session->L, session->env_index);
+
+#if HAKA_LUA52
+		lua_setupvalue(session->L, -2, 1);
+#else
 		lua_setfenv(session->L, -2);
+#endif
 
 		execute_print(session->L, session->user, true, NULL);
 		lua_pop(session->L, 1);
@@ -957,7 +962,9 @@ static void lua_debug_hook(lua_State *L, lua_Debug *ar)
 		break;
 
 	case LUA_HOOKRET:
+#if !HAKA_LUA52
 	case LUA_HOOKTAILRET:
+#endif
 		break;
 
 	default:

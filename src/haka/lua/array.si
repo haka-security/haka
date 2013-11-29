@@ -9,7 +9,7 @@
 static struct type **_get_##type##_array(lua_State* L, int input, swig_type_info *swigtype, int disown)
 {
 	struct type **array, **iter;
-	int i, size = lua_objlen(L, input);
+	int i, size = lua_rawlen(L, input);
 	array = malloc(sizeof(struct type*)*(size+1));
 	if (!array) {
 		error(L"memory error");

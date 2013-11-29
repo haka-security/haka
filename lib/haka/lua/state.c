@@ -73,7 +73,7 @@ int lua_state_error_formater(lua_State *L)
 			return 0;
 		}
 
-		lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+		lua_getglobal(L, "debug");
 		if (!lua_istable(L, -1)) {
 			lua_pop(L, 1);
 			return 0;
@@ -115,7 +115,7 @@ static int lua_print(lua_State* L)
 	return 0;
 }
 
-#if !HAKA_LUAJIT
+#if !HAKA_LUAJIT && !HAKA_LUA52
 
 /*
  * On Lua 5.1, the string.format function does not convert userdata to
@@ -318,7 +318,7 @@ struct lua_state *lua_state_init()
 	lua_pushcfunction(L, lua_print);
 	lua_setglobal(L, "print");
 
-#if !HAKA_LUAJIT
+#if !HAKA_LUAJIT && !HAKA_LUA52
 	lua_getglobal(L, "string");
 	lua_pushcfunction(L, str_format);
 	lua_setfield(L, -2, "format");

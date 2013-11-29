@@ -169,9 +169,15 @@ int capture_env(struct lua_State *L, int frame)
 	}
 
 	lua_newtable(L);
+#if HAKA_LUA52
+	if (!lua_getupvalue(L, -3, 1)) {
+		lua_pushglobaltable(L);
+	}
+#else
 	lua_getfenv(L, -3);
+#endif
 	lua_setfield(L, -2, "__index");
-	lua_getfenv(L, -3);
+	lua_getfield(L, -1, "__index");
 	lua_setfield(L, -2, "__newindex");
 	lua_setmetatable(L, -2);
 
