@@ -949,7 +949,7 @@ bool vbuffer_iterator_erase(struct vbuffer_iterator *iter, size_t len)
 size_t vbuffer_iterator_advance(struct vbuffer_iterator *iterator, size_t len)
 {
 	size_t clen = len;
-	struct vbuffer *iter = iterator->buffer, *last;
+	struct vbuffer *iter = iterator->buffer, *last = NULL;
 	size_t offset = iterator->offset;
 	iterator->offset = 0;
 
@@ -957,6 +957,7 @@ size_t vbuffer_iterator_advance(struct vbuffer_iterator *iterator, size_t len)
 		return (size_t)-1;
 	}
 
+	assert(iter);
 	assert(!iterator->registered);
 
 	while (iter) {
