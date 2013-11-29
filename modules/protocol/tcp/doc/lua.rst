@@ -171,7 +171,7 @@ TCP connection
         that belong to this connection will be silently dropped.
 
 Example
-^^^^^^^
+-------
 
 .. literalinclude:: ../../../../sample/ruleset/tcp/rules.lua
     :language: lua
