@@ -1,8 +1,8 @@
 
 .. highlightlang:: lua
 
-Packet :lua:mod:`haka.packet`
-=============================
+Packet
+======
 
 .. lua:module:: haka.packet
 

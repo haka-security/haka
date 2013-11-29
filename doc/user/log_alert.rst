@@ -6,8 +6,8 @@ Logging & Alerting
 
 This section introduces the Haka logging and alerting API
 
-Log :lua:mod:`haka.log`
------------------------
+Log
+---
 
 .. lua:module:: haka.log
 
@@ -29,8 +29,8 @@ Log :lua:mod:`haka.log`
     Set the logging level to display. It can be set globally and also manually for
     each module.
 
-Alert :lua:mod:`haka.alert`
----------------------------
+Alert
+-----
 
 .. lua:module:: haka.alert
 

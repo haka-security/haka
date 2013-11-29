@@ -6,8 +6,8 @@ Defining rules
 
 This section introduces how to define security rules.
 
-Single rule :lua:mod:`haka.rule`
---------------------------------
+Single rule
+-----------
 
 As detailed hereater, a rule is made of a list of hooks and an evaluation function:
 
@@ -37,8 +37,8 @@ Example:
     :language: lua
     :tab-width: 4
 
-Rule group :lua:mod:`haka.rule_group`
--------------------------------------
+Rule group
+----------
 
 Rule group allow to customize the rule evaluation.
 
