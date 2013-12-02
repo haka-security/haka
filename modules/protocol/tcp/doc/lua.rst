@@ -87,7 +87,7 @@ TCP
 
     .. lua:data:: flags
 
-        TCP flags.
+        TCP flags table.
 
         .. lua:data:: fin
                       syn

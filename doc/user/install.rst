@@ -55,3 +55,6 @@ Compile and install Haka
     $ cmake ..
     $ make
     $ sudo make install
+
+Haka will be installed by default to ``/opt/haka``. You might want to update your ``PATH``
+environment variable in order to simplify launching the tools.

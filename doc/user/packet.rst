@@ -15,13 +15,13 @@ Packet
 
         Drop the packet.
 
-        .. note:: The object will be unusable after calling this function.
+        .. note:: The packet will be unusable after calling this function.
 
     .. lua:method:: accept()
 
         Accept the packet.
 
-        .. note:: The object will be unusable after calling this function.
+        .. note:: The packet will be unusable after calling this function.
 
     .. lua:method:: send()
 

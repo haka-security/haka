@@ -1,6 +1,8 @@
 
 .. highlightlang:: lua
 
+.. lua:currentmodule:: haka
+
 Defining rules
 ==============
 

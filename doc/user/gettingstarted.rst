@@ -7,12 +7,12 @@ Running Haka
 
 .. program:: haka
 
-``haka`` is primarily intended to be used as a daemon which could be starded by providing an optional
+``haka`` is primarily intended to be used as a daemon which could be started by providing an optional
 configaration file (using -c option).
 
 .. code-block:: console
 
-    $ cd <haka_install_path>/share/haka/sample/doc
+    $ cd <haka_install_path>/share/haka/sample/doc/gettingstarted
     $ sudo haka -c gettingstarted.conf
 
 Sample configuration
@@ -26,6 +26,13 @@ policy script ``gettingstarted.lua``
     :language: ini
     :tab-width: 4
 
+Lua language
+------------
+
+Haka uses the language Lua to define its policy files. It is a simple scripted language. If you are not familiar
+with it, you might find helpful to check the language manual and examples. You should find many informations on
+various website, but a good starting point is the official Lua page at `<http://www.lua.org/>`_.
+
 First Lua policy file
 ---------------------
 
@@ -35,10 +42,8 @@ Below, the source code of the lua script file ``gettingstarted.conf`` :
     :language: lua
     :tab-width: 4
 
-Sample Lua policy file
-----------------------
+Going further
+-------------
 
-A sample policy is installed at <haka_install_path>/share/haka/sample/ruleset. The main file is named
-``config.lua`` which can be used directly with haka.
-
-This configuration contains various rules with different dissectors (*ipv4*, *tcp* and *http*).
+Other documented examples are available to illustrate all features of Haka. Those samples are installed in
+``<haka_install_path>/share/haka/sample`` and the corresponding documentation is at :doc:`tutorial`.
