@@ -182,6 +182,9 @@ add_custom_target(tests
 
 # Add sub directories)
 add_subdirectory(external)
+
+include_directories(${UTHASH_INCLUDE})
+
 add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(modules)
