@@ -4,8 +4,8 @@ Build
 
 .. note::
 
-    The installation instructions are for Debian. It will need
-    to be adapted to other platform.
+    The build instructions are for Debian. It will need to be adapted to
+    other platform.
 
 Dependencies
 ------------

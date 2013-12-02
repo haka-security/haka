@@ -21,7 +21,7 @@ Modules
     .. c:var:: const wchar_t *description
     .. c:var:: const wchar_t *author
 
-    .. c:function:: int (*init)(int argc, char *argv[])
+    .. c:function:: int (*init)(struct parameters *args)
 
         Initialize the module. This function is called by the application.
 
@@ -32,23 +32,6 @@ Modules
 
         Cleanup the module. This function is called by the application when the
         module is unloaded.
-
-.. c:type:: struct log_module
-
-    Logging module structure.
-
-    .. c:var:: struct module module
-
-    .. c:function:: int (*message)(log_level level, const wchar_t *module, const wchar_t *message)
-
-        Messaging function called by the application.
-
-        :returns: Non-zero in case of error.
-
-
-.. c:type:: struct packet_module_state
-
-    Opaque state structure.
 
 
 .. c:type:: struct packet_module
