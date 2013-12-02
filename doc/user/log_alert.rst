@@ -51,7 +51,7 @@ Alert
     :param targets: a table of :lua:func:`haka.alert.address`, :lua:func:`haka.alert.service`...
     :param ref: a table of alert reference
     :returns: Return an alert reference.
-    :rtype: Opaque object that can be unsed in :lua:func:`haka.alert.update`.
+    :rtype: Opaque object that can be used in :lua:func:`haka.alert.update`.
 
 .. lua:function:: address(object1, object2, [...])
                   service(object1, object2, [...])

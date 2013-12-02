@@ -38,7 +38,7 @@ Below, the source code of the lua script file ``gettingstarted.conf`` :
 Sample Lua policy file
 ----------------------
 
-A sample policy is installed at <haka_install_path>/share/haka/sample/standard. The main file is named
+A sample policy is installed at <haka_install_path>/share/haka/sample/ruleset. The main file is named
 ``config.lua`` which can be used directly with haka.
 
 This configuration contains various rules with different dissectors (*ipv4*, *tcp* and *http*).

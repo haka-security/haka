@@ -4,7 +4,7 @@ hakactl
 
 .. program:: hakactl
 
-``hakactl`` allows to control `haka` remotely.
+``hakactl`` allows to control `haka` daemon.
 
 .. code-block:: console
 

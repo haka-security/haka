@@ -32,9 +32,8 @@ group:rule{
 		local tcp = pkt.tcp
 
 		if client_network:contains(tcp.ip.src) and
-		   server_network:contains(tcp.ip.dst) and
-		   tcp.dstport == 80 then
-
+		    server_network:contains(tcp.ip.dst) and
+		    tcp.dstport == 80 then
 			haka.log.warning("filter", "authorizing http traffic")
 			pkt.next_dissector = "http"
 			return true
@@ -49,9 +48,8 @@ group:rule{
 		local tcp = pkt.tcp
 
 		if client_network:contains(tcp.ip.src) and
-		   server_network:contains(tcp.ip.dst) and
-		   tcp.dstport == 22 then
-
+		    server_network:contains(tcp.ip.dst) and
+		    tcp.dstport == 22 then
 			haka.log.warning("filter", "authorizing ssh traffic")
 			haka.log.warning("filter", "no available dissector for ssh")
 			return true

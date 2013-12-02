@@ -4,8 +4,10 @@ hakapcap
 
 .. program:: hakapcap
 
-``hakapcap`` is a tool that allows to apply lua policy filters on pcap capture files.
-It takes as input a pcap file, a lua policy file and a list of options:
+``hakapcap`` is a tool that allows to apply lua policy filters
+on pcap capture files.
+It takes as input an optional list of options, a pcap file, and a 
+lua policy file:
 
 .. code-block:: console
 
