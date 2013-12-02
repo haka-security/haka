@@ -30,4 +30,4 @@ Authors:
 License
 -------
 
-*TODO*
+.. include:: ../../LICENSE.txt
