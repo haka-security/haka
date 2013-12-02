@@ -8,7 +8,7 @@ Welcome to Haka's Developer Guide!
 
     build.rst
     rulearch.rst
-    main.rst
+    c.rst
 
 Indices and tables
 ^^^^^^^^^^^^^^^^^^

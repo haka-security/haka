@@ -32,7 +32,6 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 		TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
 		TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
 		ALERT(invalid_packet, 1, 1)
-
 			description: L"invalid tcp packet, size is too small",
 			severity: HAKA_ALERT_LOW,
 		ENDALERT
