@@ -28,6 +28,9 @@ struct pcap_packet;
 struct pcap_capture {
 	pcap_t       *pd;
 	int           link_type;
+	FILE         *file;
+	size_t        file_size;
+	time_us       last_progress;
 };
 
 struct packet_module_state {
@@ -208,6 +211,19 @@ static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 		messagef(HAKA_LOG_INFO, L"pcap", L"openning file '%s'", input);
 
 		pd->pd = pcap_open_offline(input, errbuf);
+
+		{
+			size_t cur;
+
+			pd->file = pcap_file(pd->pd);
+			assert(pd->file);
+
+			cur = ftell(pd->file);
+			fseek(pd->file, 0L, SEEK_END);
+			pd->file_size = ftell(pd->file);
+			pd->last_progress = INVALID_TIME;
+			fseek(pd->file, cur, SEEK_SET);
+		}
 	}
 
 	if (!pd->pd) {
@@ -386,6 +402,21 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 				if (packet->header.caplen < packet->header.len)
 					messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
+
+				if (pd->file) {
+					const size_t cur = ftell(pd->file);
+					const float percent = ((cur * 10000) / pd->file_size) / 100.f;
+					const time_us time = time_gettimestamp();
+
+					if (pd->last_progress == INVALID_TIME ||
+					    time_diff(time, pd->last_progress) > 5000000) /* 5 seconds */
+					{
+						pd->last_progress = time;
+						if (percent > 0) {
+							messagef(HAKA_LOG_INFO, L"pcap", L"progress %.2f %%", percent);
+						}
+					}
+				}
 
 				*pkt = (struct packet *)packet;
 				return 0;

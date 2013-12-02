@@ -32,6 +32,10 @@ $0 ~ /^debug rule:/ {
 	next;
 }
 
+$0 ~ /^info pcap: progress/ {
+	next;
+}
+
 $0 ~ /^stack traceback:$/ {
 	trace = 1;
 	next;
