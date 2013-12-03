@@ -47,6 +47,8 @@ void tcp_connection_insert(struct ctable *elem)
 	mutex_unlock(&ct_mutex);
 }
 
+#define EXCHANGE(a, b) { const typeof(a) tmp = a; a = b; b = tmp; }
+
 static struct ctable *tcp_connection_find(const struct tcp *tcp,
 		bool *direction_in, bool *dropped)
 {
@@ -70,10 +72,8 @@ static struct ctable *tcp_connection_find(const struct tcp *tcp,
 		return ptr;
 	}
 
-	elem.dstip = ipv4_get_src(tcp->packet);
-	elem.srcip = ipv4_get_dst(tcp->packet);
-	elem.dstport = tcp_get_srcport(tcp);
-	elem.srcport = tcp_get_dstport(tcp);
+	EXCHANGE(elem.dstip, elem.srcip);
+	EXCHANGE(elem.dstport, elem.srcport);
 
 	HASH_FIND(hh, cnx_table, &elem.srcip, hash_keysize, ptr);
 	if (ptr) {
