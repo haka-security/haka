@@ -13,7 +13,7 @@ Install from package
 Download the package
 --------------------
 
-To download and install the Haka package, enter the following
+To download and install the Haka package, enter the following:
 
 .. code-block:: console
 
@@ -37,7 +37,7 @@ Some packages are required to build and run Haka. This operation make take some 
 Download the sources
 --------------------
 
-To download the Haka sources, enter the following
+To download the Haka sources, enter the following:
 
 .. code-block:: console
 
@@ -56,5 +56,5 @@ Compile and install Haka
     $ make
     $ sudo make install
 
-Haka will be installed by default to ``/opt/haka``. You might want to update your ``PATH``
-environment variable in order to simplify launching the tools.
+Haka will be installed by default in ``/opt/haka``. You might want to update your ``PATH``
+environment variable in order to simplify Haka starting tools.

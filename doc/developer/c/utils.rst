@@ -35,12 +35,12 @@ Types
 .. c:macro:: GET_BIT(v, i)
              SET_BIT(v, i, x)
 
-    Gets and sets the bit `i` from an integer `v`.
+    Get and sets the bit `i` from an integer `v`.
 
 .. c:macro:: GET_BITS(v, i, j)
              SET_BITS(v, i, j, x)
 
-    Gets and sets the bits in range [`i` ; `j`] from an integer `v`.
+    Get and sets the bits in range [`i` ; `j`] from an integer `v`.
 
 Utilities
 =========
@@ -63,8 +63,8 @@ Errors
 
 .. c:function:: bool check_error()
 
-    Checks if an error has occurred. This function does not clear error flag.
+    Check if an error has occurred. This function does not clear error flag.
 
 .. c:function:: const wchar_t *clear_error()
 
-    Gets the error message and clear the error state.
+    Get the error message and clear the error state.

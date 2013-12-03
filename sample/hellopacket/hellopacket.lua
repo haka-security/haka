@@ -27,7 +27,7 @@ haka.rule{
 	--     First parameter must be named self
 	--     Second parameter can be named whatever you want
 	eval = function (self, pkt)
-		-- All fields is accessible through accessors
+		-- All fields are accessible through accessors
 		-- Documentation give the complet list of accessors
 		haka.log("Hello", "packet from %s to %s", pkt.src, pkt.dst)
 	end
@@ -38,7 +38,7 @@ haka.rule{
 	-- The rule is evaluated at TCP connection establishment
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
-		-- Fields from previous layer is accessible too
+		-- Fields from previous layer are accessible too
 		haka.log("Hello", "TCP connection from %s:%d to %s:%d", pkt.tcp.ip.src,
 			pkt.tcp.srcport, pkt.tcp.ip.dst, pkt.tcp.dstport)
 

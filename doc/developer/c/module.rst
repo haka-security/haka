@@ -60,15 +60,15 @@ Modules
         Callback used to receive a new packet. This function should block until
         a packet is received.
 
-        :returns:Non zero in case of error.
+        :returns: Non zero in case of error.
 
     .. c:function:: void (*verdict)(struct packet *pkt, filter_result result)
 
         Apply a verdict on a received packet. The module should then apply this
         verdict on the underlying packet.
 
-        :param pkt: The received packet. After calling this funciton the packet address
-            is never used again by the application allow the module to free it if needed.
+        :param pkt: The received packet. After calling this function the packet address
+            is never used again by the application but allow the module to free it if needed.
         :param result: The verdict to apply to this packet.
 
     .. c:function:: size_t (*get_length)(struct packet *pkt)
@@ -85,7 +85,7 @@ Modules
 
     .. c:function:: uint64 (*get_id)(struct packet *pkt)
 
-        Gets the id fo the packet.
+        Get the id fo the packet.
 
     .. c:function:: const uint8 *(*get_data)(struct packet *pkt)
 
@@ -98,14 +98,14 @@ Modules
 
 .. c:function:: struct module *module_load(const char *module_name,...)
 
-    Load a module given its name. It is not needed to call module_addref on the result
+    Load a module given its name. It is not needed to call `module_addref` on the result
     as this is done before returning.
 
     :returns: The loaded module structure or NULL in case of an error.
 
 .. c:function:: void module_addref(struct module *module)
 
-    Keep the module. Must match with a call to module_release
+    Keep the module. Must match with a call to `module_release`
     otherwise the module will not be able to be removed correctly
     when unused.
 
@@ -115,7 +115,7 @@ Modules
 
 .. c:function:: void module_set_path(const char *path)
 
-    Sets the path used to load haka modules. This path must be in the form:
+    Set the path used to load haka modules. This path must be in the form:
 
     .. code-block:: bash
 
@@ -123,4 +123,4 @@ Modules
 
 .. c:function:: const char *module_get_path()
 
-    Gets the modules path.
+    Get the modules path.

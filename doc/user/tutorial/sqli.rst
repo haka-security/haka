@@ -35,7 +35,7 @@ The first example presents a naive rule which checks some malicious patterns aga
 
 Anti-evasion
 ------------
-It is trivial to bypass the above rule with slight modifications on uri. For instance hiding a select keyword using comments (e.g. `sel/*something*/ect`) or simply using uppercase letters will bypass our naive rule. The script file ``sqli-decode.lua`` improves detection by applying first decoding fucntions on uri. This fucntions are defined in ``httpdecode.lua`` file.
+It is trivial to bypass the above rule with slight modifications on uri. For instance hiding a select keyword using comments (e.g. `sel/*something*/ect`) or simply using uppercase letters will bypass our naive rule. The script file ``sqli-decode.lua`` improves detection by applying first decoding functions on uri. This functions are defined in ``httpdecode.lua`` file.
 
 .. literalinclude:: ../../../sample/sqli/sqli-decode.lua
     :tab-width: 4
@@ -58,7 +58,7 @@ The script file introduces additional malicious patterns and use the rule_group 
 
 White list
 ----------
-All the defined rules are too general and will therefore raise many alerts. In the example given hereafter we show how we could skip evalation of rules if the uri matches some conditions (for instance do not evaluate anti-sqli rules when the requested resource is equal to `/foo/bar/safepage.php`). This is shows another advantage of using rules group feature.
+All the defined rules are too general and will therefore raise many alerts. In the example given hereafter we show how we could skip evalation of rules if the uri matches some conditions (for instance do not evaluate anti-sqli rules when the requested resource is equal to `/foo/bar/safepage.php`). This shows another advantage of using rules group feature.
 
 .. note:: The check is done after uri normalisation
 

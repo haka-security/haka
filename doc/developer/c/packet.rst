@@ -15,15 +15,15 @@ Packet
 
 .. c:function:: size_t packet_length(struct packet *pkt)
 
-    Gets the length of a packet.
+    Get the length of a packet.
 
 .. c:function:: const uint8 *packet_data(struct packet *pkt)
 
-    Gets the data of a packet.
+    Get the data of a packet.
 
 .. c:function:: const char *packet_dissector(struct packet *pkt)
 
-    Gets packet dissector to use.
+    Get packet dissector to use.
 
 .. c:function:: uint8 *packet_data_modifiable(struct packet *pkt)
 

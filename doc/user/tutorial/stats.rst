@@ -43,25 +43,25 @@ This section introduces the stats API. More precisely, it shows how to create th
 
 .. lua:function:: new()
 
-    Create the stats table
+    Create the stats table.
 
 .. lua:module:: stats
 
 .. lua:function:: list(self)
 
-    Print column names of `stats` table
+    Print column names of `stats` table.
 
-.. lua:function:: dump(self, nb)
+.. lua:function:: dump(self [, nb])
 
-    Print `nb` entries of `stats` table
+    Print `nb` entries of `stats` table.
 
-.. lua:function:: top(self, column_name, nb)
+.. lua:function:: top(self, column_name [, nb])
 
-    Dump the top 10 of given field name. Limits output to `nb` if `nb` is provided
+    Dump the top 10 of given field name. Limits output to `nb` if `nb` is provided.
 
-.. lua:function:: select_table(self, column_tab, where)
+.. lua:function:: select_table(self, column_tab [, where])
 
-    Select specific columns from `stats` table. Optionnaly, filter entry-lines based on `where` function
+    Select specific columns from `stats` table. Optionnaly, filter entry-lines based on `where` function.
 
 Dumping stats
 -------------
@@ -77,12 +77,12 @@ The script will output some statistics on collected http trafic after parsing al
 
     ...
     list of source ip using 'Mozilla/2.0' as user-gent'
-    | ip             | useragent                                       |
-    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;)                       |
-    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;)                       |
-    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;)                       |
-    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;)                       |
-    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;)                       |
+    | ip             | useragent                 |
+    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;) |
+    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;) |
+    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;) |
+    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;) |
+    | 172.16.117.132 | Mozilla/2.01 (Win3.1; I;) |
     ... 12762 remaining entries
     ...
 

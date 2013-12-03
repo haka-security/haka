@@ -68,9 +68,9 @@ Going further
 -------------
 
 All fields from capture can be accessed, read, and/or modified. All the fields
-are similar to wireshark syntax. For example, you can get the IP version, ttl
-or proto simply by using ``pkt.version``, ``pkt.ttl`` or ``pkt.proto`` on ipv4
-rules.
+are similar to wireshark syntax. For example, you can get the IP `version`, `ttl`
+or `proto` simply by using ``pkt.version``, ``pkt.ttl`` or ``pkt.proto`` on ipv4
+rules, respectively.
 
 .. seealso:: Check :lua:mod:`ipv4` to get the full list of ipv4 accessors.
 

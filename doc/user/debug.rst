@@ -32,7 +32,7 @@ Debugger
 --------
 
 If you need to inspect an existing configuration, you can use the debugger. You need to activate
-the debugger first. This can be done by starting haka with the option ``--luadebug``.
+the debugger first. This can be done by starting Haka with the option ``--luadebug``.
 
 This line will start the debugger and break immediately. A prompt will allow you to inspect variables,
 up-values, expressions... You can also set breakpoints and execute your code line by line. To get the

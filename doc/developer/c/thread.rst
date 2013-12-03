@@ -6,16 +6,16 @@ Threads
 
 .. c:function:: int thread_get_packet_capture_cpu_count()
 
-    Gets the number of thread to be used by the application for
+    Get the number of thread to be used by the application for
     packet capture.
 
 .. c:function:: int thread_get_cpu_count()
 
-    Gets the number of CPUs.
+    Get the number of CPUs.
 
 .. c:function:: int thread_get_id()
 
-    Gets current thread id.
+    Get current thread id.
 
 Atomic
 ------
@@ -34,11 +34,11 @@ Atomic
 
 .. c:function:: uint32 atomic_get(atomic_t *v)
 
-    Gets the current value of the atomic counter `v`.
+    Get the current value of the atomic counter `v`.
 
 .. c:function:: void atomic_set(atomic_t *v, uint32 x)
 
-    Sets the current value of the atomic counter `v` to `x`.
+    Set the current value of the atomic counter `v` to `x`.
 
 Mutex
 -----
@@ -53,7 +53,7 @@ Mutex
 
 .. c:function:: bool mutex_init(mutex_t *mutex, bool recursive)
 
-    Initializes a mutex `mutex`. With `recursive`, the mutex can be created
+    Initialize a mutex `mutex`. With `recursive`, the mutex can be created
     recursive (ie. can be re-entered by the same thread).
 
     :returns: True on success. Use :c:func:`clear_error` to get details about the error.
@@ -66,7 +66,7 @@ Mutex
 
 .. c:function:: bool mutex_lock(mutex_t *mutex)
 
-    Locks a mutex.
+    Lock a mutex.
 
     :returns: True on success. Use :c:func:`clear_error` to get details about the error.
 
@@ -79,7 +79,7 @@ Mutex
 
 .. c:function:: bool mutex_unlock(mutex_t *mutex)
 
-    Unlocks a mutex.
+    Unlock a mutex.
 
     :returns: True on success. Use :c:func:`clear_error` to get details about the error.
 
@@ -136,12 +136,12 @@ Thread local storage
 
 .. c:function:: void *local_storage_get(local_storage_t *key)
 
-    Gets the value of the thread local storage.
+    Get the value of the thread local storage.
 
     :returns: The value associated with the current thread.
 
 .. c:function:: bool local_storage_set(local_storage_t *key, const void *value)
 
-    Sets the value of the thread local storage.
+    Set the value of the thread local storage.
 
     :returns: True on success. Use :c:func:`clear_error` to get details about the error.

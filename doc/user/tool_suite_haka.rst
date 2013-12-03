@@ -26,7 +26,7 @@ Options
 
 .. option:: --no-daemon
 
-    Do not run haka as daemon.
+    Do not run `haka` as daemon.
 
 .. option:: -c, --config
 

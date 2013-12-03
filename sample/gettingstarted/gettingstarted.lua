@@ -1,4 +1,4 @@
--- This script is meant to be launched with a capture type nfq or pcap
+-- This script is meant to be launched with a capture type nfqueue or pcap
 
 -- Mandatory to load ipv4 dissector, Once dissector is loaded, we can access
 -- all fields of IPv4 packets inside this script

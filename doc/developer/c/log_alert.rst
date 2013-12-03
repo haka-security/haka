@@ -34,12 +34,12 @@ Log
 
 .. c:function:: void setlevel(log_level level, const wchar_t *module)
 
-    Sets the logging level to display for a given module name. The `module` parameter can be
+    Set the logging level to display for a given module name. The `module` parameter can be
     `NULL` in which case it will set the default level.
 
 .. c:function:: log_level getlevel(const wchar_t *module)
 
-    Gets the logging level for a given module name.
+    Get the logging level for a given module name.
 
 Alert
 -----
@@ -84,7 +84,7 @@ Alert
 
     .. c:member:: double confidence_num
 
-        If ``confidence`` is HAKA_ALERT_NUMERIC, set this value as custom
+        If `confidence` is HAKA_ALERT_NUMERIC, set this value as custom
         confidence value.
 
     .. c:member:: alert_completion completion

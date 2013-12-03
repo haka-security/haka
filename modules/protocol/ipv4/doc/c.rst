@@ -57,4 +57,4 @@ IPv4 network
 
     Checks if IPv4 address is in network range.
 
-    :returns: `true` if ip address is in network range and `false` otherwise.
+    :returns: True if ip address is in network range and False otherwise.
