@@ -65,6 +65,7 @@ struct nfqueue_packet {
 };
 
 bool use_multithreading = true;
+size_t nfqueue_len = 1024;
 
 /* Iptables rules to add (iptables-restore format) */
 static const char iptables_config_template_begin[] =
@@ -359,6 +360,13 @@ static struct packet_module_state *init_state(int thread_id)
 	}
 
 	state->fd = nfq_fd(state->handle);
+
+	/* Change nfq queue len and netfilter receive size */
+	if (nfq_set_queue_maxlen(state->queue, nfqueue_len) < 0) {
+		message(HAKA_LOG_WARNING, MODULE_NAME, L"cannot change netfilter queue len");
+	}
+
+	nfnl_rcvbufsiz(nfq_nfnlh(state->handle), nfqueue_len * 1500);
 
 	return state;
 }
