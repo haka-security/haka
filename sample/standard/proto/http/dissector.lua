@@ -1,1 +1,0 @@
-http = require("protocol/http")

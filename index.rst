@@ -1,29 +1,27 @@
-.. Haka documentation master file, created by
-   sphinx-quickstart on Thu May 30 17:34:17 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
-Welcome to Haka's documentation!
+Welcome to Haka's Documentation!
 ================================
 
-Contents:
+Users
+^^^^^
 
 .. toctree::
-   :maxdepth: 3
-   :numbered:
+    :titlesonly:
+    :maxdepth: 2
 
-   doc/intro.rst
-   doc/build.rst
-   doc/getting_started.rst
-   doc/tutorial.rst
-   doc/tool_suite.rst
-   doc/rulearch.rst
-   doc/api/lua/main.rst
-   doc/api/c/main.rst
-   doc/debug.rst
+    doc/user/index.rst
+
+Developers
+^^^^^^^^^^
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 2
+
+    doc/developer/index.rst
 
 Indices and tables
-==================
+^^^^^^^^^^^^^^^^^^
 
 * :ref:`genindex`
 * :ref:`search`

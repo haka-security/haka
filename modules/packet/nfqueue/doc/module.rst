@@ -1,4 +1,3 @@
-.. highlightlang:: ini
 
 Netfilter queue `packet/nfqueue`
 ================================
@@ -21,7 +20,9 @@ Parameters
 
     List of comma-separated interfaces.
 
-    Example of possible values : ::
+    Example of possible values :
+
+    .. code-block:: ini
 
         # Capture loopback traffic
         interfaces = "lo"
@@ -46,7 +47,9 @@ Parameters
     
     Save filtered packets in the specified pcap file capture.
 
-    An example to set packet dumping for nfqueue (only revceived and filtered packets will be saved in pcap files) : ::
+    An example to set packet dumping for nfqueue (only received and filtered packets will be saved in pcap files) :
+
+    .. code-block:: ini
 
         dump = true
         dump_input = "/tmp/input.pcap"

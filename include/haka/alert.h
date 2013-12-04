@@ -54,12 +54,12 @@ struct alert {
 	uint64             *alert_ref;
 };
 
-#define ALERT(name, src, dst) \
-	struct alert_node *_sources[src+1] = {0}; \
-	struct alert_node *_targets[dst+1] = {0}; \
+#define ALERT(name, nsrc, ntgt) \
+	struct alert_node *_sources[nsrc+1] = {0}; \
+	struct alert_node *_targets[ntgt+1] = {0}; \
 	struct alert name = { \
-		sources: src==0 ? NULL : _sources, \
-		targets: dst==0 ? NULL : _targets,
+		sources: nsrc==0 ? NULL : _sources, \
+		targets: ntgt==0 ? NULL : _targets,
 
 #define ENDALERT };
 
@@ -69,8 +69,9 @@ struct alert {
 	wchar_t *_node##name##index_list[] = { __VA_ARGS__, NULL }; \
 	_node##name##index.list = _node##name##index_list
 
-#define ALERT_REF(a, ...) \
-	uint64 _alert_ref[] = { __VA_ARGS__, 0 }; \
+#define ALERT_REF(a, count, ...) \
+	uint64 _alert_ref[count] = { __VA_ARGS__ }; \
+	a.alert_ref_count = count; \
 	a.alert_ref = _alert_ref
 
 #define ALERT_METHOD_REF(a, ...) \

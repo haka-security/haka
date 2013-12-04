@@ -1,4 +1,3 @@
-.. highlightlang:: ini
 
 Pcap  `packet/pcap`
 ===================
@@ -6,7 +5,7 @@ Pcap  `packet/pcap`
 Description
 ^^^^^^^^^^^
 
-The module uses the library pcap to read packets from a file or from an real network
+The module uses the library pcap to read packets from a file or from a real network
 device.
 
 .. note:
@@ -18,26 +17,34 @@ Parameters
 
 .. describe:: interfaces
 
-    Selected interfaces.
+    List of comma-separated interfaces.
 
-    Example of possible values: ::
+    Example of possible values:
+
+    .. code-block:: ini
 
         # Capture loopback traffic
         interfaces = "lo"
         # Capture loopback traffic and eth0
-        # interfaces = "lo,eth0"
+        # interfaces = "lo, eth0"
         # Capture on all interfaces
         # interfaces = "any"
 
 .. describe:: file
 
-    Read packets from a pcap file. ``interfaces`` must be not be useed.
+    Read packets from a pcap file.
+
+.. note::
+
+    Only one of **interfaces** or **file** should be used.
 
 .. describe:: output
 
     Save unfiltered packets to the specified pcap output file.
 
-    Example of capturing packets from a pcap file and saving unfiltered ones in a pcap output file: ::
+    Example of capturing packets from a pcap file and saving unfiltered ones in a pcap output file:
+
+    .. code-block:: ini
 
         file = "/tmp/input.pcap"
         output = "/tmp/output.pcap"

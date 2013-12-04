@@ -45,7 +45,7 @@ debug tcp-connection: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 50696 --> 80
 warn filter: authorizing http traffic
 info alert: id = <>
-	severity = low
+	severity = high
 	description = 'sqlmap' scan detected
 	sources = {
 		address: 192.168.10.1

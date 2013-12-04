@@ -254,4 +254,3 @@ texinfo_documents = [
 #texinfo_show_urls = 'footnote'
 
 # -- Local variables -----------------------------------------------------------
-rst_prolog = '.. |haka_install_path| replace:: @CMAKE_HAKA_INSTALL_PREFIX@' 

@@ -1,6 +1,6 @@
 
-Syslog `log/syslog`
-===================
+Syslog logging `log/syslog`
+===========================
 
 Description
 ^^^^^^^^^^^
@@ -13,7 +13,7 @@ syslogd.conf accordingly.
 For instance: ::
 
     # HAKA syslog en Facility log level local0
-    local0.*   /var/log/haka
+    local0.*   /var/log/haka.log
 
 Parameters
 ^^^^^^^^^^
