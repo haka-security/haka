@@ -4,31 +4,24 @@
 
 .. highlightlang:: lua
 
-.. lua:currentmodule:: haka
+Rules
+=====
 
-Defining rules
-==============
+.. lua:module:: haka
 
-This section introduces how to define security rules.
-
-Single rule
+Single Rule
 -----------
-
-As detailed herefater, a rule is made of a list of hooks
-and an evaluation function:
 
 .. lua:class:: rule
 
-    .. lua:data:: hooks
+    .. lua:data:: hook
 
-        An array of hook names where the rule should be installed.
+        Event that will trigger the evaluation function.
 
-    .. lua:method:: eval(self, d)
+    .. lua:method:: eval(...)
 
-        The function to call to evaluate the rule.
-        
-        :param d: The dissector data.
-        :paramtype d: :lua:class:`dissector_data`
+        The function to call to evaluate the rule. The number of paramters depends
+        on the registered event.
 
 .. lua:function:: rule(r)
 
@@ -37,59 +30,44 @@ and an evaluation function:
     :param r: Rule description.
     :paramtype r: :lua:class:`rule`
 
-Example:
+Example: ::
 
-.. literalinclude:: ../../sample/ruleset/ipv4/security.lua
-    :language: lua
-    :tab-width: 4
+   TODO
 
-Rule group
+Rule Group
 ----------
 
 Rule group allow to customize the rule evaluation.
 
 .. lua:class:: rule_group
 
-    .. lua:data:: name
+    .. lua:method:: init(...)
 
-        Name of the group.
+        This function is called whenever a group start to be evaluated.
 
-    .. lua:method:: init(self, d)
-
-        This function is called whenever a group start to be evaluated. `d` is the
-        dissector data for the current hook (:lua:class:`dissector_data`).
-
-    .. lua:method:: fini(self, d)
+    .. lua:method:: fini(...)
 
         If all the rules of the group have been evaluated, this callback is
-        called at the end. `d` is the dissector data for the current hook
-        (:lua:class:`dissector_data`).
+        called at the end.
 
-    .. lua:method:: continue(self, d, ret)
+    .. lua:method:: continue(ret, ...)
 
         After each rule evaluation, the function is called to know if the evaluation
         of the other rules should continue. If not, the other rules will be skipped.
-        
-        :param ret: Value returned by the evaluated rule.
-        :param d: Data that where given to the evaluated rule.
-        :paramtype d: :lua:class:`dissector_data`
 
-    .. lua:method:: rule(self, r)
+        :param ret: Value returned by the evaluated rule.
+
+    .. lua:method:: rule(eval)
 
         Register a rule for this group.
 
-        .. seealso:: :lua:func:`haka.rule`.
+        :param eval: Evaluation function.
 
 .. lua:function:: rule_group(rg)
 
     Register a new rule group. `rg` should be a table that will be used to initialize the
-    rule group. It can contains `name`, `init`, `fini` and `continue`.
+    rule group. It can contains `hook`, `init`, `fini` and `continue`.
 
     :returns: The new group.
     :rtype: :lua:class:`rule_group`
 
-Example:
-
-.. literalinclude:: ../../sample/ruleset/tcp/rules.lua
-    :language: lua
-    :tab-width: 4

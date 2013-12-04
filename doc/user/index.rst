@@ -14,10 +14,12 @@ Welcome to Haka's User Guide!
     gettingstarted.rst
     tool_suite.rst
     tutorial.rst
+    event.rst
     rule.rst
-    log_alert.rst
     dissector.rst
-    packet.rst
+    grammar.rst
+    state_machine.rst
+    log_alert.rst
     misc.rst
     debug.rst
     external_modules.rst
