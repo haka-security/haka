@@ -1,3 +1,6 @@
+.. This Source Code Form is subject to the terms of the Mozilla Public
+.. License, v. 2.0. If a copy of the MPL was not distributed with this
+.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 .. highlightlang:: c
 
@@ -22,103 +25,6 @@ Types
 
 Functions
 ---------
-
-TCP
-^^^
-
-.. c:function:: struct tcp *tcp_dissect(struct ipv4 *packet)
-
-    Dissect TCP packet.
-
-.. c:function:: struct ipv4 *tcp_forge(struct tcp *packet)
-
-    Forge IPv4 packet from TCP.
-
-.. c:function:: struct tcp *tcp_create(struct ipv4 *packet)
-
-    Create a new TCP packet on top of the given IPv4.
-
-.. c:function:: void tcp_release(struct tcp *packet)
-
-    Release TCP structure memory allocation.
-
-.. c:function:: void tcp_pre_modify(struct tcp *packet)
-
-    Make TCP data modifiable.
-
-.. c:function:: void tcp_compute_checksum(struct tcp *packet)
-
-    Compute TCP checksum according to :rfc:`1071`.
-
-.. c:function:: bool tcp_verify_checksum(const struct tcp *packet)
-
-    Verify TCP checksum.
-
-.. c:function:: const uint8 *tcp_get_payload(const struct tcp *packet)
-
-    Get TCP payload data.
-
-.. c:function:: uint8 *tcp_get_payload_modifiable(struct tcp *packet)
-
-    Get TCP modifiable payload data.
-
-.. c:function:: size_t tcp_get_payload_length(const struct tcp *packet)
-
-    Get TCP payload length.
-
-.. c:function:: uint8 *tcp_resize_payload(struct tcp *packet, size_t size)
-
-    Resize the TCP packet.
-
-.. c:function:: void tcp_action_drop(struct tcp *packet)
-
-    Drop the TCP packet.
-
-.. c:function:: bool tcp_valid(struct tcp *packet)
-
-    Get if the packet is valid and can continue to be processed.
-
-.. c:function:: uint16 tcp_get_srcport(const struct tcp *tcp)
-                uint8 tcp_get_dstport(const struct tcp *tcp)
-                uint32 tcp_get_seq(const struct tcp *tcp)
-                uint8 tcp_get_ack_seq(const struct tcp *tcp)
-                uint8 tcp_get_res(const struct tcp *tcp)
-                uint8 tcp_get_window_size(const struct tcp *tcp)
-                uint8 tcp_get_urgent_pointer(const struct tcp *tcp)
-                uint16 tcp_get_checksum(const struct tcp *tcp)
-                uint8 tcp_get_hdr_len(const struct tcp *tcp)
-                uint8 tcp_get_flags(const struct tcp *tcp)
-                uint8 tcp_get_flags_fin(const struct tcp *tcp)
-                uint8 tcp_get_flags_syn(const struct tcp *tcp)
-                uint8 tcp_get_flags_rst(const struct tcp *tcp)
-                uint8 tcp_get_flags_psh(const struct tcp *tcp)
-                uint8 tcp_get_flags_ack(const struct tcp *tcp)
-                uint8 tcp_get_flags_urg(const struct tcp *tcp)
-                uint8 tcp_get_flags_ecn(const struct tcp *tcp)
-                uint8 tcp_get_flags_cwr(const struct tcp *tcp)
-
-    TCP accessors.
-
-.. c:function:: void tcp_set_srcport(struct tcp *tcp, uint16 v)
-                void tcp_set_dstport(struct tcp *tcp, uint16 v)
-                void tcp_set_seq(struct tcp *tcp, uint32 v)
-                void tcp_set_ack_seq(struct tcp *tcp, uint32 v)
-                void tcp_set_res(struct tcp *tcp, uint8 v)
-                void tcp_set_window_size(struct tcp *tcp, uint16 v)
-                void tcp_set_urgent_pointer(struct ipv4 *ip, uint16 v)
-                void tcp_set_checksum(struct tcp *tcp, uint16 v)
-                void tcp_set_hdr_len(struct tcp *tcp, uint8 v)
-                void tcp_set_flags(struct tcp *tcp, uint8 v)
-                void tcp_set_flags_fin(struct tcp *tcp, bool v)
-                void tcp_set_flags_syn(struct tcp *tcp, bool v)
-                void tcp_set_flags_rst(struct tcp *tcp, bool v)
-                void tcp_set_flags_psh(struct tcp *tcp, bool v)
-                void tcp_set_flags_ack(struct tcp *tcp, bool v)
-                void tcp_set_flags_urg(struct tcp *tcp, bool v)
-                void tcp_set_flags_ecn(struct tcp *tcp, bool v)
-                void tcp_set_flags_cwr(struct tcp *tcp, bool v)
-
-    TCP setters.
 
 TCP connection
 ^^^^^^^^^^^^^^
@@ -149,13 +55,6 @@ TCP connection
 .. c:function:: void tcp_connection_drop(struct tcp_connection *tcp_conn)
 
     Drop the TCP connection.
-
-.. c:function:: uint16 tcp_connection_get_srcport(const struct tcp_connection *tcp_conn)
-                uint16 tcp_connection_get_dstport(const struct tcp_connection *tcp_conn)
-                ipv4addr tcp_connection_get_srcip(const struct tcp_connection *tcp_conn)
-                ipv4addr tcp_connection_get_dstip(const struct tcp_connection *tcp_conn)
-
-    TCP connection accessors.
 
 TCP stream
 ^^^^^^^^^^

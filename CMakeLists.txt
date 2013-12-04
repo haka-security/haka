@@ -1,3 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Initialize
 cmake_minimum_required(VERSION 2.6)
@@ -155,8 +158,6 @@ include_directories(include)
 
 # Tests
 enable_testing()
-find_package(Check REQUIRED)
-include_directories(${CHECK_INCLUDE_DIRS})
 set(TEST_RUNDIR ${CMAKE_BINARY_DIR}/test/${CMAKE_INSTALL_PREFIX})
 
 add_custom_target(pretests-build
@@ -182,25 +183,14 @@ add_custom_target(tests
 
 # Add sub directories)
 add_subdirectory(external)
+
+include_directories(${UTHASH_INCLUDE})
+
 add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(modules)
 add_subdirectory(sample)
 add_subdirectory(include)
-
-# Documentation
-find_package(Sphinx)
-if(SPHINX_FOUND)
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
-	add_custom_target(doc
-		ALL
-		COMMAND ${SPHINX_EXECUTABLE} -b html -c ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/doc
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-		COMMENT "Generating API documentation with Sphinx" VERBATIM
-	)
-
-	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka/manual)
-endif(SPHINX_FOUND)
 
 # add a target to run cppcheck on the sources
 find_package(Cppcheck)
@@ -225,7 +215,11 @@ set(CPACK_PACKAGE_VERSION_MAJOR ${HAKA_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${HAKA_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${HAKA_VERSION_PATCH})
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${CMAKE_SYSTEM_PROCESSOR}_${LUA}")
+set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_BINARY_DIR}/CPackEnv.cmake")
+FILE(WRITE "${CPACK_PROJECT_CONFIG_FILE}" "set(ENV{LD_LIBRARY_PATH} \"${CMAKE_CURRENT_BINARY_DIR}/_CPack_Packages/\${CPACK_TOPLEVEL_TAG}/DEB/\${CPACK_PACKAGE_FILE_NAME}/${HAKA_INSTALL_PREFIX}/lib\")\n")
+
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/postinst;${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/postrm;${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/preinst;${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/prerm;${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/conffiles;")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 install(FILES LICENSE.txt DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka)
 set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt)

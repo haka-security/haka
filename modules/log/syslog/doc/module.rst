@@ -1,6 +1,9 @@
+.. This Source Code Form is subject to the terms of the Mozilla Public
+.. License, v. 2.0. If a copy of the MPL was not distributed with this
+.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Syslog `log/syslog`
-===================
+Syslog logging `log/syslog`
+===========================
 
 Description
 ^^^^^^^^^^^
@@ -13,7 +16,7 @@ syslogd.conf accordingly.
 For instance: ::
 
     # HAKA syslog en Facility log level local0
-    local0.*   /var/log/haka
+    local0.*   /var/log/haka.log
 
 Parameters
 ^^^^^^^^^^

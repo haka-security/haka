@@ -1,0 +1,29 @@
+------------------------------------
+-- Loading dissectors
+------------------------------------
+
+-- We assign ipv4 because we'll need some function provided by dissector later
+-- in a security rule
+local ipv4 = require('protocol/ipv4')
+
+------------------------------------
+-- Security rule
+------------------------------------
+haka.rule{
+	-- This rule is applied on each IP incoming packet
+	hook = haka.event('ipv4', 'receive_packet'),
+	eval = function (pkt)
+		-- We assign a variable to an IP address thanks to the ipv4.addr
+		-- function
+		local bad_ip = ipv4.addr('192.168.10.10')
+		if pkt.src == bad_ip then
+			-- We want to block this IP
+			haka.alert{
+				description = string.format("Filtering IP %s", bad_ip),
+				severity = 'low'
+			}
+			pkt:drop()
+		end
+		-- All other packets will be accepted
+	end
+}

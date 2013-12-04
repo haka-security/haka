@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 include(FindPackageHandleStandardArgs)
 
 find_program(SPHINX_EXECUTABLE NAMES sphinx-build
@@ -10,5 +14,4 @@ if(SPHINX_EXECUTABLE)
 	set(SPHINX_FOUND)
 endif(SPHINX_EXECUTABLE)
 
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Sphinx DEFAULT_MSG SPHINX_EXECUTABLE)
-MARK_AS_ADVANCED(SPHINX_EXECUTABLE)
+find_package_handle_standard_args(Sphinx REQUIRED_VARS SPHINX_EXECUTABLE)

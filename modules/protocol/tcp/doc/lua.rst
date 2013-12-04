@@ -1,3 +1,6 @@
+.. This Source Code Form is subject to the terms of the Mozilla Public
+.. License, v. 2.0. If a copy of the MPL was not distributed with this
+.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 .. highlightlang:: lua
 
@@ -87,7 +90,7 @@ TCP
 
     .. lua:data:: flags
 
-        TCP flags.
+        TCP flags table.
 
         .. lua:data:: fin
                       syn
@@ -171,8 +174,8 @@ TCP connection
         that belong to this connection will be silently dropped.
 
 Example
-^^^^^^^
+-------
 
-.. literalinclude:: ../../../../sample/standard/proto/tcp/rules.lua
+.. literalinclude:: ../../../../sample/ruleset/tcp/rules.lua
     :language: lua
     :tab-width: 4

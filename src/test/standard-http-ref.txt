@@ -1,7 +1,7 @@
-debug filter: entering packet filetring rules : 50692 --> 80
+debug filter: entering packet filtering rules : 50692 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
-debug filter: entering packet filetring rules : 50693 --> 80
+debug filter: entering packet filtering rules : 50693 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
 info alert: id = <>
@@ -14,7 +14,7 @@ info alert: id = <>
 		service: tcp/80, http
 	}
 debug tcp-connection: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
-debug filter: entering packet filetring rules : 50694 --> 80
+debug filter: entering packet filtering rules : 50694 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
 info alert: id = <>
@@ -27,7 +27,7 @@ info alert: id = <>
 		service: tcp/80, http
 	}
 debug tcp-connection: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
-debug filter: entering packet filetring rules : 50695 --> 80
+debug filter: entering packet filtering rules : 50695 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
 info alert: id = <>
@@ -39,11 +39,11 @@ info alert: id = <>
 		address: 192.168.20.1
 		service: tcp/80, http
 	}
-debug filter: entering packet filetring rules : 50696 --> 80
+debug filter: entering packet filtering rules : 50696 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
 info alert: id = <>
-	severity = low
+	severity = high
 	description = 'sqlmap' scan detected
 	sources = {
 		address: 192.168.10.1

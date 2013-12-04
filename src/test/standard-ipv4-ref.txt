@@ -1,12 +1,12 @@
 info alert: id = <>
-	severity = low
+	severity = high
 	confidence = medium
 	description = Land attack detected
 	sources = {
 		address: 192.168.20.1
 	}
 info alert: id = <>
-	severity = low
+	severity = high
 	confidence = medium
 	description = Land attack detected
 	sources = {

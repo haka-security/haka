@@ -1,3 +1,4 @@
+
 HAKA Runtime
 ============
 
@@ -64,3 +65,10 @@ Run `make doc` to generate documentation in `html`. The documentation is then av
 in `doc` inside your build folder.
 
 The documentation contains more information about building and using Haka.
+
+License
+-------
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.

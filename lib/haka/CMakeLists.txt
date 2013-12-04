@@ -1,3 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 add_subdirectory(lua)
 
@@ -22,6 +25,9 @@ add_library(libhaka SHARED
 	vbuffer.c
 	container/list.c
 	container/vector.c)
+
+set_target_properties(libhaka PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}
+	SOVERSION ${HAKA_VERSION_MAJOR})
 
 LUA_LINK(libhaka)
 find_package(DL REQUIRED)

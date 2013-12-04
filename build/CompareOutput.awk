@@ -1,4 +1,8 @@
 #!/bin/awk
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 BEGIN {
 	show = 0
 	trace = 0
@@ -33,6 +37,10 @@ $0 ~ /^debug state-machine:/ {
 }
 
 $0 ~ /^debug event: signal/ {
+	next;
+}
+
+$0 ~ /^info pcap: progress/ {
 	next;
 }
 

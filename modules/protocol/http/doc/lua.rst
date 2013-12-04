@@ -1,15 +1,18 @@
+.. This Source Code Form is subject to the terms of the Mozilla Public
+.. License, v. 2.0. If a copy of the MPL was not distributed with this
+.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 .. highlightlang:: lua
 
 HTTP
 ====
 
-.. lua:module:: http
+.. lua:module:: http.uri
 
 Types
 -----
 
-.. lua:class:: uri.split
+.. lua:class:: split
 
     .. lua:data:: scheme
 
@@ -35,7 +38,7 @@ Types
 
         URI password (from userinfo).
 
-    .. note:: rfc 3986 states that the format "user:password" in the userinfo field is deprecated
+    .. note:: rfc 3986 states that the format "user:password" in the userinfo field is deprecated.
 
     .. lua:data:: port
 
@@ -49,7 +52,7 @@ Types
 
         URI query.
 
-    .. lua:class :: args
+    .. lua:data:: args
 
         URI query's parameters.
 
@@ -57,44 +60,56 @@ Types
 
         URI fragment.
 
-    .. lua:function:: tostring(uri.split)
+    .. lua:function:: tostring(split_uri)
 
-		unsplit URI.
+        Recreate the URI.
 
-    .. lua:function:: normalize(uri.split)
+    .. lua:method:: normalize()
 
-		Normalize URI according to rfc 3986
+        Normalize URI according to rfc 3986: remove dot-segments in path, capitalize letters in esape sequences,
+        decode percent-encoded octets (safe decoding), remove default port, etc.
 
-.. lua:function:: uri.split(str)
+.. lua:function:: split(str)
 
     Split URI into subparts.
 
     Example: ::
 
-	    uri.split('http://www.example.com:8888/foo/page.php')
+        http.uri.split('http://www.example.com:8888/foo/page.php')
 
-.. lua:class:: uri.cookies
 
-    .. lua function tostring(uri.cookies)
+.. lua:class:: cookies
 
-		 return cookie string
+    Store the cookies as a table of key-value pairs.
 
-.. lua:class:: uri.cookies(str)
+    .. lua function tostring(cookies)
 
-	Store cookies as a list of key-value pairs.
+        Return cookies as a string.
+
+.. lua:function:: cookies(str)
+
+    Parse the cookies.
+
+    :returns: :lua:class:`cookies`
+
+
 
 Functions
 ---------
 
-.. lua:function:: uri.normalize(str)
+.. lua:function:: normalize(str)
 
-	Normalize URI according to rfc 3986: remove dot-segments in path, capitalize letters in esape sequences, decode percent-encoded octets (safe decoding), remove default port, etc.
+    Normalize URI according to rfc 3986.
+
+    .. seealso:: :lua:func:`split:normalize`
 
 
 
 
 Dissector
 ---------
+
+.. lua:module:: http
 
 .. lua:class:: http
 
@@ -107,6 +122,9 @@ Dissector
     .. seealso:: :lua:class:`haka.dissector_data`.
 
     .. lua:data:: request
+
+        Inside a `http-request` or `http-response` hook, the :lua:data:`http:request` table holds information about the
+        current request.
 
         .. lua:data:: method
                       uri
@@ -123,6 +141,10 @@ Dissector
             Stream of HTTP data.
 
     .. lua:data:: response
+
+        Inside a `http-response` hook, the :lua:data:`http:response` table holds information about the current response.
+
+        .. note:: This table is not available inside the hook `http-request`.
 
         .. lua:data:: version
                       status
@@ -141,6 +163,6 @@ Dissector
 Example
 -------
 
-.. literalinclude:: ../../../../sample/standard/proto/http/policy.lua
+.. literalinclude:: ../../../../sample/ruleset/http/policy.lua
     :language: lua
     :tab-width: 4

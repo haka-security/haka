@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "haka/tcp.h"
 
 #include <stdlib.h>
@@ -53,7 +57,6 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 		TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
 		TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
 		ALERT(invalid_packet, 1, 1)
-
 			description: L"invalid tcp packet, size is too small",
 			severity: HAKA_ALERT_LOW,
 		ENDALERT
