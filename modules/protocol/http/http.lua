@@ -364,22 +364,6 @@ local function string_compare(a, b)
 	end
 end
 
-local function sorted_pairs(t)
-	local a = {}
-	for n in pairs(t) do
-		table.insert(a, n)
-	end
-
-	table.sort(a, string_compare)
-	local i = 0
-	return function ()   -- iterator function
-		i = i + 1
-		if a[i] == nil then return nil
-		else return a[i], t[a[i]]
-		end
-	end
-end
-
 local function dump(t, indent)
 	if not indent then indent = "" end
 
@@ -462,7 +446,7 @@ local function build_headers(stream, headers, headers_order)
 		end
 	end
 	local headers_copy = dict(headers_order)
-	for name, value in pairs(headers) do
+	for name, value in sorted_pairs(headers) do
 		if value and not contains(headers_copy, name) then
 			stream:insert(name)
 			stream:insert(": ")

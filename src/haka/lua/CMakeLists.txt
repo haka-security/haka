@@ -27,6 +27,7 @@ lua_compile(NAME haka-lua FILES
 	context.lua
 	state_machine.lua
 	grammar.lua
+	utils.lua
 	dissector.lua)
 lua_compile(NAME haka-lua FILES interactive.lua FLAGS ${LUA_FLAGS_DEBUG})
 

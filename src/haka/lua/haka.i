@@ -177,6 +177,7 @@ int _getswigclassmetatable(struct lua_State *L)
 	end
 
 	require('class')
+	require('utils')
 
 	function haka.initialize()
 		require('events')
