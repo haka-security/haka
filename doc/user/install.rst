@@ -34,7 +34,7 @@ Some packages are required to build and run Haka. This operation make take some 
 
 .. code-block:: console
 
-    $ sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 \
+    $ sudo apt-get install build-essential cmake swig python-sphinx liblua5.2 \
     tshark check rsync libpcap-dev gawk libedit-dev libnetfilter-queue-dev
 
 Download the sources

@@ -20,7 +20,7 @@ Required
 * cmake
 * swig
 * python-sphinx
-* liblua5.1
+* liblua5.2
 * tshark
 * check
 * rsync
@@ -32,7 +32,7 @@ Debian:
 
 .. code-block:: console
 
-    $ sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 tshark check rsync libpcap-dev gawk libedit-dev
+    $ sudo apt-get install build-essential cmake swig python-sphinx liblua5.2 tshark check rsync libpcap-dev gawk libedit-dev
 
 Optional
 ^^^^^^^^
@@ -82,7 +82,7 @@ The configuration with cmake supports the following options:
 
     Select the build type to be compiled (default: *Release*)
 
-.. option:: LUA=[lua51|luajit]
+.. option:: LUA=[lua|luajit]
 
     Choose the Lua version to use (default: *luajit*)
 
