@@ -1,3 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if(LUA STREQUAL "luajit")
 	set(HAKA_LUAJIT 1)
@@ -8,7 +11,7 @@ if(LUA STREQUAL "luajit")
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funwind-tables")
 	endif()
 elseif(LUA STREQUAL "lua51")
-	find_package(Lua51 REQUIRED)
+	find_package(Lua REQUIRED)
 	set(HAKA_LUAJIT 0)
 	set(HAKA_LUA51 1)
 elseif(LUA STREQUAL "custom")

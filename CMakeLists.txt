@@ -1,3 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Initialize
 cmake_minimum_required(VERSION 2.6)
@@ -155,8 +158,6 @@ include_directories(include)
 
 # Tests
 enable_testing()
-find_package(Check REQUIRED)
-include_directories(${CHECK_INCLUDE_DIRS})
 set(TEST_RUNDIR ${CMAKE_BINARY_DIR}/test/${CMAKE_INSTALL_PREFIX})
 
 add_custom_target(pre-tests-build

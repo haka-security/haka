@@ -1,3 +1,6 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %{
 #include <haka/log.h>
@@ -7,15 +10,16 @@
 static wchar_t* str2wstr(const char *str, int len)
 {
 	wchar_t *p;
-	if (str == 0 || len < 0)
+	if (str == 0 || len < 0) {
 		return 0;
+	}
 
 	p = (wchar_t *)malloc((len+1)*sizeof(wchar_t));
-	if (p == 0)
+	if (p == 0) {
 		return 0;
+	}
 
-	if (mbstowcs(p, str, len) == -1)
-	{
+	if (mbstowcs(p, str, len) == -1) {
 		free(p);
 		return 0;
 	}
@@ -28,7 +32,10 @@ static wchar_t* str2wstr(const char *str, int len)
 %typemap(in, checkfn="SWIG_lua_isnilstring", fragment="SWIG_lua_isnilstring") wchar_t *
 %{
 	$1 = str2wstr(lua_tostring(L, $input), lua_rawlen(L, $input));
-	if ($1 == 0) { lua_pushfstring(L, "Error in converting to wchar (arg %d)", $input); goto fail; }
+	if ($1 == 0) {
+		lua_pushfstring(L, "Error in converting to wchar (arg %d)", $input);
+		SWIG_fail;
+	}
 %}
 
 %typemap(freearg) wchar_t *

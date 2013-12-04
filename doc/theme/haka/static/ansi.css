@@ -1,13 +1,13 @@
-.ansi-bold {
-    font-weight: bold;
-}
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 .ansi-black {
     color: #000000;
 }
 
-.ansi-red {
-    color: #b21717;
+.ansi-white {
+    color: #b2b2b2;
 }
 
 .ansi-green {
@@ -16,6 +16,10 @@
 
 .ansi-yellow {
     color: #b26717;
+}
+
+.ansi-red {
+    color: #b21717;
 }
 
 .ansi-blue {
@@ -28,10 +32,6 @@
 
 .ansi-cyan {
     color: #17b2b2;
-}
-
-.ansi-white {
-    color: #b2b2b2;
 }
 
 .ansi-black.ansi-bold {
@@ -70,8 +70,8 @@
     background-color: #000000;
 }
 
-.ansi-bg_red {
-    background-color: #b21717;
+.ansi-bg_white {
+    background-color: #b2b2b2;
 }
 
 .ansi-bg_green {
@@ -80,6 +80,10 @@
 
 .ansi-bg_yellow {
     background-color: #b26717;
+}
+
+.ansi-bg_red {
+    background-color: #b21717;
 }
 
 .ansi-bg_blue {
@@ -94,6 +98,7 @@
     background-color: #17b2b2;
 }
 
-.ansi-bg_white {
-    background-color: #b2b2b2;
+.ansi-bold {
+    font-weight: bold;
 }
+

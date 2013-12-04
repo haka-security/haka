@@ -1,19 +1,6 @@
-/* ------------------------------------------------------------
- * --- Argc & Argv ---
- * ------------------------------------------------------------
- *
- *  Use it as follow:
- *
- *    %apply (int ARGC, char **ARGV) { (size_t argc, const char **argv) }
- *    extern int mainApp(size_t argc, const char **argv);
- *
- *  then in the lua:
- *
- *    args = { "arg0", "arg1" }
- *    mainApp(args);
- *
- * ------------------------------------------------------------ */
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %typemap(in) (int ARGC, char **ARGV) {
 	if (lua_istable(L,$input)) {
