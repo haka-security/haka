@@ -25,6 +25,9 @@
 
 #endif
 
+#ifdef HAKA_LUA52
+#define lua_objlen    lua_rawlen
+#endif
 
 struct lua_State;
 

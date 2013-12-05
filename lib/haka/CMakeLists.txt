@@ -2,11 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-add_subdirectory(lua)
-
 include_directories(${LIBINIPARSER_INCLUDE})
 
 # Haka library shared between runtime and modules
+
+find_package(SWIG REQUIRED)
+include(UseSWIG)
+swig_process(libhakalua lua lua/object.i)
+
 add_library(libhaka SHARED
 	packet.c
 	log.c
@@ -24,7 +27,12 @@ add_library(libhaka SHARED
 	state_machine.c
 	vbuffer.c
 	container/list.c
-	container/vector.c)
+	container/vector.c
+	lua/state.c
+	lua/ref.c
+	lua/lua.c
+	${SWIG_libhakalua_FILES}
+)
 
 set_target_properties(libhaka PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}
 	SOVERSION ${HAKA_VERSION_MAJOR})
@@ -33,7 +41,6 @@ LUA_LINK(libhaka)
 find_package(DL REQUIRED)
 target_link_libraries(libhaka ${DL_LIBRARIES})
 target_link_libraries(libhaka ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(libhaka libhaka-lua)
 target_link_libraries(libhaka libiniparser)
 target_link_libraries(libhaka rt)
 target_link_libraries(libhaka m)

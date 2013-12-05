@@ -54,7 +54,7 @@ enum alert_node_type { HAKA_ALERT_NODE_ADDRESS, HAKA_ALERT_NODE_SERVICE };
 		$1 = malloc((size+1)*sizeof(wchar_t *));
 		for (i = 0; i < size; ++i) {
 			lua_rawgeti(L, $input, i+1);
-			$1[i] = str2wstr(lua_tostring(L, -1), lua_rawlen(L, -1));
+			$1[i] = str2wstr(lua_tostring(L, -1), lua_objlen(L, -1));
 			lua_pop(L, 1);
 		}
 		$1[i] = NULL;

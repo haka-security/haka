@@ -12,7 +12,8 @@
 #include <ctype.h>
 #include <haka/lua/object.h>
 #include <luadebug/lua.h>
-#include "../app.h"
+#include "app.h"
+#include "lua/state.h"
 
 
 extern int luaopen_haka(lua_State *L);
