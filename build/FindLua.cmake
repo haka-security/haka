@@ -4,6 +4,13 @@
 
 include(FindLua51)
 
+find_program(LUA_COMPILER
+	NAMES luac51 luac5.1 luac-5.1 luac
+	HINTS $ENV{LUA_DIR}
+	PATH_SUFFIXES bin
+	DOC "Lua compiler"
+)
+
 set(LUA_FLAGS_NONE "")
 set(LUA_FLAGS_DEBUG "")
 set(LUA_FLAGS_MEMCHECK "")
