@@ -4,14 +4,14 @@
 
 %module haka
 
-%include "time.si"
+%include "lua/time.si"
 
 %{
 #include <stdint.h>
 #include <wchar.h>
 
 #include "app.h"
-#include "state.h"
+#include "lua/state.h"
 #include <haka/packet_module.h>
 #include <haka/thread.h>
 #include <haka/module.h>

@@ -5,9 +5,12 @@
 include_directories(${LIBINIPARSER_INCLUDE})
 
 # Haka library shared between runtime and modules
+
 find_package(SWIG REQUIRED)
 include(UseSWIG)
-swig_add_module(libhaka lua SHARED
+swig_process(libhakalua lua lua/object.i)
+
+add_library(libhaka SHARED
 	packet.c
 	log.c
 	log_module.c
@@ -23,7 +26,7 @@ swig_add_module(libhaka lua SHARED
 	container/list.c
 	lua/state.c
 	lua/ref.c
-	lua/object.i
+	${SWIG_libhakalua_FILES}
 )
 
 set_target_properties(libhaka PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}

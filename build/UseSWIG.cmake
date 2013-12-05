@@ -331,3 +331,19 @@ MACRO(SWIG_LINK_LIBRARIES name)
   ENDIF(SWIG_MODULE_${name}_REAL_NAME)
 ENDMACRO(SWIG_LINK_LIBRARIES name)
 
+#
+# Process Swig files
+#
+MACRO(SWIG_PROCESS name language)
+  SWIG_MODULE_INITIALIZE(${name} ${language})
+
+  SET(swig_generated_sources)
+  FOREACH(it ${ARGN})
+    SWIG_ADD_SOURCE_TO_MODULE(${name} swig_generated_source ${it})
+    SET(swig_generated_sources ${swig_generated_sources} "${swig_generated_source}")
+  ENDFOREACH(it)
+  GET_DIRECTORY_PROPERTY(swig_extra_clean_files ADDITIONAL_MAKE_CLEAN_FILES)
+  SET_DIRECTORY_PROPERTIES(PROPERTIES
+    ADDITIONAL_MAKE_CLEAN_FILES "${swig_extra_clean_files};${swig_generated_sources}")
+  SET(SWIG_${name}_FILES ${swig_generated_sources})
+ENDMACRO(SWIG_PROCESS)
