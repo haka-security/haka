@@ -79,7 +79,10 @@ function table_mt:top(field, nb)
 	nb = nb or 10
 	assert(field, "missing field parameter")
 	local grouped = group_by(self, field)
-	local sorted = order_by(grouped, function(p, q) return #p[2] > #q[2] end)
+	local sorted = order_by(grouped, function(p, q)
+		return #p[2] > #q[2] or
+			(#p[2] == #q[2] and p[1] > q[1])
+	end)
 
 	for _, entry in ipairs(sorted) do
 		if nb <= 0 then break end
