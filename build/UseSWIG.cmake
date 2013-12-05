@@ -124,6 +124,8 @@ MACRO(SWIG_GET_WRAPPER_DEPENDENCIES swigFile genWrapper language DEST_VARIABLE)
   FOREACH(it ${swig_getdeps_include_directories})
     SET(swig_getdeps_include_dirs ${swig_getdeps_include_dirs} "-I${it}")
   ENDFOREACH(it)
+  get_filename_component(swig_getdeps_depsdir ${swig_getdeps_depsfile} PATH)
+  file(MAKE_DIRECTORY ${swig_getdeps_depsdir})
   EXECUTE_PROCESS(
     COMMAND ${SWIG_EXECUTABLE}
     -MM -MF ${swig_getdeps_depsfile} ${swig_getdeps_extra_flags}
