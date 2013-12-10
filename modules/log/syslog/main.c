@@ -62,7 +62,6 @@ struct log_module HAKA_MODULE = {
 		type:        MODULE_LOG,
 		name:        L"Syslog logger",
 		description: L"Logger to syslog",
-		author:      L"Arkoon Network Security",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup

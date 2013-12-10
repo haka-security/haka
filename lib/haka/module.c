@@ -96,8 +96,18 @@ struct module *module_load(const char *module_name, struct parameters *args)
 
 	if (atomic_get(&module->ref) == 0) {
 		/* Initialize the module */
-		messagef(HAKA_LOG_INFO, L"core", L"load module '%s'\n\t%ls, %ls", full_module_name,
-		         module->name, module->author);
+		if (module->name && module->author) {
+			messagef(HAKA_LOG_INFO, L"core", L"load module '%s', %ls, %ls",
+			         full_module_name, module->name, module->author);
+		}
+		else if (module->name || module->author) {
+			messagef(HAKA_LOG_INFO, L"core", L"load module '%s', %ls%ls",
+			         full_module_name, module->name ? module->name : L"",
+			         module->author ? module->author : L"");
+		}
+		else {
+			messagef(HAKA_LOG_INFO, L"core", L"load module '%s'", full_module_name);
+		}
 
 		if (module->init(args) || check_error()) {
 			if (check_error())

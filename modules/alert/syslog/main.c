@@ -65,7 +65,6 @@ struct alert_module HAKA_MODULE = {
 		type:        MODULE_ALERT,
 		name:        L"Syslog alert",
 		description: L"Alert output to syslog",
-		author:      L"Arkoon Network Security",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup
