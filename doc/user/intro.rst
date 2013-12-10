@@ -16,14 +16,20 @@ Major features
 * Filter packet from Lua policy files
 * Alter packet from Lua policy files
 * Inject new packet from Lua policy files
-* Filter packet in an interfactive fashion way
+* Filter packet in an interactive fashion way
 * Debug security rules
 * And more features coming soon ...
 
 Authors / Contributors
 ----------------------
 
-Authors:
+Project initiators:
+
+* Arkoon Network Security
+* OpenWide
+* Telecom ParisTech
+
+Contributors:
 
 * Jeremy Rosen
 * Kevin Denis
