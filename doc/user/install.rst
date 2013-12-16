@@ -8,7 +8,7 @@ Installation
 .. note::
 
     The installation instructions are for Debian. It will need to be adapted to
-    other platform.
+    other distributions.
 
 Install from package
 ====================
@@ -16,7 +16,7 @@ Install from package
 Download the package
 --------------------
 
-To download and install the Haka package, enter the following:
+To download and install the Haka package, type the following commands:
 
 .. code-block:: console
 
@@ -30,7 +30,9 @@ Install from source
 Pre-installation requirements
 -----------------------------
 
-Some packages are required to build and run Haka. This operation make take some time.
+To build and install Haka you will need to install some required packages.
+
+Enter the following command to install them (this make take some time):
 
 .. code-block:: console
 
@@ -40,7 +42,7 @@ Some packages are required to build and run Haka. This operation make take some 
 Download the sources
 --------------------
 
-To download the Haka sources, enter the following:
+To download the Haka sources, type the following command:
 
 .. code-block:: console
 
@@ -59,5 +61,5 @@ Compile and install Haka
     $ make
     $ sudo make install
 
-Haka will be installed by default in ``/opt/haka``. You might want to update your ``PATH``
-environment variable in order to simplify Haka starting tools.
+By default, Haka will be installed in ``/opt/haka``. You might want to update your ``PATH``
+environment variable to be able to easily launch the various tools from the command line.

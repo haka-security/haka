@@ -8,22 +8,22 @@ Netfilter queue `packet/nfqueue`
 Description
 ^^^^^^^^^^^
 
-The module uses the library netfilter queue to intercept all packets.
+This module uses the library netfilter queue to capture packets from a given network interface.
 
-At initialization, the module will install some iptables rules for the `raw` table.
-The table will be cleared when the application is closed.
+This module will install iptable rules in the `raw` table during its initialization
+.
+The table will be cleared when the application terminates.
 
-To operate correctly, the process need to be launched with the proper access
-rights.
+When using this module, ``haka`` needs to be run with the appropriate permissions.
 
 Parameters
 ^^^^^^^^^^
 
 .. describe:: interfaces
 
-    List of comma-separated interfaces.
+    Comma-separated list of interfaces or the `any` keyword.
 
-    Example of possible values :
+    Example :
 
     .. code-block:: ini
 
@@ -34,23 +34,23 @@ Parameters
         # Capture on all interfaces
         # interfaces = "any"
 
-.. describe:: dump
+.. describe:: dump=[yes|no]
 
-    Save output in pcap files (yes/no option).
+    Enable dumping feature.
 
-.. describe:: dump_input
+.. describe:: dump_input=`file`
 
-    Save received packets in the specified pcap file capture.
+    Save all received packets to a  pcap file.
 
-.. describe:: dump_output
+.. describe:: dump_output=`file`
     
-    Save unfiltered packets in the specified pcap file capture.
+    Save packets that were accepted to to a pcap file.
 
-.. describe:: dump_drop
+.. describe:: dump_drop=`file`
     
-    Save filtered packets in the specified pcap file capture.
+    Save packets that were dropped to to a pcap file.
 
-    An example to set packet dumping for nfqueue (only received and filtered packets will be saved in pcap files) :
+    Example :
 
     .. code-block:: ini
 

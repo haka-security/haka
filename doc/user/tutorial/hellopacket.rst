@@ -7,11 +7,11 @@ Hellopacket
 
 Introduction
 ------------
-Every language implements its own "helloworld".
-Haka is a language, therefore here is its own helloworld called
+Every language needs a "helloworld".
+Haka, being as much a language as a network tool, needs its own helloworld, called
 "hellopacket".
 
-This "hellopacket" reads a pcap file, then print some tcp/ip packet fields.
+This "hellopacket" reads a pcap file and print a couple of tcp/ip fields of each packet in the file.
 
 How-to
 ------
@@ -22,8 +22,8 @@ Launch ``hakapcap`` with a pcap file and a lua script file as arguments.
     $ cd <haka_install_path>/share/haka/sample/hellopacket
     $ hakapcap hellopacket.pcap hellopacket.lua
 
-As shown below, hakapcap will first dump infos about registered dissectors and
-rules and then process the pcap file and ouput networking infos (packet source
+Hakapcap will first dump infos about registered dissectors and
+rules and then process the pcap file, outputing information on each packet (packet source
 and destination, connection establishment, etc.):
 
 .. ansi-block::
@@ -56,11 +56,10 @@ and destination, connection establishment, etc.):
     \x1b[0m
 
 
-We can see each packet and TCP connection saying hello to the world.
-You can open the pcap file with wireshark or any other network tool to see the
-same informations.
+Each new connection and each packet is properly logged. The pcap file is a standard format that
+can be opened by various network tools, including wireshark.
 
-The lua config file is self-documented:
+Below is the content of the ``hellopacket.lua`` file:
 
 .. literalinclude:: ../../../sample/hellopacket/hellopacket.lua
    :language: lua
@@ -70,10 +69,10 @@ The lua config file is self-documented:
 Going further
 -------------
 
-All fields from capture can be accessed, read, and/or modified. All the fields
-are similar to wireshark syntax. For example, you can get the IP `version`, `ttl`
-or `proto` simply by using ``pkt.version``, ``pkt.ttl`` or ``pkt.proto`` on ipv4
-rules, respectively.
+All fields can be accessed, read and modified. The fields
+are  named similarly to wireshark. For example, you can get the IP `version`, `ttl`
+or `proto` simply by using ``pkt.version``, ``pkt.ttl`` or ``pkt.proto``.
 
-.. seealso:: Check :lua:mod:`ipv4` to get the full list of ipv4 accessors.
+.. seealso:: :lua:mod:`ipv4` for a list of all ipv4 accessors.
+.. seealso:: :lua:mod:`tcp` for a list of all tcp accessors.
 

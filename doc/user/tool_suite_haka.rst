@@ -7,8 +7,11 @@ haka
 
 .. program:: haka
 
-``haka`` is the main program of the suite. It allows to capture packets using either pcap
+``haka`` is the main program of the collection. It allows to capture packets using either pcap
 or nfqueue and to filter/alter them according to the specified lua policy file.
+
+``haka`` is usually launched as a daemon to monitor packets in the background, but it can 
+also be launched from the command line to debug lua scripts.
 
 Options
 -------
@@ -29,7 +32,7 @@ Options
 
 .. option:: --no-daemon
 
-    Do not run `haka` as daemon.
+    Do not run `haka` as daemon, do not detach from the command line.
 
 .. option:: -c, --config
 
@@ -37,28 +40,28 @@ Options
 
 .. option:: --lua-debug
 
-    Start `haka` and automatically attach the Lua debugger.
+    Start `haka` and immediately attach the Lua debugger.
 
 Configuration file
 ------------------
 
-The configuration file is divided into three main topics: **general**, **packet**, **alert** and **log**
+The configuration file is divided into three main sections **general**, **packet**, **alert** and **log**
 
 General directives
 ^^^^^^^^^^^^^^^^^^
 
 .. describe:: configuration
 
-    Set the path of the Lua policy file.
+    Set the Lua policy file.
 
 .. describe:: thread
 
-    Set the number of thread to use. By default, all system thread will be used.
+    Set the number of threads to use. By default, haka will use as many threads as cpu-cores
 
-.. describe:: pass-through
+.. describe:: pass-through=[yes|no]
 
-    Activate pass-through mode (yes/no option). Pass-through mode allow `haka` to
-    be placed as a network probe that cannot interact with the traffic.
+    Activate pass-through mode. `haka` will only monitor traffic and will not allow blocking
+    or modification of packets. The overall performence of `haka` will be greatly improved
 
 Packet directives
 ^^^^^^^^^^^^^^^^^
@@ -69,7 +72,7 @@ Packet directives
 
     .. seealso::
 
-        Check the :ref:`packet_module_section` to get the list of all available modules and
+        :ref:`packet_module_section` contains a list of all available modules and
         their options
 
 Alert directives
@@ -81,7 +84,7 @@ Alert directives
 
     .. seealso::
 
-        Check the :ref:`alert_module_section` to get the list of all available modules and
+        :ref:`alert_module_section` contains the list of all available modules and
         their options
 
 Log directives
@@ -93,7 +96,7 @@ Log directives
 
     .. seealso::
 
-        Check the :ref:`log_module_section` to get the list of all available modules and
+        :ref:`log_module_section` contains the list of all available modules and
         their options
 
 Example
@@ -141,8 +144,9 @@ Logging modules
 Service
 -------
 
-It is possible to launch ``haka`` as a service. When started, ``haka`` loads the
-default configuration file ``haka.conf`` located at <haka_install_path>/etc/haka/.
+On debian, ``haka`` is installed as a system service by the .deb package.
+Unless otherwise specified using the `-c` command line option, ``haka`` will
+load the default configuration file ``<haka_install_path>/etc/haka/haka.conf``.
 
 * Starting haka service
 

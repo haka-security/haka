@@ -8,19 +8,18 @@ Pcap  `packet/pcap`
 Description
 ^^^^^^^^^^^
 
-The module uses the library pcap to read packets from a file or from a real network
-device.
+The module uses the pcap library to read packets from a pcap file or from a network interface.
 
 .. note:
     To be able to capture packets on a real interface, the process need to be launched with
-    the proper access rights.
+    the proper permissions.
 
 Parameters
 ^^^^^^^^^^
 
 .. describe:: interfaces
 
-    List of comma-separated interfaces.
+    Comma-separated list of interfaces or the `any` keyword.
 
     Example of possible values:
 
@@ -39,13 +38,13 @@ Parameters
 
 .. note::
 
-    Only one of **interfaces** or **file** should be used.
+    Only one of **interfaces** or **file** can be defined.
 
-.. describe:: output
+.. describe:: output=`file`
 
-    Save unfiltered packets to the specified pcap output file.
+    Save accepted packets to the specified pcap output file.
 
-    Example of capturing packets from a pcap file and saving unfiltered ones in a pcap output file:
+    Example of capturing packets from a pcap file and saving accepted ones in a pcap output file:
 
     .. code-block:: ini
 

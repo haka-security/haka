@@ -6,7 +6,8 @@ require('protocol/tcp')
 local http = require('protocol/http')
 
 ------------------------------------
--- Security rule
+-- Only allow connections on port 80, close all other connections
+-- Forward all accepted connections to the HTTP dissector
 ------------------------------------
 haka.rule{
 	hooks = { 'tcp-connection-new' },
@@ -21,7 +22,7 @@ haka.rule{
 	end
 }
 
---This rule will handle HTTP requests
+-- Only allow connections from from the 'Mozilla' user agent.
 haka.rule{
 	hooks = { 'http-request' },
 	eval = function (self, http)

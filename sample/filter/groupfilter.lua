@@ -7,44 +7,48 @@ require('protocol/tcp')
 ------------------------------------
 -- Security group
 ------------------------------------
+-- This group implements an logical 'or' between rules
+-- Each rule returns a boolean,
+--
+-- if any rule return 'true' we leave the rule group
+-- if all rules return 'false' the packet is droped
 
--- Here, we create a group rule
--- A group have an init function (self explanatory)
--- A continue function which tells what to do after each rule. As written here,
--- it says that if a rule return true, it will stop the evaluation of other
--- rules. If false, it continues to the next rule.
--- The fini function is the last evaluation made by the group.
--- For this test, it permits us to do a "default drop" with haka and authorize
--- only connection to specific ports (ssh and http)
 
-local group = haka.rule_group{
-	-- The hooks tells where this rule is applied only TCP packets will be
-	-- concerned by this rule other protocol will flow
-	name = "group",
+-- create a new group with no rules in it
+-- The 'my_group' lua variable will be used to add rules to the group
+local my_group = haka.rule_group{
+	name = "my_group",
 	init = function (self, pkt)
 		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d",
 			pkt.tcp.srcport, pkt.tcp.dstport)
 	end,
+
+	-- rules will return a boolean
+	-- if the boolean is false, we continue
+	-- if the boolean is true, we finish the group immediately
+	continue = function (self, pkt, ret)
+		return not ret
+	end,
+
+	-- if we reach the fini function, all rules have returned false
+	-- Nobody has accepted the packet => we drop it.
 	fini = function (self, pkt)
 		haka.alert{
 			description = "Packet dropped : drop by default",
 			targets = { haka.alert.service("tcp", pkt.tcp.dstport) }
 		}
 		pkt:drop()
-	end,
-	continue = function (self, pkt, ret)
-		return not ret
 	end
 }
 
 ------------------------------------
--- Security group rule
+-- Security rules for my_group
 ------------------------------------
 
-group:rule{
+-- return true if connection is on port 80
+my_group:rule{
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
-		-- Accept connection to TCP port 80
 		if pkt.tcp.dstport == 80 then
 			haka.log("Filter", "Authorizing traffic on port 80")
 			return true
@@ -52,10 +56,10 @@ group:rule{
 	end
 }
 
-group:rule{
+-- return true if connection is on port 22
+my_group:rule{
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
-		-- Accept connection to TCP port 22
 		if pkt.tcp.dstport == 22 then
 			haka.log("Filter", "Authorizing traffic on port 22")
 			return true

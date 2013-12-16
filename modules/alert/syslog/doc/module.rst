@@ -8,12 +8,12 @@ Syslog alert `alert/syslog`
 Description
 ^^^^^^^^^^^
 
-Module that output alerts to syslog.
+This module will output all alerts to `syslog`
 
-By default, the message are send to the facility local0. You can adjust your
+By default, the message are sent to local0. You can adjust your
 syslogd.conf accordingly.
 
-For instance: ::
+Example: ::
 
     # HAKA syslog en Facility log level local0
     local0.*   /var/log/haka.log

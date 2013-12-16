@@ -7,7 +7,7 @@ hakactl
 
 .. program:: hakactl
 
-``hakactl`` allows to control `haka` daemon.
+``hakactl`` allows to control a running `haka` daemon.
 
 .. code-block:: console
 
@@ -47,14 +47,14 @@ Commands
 
     Set the logging level (fatal, error, warn, info, debug).
 
-    .. seealso:: Check :lua:mod:`haka.log` to get more information about logging levels.
+    .. seealso:: See :lua:mod:`haka.log` for more information about logging levels.
 
 .. option:: debug
 
-    Debug haka rules remotely.
+    Remotely debug haka rules on a running daemon.
 
 .. option:: interactive
 
-    Launch the interactive mode remotely.
+    Put a running daemon in interactive mode
 
-    .. seealso:: Check the :doc:`\debug` topic to get more information about the debugger and the interactive mode.
+    .. seealso:: See :doc:`\debug` for more information about the debugger and the interactive mode.

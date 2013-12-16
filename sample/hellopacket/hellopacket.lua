@@ -1,48 +1,50 @@
 ------------------------------------
+-- This is an example lua file for the hellopacket tutorial
+--
 -- Use this file with hakapcap tool:
 --
 -- hakapcap hellopacket.pcap hellopacket.lua
 --
--- (adjust paths)
 ------------------------------------
 
 ------------------------------------
 -- Loading dissectors
 ------------------------------------
--- The require lines tolds Haka which dissector it has to register. Those
--- dissectors gives hook to interfere with it and some specific function
--- relative to the protocol.
+-- Each dissector provides hooks to intercept and modify packets.
+-- We need ipv4 to intercept incoming packets
+-- We need tcp to intercept new connectiosn
 require('protocol/ipv4')
 require('protocol/tcp')
 
 ------------------------------------
--- This is a security rule
+-- Log all incoming packets, reporting the source and destination IP address
 ------------------------------------
 haka.rule{
-	-- The hooks tells where this rule is applied
+	-- Intercept all ipv4 packet before they are passed to tcp
 	hooks = { 'ipv4-up' },
 
-	-- Each rule have an eval function
-	-- Eval function is always build with (self, name)
-	--     First parameter must be named self
-	--     Second parameter can be named whatever you want
+	-- Function to call on all packets.
+	--     self : the dissector object that handles the packet (here, ipv4 dissector)
+	--     pkt : the packet that we are intercepting
 	eval = function (self, pkt)
 		-- All fields are accessible through accessors
-		-- Documentation give the complet list of accessors
+		-- See the Haka documentation for a complete list.
 		haka.log("Hello", "packet from %s to %s", pkt.src, pkt.dst)
 	end
 }
 
--- Any number of rule is authorized
+------------------------------------
+-- Log all new connection, logging address and port of source and destination
+------------------------------------
 haka.rule{
-	-- The rule is evaluated at TCP connection establishment
+	-- Intercept connection establishement, detected by the TCP dissector
 	hooks = { 'tcp-connection-new' },
 	eval = function (self, pkt)
 		-- Fields from previous layer are accessible too
 		haka.log("Hello", "TCP connection from %s:%d to %s:%d", pkt.tcp.ip.src,
 			pkt.tcp.srcport, pkt.tcp.ip.dst, pkt.tcp.dstport)
 
-		-- We can raise an alert too
+		-- Raise a simple alert for testing purpose
 		haka.alert{
 			description = "A simple alert",
 			severity = "low"

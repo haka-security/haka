@@ -7,76 +7,71 @@ Filter
 
 Introduction
 ------------
-Haka is a tool which can filter packets and streams, based on any fields or
-combination of fields in the packet or the streams.
+This chapter will document how to use haka to filter packets and streams according to their different fields.
 
-How-to
-------
-This tutorial is divided into two parts. The first one relies on hakapcap
-tool and pcap file, in order to show how to do basic filtering.
-The second one uses the nfqueue interface in order to alter tcp streams.
+This tutorial is divided into two parts. The first part will use hakapcap and a pcap file to do some basic, offline, filtering. The second part will use nfqueue to alter tcp streams as they pass through haka.
 
 Basic TCP/IP filtering
 ----------------------
 
 Basic IP filtering
 ^^^^^^^^^^^^^^^^^^
-In order to do some basic IP filtering you can read the self-documented
-lua script file:
+the direcctory <haka_install_path>/share/haka/sample/filter/ contains all the example files for this section.
+
+A basic filter script on IP fields is provided as ``ipfilter.lua``:
 
 .. literalinclude:: ../../../sample/filter/ipfilter.lua
    :language: lua
    :tab-width: 4
 
-A pcap file is provided in order to run the above lua script file
+This script can be run with a pcap file provided in the sample directory.
 
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/filter/
     $ hakapcap ipfilter.pcap ipfilter.lua
 
-You can save the pcap in an output file in order to see the
-modification or deletion of packets:
+To create a pcap file containing all packets that were not dropped, run the following command
 
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/filter/
     $ hakapcap trace.pcap ipfilter.lua -o output.pcap
 
+
+The resulting pcap file can be opened with wireshark to check that haka correctly filtered the packets
+according to their IP source address.
+
 Interactive rule debugging
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Hereafter, a second lua script file allowing to filter tcp packets based
-on destination port.
+
+Haka allows to interactively debug lua rules. A script containing a lua error is provided as ``tcpfilter.lua``
+
+This script will filter TCP packets, only allowing packets to/from port 80 to pass through.
 
 .. literalinclude:: ../../../sample/filter/tcpfilter.lua
    :language: lua
    :tab-width: 4
 
-If we try to launch this script, we will notice that it will fail to
-run successfully. Actually, we deliberately introduced an error into the code.
-Haka will raise an error. More precisely, there is no field named ``destport``.
+To run this example, use the following commands:
 
-As shown in section :doc:`\../debug`, Haka is featured with debugging capabilities allowing
-to get more details about errors. The debugger mode is available through the ``--luadebug`` option:
+.. code-block:: console
+
+    $ cd <haka_install_path>/share/haka/sample/filter/
+    $ hakapcap tcpfilter.pcap tcfilter.lua
+
+When this script is run, haka will output a high number of errors, complaining that the field ``destport`` doesn't exist. We will use haka's debug facilities to find out precisely where the error occurs.
+
+.. seealso:: :doc:`\../debug` contains documentation on haka's debugging facilities.
+
+To start haka in debugging mode, add ``--luadebug`` at the end of the command line:
 
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/filter/
     $ hakapcap tcpfilter.pcap tcpfilter.lua --luadebug
 
-When the debugger starts, it automatically breaks at the first lua line:
-
-.. ansi-block::
-    :string_escape:
-
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdebugger:\x1b[0m \x1b[0mlua debugger activated
-    \x1b[0m\x1b[31m   5\x1b[1m=> \x1b[0mrequire('protocol/ipv4')
-    \x1b[32mdebug\x1b[1m>
-
-
-At the debug prompt, type ``continue`` to immediately break into the erroneous
-code. When a lua error code occurs, the debugger breaks and outputs the error
-and a backtrace.
+When a lua error code occurs, the debugger breaks and outputs the error and a backtrace.
 
 .. ansi-block::
     :string_escape:
@@ -96,10 +91,11 @@ and a backtrace.
      #8    \x1b[36m/opt/haka/share/haka/core/rule.bc:0\x1b[0m: in the main chunk
     ...
 
-As we are interested in debugging lua code, we skip the first frames and jump
-directly to the frame #3 (type ``frame 3``). To get the line number that
-generated the error, we simply list the lua source code using the ``list``
-command.
+The general syntax of the debugger is close to the syntax of gdb.
+
+Here we are interested in the third frames which is the one in the lua script itself.
+
+To set the debugger to focus on that particular frame, type ``frame 3``. We can now use the ``list`` command to display the faulty source code:
 
 .. ansi-block::
     :string_escape:
@@ -116,7 +112,11 @@ command.
     \x1b[33m  24:  \x1b[0m            pkt:drop()
     \x1b[33m  25:  \x1b[0m        end
 
-Printing the `pkt` table (``print pkt``) will show that we misspelled the ``dstport`` field.
+We now see that lua is complaining about an unknonw field ``destport`` on the line testing the destination port of the packet.
+
+Packets, like all structures provided by haka, can be printed easily using the debugger. 
+
+To see the content of the packet, type ``print pkt``:
 
 .. ansi-block::
     :string_escape:
@@ -141,10 +141,25 @@ Printing the `pkt` table (``print pkt``) will show that we misspelled the ``dstp
             \x1b[34;1mhdr_len\x1b[0m : 40
         }
 
+You can notice that there is no field called destport. The correct name for the field is ``dstport``. Once this typo is corrected, the script will run properly
+
 Press CTRL-C to quit or type ``help`` to get the list of available commands.
 
-Using the rule group
-^^^^^^^^^^^^^^^^^^^^
+Using rule groups
+^^^^^^^^^^^^^^^^^
+
+Haka can handle multiple rules as a group.
+
+Rule groups have three functions
+
+The `init` function is called before any rule from the group is applied
+
+The `continue` function is called between each rule of the group and can decide to stop
+processing the group at any point
+
+the `fini` function is called after all rules have been run. It is not called if `continue` has forced a cancelation mid-group.
+
+The following example uses the concept of group to implement a simple filter that only accepts connections on port 80 or port 22
 
 .. literalinclude:: ../../../sample/filter/groupfilter.lua
     :language: lua
@@ -155,41 +170,41 @@ Advanced TCP/IP Filtering
 
 Filtering with NFQueue
 ^^^^^^^^^^^^^^^^^^^^^^
-The lua configuration files can be used with nfqueue and haka daemon.
-Haka will hook itself at startup to the raw nfqueue table in order to
+All the examples so far have used ``hakapcap`` to test some recorded packets.
+
+Haka can also use nfqueue to capture packets from a live interface. The following
+examples will illustrate how to do that.
+
+When configured to use nfqueue, haka will hook itself up to the `raw` nfqueue table in order to
 inspect, modify, create and delete packets in real time.
 
-For the rest of this tutorial, we will assume that you've installed
-haka package on a host with an interface named eth0.
+The rest of this tutorial assumes that the haka package is installed on a host and that that
+host has a network interface named eth0
 
-This is the configuration of the daemon:
+The configuration file for the daemon is given below:
 
 .. literalinclude:: ../../../sample/filter/daemon.conf
    :language: ini
    :tab-width: 4
 
-In order to start haka, you have to be root. The ``--no-daemon`` option
-won't send haka daemon on background. Plus, all logs messages are
-printed on output, instead of syslogd.
+In order to be able to capture packets, the `haka` daemon needs to be run as root. The `--no-daemon`` option will prevent `haka` from detaching from the command line and will force `haka` to send its outputs to stdout instead of syslog. 
 
 .. code-block:: console
 
    # cd <haka_install_path>/share/haka/sample/filter/
    # haka -c daemon.conf --no-daemon
 
-The filtering will be done according to the .lua configuration file seen
-previously.
+The lua file used here is the one from the first tutorial. This filter will refuse all packets coming from `192.168.10.10`
 
 HTTP filtering
 ^^^^^^^^^^^^^^
-You can filter through all HTTP fields thanks to http module:
+Haka comes with an HTTP parser. Using that module it is easy to filter packets using specific fields from HTTP headers
 
 .. literalinclude:: ../../../sample/filter/httpfilter.lua
    :language: lua
    :tab-width: 4
 
-Modify the ``dameon.conf`` in order to load the ``httpfilter.lua``
-configuration file:
+To test this filter you will need to modify ``dameon.conf`` to tell haka to use ``httpfilter.lua``:
 
 .. code-block:: ini
 
@@ -197,7 +212,7 @@ configuration file:
     # Select the haka configuration file to use.
     configuration = "httpfilter.lua"
 
-And start it
+It is now possible to start the daemon using this new configuration.
 
 .. code-block:: console
 
@@ -207,12 +222,9 @@ And start it
 
 Modifying HTTP responses
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Haka can also alter data sent by webserver. We want to be able to
-filter all obsolete Web browser based on the User-Agent header.
-More, we want to force these obsolete browsers to go only to update websites.
-Haka will check User-Agent, and if the User-Agent is considered
-obsolete, it will change HTTP response to redirect request to a safer
-site (web site of the browser).
+Haka can also be used to modify packets as they pass through the system. The following example will redirect traffic based on HTTP headers.
+
+More specifically, it will detect outdated firefox versions and will redirect all traffic from these browsers to the firefox update site.
 
 .. literalinclude:: ../../../sample/filter/httpmodif.lua
    :language: lua

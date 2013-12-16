@@ -7,7 +7,7 @@
 Haka tool suite
 ===============
 
-Haka-Runtime is a collection of three tools: ``haka``, ``hakactl`` and ``hakapcap``.
+The Haka project provides three binaries: ``haka``, ``hakactl`` and ``hakapcap``.
 
 .. toctree::
    :maxdepth: 2

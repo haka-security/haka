@@ -5,16 +5,12 @@ require('protocol/ipv4')
 require('protocol/tcp')
 local http = require('protocol/http')
 
-------------------------------------
--- Firefox Version and website
--- Be sure to update to last version
-------------------------------------
 local last_firefox_version = 24.0
 local firefox_web_site = 'http://www.mozilla.org'
 
 -------------------------------------
--- Domains for updating browsers,
--- e.g. Mozilla firefox
+-- Domain whitelist,
+-- all traffic to these domains will be unmodified
 -------------------------------------
 local update_domains = {
 	'mozilla.org',
@@ -23,7 +19,7 @@ local update_domains = {
 }
 
 -------------------------------------
--- Setting http dissector
+-- Forward all traffic on port 80 to the HTTP dissector
 -------------------------------------
 haka.rule{
 	hooks = { 'tcp-connection-new' },
@@ -35,7 +31,7 @@ haka.rule{
 }
 
 -------------------------------------
--- Security group rule
+-- Rule group implementing a logical 'or'
 -------------------------------------
 safe_update = haka.rule_group{
 	name = 'safe_update',
@@ -56,12 +52,8 @@ safe_update = haka.rule_group{
 	end
 }
 
--------------------------------------
--- Security rules
--------------------------------------
 
--- This rule allow access to update sites whatever the User-Agent version is
--- It's a kind of white listing
+-- Traffic to all websites in the whitelist is unconditionnally allowed
 safe_update:rule{
 	hooks = { 'http-response' },
 	eval = function (self, http)
@@ -76,26 +68,26 @@ safe_update:rule{
 
 }
 
--- This rule will deny access to any website if User-Agent is outdated
+-- If the User-Agent contains firefox and the version is outdated
+-- the redirect the traffic to firefox_web_site
 safe_update:rule{
 	hooks = { 'http-response' },
 	eval = function (self, http)
-		-- Uncomment to dump the request helps to debug
+		-- Uncomment the following line to see the the content of the request
 		-- http.request:dump()
 
 		local UA = http.request.headers["User-Agent"] or "No User-Agent header"
 		haka.log("Filter", "UA detected: %s", UA)
 		local FF_UA = (string.find(UA, "Firefox/"))
 
-		if FF_UA then -- If FF_UA is nil, the browser is not Firefox
+		if FF_UA then -- Firefox was detected
 			local version = tonumber(string.sub(UA, FF_UA+8))
 			if not version or version < last_firefox_version then
 				haka.alert{
 					description= "Firefox is outdated, please upgrade",
 					severity= 'medium'
 				}
-				-- We modify some fields of the response on the fly We redirect
-				-- the browser to a safe place where updates will be made
+				-- redirect browser to a safe place where updates will be made
 				http.response.status = "307"
 				http.response.reason = "Moved Temporarily"
 				http.response.headers["Content-Length"] = "0"
@@ -103,6 +95,7 @@ safe_update:rule{
 				http.response.headers["Server"] = "A patchy server"
 				http.response.headers["Connection"] = "Close"
 				http.response.headers["Proxy-Connection"] = "Close"
+				-- dump the response for illustrative purpose
 				http.response:dump()
 			end
 		else

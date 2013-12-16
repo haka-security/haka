@@ -7,14 +7,12 @@ hakapcap
 
 .. program:: hakapcap
 
-``hakapcap`` is a tool that allows to apply lua policy filters
+``hakapcap`` is a tool to quickly apply a lua policy file to a pcap file and see the resulting decisions.
 on pcap capture files.
-It takes as input an optional list of options, a pcap file, and a 
-lua policy file:
 
 .. code-block:: console
 
-     $ hakatool [options] <pcapfile> <config>
+     $ hakatool [options] <pcapfile> <luafile>
 
 Options
 -------
@@ -39,6 +37,14 @@ Options
 
     Save unfiltered packets.
 
-.. option:: --lua-debug
+.. option:: --luadebug
 
     Start `hakapcap` and automatically attach the Lua debugger.
+
+.. option:: pcapfile
+
+    A pcap file containing the packets to filter
+
+.. option:: luafile
+
+    A lua script containing the filtering rules to apply to the pcap file

@@ -5,12 +5,12 @@ require('protocol/ipv4')
 require('protocol/tcp')
 
 ------------------------------------
--- Security rule
+-- Only allow packets to/from port 80
 ------------------------------------
 
 haka.rule{
 	-- The hooks tells where this rule is applied. Only TCP packets will be
-	-- concerned by this rule. Other protocol will flow.
+	-- intecepted by this rule. Other protocol will flow.
 	hooks = { 'tcp-up' },
 	eval = function (self, pkt)
 		-- The next line will generate a lua error:
