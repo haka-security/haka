@@ -16,12 +16,13 @@ Install from package
 Download the package
 --------------------
 
-To download and install the Haka package, type the following commands:
+First download the Debian package from the Haka website http://www.haka-security.org.
+
+Then to install it, type the following command:
 
 .. code-block:: console
 
-    $ wget http://www.haka-security.org/download/haka-0.1.deb
-    $ sudo dpkg -i haka-0.1.deb
+    $ sudo dpkg -i haka.deb
 
 
 Install from source
@@ -42,12 +43,13 @@ Enter the following command to install them (this make take some time):
 Download the sources
 --------------------
 
-To download the Haka sources, type the following command:
+First download the source tarball from the Haka website http://www.haka-security.org.
+
+Then type the following commands:
 
 .. code-block:: console
 
-    $ wget http://www.haka-security.org/download/haka-0.1.tar.gz
-    $ tar -xvzf haka-0.1.tar.gz
+    $ tar -xvzf haka.tar.gz
     $ cd haka
 
 Compile and install Haka
