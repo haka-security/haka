@@ -14,6 +14,15 @@ Users
 
     doc/user/index.rst
 
+References
+^^^^^^^^^^
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 2
+
+    doc/ref/index.rst
+
 Developers
 ^^^^^^^^^^
 
