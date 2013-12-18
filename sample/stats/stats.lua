@@ -6,7 +6,7 @@ require('protocol/ipv4')
 require('protocol/tcp')
 require('protocol/http')
 
-local tbl = require('tblutils')
+local tbl = require('stats_utils')
 
 -- Each entry of stats table will store
 -- info about http request/response (method,

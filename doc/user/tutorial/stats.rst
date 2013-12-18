@@ -32,39 +32,46 @@ Before making statisctics, we need first to collect data. This is the purpose of
 - usergant: user-agent header
 - status: response status code
 
-.. note:: While the security rule 'hooks' on `http-response` we still get access to http request fields (via `request` accessor) and ip header fields (through `connection` accessor)
+.. note::
+
+    While the security rule 'hooks' on `http-response` we still get access to
+    http request fields (via `request` accessor) and ip header fields (through
+    `connection` accessor)
 
 .. literalinclude:: ../../../sample/stats/stats.lua
     :tab-width: 4
     :language: lua
 
-Stats API
----------
-This section introduces the stats API. More precisely, it shows how to create the global `stats` table and how to run basic stats operations on the created table.
+Stats utilities
+----------------
 
-.. lua:module:: tblutils
+This section introduces the stats utilities developed for this tutorial. More
+precisely, it shows how to create the global `stats` table and how to run basic
+stats operations on the created table.
+
+.. lua:module:: stats_utils
 
 .. lua:function:: new()
 
     Create the stats table.
 
-.. lua:module:: stats
+.. lua:class:: stats
 
-.. lua:function:: list(self)
+    .. lua:method:: list(self)
 
-    Print column names of `stats` table.
+        Print column names of `stats` table.
 
-.. lua:function:: dump(self [, nb])
+    .. lua:method:: dump(self [, nb])
 
-    Print `nb` entries of `stats` table.
+        Print `nb` entries of `stats` table.
 
-.. lua:function:: top(self, column_name [, nb])
+    .. lua:method:: top(self, column_name [, nb])
 
-    Dump the top 10 of given field name. Limits output to `nb` if `nb` is provided.
+        Dump the top 10 of given field name. Limits output to `nb` if `nb` is provided.
 
-.. lua:function:: select_table(self, column_tab [, where])
+    .. lua:method:: select_table(self, column_tab [, where])
 
-    Select specific columns from `stats` table. Optionnaly, filter entry-lines based on `where` function.
+        Select specific columns from `stats` table. Optionally, filter entry-lines based on `where` function.
 
 Dumping stats
 -------------
