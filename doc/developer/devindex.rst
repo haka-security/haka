@@ -12,9 +12,3 @@ Welcome to Haka's Developer Guide!
     build.rst
     rulearch.rst
     c.rst
-
-Indices and tables
-^^^^^^^^^^^^^^^^^^
-
-* :ref:`genindex`
-* :ref:`search`

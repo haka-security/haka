@@ -3,22 +3,264 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import url("default.css");
-
 @import url("ansi.css");
+@import url("fonts.css");
+
+* {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+pre {
+	background: #f0f0f0;
+	border: 1px solid #aaaaaa;
+	border-radius: 5px;
+}
+
+body, html, button, input, select, textarea {
+	font-family: "Source Sans Pro",Helvetica,sans-serif;
+}
+
+div.body h1, div.body h2, div.body h3,
+div.body h4, div.body h5, div.body h6 {
+	clear: both;
+	font-family: Bitter,Georgia,serif;
+	line-height: 1.3;
+	background-color: transparent;
+	font-weight: bold;
+	color: #000000;
+	border: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	clear: both;
+	font-family: Bitter,Georgia,serif;
+	line-height: 1.3;
+}
+
+a {
+	color: #99CC66;
+}
+
+a:visited {
+	color: #99CC66;
+}
+
+a.headerlink {
+	color: #99CC66;
+}
+
+a.headerlink:hover {
+	color: #ffffff;
+	background-color: #FFCC33;
+}
+
+.toctree-wrapper a,
+.indextable a {
+	color: #34373F;
+}
+
+.toctree-wrapper a:visited,
+.indextable a:visited {
+	color: #34373F;
+}
+
+#header {
+	background: none repeat scroll 0 0 #99CC66;
+	position: relative;
+}
+
+#header a {
+	color: #FFFFFF;
+}
+
+#header .home-link {
+	color: #141412;
+	display: block;
+	margin: 0 auto;
+	max-width: 1080px;
+	min-height: 180px;
+	padding: 0 20px;
+	width: 100%;
+	position: relative;
+}
+
+#version {
+	color: #FFFFFF;
+	display: block;
+	position: absolute;
+	right: 0;
+	padding: 10px 20px;
+}
+
+#navwrapper {
+	background-color: #515151;
+}
+
+#site-navigation {
+	display: block;
+	margin: 0 auto;
+	max-width: 1080px;
+	min-height: 45px;
+	text-decoration: none;
+	width: 100%;
+}
+
+#footer {
+	color: #ffffff;
+	display: block;
+	margin: 30px auto;
+	max-width: 1080px;
+	text-align: center;
+}
+
+#content {
+	background-color: #ffffff;
+}
+
+div.body {
+	padding: 0;
+}
+
+#contentwrapper {
+	max-width: 1080px;
+	margin: auto;
+	padding: 20px 20px;
+}
+
+.description {
+	font: italic 300 24px "Source Sans Pro",Helvetica,sans-serif;
+	margin: 0;
+}
+
+.title {
+	font-size: 60px;
+	font-weight: 700;
+	line-height: 1;
+	margin: 0;
+	padding: 38px 0 10px;
+}
+
+.title, .description {
+	color: #FFFFFF;
+}
 
 th {
 	background-color: #FFFFFF;
 }
 
 div.seealso, div.note {
-	background-color: #e3dbd1;
-	border: 1px solid #c9beb1;
-}
-
-pre {
-	border-color: #c9beb1 -moz-use-text-color;
+	background: #f0f0f0;
+	border: 1px solid #aaaaaa;
+	border-radius: 5px;
 }
 
 dt:target, .highlighted {
-	background-color: #ffc465;
+	background-color: #FFCC33;
+}
+
+ul.nav-menu,
+div.nav-menu > ul {
+	margin: 0;
+	padding: 0 40px 0 0;
+}
+
+.nav-menu li {
+	display: inline-block;
+	position: relative;
+}
+
+.nav-menu .current > a {
+	color: #FFCC33;
+	font-style: italic;
+}
+
+.nav-menu li a {
+	color: #ffffff;
+	display: block;
+	font-size: 15px;
+	line-height: 1;
+	padding: 15px 20px;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+.nav-menu li:hover > a,
+.nav-menu li a:hover {
+	background-color: #363434;
+	font-weight: bold;
+	color: #fff;
+}
+
+.nav-menu .sub-menu,
+.nav-menu .children {
+	font-weight: bold;
+	background-color: #ffcc33;
+	border: 2px solid #515151;
+	border-top: 0;
+	display: none;
+	padding: 0;
+	position: absolute;
+	left: -2px;
+	z-index: 99999;
+}
+
+.nav-menu .sub-menu ul,
+.nav-menu .children ul {
+	border-left: 0;
+	left: 100%;
+	top: 0;
+}
+
+ul.nav-menu ul a,
+.nav-menu ul ul a {
+	color: #fff;
+	margin: 0;
+	width: 200px;
+}
+
+ul.nav-menu ul a:hover,
+.nav-menu ul ul a:hover {
+	background-color: #db572f;
+}
+
+ul.nav-menu li:hover > ul,
+.nav-menu ul li:hover > ul {
+	display: block;
+}
+
+.nav-menu .current_page_item > a,
+.nav-menu .current_page_ancestor > a,
+.nav-menu .current-menu-item > a,
+.nav-menu .current-menu-ancestor > a {
+	color: #ffcc33;
+	font-style: italic;
+}
+
+.menu-toggle {
+	display: none;
+}
+
+.right {
+	float: right;
+}
+
+input[type=text]
+{
+	border: 1px solid #aaaaaa;
+	border-radius: 5px;
+	padding: 3px;
+	margin-left: 20px;
+}
+
+.highlight-link {
+	float: right;
+	background: transparent url(cross.png) no-repeat center center;
+	width: 20px;
+	height: 20px;
+}
+
+.highlight-link:hover {
+	background: transparent url(cross-highlight.png) no-repeat center center !important;
 }

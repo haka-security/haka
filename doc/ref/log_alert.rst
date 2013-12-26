@@ -7,7 +7,7 @@
 Logging & Alerting
 ==================
 
-This section introduces the Haka logging and alerting API
+This section introduces the Haka logging and alerting API.
 
 Log
 ---

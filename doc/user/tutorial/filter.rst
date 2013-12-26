@@ -16,7 +16,8 @@ Basic TCP/IP filtering
 
 Basic IP filtering
 ^^^^^^^^^^^^^^^^^^
-the direcctory <haka_install_path>/share/haka/sample/filter/ contains all the example files for this section.
+
+The direcctory <haka_install_path>/share/haka/sample/filter/ contains all the example files for this section.
 
 A basic filter script on IP fields is provided as ``ipfilter.lua``:
 
