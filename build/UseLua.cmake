@@ -3,18 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if(LUA STREQUAL "luajit")
-	set(HAKA_LUAJIT 1)
-	set(HAKA_LUA51 1)
-	set(LUA_DEPENDENCY luajit)
-	
-	if(NOT ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funwind-tables")
-	endif()
+	include(external/luajit.cmake)
 elseif(LUA STREQUAL "lua51")
-	find_package(Lua REQUIRED)
-	set(HAKA_LUAJIT 0)
-	set(HAKA_LUA51 1)
-elseif(LUA STREQUAL "custom")
+	include(external/lua.cmake)
 else()
 	message(FATAL_ERROR "Invalid Lua version")
 endif()

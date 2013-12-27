@@ -98,7 +98,7 @@ include(UseLua)
 
 # Configure
 if(CMAKE_COMPILER_IS_GNUCC)
-	set(CMAKE_C_FLAGS "-Wall -Werror")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
 endif()
 
 find_package(Threads REQUIRED)

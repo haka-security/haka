@@ -11,7 +11,6 @@ Dependencies
 * cmake
 * swig
 * python-sphinx
-* liblua5.1
 * tshark
 * check
 * rsync
@@ -21,7 +20,7 @@ Dependencies
 
 #### Debian
 
-    $ sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 tshark check rsync libpcap-dev gawk libedit-dev
+    $ sudo apt-get install build-essential cmake swig python-sphinx tshark check rsync libpcap-dev gawk libedit-dev
 
 ### Optional
 

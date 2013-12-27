@@ -37,7 +37,7 @@ Enter the following command to install them (this make take some time):
 
 .. code-block:: console
 
-    $ sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 \
+    $ sudo apt-get install build-essential cmake swig python-sphinx \
     tshark check rsync libpcap-dev gawk libedit-dev libnetfilter-queue-dev
 
 Download the sources

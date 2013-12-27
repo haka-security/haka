@@ -2,5 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("iniparser.cmake")
-include("uthash.cmake")
+add_subdirectory(external/lua)
+
+set(HAKA_LUAJIT 0)
+set(HAKA_LUA51 1)
