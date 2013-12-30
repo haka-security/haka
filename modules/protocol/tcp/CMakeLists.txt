@@ -4,8 +4,6 @@
 
 INCLUDE_MODULE(ipv4 protocol)
 
-find_package(SWIG REQUIRED)
-include(UseSWIG)
 swig_add_module(tcp lua SHARED
 	tcp.i
 	main.c

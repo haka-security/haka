@@ -24,6 +24,10 @@ $0 ~ /The RTT to ACK the segment was: / {
 	next;
 }
 
+$0 ~ /^[ ]+\[Response time: .*\]$/ {
+	next;
+}
+
 {
 	print;
 }

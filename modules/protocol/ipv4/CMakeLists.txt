@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-find_package(SWIG REQUIRED)
-include(UseSWIG)
 swig_add_module(ipv4 lua SHARED
 	ipv4.i
 	main.c
@@ -16,7 +14,6 @@ include_directories(.)
 
 # Lua dependency
 LUA_LINK(ipv4)
-target_link_libraries(ipv4 libhaka)
 
 INSTALL_MODULE(ipv4 protocol)
 

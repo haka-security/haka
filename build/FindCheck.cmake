@@ -7,7 +7,7 @@
 include(FindPackageHandleStandardArgs)
 
 find_path(CHECK_INCLUDE_DIRS NAMES check.h)
-find_library(CHECK_LIBRARIES NAMES check_pic)
+find_library(CHECK_LIBRARIES NAMES check)
 if(CHECK_LIBRARIES)
 	set(CHECK_FOUND)
 endif(CHECK_LIBRARIES)

@@ -2,42 +2,50 @@
 HAKA Runtime
 ============
 
+What is HAKA
+------------
+
+Haka is a collection of tool that allows capturing TCP/IP packets and filtering
+them based on Lua policy files.
+
 Dependencies
 ------------
 
 ### Required
 
 * Toolchain (GCC, Make, ...)
-* cmake
+* cmake (>= 2.8)
 * swig
-* python-sphinx
+* sphinx (>= 2)
 * tshark
 * check
 * rsync
-* libpcap-dev
+* libpcap
 * gawk
-* libedit-dev
-
-#### Debian
-
-    $ sudo apt-get install build-essential cmake swig python-sphinx tshark check rsync libpcap-dev gawk libedit-dev
+* libedit
 
 ### Optional
 
+* Git
 * Cppcheck
 * Netfilter Queue
 * Valgrind
 
-#### Debian
+Submodules
+----------
 
-    $ sudo apt-get install cppcheck libnetfilter-queue-dev valgrind
+If using the Git repository, it uses submodules that need to
+be initialized and updated:
+
+    $ git submodule init
+    $ git submodule update
 
 Build
 -----
 
 ### Configure
 
-It is highly recommanded to create a separate directory to store
+It is required to create a separate directory to store
 all the files generated during the build using cmake.
 
     $ mkdir make
@@ -46,17 +54,11 @@ all the files generated during the build using cmake.
 
 ### Build
 
-The repository uses submodules that need to be initialized and updated:
-
-    $ git submodule init
-    $ git submodule update
-
 Then use make like usual to compile (`make`) and install (`make install`) or
 clean (`make clean`).
 
     $ make
-    $ make install
-    $ make clean
+    $ sudo make install
 
 ### Documentation
 
