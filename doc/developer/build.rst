@@ -50,7 +50,7 @@ Fedora
 
     $ sudo yum install gcc gcc-c++ make cmake python-sphinx wireshark check
     $ sudo yum install check-devel rsync libpcap-devel gawk libedit-devel
-    $ sudo yum install git cppcheck libnetfilter_queue-devel valgrind rpm-build
+    $ sudo yum install git cppcheck libnetfilter_queue-devel rpm-build valgrind valgrind-devel
 
 The *swig* package in Fedora is broken and will not be usable to compile Haka.
 You will need to get a swig build from upstream.
