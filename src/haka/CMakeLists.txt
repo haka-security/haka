@@ -59,4 +59,4 @@ LUA_LINK(hakapcap)
 
 install(TARGETS hakapcap RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
 
-add_subdirectory(debian)
+add_subdirectory(init)

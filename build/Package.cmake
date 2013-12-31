@@ -28,7 +28,7 @@ set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/LICENSE.txt)
 
 # Debian package
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Arkoon Network Security")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_BINARY_DIR}/src/haka/debian/postinst;${CMAKE_BINARY_DIR}/src/haka/debian/postrm;${CMAKE_BINARY_DIR}/src/haka/debian/preinst;${CMAKE_BINARY_DIR}/src/haka/debian/prerm;${CMAKE_BINARY_DIR}/src/haka/debian/conffiles;")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_BINARY_DIR}/src/haka/init/postinst;${CMAKE_BINARY_DIR}/src/haka/init/postrm;${CMAKE_BINARY_DIR}/src/haka/init/preinst;${CMAKE_BINARY_DIR}/src/haka/init/prerm;${CMAKE_BINARY_DIR}/src/haka/init/conffiles;")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.haka-security.org")
 
@@ -43,5 +43,10 @@ set(CPACK_RPM_SPEC_MORE_DEFINE
 set(CPACK_RPM_PACKAGE_LICENSE "Mozilla Public License Version 2.0")
 set(CPACK_RPM_PACKAGE_GROUP "Security")
 set(CPACK_RPM_PACKAGE_URL "http://www.haka-security.org")
+set(CPACK_RPM_USER_FILELIST "%config ${CMAKE_HAKA_INSTALL_PREFIX}/etc/haka/haka.conf")
+set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/src/haka/init/postinst")
+set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/src/haka/init/postrm")
+set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/src/haka/init/preinst")
+set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/src/haka/init/prerm")
 
 include(CPack)

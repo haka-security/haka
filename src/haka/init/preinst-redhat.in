@@ -3,14 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#echo prerm $*
+if [ $1 -eq 2 ]; then
+	@CMAKE_INSTALL_PREFIX@/etc/init.d/haka status > /dev/null
+	if [ $? -eq 0 ]; then
+		@CMAKE_INSTALL_PREFIX@/etc/init.d/haka stop
+		rm -f @HAKA_PID_FILE@
 
-@CMAKE_INSTALL_PREFIX@/etc/init.d/haka status > /dev/null
-if [ $? -eq 0 ]; then
-	@CMAKE_INSTALL_PREFIX@/etc/init.d/haka stop
-	rm -f @HAKA_PID_FILE@
-
-	if [ "$1" = "upgrade" ]; then
 		echo "restart" > @HAKA_PID_FILE@
 	fi
+
+	which systemctl >/dev/null 2>1 && systemctl daemon-reload
 fi

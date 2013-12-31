@@ -1,0 +1,11 @@
+#!/bin/sh
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if [ -f @HAKA_PID_FILE@ ]; then
+	if [ "$(cat @HAKA_PID_FILE@)" = "restart" ]; then
+		rm -f @HAKA_PID_FILE@
+		@CMAKE_INSTALL_PREFIX@/etc/init.d/haka start
+	fi
+fi
