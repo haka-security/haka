@@ -29,17 +29,21 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CTEST_MODULE_BINARY_DI
 include(version.cmake)
 
 if(DEFINED BUILDTAG)
-	set(HAKA_VERSION_BUILD ${BUILDTAG})
+    if(BUILDTAG STREQUAL "official")
+        set(HAKA_VERSION_BUILD "")
+    else()
+    	set(HAKA_VERSION_BUILD "-${BUILDTAG}")
+    endif()
 else()
 	execute_process(COMMAND "date" "+%Y%m%d-%H%M" OUTPUT_VARIABLE BUILDTAG RESULT_VARIABLE HAD_ERROR)
 	if(HAD_ERROR)
 		message(FATAL_ERROR "failed to get current date")
 	endif(HAD_ERROR)
 
-	string(REGEX REPLACE "([^\n]+).*" "\\1" HAKA_VERSION_BUILD ${BUILDTAG})
+	string(REGEX REPLACE "([^\n]+).*" "\\1" HAKA_VERSION_BUILD "-${BUILDTAG}")
 endif()
 
-message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}-${HAKA_VERSION_BUILD}")
+message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}${HAKA_VERSION_BUILD}")
 
 # Distribution
 find_package(Distrib REQUIRED)
