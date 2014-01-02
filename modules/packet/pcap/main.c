@@ -215,7 +215,7 @@ static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 
 		pd->pd = pcap_open_offline(input, errbuf);
 
-		{
+		if (pd->pd) {
 			size_t cur;
 
 			pd->file = pcap_file(pd->pd);
