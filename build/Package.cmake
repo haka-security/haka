@@ -15,7 +15,7 @@ set(CPACK_PACKAGE_VERSION_PATCH ${HAKA_VERSION_PATCH})
 
 # Sources
 set(CPACK_SOURCE_GENERATOR "TGZ")
-set(CPACK_SOURCE_IGNORE_FILES "${CPACK_SOURCE_IGNORE_FILES};.gitignore;.gitmodules;.git")
+set(CPACK_SOURCE_IGNORE_FILES "${CMAKE_BINARY_DIR};\\\\.git/;\\\\.git$;\\\\.gitignore$;\\\\.gitmodules$;.*\\\\.swp;.*\\\\.pyc;__pycache__/")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${CMAKE_SYSTEM_PROCESSOR}_${LUA}")
 
 # Common
