@@ -77,8 +77,6 @@ When a lua error code occurs, the debugger breaks and outputs the error and a ba
 .. ansi-block::
     :string_escape:
 
-    \x1b[32mdebug\x1b[1m>  \x1b[0mcontinue
-    ...
     \x1b[0m\x1b[32mentering debugger\x1b[0m: unknown field 'destport'
     Backtrace
     \x1b[31m\x1b[1m=>\x1b[0m0    \x1b[36m[C]\x1b[0m: in function '\x1b[35m(null)\x1b[0m'
