@@ -61,9 +61,10 @@ static void ctl_client_cleanup(struct ctl_client_state *state)
 {
 	struct ctl_server_state *server_state = state->server;
 
+	thread_setcancelstate(false);
 	mutex_lock(&server_state->lock);
 
-	if (state->fd > 0) {
+	if (state->fd >= 0) {
 		close(state->fd);
 		state->fd = -1;
 	}
@@ -72,6 +73,7 @@ static void ctl_client_cleanup(struct ctl_client_state *state)
 	free(state);
 
 	mutex_unlock(&server_state->lock);
+	thread_setcancelstate(true);
 }
 
 static void *ctl_client_process_thread(void *param)
@@ -162,7 +164,7 @@ static void ctl_server_cleanup(struct ctl_server_state *state)
 
 		state->clients = NULL;
 
-		if (state->fd > 0) {
+		if (state->fd >= 0) {
 			close(state->fd);
 			state->fd = -1;
 		}
@@ -415,8 +417,8 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 	}
 	else if (strcmp(command, "STOP") == 0) {
 		messagef(HAKA_LOG_INFO, MODULE, L"request to stop haka received");
-		kill(getpid(), SIGTERM);
 		ctl_send_chars(state->fd, "OK");
+		kill(getpid(), SIGTERM);
 	}
 	else if (strcmp(command, "LOGS") == 0) {
 		struct redirect_logger *logger = redirect_logger_create(state->fd);
