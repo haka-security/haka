@@ -204,7 +204,7 @@ static int run_stats(int fd, int argc, char *argv[])
 
 struct command command_stats = {
 	"stats",
-	"stats:               show statistics",
+	"stats:              Show statistics",
 	0,
 	run_stats
 };
