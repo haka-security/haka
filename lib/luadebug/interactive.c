@@ -102,8 +102,8 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 
 	mutex_lock(&active_session_mutex);
 
-	if (!single) single = GREEN BOLD ">  " CLEAR;
-	if (!multi) multi = GREEN BOLD ">> " CLEAR;
+	if (!single) single = ">  ";
+	if (!multi) multi = ">> ";
 
 	session.user->completion = completion;
 

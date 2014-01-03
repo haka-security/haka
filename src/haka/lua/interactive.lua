@@ -11,6 +11,5 @@ function haka.interactive_rule(self, input)
 	end
 
 	haka.debug.pprint(input, "", 1, haka.debug.hide_underscore, out)
-	haka.debug.interactive.enter(color.green .. self.hook .. color.bold .. ">  " .. color.clear,
-		color.green .. self.hook .. color.bold .. ">> " .. color.clear, dump)
+	haka.debug.interactive.enter(self.hook .. ">  ", self.hook .. ">> ", dump)
 end
