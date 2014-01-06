@@ -125,7 +125,7 @@ static char *my_readline(struct luadebug_user *_user, const char *prompt)
 		}
 		else if (command == 'c') {
 			/* completion request */
-			generator_callback *generator;
+			generator_callback *generator = NULL;
 			char *line;
 			char *res;
 			int state = 0;
@@ -137,7 +137,10 @@ static char *my_readline(struct luadebug_user *_user, const char *prompt)
 				report_error(user, errno);
 				return NULL;
 			}
-			generator = _user->completion(line, start);
+
+			if (_user->completion) {
+				generator = _user->completion(line, start);
+			}
 			free(line);
 
 			line = read_string(user->fd);

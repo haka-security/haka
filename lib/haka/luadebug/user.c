@@ -10,6 +10,7 @@
 void luadebug_user_init(struct luadebug_user *user)
 {
 	atomic_set(&user->refcount, 1);
+	user->completion = NULL;
 }
 
 void luadebug_user_addref(struct luadebug_user *user)
