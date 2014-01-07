@@ -73,7 +73,11 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 		return NULL;
 	}
 
-	ip->payload = vbuffer_extract(payload, hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET, ALL, false);
+	/* extract the ip data, we cannot just take everything that is after the header
+	 * as the packet might contains some padding.
+	 */
+	ip->payload = vbuffer_extract(payload, hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET,
+			ipv4_get_len(ip)-(hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET), false);
 	if (!ip->payload) {
 		assert(check_error());
 		free(ip);
