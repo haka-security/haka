@@ -1,0 +1,4 @@
+debug http: selecting http dissector on flow
+debug tcp-connection: opening connection 127.0.0.1:42068 -> 127.0.0.1:80
+Ip source 127.0.0.1 port source 42068
+debug tcp-connection: closing connection 127.0.0.1:42068 -> 127.0.0.1:80
