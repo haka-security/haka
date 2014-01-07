@@ -158,8 +158,9 @@ void lua_luadebug_debugger_break();
 				end
 			end
 
-			if obj.__property then
-				for key, _ in pairs(obj.__property) do
+			local property = rawget(obj, '__property')
+			if property then
+				for key, _ in pairs(property) do
 					if not vars[key] and (not hidden or not hidden(key)) then
 						vars[key] = true
 						local success, child_obj = pcall(function () return obj[key] end)
