@@ -19,5 +19,5 @@ go to state1
 leave state3
 enter state2
 error on state2
-finished hello
 leave state2
+finished hello

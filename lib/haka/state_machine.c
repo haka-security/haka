@@ -483,18 +483,20 @@ void state_machine_instance_init(struct state_machine_instance *instance)
 void state_machine_instance_finish(struct state_machine_instance *instance)
 {
 	if (instance->current) {
+		struct state *current = instance->current;
+
+		state_machine_leave_state(instance);
+
 		messagef(HAKA_LOG_DEBUG, MODULE, L"%s: finish from state '%s'",
-				instance->state_machine->name, instance->current->name);
+				instance->state_machine->name, current->name);
 
-		if (have_transition(instance, &instance->current->finish)) {
+		if (have_transition(instance, &current->finish)) {
 			messagef(HAKA_LOG_DEBUG, MODULE, L"%s: finish transition on state '%s'",
-					instance->state_machine->name, instance->current->name);
+					instance->state_machine->name, current->name);
 
-			do_transition(instance, &instance->current->finish);
+			do_transition(instance, &current->finish);
 		}
 	}
-
-	state_machine_leave_state(instance);
 }
 
 void state_machine_instance_destroy(struct state_machine_instance *instance)
