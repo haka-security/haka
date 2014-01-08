@@ -38,6 +38,8 @@ macro(LUA_COMPILE)
 		set(LUA_FLAGS "${LUA_COMPILE_FLAGS}")
 	endif()
 
+	set(LUA_COMPILE_COMPILED_FILES)
+
 	foreach(it ${LUA_COMPILE_FILES})
 		get_filename_component(lua_source_file_path "${it}" ABSOLUTE)
 		get_filename_component(lua_source_file_name "${it}" NAME_WE)
