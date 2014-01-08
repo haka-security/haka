@@ -142,7 +142,9 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 			current_line = full_line;
 		}
 		else {
-			session.user->addhistory(session.user, line);
+			if (strlen(line) > 0) {
+				session.user->addhistory(session.user, line);
+			}
 			current_line = line;
 		}
 
