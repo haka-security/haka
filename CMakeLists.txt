@@ -27,20 +27,24 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CTEST_MODULE_BINARY_DI
 
 # Version
 include(version.cmake)
+set(HAKA_VERSION_BUILD "")
 
-if(DEFINED BUILDTAG)
-    if(BUILDTAG STREQUAL "official")
-        set(HAKA_VERSION_BUILD "")
-    else()
-    	set(HAKA_VERSION_BUILD "-${BUILDTAG}")
-    endif()
+# Add a build tag from the Git information
+execute_process(COMMAND git symbolic-ref -q --short HEAD WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	OUTPUT_VARIABLE BUILD_BRANCH RESULT_VARIABLE HAD_ERROR OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND git describe --dirty --always WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	OUTPUT_VARIABLE BUILDTAG RESULT_VARIABLE HAD_ERROR OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(HAD_ERROR EQUAL 0)
+	if((BUILD_BRANCH MATCHES "^master$" OR BUILD_BRANCH MATCHES "^release/.*$") AND
+		(NOT BUILDTAG MATCHES "-dirty"))
+		# Release build not dirty, no extra buildtag
+		execute_process(COMMAND rm -f "${CMAKE_SOURCE_DIR}/buildtag.cmake")
+	else()
+		set(HAKA_VERSION_BUILD "+${BUILDTAG}")
+		execute_process(COMMAND echo "set(HAKA_VERSION_BUILD \"${HAKA_VERSION_BUILD}\")" OUTPUT_FILE ${CMAKE_SOURCE_DIR}/buildtag.cmake)
+	endif()
 else()
-	execute_process(COMMAND "date" "+%Y%m%d-%H%M" OUTPUT_VARIABLE BUILDTAG RESULT_VARIABLE HAD_ERROR)
-	if(HAD_ERROR)
-		message(FATAL_ERROR "failed to get current date")
-	endif(HAD_ERROR)
-
-	string(REGEX REPLACE "([^\n]+).*" "\\1" HAKA_VERSION_BUILD "-${BUILDTAG}")
+	include(buildtag.cmake OPTIONAL)
 endif()
 
 message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}${HAKA_VERSION_BUILD}")
