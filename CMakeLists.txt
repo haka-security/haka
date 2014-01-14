@@ -53,7 +53,7 @@ message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAK
 find_package(Distrib REQUIRED)
 
 # Build type
-set(BUILD "None" CACHE STRING "Selected build type")
+set(BUILD "Release" CACHE STRING "Selected build type")
 set(CMAKE_BUILD_TYPE ${BUILD})
 message(STATUS "Building configuration (BUILD): ${CMAKE_BUILD_TYPE}")
 
