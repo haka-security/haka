@@ -63,7 +63,10 @@ The script file introduces additional malicious patterns and use the rule_group 
 
 White list
 ----------
-All the defined rules are too general and will therefore raise many alerts. In the example given hereafter we show how we could skip evalation of rules if the uri matches some conditions (for instance do not evaluate anti-sqli rules when the requested resource is equal to `/foo/bar/safepage.php`). This shows another advantage of using rules group feature.
+All the defined rules are too general and will therefore raise many alerts. In the example given hereafter,
+we show how we could skip evaluation of rules if the uri matches some conditions (for instance, do not evaluate
+anti-sqli rules when the requested resource is equal to `/foo/bar/safepage.php`). This shows another advantage
+of using rules group feature.
 
 .. note:: The check is done after uri normalisation
 

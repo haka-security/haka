@@ -45,7 +45,7 @@ Options
 Configuration file
 ------------------
 
-The configuration file is divided into three main sections **general**, **packet**, **alert** and **log**
+The configuration file is divided into three main sections **general**, **packet**, **alert** and **log**.
 
 General directives
 ^^^^^^^^^^^^^^^^^^
@@ -56,12 +56,12 @@ General directives
 
 .. describe:: thread
 
-    Set the number of threads to use. By default, haka will use as many threads as cpu-cores
+    Set the number of threads to use. By default, haka will use as many threads as cpu-cores.
 
 .. describe:: pass-through=[yes|no]
 
     Activate pass-through mode. `haka` will only monitor traffic and will not allow blocking
-    or modification of packets. The overall performence of `haka` will be greatly improved
+    or modification of packets. The overall performence of `haka` will be greatly improved.
 
 Packet directives
 ^^^^^^^^^^^^^^^^^

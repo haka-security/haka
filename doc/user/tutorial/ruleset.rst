@@ -29,7 +29,7 @@ The `functions.lua` file is a placeholder to put all lua utils functions.
 Protocol directories
 --------------------
 A directory has been created for ipv4, tcp and http protocols.
-Each directory contains one or more lua policy files. Each one contains a mandatory `dissector.lua` file which handle 
+Each directory contains one or more lua policy files. Each one contains a mandatory `dissector.lua` file which handles
 the dissector parts. There is some other files to enforce protocols controls and security/rules files.
-Every file will be used as long as it's called from the main lua file
+Every file will be used as long as it's called from the main lua file.
 You can read those file as an example of how to make a ruleset made of security, filtering and compliance rules.

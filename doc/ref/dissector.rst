@@ -11,7 +11,7 @@ Dissector
 
 .. lua:class:: dissector_data
 
-    This class is used to communicate the dissector data to rules or other dissectors.
+    Communicate the dissector data to rules or other dissectors.
 
     .. lua:data:: dissector
 

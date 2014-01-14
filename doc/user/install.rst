@@ -8,7 +8,7 @@ Installation
 Download the package
 ====================
 
-First download a Debian package from the `Haka website <http://www.haka-security.org>`_ in
+First, download a Debian package from the `Haka website <http://www.haka-security.org>`_ in
 the *Download* section.
 
 .. seealso::
