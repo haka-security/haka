@@ -42,9 +42,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </li>
         <li>{%- include "searchbox.html" %}</li>
         {%- if parents[-1] %}
-          <li class="right"><a href="{{ parents[-1].link|e }}" title="{{ parents[-1].title }}">Top</a></li>
+          <li class="right"><a href="{{ parents[-1].link|e }}" title="{{ parents[-1].title }}">Up</a></li>
         {%- elif pagename != master_doc %}
-          <li class="right"><a href="{{ pathto(master_doc) }}" title="{{ shorttitle|e }}">Top</a></li>
+          <li class="right"><a href="{{ pathto(master_doc) }}" title="{{ shorttitle|e }}">Up</a></li>
         {%- endif %}
         {%- if prev %}
           <li class="right"><a href="{{ prev.link|e }}" title="{{ prev.title }}">Prev</a></li>
