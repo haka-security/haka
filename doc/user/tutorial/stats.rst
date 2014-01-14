@@ -23,7 +23,8 @@ This tutorial introduces two lua script files: ``stats_on_exit`` and ``stats_int
     In this tutorial we use a pre-processed pcap file originated from the
     DARPA dataset and which could be retrieved from the `MIT website <http://www.ll.mit.edu/mission/communications/cyber/CSTcorpora/ideval/data/>`_.
     We filtered out some packets to get a reasonable size capture that
-    you can download `here <http://www.haka-security.org/pcap-download-1/>`_.
+    you can download from the `Haka website <http://www.haka-security.org/>`_
+    in the *Resources* section.
 
 Collecting data
 ---------------
