@@ -8,8 +8,13 @@ Installation
 Download the package
 ====================
 
-First download the package (*deb* or *rpm* depending on your distribution) from the
-`Haka website <http://www.haka-security.org>`_ in the *Download* section.
+First download a Debian package from the `Haka website <http://www.haka-security.org>`_ in
+the *Download* section.
+
+.. seealso::
+
+    If you need a package for another distribution, we will need to build it from the sources.
+    See the section :doc:`\../developer/build` for more details about this.
 
 Install
 =======
@@ -19,9 +24,3 @@ Then to install it, type the following command:
 .. code-block:: console
 
     $ sudo dpkg -i haka.deb
-
-Or
-
-.. code-block:: console
-
-    $ sudo rpm -i haka.rpm
