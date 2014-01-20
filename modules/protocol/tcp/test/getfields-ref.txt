@@ -1,0 +1,22 @@
+----------TCP HEADER ---------
+TCP Source Port: 4444
+TCP Destination Port: 34003
+TCP Sequence No: 0xd5735925
+TCP Ack Sequence No: 0x243faef2
+TCP Reserved: 0x0
+TCP Header Length: 32 bytes
+TCP Flags: 0x18
+    0... .... = FIN Flag: Not set
+    .0.. .... = SYN Flag: Not set
+    ..0. .... = RST Flag: Not set
+    ...1 .... = PSH Flag: Set
+    .... 1... = ACK Flag: Set
+    .... .0.. = URG Flag: Not set
+    .... ..0. = ECN Flag: Not set
+    .... ...0 = CWR Flag: Not set
+TCP Window Size: 0x0100
+TCP Checksum: 0x54e8
+    [Good: True]
+    [Bad: False]
+TCP Urgent Pointer: 0x0000
+

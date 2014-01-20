@@ -1,0 +1,7 @@
+warn core: no registered rule
+debug tcp-connection: opening connection 192.168.10.1:32889 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:32890 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:32890 -> 192.168.20.1:80
+debug tcp-connection: opening connection 192.168.10.1:32891 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:32889 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:32891 -> 192.168.20.1:80
