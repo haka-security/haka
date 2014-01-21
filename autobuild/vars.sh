@@ -11,6 +11,6 @@ if [ -z "$HAKA_BUILD" ]; then
 fi
 
 if [ -z "$HAKA_LUA" ]; then
-	export HAKA_LUA="lua51,luajit"
+	export HAKA_LUA="lua,luajit"
 fi
 
