@@ -7,8 +7,6 @@ include_directories(../common)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # SWIG lua bindings for the lib haka
-find_package(SWIG REQUIRED)
-include(UseSWIG)
 swig_process(hakalua lua
 	lua/haka.i
 	lua/log.i
@@ -61,4 +59,4 @@ LUA_LINK(hakapcap)
 
 install(TARGETS hakapcap RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
 
-add_subdirectory(debian)
+add_subdirectory(init)

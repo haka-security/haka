@@ -852,7 +852,7 @@ static void process_debugger(void *_data)
 
 	dump_source(data->session, data->ar, data->ar->currentline, data->ar->currentline);
 
-	while ((line = data->session->user->readline(data->session->user, GREEN "debug" BOLD ">  " CLEAR))) {
+	while ((line = data->session->user->readline(data->session->user, "debug>  "))) {
 		const bool cont = process_command(data->session, line, true);
 		free(line);
 

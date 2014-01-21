@@ -45,6 +45,7 @@ struct ctl_client_state {
 
 struct ctl_server_state {
 	int                      fd;
+	bool                     thread_created;
 	thread_t                 thread;
 	bool                     exiting;
 	bool                     binded;
@@ -60,9 +61,10 @@ static void ctl_client_cleanup(struct ctl_client_state *state)
 {
 	struct ctl_server_state *server_state = state->server;
 
+	thread_setcancelstate(false);
 	mutex_lock(&server_state->lock);
 
-	if (state->fd > 0) {
+	if (state->fd >= 0) {
 		close(state->fd);
 		state->fd = -1;
 	}
@@ -71,6 +73,7 @@ static void ctl_client_cleanup(struct ctl_client_state *state)
 	free(state);
 
 	mutex_unlock(&server_state->lock);
+	thread_setcancelstate(true);
 }
 
 static void *ctl_client_process_thread(void *param)
@@ -135,41 +138,44 @@ static void ctl_server_cleanup(struct ctl_server_state *state)
 	mutex_lock(&state->lock);
 
 	state->exiting = true;
-	thread_cancel(state->thread);
 
-	mutex_unlock(&state->lock);
-	thread_join(state->thread, &ret);
-	mutex_lock(&state->lock);
+	if (state->thread_created) {
+		thread_cancel(state->thread);
 
-	while (state->clients) {
-		struct ctl_client_state *current = state->clients;
-		if (current->thread_created) {
-			const thread_t client_thread = current->thread;
-			thread_cancel(client_thread);
+		mutex_unlock(&state->lock);
+		thread_join(state->thread, &ret);
+		mutex_lock(&state->lock);
 
-			mutex_unlock(&state->lock);
-			thread_join(client_thread, &ret);
-			mutex_lock(&state->lock);
+		while (state->clients) {
+			struct ctl_client_state *current = state->clients;
+			if (current->thread_created) {
+				const thread_t client_thread = current->thread;
+				thread_cancel(client_thread);
+
+				mutex_unlock(&state->lock);
+				thread_join(client_thread, &ret);
+				mutex_lock(&state->lock);
+			}
+
+			if (state->clients == current) {
+				ctl_client_cleanup(current);
+			}
 		}
 
-		if (state->clients == current) {
-			ctl_client_cleanup(current);
-		}
-	}
+		state->clients = NULL;
 
-	state->clients = NULL;
-
-	if (state->fd > 0) {
-		close(state->fd);
-		state->fd = -1;
-	}
-
-	if (state->binded) {
-		if (remove(HAKA_CTL_SOCKET_FILE)) {
-			messagef(HAKA_LOG_ERROR, MODULE, L"cannot remove socket file: %s", errno_error(errno));
+		if (state->fd >= 0) {
+			close(state->fd);
+			state->fd = -1;
 		}
 
-		state->binded = false;
+		if (state->binded) {
+			if (remove(HAKA_CTL_SOCKET_FILE)) {
+				messagef(HAKA_LOG_ERROR, MODULE, L"cannot remove socket file: %s", errno_error(errno));
+			}
+
+			state->binded = false;
+		}
 	}
 
 	mutex_unlock(&state->lock);
@@ -189,6 +195,8 @@ static void *ctl_server_coreloop(void *param)
 		message(HAKA_LOG_FATAL, L"core", clear_error());
 		return NULL;
 	}
+
+	state->thread_created = true;
 
 	while (!state->exiting) {
 		socklen_t len = sizeof(addr);
@@ -409,8 +417,8 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 	}
 	else if (strcmp(command, "STOP") == 0) {
 		messagef(HAKA_LOG_INFO, MODULE, L"request to stop haka received");
-		kill(getpid(), SIGTERM);
 		ctl_send_chars(state->fd, "OK");
+		kill(getpid(), SIGTERM);
 	}
 	else if (strcmp(command, "LOGS") == 0) {
 		struct redirect_logger *logger = redirect_logger_create(state->fd);

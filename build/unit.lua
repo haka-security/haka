@@ -2,12 +2,12 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package.path = '?.lua;' .. package.path
+package.path = string.gsub('@CONF@', '[^/]*%.lua', '') .. '?.lua;' .. package.path
 
 print("UNIT TEST BEGIN")
 
 local function call()
-	require(string.gsub('@CONF@', '.lua', ''))
+	require(string.gsub(string.match('@CONF@', '[^/]*%.lua'), '%.lua', ''))
 end
 
 local success, msg = pcall(call)

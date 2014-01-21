@@ -22,4 +22,4 @@ Exit
 
 .. lua:function:: on_exit(exit_func)
 
-	Runs ``exit_func`` code at haka exit
+	Runs ``exit_func`` code at haka exit.

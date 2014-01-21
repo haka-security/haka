@@ -8,7 +8,7 @@ Syslog alert `alert/syslog`
 Description
 ^^^^^^^^^^^
 
-This module will output all alerts to `syslog`
+This module will output all alerts to `syslog`.
 
 By default, the message are sent to local0. You can adjust your
 syslogd.conf accordingly.

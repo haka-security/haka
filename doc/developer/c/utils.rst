@@ -9,7 +9,7 @@ Types
 
 .. c:type:: wchar_t
 
-    Wide chars
+    Wide chars.
 
 .. c:type:: bool
 
@@ -33,7 +33,7 @@ Types
              SWAP_FROM_LE(type, x)
 
     Byte swapping utility macro. The `type` should be the C type of the value `x`
-    (ie. :c:type:`int32`, :c:type:`uint64`...)
+    (ie. :c:type:`int32`, :c:type:`uint64`...).
 
 .. c:macro:: GET_BIT(v, i)
              SET_BIT(v, i, x)

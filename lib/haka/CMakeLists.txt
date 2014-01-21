@@ -6,8 +6,6 @@ include_directories(${LIBINIPARSER_INCLUDE})
 
 # Haka library shared between runtime and modules
 
-find_package(SWIG REQUIRED)
-include(UseSWIG)
 swig_process(libhakalua lua lua/object.i)
 
 add_library(libhaka SHARED

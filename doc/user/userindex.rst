@@ -15,9 +15,3 @@ Welcome to Haka's User Guide!
     tool_suite.rst
     tutorial.rst
     debug.rst
-
-Indices and tables
-^^^^^^^^^^^^^^^^^^
-
-* :ref:`genindex`
-* :ref:`search`

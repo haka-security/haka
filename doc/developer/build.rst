@@ -5,11 +5,6 @@
 Build
 =====
 
-.. note::
-
-    The build instructions are for Debian. It will need to be adapted to
-    other platform.
-
 Dependencies
 ------------
 
@@ -17,38 +12,77 @@ Required
 ^^^^^^^^
 
 * Toolchain (GCC, Make, ...)
-* cmake
+* cmake (>= 2.8)
 * swig
-* python-sphinx
-* liblua5.1
+* sphinx (>= 2)
 * tshark
 * check
 * rsync
-* libpcap-dev
+* libpcap
 * gawk
-* libedit-dev
-
-Debian:
-
-.. code-block:: console
-
-    $ sudo apt-get install build-essential cmake swig python-sphinx liblua5.1 tshark check rsync libpcap-dev gawk libedit-dev
+* libedit
 
 Optional
 ^^^^^^^^
 
+* Git
 * Cppcheck
 * Netfilter Queue
 * Valgrind
+* rpm-build
 
-Debian:
+Examples
+^^^^^^^^
+
+Debian (and compatible)
+"""""""""""""""""""""""
 
 .. code-block:: console
 
+    $ sudo apt-get install build-essential cmake swig python-sphinx tshark check
+    $ sudo apt-get install rsync libpcap-dev gawk libedit-dev
     $ sudo apt-get install cppcheck libnetfilter-queue-dev valgrind
 
-Build
------
+Fedora
+""""""
+
+.. code-block:: console
+
+    $ sudo yum install gcc gcc-c++ make cmake python-sphinx wireshark check
+    $ sudo yum install check-devel rsync libpcap-devel gawk libedit-devel
+    $ sudo yum install git cppcheck libnetfilter_queue-devel rpm-build valgrind valgrind-devel
+
+The *swig* package in Fedora is broken and will not be usable to compile Haka.
+You will need to get a swig build from upstream.
+
+.. code-block:: console
+
+    $ git clone https://github.com/swig/swig.git
+    $ cd swig
+    $ git co rel-2.0.11
+    $ ./autogen.sh
+    $ ./configure
+    $ make
+    $ sudo make install
+
+Download
+--------
+
+You can get the sources of Haka from a tarball or directly by cloning the Git
+repository.
+
+From sources tarball
+^^^^^^^^^^^^^^^^^^^^
+
+First download the source tarball from the
+`Haka website <http://www.haka-security.org>`_.
+
+Then type the following commands:
+
+.. code-block:: console
+
+    $ tar -xzf haka.tar.gz
+    $ cd haka
 
 Git
 ^^^
@@ -59,7 +93,7 @@ You must first clone the Git repository. Our project is hosted on GitHub:
 
     $ git clone git@github.com:haka-security/haka.git
 
-Our development uses the branching model Git flow which describe how to
+Our development uses the branching model Git flow which describes how to
 use and name Git branches. For instance, you will find the following branches:
 
 * ``master`` branch contains the last release of Haka. This branch might be empty
@@ -73,7 +107,7 @@ You should then switch to the branch you want to build. For example:
     $ git checkout develop
 
 Submodules
-^^^^^^^^^^
+""""""""""
 
 The repository uses submodules that need to be initialized and updated:
 
@@ -81,6 +115,9 @@ The repository uses submodules that need to be initialized and updated:
 
     $ git submodule init
     $ git submodule update
+
+Build
+-----
 
 Configure
 ^^^^^^^^^
@@ -125,11 +162,22 @@ Use make like usual to compile:
 Install
 ^^^^^^^
 
-To install haka, you have the following options:
+To install Haka on your system, type this command:
 
 .. code-block:: console
 
-    $ make install
+    $ sudo make install
+
+By default, Haka will be installed in ``/opt/haka``. You might want to update your ``PATH``
+environment variable to be able to easily launch the various tools from the command line.
+
+Local install
+"""""""""""""
+
+To install Haka locally, type this command:
+
+.. code-block:: console
+
     $ make localinstall
 
 Using ``localinstall`` allow to install haka locally under the folder ``out``. To use
@@ -164,4 +212,10 @@ command ``make pre-tests``.
 Packaging
 ^^^^^^^^^
 
-Run ``make package`` to build a .deb installable package.
+Run ``make package`` to build an installable package.
+
+.. note::
+
+    If you have some issue with the folder permission in the generated package, check your
+    umask property. If you hit this problem, for instance, rpm will complains about conflicting
+    directory.

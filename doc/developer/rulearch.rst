@@ -30,7 +30,7 @@ assigned to some `hooks`. A rule need the following fields:
 * A :lua:data:`hooks` member that contains a array of hook string name.
   It will be used to install the rule on them.
 * A :lua:func:`rule.eval` function that is called to evaluate the rule.
-* All fields defined from the dissector can be used from the rule
+* All fields defined from the dissector can be used from the rule.
 
 .. seealso: :lua:func:`rule`.
 
@@ -44,7 +44,7 @@ the declaration order.
 A given dissector automatically defines two hooks:
 
 * `dissector_name`-up: For instance, for the dissector `ipv4`, this hook is named `ipv4-up`.
-* `dissector_name`-down
+* `dissector_name`-down.
 
 .. image:: dissector-hook.png
 

@@ -16,7 +16,8 @@ Basic TCP/IP filtering
 
 Basic IP filtering
 ^^^^^^^^^^^^^^^^^^
-the direcctory <haka_install_path>/share/haka/sample/filter/ contains all the example files for this section.
+
+The directory <haka_install_path>/share/haka/sample/filter/ contains all the example files for this section.
 
 A basic filter script on IP fields is provided as ``ipfilter.lua``:
 
@@ -31,7 +32,7 @@ This script can be run with a pcap file provided in the sample directory.
     $ cd <haka_install_path>/share/haka/sample/filter/
     $ hakapcap ipfilter.pcap ipfilter.lua
 
-To create a pcap file containing all packets that were not dropped, run the following command
+To create a pcap file containing all packets that were not dropped, run the following command:
 
 .. code-block:: console
 
@@ -45,7 +46,7 @@ according to their IP source address.
 Interactive rule debugging
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Haka allows to interactively debug lua rules. A script containing a lua error is provided as ``tcpfilter.lua``
+Haka allows to interactively debug lua rules. A script containing a lua error is provided as ``tcpfilter.lua``.
 
 This script will filter TCP packets, only allowing packets to/from port 80 to pass through.
 
@@ -76,8 +77,6 @@ When a lua error code occurs, the debugger breaks and outputs the error and a ba
 .. ansi-block::
     :string_escape:
 
-    \x1b[32mdebug\x1b[1m>  \x1b[0mcontinue
-    ...
     \x1b[0m\x1b[32mentering debugger\x1b[0m: unknown field 'destport'
     Backtrace
     \x1b[31m\x1b[1m=>\x1b[0m0    \x1b[36m[C]\x1b[0m: in function '\x1b[35m(null)\x1b[0m'
@@ -150,16 +149,15 @@ Using rule groups
 
 Haka can handle multiple rules as a group.
 
-Rule groups have three functions
+Rule groups have three functions:
 
-The `init` function is called before any rule from the group is applied
+* The `init` function is called before any rule from the group is applied
 
-The `continue` function is called between each rule of the group and can decide to stop
-processing the group at any point
+* The `continue` function is called between each rule of the group and can decide to stop processing the group at any point.
 
-the `fini` function is called after all rules have been run. It is not called if `continue` has forced a cancelation mid-group.
+* The `fini` function is called after all rules have been run. It is not called if `continue` has forced a cancelation mid-group.
 
-The following example uses the concept of group to implement a simple filter that only accepts connections on port 80 or port 22
+The following example uses the concept of group to implement a simple filter that only accepts connections on port 80 or port 22.
 
 .. literalinclude:: ../../../sample/filter/groupfilter.lua
     :language: lua
@@ -178,8 +176,8 @@ examples will illustrate how to do that.
 When configured to use nfqueue, haka will hook itself up to the `raw` nfqueue table in order to
 inspect, modify, create and delete packets in real time.
 
-The rest of this tutorial assumes that the haka package is installed on a host and that that
-host has a network interface named eth0
+The rest of this tutorial assumes that the haka package is installed on a host which has a
+network interface named eth0.
 
 The configuration file for the daemon is given below:
 
@@ -198,7 +196,7 @@ The lua file used here is the one from the first tutorial. This filter will refu
 
 HTTP filtering
 ^^^^^^^^^^^^^^
-Haka comes with an HTTP parser. Using that module it is easy to filter packets using specific fields from HTTP headers
+Haka comes with an HTTP parser. Using that module it is easy to filter packets using specific fields from HTTP headers.
 
 .. literalinclude:: ../../../sample/filter/httpfilter.lua
    :language: lua
@@ -239,7 +237,7 @@ configuration file:
     # Select the haka configuration file to use
     configuration = "httpmodif.lua"
 
-And start it
+And start it.
 
 .. code-block:: console
 

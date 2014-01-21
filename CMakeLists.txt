@@ -3,19 +3,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Initialize
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 include(TestBigEndian)
 include(CheckTypeSize)
-include(ProcessorCount)
+include(ProcessorCount OPTIONAL)
 
-ProcessorCount(CPU_COUNT)
+if(COMMAND ProcessorCount)
+	ProcessorCount(CPU_COUNT)
+else()
+	set(CPU_COUNT 1)
+endif()
 
 # Warn in source build
 if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
 	message(WARNING "In-source builds are not recommanded.")
 endif()
 
-project(haka)
+project(haka NONE C)
 
 set(CTEST_MODULE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
 set(CTEST_MODULE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
@@ -23,22 +27,33 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build ${CTEST_MODULE_BINARY_DI
 
 # Version
 include(version.cmake)
+set(HAKA_VERSION_BUILD "")
 
-if(DEFINED BUILDTAG)
-	set(HAKA_VERSION_BUILD ${BUILDTAG})
+# Add a build tag from the Git information
+execute_process(COMMAND git symbolic-ref -q --short HEAD WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	OUTPUT_VARIABLE BUILD_BRANCH RESULT_VARIABLE HAD_ERROR OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+execute_process(COMMAND git describe --dirty --always WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	OUTPUT_VARIABLE BUILDTAG RESULT_VARIABLE HAD_ERROR OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+if(HAD_ERROR EQUAL 0)
+	if((BUILD_BRANCH MATCHES "^master$" OR BUILD_BRANCH MATCHES "^release/.*$") AND
+		(NOT BUILDTAG MATCHES "-dirty"))
+		# Release build not dirty, no extra buildtag
+		execute_process(COMMAND rm -f "${CMAKE_SOURCE_DIR}/buildtag.cmake")
+	else()
+		set(HAKA_VERSION_BUILD "+${BUILDTAG}")
+		execute_process(COMMAND echo "set(HAKA_VERSION_BUILD \"${HAKA_VERSION_BUILD}\")" OUTPUT_FILE ${CMAKE_SOURCE_DIR}/buildtag.cmake)
+	endif()
 else()
-	execute_process(COMMAND "date" "+%Y%m%d-%H%M" OUTPUT_VARIABLE BUILDTAG RESULT_VARIABLE HAD_ERROR)
-	if(HAD_ERROR)
-		message(FATAL_ERROR "failed to get current date")
-	endif(HAD_ERROR)
-
-	string(REGEX REPLACE "([^\n]+).*" "\\1" HAKA_VERSION_BUILD ${BUILDTAG})
+	include(buildtag.cmake OPTIONAL)
 endif()
 
-message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}-${HAKA_VERSION_BUILD}")
+message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}${HAKA_VERSION_BUILD}")
+
+# Distribution
+find_package(Distrib REQUIRED)
 
 # Build type
-set(BUILD "None" CACHE STRING "Selected build type")
+set(BUILD "Release" CACHE STRING "Selected build type")
 set(CMAKE_BUILD_TYPE ${BUILD})
 message(STATUS "Building configuration (BUILD): ${CMAKE_BUILD_TYPE}")
 
@@ -62,6 +77,9 @@ endif()
 SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags")
 
 # Default SWIG behavior to not create global module
+find_package(SWIG 2 REQUIRED)
+include(UseSWIG)
+
 set(CMAKE_SWIG_FLAGS "-nomoduleglobal")
 
 # Install prefix
@@ -98,7 +116,7 @@ include(UseLua)
 
 # Configure
 if(CMAKE_COMPILER_IS_GNUCC)
-	set(CMAKE_C_FLAGS "-Wall -Werror")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
 endif()
 
 find_package(Threads REQUIRED)
@@ -203,29 +221,4 @@ if(CPPCHECK_FOUND)
 	)
 endif(CPPCHECK_FOUND)
 
-# Packaging
-set(CPACK_GENERATOR "DEB")
-set(CPACK_SET_DESTDIR "TRUE")
-
-# Common
-set(CPACK_PACKAGE_NAME "haka")
-set(CPACK_PACKAGE_VENDOR "Arkoon Network Security")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Haka runtime is a tool that allows to capture network traffic and filter them based on Lua policy files.")
-set(CPACK_PACKAGE_VERSION "${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}-${HAKA_VERSION_BUILD}")
-set(CPACK_PACKAGE_VERSION_MAJOR ${HAKA_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${HAKA_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${HAKA_VERSION_PATCH})
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${CMAKE_SYSTEM_PROCESSOR}_${LUA}")
-set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_BINARY_DIR}/CPackEnv.cmake")
-FILE(WRITE "${CPACK_PROJECT_CONFIG_FILE}" "set(ENV{LD_LIBRARY_PATH} \"${CMAKE_CURRENT_BINARY_DIR}/_CPack_Packages/\${CPACK_TOPLEVEL_TAG}/DEB/\${CPACK_PACKAGE_FILE_NAME}/${HAKA_INSTALL_PREFIX}/lib\")\n")
-
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/postinst;${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/postrm;${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/preinst;${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/prerm;${CMAKE_CURRENT_BINARY_DIR}/src/haka/debian/conffiles;")
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-
-install(FILES LICENSE.txt DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka)
-set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt)
-
-# Debian package
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Arkoon Network Security")
-
-include(CPack)
+include(Package)

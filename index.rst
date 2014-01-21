@@ -12,7 +12,7 @@ Users
     :titlesonly:
     :maxdepth: 2
 
-    doc/user/index.rst
+    doc/user/userindex.rst
 
 References
 ^^^^^^^^^^
@@ -21,7 +21,7 @@ References
     :titlesonly:
     :maxdepth: 2
 
-    doc/ref/index.rst
+    doc/ref/refindex.rst
 
 Developers
 ^^^^^^^^^^
@@ -30,10 +30,4 @@ Developers
     :titlesonly:
     :maxdepth: 2
 
-    doc/developer/index.rst
-
-Indices and tables
-^^^^^^^^^^^^^^^^^^
-
-* :ref:`genindex`
-* :ref:`search`
+    doc/developer/devindex.rst

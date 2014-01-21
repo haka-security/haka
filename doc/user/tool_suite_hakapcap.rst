@@ -8,7 +8,6 @@ hakapcap
 .. program:: hakapcap
 
 ``hakapcap`` is a tool to quickly apply a lua policy file to a pcap file and see the resulting decisions.
-on pcap capture files.
 
 .. code-block:: console
 
@@ -43,8 +42,8 @@ Options
 
 .. option:: pcapfile
 
-    A pcap file containing the packets to filter
+    A pcap file containing the packets to filter.
 
 .. option:: luafile
 
-    A lua script containing the filtering rules to apply to the pcap file
+    A lua script containing the filtering rules to apply to the pcap file.

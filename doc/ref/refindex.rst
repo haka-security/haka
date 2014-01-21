@@ -17,9 +17,3 @@ Welcome to Haka's Reference Guide!
     ../../../modules/protocol/ipv4/doc/lua.rst
     ../../../modules/protocol/tcp/doc/lua.rst
     ../../../modules/protocol/http/doc/lua.rst
-
-Indices and tables
-^^^^^^^^^^^^^^^^^^
-
-* :ref:`genindex`
-* :ref:`search`

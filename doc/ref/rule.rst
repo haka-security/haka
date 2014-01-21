@@ -14,7 +14,7 @@ This section introduces how to define security rules.
 Single rule
 -----------
 
-As detailed herefater, a rule is made of a list of hooks
+As detailed hereafter, a rule is made of a list of hooks
 and an evaluation function:
 
 .. lua:class:: rule
@@ -46,7 +46,7 @@ Example:
 Rule group
 ----------
 
-Rule group allow to customize the rule evaluation.
+Rule group allows customizing the rule evaluation.
 
 .. lua:class:: rule_group
 

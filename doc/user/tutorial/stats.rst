@@ -7,7 +7,7 @@ Statistics
 
 Introduction
 ------------
-This tutorial shows how tu collect trafic and make statisctics on collected data.
+This tutorial shows how tu collect traffic and make statistics on collected data.
 
 How-to
 ------
@@ -18,7 +18,13 @@ This tutorial introduces two lua script files: ``stats_on_exit`` and ``stats_int
     $ cd <haka_install_path>/share/haka/sample/stats
     $ hakapcap <pcap_file> <script_stat_file>
 
-.. note:: In this tutorial we use a pre-processed pcap file originated from the DARPA-99 dataset and which could be retrieved from http://www.ll.mit.edu/mission/communications/cyber/CSTcorpora/ideval/data/1999/training/week1/monday/outside.tcpdump.gz). We filtered out all packets not belonging to a tcp connection.
+.. note::
+
+    In this tutorial we use a pre-processed pcap file originated from the
+    DARPA dataset and which could be retrieved from the `MIT website <http://www.ll.mit.edu/mission/communications/cyber/CSTcorpora/ideval/data/>`_.
+    We filtered out some packets to get a reasonable size capture that
+    you can download from the `Haka website <http://www.haka-security.org/>`_
+    in the *Resources* section.
 
 Collecting data
 ---------------
