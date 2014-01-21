@@ -141,7 +141,7 @@ The configuration with cmake supports the following options:
 
     Select the build type to be compiled (default: *Release*)
 
-.. option:: LUA=[lua51|luajit]
+.. option:: LUA=[lua|luajit]
 
     Choose the Lua version to use (default: *luajit*)
 
@@ -207,7 +207,7 @@ You can also pass some arguments to ctest by using the variable ``CTEST_ARGS``.
 
 This command will install locally the project and run the tests in the folder. If you need
 to run the tests manually using the command ctest, you can prepare the environment with the
-command ``make pre-tests``.
+command ``make pretests``.
 
 Packaging
 ^^^^^^^^^

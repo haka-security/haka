@@ -28,7 +28,16 @@ static void tcp_connection_release(struct ctable *elem, bool freemem);
 
 static struct ctable *cnx_table = NULL;
 
-mutex_t ct_mutex = PTHREAD_MUTEX_INITIALIZER;
+mutex_t ct_mutex;
+
+static INIT void tcp_connection_init()
+{
+	/* Init a recursive mutex to avoid dead-lock on signal handling when
+	 * running in single thread mode.
+	 */
+	UNUSED bool ret = mutex_init(&ct_mutex, true);
+	assert(ret);
+}
 
 static FINI void tcp_connection_fini()
 {
@@ -40,6 +49,8 @@ static FINI void tcp_connection_fini()
 	}
 
 	cnx_table = NULL;
+
+	mutex_destroy(&ct_mutex);
 }
 
 void tcp_connection_insert(struct ctable *elem)
@@ -53,7 +64,7 @@ void tcp_connection_insert(struct ctable *elem)
 
 #define EXCHANGE(a, b) { const typeof(a) tmp = a; a = b; b = tmp; }
 
-static struct ctable *tcp_connection_find(const struct tcp *tcp,
+static struct ctable *tcp_connection_find(struct tcp *tcp,
 		bool *direction_in, bool *dropped)
 {
 	struct tcp_connection elem;
@@ -102,8 +113,6 @@ static void tcp_connection_remove(struct ctable *elem)
 
 static void tcp_connection_release(struct ctable *elem, bool freemem)
 {
-	lua_ref_clear(&elem->tcp_conn.lua_table);
-
 	if (elem->tcp_conn.stream_input) {
 		stream_destroy(elem->tcp_conn.stream_input);
 		elem->tcp_conn.stream_input = NULL;
@@ -115,13 +124,13 @@ static void tcp_connection_release(struct ctable *elem, bool freemem)
 	}
 
 	if (freemem) {
+		lua_ref_clear(&elem->tcp_conn.lua_table);
 		lua_object_release(&elem->tcp_conn, &elem->tcp_conn.lua_object);
 		free(elem);
 	}
 }
 
-
-struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
+struct tcp_connection *tcp_connection_new(struct tcp *tcp)
 {
 	struct ctable *ptr;
 	bool dropped;
@@ -169,7 +178,7 @@ struct tcp_connection *tcp_connection_new(const struct tcp *tcp)
 	return &ptr->tcp_conn;
 }
 
-struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction_in,
+struct tcp_connection *tcp_connection_get(struct tcp *tcp, bool *direction_in,
 		bool *_dropped)
 {
 	bool dropped;
@@ -185,6 +194,8 @@ struct tcp_connection *tcp_connection_get(const struct tcp *tcp, bool *direction
 		}
 	}
 	else {
+		if (direction_in) *direction_in = true; /* This is the direction of this connection
+												   if is created from this packet */
 		if (_dropped) *_dropped = false;
 		return NULL;
 	}

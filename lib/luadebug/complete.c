@@ -104,7 +104,11 @@ bool complete_push_table_context(struct lua_State *L, struct luadebug_complete *
 		if (context->stack_env >= 0) {
 			/* Change the chunk environment */
 			lua_pushvalue(L, context->stack_env);
+#if HAKA_LUA52
+			lua_setupvalue(L, -2, 1);
+#else
 			lua_setfenv(L, -2);
+#endif
 		}
 
 		if (lua_pcall(L, 0, 1, 0)) {
@@ -303,7 +307,11 @@ char *complete_callback_global(struct lua_State *L, struct luadebug_complete *co
 		context->operator = 0;
 		context->token = text;
 
+#if HAKA_LUA52
+		lua_pushglobaltable(L);
+#else
 		lua_pushvalue(L, LUA_GLOBALSINDEX);
+#endif
 	}
 
 	return complete_table(L, context, text, state, &complete_underscore_hidden);

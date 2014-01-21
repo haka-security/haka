@@ -25,7 +25,7 @@ local function max_length_field(tab, nb)
 	local max = {}
 	if nb > #tab then nb = #tab end
 	for iter = 1, nb do
-		for k, v in pairs(tab[iter]) do
+		for k, v in sorted_pairs(tab[iter]) do
 			local size = #v
 			if size > 99 then
 				-- Lua formating limits width to 99
@@ -46,7 +46,7 @@ local function print_columns(tab, nb)
 	local max = max_length_field(tab, nb)
 	if #tab > 0 then
 		local columns = {}
-		for k, _ in pairs(tab[1]) do
+		for k, _ in sorted_pairs(tab[1]) do
 			table.insert(columns, string.format("%-" .. tostring(max[k]) .. "s", k))
 		end
 		print("| " .. table.concat(columns, " | ") .. " |")
@@ -79,7 +79,10 @@ function table_mt:top(field, nb)
 	nb = nb or 10
 	assert(field, "missing field parameter")
 	local grouped = group_by(self, field)
-	local sorted = order_by(grouped, function(p, q) return #p[2] > #q[2] end)
+	local sorted = order_by(grouped, function(p, q)
+		return #p[2] > #q[2] or
+			(#p[2] == #q[2] and p[1] > q[1])
+	end)
 
 	for _, entry in ipairs(sorted) do
 		if nb <= 0 then break end
@@ -96,7 +99,7 @@ function table_mt:dump(nb)
 	for _, entry in ipairs(self) do
 		if iter <= 0 then break end
 		local content = {}
-		for k, v in pairs(entry) do
+		for k, v in sorted_pairs(entry) do
 			table.insert(content, string.format("%-" .. tostring(max[k]) .. "s", v))
 		end
 		print("| " .. table.concat(content, " | ") .. " |")
@@ -109,7 +112,7 @@ end
 
 function table_mt:list()
 	if #stats > 1 then
-		for k, _ in pairs(self[1]) do 
+		for k, _ in sorted_pairs(self[1]) do 
 			print(k)
 		end
 	end

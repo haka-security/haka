@@ -5,6 +5,8 @@
 #ifndef _HAKA_LUA_OBJECT_H
 #define _HAKA_LUA_OBJECT_H
 
+#include <haka/types.h>
+
 struct lua_state;
 struct lua_State;
 
@@ -21,6 +23,7 @@ struct lua_object {
 };
 
 void lua_object_initialize(struct lua_State *L);
+bool lua_object_ownedbylua(struct lua_object *obj);
 void lua_object_init(struct lua_object *obj);
 void lua_object_release(void *ptr, struct lua_object *obj);
 

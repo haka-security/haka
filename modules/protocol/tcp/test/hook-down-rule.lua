@@ -7,10 +7,11 @@
 
 require("protocol/ipv4")
 require("protocol/tcp")
+require("protocol/tcp-connection")
 
 haka.rule {
-	hooks = {"tcp-down"},
-	eval = function (self,pkt)
+	hook = haka.event('tcp', 'send_packet'),
+	eval = function (pkt)
 		print(string.format("srcport:%s - dstport:%s", pkt.srcport, pkt.dstport))
 	end
 }

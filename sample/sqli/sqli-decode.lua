@@ -11,12 +11,12 @@ local keywords = {
 
 -- Still naive rule
 haka.rule{
-	hooks = { 'http-request' },
-	eval = function (self, http)
-		dump_request(http)
+	hook = haka.event('http', 'request'),
+	eval = function (http, request)
+		dump_request(request)
 
 		local score = 0
-		local uri = http.request.uri
+		local uri = request.uri
 
 		-- Apply all decoding functions on uri (percent-decode, uncomments, etc.)
 		uri = decode_all(uri)

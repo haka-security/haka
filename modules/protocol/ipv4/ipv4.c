@@ -13,34 +13,86 @@
 #include <haka/error.h>
 
 
+static bool ipv4_flatten_header(struct vbuffer *payload, size_t hdrlen)
+{
+	struct vsubbuffer header_part;
+	if (!vbuffer_sub(payload, 0, hdrlen, &header_part)) {
+		return false;
+	}
+
+	if (!vsubbuffer_flatten(&header_part)) {
+		return false;
+	}
+
+	return true;
+}
+
 struct ipv4 *ipv4_dissect(struct packet *packet)
 {
 	struct ipv4 *ip = NULL;
+	struct vbuffer *payload;
+	struct {
+#ifdef HAKA_LITTLEENDIAN
+		uint8    hdr_len:4;
+		uint8    version:4;
+#else
+		uint8    version:4;
+		uint8    hdr_len:4;
+#endif
+	} hdrlen;
 
 	assert(packet);
+	payload = packet_payload(packet);
 
-	if (packet_length(packet) < sizeof(struct ipv4_header)) {
+	if (!vbuffer_checksize(payload, sizeof(struct ipv4_header))) {
+		error(L"invalid packet size");
 		return NULL;
 	}
 
 	ip = malloc(sizeof(struct ipv4));
 	if (!ip) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	ip->packet = packet;
+	ip->invalid_checksum = false;
+
+	if (!payload) {
+		assert(check_error());
+		free(ip);
+		return NULL;
+	}
+
+	/* extract ip header len */
+	*(uint8 *)&hdrlen = vbuffer_getbyte(payload, 0);
+
+	if (!ipv4_flatten_header(payload, hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET)) {
+		assert(check_error());
+		free(ip);
+		return NULL;
+	}
+
+	/* extract the ip data, we cannot just take everything that is after the header
+	 * as the packet might contains some padding.
+	 */
+	ip->payload = vbuffer_extract(payload, hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET,
+			ipv4_get_len(ip)-(hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET), false);
+	if (!ip->payload) {
+		assert(check_error());
+		free(ip);
 		return NULL;
 	}
 
 	lua_object_init(&ip->lua_object);
-	ip->packet = packet;
-	ip->header = (struct ipv4_header*)(packet_data(packet));
-	ip->modified = false;
-	ip->invalid_checksum = false;
-	ip->drop = false;
-
 	return ip;
 }
 
 struct ipv4 *ipv4_create(struct packet *packet)
 {
 	struct ipv4 *ip = NULL;
+	struct vbuffer *payload;
+	size_t hdrlen;
 
 	assert(packet);
 
@@ -49,26 +101,43 @@ struct ipv4 *ipv4_create(struct packet *packet)
 		return NULL;
 	}
 
-	lua_object_init(&ip->lua_object);
 	ip->packet = packet;
+	ip->invalid_checksum = true;
 
-	packet_resize(packet, sizeof(struct ipv4_header));
-	ip->header = (struct ipv4_header*)(packet_data_modifiable(packet));
-	if (!ip->header) {
+	payload = packet_payload(packet);
+
+	hdrlen = sizeof(struct ipv4_header);
+
+	{
+		size_t len;
+		uint8 *ptr;
+		struct vbuffer *header_buffer = vbuffer_create_new(hdrlen);
+		if (!header_buffer) {
+			assert(check_error());
+			free(ip);
+			return NULL;
+		}
+
+		ptr = vbuffer_mmap(header_buffer, NULL, &len, true);
+		assert(ptr);
+		memset(ptr, 0, len);
+
+		vbuffer_insert(payload, 0, header_buffer, true);
+	}
+
+	ip->payload = vbuffer_extract(payload, hdrlen, ALL, false);
+	if (!ip->payload) {
 		assert(check_error());
 		free(ip);
 		return NULL;
 	}
 
-	ip->modified = true;
-	ip->invalid_checksum = true;
-	ip->drop = false;
-
 	ipv4_set_version(ip, 4);
 	ipv4_set_checksum(ip, 0);
-	ipv4_set_len(ip, sizeof(struct ipv4_header));
-	ipv4_set_hdr_len(ip, sizeof(struct ipv4_header));
+	ipv4_set_len(ip, hdrlen);
+	ipv4_set_hdr_len(ip, hdrlen);
 
+	lua_object_init(&ip->lua_object);
 	return ip;
 }
 
@@ -76,33 +145,52 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 {
 	struct packet *packet = ip->packet;
 	if (packet) {
-		if (ip->drop) {
-			ip->packet = NULL;
-			ip->header = NULL;
-			packet_drop(packet);
-			packet_release(packet);
-			return NULL;
+		const size_t len = ipv4_get_hdr_len(ip) + vbuffer_size(ip->payload);
+		if (len != ipv4_get_len(ip)) {
+			ipv4_set_len(ip, len);
 		}
-		else {
-			if (ip->invalid_checksum)
-				ipv4_compute_checksum(ip);
 
-			ip->packet = NULL;
-			ip->header = NULL;
-			return packet;
-		}
+		if (ip->invalid_checksum)
+			ipv4_compute_checksum(ip);
+
+		vbuffer_insert(ip->packet->payload, ipv4_get_hdr_len(ip), ip->payload, false);
+
+		ip->payload = NULL;
+		ip->packet = NULL;
+		return packet;
 	}
 	else {
 		return NULL;
 	}
 }
 
+struct ipv4_header *ipv4_header(struct ipv4 *ip, bool write)
+{
+	struct ipv4_header *header;
+	size_t len;
+	header = (struct ipv4_header *)vbuffer_mmap(ip->packet->payload, NULL, &len, write);
+	if (!header) {
+		assert(write); /* should always work in read mode */
+		assert(check_error());
+		return NULL;
+	}
+
+	if (write) {
+		ip->invalid_checksum = true;
+	}
+
+	assert(len >= sizeof(struct ipv4_header));
+	return header;
+}
+
 static void ipv4_flush(struct ipv4 *ip)
 {
-	struct packet *packet;
-	while ((packet = ipv4_forge(ip))) {
-		packet_drop(packet);
-		packet_release(packet);
+	if (ip->packet) {
+		packet_drop(ip->packet);
+		packet_release(ip->packet);
+		vbuffer_free(ip->payload);
+		ip->payload = NULL;
+		ip->packet = NULL;
 	}
 }
 
@@ -113,35 +201,9 @@ void ipv4_release(struct ipv4 *ip)
 	free(ip);
 }
 
-int ipv4_pre_modify(struct ipv4 *ip)
-{
-	if (!ip->modified) {
-		struct ipv4_header *header = (struct ipv4_header *)(packet_data_modifiable(ip->packet));
-		if (!header) {
-			assert(check_error());
-			return -1;
-		}
-
-		ip->header = header;
-	}
-
-	ip->modified = true;
-	return 0;
-}
-
-int ipv4_pre_modify_header(struct ipv4 *ip)
-{
-	const int ret = ipv4_pre_modify(ip);
-	if (ret) return ret;
-
-	ip->invalid_checksum = true;
-	return 0;
-}
-
-
 /* compute tcp checksum RFC #1071 */
 //TODO: To be optimized
-int16 inet_checksum(uint16 *ptr, uint16 size)
+int32 inet_checksum_partial(uint16 *ptr, size_t size)
 {
 	register long sum = 0;
 
@@ -158,120 +220,70 @@ int16 inet_checksum(uint16 *ptr, uint16 size)
 #endif
 	}
 
+	return sum;
+}
+
+int16 inet_checksum_reduce(int32 sum)
+{
 	while (sum >> 16)
 		sum = (sum & 0xffff) + (sum >> 16);
 
 	return ~sum;
 }
 
+int16 inet_checksum(uint16 *ptr, size_t size)
+{
+	const int32 sum = inet_checksum_partial(ptr, size);
+	return inet_checksum_reduce(sum);
+}
 
-bool ipv4_verify_checksum(const struct ipv4 *ip)
+int32 inet_checksum_vbuffer_partial(struct vsubbuffer *buf)
+{
+	int32 sum = 0;
+	void *iter = NULL;
+	uint8 *data;
+	size_t len, remlen = 0;
+
+	while ((data = vsubbuffer_mmap(buf, &iter, &remlen, &len, false))) {
+		if (len > 0) {
+			sum += inet_checksum_partial((uint16 *)data, len);
+		}
+	}
+
+	return sum;
+}
+
+int16 inet_checksum_vbuffer(struct vsubbuffer *buf)
+{
+	const int32 sum = inet_checksum_vbuffer_partial(buf);
+	return inet_checksum_reduce(sum);
+}
+
+bool ipv4_verify_checksum(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip, false);
-	return inet_checksum((uint16 *)ip->header, ipv4_get_hdr_len(ip)) == 0;
+	return inet_checksum((uint16 *)ipv4_header(ip, false), ipv4_get_hdr_len(ip)) == 0;
 }
 
 void ipv4_compute_checksum(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip);
-	if (!ipv4_pre_modify_header(ip)) {
-		ip->header->checksum = 0;
-		ip->header->checksum = inet_checksum((uint16 *)ip->header, ipv4_get_hdr_len(ip));
+	struct ipv4_header *header = ipv4_header(ip, true);
+	if (header) {
+		header->checksum = 0;
+		header->checksum = inet_checksum((uint16 *)header, ipv4_get_hdr_len(ip));
 		ip->invalid_checksum = false;
 	}
-}
-
-const uint8 *ipv4_get_payload(struct ipv4 *ip)
-{
-	IPV4_CHECK(ip, NULL);
-	return ((const uint8 *)ip->header) + ipv4_get_hdr_len(ip);
-}
-
-uint8 *ipv4_get_payload_modifiable(struct ipv4 *ip)
-{
-	IPV4_CHECK(ip, NULL);
-	if (!ipv4_pre_modify(ip))
-		return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip);
-	else
-		return NULL;
 }
 
 size_t ipv4_get_payload_length(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip, 0);
-	const uint8 hdr_len = ipv4_get_hdr_len(ip);
-	const size_t total_len = ipv4_get_len(ip);
-	return total_len - hdr_len;
-}
-
-uint8 *ipv4_resize_payload(struct ipv4 *ip, size_t size)
-{
-	size_t new_size;
-
-	IPV4_CHECK(ip, NULL);
-
-	new_size = size + ipv4_get_hdr_len(ip);
-	if (packet_resize(ip->packet, new_size)) {
-		return NULL;
-	}
-
-	ip->header = (struct ipv4_header*)packet_data_modifiable(ip->packet);
-	ip->modified = true;
-	ip->invalid_checksum = true;
-	ipv4_set_len(ip, new_size);
-	return ((uint8 *)ip->header) + ipv4_get_hdr_len(ip);
-}
-
-static char *ipv4_proto_dissector[256];
-
-void ipv4_register_proto_dissector(uint8 proto, const char *dissector)
-{
-	if (ipv4_proto_dissector[proto] != NULL) {
-		if (strcmp(ipv4_proto_dissector[proto], dissector) == 0) {
-			return;
-		}
-		else {
-			error(L"IPv4 protocol %d dissector already registered", proto);
-			return;
-		}
-	}
-
-	ipv4_proto_dissector[proto] = strdup(dissector);
-}
-
-const char *ipv4_get_proto_dissector(struct ipv4 *ip)
-{
-	IPV4_CHECK(ip, NULL);
-	return ipv4_proto_dissector[ipv4_get_proto(ip)];
-}
-
-static FINI void ipv4_dissector_cleanup()
-{
-	int i;
-	for (i = 0; i < 256; ++i) {
-		free(ipv4_proto_dissector[i]);
-		ipv4_proto_dissector[i] = NULL;
-	}
+	return vbuffer_size(ip->payload);
 }
 
 void ipv4_action_drop(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip);
-	ip->drop = true;
-}
-
-void ipv4_action_send(struct ipv4 *ip)
-{
-	struct packet *packet;
-
-	IPV4_CHECK(ip);
-
-	while ((packet = ipv4_forge(ip))) {
-		packet_send(packet);
-	}
-}
-
-bool ipv4_valid(struct ipv4 *ip)
-{
-	return !ip->drop;
+	ipv4_flush(ip);
 }

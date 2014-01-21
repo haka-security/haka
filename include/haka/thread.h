@@ -28,8 +28,8 @@ bool     thread_create(thread_t *thread, void *(*main)(void*), void *param);
 bool     thread_join(thread_t thread, void **ret);
 bool     thread_cancel(thread_t thread);
 
-int      thread_get_id();
-void     thread_set_id(int id);
+int      thread_getid();
+void     thread_setid(int id);
 
 bool     thread_sigmask(int how, sigset_t *set, sigset_t *oldset);
 
@@ -91,6 +91,15 @@ bool semaphore_init(semaphore_t *semaphore, uint32 initial);
 bool semaphore_destroy(semaphore_t *semaphore);
 bool semaphore_wait(semaphore_t *semaphore);
 bool semaphore_post(semaphore_t *semaphore);
+
+
+/* Barrier */
+
+typedef pthread_barrier_t barrier_t;
+
+bool barrier_init(barrier_t *barrier, uint32 count);
+bool barrier_destroy(barrier_t *barrier);
+bool barrier_wait(barrier_t *barrier);
 
 
 /* Thread local storage */

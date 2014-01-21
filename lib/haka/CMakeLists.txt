@@ -21,9 +21,14 @@ add_library(libhaka SHARED
 	colors.c
 	time.c
 	stat.c
+	timer.c
+	state_machine.c
+	vbuffer.c
 	container/list.c
+	container/vector.c
 	lua/state.c
 	lua/ref.c
+	lua/lua.c
 	${SWIG_libhakalua_FILES}
 )
 
@@ -36,6 +41,7 @@ target_link_libraries(libhaka ${DL_LIBRARIES})
 target_link_libraries(libhaka ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(libhaka libiniparser)
 target_link_libraries(libhaka rt)
+target_link_libraries(libhaka m)
 
 set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 

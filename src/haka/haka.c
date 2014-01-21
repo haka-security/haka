@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -29,8 +32,6 @@
 
 #define HAKA_CONFIG "/etc/haka/haka.conf"
 
-
-extern void packet_set_mode(enum packet_mode mode);
 
 static void usage(FILE *output, const char *program)
 {
@@ -238,11 +239,6 @@ int read_configuration(const char *file)
 	/* Other options */
 	parameters_open_section(config, "general");
 
-	if (parameters_get_boolean(config, "pass-through", false)) {
-		messagef(HAKA_LOG_INFO, L"core", L"setting packet mode to pass-through\n");
-		packet_set_mode(MODE_PASSTHROUGH);
-	}
-
 	{
 		const char *configuration = parameters_get_string(config, "configuration", NULL);
 		if (!configuration) {
@@ -254,6 +250,8 @@ int read_configuration(const char *file)
 			set_configuration_script(configuration);
 		}
 	}
+
+	parameters_free(config);
 
 	return -1;
 }
@@ -292,10 +290,21 @@ bool check_running_haka()
 	return true;
 }
 
+static void terminate()
+{
+	_exit(2);
+}
+
+static void terminate_ok()
+{
+	_exit(0);
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;
 	FILE *pid_file = NULL;
+	pid_t parent = getpid();
 
 	initialize();
 
@@ -338,6 +347,30 @@ int main(int argc, char *argv[])
 		luadebug_user_release(&user);
 	}
 
+	if (daemonize) {
+		pid_t child;
+
+		child = fork();
+		if (child == -1) {
+			message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
+			fclose(pid_file);
+			clean_exit();
+			return 1;
+		}
+
+		if (child != 0) {
+			int status;
+
+			signal(SIGTERM, terminate);
+			signal(SIGINT, terminate);
+			signal(SIGQUIT, terminate);
+			signal(SIGHUP, terminate_ok);
+
+			wait(&status);
+			_exit(2);
+		}
+	}
+
 	prepare(-1, lua_debugger);
 
 	pid_file = fopen(HAKA_PID_FILE, "w");
@@ -345,20 +378,6 @@ int main(int argc, char *argv[])
 		message(HAKA_LOG_FATAL, L"core", L"cannot create pid file");
 		clean_exit();
 		return 1;
-	}
-
-	if (daemonize) {
-		message(HAKA_LOG_INFO, L"core", L"switch to background");
-
-		if (daemon(1, 0)) {
-			message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
-			fclose(pid_file);
-			clean_exit();
-			return 1;
-		}
-
-		luadebug_debugger_user(NULL);
-		luadebug_interactive_user(NULL);
 	}
 
 	if (!start_ctl_server()) {
@@ -371,6 +390,31 @@ int main(int argc, char *argv[])
 		fprintf(pid_file, "%i\n", pid);
 		fclose(pid_file);
 		pid_file = NULL;
+	}
+
+	if (daemonize) {
+		luadebug_debugger_user(NULL);
+		luadebug_interactive_user(NULL);
+
+		message(HAKA_LOG_INFO, L"core", L"switch to background");
+
+		{
+			const int nullfd = open("/dev/null", O_RDWR);
+			if (nullfd == -1) {
+				message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
+				fclose(pid_file);
+				clean_exit();
+				return 1;
+			}
+
+			dup2(nullfd, STDOUT_FILENO);
+			dup2(nullfd, STDERR_FILENO);
+			dup2(nullfd, STDIN_FILENO);
+
+			enable_stdout_logging(false);
+		}
+
+		kill(parent, SIGHUP);
 	}
 
 	start();

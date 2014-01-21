@@ -27,19 +27,20 @@ local sql_functions = {
 
 -- Define a security rule group related to SQLi attacks
 sqli = haka.rule_group{
+	hook = haka.event('http', 'request'),
 	name = 'sqli',
 	-- Initialize some values before evaluating any security rule
-	init = function (self, http)
-		dump_request(http)
+	init = function (http, request)
+		dump_request(request)
 
 		-- Another way to split cookie header value and query's arguments
 		http.sqli = {
 			cookies = {
-				value = http.request:split_cookies(),
+				value = request:split_cookies(),
 				score = 0
 			},
 			args = {
-				value = http.request:split_uri().args,
+				value = request:split_uri().args,
 				score = 0
 			}
 		}
@@ -47,9 +48,8 @@ sqli = haka.rule_group{
 }
 
 local function check_sqli(patterns, score, trans)
-	sqli:rule{
-		hooks = { 'http-request' },
-		eval = function (self, http)
+	sqli:rule(
+		function (http, request)
 			for k, v in pairs(http.sqli) do
 				if v.value then
 					for _, val in pairs(v.value) do
@@ -83,7 +83,7 @@ local function check_sqli(patterns, score, trans)
 				end
 			end
 		end
-	}
+	)
 end
 
 -- Generate a security rule for each malicious pattern class

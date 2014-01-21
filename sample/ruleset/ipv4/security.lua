@@ -2,9 +2,9 @@
 -- IP attacks
 ------------------------------------
 
-haka.rule{
-	hooks = { 'ipv4-up' },
-	eval = function (self, pkt)
+haka.rule {
+	hook = haka.event('ipv4', 'receive_packet'),
+	eval = function (pkt)
 		if pkt.src == pkt.dst and pkt.src ~= ipv4.addr("127.0.0.1") then
 			haka.alert{
 				description = "Land attack detected",

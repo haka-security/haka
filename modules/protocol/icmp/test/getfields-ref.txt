@@ -1,0 +1,20 @@
+Internet Control Message Protocol
+    Type: 8 (Echo (ping) request)
+    Code: 0
+    Checksum: 0xad98 [correct]
+
+Internet Control Message Protocol
+    Type: 0 (Echo (ping) reply)
+    Code: 8
+    Checksum: 0xb590 [correct]
+
+Internet Control Message Protocol
+    Type: 8 (Echo (ping) request)
+    Code: 0
+    Checksum: 0x2b92 [correct]
+
+Internet Control Message Protocol
+    Type: 0 (Echo (ping) reply)
+    Code: 8
+    Checksum: 0x338a [correct]
+

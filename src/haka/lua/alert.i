@@ -39,7 +39,6 @@ static void free_nodes(struct alert_node **nodes)
 
 %include "haka/lua/wchar.si"
 %include "haka/lua/swig.si"
-%include "time.si"
 %include "array.si"
 
 %nodefaultctor;
@@ -51,7 +50,7 @@ enum alert_node_type { HAKA_ALERT_NODE_ADDRESS, HAKA_ALERT_NODE_SERVICE };
 
 %typemap(in) wchar_t ** {
 	if (lua_istable(L, $input)) {
-		int i, size = lua_objlen(L, $input);
+		int i, size = lua_rawlen(L, $input);
 		$1 = malloc((size+1)*sizeof(wchar_t *));
 		for (i = 0; i < size; ++i) {
 			lua_rawgeti(L, $input, i+1);
@@ -154,12 +153,12 @@ struct alert {
 			free($self);
 		}
 
-		void start_time(struct time_lua *t) {
-			$self->start_time = t->seconds*1000000LL + t->micro_seconds;
+		void start_time(struct time *t) {
+			$self->start_time = *t;
 		}
 
-		void end_time(struct time_lua *t) {
-			$self->end_time = t->seconds*1000000LL + t->micro_seconds;
+		void end_time(struct time *t) {
+			$self->end_time = *t;
 		}
 
 		void alert_ref(struct alert_id **ids) {

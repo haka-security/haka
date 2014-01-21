@@ -5,8 +5,8 @@
 require('protocol/ipv4')
 
 haka.rule{
-	hooks = { "ipv4-up" },
-	eval = function (self, p)
+	hook = haka.event('ipv4', 'receive_packet'),
+	eval = function (p)
 		pkt = p
 		require('alert-doc')
 		require('alertupdate-doc')

@@ -15,13 +15,13 @@ local keywords = {
 
 haka.rule{
 	-- Evaluation applies on upcoming requests
-	hooks = { 'http-request' },
-	eval = function (self, http)
-		dump_request(http)
+	hook = haka.event('http', 'request'),
+	eval = function (http, request)
+		dump_request(request)
 
 		local score = 0
-		-- Http fields (uri, headers) are available through 'request' field
-		local uri = http.request.uri
+		-- Http fields (uri, headers) are available through 'request' parameter
+		local uri = request.uri
 
 		for _, key in ipairs(keywords) do
 			-- Check the whole uri against the list of malicious keywords

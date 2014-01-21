@@ -1,118 +1,40 @@
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:50692 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
 warn tcp-connection: retransmit packet (ignored)
 warn tcp-connection: retransmit packet (ignored)
 warn tcp-connection: retransmit packet (ignored)
-debug tcp-connection: closing connection 192.168.10.1:50693 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
 warn tcp-connection: retransmit packet (ignored)
-info alert: id = <>
-	severity = low
-	description = no connection found for tcp packet
-	sources = {
-		address: 192.168.20.1
-		service: tcp/80
-	}
-	targets = {
-		address: 192.168.10.1
-		service: tcp/50693
-	}
+error tcp-connection: unexpected tcp packet
+debug tcp-connection: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
 warn tcp-connection: retransmit packet (ignored)
-debug tcp-connection: closing connection 192.168.10.1:50694 -> 192.168.20.1:80
-info alert: id = <>
-	severity = low
-	description = no connection found for tcp packet
-	sources = {
-		address: 192.168.20.1
-		service: tcp/80
-	}
-	targets = {
-		address: 192.168.10.1
-		service: tcp/50694
-	}
-info alert: id = <>
-	severity = low
-	description = no connection found for tcp packet
-	sources = {
-		address: 192.168.10.1
-		service: tcp/50693
-	}
-	targets = {
-		address: 192.168.20.1
-		service: tcp/80
-	}
+error tcp-connection: unexpected tcp packet
+debug tcp-connection: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:50695 -> 192.168.20.1:80
-info alert: id = <>
-	severity = low
-	description = no connection found for tcp packet
-	sources = {
-		address: 192.168.10.1
-		service: tcp/50694
-	}
-	targets = {
-		address: 192.168.20.1
-		service: tcp/80
-	}
-info alert: id = <>
-	severity = low
-	description = no connection found for tcp packet
-	sources = {
-		address: 192.168.20.1
-		service: tcp/80
-	}
-	targets = {
-		address: 192.168.10.1
-		service: tcp/50694
-	}
-info alert: id = <>
-	severity = low
-	description = no connection found for tcp packet
-	sources = {
-		address: 192.168.20.1
-		service: tcp/80
-	}
-	targets = {
-		address: 192.168.10.1
-		service: tcp/50693
-	}
+debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
-info alert: id = <>
-	severity = low
-	description = no connection found for tcp packet
-	sources = {
-		address: 192.168.10.1
-		service: tcp/50694
-	}
-	targets = {
-		address: 192.168.20.1
-		service: tcp/80
-	}
 warn tcp-connection: retransmit packet (ignored)
 warn tcp-connection: retransmit packet (ignored)
 warn tcp-connection: retransmit packet (ignored)
-info alert: id = <>
-	severity = low
-	description = no connection found for tcp packet
-	sources = {
-		address: 192.168.10.1
-		service: tcp/50693
-	}
-	targets = {
-		address: 192.168.20.1
-		service: tcp/80
-	}
 top 10 (by default) of useragent header
 Wget/1.13.4 (linux-gnu) : 1
  : 1
 
 select columns 'ip, 'method' and 'resource' from the stats table
-| resource | method | ip           |
-| /        | GET    | 192.168.10.1 |
-| /        | TRACE  | 192.168.10.1 |
+| ip           | method | resource |
+| 192.168.10.1 | GET    | /        |
+| 192.168.10.1 | TRACE  | /        |
 
 list of source ip using 'Mozilla/2.0' as user-gent'
 
 top ten of http resources that generated the most 404 status error
 
+debug tcp-connection: closing connection 192.168.10.1:50696 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:50695 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:50694 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:50693 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:50692 -> 192.168.20.1:80

@@ -9,7 +9,7 @@ BEGIN {
 	alert = 0
 }
 
-$0 ~ /^[^ ]+[ ]+[^:]+:[ ]+.*$/ {
+$0 ~ /^[^ \t]+[ \t]+[^:]+:[ ]+.*$/ {
 	/* Reformat log output to avoid extra spaces */
 	$0 = $1 " " $2 " " substr($0, index($0,$3));
 }
@@ -32,7 +32,11 @@ $0 ~ /^debug packet:/ {
 	next;
 }
 
-$0 ~ /^debug rule:/ {
+$0 ~ /^debug state-machine:/ {
+	next;
+}
+
+$0 ~ /^debug event: signal/ {
 	next;
 }
 

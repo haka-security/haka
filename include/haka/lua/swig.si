@@ -12,6 +12,7 @@
 %{
 	#include <haka/error.h>
 	#include <haka/lua/lua.h>
+	#include <haka/lua/state.h>
 
 	#include <stdlib.h>
 
@@ -36,10 +37,29 @@
 
 	#define _STR_TO_WCS(str)   L##str
 	#define STR_TO_WCS(str)   _STR_TO_WCS(str)
+
+	/* We need to override SWIG to avoid overriding a struct metatable. We let user dynamically
+	 * add Lua function in this metatable. This is going to be lost if it gets overwritten.
+	 */
+	SWIGINTERN void  SWIG_Lua_class_register_custom(lua_State* L,swig_lua_class* clss)
+	{
+		/* Check if the metatable is already registered */
+		SWIG_Lua_get_class_registry(L);
+		lua_getfield(L, -1, clss->name);
+		if (!lua_isnil(L, -1)) {
+			lua_pop(L, 2);
+			return;
+		}
+		lua_pop(L, 2);
+
+		SWIG_Lua_class_register(L, clss);
+	}
+
+	#define SWIG_Lua_class_register SWIG_Lua_class_register_custom
 %}
 
 %insert("init") %{
-	if (luaL_loadstring(L, SWIG_LUACODE)) {
+	if (luaL_loadbuffer(L, SWIG_LUACODE, strlen(SWIG_LUACODE), SWIG_name)) {
 		luaL_error(L, lua_tostring(L, -1));
 		lua_pop(L, 1);
 		return;
@@ -52,32 +72,19 @@
 		return;
 	}
 
-	return;
+	/* Avoid the default swig behavior to be used */
+	#define SWIG_Lua_dostring(...)
 %}
 
 %exception %{
 	const wchar_t *error;
 	$action
 	if ((error = clear_error())) {
-		int size;
-		char *errormb;
-
-		size = wcstombs(NULL, error, 0);
-		if (size == (size_t)-1) {
-			lua_pushstring(L, "unknown error");
-			SWIG_execfail;
+		if (!lua_pushwstring(L, error)) {
+			if (!lua_pushwstring(L, clear_error())) {
+				lua_pushstring(L, "unknown error");
+			}
 		}
-
-		errormb = malloc(size+1);
-		if (!errormb) {
-			lua_pushstring(L, "memory error");
-			SWIG_execfail;
-		}
-
-		wcstombs(errormb, error, size+1);
-		lua_pushstring(L, errormb);
-		free(errormb);
-
 		SWIG_execfail;
 	}
 %}
@@ -125,8 +132,21 @@ void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
 
 %include "typemaps.i"
 
-%apply bool *OUTPUT { bool *OUTPUT1 };
-%apply bool *OUTPUT { bool *OUTPUT2 };
-%apply bool *OUTPUT { bool *OUTPUT3 };
-%apply bool *OUTPUT { bool *OUTPUT4 };
-%apply bool *OUTPUT { bool *OUTPUT5 };
+%define APPLY_OUTPUT(type)
+
+	%apply type *OUTPUT { type *OUTPUT1 };
+	%apply type *OUTPUT { type *OUTPUT2 };
+	%apply type *OUTPUT { type *OUTPUT3 };
+	%apply type *OUTPUT { type *OUTPUT4 };
+	%apply type *OUTPUT { type *OUTPUT5 };
+
+%enddef
+
+%typemap(in, numinputs=0) const char **OUTPUT (char *temp)
+%{ $1 = &temp; %}
+
+%typemap(argout) const char **OUTPUT
+%{ lua_pushstring(L, *$1); SWIG_arg++;%}
+
+APPLY_OUTPUT(bool)
+APPLY_OUTPUT(const char *)

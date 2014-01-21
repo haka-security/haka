@@ -27,8 +27,8 @@
 struct tcp_header {
 	uint16    srcport;
 	uint16    dstport;
-	uint32	  seq;
-	uint32	  ack_seq;
+	uint32    seq;
+	uint32    ack_seq;
 #ifdef HAKA_LITTLEENDIAN
 	uint16    res:4,
 	          hdr_len:4,
@@ -41,7 +41,7 @@ struct tcp_header {
 	          ecn:1,
 	          cwr:1;
 #else
-	uint16	  hdr_len:4,
+	uint16    hdr_len:4,
 	          res:4,
 	          cwr:1,
 	          ecn:1,
@@ -52,9 +52,9 @@ struct tcp_header {
 	          syn:1,
 	          fin:1;
 #endif
-	uint16	  window_size;
-	uint16	  checksum;
-	uint16	  urgent_pointer;
+	uint16    window_size;
+	uint16    checksum;
+	uint16    urgent_pointer;
 };
 
 
@@ -62,7 +62,7 @@ struct tcp_header {
 struct tcp {
 	struct ipv4         *packet;
 	struct lua_object    lua_object;
-	struct tcp_header   *header;
+	struct vbuffer      *payload;
 	bool                 modified:1;
 	bool                 invalid_checksum:1;
 };
@@ -70,22 +70,21 @@ struct tcp {
 struct tcp *tcp_dissect(struct ipv4 *packet);
 struct tcp *tcp_create(struct ipv4 *packet);
 struct ipv4 *tcp_forge(struct tcp *packet);
+struct tcp_header *tcp_header(struct tcp *packet, bool write);
 void tcp_release(struct tcp *packet);
-int tcp_pre_modify(struct tcp *packet);
 void tcp_compute_checksum(struct tcp *packet);
-bool tcp_verify_checksum(const struct tcp *packet);
-const uint8 *tcp_get_payload(const struct tcp *packet);
+bool tcp_verify_checksum(struct tcp *packet);
+const uint8 *tcp_get_payload(struct tcp *packet);
 uint8 *tcp_get_payload_modifiable(struct tcp *packet);
-size_t tcp_get_payload_length(const struct tcp *packet);
+size_t tcp_get_payload_length(struct tcp *packet);
 uint8 *tcp_resize_payload(struct tcp *packet, size_t size);
 void tcp_action_drop(struct tcp *packet);
-void tcp_action_send(struct tcp *packet);
-bool tcp_valid(struct tcp *packet);
 
 
 #define TCP_GETSET_FIELD(type, field) \
-	INLINE type tcp_get_##field(const struct tcp *tcp) { TCP_CHECK(tcp, 0); return SWAP_FROM_TCP(type, tcp->header->field); } \
-	INLINE void tcp_set_##field(struct tcp *tcp, type v) { TCP_CHECK(tcp); if (!tcp_pre_modify(tcp)) tcp->header->field = SWAP_TO_TCP(type, v); }
+	INLINE type tcp_get_##field(struct tcp *tcp) { TCP_CHECK(tcp, 0); return SWAP_FROM_TCP(type, tcp_header(tcp, false)->field); } \
+	INLINE void tcp_set_##field(struct tcp *tcp, type v) { TCP_CHECK(tcp); \
+		struct tcp_header *header = tcp_header(tcp, true); if (header) { header->field = SWAP_TO_TCP(type, v); } }
 
 TCP_GETSET_FIELD(uint16, srcport);
 TCP_GETSET_FIELD(uint16, dstport);
@@ -96,36 +95,40 @@ TCP_GETSET_FIELD(uint16, window_size);
 TCP_GETSET_FIELD(uint16, urgent_pointer);
 TCP_GETSET_FIELD(uint16, checksum);
 
-INLINE uint8 tcp_get_hdr_len(const struct tcp *tcp)
+INLINE uint8 tcp_get_hdr_len(struct tcp *tcp)
 {
 	TCP_CHECK(tcp, 0);
-	return tcp->header->hdr_len << TCP_HDR_LEN;
+	return tcp_header(tcp, false)->hdr_len << TCP_HDR_LEN;
 }
 
 INLINE void tcp_set_hdr_len(struct tcp *tcp, uint8 v)
 {
 	TCP_CHECK(tcp);
-	if (!tcp_pre_modify(tcp))
-		tcp->header->hdr_len = v >> TCP_HDR_LEN;
+	struct tcp_header *header = tcp_header(tcp, true);
+	if (header)
+		header->hdr_len = v >> TCP_HDR_LEN;
 }
 
-INLINE uint16 tcp_get_flags(const struct tcp *tcp)
+INLINE uint16 tcp_get_flags(struct tcp *tcp)
 {
 	TCP_CHECK(tcp, 0);
-	return TCP_GET_BITS(uint8, *(((uint8 *)tcp->header) + TCP_FLAGS_START), TCP_FLAGS_BITS);
+	struct tcp_header *header = tcp_header(tcp, false);
+	return TCP_GET_BITS(uint8, *(((uint8 *)header) + TCP_FLAGS_START), TCP_FLAGS_BITS);
 }
 
 INLINE void tcp_set_flags(struct tcp *tcp, uint8 v)
 {
 	TCP_CHECK(tcp);
-	if (!tcp_pre_modify(tcp))
-		*(((uint8 *)tcp->header) + TCP_FLAGS_START) = TCP_SET_BITS(uint8, *(((uint8 *)tcp->header) + TCP_FLAGS_START), TCP_FLAGS_BITS, v);
+	struct tcp_header *header = tcp_header(tcp, true);
+	if (header)
+		*(((uint8 *)header) + TCP_FLAGS_START) = TCP_SET_BITS(uint8, *(((uint8 *)header) + TCP_FLAGS_START), TCP_FLAGS_BITS, v);
 }
 
 
 #define TCP_GETSET_FLAG(name) \
-	INLINE bool tcp_get_flags_##name(const struct tcp *tcp) { TCP_CHECK(tcp, 0); return tcp->header->name; } \
-	INLINE void tcp_set_flags_##name(struct tcp *tcp, bool v) { TCP_CHECK(tcp); if (!tcp_pre_modify(tcp)) tcp->header->name = v; }
+	INLINE bool tcp_get_flags_##name(struct tcp *tcp) { TCP_CHECK(tcp, 0); return tcp_header(tcp, false)->name; } \
+	INLINE void tcp_set_flags_##name(struct tcp *tcp, bool v) { TCP_CHECK(tcp); \
+		struct tcp_header *header = tcp_header(tcp, true); if (header) { tcp_header(tcp, true)->name = v; } }
 
 TCP_GETSET_FLAG(fin);
 TCP_GETSET_FLAG(syn);

@@ -144,15 +144,17 @@ uint64 alert(const struct alert *alert)
 	const uint64 id = atomic64_inc(&alert_id);
 	struct alerter *iter;
 	bool remove_pass = false;
-	const time_us time = time_gettimestamp();
+	struct time time;
+
+	time_gettimestamp(&time);
 
 	if (alert_to_stdout) {
-		stdout_message(HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "", "\n\t"));
+		stdout_message(HAKA_LOG_INFO, L"alert", alert_tostring(id, &time, alert, "", "\n\t"));
 	}
 
 	rwlock_readlock(&alert_module_lock);
 	for (iter=alerters; iter; iter = list_next(iter)) {
-		iter->alert(iter, id, time, alert);
+		iter->alert(iter, id, &time, alert);
 		remove_pass |= iter->mark_for_remove;
 	}
 	rwlock_unlock(&alert_module_lock);
@@ -166,15 +168,17 @@ bool alert_update(uint64 id, const struct alert *alert)
 {
 	bool remove_pass = false;
 	struct alerter *iter;
-	const time_us time = time_gettimestamp();
+	struct time time;
+
+	time_gettimestamp(&time);
 
 	if (alert_to_stdout) {
-		stdout_message(HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "update ", "\n\t"));
+		stdout_message(HAKA_LOG_INFO, L"alert", alert_tostring(id, &time, alert, "update ", "\n\t"));
 	}
 
 	rwlock_readlock(&alert_module_lock);
 	for (iter=alerters; iter; iter = list_next(iter)) {
-		iter->update(iter, id, time, alert);
+		iter->update(iter, id, &time, alert);
 		remove_pass |= iter->mark_for_remove;
 	}
 	rwlock_unlock(&alert_module_lock);
@@ -274,7 +278,7 @@ static void alert_nodes_append(wchar_t **buffer, size_t *len, struct alert_node 
 	alert_string_append(buffer, len, L"%s}", indent);
 }
 
-const wchar_t *alert_tostring(uint64 id, time_us time, const struct alert *alert, const char *header, const char *indent)
+const wchar_t *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent)
 {
 	wchar_t *buffer = alert_string_context();
 	wchar_t *iter = buffer;
@@ -284,19 +288,19 @@ const wchar_t *alert_tostring(uint64 id, time_us time, const struct alert *alert
 
 	{
 		char timestr[TIME_BUFSIZE];
-		time_tostring(time, timestr);
+		time_tostring(time, timestr, TIME_BUFSIZE);
 		alert_string_append(&iter, &len, L"%stime = %s", indent, timestr);
 	}
 
-	if (alert->start_time != INVALID_TIME) {
+	if (time_isvalid(&alert->start_time)) {
 		char timestr[TIME_BUFSIZE];
-		time_tostring(alert->start_time, timestr);
+		time_tostring(&alert->start_time, timestr, TIME_BUFSIZE);
 		alert_string_append(&iter, &len, L"%sstart time = %s", indent, timestr);
 	}
 
-	if (alert->end_time != INVALID_TIME) {
+	if (time_isvalid(&alert->end_time)) {
 		char timestr[TIME_BUFSIZE];
-		time_tostring(alert->end_time, timestr);
+		time_tostring(&alert->end_time, timestr, TIME_BUFSIZE);
 		alert_string_append(&iter, &len, L"%send time = %s", indent, timestr);
 	}
 

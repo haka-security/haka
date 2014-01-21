@@ -5,4 +5,4 @@
 add_subdirectory(external/lua)
 
 set(HAKA_LUAJIT 0)
-set(HAKA_LUA51 1)
+set(HAKA_LUA52 1)

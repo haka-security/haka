@@ -2,14 +2,15 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
--- This test will check how ipv4 reacts
--- to an unkonw hook
+-- Basic test that will set all fields on the received packets.
 
-require("protocol/ipv4")
+require("protocol/icmp")
 
 haka.rule {
-	hooks = {"ipv4-unknown"},
-	eval = function (self,pkt)
-		print(string.format("SRC:%s - DST:%s", pkt.src, pkt.dst))
+	hook = haka.event('icmp', 'receive_packet'),
+	eval = function (pkt)
+		pkt.type = 50
+		pkt.code = 12
+		pkt.checksum = 1
 	end
 }

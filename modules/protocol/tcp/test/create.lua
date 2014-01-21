@@ -4,19 +4,28 @@
 
 -- Test that will duplicate a tcp connection
 
-local ipv4 = require("protocol/ipv4")
-local tcp = require("protocol/tcp")
+require("protocol/ipv4")
+require("protocol/tcp")
+require("protocol/tcp-connection")
+
+-- just to be safe, to avoid the test to run in an infinite loop
+local counter = 10
 
 haka.rule {
-	hooks = { "tcp-up" },
-	eval = function (self, pkt)
+	hook = haka.event('tcp', 'receive_packet'),
+	eval = function (pkt)
 		if pkt.dstport == 4444 or pkt.srcport == 4444 then
-			local npkt = haka.packet.new()
-			npkt = ipv4.create(npkt)
+			if counter == 0 then
+				error("loop detected")
+			end
+			counter = counter-1
+
+			local npkt = haka.dissector.get('raw'):create()
+			npkt = haka.dissector.get('ipv4'):create(npkt)
 			npkt.ttl = pkt.ip.ttl
 			npkt.dst = pkt.ip.dst
 			npkt.src = pkt.ip.src
-			npkt = tcp.create(npkt)
+			npkt = haka.dissector.get('tcp'):create(npkt)
 			npkt.window_size = pkt.window_size
 			npkt.seq = pkt.seq+1000
 			if pkt.ack_seq ~= 0 then
@@ -25,11 +34,13 @@ haka.rule {
 			npkt.flags.all = pkt.flags.all
 			npkt.dstport = pkt.dstport+10
 			npkt.srcport = pkt.srcport+10
-			npkt.payload:resize(#pkt.payload)
+			
+			local payload = haka.vbuffer(#pkt.payload)
 			for i=1,#pkt.payload do
-				npkt.payload[i] = pkt.payload[i]
+				payload[i] = pkt.payload[i]
 			end
-			npkt:send()
+			npkt.payload:append(payload)
+			npkt:inject()
 		end
 	end
 }

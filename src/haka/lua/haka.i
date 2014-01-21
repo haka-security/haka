@@ -4,8 +4,6 @@
 
 %module haka
 
-%include "lua/time.si"
-
 %{
 #include <stdint.h>
 #include <wchar.h>
@@ -22,19 +20,6 @@
 char *module_prefix = HAKA_MODULE_PREFIX;
 char *module_suffix = HAKA_MODULE_SUFFIX;
 
-struct time_lua *mk_lua_time(time_us ts)
-{
-	struct time_lua *t = malloc(sizeof(struct time_lua));
-	if (!t) {
-		error(L"memory error");
-		return NULL;
-	}
-
-	t->seconds = ts / 1000000;
-	t->micro_seconds = ts % 1000000;
-	return t;
-}
-
 %}
 
 %include "haka/lua/swig.si"
@@ -43,8 +28,8 @@ struct time_lua *mk_lua_time(time_us ts)
 %nodefaultctor;
 %nodefaultdtor;
 
-%rename(current_thread) thread_get_id;
-int thread_get_id();
+%rename(current_thread) thread_getid;
+int thread_getid();
 
 %rename(module_path) module_get_path;
 const char *module_get_path();
@@ -57,37 +42,38 @@ struct stream {
 };
 BASIC_STREAM(stream)
 
-%rename(time) time_lua;
-struct time_lua {
-	int    seconds;
-	int    micro_seconds;
+struct time {
+	int    secs;
+	int    nsecs;
 
 	%extend {
-		time_lua() {
-			return mk_lua_time(time_gettimestamp());
+		time(double ts) {
+			struct time *t = malloc(sizeof(struct time));
+			if (!t) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			time_build(t, ts);
+			return t;
 		}
 
-		~time_lua() {
+		~time() {
 			free($self);
 		}
 
-		double toseconds()
-		{
-			return ((double)$self->seconds) + $self->micro_seconds / 1000000.;
-		}
+		%immutable;
+		double seconds;
 
 		temporary_string __tostring()
 		{
-			time_us ts;
 			char *ret = malloc(TIME_BUFSIZE);
 			if (!ret) {
 				error(L"memory error");
 				return NULL;
 			}
 
-			ts = $self->seconds*1000000LL + $self->micro_seconds;
-
-			if (!time_tostring(ts, ret)) {
+			if (!time_tostring($self, ret, TIME_BUFSIZE)) {
 				assert(check_error());
 				free(ret);
 				return NULL;
@@ -97,6 +83,26 @@ struct time_lua {
 		}
 	}
 };
+
+STRUCT_UNKNOWN_KEY_ERROR(time);
+
+%{
+
+double time_seconds_get(struct time *t) {
+	return time_sec(t);
+}
+
+%}
+
+%native(_getswigclassmetatable) int _getswigclassmetatable(struct lua_State *L);
+
+%{
+int _getswigclassmetatable(struct lua_State *L)
+{
+	SWIG_Lua_get_class_registry(L);
+	return 1;
+}
+%}
 
 %luacode {
 	haka = unpack({...})
@@ -151,5 +157,36 @@ struct time_lua {
 	package.cpath = addpath(package.cpath, haka.module_path(), { haka.module_prefix .. '?' .. haka.module_suffix })
 	package.path = addpath(package.path, haka.module_path(), { '?.bc', '?.lua' })
 
-	require('rule')
+	swig = {}
+	function swig.getclassmetatable(name)
+		local ret = haka._getswigclassmetatable()[name]
+		assert(ret, string.format("unknown swig class '%s'", name))
+		return ret
+	end
+
+	function haka.pcall(func, ...)
+		assert(func)
+		local args = {...}
+		local ret, msg = xpcall(function () func(unpack(args)) end, debug.format_error)
+		if not ret then
+			haka.log.error("core", msg)
+			return false
+		else
+			return true
+		end
+	end
+
+	require('class')
+	require('utils')
+
+	function haka.initialize()
+		require('events')
+		require('context')
+		require('rule')
+		require('rule_group')
+		require('dissector')
+		require('grammar')
+	end
 }
+
+%include "lua/vbuffer.i"

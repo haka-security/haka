@@ -11,8 +11,8 @@ require('protocol/tcp')
 haka.rule{
 	-- The hooks tells where this rule is applied. Only TCP packets will be
 	-- intecepted by this rule. Other protocol will flow.
-	hooks = { 'tcp-up' },
-	eval = function (self, pkt)
+	hook = haka.event('tcp', 'receive_packet'),
+	eval = function (pkt)
 		-- The next line will generate a lua error:
 		-- there is no 'destport' field. replace 'destport' by 'dstport'
 		if pkt.destport == 80 or pkt.srcport == 80 then

@@ -110,6 +110,7 @@ static int run_logs(int fd, int argc, char *argv[])
 
 	if (ctl_expect_chars(fd, "OK")) {
 		printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+		fflush(stdout);
 
 		while (display_log_line(fd));
 	}

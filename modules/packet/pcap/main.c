@@ -33,7 +33,7 @@ struct pcap_capture {
 	int           link_type;
 	FILE         *file;
 	size_t        file_size;
-	time_us       last_progress;
+	struct time   last_progress;
 };
 
 struct packet_module_state {
@@ -49,9 +49,10 @@ struct packet_module_state {
 struct pcap_packet {
 	struct packet               core_packet;
 	struct list                 list;
+	struct time                 timestamp;
 	struct packet_module_state *state;
 	struct pcap_pkthdr          header;
-	u_char                     *data;
+	struct vbuffer             *data;
 	uint64                      id;
 	int                         link_type;
 	bool                        captured;
@@ -75,6 +76,7 @@ static int    input_count;
 static char **inputs;
 static bool   input_is_iface;
 static char  *output_file;
+static bool   passthrough = true;
 
 
 static void cleanup()
@@ -167,12 +169,19 @@ static int init(struct parameters *args)
 		output_file = strdup(output);
 	}
 
+	passthrough = parameters_get_boolean(args, "pass-through", true);
+
 	return 0;
 }
 
 static bool multi_threaded()
 {
 	return false;
+}
+
+static bool pass_through()
+{
+	return passthrough;
 }
 
 static void cleanup_state(struct packet_module_state *state)
@@ -224,7 +233,6 @@ static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 			cur = ftell(pd->file);
 			fseek(pd->file, 0L, SEEK_END);
 			pd->file_size = ftell(pd->file);
-			pd->last_progress = INVALID_TIME;
 			fseek(pd->file, cur, SEEK_SET);
 		}
 	}
@@ -310,6 +318,73 @@ static struct packet_module_state *init_state(int thread_id)
 	return state;
 }
 
+static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
+{
+	size_t len = (size_t)-1;
+	uint8* data = NULL;
+	if (pkt->data) data = vbuffer_mmap(pkt->data, NULL, &len, false);
+
+	switch (pkt->link_type)
+	{
+	case DLT_LINUX_SLL:
+		{
+			struct linux_sll_header *eh = (struct linux_sll_header *)data;
+			*data_offset = sizeof(struct linux_sll_header);
+			assert(len >= *data_offset);
+			if (eh) return ntohs(eh->protocol);
+			else return 0;
+		}
+		break;
+
+	case DLT_EN10MB:
+		{
+			struct ethhdr *eh = (struct ethhdr *)data;
+			*data_offset = sizeof(struct ethhdr);
+			assert(len >= *data_offset);
+			if (eh) return ntohs(eh->h_proto);
+			else return 0;
+		}
+		break;
+
+	case DLT_IPV4:
+	case DLT_RAW:
+		*data_offset = 0;
+		return ETH_P_IP;
+
+	case DLT_NULL:
+		*data_offset = 4;
+		assert(len >= *data_offset);
+		if (*(uint32 *)data == PF_INET) {
+			return ETH_P_IP;
+		}
+		else {
+			return -1;
+		}
+		break;
+
+	default:
+		*data_offset = 0;
+		assert(0);
+		return -1;
+	}
+}
+
+static bool packet_build_payload(struct pcap_packet *packet)
+{
+	size_t data_offset;
+	get_protocol(packet, &data_offset);
+	if (data_offset > 0) {
+		packet->core_packet.payload = vbuffer_extract(packet->data, data_offset, ALL, false);
+		if (!packet->core_packet.payload) {
+			return false;
+		}
+	}
+	else {
+		packet->core_packet.payload = packet->data;
+	}
+	return true;
+}
+
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
 	/* first check if a packet is waiting in the sent queue */
@@ -345,8 +420,13 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 		ret = select(max_fd+1, &read_set, NULL, NULL, NULL);
 		if (ret < 0) {
-			messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errno_error(errno));
-			return 1;
+			if (errno == EINTR) {
+				return 0;
+			}
+			else {
+				messagef(HAKA_LOG_ERROR, L"pcap", L"%s", errno_error(errno));
+				return 1;
+			}
 		}
 		else if (ret == 0) {
 			return 0;
@@ -389,19 +469,23 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 				list_init(packet);
 
-				packet->data = malloc(header->caplen);
+				packet->data = vbuffer_create_new(header->caplen);
 				if (!packet->data) {
 					free(packet);
 					return ENOMEM;
 				}
 
+				vbuffer_setmode(packet->data, passthrough);
+
 				/* fill packet data structure */
-				memcpy(packet->data, p, header->caplen);
+				memcpy(vbuffer_mmap(packet->data, NULL, NULL, false), p, header->caplen);
 				packet->header = *header;
 				packet->state = state;
 				packet->captured = true;
 				packet->link_type = pd->link_type;
 				packet->id = state->packet_id++;
+				packet->timestamp.secs = header->ts.tv_sec;
+				packet->timestamp.nsecs = header->ts.tv_usec*1000;
 
 				if (packet->header.caplen < packet->header.len)
 					messagef(HAKA_LOG_WARNING, L"pcap", L"packet truncated");
@@ -409,16 +493,23 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				if (pd->file) {
 					const size_t cur = ftell(pd->file);
 					const float percent = ((cur * 10000) / pd->file_size) / 100.f;
-					const time_us time = time_gettimestamp();
+					struct time time;
+					time_gettimestamp(&time);
 
-					if (pd->last_progress == INVALID_TIME ||
-					    time_diff(time, pd->last_progress) > 5000000) /* 5 seconds */
+					if (!time_isvalid(&pd->last_progress) ||
+					    time_diff(&time, &pd->last_progress) > 5.) /* 5 seconds */
 					{
 						pd->last_progress = time;
 						if (percent > 0) {
 							messagef(HAKA_LOG_INFO, L"pcap", L"progress %.2f %%", percent);
 						}
 					}
+				}
+
+				if (!packet_build_payload(packet)) {
+					vbuffer_free(packet->data);
+					free(packet);
+					return ENOMEM;
 				}
 
 				*pkt = (struct packet *)packet;
@@ -434,89 +525,38 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 
 	if (pkt->data) {
-		if (pkt->state->pf && result == FILTER_ACCEPT)
-			pcap_dump((u_char *)pkt->state->pf, &(pkt->header), pkt->data);
+		if (pkt->data != pkt->core_packet.payload) {
+			size_t data_offset;
+			get_protocol(pkt, &data_offset);
+			vbuffer_insert(pkt->data, data_offset, pkt->core_packet.payload, false);
+		}
+		pkt->core_packet.payload = NULL;
 
-		free(pkt->data);
+		if (pkt->state->pf && result == FILTER_ACCEPT) {
+			uint8 *data;
+			size_t len;
+
+			if (!vbuffer_flatten(pkt->data)) {
+				assert(check_error());
+				vbuffer_free(pkt->data);
+				pkt->data = NULL;
+				return;
+			}
+
+			data = vbuffer_mmap(pkt->data, NULL, &len, false);
+			assert(data);
+
+			if (pkt->header.caplen != len) {
+				pkt->header.len = len;
+				pkt->header.caplen = len;
+			}
+
+			pcap_dump((u_char *)pkt->state->pf, &(pkt->header), data);
+		}
+
+		vbuffer_free(pkt->data);
 		pkt->data = NULL;
 	}
-}
-
-static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
-{
-	switch (pkt->link_type)
-	{
-	case DLT_LINUX_SLL:
-		{
-			struct linux_sll_header *eh = (struct linux_sll_header *)pkt->data;
-			*data_offset = sizeof(struct linux_sll_header);
-			if (eh) return ntohs(eh->protocol);
-			else return 0;
-		}
-		break;
-
-	case DLT_EN10MB:
-		{
-			struct ethhdr *eh = (struct ethhdr *)pkt->data;
-			*data_offset = sizeof(struct ethhdr);
-			if (eh) return ntohs(eh->h_proto);
-			else return 0;
-		}
-		break;
-
-	case DLT_IPV4:
-	case DLT_RAW:
-		*data_offset = 0;
-		return ETH_P_IP;
-
-		{
-			*data_offset = 16;
-			struct ethhdr *eh = (struct ethhdr *)pkt->data;
-			*data_offset = sizeof(struct ethhdr);
-			if (eh) return ntohs(eh->h_proto);
-			else return 0;
-		}
-		break;
-
-	case DLT_NULL:
-		*data_offset = 4;
-		if (*(uint32 *)pkt->data == PF_INET) {
-			return ETH_P_IP;
-		}
-		else {
-			return -1;
-		}
-		break;
-
-	default:
-		*data_offset = 0;
-		assert(0);
-		return -1;
-	}
-}
-
-static size_t packet_get_length(struct packet *orig_pkt)
-{
-	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	size_t data_offset;
-	get_protocol(pkt, &data_offset);
-	return pkt->header.caplen - data_offset;
-}
-
-static const uint8 *packet_get_data(struct packet *orig_pkt)
-{
-	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	size_t data_offset;
-	get_protocol(pkt, &data_offset);
-	return (pkt->data + data_offset);
-}
-
-static uint8 *packet_modifiable(struct packet *orig_pkt)
-{
-	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	size_t data_offset;
-	get_protocol(pkt, &data_offset);
-	return (pkt->data + data_offset);
 }
 
 static const char *packet_get_dissector(struct packet *orig_pkt)
@@ -530,33 +570,6 @@ static const char *packet_get_dissector(struct packet *orig_pkt)
 	default:
 		return NULL;
 	}
-}
-
-static int packet_do_resize(struct packet *orig_pkt, size_t size)
-{
-	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	u_char *new_data;
-	size_t new_size, copy_size;
-	size_t data_offset;
-
-	get_protocol(pkt, &data_offset);
-	new_size = size + data_offset;
-	copy_size = MIN(new_size, pkt->header.caplen);
-
-	new_data = malloc(new_size);
-	if (!new_data) {
-		error(L"memory error");
-		return ENOMEM;
-	}
-
-	memcpy(new_data, pkt->data, copy_size);
-	memset(new_data + copy_size, 0, new_size - copy_size);
-
-	free(pkt->data);
-	pkt->data = new_data;
-	pkt->header.len = new_size;
-	pkt->header.caplen = new_size;
-	return 0;
 }
 
 static uint64 packet_get_id(struct packet *orig_pkt)
@@ -573,7 +586,6 @@ static void packet_do_release(struct packet *orig_pkt)
 		packet_verdict(orig_pkt, FILTER_DROP);
 	}
 
-	free(pkt->data);
 	free(pkt);
 }
 
@@ -594,6 +606,7 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 
 static struct packet *new_packet(struct packet_module_state *state, size_t size)
 {
+	uint8 *data;
 	size_t data_offset;
 	struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
 	if (!packet) {
@@ -607,24 +620,22 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	packet->state = state;
 	packet->captured = false;
 	packet->link_type = state->link_type;
-
-	{
-		const time_us timestamp = time_gettimestamp();
-		packet->header.ts.tv_sec = timestamp / 1000000;
-		packet->header.ts.tv_usec = timestamp % 1000000;
-	}
+	time_gettimestamp(&packet->timestamp);
 
 	get_protocol(packet, &data_offset);
 	size += data_offset;
 
-	packet->data = malloc(size);
+	packet->data = vbuffer_create_new(size);
 	if (!packet->data) {
+		assert(check_error());
 		free(packet);
-		error(L"Memory error");
 		return NULL;
 	}
 
-	memset(packet->data, 0, size);
+	data = vbuffer_mmap(packet->data, NULL, NULL, true);
+	assert(data);
+
+	memset(data, 0, size);
 
 	packet->header.len = size;
 	packet->header.caplen = size;
@@ -637,19 +648,19 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 		break;
 
 	case DLT_NULL:
-		*(uint32 *)packet->data = PF_INET;
+		*(uint32 *)data = PF_INET;
 		break;
 
 	case DLT_LINUX_SLL:
 		{
-			struct linux_sll_header *eh = (struct linux_sll_header *)packet->data;
+			struct linux_sll_header *eh = (struct linux_sll_header *)data;
 			eh->protocol = htons(ETH_P_IP);
 		}
 		break;
 
 	case DLT_EN10MB:
 		{
-			struct ethhdr *eh = (struct ethhdr *)packet->data;
+			struct ethhdr *eh = (struct ethhdr *)data;
 			eh->h_proto = htons(ETH_P_IP);
 		}
 		break;
@@ -659,12 +670,23 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 		break;
 	}
 
+	if (!packet_build_payload(packet)) {
+		vbuffer_free(packet->data);
+		free(packet);
+		return NULL;
+	}
+
 	return (struct packet *)packet;
 }
 
 static bool send_packet(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+
+	if (passthrough) {
+		error(L"sending is not supported in pass-through");
+		return false;
+	}
 
 	assert(pkt->data);
 	assert(!list_next(pkt) && !list_prev(pkt));
@@ -679,10 +701,10 @@ static size_t get_mtu(struct packet *pkt)
 	return 1500;
 }
 
-static time_us get_timestamp(struct packet *orig_pkt)
+static const struct time *get_timestamp(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	return (((time_us)pkt->header.ts.tv_sec)*1000000) + pkt->header.ts.tv_usec;
+	return &pkt->timestamp;
 }
 
 
@@ -696,15 +718,12 @@ struct packet_module HAKA_MODULE = {
 		cleanup:     cleanup
 	},
 	multi_threaded:  multi_threaded,
+	pass_through:    pass_through,
 	init_state:      init_state,
 	cleanup_state:   cleanup_state,
 	receive:         packet_do_receive,
 	verdict:         packet_verdict,
-	get_length:      packet_get_length,
-	make_modifiable: packet_modifiable,
-	resize:          packet_do_resize,
 	get_id:          packet_get_id,
-	get_data:        packet_get_data,
 	get_dissector:   packet_get_dissector,
 	release_packet:  packet_do_release,
 	packet_getstate: packet_getstate,

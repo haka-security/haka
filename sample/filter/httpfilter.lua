@@ -3,6 +3,7 @@
 ------------------------------------
 require('protocol/ipv4')
 require('protocol/tcp')
+require('protocol/tcp-connection')
 local http = require('protocol/http')
 
 ------------------------------------
@@ -10,13 +11,13 @@ local http = require('protocol/http')
 -- Forward all accepted connections to the HTTP dissector
 ------------------------------------
 haka.rule{
-	hooks = { 'tcp-connection-new' },
-	eval = function (self, pkt)
-		if pkt.tcp.dstport == 80 then
-			pkt.next_dissector = 'http'
+	hook = haka.event('tcp-connection', 'new_connection'),
+	eval = function (flow, pkt)
+		if pkt.dstport == 80 then
+			haka.context:install_dissector(haka.dissector.get('http'):new(flow))
 		else
 			haka.log("Filter", "Dropping TCP connection: tcp dstpport=%d",
-				pkt.tcp.dstport)
+				pkt.dstport)
 			pkt:reset() -- Send a TCP RST packet to both sides: client and server
 		end
 	end
@@ -24,9 +25,9 @@ haka.rule{
 
 -- Only allow connections from from the 'Mozilla' user agent.
 haka.rule{
-	hooks = { 'http-request' },
-	eval = function (self, http)
-		if string.match(http.request.headers['User-Agent'], 'Mozilla') then
+	hook = haka.event('http', 'request'),
+	eval = function (http, request)
+		if string.match(request.headers['User-Agent'], 'Mozilla') then
 			haka.log("Filter", "User-Agent Mozilla detected")
 		else
 			haka.log("Filter", "Only Mozilla User-Agent authorized")

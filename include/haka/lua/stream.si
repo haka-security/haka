@@ -62,7 +62,11 @@ LUA_OBJECT(struct stream);
 		return stream_read((struct stream *)$self, NULL, size);
 	}
 
-	unsigned int available();
+	%rename(available) _available;
+	unsigned int _available()
+	{
+		return stream_available((struct stream *)$self);
+	}
 
 	%rename(insert) _insert;
 	unsigned int _insert(struct buffer *buf)
@@ -80,15 +84,29 @@ LUA_OBJECT(struct stream);
 		return stream_insert((struct stream *)$self, (const uint8*)buf, strlen(buf));
 	}
 
-	unsigned int erase(int size);
-
-	struct stream_mark *mark() {
-		return stream_mark($self, false);
+	%rename(erase) _erase;
+	unsigned int _erase(int size)
+	{
+		return stream_erase((struct stream *)$self, size);
 	}
 
-	struct stream_mark *mark(bool readonly);
-	void unmark(struct stream_mark *mark);
-	void seek(struct stream_mark *mark, bool unmark);
+	struct stream_mark *mark() {
+		return stream_mark((struct stream *)$self, false);
+	}
+
+	struct stream_mark *mark(bool readonly) {
+		return stream_mark((struct stream *)$self, readonly);
+	}
+
+	%rename(unmark) _unmark;
+	void _unmark(struct stream_mark *mark) {
+		stream_unmark((struct stream *)$self, mark);
+	}
+
+	%rename(seek) _seek;
+	void _seek(struct stream_mark *mark, bool unmark) {
+		stream_seek((struct stream *)$self, mark, unmark);
+	}
 }
 
 STRUCT_UNKNOWN_KEY_ERROR(type);

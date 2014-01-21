@@ -42,12 +42,12 @@ INIT static void thread_id_init()
 	assert(ret);
 }
 
-int thread_get_id()
+int thread_getid()
 {
 	return (ptrdiff_t)local_storage_get(&thread_id_key);
 }
 
-void thread_set_id(int id)
+void thread_setid(int id)
 {
 	local_storage_set(&thread_id_key, (void*)(ptrdiff_t)id);
 }
@@ -426,6 +426,41 @@ bool semaphore_post(semaphore_t *semaphore)
 	const int err = sem_post(semaphore);
 	if (err) {
 		error(L"semaphore error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+
+/*
+ * Barrier
+ */
+
+bool barrier_init(barrier_t *barrier, uint32 count)
+{
+	const int err = pthread_barrier_init(barrier, NULL, count);
+	if (err) {
+		error(L"barrier error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool barrier_destroy(barrier_t *barrier)
+{
+	const int err = pthread_barrier_destroy(barrier);
+	if (err) {
+		error(L"barrier error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool barrier_wait(barrier_t *barrier)
+{
+	const int err = pthread_barrier_wait(barrier);
+	if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
+		error(L"barrier error: %s", errno_error(err));
 		return false;
 	}
 	return true;

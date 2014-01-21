@@ -4,6 +4,7 @@
 
 require("protocol/ipv4")
 require("protocol/tcp")
+require("protocol/tcp-connection")
 
 local buf = haka.buffer(4)
 buf[1] = 0x48
@@ -12,15 +13,15 @@ buf[3] = 0x6b
 buf[4] = 0x61
 
 haka.rule {
-	hooks = { "tcp-connection-up" },
-	eval = function (self, pkt)
-		pkt.stream:insert(buf)
+	hook = haka.event('tcp-connection', 'receive_data'),
+	eval = function (flow, stream)
+		stream:insert(buf)
 	end
 }
 
 haka.rule {
-	hooks = { "tcp-connection-down" },
-	eval = function (self, pkt)
-		pkt.stream:erase(10)
+	hook = haka.event('tcp-connection', 'send_data'),
+	eval = function (flow, stream)
+		stream:erase(10)
 	end
 }

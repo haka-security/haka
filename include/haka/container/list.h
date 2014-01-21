@@ -33,4 +33,4 @@ void _list_insert_after(struct list *elem, struct list *l, int offset,
 void _list_insert_before(struct list *elem, struct list *l, int offset,
 		void **head, void **tail);
 
-#endif /*/ _HAKA_CONTAINER_LIST_H */
+#endif /* _HAKA_CONTAINER_LIST_H */

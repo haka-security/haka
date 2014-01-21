@@ -8,8 +8,8 @@
 require("protocol/ipv4")
 
 haka.rule {
-	hooks = {"ipv4-down"},
-	eval = function (self,pkt)
+	hook = haka.event('ipv4', 'send_packet'),
+	eval = function (pkt)
 		print(string.format("SRC:%s - DST:%s", pkt.src, pkt.dst))
 	end
 }

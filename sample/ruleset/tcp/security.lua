@@ -2,9 +2,9 @@
 -- TCP attacks
 ------------------------------------
 
-haka.rule{
-	hooks = { 'tcp-up' },
-	eval = function (self, pkt)
+haka.rule {
+	hook = haka.event('tcp', 'receive_packet'),
+	eval = function (pkt)
 		--Xmas scan, as made by nmap -sX <IP>
 		if pkt.flags.psh and pkt.flags.fin and pkt.flags.urg then
 			haka.alert{
@@ -29,9 +29,9 @@ local bindshell = string_convert({0xeb, 0x1f, 0x5e, 0x89, 0x76, 0x08, 0x31, 0xc0
 	0x8d, 0x56, 0x0c, 0xcd, 0x80, 0x31, 0xdb, 0x89, 0xd8, 0x40, 0xcd, 0x80, 0xe8,
 	0xdc, 0xff, 0xff, 0xff, "/bin/sh"})
 
-haka.rule{
-	hooks = { 'tcp-up' },
-	eval = function (self, pkt)
+haka.rule {
+	hook = haka.event('tcp', 'receive_packet'),
+	eval = function (pkt)
 		if #pkt.payload > 0 then
 			-- reconstruct payload
 			local payload = getpayload(pkt.payload)

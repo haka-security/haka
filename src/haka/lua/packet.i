@@ -20,30 +20,20 @@ void lua_pushppacket(lua_State *L, struct packet *pkt)
 	}
 }
 
-#define _new(s) __new(L, s)
-
 %}
-
-%include "time.si"
-
-%rename(ACCEPT) FILTER_ACCEPT;
-%rename(DROP) FILTER_DROP;
-
-enum filter_result { FILTER_ACCEPT, FILTER_DROP };
 
 %nodefaultctor;
 %nodefaultdtor;
 
 %newobject packet::forge;
-%newobject packet::timestamp;
 
 struct packet {
 	%extend {
 		%immutable;
-		size_t length;
-		struct time_lua *timestamp;
+		const struct time *timestamp;
 		const char *dissector;
-		const char *next_dissector;
+		const char *name;
+		struct vbuffer *payload;
 
 		~packet()
 		{
@@ -52,41 +42,9 @@ struct packet {
 			}
 		}
 
-		size_t __len(void *dummy)
-		{
-			return packet_length($self);
-		}
-
-		int __getitem(int index)
-		{
-			--index;
-			if (index < 0 || index >= packet_length($self)) {
-				error(L"out-of-bound index");
-				return 0;
-			}
-			return packet_data($self)[index];
-		}
-
-		void __setitem(int index, int value)
-		{
-			--index;
-			if (index < 0 || index >= packet_length($self)) {
-				error(L"out-of-bound index");
-				return;
-			}
-			packet_data_modifiable($self)[index] = value;
-		}
-
-		void resize(int size);
 		void drop();
-		void accept();
-		void send();
-
-		struct packet *forge()
-		{
-			packet_accept($self);
-			return NULL;
-		}
+		%rename(continue) _continue;
+		bool _continue();
 	}
 };
 
@@ -98,25 +56,147 @@ enum packet_mode { MODE_NORMAL, MODE_PASSTHROUGH };
 %rename(mode) packet_mode;
 enum packet_mode packet_mode();
 
-%rename(new) packet_new;
+%rename(_create) packet_new;
 %newobject packet_new;
 struct packet *packet_new(int size = 0);
 
-%{
-size_t packet_length_get(struct packet *pkt) {
-	return packet_length(pkt);
-}
+%rename(_send) packet__send;
+void packet__send(struct packet *pkt);
 
-struct time_lua *packet_timestamp_get(struct packet *pkt) {
-	return mk_lua_time(packet_timestamp(pkt));
+%rename(_inject) packet__inject;
+%delobject packet__inject;
+void packet__inject(struct packet *pkt);
+
+%{
+const struct time *packet_timestamp_get(struct packet *pkt) {
+	return packet_timestamp(pkt);
 }
 
 const char *packet_dissector_get(struct packet *pkt) {
-	return "raw";
-}
-
-const char *packet_next_dissector_get(struct packet *pkt) {
 	return packet_dissector(pkt);
 }
 
+const char *packet_name_get(struct packet *pkt) {
+	return "raw";
+}
+
+struct vbuffer *packet_payload_get(struct packet *pkt) {
+	return packet_payload(pkt);
+}
+
+void packet__send(struct packet *pkt)
+{
+	assert(pkt);
+
+	switch (packet_state(pkt)) {
+	case STATUS_FORGED:
+	case STATUS_NORMAL:
+		packet_accept(pkt);
+		break;
+
+	case STATUS_SENT:
+		error(L"operation not supported");
+		return;
+
+	default:
+		assert(0);
+		return;
+	}
+}
+
+void packet__inject(struct packet *pkt)
+{
+	assert(pkt);
+
+	switch (packet_state(pkt)) {
+	case STATUS_FORGED:
+		packet_send(pkt);
+		break;
+
+	case STATUS_NORMAL:
+	case STATUS_SENT:
+		error(L"operation not supported");
+		return;
+
+	default:
+		assert(0);
+		return;
+	}
+}
+
+bool packet__continue(struct packet *pkt)
+{
+	assert(pkt);
+	return packet_state(pkt) != STATUS_SENT;
+}
 %}
+
+%luacode{
+	local this = unpack({...})
+
+	local raw_dissector = haka.dissector.new{
+		type = haka.dissector.PacketDissector,
+		name = 'raw'
+	}
+
+	raw_dissector.options.drop_unknown_dissector = false
+
+	function raw_dissector.method:emit()
+		if not haka.pcall(haka.context.signal, haka.context, self, raw_dissector.events.receive_packet) then
+			return self:drop()
+		end
+
+		if not self:continue() then
+			return
+		end
+
+		local dissector = self.dissector
+		if dissector then
+			local next_dissector = haka.dissector.get(dissector)
+			if next_dissector then
+				return next_dissector:receive(self)
+			else
+				if raw_dissector.options.drop_unknown_dissector then
+					haka.log.error("raw", "dissector '%s' is unknown", dissector)
+					return self:drop()
+				else
+					return self:send()
+				end
+			end
+		else
+			return self:send()
+		end
+	end
+
+	function raw_dissector:receive(pkt)
+		return pkt:emit()
+	end
+
+	function raw_dissector:create(size)
+		return this._create(size or 0)
+	end
+
+	function raw_dissector.method:send()
+		if not haka.pcall(haka.context.signal, haka.context, self, raw_dissector.events.send_packet) then
+			return self:drop()
+		end
+
+		if not self:continue() then
+			return
+		end
+
+		return this._send(self)
+	end
+
+	function raw_dissector.method:inject()
+		return this._inject(self)
+	end
+
+	swig.getclassmetatable('packet')['.fn'].send = raw_dissector.method.send
+	swig.getclassmetatable('packet')['.fn'].emit = raw_dissector.method.emit
+	swig.getclassmetatable('packet')['.fn'].inject = raw_dissector.method.inject
+
+	function haka.filter(pkt)
+		raw_dissector:receive(pkt)
+	end
+}

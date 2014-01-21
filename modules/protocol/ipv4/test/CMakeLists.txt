@@ -6,7 +6,6 @@
 include(TestPcap)
 include(TestUnit)
 
-TEST_PCAP(ipv4 hook-unknown-rule)
 TEST_PCAP(ipv4 setbadfields)
 TEST_PCAP(ipv4 hook-up-rule)
 TEST_PCAP(ipv4 hook-down-rule)
@@ -18,6 +17,7 @@ TEST_PCAP(ipv4 setfields)
 TEST_PCAP(ipv4 getfields-passthrough OPTIONS --pass-through)
 TEST_PCAP(ipv4 setfields-passthrough OPTIONS --pass-through)
 TEST_PCAP(ipv4 create)
+# TEST_PCAP(ipv4 options)
 
 TEST_UNIT(ipv4 unit unit.c)
 target_link_libraries(ipv4-unit ipv4)

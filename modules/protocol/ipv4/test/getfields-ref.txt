@@ -3,7 +3,7 @@ Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0
     Header length: 20 bytes
     Total Length: 84
     Identification: 0x0000 (0)
-    Flags: 0x02 (Don't Fragment)
+    Flags: (Don't Fragment)
         0... .... = Reserved bit: Not set
         .1.. .... = Don't fragment: Set
         ..0. .... = More fragments: Not set
@@ -21,7 +21,7 @@ Internet Protocol Version 4, Src: 127.0.0.1 (127.0.0.1), Dst: 127.0.0.1 (127.0.0
     Header length: 20 bytes
     Total Length: 84
     Identification: 0x1363 (4963)
-    Flags: 0x00
+    Flags:
         0... .... = Reserved bit: Not set
         .0.. .... = Don't fragment: Not set
         ..0. .... = More fragments: Not set

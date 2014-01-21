@@ -8,14 +8,14 @@
 local ipv4 = require("protocol/ipv4")
 
 haka.rule {
-	hooks = { "ipv4-up" },
-	eval = function (self, pkt)
-		pkt.version = 7
-		pkt.len = 84
-		pkt.frag_offset = 80
-		pkt.ttl = 33
-		pkt.proto = 17
-		pkt.src = ipv4.addr(350, 350, 350, 350)
-		pkt.dst = ipv4.addr("350.350.350.350")
+	hook = haka.event('ipv4', 'receive_packet'),
+	eval = function (pkt)
+		print(pcall(function () pkt.version = 77 end))
+		print(pcall(function () pkt.len = -84 end))
+		print(pcall(function () pkt.frag_offset = 83 end))
+		print(pcall(function () pkt.ttl = 333 end))
+		print(pcall(function () pkt.proto = -14 end))
+		print(pcall(function () pkt.src = ipv4.addr(350, 350, 350, 350) end))
+		print(pcall(function () pkt.dst = ipv4.addr("350.350.350.350") end))
 	end
 }

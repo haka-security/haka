@@ -16,7 +16,7 @@ uint32 ipv4_addr_from_string(const char *string)
 	struct in_addr addr;
 
 	if (inet_pton(AF_INET, string, &addr) <= 0) {
-		error(L"Invalid IPv4 address format");
+		error(L"invalid IPv4 address format");
 		return 0;
 	}
 

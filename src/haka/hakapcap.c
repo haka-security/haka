@@ -25,8 +25,6 @@
 #include "lua/state.h"
 
 
-extern void packet_set_mode(enum packet_mode mode);
-
 static void usage(FILE *output, const char *program)
 {
 	fprintf(stdout, "Usage: %s [options] <pcapfile> <config>\n", program);
@@ -37,16 +35,17 @@ static void help(const char *program)
 	usage(stdout, program);
 
 	fprintf(stdout, "Options:\n");
-	fprintf(stdout, "\t-h,--help:       Display this information\n");
-	fprintf(stdout, "\t--version:       Display version information\n");
-	fprintf(stdout, "\t-d,--debug:      Display debug output\n");
-	fprintf(stdout, "\t--luadebug:      Attach lua debugger\n");
-	fprintf(stdout, "\t--pass-through:  Run in pass-through mode\n");
-	fprintf(stdout, "\t-o <output>:     Save result in a pcap file\n");
+	fprintf(stdout, "\t-h,--help:         Display this information\n");
+	fprintf(stdout, "\t--version:         Display version information\n");
+	fprintf(stdout, "\t-d,--debug:        Display debug output\n");
+	fprintf(stdout, "\t--luadebug:        Attach lua debugger\n");
+	fprintf(stdout, "\t--no-pass-through, --pass-through:\n");
+	fprintf(stdout, "\t                   Select pass-through mode (default: true)\n");
+	fprintf(stdout, "\t-o <output>:       Save result in a pcap file\n");
 }
 
 static char *output = NULL;
-static bool pass_throught = false;
+static bool pass_through = true;
 static bool lua_debugger = false;
 
 static int parse_cmdline(int *argc, char ***argv)
@@ -55,12 +54,13 @@ static int parse_cmdline(int *argc, char ***argv)
 	int index = 0;
 
 	static struct option long_options[] = {
-		{ "version",      no_argument,       0, 'v' },
-		{ "help",         no_argument,       0, 'h' },
-		{ "debug",        no_argument,       0, 'd' },
-		{ "luadebug",     no_argument,       0, 'L' },
-		{ "pass-through", no_argument,       0, 'P' },
-		{ 0,              0,                 0, 0 }
+		{ "version",         no_argument,       0, 'v' },
+		{ "help",            no_argument,       0, 'h' },
+		{ "debug",           no_argument,       0, 'd' },
+		{ "luadebug",        no_argument,       0, 'L' },
+		{ "no-pass-through", no_argument,       0, 'p' },
+		{ "pass-through",    no_argument,       0, 'P' },
+		{ 0,                 0,                 0, 0 }
 	};
 
 	while ((c = getopt_long(*argc, *argv, "dho:", long_options, &index)) != -1) {
@@ -78,8 +78,12 @@ static int parse_cmdline(int *argc, char ***argv)
 			printf("API version %d\n", HAKA_API_VERSION);
 			return 0;
 
+		case 'p':
+			pass_through = false;
+			break;
+
 		case 'P':
-			pass_throught = true;
+			pass_through = true;
 			break;
 
 		case 'o':
@@ -136,6 +140,8 @@ int main(int argc, char *argv[])
 			parameters_set_string(args, "output", output);
 		}
 
+		parameters_set_boolean(args, "pass-through", pass_through);
+
 		pcap = module_load("packet/pcap", args);
 
 		free(output);
@@ -156,11 +162,6 @@ int main(int argc, char *argv[])
 
 	/* Select configuration */
 	set_configuration_script(argv[1]);
-
-	if (pass_throught) {
-		messagef(HAKA_LOG_INFO, L"core", L"setting packet mode to pass-through\n");
-		packet_set_mode(MODE_PASSTHROUGH);
-	}
 
 	{
 		struct luadebug_user *user = luadebug_user_readline();

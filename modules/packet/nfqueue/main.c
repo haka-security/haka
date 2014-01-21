@@ -61,10 +61,7 @@ struct nfqueue_packet {
 	struct packet               core_packet;
 	struct packet_module_state *state;
 	int                         id; /* nfq identifier */
-	size_t                      length;
-	time_us                     timestamp;
-	int                         modified:1;
-	uint8                      *data;
+	struct time                 timestamp;
 };
 
 bool use_multithreading = true;
@@ -222,24 +219,23 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 		return 0;
 	}
 
-	memset(state->current_packet,0,sizeof(struct nfqueue_packet));
+	memset(state->current_packet, 0, sizeof(struct nfqueue_packet));
 
-	state->current_packet->data = malloc(packet_len);
-	if (!state->current_packet->data) {
+	state->current_packet->core_packet.payload = vbuffer_create_new(packet_len);
+	if (!state->current_packet->core_packet.payload) {
 		free(state->current_packet);
 		state->error = ENOMEM;
 		return 0;
 	}
 
-	state->current_packet->timestamp = time_gettimestamp();
-	state->current_packet->length = packet_len;
-	state->current_packet->modified = 0;
-	state->current_packet->id = ntohl(packet_hdr->packet_id);
-
 	/* The copy is needed as the packet buffer will be overridden when the next
 	 * packet will arrive.
 	 */
-	memcpy(state->current_packet->data, packet_data, packet_len);
+	memcpy(vbuffer_mmap(state->current_packet->core_packet.payload, NULL, NULL, false),
+		packet_data, packet_len);
+
+	time_gettimestamp(&state->current_packet->timestamp);
+	state->current_packet->id = ntohl(packet_hdr->packet_id);
 
 	return 0;
 }
@@ -547,17 +543,23 @@ static bool multi_threaded()
 	return use_multithreading;
 }
 
-static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt)
+static bool pass_through()
+{
+	return false;
+}
+
+static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt,
+		uint8 *data, size_t len)
 {
 	if (pcap->pf) {
 		struct pcap_pkthdr hdr;
 
 		mutex_lock(&pcap->mutex);
 
-		hdr.caplen = hdr.len = pkt->length;
-		hdr.ts.tv_sec = pkt->timestamp / 1000000;
-		hdr.ts.tv_usec = pkt->timestamp % 1000000;
-		pcap_dump((u_char *)pcap->pf, &hdr, pkt->data);
+		hdr.caplen = hdr.len = len;
+		hdr.ts.tv_sec = pkt->timestamp.secs;
+		hdr.ts.tv_usec = pkt->timestamp.nsecs / 1000;
+		pcap_dump((u_char *)pcap->pf, &hdr, data);
 
 		mutex_unlock(&pcap->mutex);
 	}
@@ -568,7 +570,9 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	const int rv = recv(state->fd, state->receive_buffer,
 			sizeof(state->receive_buffer), 0);
 	if (rv < 0) {
-		messagef(HAKA_LOG_ERROR, MODULE_NAME, L"packet reception failed, %s", errno_error(errno));
+		if (errno != EINTR) {
+			messagef(HAKA_LOG_ERROR, MODULE_NAME, L"packet reception failed, %s", errno_error(errno));
+		}
 		return 0;
 	}
 
@@ -578,7 +582,13 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			*pkt = (struct packet*)state->current_packet;
 
 			if (pcap) {
-				dump_pcap(&pcap->in, state->current_packet);
+				uint8 *data;
+				size_t len;
+				assert(vbuffer_isflat((*pkt)->payload));
+				data = vbuffer_mmap((*pkt)->payload, NULL, &len, false);
+				assert(data);
+
+				dump_pcap(&pcap->in, state->current_packet, data, len);
 			}
 
 			state->current_packet = NULL;
@@ -599,10 +609,23 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	int ret;
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
-	if (pkt->data) {
+	if (pkt->core_packet.payload) {
+		uint8 *data;
+		size_t len;
+
+		if (!vbuffer_flatten(pkt->core_packet.payload)) {
+			assert(check_error());
+			vbuffer_free(pkt->core_packet.payload);
+			pkt->core_packet.payload = NULL;
+			return;
+		}
+
+		data = vbuffer_mmap(pkt->core_packet.payload, NULL, &len, false);
+		assert(data);
+
 		if (pkt->id == -1) {
 			if (result == FILTER_ACCEPT) {
-				ret = socket_send_packet(pkt->state->send_mark_fd, pkt->data, pkt->length);
+				ret = socket_send_packet(pkt->state->send_mark_fd, data, len);
 			}
 			else {
 				ret = 0;
@@ -620,21 +643,23 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 				break;
 			}
 
-			if (pkt->modified)
-				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, pkt->length, pkt->data);
-			else
+			if (vbuffer_ismodified(pkt->core_packet.payload)) {
+				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, len, data);
+			}
+			else {
 				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, 0, NULL);
+			}
 		}
 
 		if (pcap) {
 			switch (result) {
 			case FILTER_ACCEPT:
-				dump_pcap(&pcap->out, pkt);
+				dump_pcap(&pcap->out, pkt, data, len);
 				break;
 
 			case FILTER_DROP:
 			default:
-				dump_pcap(&pcap->drop, pkt);
+				dump_pcap(&pcap->drop, pkt, data, len);
 				break;
 			}
 		}
@@ -643,49 +668,9 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 			message(HAKA_LOG_ERROR, MODULE_NAME, L"packet verdict failed");
 		}
 
-		free(pkt->data);
-		pkt->data = NULL;
+		vbuffer_free(pkt->core_packet.payload);
+		pkt->core_packet.payload = NULL;
 	}
-}
-
-static size_t packet_get_length(struct packet *orig_pkt)
-{
-	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
-	return pkt->length;
-}
-
-static const uint8 *packet_get_data(struct packet *orig_pkt)
-{
-	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
-	return pkt->data;
-}
-
-static uint8 *packet_modifiable(struct packet *orig_pkt)
-{
-	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
-	pkt->modified = 1;
-	return pkt->data;
-}
-
-static int packet_do_resize(struct packet *orig_pkt, size_t size)
-{
-	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
-	uint8 *new_data;
-	const size_t copy_size = MIN(size, pkt->length);
-
-	new_data = malloc(size);
-	if (!new_data) {
-		error(L"memory error");
-		return ENOMEM;
-	}
-
-	memcpy(new_data, pkt->data, copy_size);
-	memset(new_data + copy_size, 0, size - copy_size);
-
-	free(pkt->data);
-	pkt->data = new_data;
-	pkt->length = size;
-	return 0;
 }
 
 static uint64 packet_get_id(struct packet *orig_pkt)
@@ -703,11 +688,10 @@ static void packet_do_release(struct packet *orig_pkt)
 {
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
-	if (pkt->data) {
+	if (orig_pkt->payload) {
 		packet_verdict(orig_pkt, FILTER_DROP);
 	}
 
-	free(pkt->data);
 	free(pkt);
 }
 
@@ -715,7 +699,7 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 {
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
-	if (pkt->data) {
+	if (orig_pkt->payload) {
 		if (pkt->id == -1)
 			return STATUS_FORGED;
 		else
@@ -736,19 +720,18 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 	memset(packet, 0, sizeof(struct nfqueue_packet));
 
-	packet->data = malloc(size);
-	if (!packet->data) {
+	packet->core_packet.payload = vbuffer_create_new(size);
+	if (!packet->core_packet.payload) {
+		assert(check_error());
 		free(packet);
-		error(L"Memory error");
 		return NULL;
 	}
 
-	memset(packet->data, 0, size);
+	vbuffer_zero(packet->core_packet.payload, true);
 
 	packet->id = -1;
-	packet->length = size;
 	packet->state = state;
-	packet->timestamp = time_gettimestamp();
+	time_gettimestamp(&packet->timestamp);
 
 	return (struct packet *)packet;
 }
@@ -757,11 +740,23 @@ static bool send_packet(struct packet *orig_pkt)
 {
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 	bool ret;
+	uint8 *data;
+	size_t len;
 
-	ret = socket_send_packet(pkt->state->send_fd, pkt->data, pkt->length);
+	if (!vbuffer_flatten(pkt->core_packet.payload)) {
+		assert(check_error());
+		vbuffer_free(pkt->core_packet.payload);
+		pkt->core_packet.payload = NULL;
+		return false;
+	}
 
-	free(pkt->data);
-	pkt->data = NULL;
+	data = vbuffer_mmap(pkt->core_packet.payload, NULL, &len, false);
+	assert(data);
+
+	ret = socket_send_packet(pkt->state->send_fd, data, len);
+
+	vbuffer_free(pkt->core_packet.payload);
+	pkt->core_packet.payload = NULL;
 
 	return ret;
 }
@@ -772,10 +767,10 @@ static size_t get_mtu(struct packet *pkt)
 	return 1500;
 }
 
-static time_us get_timestamp(struct packet *orig_pkt)
+static const struct time *get_timestamp(struct packet *orig_pkt)
 {
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
-	return pkt->timestamp;
+	return &pkt->timestamp;
 }
 
 
@@ -789,15 +784,12 @@ struct packet_module HAKA_MODULE = {
 		cleanup:	 cleanup
 	},
 	multi_threaded:  multi_threaded,
+	pass_through:    pass_through,
 	init_state:      init_state,
 	cleanup_state:   cleanup_state,
 	receive:         packet_do_receive,
 	verdict:         packet_verdict,
-	get_length:      packet_get_length,
-	make_modifiable: packet_modifiable,
-	resize:          packet_do_resize,
 	get_id:          packet_get_id,
-	get_data:        packet_get_data,
 	get_dissector:   packet_get_dissector,
 	release_packet:  packet_do_release,
 	packet_getstate: packet_getstate,

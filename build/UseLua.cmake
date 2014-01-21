@@ -4,7 +4,7 @@
 
 if(LUA STREQUAL "luajit")
 	include(external/luajit.cmake)
-elseif(LUA STREQUAL "lua51")
+elseif(LUA STREQUAL "lua")
 	include(external/lua.cmake)
 else()
 	message(FATAL_ERROR "Invalid Lua version")

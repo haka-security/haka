@@ -16,23 +16,37 @@
 #include <haka/lua/object.h>
 #include <haka/log.h>
 #include <haka/compiler.h>
+#include <haka/error.h>
+#include <haka/lua/lua.h>
+#include <haka/container/vector.h>
 #include <luadebug/debugger.h>
 
 
-#define STATE_TABLE "__haka_state"
+#define STATE_TABLE      "__haka_state"
 
 
+struct lua_interrupt_data {
+	lua_function          function;
+	void                 *data;
+	void                (*destroy)(void *);
+};
 
 struct lua_state_ext {
 	struct lua_state       state;
+	bool                   hook_installed;
+	lua_hook               debug_hook;
+	struct vector          interrupts;
+	bool                   has_interrupts;
 	struct lua_state_ext  *next;
 };
+
+static void lua_dispatcher_hook(lua_State *L, lua_Debug *ar);
 
 
 static int panic(lua_State *L)
 {
 	messagef(HAKA_LOG_FATAL, L"lua", L"lua panic: %s", lua_tostring(L, -1));
-	raise(SIGTERM);
+	raise(SIGQUIT);
 	return 0;
 }
 
@@ -59,7 +73,7 @@ int lua_state_error_formater(lua_State *L)
 			return 0;
 		}
 
-		lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+		lua_getglobal(L, "debug");
 		if (!lua_istable(L, -1)) {
 			lua_pop(L, 1);
 			return 0;
@@ -83,33 +97,6 @@ int lua_state_error_formater(lua_State *L)
 	}
 }
 
-
-/*
- * Redefine the luaL_tolstring (taken from Lua 5.2)
- */
-const char *lua_converttostring(struct lua_State *L, int idx, size_t *len)
-{
-	if (!luaL_callmeta(L, idx, "__tostring")) {  /* no metafield? */
-		switch (lua_type(L, idx)) {
-			case LUA_TNUMBER:
-			case LUA_TSTRING:
-				lua_pushvalue(L, idx);
-				break;
-			case LUA_TBOOLEAN:
-				lua_pushstring(L, (lua_toboolean(L, idx) ? "true" : "false"));
-				break;
-			case LUA_TNIL:
-				lua_pushliteral(L, "nil");
-				break;
-			default:
-				lua_pushfstring(L, "%s: %p", luaL_typename(L, idx),
-						lua_topointer(L, idx));
-				break;
-		}
-	}
-	return lua_tolstring(L, -1, len);
-}
-
 static int lua_print(lua_State* L)
 {
 	int i;
@@ -128,7 +115,7 @@ static int lua_print(lua_State* L)
 	return 0;
 }
 
-#if !HAKA_LUAJIT
+#if !HAKA_LUAJIT && !HAKA_LUA52
 
 /*
  * On Lua 5.1, the string.format function does not convert userdata to
@@ -296,6 +283,14 @@ static int str_format(lua_State *L)
 
 static struct lua_state_ext *allocated_state = NULL;
 
+static void lua_interrupt_data_destroy(void *_data)
+{
+	struct lua_interrupt_data *data = (struct lua_interrupt_data *)_data;
+	if (data->destroy) {
+		data->destroy(data->data);
+	}
+}
+
 struct lua_state *lua_state_init()
 {
 	struct lua_state_ext *ret;
@@ -310,6 +305,10 @@ struct lua_state *lua_state_init()
 	}
 
 	ret->state.L = L;
+	ret->hook_installed = false;
+	ret->debug_hook = NULL;
+	ret->has_interrupts = false;
+	vector_create_reserve(&ret->interrupts, struct lua_interrupt_data, 20, lua_interrupt_data_destroy);
 	ret->next = NULL;
 
 	lua_atpanic(L, panic);
@@ -319,7 +318,7 @@ struct lua_state *lua_state_init()
 	lua_pushcfunction(L, lua_print);
 	lua_setglobal(L, "print");
 
-#if !HAKA_LUAJIT
+#if !HAKA_LUAJIT && !HAKA_LUA52
 	lua_getglobal(L, "string");
 	lua_pushcfunction(L, str_format);
 	lua_setfield(L, -2, "format");
@@ -340,10 +339,15 @@ struct lua_state *lua_state_init()
 	return &ret->state;
 }
 
-void lua_state_close(struct lua_state *state)
+void lua_state_close(struct lua_state *_state)
 {
-	lua_close(state->L);
-	state->L = NULL;
+	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+
+	vector_destroy(&state->interrupts);
+	state->has_interrupts = false;
+
+	lua_close(state->state.L);
+	state->state.L = NULL;
 }
 
 FINI_P(2000) static void lua_state_cleanup()
@@ -365,7 +369,7 @@ bool lua_state_isvalid(struct lua_state *state)
 	return (state->L != NULL);
 }
 
-struct lua_state *lua_state_get(lua_State *L)
+static struct lua_state_ext *lua_state_getext(lua_State *L)
 {
 	const void *p;
 
@@ -374,5 +378,112 @@ struct lua_state *lua_state_get(lua_State *L)
 	p = lua_topointer(L, -1);
 	lua_pop(L, 1);
 
-	return (struct lua_state *)p;
+	return (struct lua_state_ext *)p;
+}
+
+struct lua_state *lua_state_get(lua_State *L)
+{
+	return &lua_state_getext(L)->state;
+}
+
+static void lua_interrupt_call(struct lua_state_ext *state)
+{
+	int i;
+
+	for (i=0; i<vector_count(&state->interrupts); ++i) {
+		struct lua_interrupt_data *func = vector_get(&state->interrupts, struct lua_interrupt_data, i);
+		assert(func);
+
+		lua_pushcfunction(state->state.L, func->function);
+
+		if (func->data)
+			lua_pushlightuserdata(state->state.L, func->data);
+		else
+			lua_pushnil(state->state.L);
+
+		if (lua_pcall(state->state.L, 1, 0, 0)) {
+			lua_state_print_error(state->state.L, L"lua");
+		}
+	}
+
+	vector_resize(&state->interrupts, 0);
+	state->has_interrupts = false;
+}
+
+static void lua_update_hook(struct lua_state_ext *state)
+{
+	if (state->debug_hook || state->has_interrupts) {
+		if (!state->hook_installed) {
+			lua_sethook(state->state.L, &lua_dispatcher_hook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
+			state->hook_installed = true;
+		}
+	}
+	else {
+		if (state->hook_installed) {
+			lua_sethook(state->state.L, &lua_dispatcher_hook, 0, 1);
+			state->hook_installed = false;
+		}
+	}
+}
+
+static void lua_dispatcher_hook(lua_State *L, lua_Debug *ar)
+{
+	struct lua_state_ext *state = lua_state_getext(L);
+	if (state) {
+		if (state->debug_hook) {
+			state->debug_hook(L, ar);
+		}
+
+		if (state->has_interrupts)
+		{
+			lua_interrupt_call(state);
+			lua_update_hook(state);
+		}
+	}
+}
+
+bool lua_state_setdebugger_hook(struct lua_state *_state, lua_hook hook)
+{
+	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+
+	state->debug_hook = hook;
+	lua_update_hook(state);
+
+	return true;
+}
+
+bool lua_state_interrupt(struct lua_state *_state, lua_function func, void *data, void (*destroy)(void *))
+{
+	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+	struct lua_interrupt_data *func_data;
+
+	if (!lua_state_isvalid(&state->state)) {
+		error(L"invalid lua state");
+		return false;
+	}
+
+	assert(func);
+	func_data = vector_push(&state->interrupts, struct lua_interrupt_data);
+	func_data->function = func;
+	func_data->data = data;
+	func_data->destroy = destroy;
+
+	state->has_interrupts = true;
+	lua_update_hook(state);
+
+	return true;
+}
+
+bool lua_state_runinterrupt(struct lua_state *_state)
+{
+	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+
+	if (!vector_isempty(&state->interrupts)) {
+		state->has_interrupts = false;
+		lua_update_hook(state);
+
+		lua_interrupt_call(state);
+	}
+
+	return true;
 }

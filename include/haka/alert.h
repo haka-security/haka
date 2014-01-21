@@ -42,8 +42,8 @@ struct alert_node {
 };
 
 struct alert {
-	time_us             start_time;
-	time_us             end_time;
+	struct time         start_time;
+	struct time         end_time;
 	wchar_t            *description;
 	alert_level         severity;
 	alert_level         confidence;
@@ -83,14 +83,14 @@ struct alert {
 
 uint64          alert(const struct alert *alert);
 bool            alert_update(uint64 id, const struct alert *alert);
-const wchar_t  *alert_tostring(uint64 id, time_us time, const struct alert *alert, const char *header, const char *indent);
+const wchar_t  *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent);
 void            enable_stdout_alert(bool enable);
 
 struct alerter {
 	struct list   list;
 	void        (*destroy)(struct alerter *state);
-	bool        (*alert)(struct alerter *state, uint64 id, time_us time, const struct alert *alert);
-	bool        (*update)(struct alerter *state, uint64 id, time_us time, const struct alert *alert);
+	bool        (*alert)(struct alerter *state, uint64 id, const struct time *time, const struct alert *alert);
+	bool        (*update)(struct alerter *state, uint64 id, const struct time *time, const struct alert *alert);
 	bool          mark_for_remove;
 };
 

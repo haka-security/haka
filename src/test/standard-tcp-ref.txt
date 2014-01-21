@@ -1,14 +1,12 @@
-debug tcp-connection: opening connection 192.168.10.1:52110 -> 192.168.20.1:443
 debug filter: entering packet filtering rules : 52110 --> 443
 info alert: id = <>
-description = Packet dropped : drop by default
+	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 52110
 	}
 	targets = {
 		address: 192.168.20.1, 443
 	}
-debug tcp-connection: dropping connection 192.168.10.1:52110 -> 192.168.20.1:443
 info alert: id = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -100,62 +98,52 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-debug tcp-connection: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 50706 --> 80
 warn filter: authorizing http traffic
-debug tcp-connection: closing connection 192.168.10.1:50706 -> 192.168.20.1:80
-debug tcp-connection: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
+debug tcp-connection: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 51584 --> 80
 info alert: id = <>
-description = Packet dropped : drop by default
+	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 51584
 	}
 	targets = {
 		address: 192.168.20.255, 80
 	}
-debug tcp-connection: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
-debug tcp-connection: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug filter: entering packet filtering rules : 51584 --> 80
 info alert: id = <>
-description = Packet dropped : drop by default
+	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 51584
 	}
 	targets = {
 		address: 192.168.20.255, 80
 	}
-debug tcp-connection: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
-debug tcp-connection: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
 debug filter: entering packet filtering rules : 37017 --> 22
 warn filter: authorizing ssh traffic
 warn filter: no available dissector for ssh
-debug tcp-connection: closing connection 192.168.10.1:37017 -> 192.168.20.1:22
-debug tcp-connection: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
+debug tcp-connection: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
 debug filter: entering packet filtering rules : 34191 --> 22
 info alert: id = <>
-description = Packet dropped : drop by default
+	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 34191
 	}
 	targets = {
 		address: 192.168.20.255, 22
 	}
-debug tcp-connection: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
-debug tcp-connection: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug filter: entering packet filtering rules : 34191 --> 22
 info alert: id = <>
-description = Packet dropped : drop by default
+	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 34191
 	}
 	targets = {
 		address: 192.168.20.255, 22
 	}
-debug tcp-connection: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
-debug tcp-connection: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 50710 --> 80
 warn filter: authorizing http traffic
+debug tcp-connection: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
 info alert: id = <>
 	description = /bin/sh shellcode detected
 	sources = {
@@ -196,3 +184,6 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug tcp-connection: closing connection 192.168.10.1:50710 -> 192.168.20.1:80
+debug tcp-connection: closing connection 192.168.10.1:37017 -> 192.168.20.1:22
+debug tcp-connection: closing connection 192.168.10.1:50706 -> 192.168.20.1:80

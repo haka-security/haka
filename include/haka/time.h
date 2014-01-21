@@ -7,14 +7,24 @@
 
 #include <haka/types.h>
 
-typedef uint64   time_us; /* time in micro-seconds since the Epoch */
-typedef int64    difftime_us;
+#include <time.h>
 
-#define INVALID_TIME    0
+
+struct time {
+	time_t       secs;   /* seconds */
+	uint32       nsecs;  /* nano-seconds */
+};
+
 #define TIME_BUFSIZE    27
+#define INVALID_TIME    { 0, 0 }
 
-time_us          time_gettimestamp();
-difftime_us      time_diff(time_us t1, time_us t2);
-bool             time_tostring(time_us t, char *buffer);
+void       time_build(struct time *t, double secs);
+bool       time_gettimestamp(struct time *t);
+void       time_add(struct time *t1, const struct time *t2);
+double     time_diff(const struct time *t1, const struct time *t2);
+int        time_cmp(const struct time *t1, const struct time *t2);
+double     time_sec(const struct time *t);
+bool       time_tostring(const struct time *t, char *buffer, size_t len);
+bool       time_isvalid(const struct time *t);
 
 #endif /* _HAKA_TIME_H */
