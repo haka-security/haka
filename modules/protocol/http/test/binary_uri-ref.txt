@@ -1,0 +1,14 @@
+debug tcp-connection: opening connection 127.0.0.1:42072 -> 127.0.0.1:80
+HTTP REQUEST
+ _headers_order
+   1 = Host
+ _length = 46
+ headers
+   Host = 127.0.0.1
+ method = GET
+ uri = /Ž™ÿ
+ version = HTTP/1.1
+info alert: id = <>
+	severity = low
+	description = invalid http header '<html><head>'
+debug tcp-connection: dropping connection 127.0.0.1:42072 -> 127.0.0.1:80

@@ -1,0 +1,65 @@
+{#
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#}
+
+{% extends "basic/layout.html" %}
+{% set script_files = script_files + ['_static/scripts.js'] %}
+
+{% block relbar1 %}{% endblock %}
+
+{% block header %}
+<header id="header" role="banner">
+  <div class="home-link">
+    <div id="version" class="description">Version {{ release }}</div>
+    <h1 class="title"><a rel="home" title="Haka" href="http://www.haka-security.org">Haka</a></h1>
+    <h2 class="description">Software Defined Security</h2>
+  </div>
+</header>
+{% endblock %}
+
+{% block relbar2 %}{% endblock %}
+
+{% block footer %}
+<div id="footer">
+  {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}
+</div>
+{% endblock %}
+
+{% block content %}
+  <div id="navbar" class="navbar">
+    <nav id="site-navigation" class="navigation main-navigation" role="navigation">
+      <ul class="nav-menu">
+        <li class="{% if pagename == 'doc/user/userindex' %}current{% endif %} {% for parent in parents %}{% if parent.link == pathto("doc/user/userindex") %}current{% endif %}{% endfor %}">
+          <a href="{{ pathto("doc/user/userindex") }}">Users</a>
+        </li>
+        <li class="{% if pagename == 'doc/ref/refindex' %}current{% endif %} {% for parent in parents %}{% if parent.link == pathto("doc/ref/refindex") %}current{% endif %}{% endfor %}">
+          <a href="{{ pathto("doc/ref/refindex") }}" class="{{ pathto("doc/ref/refindex") }}">References</a>
+        </li>
+        <li class="{% if pagename == 'doc/developer/devindex' %}current{% endif %} {% for parent in parents %}{% if parent.link == pathto("doc/developer/devindex") %}current{% endif %}{% endfor %}">
+          <a href="{{ pathto("doc/developer/devindex") }}" class="">Developers</a>
+        </li>
+        <li>{%- include "searchbox.html" %}</li>
+        {%- if parents[-1] %}
+          <li class="right"><a href="{{ parents[-1].link|e }}" title="{{ parents[-1].title }}">Up</a></li>
+        {%- elif pagename != master_doc %}
+          <li class="right"><a href="{{ pathto(master_doc) }}" title="{{ shorttitle|e }}">Up</a></li>
+        {%- endif %}
+        {%- if prev %}
+          <li class="right"><a href="{{ prev.link|e }}" title="{{ prev.title }}">Prev</a></li>
+        {%- endif %}
+        {%- if next %}
+          <li class="right"><a href="{{ next.link|e }}" title="{{ next.title }}">Next</a></li>
+        {%- endif %}
+         <li class="{% if pagename == 'genindex' %}current{% endif %} right"><a href="{{ pathto("genindex.html", 1) }}">Index</a></li>
+         <li class="{% if pagename == 'lua-modindex' %}current{% endif %} right"><a href="{{ pathto("lua-modindex.html", 1) }}">Modules</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div id="content" class="body">
+    <div id="contentwrapper">
+      {% block body %}{% endblock %}
+    </div>
+  </div>
+{% endblock %}

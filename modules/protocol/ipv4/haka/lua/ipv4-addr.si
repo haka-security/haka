@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%{
+
+struct ipv4_addr;
+struct ipv4_addr *ipv4_addr_new(ipv4addr a);
+
+%}
+
+/* ipv4_addr should never be disowned */
+%typemap(in, checkfn="SWIG_isptrtype") struct ipv4_addr* %{
+	if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, 0))){
+		SWIG_fail_ptr("$symname", $argnum, $descriptor);
+	}
+%}

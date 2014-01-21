@@ -1,0 +1,5 @@
+/make
+/buildtag.cmake
+*.swp
+.project
+.externalToolBuilders

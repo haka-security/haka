@@ -1,0 +1,12 @@
+[submodule "external/luajit"]
+	path = external/luajit
+	url = git://repo.or.cz/luajit-2.0.git
+[submodule "external/sphinx-lua"]
+	path = external/sphinx-lua
+	url = git://github.com/redjack/sphinx-lua
+[submodule "external/iniparser"]
+	path = external/iniparser
+	url = git://github.com/ndevilla/iniparser.git
+[submodule "external/lua"]
+	path = external/lua
+	url = git@github.com:haka-security/lua.git

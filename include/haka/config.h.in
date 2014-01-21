@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef _HAKA_CONFIG_H
+#define _HAKA_CONFIG_H
+
+#define HAKA_VERSION_MAJOR     "${HAKA_VERSION_MAJOR}"
+#define HAKA_VERSION_MINOR     "${HAKA_VERSION_MINOR}"
+#define HAKA_VERSION_PATCH     "${HAKA_VERSION_PATCH}"
+#define HAKA_VERSION_BUILD     "${HAKA_VERSION_BUILD}"
+
+#define HAKA_ARCH              "${CMAKE_SYSTEM_PROCESSOR}"
+
+#cmakedefine HAKA_BIGENDIAN @HAKA_BIGENDIAN@
+#cmakedefine HAKA_LITTLEENDIAN @HAKA_LITTLEENDIAN@
+
+#define HAKA_16BIT_TYPE @HAKA_16BIT_TYPE@
+#define HAKA_32BIT_TYPE @HAKA_32BIT_TYPE@
+#define HAKA_64BIT_TYPE @HAKA_64BIT_TYPE@
+
+#define HAKA_MODULE_PREFIX    "${HAKA_MODULE_PREFIX}"
+#define HAKA_MODULE_SUFFIX    "${HAKA_MODULE_SUFFIX}"
+
+#define HAKA_LUA         "${LUA}"
+#cmakedefine HAKA_LUAJIT @HAKA_LUAJIT@
+#cmakedefine HAKA_LUA51  @HAKA_LUA51@
+
+#define HAKA_PREFIX      "@CMAKE_HAKA_INSTALL_PREFIX@"
+
+#cmakedefine HAKA_DEBUG
+#cmakedefine HAKA_NDEBUG
+#cmakedefine HAKA_MEMCHECK
+
+#endif /* _HAKA_CONFIG_H */

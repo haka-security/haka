@@ -1,0 +1,154 @@
+debug tcp-connection: opening connection 10.2.96.127:57838 -> 10.2.104.129:80
+HTTP REQUEST
+ _headers_order
+   1 = User-Agent
+   2 = Accept
+   3 = Host
+   4 = Connection
+ _length = 127
+ headers
+   Accept = */*
+   Connection = Keep-Alive
+   Host = 10.2.104.129
+   User-Agent = Wget/1.13.4 (linux-gnu)
+ method = GET
+ uri = /twiki/bin/view/
+ version = HTTP/1.1
+HTTP RESPONSE
+ _headers_order
+   1 = Date
+   2 = Server
+   3 = Keep-Alive
+   4 = Connection
+   5 = Transfer-Encoding
+   6 = Content-Type
+ _length = 223
+ headers
+   Connection = Keep-Alive
+   Content-Type = text/html; charset=ISO-8859-1
+   Date = Mon, 17 Jun 2013 15:08:03 GMT
+   Keep-Alive = timeout=15, max=100
+   Server = Apache/2.2.8 (Ubuntu) DAV/2
+   Transfer-Encoding = chunked
+ reason = OK
+ status = 200
+ version = HTTP/1.1
+HTTP REQUEST
+ _headers_order
+   1 = User-Agent
+   2 = Accept
+   3 = Host
+   4 = Connection
+ _length = 122
+ headers
+   Accept = */*
+   Connection = Keep-Alive
+   Host = 10.2.104.129
+   User-Agent = Wget/1.13.4 (linux-gnu)
+ method = GET
+ uri = /robots.txt
+ version = HTTP/1.1
+HTTP RESPONSE
+ _headers_order
+   1 = Date
+   2 = Server
+   3 = Content-Length
+   4 = Keep-Alive
+   5 = Connection
+   6 = Content-Type
+ _length = 222
+ headers
+   Connection = Keep-Alive
+   Content-Length = 291
+   Content-Type = text/html; charset=iso-8859-1
+   Date = Mon, 17 Jun 2013 15:08:03 GMT
+   Keep-Alive = timeout=15, max=99
+   Server = Apache/2.2.8 (Ubuntu) DAV/2
+ reason = Not Found
+ status = 404
+ version = HTTP/1.1
+HTTP REQUEST
+ _headers_order
+   1 = Referer
+   2 = User-Agent
+   3 = Accept
+   4 = Host
+   5 = Connection
+ _length = 204
+ headers
+   Accept = */*
+   Connection = Keep-Alive
+   Host = 10.2.104.129
+   Referer = http://10.2.104.129/twiki/bin/view/
+   User-Agent = Wget/1.13.4 (linux-gnu)
+ method = GET
+ uri = /twiki/pub/TWiki/TWikiLogos/twikiRobot46x50.gif
+ version = HTTP/1.1
+HTTP RESPONSE
+ _headers_order
+   1 = Date
+   2 = Server
+   3 = Last-Modified
+   4 = ETag
+   5 = Accept-Ranges
+   6 = Content-Length
+   7 = Keep-Alive
+   8 = Connection
+   9 = Content-Type
+ _length = 297
+ headers
+   Accept-Ranges = bytes
+   Connection = Keep-Alive
+   Content-Length = 2877
+   Content-Type = image/gif
+   Date = Mon, 17 Jun 2013 15:08:03 GMT
+   ETag = "140d0-b3d-3a47575c36300"
+   Keep-Alive = timeout=15, max=98
+   Last-Modified = Fri, 28 Jun 2002 07:28:44 GMT
+   Server = Apache/2.2.8 (Ubuntu) DAV/2
+ reason = OK
+ status = 200
+ version = HTTP/1.1
+HTTP REQUEST
+ _headers_order
+   1 = Referer
+   2 = User-Agent
+   3 = Accept
+   4 = Host
+   5 = Connection
+ _length = 205
+ headers
+   Accept = */*
+   Connection = Keep-Alive
+   Host = 10.2.104.129
+   Referer = http://10.2.104.129/twiki/bin/view/
+   User-Agent = Wget/1.13.4 (linux-gnu)
+ method = GET
+ uri = /twiki/pub/TWiki/TWikiLogos/twikiRobot131x64.gif
+ version = HTTP/1.1
+HTTP RESPONSE
+ _headers_order
+   1 = Date
+   2 = Server
+   3 = Last-Modified
+   4 = ETag
+   5 = Accept-Ranges
+   6 = Content-Length
+   7 = Keep-Alive
+   8 = Connection
+   9 = Content-Type
+ _length = 298
+ headers
+   Accept-Ranges = bytes
+   Connection = Keep-Alive
+   Content-Length = 7218
+   Content-Type = image/gif
+   Date = Mon, 17 Jun 2013 15:08:03 GMT
+   ETag = "140d1-1c32-3a47566906540"
+   Keep-Alive = timeout=15, max=97
+   Last-Modified = Fri, 28 Jun 2002 07:24:29 GMT
+   Server = Apache/2.2.8 (Ubuntu) DAV/2
+ reason = OK
+ status = 200
+ version = HTTP/1.1
+debug tcp-connection: closing connection 10.2.96.127:57838 -> 10.2.104.129:80

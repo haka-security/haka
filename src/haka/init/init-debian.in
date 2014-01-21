@@ -1,0 +1,51 @@
+#!/bin/sh
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Start/stop the haka daemon.
+#
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:@CMAKE_HAKA_INSTALL_PREFIX@/sbin:@CMAKE_HAKA_INSTALL_PREFIX@/bin
+DESC="haka daemon"
+NAME=haka
+DAEMON=@CMAKE_HAKA_INSTALL_PREFIX@/sbin/haka
+PIDFILE=@HAKA_PID_FILE@
+SCRIPTNAME=@CMAKE_INSTALL_PREFIX@/etc/init.d/"$NAME"
+DESCRIPTION="haka network tool"
+
+test -f $DAEMON || exit 0
+
+. /lib/lsb/init-functions
+
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+case "$1" in
+start)  log_daemon_msg "Starting $DESCRIPTION" "$NAME"
+        start_daemon -p $PIDFILE $DAEMON -- $EXTRA_OPTS >/dev/null 2>&1
+        log_end_msg $?
+        ;;
+stop)   log_daemon_msg "Stopping $DESCRIPTION" "$NAME"
+        pidofproc -p $PIDFILE $DAEMON >/dev/null; status="$?"
+        if [ "$status" = 0 ]; then
+            killproc -p $PIDFILE $DAEMON
+            RETVAL=$?
+            [ $RETVAL -eq 0 ] && [ -e "$PIDFILE" ] && rm -f $PIDFILE
+            log_end_msg $RETVAL
+        else
+            log_progress_msg "is not running"
+            log_end_msg 255
+        fi
+        ;;
+restart) log_daemon_msg "Restarting $DESCRIPTION" "$NAME"
+        echo
+        $0 stop
+        $0 start
+        ;;
+status)
+        status_of_proc -p $PIDFILE $DAEMON $NAME && exit 0 || exit $?
+        ;;
+*)      log_action_msg "Usage: $SCRIPTNAME {start|stop|status|restart}"
+        exit 2
+        ;;
+esac

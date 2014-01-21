@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%{
+#include <haka/lua/ref.h>
+%}
+
+%typemap(in) struct lua_ref
+%{
+	lua_pushvalue(L, $input);
+	lua_ref_init(&$1);
+	lua_ref_get(L, &$1);
+%}
+
+%typemap(out) struct lua_ref
+%{
+	if (!lua_ref_isvalid(&$1)) {
+		lua_pushnil(L);
+	}
+	else {
+		lua_ref_push(L, &$1);
+		++SWIG_arg;
+	}
+%}

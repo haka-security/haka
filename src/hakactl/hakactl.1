@@ -1,0 +1,46 @@
+.\" This Source Code Form is subject to the terms of the Mozilla Public"
+.\" License, v. 2.0. If a copy of the MPL was not distributed with this"
+.\" file, You can obtain one at http://mozilla.org/MPL/2.0/."
+.\""
+.TH HAKACTL 1 "2013" "Haka" Commands
+.SH NAME
+hakactl \- Haka daemon control interface
+.SH SYNOPSIS
+\fBhakactl\fP [\fIoptions\fP] <\fIcommand\fP> [\fIarguments\fP]
+.SH DESCRIPTION
+.PP 
+hakactl is a frontend for controlling haka dameon.
+.SH OPTIONS
+Following options are supported
+.TP
+\fB\-h\fP, \fB\-\-help\fP
+Display help
+.TP
+\fB\-\-version\fP
+Display version
+.SH COMMANDS
+.TP
+\fBstatus\fP
+Show haka status
+.TP
+\fBstop\fP
+Stop haka
+.TP
+\fBlogs\fP
+Display haka logs in real time
+.TP
+\fBloglevel <level>\fP
+Change haka logging level
+.TP
+\fBdebug\fP
+Attach a remote lua debugger to haka
+.TP
+\fBinteractive\fP
+Attach an interactive session to haka
+.SH FILES
+\fB/var/run/haka-ctl.sock\fP is the socket used by hakactl to control 
+haka daemon
+.SH AUTHORS
+Team HAKA - Arkoon
+.SH COPYRIGHT
+Arkoon Network Security, OpenWide and Telecom ParisTech.

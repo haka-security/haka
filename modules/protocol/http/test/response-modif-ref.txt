@@ -1,0 +1,55 @@
+debug tcp-connection: opening connection 192.168.10.10:56353 -> 192.168.20.1:80
+HTTP REQUEST
+ _headers_order
+   1 = User-Agent
+   2 = Accept
+   3 = Host
+   4 = Connection
+ _length = 120
+ headers
+   Accept = */*
+   Connection = Keep-Alive
+   Host = server
+   User-Agent = Wget/1.13.4 (linux-gnu)
+ method = GET
+ uri = /twiki/bin/view
+ version = HTTP/1.1
+HTTP RESPONSE
+ _headers_order
+   1 = Date
+   2 = Server
+   3 = Keep-Alive
+   4 = Connection
+   5 = Transfer-Encoding
+   6 = Content-Type
+ _length = 223
+ headers
+   Connection = Keep-Alive
+   Content-Type = text/html; charset=ISO-8859-1
+   Date = Fri, 25 Oct 2013 14:18:57 GMT
+   Keep-Alive = timeout=15, max=100
+   Server = Apache/2.2.8 (Ubuntu) DAV/2
+   Transfer-Encoding = chunked
+ reason = OK
+ status = 200
+ version = HTTP/1.1
+HTTP MODIFIED RESPONSE
+ _headers_order
+   1 = Date
+   2 = Server
+   3 = Keep-Alive
+   4 = Connection
+   5 = Transfer-Encoding
+   6 = Content-Type
+ _length = 223
+ headers
+   Connection = Keep-Alive
+   Content-Type = text/html; charset=ISO-8859-1
+   Date = Fri, 25 Oct 2013 14:18:57 GMT
+   Haka = Done
+   Keep-Alive = timeout=15, max=100
+   Transfer-Encoding = chunked
+ reason = OK
+ status = 200
+ version = HTTP/1.1
+debug tcp-connection: closing connection 192.168.10.10:56353 -> 192.168.20.1:80
