@@ -28,7 +28,7 @@ endif()
 
 # Sources
 set(CPACK_SOURCE_GENERATOR "TGZ")
-set(CPACK_SOURCE_IGNORE_FILES "${CMAKE_BINARY_DIR};\\\\.git/;\\\\.git$;\\\\.gitignore$;\\\\.gitmodules$;.*\\\\.swp;.*\\\\.pyc;__pycache__/")
+set(CPACK_SOURCE_IGNORE_FILES "${CMAKE_BINARY_DIR};\\\\.git/;\\\\.git$;\\\\.gitignore$;\\\\.gitmodules$;.*\\\\.swp;.*\\\\.pyc;__pycache__/;/make/")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}")
 
 # Common
