@@ -80,10 +80,12 @@ tcp_connection_dissector.states:default{
 	end,
 	input = function (context, pkt)
 		haka.log.error('tcp-connection', "unexpected tcp packet")
+		pkt:drop()
 		return context.states.ERROR
 	end,
 	output = function (context, pkt)
 		haka.log.error('tcp-connection', "unexpected tcp packet")
+		pkt:drop()
 		return context.states.ERROR
 	end,
 	finish = function (context)
