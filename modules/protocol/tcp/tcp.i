@@ -168,8 +168,19 @@ struct tcp_connection {
 				tcp_connection_drop($self);
 		}
 
-		void close();
-		void drop();
+		%rename(close) _close;
+		void _close()
+		{
+			if ($self)
+				tcp_connection_close($self);
+		}
+
+		%rename(drop) _drop;
+		void _drop()
+		{
+			if ($self)
+				tcp_connection_drop($self);
+		}
 
 		struct tcp_stream *stream(const char *direction)
 		{

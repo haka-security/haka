@@ -204,6 +204,7 @@ struct tcp_connection *tcp_connection_get(struct tcp *tcp, bool *direction_in,
 void tcp_connection_close(struct tcp_connection* tcp_conn)
 {
 	struct ctable *current = (struct ctable *)((uint8 *)tcp_conn - offsetof(struct ctable, tcp_conn));
+	assert(tcp_conn);
 
 	{
 		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
@@ -222,6 +223,7 @@ void tcp_connection_close(struct tcp_connection* tcp_conn)
 void tcp_connection_drop(struct tcp_connection *tcp_conn)
 {
 	struct ctable *current = (struct ctable *)((uint8 *)tcp_conn - offsetof(struct ctable, tcp_conn));
+	assert(tcp_conn);
 
 	{
 		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
