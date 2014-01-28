@@ -63,6 +63,7 @@ struct tcp {
 	struct ipv4         *packet;
 	struct lua_object    lua_object;
 	struct vbuffer      *payload;
+	struct vbuffer      *select;
 	bool                 modified:1;
 	bool                 invalid_checksum:1;
 };

@@ -110,8 +110,8 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 		return NULL;
 	}
 
-	ip->payload = vbuffer_extract(payload, hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET,
-			ipv4_get_len(ip)-(hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET), false);
+	ip->payload = vbuffer_select(payload, hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET,
+			ipv4_get_len(ip)-(hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET), &ip->select);
 	if (!ip->payload) {
 		assert(check_error());
 		free(ip);
@@ -156,10 +156,10 @@ struct ipv4 *ipv4_create(struct packet *packet)
 		assert(ptr);
 		memset(ptr, 0, len);
 
-		vbuffer_insert(payload, 0, header_buffer, true);
+		vbuffer_insert(payload, 0, header_buffer);
 	}
 
-	ip->payload = vbuffer_extract(payload, hdrlen, ALL, false);
+	ip->payload = vbuffer_select(payload, hdrlen, ALL, &ip->select);
 	if (!ip->payload) {
 		assert(check_error());
 		free(ip);
@@ -187,7 +187,8 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 		if (ip->invalid_checksum)
 			ipv4_compute_checksum(ip);
 
-		vbuffer_insert(ip->packet->payload, ipv4_get_hdr_len(ip), ip->payload, false);
+		vbuffer_restore(ip->select, ip->payload);
+		ip->select = NULL;
 
 		ip->payload = NULL;
 		ip->packet = NULL;

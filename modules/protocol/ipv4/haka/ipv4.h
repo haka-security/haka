@@ -56,6 +56,7 @@ struct ipv4 {
 	struct packet       *packet;
 	struct lua_object    lua_object;
 	struct vbuffer      *payload;
+	struct vbuffer      *select;
 	bool                 invalid_checksum:1;
 };
 

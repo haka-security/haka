@@ -89,7 +89,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 		return NULL;
 	}
 
-	tcp->payload = vbuffer_extract(packet->payload, hdrlen.hdr_len << TCP_HDR_LEN, ALL, false);
+	tcp->payload = vbuffer_select(packet->payload, hdrlen.hdr_len << TCP_HDR_LEN, ALL, &tcp->select);
 	if (!tcp->payload) {
 		assert(check_error());
 		free(tcp);
@@ -116,7 +116,7 @@ static bool tcp_add_header(struct vbuffer *payload)
 	assert(ptr);
 	memset(ptr, 0, len);
 
-	vbuffer_insert(payload, 0, header_buffer, true);
+	vbuffer_insert(payload, 0, header_buffer);
 	return true;
 }
 
@@ -140,7 +140,7 @@ struct tcp *tcp_create(struct ipv4 *packet)
 		return NULL;
 	}
 
-	tcp->payload = vbuffer_extract(payload, hdrlen, ALL, false);
+	tcp->payload = vbuffer_select(payload, hdrlen, ALL, &tcp->select);
 	if (!tcp->payload) {
 		assert(check_error());
 		free(tcp);
@@ -181,7 +181,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 			struct tcp_header tcpheader;
 			struct tcp_header *header;
 
-			rem_payload = vbuffer_extract(tcp->payload, mtu, ALL, true);
+			rem_payload = vbuffer_extract(tcp->payload, mtu, ALL);
 			if (!rem_payload) {
 				assert(check_error());
 				return NULL;
@@ -195,10 +195,17 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 
 			tcp_recompute_checksum(tcp);
 
-			vbuffer_insert(tcp->packet->payload, tcp_get_hdr_len(tcp), tcp->payload, true);
+			if (!tcp->select) {
+				vbuffer_insert(tcp->packet->payload, tcp_get_hdr_len(tcp), tcp->payload);
+			}
+			else {
+				vbuffer_restore(tcp->select, tcp->payload);
+				tcp->select = NULL;
+			}
+
 			tcp->payload = NULL;
 
-			/* 'packet' is ready to be sent, preapre the next tcp packet
+			/* 'packet' is ready to be sent, prepare the next tcp packet
 			 * before returning */
 			tcp->payload = rem_payload;
 
@@ -238,7 +245,14 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 		else {
 			tcp_recompute_checksum(tcp);
 
-			vbuffer_insert(tcp->packet->payload, tcp_get_hdr_len(tcp), tcp->payload, false);
+			if (!tcp->select) {
+				vbuffer_insert(tcp->packet->payload, tcp_get_hdr_len(tcp), tcp->payload);
+			}
+			else {
+				vbuffer_restore(tcp->select, tcp->payload);
+				tcp->select = NULL;
+			}
+
 			tcp->payload = NULL;
 
 			tcp->packet = NULL;
@@ -369,7 +383,7 @@ uint8 *tcp_resize_payload(struct tcp *tcp, size_t size)
 			return NULL;
 		}
 
-		vbuffer_insert(tcp->payload, cursize, extra, true);
+		vbuffer_insert(tcp->payload, cursize, extra);
 	}
 	else {
 		vbuffer_erase(tcp->payload, size, ALL);

@@ -53,6 +53,7 @@ struct pcap_packet {
 	struct packet_module_state *state;
 	struct pcap_pkthdr          header;
 	struct vbuffer             *data;
+	struct vbuffer             *select;
 	uint64                      id;
 	int                         link_type;
 	bool                        captured;
@@ -374,13 +375,14 @@ static bool packet_build_payload(struct pcap_packet *packet)
 	size_t data_offset;
 	get_protocol(packet, &data_offset);
 	if (data_offset > 0) {
-		packet->core_packet.payload = vbuffer_extract(packet->data, data_offset, ALL, false);
+		packet->core_packet.payload = vbuffer_select(packet->data, data_offset, ALL, &packet->select);
 		if (!packet->core_packet.payload) {
 			return false;
 		}
 	}
 	else {
 		packet->core_packet.payload = packet->data;
+		packet->select = NULL;
 	}
 	return true;
 }
@@ -525,10 +527,9 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 
 	if (pkt->data) {
-		if (pkt->data != pkt->core_packet.payload) {
-			size_t data_offset;
-			get_protocol(pkt, &data_offset);
-			vbuffer_insert(pkt->data, data_offset, pkt->core_packet.payload, false);
+		if (pkt->select) {
+			vbuffer_restore(pkt->select, pkt->core_packet.payload);
+			pkt->select = NULL;
 		}
 		pkt->core_packet.payload = NULL;
 

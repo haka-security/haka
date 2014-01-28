@@ -63,7 +63,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator);
 
 LUA_OBJECT(struct vbuffer);
 %newobject vbuffer::iter;
-%newobject vbuffer::_extract;
+%newobject vbuffer::_select;
 
 struct vbuffer {
 	%extend {
@@ -105,17 +105,17 @@ struct vbuffer {
 				return;
 			}
 
-			vbuffer_insert($self, offset, DISOWN_SUCCESS_ONLY, true);
+			vbuffer_insert($self, offset, DISOWN_SUCCESS_ONLY);
 		}
 
-		void append(struct vbuffer *DISOWN_SUCCESS_ONLY, bool modify = true)
+		void append(struct vbuffer *DISOWN_SUCCESS_ONLY)
 		{
 			if (!DISOWN_SUCCESS_ONLY) {
 				error(L"invalid parameter");
 				return;
 			}
 
-			vbuffer_insert($self, ALL, DISOWN_SUCCESS_ONLY, modify);
+			vbuffer_insert($self, ALL, DISOWN_SUCCESS_ONLY);
 		}
 
 		void replace(struct vbuffer *DISOWN_SUCCESS_ONLY, int off = 0, int len = -1)
@@ -126,7 +126,7 @@ struct vbuffer {
 			}
 
 			vbuffer_erase($self, off, len);
-			vbuffer_insert($self, off, DISOWN_SUCCESS_ONLY, true);
+			vbuffer_insert($self, off, DISOWN_SUCCESS_ONLY);
 		}
 
 		%rename(asnumber) _asnumber;
@@ -209,14 +209,20 @@ struct vbuffer {
 			vsubbuffer_setstring(&sub, str, strlen(str));
 		}
 
-		%rename(extract) _extract;
-		struct vbuffer *_extract(bool modified=true, int off = 0, int len = -1)
+		%rename(select) _select;
+		struct vbuffer *_select(int off, int len = -1, struct vbuffer **OUTPUT_DISOWN = NULL)
 		{
-			struct vbuffer *ret = vbuffer_extract($self, off, len, modified);
+			struct vbuffer *ret = vbuffer_select($self, off, len, OUTPUT_DISOWN);
 			if (!ret) {
 				return NULL;
 			}
 			return ret;
+		}
+
+		%rename(restore) _restore;
+		void _restore(struct vbuffer *data)
+		{
+			vbuffer_restore($self, data);
 		}
 
 		%rename(erase) _erase;
@@ -317,9 +323,9 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 		return buf:insert(off, data)
 	end
 
-	function subbuffer.method:extract(modified, off, len)
+	function subbuffer.method:select(off, len)
 		local buf, off, len = _sub(self, off, len)
-		return buf:extract(modified, off, len)
+		return buf:select(off, len)
 	end
 
 	function subbuffer.method:asnumber(endian, off, len)
