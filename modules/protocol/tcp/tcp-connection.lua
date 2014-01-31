@@ -235,6 +235,8 @@ tcp_connection_dissector.states.fin_wait_2 = tcp_connection_dissector.states:sta
 		if pkt.flags.fin then
 			context.flow:_sendpkt(pkt, context.output)
 			return context.states.timed_wait
+		elseif pkt.flags.ack then
+			context.flow:_sendpkt(pkt, context.output)
 		else
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
 			pkt:drop()
