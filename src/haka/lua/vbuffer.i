@@ -239,7 +239,7 @@ struct vbuffer {
 				return NULL;
 			}
 
-			if (!vbuffer_iterator($self, iter, false, false)) {
+			if (!vbuffer_iterator($self, iter, 0, false, false)) {
 				free(iter);
 				return NULL;
 			}

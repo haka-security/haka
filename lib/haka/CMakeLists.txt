@@ -48,3 +48,5 @@ set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 
 # Install
 install(TARGETS libhaka LIBRARY DESTINATION ${HAKA_INSTALL_PREFIX}/lib)
+
+add_subdirectory(test)

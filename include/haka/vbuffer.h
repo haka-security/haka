@@ -21,8 +21,9 @@ struct vbuffer_data;
 struct vsubbuffer;
 
 struct vbuffer_data_ops {
+	void   (*free)(struct vbuffer_data *data);
 	void   (*addref)(struct vbuffer_data *data);
-	void   (*release)(struct vbuffer_data *data);
+	bool   (*release)(struct vbuffer_data *data);
 	uint8 *(*get)(struct vbuffer_data *data, bool write);
 };
 
@@ -50,7 +51,7 @@ struct vbuffer {
 struct vbuffer *vbuffer_create_new(size_t size);
 struct vbuffer *vbuffer_create_from(struct vbuffer_data *data, size_t offset, size_t length);
 struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t offset, size_t length);
-struct vbuffer *vbuffer_select(struct vbuffer *buf, size_t offset, size_t length, struct vbuffer **data);
+struct vbuffer *vbuffer_select(struct vbuffer *buf, size_t offset, size_t length, struct vbuffer **ref);
 bool            vbuffer_restore(struct vbuffer *node, struct vbuffer *data);
 void            vbuffer_setmode(struct vbuffer *buf, bool readonly);
 void            vbuffer_free(struct vbuffer *buf);
@@ -82,7 +83,7 @@ struct vbuffer_iterator {
 	bool            registered:1;
 };
 
-bool            vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter, bool post, bool readonly);
+bool            vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter, size_t offset, bool post, bool readonly);
 bool            vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_iterator *dst);
 bool            vbuffer_iterator_register(struct vbuffer_iterator *iter);
 bool            vbuffer_iterator_unregister(struct vbuffer_iterator *iter);
@@ -120,5 +121,27 @@ void            vsubbuffer_setstring(struct vsubbuffer *buf, const char *str, si
 uint8           vsubbuffer_getbyte(struct vsubbuffer *buf, size_t offset);
 void            vsubbuffer_setbyte(struct vsubbuffer *buf, size_t offset, uint8 byte);
 
+
+/*
+ * Buffer stream
+ */
+
+struct vbuffer_stream_chunk;
+
+struct vbuffer_stream {
+	struct lua_object            lua_object;
+	struct vbuffer              *data;
+	struct vbuffer_stream_chunk *first;
+	struct vbuffer_stream_chunk *last;
+	struct vbuffer_stream_chunk *read_first;
+	struct vbuffer_stream_chunk *read_last;
+};
+
+struct vbuffer_stream *vbuffer_stream();
+void                   vbuffer_stream_free(struct vbuffer_stream *stream);
+bool                   vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data);
+struct vbuffer        *vbuffer_stream_pop(struct vbuffer_stream *stream);
+struct vbuffer        *vbuffer_stream_available(struct vbuffer_stream *stream);
+bool                   vbuffer_stream_current(struct vbuffer_stream *stream, struct vbuffer_iterator *position);
 
 #endif /* _HAKA_VBUFFER_H */

@@ -59,7 +59,8 @@ int main (int argc, char *argv[])
 	int number_failed;
 	Suite *suite = ipv4_suite();
 	SRunner *runner = srunner_create(suite);
-	srunner_run_all(runner, CK_NORMAL);
+	srunner_set_fork_status(runner, CK_NOFORK);
+	srunner_run_all(runner, CK_VERBOSE);
 	number_failed = srunner_ntests_failed(runner);
 	srunner_free(runner);
 	return number_failed;

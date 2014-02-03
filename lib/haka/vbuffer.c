@@ -33,20 +33,22 @@ static struct vbuffer_data_ops vbuffer_data_basic_ops;
 	struct vbuffer_data_basic *buf = (struct vbuffer_data_basic *)_buf; \
 	assert(buf->super.ops == &vbuffer_data_basic_ops)
 
+static void vbuffer_data_basic_free(struct vbuffer_data *_buf)
+{
+	VBUFFER_DATA_BASIC;
+	free(buf);
+}
+
 static void vbuffer_data_basic_addref(struct vbuffer_data *_buf)
 {
 	VBUFFER_DATA_BASIC;
-
 	atomic_inc(&buf->ref);
 }
 
-static void vbuffer_data_basic_release(struct vbuffer_data *_buf)
+static bool vbuffer_data_basic_release(struct vbuffer_data *_buf)
 {
 	VBUFFER_DATA_BASIC;
-
-	if (atomic_dec(&buf->ref) == 0) {
-		free(buf);
-	}
+	return atomic_dec(&buf->ref) == 0;
 }
 
 static uint8 *vbuffer_data_basic_get(struct vbuffer_data *_buf, bool write)
@@ -56,6 +58,7 @@ static uint8 *vbuffer_data_basic_get(struct vbuffer_data *_buf, bool write)
 }
 
 static struct vbuffer_data_ops vbuffer_data_basic_ops = {
+	free:    vbuffer_data_basic_free,
 	addref:  vbuffer_data_basic_addref,
 	release: vbuffer_data_basic_release,
 	get:     vbuffer_data_basic_get
@@ -75,6 +78,13 @@ static struct vbuffer_data_basic *vbuffer_data_basic(size_t size)
 	return buf;
 }
 
+static void vbuffer_data_release(struct vbuffer_data *data)
+{
+	if (data->ops->release(data)) {
+		data->ops->free(data);
+	}
+}
+
 
 /*
  *  Buffer ctl data
@@ -90,8 +100,20 @@ struct vbuffer_data_ctl_select {
 	struct vbuffer          *ctl;
 };
 
+struct vbuffer_data_ctl_push {
+	struct vbuffer_data_ctl      super;
+	struct vbuffer_stream       *stream;
+	struct vbuffer_stream_chunk *chunk;
+};
+
 #define VBUFFER_DATA_CTL  \
 	UNUSED struct vbuffer_data_ctl *buf = (struct vbuffer_data_ctl *)_buf;
+
+static void vbuffer_data_ctl_free(struct vbuffer_data *_buf)
+{
+	VBUFFER_DATA_CTL;
+	free(buf);
+}
 
 static void vbuffer_data_ctl_addref(struct vbuffer_data *_buf)
 {
@@ -99,29 +121,10 @@ static void vbuffer_data_ctl_addref(struct vbuffer_data *_buf)
 	atomic_inc(&buf->ref);
 }
 
-static void vbuffer_data_ctl_release(struct vbuffer_data *_buf)
+static bool vbuffer_data_ctl_release(struct vbuffer_data *_buf)
 {
 	VBUFFER_DATA_CTL;
-	if (atomic_dec(&buf->ref) == 0) {
-		free(buf);
-	}
-}
-
-static void vbuffer_data_ctl_select_release(struct vbuffer_data *_buf)
-{
-	VBUFFER_DATA_CTL;
-	if (atomic_dec(&buf->ref) == 0) {
-		struct vbuffer_data_ctl_select *select = (struct vbuffer_data_ctl_select *)_buf;
-
-		struct vbuffer *iter = select->ctl;
-		while (iter && iter->data != _buf) {
-			struct vbuffer *cur = iter;
-			iter = iter->next;
-			vbuffer_free_elem(cur);
-		}
-
-		free(buf);
-	}
+	return atomic_dec(&buf->ref) == 0;
 }
 
 static uint8 *vbuffer_data_ctl_get(struct vbuffer_data *_buf, bool write)
@@ -130,9 +133,24 @@ static uint8 *vbuffer_data_ctl_get(struct vbuffer_data *_buf, bool write)
 	return NULL;
 }
 
+static void vbuffer_data_ctl_select_free(struct vbuffer_data *_buf)
+{
+	struct vbuffer_data_ctl_select *select = (struct vbuffer_data_ctl_select *)_buf;
+
+	struct vbuffer *iter = select->ctl;
+	while (iter && iter->data != _buf) {
+		struct vbuffer *cur = iter;
+		iter = iter->next;
+		vbuffer_free_elem(cur);
+	}
+
+	free(select);
+}
+
 static struct vbuffer_data_ops vbuffer_data_ctl_select_ops = {
+	free:    vbuffer_data_ctl_select_free,
 	addref:  vbuffer_data_ctl_addref,
-	release: vbuffer_data_ctl_select_release,
+	release: vbuffer_data_ctl_release,
 	get:     vbuffer_data_ctl_get
 };
 
@@ -147,6 +165,29 @@ static struct vbuffer_data_ctl_select *vbuffer_data_ctl_select()
 	buf->super.super.ops = &vbuffer_data_ctl_select_ops;
 	atomic_set(&buf->super.ref, 0);
 	buf->ctl = NULL;
+	return buf;
+}
+
+static struct vbuffer_data_ops vbuffer_data_ctl_push_ops = {
+	free:    vbuffer_data_ctl_free,
+	addref:  vbuffer_data_ctl_addref,
+	release: vbuffer_data_ctl_release,
+	get:     vbuffer_data_ctl_get
+};
+
+static struct vbuffer_data_ctl_push *vbuffer_data_ctl_push(struct vbuffer_stream *stream,
+	struct vbuffer_stream_chunk *chunk)
+{
+	struct vbuffer_data_ctl_push *buf = malloc(sizeof(struct vbuffer_data_ctl_push));
+	if (!buf) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	buf->super.super.ops = &vbuffer_data_ctl_push_ops;
+	atomic_set(&buf->super.ref, 0);
+	buf->stream = stream;
+	buf->chunk = chunk;
 	return buf;
 }
 
@@ -212,6 +253,7 @@ struct vbuffer *vbuffer_create_ctl(struct vbuffer_data *data)
 {
 	struct vbuffer *ret = malloc(sizeof(struct vbuffer));
 	if (!ret) {
+		data->ops->free(data);
 		error(L"memory error");
 		return NULL;
 	}
@@ -292,8 +334,13 @@ static struct vbuffer *vbuffer_get(struct vbuffer *buf, size_t *off, bool keepla
 		iter = iter->next;
 	}
 
-	*off = last->length;
-	return last;
+	if (last) {
+		*off = last->length;
+		return last;
+	}
+	else {
+		return NULL;
+	}
 }
 
 static struct vbuffer *vbuffer_getlast(struct vbuffer *buf)
@@ -461,7 +508,6 @@ static struct vbuffer *_vbuffer_create_select_ctl(struct vbuffer *start, struct 
 
 	ctl_node = vbuffer_create_ctl(&ctl_select->super.super);
 	if (!ctl_node) {
-		vbuffer_data_ctl_release(&ctl_select->super.super);
 		return NULL;
 	}
 
@@ -624,9 +670,9 @@ struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len)
 	return _vbuffer_extract(buf, off, len, true, false, NULL);
 }
 
-struct vbuffer *vbuffer_select(struct vbuffer *buf, size_t offset, size_t length, struct vbuffer **data)
+struct vbuffer *vbuffer_select(struct vbuffer *buf, size_t offset, size_t length, struct vbuffer **ref)
 {
-	return _vbuffer_extract(buf, offset, length, false, true, data);
+	return _vbuffer_extract(buf, offset, length, false, true, ref);
 }
 
 bool vbuffer_restore(struct vbuffer *node, struct vbuffer *data)
@@ -662,7 +708,7 @@ static void vbuffer_free_elem(struct vbuffer *buf)
 		vbuffer_iterator_clear(cur);
 	}
 
-	buf->data->ops->release(buf->data);
+	vbuffer_data_release(buf->data);
 	buf->next = NULL;
 	free(buf);
 }
@@ -740,10 +786,15 @@ static struct vbuffer *_vbuffer_insert(struct vbuffer *buf, size_t off, struct v
 		return NULL;
 	}
 
-	iter = vbuffer_get(buf, &off, true);
-	if (!iter) {
-		error(L"invalid offset");
-		return NULL;
+	if (off == 0) {
+		iter = buf;
+	}
+	else {
+		iter = vbuffer_get(buf, &off, true);
+		if (!iter) {
+			error(L"invalid offset");
+			return NULL;
+		}
 	}
 
 	lua_object_release(data, &data->lua_object);
@@ -754,11 +805,17 @@ static struct vbuffer *_vbuffer_insert(struct vbuffer *buf, size_t off, struct v
 	}
 
 	if (off == 0) {
-		_vbuffer_exchange(data, iter);
-		if (end == data) end = iter;
+		if (iter->length == 0 && iter->flags.ctl) {
+			end->next = iter->next;
+			iter->next = data;
+		}
+		else {
+			_vbuffer_exchange(data, iter);
+			if (end == data) end = iter;
 
-		end->next = data;
-		assert(end->next != end);
+			end->next = data;
+			assert(end->next != end);
+		}
 
 		if (mark_modified) vbuffer_mark_modified(iter);
 	}
@@ -885,7 +942,7 @@ bool vbuffer_flatten(struct vbuffer *buf)
 				buf->next = NULL;
 			}
 
-			buf->data->ops->release(buf->data);
+			vbuffer_data_release(buf->data);
 			buf->data = &flat->super;
 			flat->super.ops->addref(&flat->super);
 
@@ -1019,7 +1076,7 @@ static void vbuffer_unregister_iterator(struct vbuffer *buf, struct vbuffer_iter
  * Iterators
  */
 
-bool vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter, bool post, bool readonly)
+bool vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter, size_t offset, bool post, bool readonly)
 {
 	list_init(iter);
 	iter->buffer = buf;
@@ -1027,7 +1084,7 @@ bool vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter, bool p
 	iter->post = post;
 	iter->readonly = readonly;
 	iter->registered = false;
-	return true;
+	return vbuffer_iterator_advance(iter, offset) == 0;
 }
 
 bool vbuffer_iterator_clear(struct vbuffer_iterator *iter)
@@ -1084,7 +1141,7 @@ bool vbuffer_iterator_unregister(struct vbuffer_iterator *iter)
 		return false;
 	}
 
-	if (!iter->registered) {
+	if (iter->registered) {
 		vbuffer_unregister_iterator(iter->buffer, iter);
 		iter->registered = false;
 		return true;
@@ -1315,8 +1372,7 @@ static uint8 *vbuffer_iterator_get_data(struct vbuffer_iterator *iterator, bool 
 
 bool vbuffer_sub(struct vbuffer *buf, size_t offset, size_t length, struct vsubbuffer *sub)
 {
-	vbuffer_iterator(buf, &sub->position, false, false);
-	vbuffer_iterator_advance(&sub->position, offset);
+	vbuffer_iterator(buf, &sub->position, offset, false, false);
 
 	if (length != ALL) {
 		if (!vbuffer_checksize(sub->position.buffer, sub->position.offset + length)) {
@@ -1740,4 +1796,219 @@ void vsubbuffer_setbyte(struct vsubbuffer *buf, size_t offset, uint8 byte)
 	}
 
 	vbuffer_setbyte(buf->position.buffer, buf->position.offset + offset, byte);
+}
+
+
+/*
+ * Buffer stream
+ */
+
+struct vbuffer_stream_chunk {
+	struct list                    list;
+	struct vbuffer_data_ctl_push  *ctl_data;
+	struct vbuffer                *ctl;
+};
+
+struct vbuffer_stream *vbuffer_stream()
+{
+	struct vbuffer_stream *ret = malloc(sizeof(struct vbuffer_stream));
+	if (!ret) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	lua_object_init(&ret->lua_object);
+	ret->data = NULL;
+	ret->first = NULL;
+	ret->last = NULL;
+	ret->read_first = NULL;
+	ret->read_last = NULL;
+	return ret;
+}
+
+static void _vbuffer_stream_free_chunks(struct vbuffer_stream_chunk *chunk)
+{
+	struct vbuffer_stream_chunk *iter, *next;
+
+	iter = chunk;
+	while (iter) {
+		next = list_next(iter);
+		free(iter);
+		iter = next;
+	}
+}
+
+void vbuffer_stream_free(struct vbuffer_stream *stream)
+{
+	_vbuffer_stream_free_chunks(stream->first);
+	_vbuffer_stream_free_chunks(stream->read_first);
+
+	lua_object_release(stream, &stream->lua_object);
+
+	if (stream->data) vbuffer_free(stream->data);
+	free(stream);
+}
+
+bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data)
+{
+	struct vbuffer *last;
+	struct vbuffer_stream_chunk *chunk = malloc(sizeof(struct vbuffer_stream_chunk));
+	if (!chunk) {
+		error(L"memory error");
+		return false;
+	}
+
+	list_init(chunk);
+
+	chunk->ctl_data = vbuffer_data_ctl_push(stream, chunk);
+	if (!chunk->ctl_data) {
+		return false;
+	}
+
+	chunk->ctl = vbuffer_create_ctl(&chunk->ctl_data->super.super);
+	if (!chunk->ctl) {
+		error(L"memory error");
+		free(chunk);
+		return false;
+	}
+
+	last = vbuffer_getlast(data);
+	assert(last);
+	_vbuffer_insert(last, last->length, chunk->ctl, false);
+
+	list_insert_after(chunk, stream->last, &stream->first, &stream->last);
+
+	if (!stream->data) {
+		stream->data = data;
+	}
+	else {
+		struct vbuffer *last = vbuffer_getlast(stream->data);
+		assert(last);
+		_vbuffer_insert(last, last->length, data, false);
+	}
+
+	return true;
+}
+
+struct vbuffer *vbuffer_stream_pop(struct vbuffer_stream *stream)
+{
+	struct vbuffer *last, *iter, *prev;
+	struct vbuffer_stream_chunk *current = stream->first;
+	bool keep_for_read = false;
+
+	if (!stream->first) {
+		return NULL;
+	}
+
+	if (stream->read_last) {
+		last = stream->read_last->ctl;
+		prev = last;
+		iter = last->next;
+	}
+	else {
+		last = stream->data;
+		prev = NULL;
+		iter = last;
+	}
+
+	/* Check if the data can be pop */
+	while (true) {
+		assert(iter);
+
+		if (iter->data == current->ctl->data) {
+			break;
+		}
+
+#ifdef HAKA_DEBUG
+		if (iter->data->ops == &vbuffer_data_ctl_push_ops) {
+			struct vbuffer_data_ctl_push *ctl_data = (struct vbuffer_data_ctl_push *)iter->data;
+			assert(ctl_data->stream != stream);
+		}
+#endif
+
+		if (iter->data->ops == &vbuffer_data_ctl_select_ops) {
+			struct vbuffer_data_ctl_select *ctl_data = (struct vbuffer_data_ctl_select *)iter->data;
+			struct vbuffer *ctl_iter = ctl_data->ctl;
+			while (ctl_iter && ctl_iter != iter) {
+				if (iter->data->ops == &vbuffer_data_ctl_push_ops) {
+					struct vbuffer_data_ctl_push *ctl_data = (struct vbuffer_data_ctl_push *)iter->data;
+					if (ctl_data->stream == stream) {
+						return NULL;
+					}
+				}
+
+				ctl_iter = ctl_iter->next;
+			}
+		}
+
+		if (iter->iterators) {
+			struct vbuffer_iterator *pos = iter->iterators;
+			while (pos) {
+				if (!pos->readonly) {
+					return NULL;
+				}
+
+				keep_for_read = true;
+				pos = list_next(pos);
+			}
+		}
+
+		prev = iter;
+		iter = iter->next;
+	}
+
+	if (keep_for_read) {
+		//TODO
+		return NULL;
+	}
+
+	list_remove(current, &stream->first, &stream->last);
+
+	free(current);
+
+	if (last == stream->data) {
+		if (iter->next) {
+			stream->data = iter->next;
+			iter->next = NULL;
+		}
+		else {
+			stream->data = NULL;
+		}
+
+		if (prev) {
+			prev->next = NULL;
+			vbuffer_free(iter);
+		}
+		else {
+			assert(iter == last);
+			vbuffer_free(iter);
+			last = vbuffer_create_new(0);
+		}
+	}
+	else {
+		last->next = iter->next;
+		prev->next = NULL;
+		iter->next = NULL;
+		vbuffer_free(iter);
+	}
+
+	return last;
+}
+
+struct vbuffer *vbuffer_stream_available(struct vbuffer_stream *stream)
+{
+	return stream->data;
+}
+
+bool vbuffer_stream_current(struct vbuffer_stream *stream, struct vbuffer_iterator *position)
+{
+	if (stream->last) {
+		return vbuffer_iterator(stream->last->ctl, position, 0, true, false);
+	}
+	else if (stream->data) {
+		return vbuffer_iterator(stream->data, position, 0, false, false);
+	}
+	else {
+		return false;
+	}
 }
