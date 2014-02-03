@@ -60,7 +60,13 @@ message(STATUS "Building configuration (BUILD): ${CMAKE_BUILD_TYPE}")
 set(CMAKE_C_FLAGS_MEMCHECK ${CMAKE_C_FLAGS_DEBUG})
 set(CMAKE_CXX_FLAGS_MEMCHECK ${CMAKE_CXX_FLAGS_DEBUG})
 
+set(CMAKE_C_FLAGS_COVERAGE "${CMAKE_C_FLAGS_DEBUG} --coverage")
+set(CMAKE_LD_FLAGS_COVERAGE "${CMAKE_LD_FLAGS_DEBUG} --coverage")
+set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(HAKA_DEBUG 1)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Coverage")
 	set(HAKA_DEBUG 1)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Memcheck")
 	set(HAKA_DEBUG 1)
@@ -72,6 +78,27 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 	set(HAKA_NDEBUG 1)
 endif()
+
+# Coverage
+find_package(LCov)
+if(LCOV_FOUND)
+	add_custom_target(coverage_clean
+		COMMAND lcov -z --directory ${CMAKE_CURRENT_BINARY_DIR}
+		COMMAND rm -f coverage/coverage.info
+		COMMENT "Clean coverage data" VERBATIM
+	)
+	
+	add_custom_target(coverage
+		COMMAND mkdir -p coverage
+		COMMAND lcov --capture --directory ${CMAKE_CURRENT_BINARY_DIR} --output-file coverage/coverage_full.info
+		COMMAND lcov -r coverage/coverage_full.info "*test*.c" -o coverage/coverage.info
+		COMMAND lcov -r coverage/coverage.info "*LUA_wrap.c" -o coverage/coverage.info
+		COMMAND lcov -r coverage/coverage.info "*external*" -o coverage/coverage.info
+		COMMAND genhtml coverage/coverage.info --output-directory coverage
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "Build coverage data" VERBATIM
+	)
+endif(LCOV_FOUND)
 
 # Force the RUNPATH to be set to the RPATH to improve library search order
 SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags")
