@@ -55,7 +55,12 @@ find_package(Distrib REQUIRED)
 # Build type
 set(BUILD "Release" CACHE STRING "Selected build type")
 set(CMAKE_BUILD_TYPE ${BUILD})
-message(STATUS "Building configuration (BUILD): ${CMAKE_BUILD_TYPE}")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-gnu-designator")
+endif()
 
 set(CMAKE_C_FLAGS_MEMCHECK ${CMAKE_C_FLAGS_DEBUG})
 set(CMAKE_CXX_FLAGS_MEMCHECK ${CMAKE_CXX_FLAGS_DEBUG})
@@ -77,7 +82,11 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	set(HAKA_NDEBUG 1)
 elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 	set(HAKA_NDEBUG 1)
+else()
+	message(FATAL_ERROR "Build configuration (BUILD): Unsupported build ${CMAKE_BUILD_TYPE}")
 endif()
+
+message(STATUS "Build configuration (BUILD): ${CMAKE_BUILD_TYPE}")
 
 # Coverage
 find_package(LCov)
@@ -140,11 +149,6 @@ add_custom_target(localinstall
 set(LUA "luajit" CACHE STRING "Lua version")
 message(STATUS "Lua version (LUA): ${LUA}")
 include(UseLua)
-
-# Configure
-if(CMAKE_COMPILER_IS_GNUCC)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
-endif()
 
 find_package(Threads REQUIRED)
 
@@ -243,7 +247,7 @@ find_package(Cppcheck)
 if(CPPCHECK_FOUND)
 	add_custom_target(cppcheck
 		${CPPCHECK_EXECUTABLE} --enable=all -imake -iexternal -Iincludes -Imake/includes .
-		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		COMMENT "Run cppcheck static analyzer on the sources" VERBATIM
 	)
 endif(CPPCHECK_FOUND)
