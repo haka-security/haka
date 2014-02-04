@@ -94,7 +94,7 @@ if(LCOV_FOUND)
 		COMMAND lcov -r coverage/coverage_full.info "*test*.c" -o coverage/coverage.info
 		COMMAND lcov -r coverage/coverage.info "*LUA_wrap.c" -o coverage/coverage.info
 		COMMAND lcov -r coverage/coverage.info "*external*" -o coverage/coverage.info
-		COMMAND genhtml coverage/coverage.info --output-directory coverage
+		COMMAND genhtml --legend coverage/coverage.info --output-directory coverage
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		COMMENT "Build coverage data" VERBATIM
 	)
