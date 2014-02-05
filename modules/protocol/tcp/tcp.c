@@ -53,7 +53,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 		return NULL;
 	}
 
-	if (!vbuffer_checksize(packet->payload, sizeof(struct tcp_header))) {
+	if (!vbuffer_checksize(packet->payload, sizeof(struct tcp_header), NULL)) {
 		TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
 		TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
 		ALERT(invalid_packet, 1, 1)
@@ -173,7 +173,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 	if (packet) {
 		const size_t mtu = packet_mtu(packet->packet) - ipv4_get_hdr_len(packet) - tcp_get_hdr_len(tcp);
 
-		if (split && packet_mode() != MODE_PASSTHROUGH && vbuffer_checksize(tcp->payload, mtu+1)) {
+		if (split && packet_mode() != MODE_PASSTHROUGH && vbuffer_checksize(tcp->payload, mtu+1, NULL)) {
 			struct vbuffer *rem_payload;
 			struct packet *rem_pkt;
 			struct ipv4 *rem_ip;
@@ -314,6 +314,7 @@ int16 tcp_checksum(struct tcp *tcp)
 	struct tcp_pseudo_header tcp_pseudo_h;
 	struct vsubbuffer subbuf;
 	int32 sum;
+	bool odd = false;
 
 	/* fill tcp pseudo header */
 	struct ipv4_header *ipheader = ipv4_header(tcp->packet, false);
@@ -324,11 +325,11 @@ int16 tcp_checksum(struct tcp *tcp)
 	tcp_pseudo_h.len = SWAP_TO_IPV4(uint16, ipv4_get_payload_length(tcp->packet) + tcp_get_payload_length(tcp));
 
 	/* compute checksum */
-	sum = inet_checksum_partial((uint16 *)&tcp_pseudo_h, sizeof(struct tcp_pseudo_header));
+	sum = inet_checksum_partial((uint16 *)&tcp_pseudo_h, sizeof(struct tcp_pseudo_header), &odd);
 	vbuffer_sub(tcp->packet->payload, 0, ALL, &subbuf);
-	sum += inet_checksum_vbuffer_partial(&subbuf);
+	sum += inet_checksum_vbuffer_partial(&subbuf, &odd);
 	vbuffer_sub(tcp->payload, 0, ALL, &subbuf);
-	sum += inet_checksum_vbuffer_partial(&subbuf);
+	sum += inet_checksum_vbuffer_partial(&subbuf, &odd);
 	return inet_checksum_reduce(sum);
 }
 

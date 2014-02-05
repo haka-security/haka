@@ -236,7 +236,7 @@ START_TEST(vbuffer_stream_test_mark)
 	ck_check_error;
 
 	struct vbuffer_iterator mark;
-	vbuffer_iterator(vbuffer_stream_available(stream), &mark, 15, false, false);
+	vbuffer_iterator(vbuffer_stream_data(stream), &mark, 15, false, false);
 	vbuffer_iterator_register(&mark);
 	ck_check_error;
 

@@ -26,28 +26,22 @@ struct vbuffer_iterator {
 			free($self);
 		}
 
+		%rename("register") _register;
+		void _register()
+		{
+			vbuffer_iterator_register($self);
+		}
+
+		%rename(unregister) _unregister;
+		void _unregister()
+		{
+			vbuffer_iterator_unregister($self);
+		}
+
 		%rename(advance) _advance;
 		void _advance(int size)
 		{
 			vbuffer_iterator_advance($self, size);
-		}
-
-		%rename(sub) _sub;
-		struct vsubbuffer *_sub(int size, bool advance = true)
-		{
-			struct vsubbuffer *sub = malloc(sizeof(struct vsubbuffer));
-			if (!sub) {
-				error(L"memory error");
-				return NULL;
-			}
-
-			if (!vbuffer_iterator_sub($self, sub, size, advance)) {
-				free(sub);
-				return NULL;
-			}
-
-			vbuffer_iterator_register(&sub->position);
-			return sub;
 		}
 
 		%rename(clear) _clear;
@@ -55,6 +49,40 @@ struct vbuffer_iterator {
 		{
 			vbuffer_iterator_clear($self);
 		}
+
+		%rename(available) _available;
+		int _available()
+		{
+			return vbuffer_iterator_available($self);
+		}
+
+		%rename(check_available) _check_available;
+		bool _check_available(int size)
+		{
+			return vbuffer_iterator_check_available($self, size);
+		}
+
+		%rename(insert) _insert;
+		void _insert(struct vbuffer *data)
+		{
+			vbuffer_iterator_insert($self, data);
+		}
+
+		%rename(erase) _erase;
+		void _erase(int size)
+		{
+			vbuffer_iterator_erase($self, size);
+		}
+
+		%rename(replace) _replace;
+		void _replace(int size, struct vbuffer *data)
+		{
+			vbuffer_iterator_replace($self, size, data);
+		}
+
+		%immutable;
+		int offset { return $self->offset; }
+		struct vbuffer *_buffer { return $self->buffer; }
 	}
 };
 
@@ -74,6 +102,11 @@ struct vbuffer {
 
 			vbuffer_zero(buf, true);
 			return buf;
+		}
+
+		vbuffer(const char *data)
+		{
+			return vbuffer_create_from_string(data);
 		}
 
 		~vbuffer()
@@ -255,6 +288,53 @@ struct vbuffer {
 
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 
+
+LUA_OBJECT(struct vbuffer_stream);
+%newobject vbuffer_stream::_pop;
+%newobject vbuffer_stream::current;
+
+struct vbuffer_stream {
+	%extend {
+		vbuffer_stream()
+		{
+		}
+
+		~vbuffer_stream()
+		{
+		}
+
+		%rename(push) _push;
+		void _push(struct vbuffer *DISOWN_SUCCESS_ONLY)
+		{
+			vbuffer_stream_push($self, DISOWN_SUCCESS_ONLY);
+		}
+
+		%rename(pop) _pop;
+		struct vbuffer *_pop()
+		{
+			return vbuffer_stream_pop($self);
+		}
+
+		%immutable;
+		struct vbuffer *data { return $self->data; }
+		struct vbuffer_iterator *current {
+			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+			if (!iter) {
+				error(L"memory error");
+				return NULL;
+			}
+			if (!vbuffer_stream_current($self, iter)) {
+				free(iter);
+				return NULL;
+			}
+			return iter;
+		}
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
+
+
 %{
 	bool vbuffer_modified_get(struct vbuffer *buf) { return vbuffer_ismodified(buf); }
 %}
@@ -391,4 +471,11 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 	swig.getclassmetatable('vbuffer')['.fn'].sub = function (self, off, len) return subbuffer:new(self, off, len) end
 	swig.getclassmetatable('vbuffer')['.fn'].right = function (self, off) return subbuffer:new(self, off) end
 	swig.getclassmetatable('vbuffer')['.fn'].left = function (self, len) return subbuffer:new(self, 0, len) end
+
+	swig.getclassmetatable('vbuffer_iterator')['.fn'].sub = function (self, len, advance)
+		advance = advance or true
+		local sub = subbuffer:new(self._buffer, self.offset, len)
+		if advance and len then self:advance(len) end
+		return sub
+	end
 }

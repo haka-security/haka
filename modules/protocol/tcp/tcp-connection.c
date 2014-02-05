@@ -114,12 +114,12 @@ static void tcp_connection_remove(struct ctable *elem)
 static void tcp_connection_release(struct ctable *elem, bool freemem)
 {
 	if (elem->tcp_conn.stream_input) {
-		stream_destroy(elem->tcp_conn.stream_input);
+		tcp_stream_free(elem->tcp_conn.stream_input);
 		elem->tcp_conn.stream_input = NULL;
 	}
 
 	if (elem->tcp_conn.stream_output) {
-		stream_destroy(elem->tcp_conn.stream_output);
+		tcp_stream_free(elem->tcp_conn.stream_output);
 		elem->tcp_conn.stream_output = NULL;
 	}
 

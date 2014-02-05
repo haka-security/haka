@@ -46,7 +46,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	assert(packet);
 	payload = packet_payload(packet);
 
-	if (!vbuffer_checksize(payload, sizeof(struct ipv4_header))) {
+	if (!vbuffer_checksize(payload, sizeof(struct ipv4_header), NULL)) {
 		TOWSTR(srcip, ipv4addr, ipv4_get_src(ip));
 		TOWSTR(dstip, ipv4addr, ipv4_get_dst(ip));
 		ALERT(invalid_packet, 1, 1)
@@ -201,6 +201,8 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 
 struct ipv4_header *ipv4_header(struct ipv4 *ip, bool write)
 {
+	IPV4_CHECK(ip, NULL);
+
 	struct ipv4_header *header;
 	size_t len;
 	header = (struct ipv4_header *)vbuffer_mmap(ip->packet->payload, NULL, &len, write);
@@ -238,16 +240,28 @@ void ipv4_release(struct ipv4 *ip)
 
 /* compute tcp checksum RFC #1071 */
 //TODO: To be optimized
-int32 inet_checksum_partial(uint16 *ptr, size_t size)
+int32 inet_checksum_partial(uint16 *ptr, size_t size, bool *odd)
 {
 	register long sum = 0;
+
+	if (*odd) {
+#ifdef HAKA_LITTLEENDIAN
+		sum += (*(uint8 *)ptr) << 8;
+#else
+		sum += *(uint8 *)ptr;
+#endif
+		ptr = (uint16 *)(((uint8 *)ptr) + 1);
+		--size;
+	}
 
 	while (size > 1) {
 		sum += *ptr++;
 		size -= 2;
 	}
 
-	if (size > 0) {
+	*odd = size > 0;
+
+	if (*odd) {
 #ifdef HAKA_LITTLEENDIAN
 		sum += *(uint8 *)ptr;
 #else
@@ -268,11 +282,12 @@ int16 inet_checksum_reduce(int32 sum)
 
 int16 inet_checksum(uint16 *ptr, size_t size)
 {
-	const int32 sum = inet_checksum_partial(ptr, size);
+	bool odd = false;
+	const int32 sum = inet_checksum_partial(ptr, size, &odd);
 	return inet_checksum_reduce(sum);
 }
 
-int32 inet_checksum_vbuffer_partial(struct vsubbuffer *buf)
+int32 inet_checksum_vbuffer_partial(struct vsubbuffer *buf, bool *odd)
 {
 	int32 sum = 0;
 	void *iter = NULL;
@@ -281,7 +296,7 @@ int32 inet_checksum_vbuffer_partial(struct vsubbuffer *buf)
 
 	while ((data = vsubbuffer_mmap(buf, &iter, &remlen, &len, false))) {
 		if (len > 0) {
-			sum += inet_checksum_partial((uint16 *)data, len);
+			sum += inet_checksum_partial((uint16 *)data, len, odd);
 		}
 	}
 
@@ -290,7 +305,8 @@ int32 inet_checksum_vbuffer_partial(struct vsubbuffer *buf)
 
 int16 inet_checksum_vbuffer(struct vsubbuffer *buf)
 {
-	const int32 sum = inet_checksum_vbuffer_partial(buf);
+	bool odd = false;
+	const int32 sum = inet_checksum_vbuffer_partial(buf, &odd);
 	return inet_checksum_reduce(sum);
 }
 

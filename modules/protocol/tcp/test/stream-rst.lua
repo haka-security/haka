@@ -9,9 +9,10 @@ require("protocol/tcp-connection")
 haka.rule {
 	hook = haka.event('tcp-connection', 'receive_data'),
 	eval = function (flow, stream)
-		haka.log.debug("filter", "received stream len=%d", stream:available())
+		local current = stream.current
+		haka.log.debug("filter", "received stream len=%d", current:available())
 
-		if stream:available() > 10 then
+		if current:available() > 10 then
 			flow:reset()
 		end
 	end

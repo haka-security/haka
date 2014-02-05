@@ -49,7 +49,8 @@ struct vbuffer {
 
 
 struct vbuffer *vbuffer_create_new(size_t size);
-struct vbuffer *vbuffer_create_from(struct vbuffer_data *data, size_t offset, size_t length);
+struct vbuffer *vbuffer_create_from_string(const char *str);
+struct vbuffer *vbuffer_create_from_data(struct vbuffer_data *data, size_t offset, size_t length);
 struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t offset, size_t length);
 struct vbuffer *vbuffer_select(struct vbuffer *buf, size_t offset, size_t length, struct vbuffer **ref);
 bool            vbuffer_restore(struct vbuffer *node, struct vbuffer *data);
@@ -61,7 +62,7 @@ bool            vbuffer_flatten(struct vbuffer *buf);
 bool            vbuffer_compact(struct vbuffer *buf);
 bool            vbuffer_isflat(struct vbuffer *buf);
 size_t          vbuffer_size(struct vbuffer *buf);
-bool            vbuffer_checksize(struct vbuffer *buf, size_t minsize);
+bool            vbuffer_checksize(struct vbuffer *buf, size_t minsize, size_t *size);
 uint8          *vbuffer_mmap(struct vbuffer *buf, void **iter, size_t *len, bool write);
 uint8           vbuffer_getbyte(struct vbuffer *buf, size_t offset);
 void            vbuffer_setbyte(struct vbuffer *buf, size_t offset, uint8 byte);
@@ -88,11 +89,14 @@ bool            vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct
 bool            vbuffer_iterator_register(struct vbuffer_iterator *iter);
 bool            vbuffer_iterator_unregister(struct vbuffer_iterator *iter);
 bool            vbuffer_iterator_clear(struct vbuffer_iterator *iter);
+size_t          vbuffer_iterator_available(struct vbuffer_iterator *iter);
+bool            vbuffer_iterator_check_available(struct vbuffer_iterator *iter, size_t size);
 bool            vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buffer, size_t len, bool advance);
 size_t          vbuffer_iterator_read(struct vbuffer_iterator *iter, uint8 *buffer, size_t len, bool advance);
 size_t          vbuffer_iterator_write(struct vbuffer_iterator *iter, uint8 *buffer, size_t len, bool advance);
 bool            vbuffer_iterator_insert(struct vbuffer_iterator *iter, struct vbuffer *data);
 bool            vbuffer_iterator_erase(struct vbuffer_iterator *iter, size_t len);
+bool            vbuffer_iterator_replace(struct vbuffer_iterator *iter, size_t len, struct vbuffer *data);
 size_t          vbuffer_iterator_advance(struct vbuffer_iterator *iter, size_t len);
 
 
@@ -141,7 +145,7 @@ struct vbuffer_stream *vbuffer_stream();
 void                   vbuffer_stream_free(struct vbuffer_stream *stream);
 bool                   vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data);
 struct vbuffer        *vbuffer_stream_pop(struct vbuffer_stream *stream);
-struct vbuffer        *vbuffer_stream_available(struct vbuffer_stream *stream);
+struct vbuffer        *vbuffer_stream_data(struct vbuffer_stream *stream);
 bool                   vbuffer_stream_current(struct vbuffer_stream *stream, struct vbuffer_iterator *position);
 
 #endif /* _HAKA_VBUFFER_H */
