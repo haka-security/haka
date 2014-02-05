@@ -5,7 +5,6 @@
 %module tcp
 
 %{
-#include <haka/stream.h>
 #include <haka/tcp.h>
 #include <haka/tcp-connection.h>
 #include <haka/tcp-stream.h>

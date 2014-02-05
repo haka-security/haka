@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <haka/types.h>
-#include <haka/stream.h>
 #include <haka/ipv4.h>
 #include <haka/tcp.h>
 #include <haka/lua/ref.h>
 #include <haka/lua/object.h>
 
 
-/* TCP connection structure. */
+struct tcp_stream;
+
 struct tcp_connection {
 	struct lua_object    lua_object;
 	ipv4addr             srcip;
