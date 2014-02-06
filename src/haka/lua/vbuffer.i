@@ -183,7 +183,7 @@ struct vbuffer {
 		}
 
 		%rename(asbits) _asbits;
-		int _asbits(int off, int len, const char *endian = "big")
+		int _asbits(int off, int len, const char *endian = NULL)
 		{
 			struct vsubbuffer sub;
 			if (!vbuffer_sub($self, off / 8, (len + 7) / 8, &sub)) {
@@ -193,7 +193,7 @@ struct vbuffer {
 		}
 
 		%rename(setbits) _setbits;
-		void _setbits(int num, int off, int len, const char *endian = "big")
+		void _setbits(int num, int off, int len, const char *endian = NULL)
 		{
 			struct vsubbuffer sub;
 			if (!vbuffer_sub($self, off / 8, (len + 7) / 8, &sub)) {
