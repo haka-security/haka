@@ -7,7 +7,10 @@
 State Machine
 =============
 
-.. lua:module:: haka
+Description
+-----------
+
+.. lua:currentmodule:: haka
 
 .. lua:class:: state_machine
 
@@ -24,22 +27,24 @@ State Machine
         should be a table containing a list of transition methods.
         Haka defines a list of built-in transitions:
 
-        * init: transition activated at machine state initialisation.
-        * finish: transition activated when quitting the state machine.
-        * enter: transition activated when entering a new state.
-        * leave: transition activated when leaving a state.
-        * error: transition triggered on error.
-        * timeout: temporal transition.
+        * ``init``: transition activated at machine state initialisation.
+        * ``finish``: transition activated when quitting the state machine.
+        * ``enter``: transition activated when entering a new state.
+        * ``leave``: transition activated when leaving a state.
+        * ``error``: transition triggered on error.
+        * ``timeout``: temporal transition.
 
     .. lua:method:: state(trans)
 
-		Defines a new state and its stransitions.
+        Defines a new state and its stransitions.
 
     .. lua:method:: instanciate()
 
         Instanciates the state machine.
 
-Instancieted State Machine
---------------------------
+Instance
+--------
 
-TODO
+.. lua:class:: state_machine_instance
+
+    Instance of a state machine.
