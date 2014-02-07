@@ -10,7 +10,9 @@
 #include <string.h>
 
 #include <haka/log.h>
+#include <haka/alert.h>
 #include <haka/error.h>
+#include <haka/string.h>
 
 
 static bool ipv4_flatten_header(struct vbuffer *payload, size_t hdrlen)
@@ -45,7 +47,20 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	payload = packet_payload(packet);
 
 	if (!vbuffer_checksize(payload, sizeof(struct ipv4_header))) {
-		error(L"invalid packet size");
+		TOWSTR(srcip, ipv4addr, ipv4_get_src(ip));
+		TOWSTR(dstip, ipv4addr, ipv4_get_dst(ip));
+		ALERT(invalid_packet, 1, 1)
+			description: L"invalid ip packet, size is too small",
+			severity: HAKA_ALERT_LOW,
+		ENDALERT
+
+		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
+		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
+
+		alert(&invalid_packet);
+
+		packet_drop(packet);
+		packet_release(packet);
 		return NULL;
 	}
 
@@ -76,6 +91,25 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	/* extract the ip data, we cannot just take everything that is after the header
 	 * as the packet might contains some padding.
 	 */
+	if (vbuffer_size(payload) < ipv4_get_len(ip)) {
+		TOWSTR(srcip, ipv4addr, ipv4_get_src(ip));
+		TOWSTR(dstip, ipv4addr, ipv4_get_dst(ip));
+		ALERT(invalid_packet, 1, 1)
+			description: L"invalid ip packet, invalid size is too small",
+			severity: HAKA_ALERT_LOW,
+		ENDALERT
+
+		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
+		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
+
+		alert(&invalid_packet);
+
+		packet_drop(packet);
+		packet_release(packet);
+		free(ip);
+		return NULL;
+	}
+
 	ip->payload = vbuffer_extract(payload, hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET,
 			ipv4_get_len(ip)-(hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET), false);
 	if (!ip->payload) {

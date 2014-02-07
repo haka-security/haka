@@ -295,7 +295,9 @@ unsigned int tcp_stream_lastseq_get(struct tcp_stream *s) { return tcp_stream_la
 
 	function tcp_dissector:receive(pkt)
 		local self = this._dissect(pkt)
-		return self:emit()
+		if self then
+			return self:emit()
+		end
 	end
 
 	function tcp_dissector:create(pkt)

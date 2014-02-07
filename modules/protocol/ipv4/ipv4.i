@@ -365,7 +365,9 @@ int lua_inet_checksum(struct vbuffer *buf, int offset = 0, int len = -1);
 
 	function ipv4_dissector:receive(pkt)
 		local new = this._dissect(pkt)
-		return new:emit()
+		if new then
+			return new:emit()
+		end
 	end
 
 	function ipv4_dissector:create(pkt)
