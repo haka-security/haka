@@ -4,6 +4,7 @@
 
 #include <haka/error.h>
 #include <haka/thread.h>
+#include <haka/debug.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -80,6 +81,8 @@ void error(const wchar_t *error, ...)
 			va_end(ap);
 
 			context->is_error = true;
+
+			BREAKPOINT;
 		}
 	}
 }

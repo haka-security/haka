@@ -16,6 +16,7 @@ add_library(libhaka SHARED
 	alert_module.c
 	module.c
 	error.c
+	debug.c
 	thread.c
 	parameters.c
 	colors.c
