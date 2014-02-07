@@ -53,10 +53,15 @@ function tcp_connection_dissector:receive(pkt)
 		end
 	end
 
+	local dissector = connection.data:namespace('tcp-connection')
+
 	haka.context:scope(connection.data, function ()
-		local dissector = connection.data:namespace('tcp-connection')
 		return dissector:emit(pkt, direction)
 	end)
+
+	if dissector._restart then
+		return tcp_connection_dissector:receive(pkt)
+	end
 end
 
 tcp_connection_dissector.states = haka.state_machine.new("tcp")
@@ -285,13 +290,13 @@ tcp_connection_dissector.states.timed_wait = tcp_connection_dissector.states:sta
 		end
 	end,
 	input = function (context, pkt)
-		if not pkt.flags.ack then
+		if pkt.flags.syn then
+			context.flow:restart()
+			return context.states.FINISH
+		elseif not pkt.flags.ack then
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
 			pkt:drop()
 			return context.states.ERROR
-		elseif pkt.flags.ack and not pkt.flags.fin then
-			context.flow:_sendpkt(pkt, context.input)
-			return context.states.FINISH
 		else
 			context.flow:_sendpkt(pkt, context.input)
 		end
@@ -308,6 +313,7 @@ tcp_connection_dissector.states.timed_wait = tcp_connection_dissector.states:sta
 
 function tcp_connection_dissector.method:__init()
 	self.stream = {}
+	self._restart = false
 end
 
 function tcp_connection_dissector.method:init(connection)
@@ -316,6 +322,17 @@ function tcp_connection_dissector.method:init(connection)
 	self.stream['down'] = self.connection:stream('down')
 	self.states = tcp_connection_dissector.states:instanciate()
 	self.states.flow = self
+end
+
+function tcp_connection_dissector.method:restart()
+	self.stream = nil
+	self.connection:close()
+	self.connection = nil
+	self.states = nil
+end
+
+function tcp_connection_dissector.method:restart()
+	self._restart = true
 end
 
 function tcp_connection_dissector.method:emit(pkt, direction)
