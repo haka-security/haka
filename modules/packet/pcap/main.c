@@ -483,7 +483,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				packet->state = state;
 				packet->captured = true;
 				packet->link_type = pd->link_type;
-				packet->id = state->packet_id++;
+				packet->id = ++state->packet_id;
 				packet->timestamp.secs = header->ts.tv_sec;
 				packet->timestamp.nsecs = header->ts.tv_usec*1000;
 
@@ -639,7 +639,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 	packet->header.len = size;
 	packet->header.caplen = size;
-	packet->id = state->packet_id++;
+	packet->id = 0;
 
 	switch (state->link_type)
 	{
