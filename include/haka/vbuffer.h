@@ -49,7 +49,7 @@ struct vbuffer {
 
 
 struct vbuffer *vbuffer_create_new(size_t size);
-struct vbuffer *vbuffer_create_from_string(const char *str);
+struct vbuffer *vbuffer_create_from_string(const char *str, size_t len);
 struct vbuffer *vbuffer_create_from_data(struct vbuffer_data *data, size_t offset, size_t length);
 struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t offset, size_t length);
 struct vbuffer *vbuffer_select(struct vbuffer *buf, size_t offset, size_t length, struct vbuffer **ref);

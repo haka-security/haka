@@ -104,9 +104,9 @@ struct vbuffer {
 			return buf;
 		}
 
-		vbuffer(const char *data)
+		vbuffer(const char *STRING, size_t SIZE)
 		{
-			return vbuffer_create_from_string(data);
+			return vbuffer_create_from_string(STRING, SIZE);
 		}
 
 		~vbuffer()

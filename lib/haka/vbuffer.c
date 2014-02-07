@@ -227,10 +227,9 @@ struct vbuffer *vbuffer_create_new(size_t size)
 	return ret;
 }
 
-struct vbuffer *vbuffer_create_from_string(const char *str)
+struct vbuffer *vbuffer_create_from_string(const char *str, size_t len)
 {
 	struct vbuffer *ret;
-	const size_t len = strlen(str);
 	struct vbuffer_data_basic *data = vbuffer_data_basic(len);
 	if (!data) {
 		return NULL;
