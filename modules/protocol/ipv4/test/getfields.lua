@@ -62,6 +62,7 @@ haka.rule {
 
 		print(string.format("Internet Protocol Version %d, Src: %s (%s), Dst: %s (%s)", pkt.version, pkt.src, pkt.src, pkt.dst, pkt.dst))
 		print(string.format("    Version: %d", pkt.version))
+		print(string.format("    TOS: %d", pkt.tos))
 		print(string.format("    Header length: %d bytes", pkt.hdr_len))
 		print(string.format("    Total Length: %d", pkt.len))
 		print(string.format("    Identification: 0x%.04x (%d)", pkt.id, pkt.id))
