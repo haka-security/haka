@@ -6,6 +6,7 @@
 #define _HAKA_REGEXP_MODULE_H
 
 #include <haka/module.h>
+#include <haka/vbuffer.h>
 
 struct regexp;
 
@@ -17,6 +18,9 @@ struct regexp_module {
 	int (*exec)(const struct regexp *regexp, const char *buffer, int len);
 	int (*match)(const char *pattern, const char *buffer, int len);
 	int (*feed)(const struct regexp *regexp, const char *buffer, int len);
+	int (*vbexec)(const struct regexp *regexp, struct vbuffer *vbuf);
+	int (*vbmatch)(const char *pattern, struct vbuffer *vbuf);
+	int (*vbfeed)(const struct regexp *regexp, struct vbuffer *vbuf);
 };
 
 struct regexp  {

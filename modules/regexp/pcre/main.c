@@ -8,8 +8,8 @@
 #include <haka/error.h>
 #include <haka/regexp_module.h>
 
-#define OVECSIZE 3
-#define WSCOUNT 512
+#define OVECSIZE 0
+#define WSCOUNT 20
 
 #define CHECK_REGEXP_TYPE(regexp_pcre)\
 	do {\
@@ -31,8 +31,11 @@ static void cleanup();
 static struct regexp *regexp_compile(const char *pattern);
 static void regexp_free(struct regexp *regexp);
 static int regexp_exec(const struct regexp *regexp, const char *buffer, int len);
-static int regexp_match(const char *regexp, const char *buffer, int len);
+static int regexp_match(const char *pattern, const char *buffer, int len);
 static int regexp_feed(const struct regexp *regexp, const char *buffer, int len);
+static int regexp_vbexec(const struct regexp *regexp, struct vbuffer *vbuf);
+static int regexp_vbmatch(const char *pattern, struct vbuffer *vbuf);
+static int regexp_vbfeed(const struct regexp *regexp, struct vbuffer *vbuf);
 
 struct regexp_module HAKA_MODULE = {
 	module: {
@@ -48,6 +51,9 @@ struct regexp_module HAKA_MODULE = {
 	exec: regexp_exec,
 	match: regexp_match,
 	feed: regexp_feed,
+	vbexec: regexp_vbexec,
+	vbmatch: regexp_vbmatch,
+	vbfeed: regexp_vbfeed,
 };
 
 static int init(struct parameters *args)
@@ -96,15 +102,14 @@ error:
 static int regexp_exec(const struct regexp *regexp, const char *buffer, int len)
 {
 	int ret;
-	int ovector[OVECSIZE];
 	struct regexp_pcre *regexp_pcre = (struct regexp_pcre *)regexp;
 	CHECK_REGEXP_TYPE(regexp_pcre);
 
-	ret = pcre_exec(regexp_pcre->pcre, NULL, buffer, len, 0, 0, ovector,
+	ret = pcre_exec(regexp_pcre->pcre, NULL, buffer, len, 0, 0, NULL,
 			OVECSIZE);
 
-	if (ret >= 0)
-		return ret;
+	if (ret == 0)
+		return 1;
 
 	switch (ret) {
 		case PCRE_ERROR_NOMATCH:
@@ -120,10 +125,11 @@ error:
 
 static int regexp_match(const char *pattern, const char *buffer, int len)
 {
-	int ret = 0;
+	int ret;
 	struct regexp *regexp = regexp_compile(pattern);
+
 	if (regexp == NULL)
-		return 0;
+		return -1;
 
 	ret = regexp_exec(regexp, buffer, len);
 
@@ -134,8 +140,7 @@ static int regexp_match(const char *pattern, const char *buffer, int len)
 
 static int regexp_feed(const struct regexp *regexp, const char *buffer, int len)
 {
-	int ovector[OVECSIZE];
-	int options = PCRE_PARTIAL_SOFT;
+	int options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
 	struct regexp_pcre *regexp_pcre = (struct regexp_pcre *)regexp;
 	CHECK_REGEXP_TYPE(regexp_pcre);
 
@@ -143,11 +148,11 @@ static int regexp_feed(const struct regexp *regexp, const char *buffer, int len)
 		options |= PCRE_DFA_RESTART;
 
 	regexp_pcre->last_result = pcre_dfa_exec(regexp_pcre->pcre, NULL,
-			buffer, len, 0, options, ovector, OVECSIZE,
+			buffer, len, 0, options, NULL, OVECSIZE,
 			regexp_pcre->workspace, WSCOUNT);
 
-	if (regexp_pcre->last_result >= 0)
-		return regexp_pcre->last_result;
+	if (regexp_pcre->last_result == 0)
+		return 1;
 
 	switch (regexp_pcre->last_result) {
 		case PCRE_ERROR_NOMATCH:
@@ -160,4 +165,38 @@ static int regexp_feed(const struct regexp *regexp, const char *buffer, int len)
 
 error:
 	return -1;
+}
+
+static int regexp_vbexec(const struct regexp *regexp, struct vbuffer *vbuf)
+{
+	return regexp_vbfeed(regexp, vbuf);
+}
+
+static int regexp_vbmatch(const char *pattern, struct vbuffer *vbuf)
+{
+	int ret;
+	struct regexp *regexp = regexp_compile(pattern);
+
+	if (regexp == NULL)
+		return -1;
+
+	ret = regexp_vbfeed(regexp, vbuf);
+
+	regexp_free(regexp);
+
+	return ret;
+}
+
+static int regexp_vbfeed(const struct regexp *regexp, struct vbuffer *vbuf)
+{
+	int ret;
+	size_t len;
+	void *iter = NULL;
+
+	do {
+		const uint8 *ptr = vbuffer_mmap(vbuf, &iter, &len, false);
+		ret = regexp_feed(regexp, (const char *)ptr, len);
+	} while (ret == 0 && (vbuf = vbuf->next) != NULL);
+
+	return ret;
 }

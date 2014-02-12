@@ -16,6 +16,14 @@ struct regexp {
                         return $self->module->feed($self, STRING, SIZE);
                 }
 
+                bool exec(struct vbuffer *vbuf) {
+                        return $self->module->vbexec($self, vbuf);
+                }
+
+                bool feed(struct vbuffer *vbuf) {
+                        return $self->module->vbfeed($self, vbuf);
+                }
+
                 ~regexp() {
                         $self->module->free($self);
                 }
