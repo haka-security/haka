@@ -20,7 +20,7 @@ struct regexp_module {
 };
 
 struct regexp  {
-        struct regexp_module *module;
+	struct regexp_module *module;
 };
 
 struct regexp_module *regexp_module_load(const char *module_name, struct parameters *args);

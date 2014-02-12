@@ -12,18 +12,18 @@
 #define WSCOUNT 512
 
 #define CHECK_REGEXP_TYPE(regexp_pcre)\
-        do {\
-                if (regexp_pcre == NULL || regexp_pcre->regexp.module != &HAKA_MODULE) {\
-                        error(L"Wrong regexp struct passed to PCRE module");\
-                        goto error;\
-                }\
-        } while(0);
+	do {\
+		if (regexp_pcre == NULL || regexp_pcre->regexp.module != &HAKA_MODULE) {\
+			error(L"Wrong regexp struct passed to PCRE module");\
+			goto error;\
+		}\
+	} while(0);
 
 struct regexp_pcre {
-        struct regexp regexp;
+	struct regexp regexp;
 	pcre *pcre;
-        int last_result;
-        int workspace[WSCOUNT];
+	int last_result;
+	int workspace[WSCOUNT];
 };
 
 static int init(struct parameters *args);
@@ -71,7 +71,7 @@ static struct regexp *regexp_compile(const char *pattern)
 	regexp_pcre->pcre = pcre_compile(pattern, 0, &errorstr, &erroffset, NULL);
 	if (regexp_pcre->pcre == NULL)
 		goto error;
-        regexp_pcre->last_result = 0;
+	regexp_pcre->last_result = 0;
 
 	return (struct regexp *)regexp_pcre;
 
@@ -83,39 +83,39 @@ error:
 
 static void regexp_free(struct regexp *regexp)
 {
-        struct regexp_pcre *regexp_pcre = (struct regexp_pcre *)regexp;
-        CHECK_REGEXP_TYPE(regexp_pcre);
+	struct regexp_pcre *regexp_pcre = (struct regexp_pcre *)regexp;
+	CHECK_REGEXP_TYPE(regexp_pcre);
 
 	pcre_free(regexp_pcre->pcre);
 	free(regexp_pcre);
 
 error:
-        return;
+	return;
 }
 
 static int regexp_exec(const struct regexp *regexp, const char *buffer, int len)
 {
-        int ret;
+	int ret;
 	int ovector[OVECSIZE];
-        struct regexp_pcre *regexp_pcre = (struct regexp_pcre *)regexp;
-        CHECK_REGEXP_TYPE(regexp_pcre);
+	struct regexp_pcre *regexp_pcre = (struct regexp_pcre *)regexp;
+	CHECK_REGEXP_TYPE(regexp_pcre);
 
 	ret = pcre_exec(regexp_pcre->pcre, NULL, buffer, len, 0, 0, ovector,
-                        OVECSIZE);
+			OVECSIZE);
 
-        if (ret >= 0)
-                return ret;
+	if (ret >= 0)
+		return ret;
 
-        switch (ret) {
-                case PCRE_ERROR_NOMATCH:
-                        return 0;
-                default:
-                        error(L"PCRE internal error %d", ret);
-                        return ret;
-        }
+	switch (ret) {
+		case PCRE_ERROR_NOMATCH:
+			return 0;
+		default:
+			error(L"PCRE internal error %d", ret);
+			return ret;
+	}
 
 error:
-        return -1;
+	return -1;
 }
 
 static int regexp_match(const char *pattern, const char *buffer, int len)
@@ -134,30 +134,30 @@ static int regexp_match(const char *pattern, const char *buffer, int len)
 
 static int regexp_feed(const struct regexp *regexp, const char *buffer, int len)
 {
-        int ovector[OVECSIZE];
-        int options = PCRE_PARTIAL_SOFT;
-        struct regexp_pcre *regexp_pcre = (struct regexp_pcre *)regexp;
-        CHECK_REGEXP_TYPE(regexp_pcre);
+	int ovector[OVECSIZE];
+	int options = PCRE_PARTIAL_SOFT;
+	struct regexp_pcre *regexp_pcre = (struct regexp_pcre *)regexp;
+	CHECK_REGEXP_TYPE(regexp_pcre);
 
-        if (regexp_pcre->last_result == PCRE_ERROR_PARTIAL)
-                options |= PCRE_DFA_RESTART;
+	if (regexp_pcre->last_result == PCRE_ERROR_PARTIAL)
+		options |= PCRE_DFA_RESTART;
 
-        regexp_pcre->last_result = pcre_dfa_exec(regexp_pcre->pcre, NULL,
-                        buffer, len, 0, options, ovector, OVECSIZE,
-                        regexp_pcre->workspace, WSCOUNT);
+	regexp_pcre->last_result = pcre_dfa_exec(regexp_pcre->pcre, NULL,
+			buffer, len, 0, options, ovector, OVECSIZE,
+			regexp_pcre->workspace, WSCOUNT);
 
-        if (regexp_pcre->last_result >= 0)
-                return regexp_pcre->last_result;
+	if (regexp_pcre->last_result >= 0)
+		return regexp_pcre->last_result;
 
-        switch (regexp_pcre->last_result) {
-                case PCRE_ERROR_NOMATCH:
-                case PCRE_ERROR_PARTIAL:
-                        return 0;
-                default:
-                        error(L"PCRE internal error %d", regexp_pcre->last_result);
-                        return regexp_pcre->last_result;
-        }
+	switch (regexp_pcre->last_result) {
+		case PCRE_ERROR_NOMATCH:
+		case PCRE_ERROR_PARTIAL:
+			return 0;
+		default:
+			error(L"PCRE internal error %d", regexp_pcre->last_result);
+			return regexp_pcre->last_result;
+	}
 
 error:
-        return -1;
+	return -1;
 }

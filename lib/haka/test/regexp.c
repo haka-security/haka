@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <haka/error.h>
 #include <haka/regexp_module.h>
+#include <haka/vbuffer.h>
 
 #define ck_check_error     if (check_error()) { ck_abort_msg("Error: %ls", clear_error()); return; }
 
