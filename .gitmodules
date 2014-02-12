@@ -9,4 +9,4 @@
 	url = git://github.com/ndevilla/iniparser.git
 [submodule "external/lua"]
 	path = external/lua
-	url = git@github.com:haka-security/lua.git
+	url = git://github.com/haka-security/lua.git
