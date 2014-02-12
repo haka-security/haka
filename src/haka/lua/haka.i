@@ -190,3 +190,4 @@ int _getswigclassmetatable(struct lua_State *L)
 }
 
 %include "lua/vbuffer.i"
+%include "lua/regexp.i"
