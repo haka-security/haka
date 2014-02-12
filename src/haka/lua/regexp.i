@@ -12,6 +12,10 @@ struct regexp {
                         return $self->module->exec($self, buffer, len);
                 }
 
+                bool feed(const char *buffer, int len) {
+                        return $self->module->feed($self, buffer, len);
+                }
+
                 ~regexp() {
                         $self->module->free($self);
                 }

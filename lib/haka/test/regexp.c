@@ -179,6 +179,59 @@ START_TEST(regexp_match_should_not_match_when_string_does_not_match)
 }
 END_TEST
 
+START_TEST(regexp_feed_should_not_fail_when_feed_twice)
+{
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct regexp *re = rem->compile(".*");
+	clear_error();
+
+	// When
+	rem->feed(re, "aaa", 3);
+	rem->feed(re, "bbb", 3);
+
+	// Then
+	ck_check_error;
+}
+END_TEST
+
+START_TEST(regexp_feed_should_match_accross_two_string)
+{
+	int ret = 0;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct regexp *re = rem->compile("ab");
+	clear_error();
+
+	// When
+	ret = rem->feed(re, "aaa", 3);
+	ret = rem->feed(re, "bbb", 3);
+
+	// Then
+	ck_check_error;
+	ck_assert(ret > 0);
+}
+END_TEST
+
+START_TEST(regexp_feed_should_not_fail_if_no_match)
+{
+	int ret = 0;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct regexp *re = rem->compile("abc");
+	clear_error();
+
+	// When
+	ret = rem->feed(re, "aaa", 3);
+
+	// Then
+	ck_check_error;
+	ck_assert(ret == 0);
+}
+END_TEST
+
 Suite* regexp_suite(void)
 {
 	Suite *suite = suite_create("regexp_suite");
@@ -196,6 +249,13 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, regexp_match_should_be_successful_when_string_match);
 	tcase_add_test(tcase, regexp_match_should_not_match_when_string_does_not_match);
 	suite_add_tcase(suite, tcase);
+
+	tcase = tcase_create("regexp_feed");
+	tcase_add_test(tcase, regexp_feed_should_not_fail_when_feed_twice);
+	tcase_add_test(tcase, regexp_feed_should_match_accross_two_string);
+	tcase_add_test(tcase, regexp_feed_should_not_fail_if_no_match);
+	suite_add_tcase(suite, tcase);
+
 	return suite;
 }
 

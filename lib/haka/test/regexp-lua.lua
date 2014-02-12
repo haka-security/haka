@@ -74,6 +74,26 @@ function test_exec_should_fail_when_pattern_do_not_match ()
         assert(not ret, "Non-matching pattern expected to failed but return match")
 end
 
+function test_feed_should_not_fail ()
+	-- Given
+	local re = rem.re:compile(".*")
+	-- When
+	local ret, msg = pcall(function () re:feed("aaa", 3) end)
+	-- Then
+	assert(ret, string.format("Regexp feed should not failed but failed with message %s", msg))
+end
+
+function test_feed_should_match_accross_two_string ()
+        -- Given
+        local re = rem.re:compile("ab")
+        -- When
+        local ret = re:feed("aaa", 3)
+        ret = re:feed("bbb", 3)
+        -- Then
+        assert(ret, "Matching pattern expected to match over two string but failed")
+end
+
+
 test_match_should_not_fail()
 test_match_should_be_successful()
 test_match_should_fail_when_pattern_do_not_match()
@@ -83,3 +103,5 @@ test_compile_should_fail_with_bad_pattern()
 test_exec_should_not_fail ()
 test_exec_should_be_successful()
 test_exec_should_fail_when_pattern_do_not_match()
+test_feed_should_not_fail()
+test_feed_should_match_accross_two_string ()

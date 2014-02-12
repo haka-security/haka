@@ -16,6 +16,7 @@ struct regexp_module {
 	void (*free)(struct regexp *regexp);
 	int (*exec)(const struct regexp *regexp, const char *buffer, int len);
 	int (*match)(const char *pattern, const char *buffer, int len);
+	int (*feed)(const struct regexp *regexp, const char *buffer, int len);
 };
 
 struct regexp  {

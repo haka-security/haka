@@ -9,6 +9,7 @@
 #include <haka/regexp_module.h>
 
 #define OVECSIZE 3
+#define WSCOUNT 512
 
 #define CHECK_REGEXP_TYPE(regexp_pcre)\
         do {\
@@ -21,6 +22,8 @@
 struct regexp_pcre {
         struct regexp regexp;
 	pcre *pcre;
+        int last_result;
+        int workspace[WSCOUNT];
 };
 
 static int init(struct parameters *args);
@@ -29,6 +32,7 @@ static struct regexp *regexp_compile(const char *pattern);
 static void regexp_free(struct regexp *regexp);
 static int regexp_exec(const struct regexp *regexp, const char *buffer, int len);
 static int regexp_match(const char *regexp, const char *buffer, int len);
+static int regexp_feed(const struct regexp *regexp, const char *buffer, int len);
 
 struct regexp_module HAKA_MODULE = {
 	module: {
@@ -43,6 +47,7 @@ struct regexp_module HAKA_MODULE = {
 	free: regexp_free,
 	exec: regexp_exec,
 	match: regexp_match,
+	feed: regexp_feed,
 };
 
 static int init(struct parameters *args)
@@ -66,6 +71,7 @@ static struct regexp *regexp_compile(const char *pattern)
 	regexp_pcre->pcre = pcre_compile(pattern, 0, &errorstr, &erroffset, NULL);
 	if (regexp_pcre->pcre == NULL)
 		goto error;
+        regexp_pcre->last_result = 0;
 
 	return (struct regexp *)regexp_pcre;
 
@@ -124,4 +130,34 @@ static int regexp_match(const char *pattern, const char *buffer, int len)
 	regexp_free(regexp);
 
 	return ret;
+}
+
+static int regexp_feed(const struct regexp *regexp, const char *buffer, int len)
+{
+        int ovector[OVECSIZE];
+        int options = PCRE_PARTIAL_SOFT;
+        struct regexp_pcre *regexp_pcre = (struct regexp_pcre *)regexp;
+        CHECK_REGEXP_TYPE(regexp_pcre);
+
+        if (regexp_pcre->last_result == PCRE_ERROR_PARTIAL)
+                options |= PCRE_DFA_RESTART;
+
+        regexp_pcre->last_result = pcre_dfa_exec(regexp_pcre->pcre, NULL,
+                        buffer, len, 0, options, ovector, OVECSIZE,
+                        regexp_pcre->workspace, WSCOUNT);
+
+        if (regexp_pcre->last_result >= 0)
+                return regexp_pcre->last_result;
+
+        switch (regexp_pcre->last_result) {
+                case PCRE_ERROR_NOMATCH:
+                case PCRE_ERROR_PARTIAL:
+                        return 0;
+                default:
+                        error(L"PCRE internal error %d", regexp_pcre->last_result);
+                        return regexp_pcre->last_result;
+        }
+
+error:
+        return -1;
 }
