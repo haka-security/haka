@@ -157,3 +157,9 @@ void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
 
 APPLY_OUTPUT(bool)
 APPLY_OUTPUT(const char *)
+
+%typemap(in,checkfn="SWIG_lua_isnilstring",fragment="SWIG_lua_isnilstring") (const char *STRING, size_t SIZE)
+%{
+       $1 = ($ltype)lua_tostring(L, $input);
+       $2 = lua_rawlen(L, $input);
+%}

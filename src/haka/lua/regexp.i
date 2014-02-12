@@ -8,12 +8,12 @@
 
 struct regexp {
         %extend {
-                bool exec(const char *buffer, int len) {
-                        return $self->module->exec($self, buffer, len);
+                bool exec(const char *STRING, size_t SIZE) {
+                        return $self->module->exec($self, STRING, SIZE);
                 }
 
-                bool feed(const char *buffer, int len) {
-                        return $self->module->feed($self, buffer, len);
+                bool feed(const char *STRING, size_t SIZE) {
+                        return $self->module->feed($self, STRING, SIZE);
                 }
 
                 ~regexp() {
@@ -25,8 +25,8 @@ struct regexp {
 %newobject regexp_module::compile;
 struct regexp_module {
         %extend {
-                bool match(const char *pattern, const char *buffer, int len) {
-                        return $self->match(pattern, buffer, len);
+                bool match(const char *pattern, const char *STRING, size_t SIZE) {
+                        return $self->match(pattern, STRING, SIZE);
                 }
 
                 struct regexp *compile(const char *pattern) {
