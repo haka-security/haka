@@ -19,4 +19,5 @@ Welcome to Haka's Reference Guide!
     state_machine.rst
     ../../../modules/protocol/ipv4/doc/lua.rst
     ../../../modules/protocol/tcp/doc/lua.rst
+    ../../../modules/protocol/udp/doc/lua.rst
     ../../../modules/protocol/http/doc/lua.rst
