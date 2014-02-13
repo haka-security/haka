@@ -79,14 +79,12 @@ START_TEST(ipv4_badnetwork4_check)
 }
 END_TEST
 
-START_TEST(ipv4_badnetwork5_check)
+START_TEST(ipv4_recover_badnetwork_check)
 {
 	ipv4network network;
 	network = ipv4_network_from_string("192.168.1.2/24");
 	ck_assert_int_eq(network.net, 0xC0A80100);
 	ck_assert_int_eq(network.mask, 24);
-	ck_assert(check_error());
-	clear_error();
 }
 END_TEST
 
@@ -119,7 +117,7 @@ int main (int argc, char *argv[])
 	tcase_add_test(tcase, ipv4_badnetwork2_check);
 	tcase_add_test(tcase, ipv4_badnetwork3_check);
 	tcase_add_test(tcase, ipv4_badnetwork4_check);
-	tcase_add_test(tcase, ipv4_badnetwork5_check);
+	tcase_add_test(tcase, ipv4_recover_badnetwork_check);
 	suite_add_tcase(suite, tcase);
 
 	SRunner *runner = srunner_create(suite);
