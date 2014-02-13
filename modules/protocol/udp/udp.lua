@@ -4,6 +4,30 @@
 
 local ipv4 = require("protocol/ipv4")
 
+local function compute_checksum(pkt)
+	local checksum = ipv4.inet_checksum()
+
+	-- UDP checksum is computed using a
+	-- pseudo-header made of some fields
+	-- of ipv4 header
+
+	-- size of the udp pseudo-header
+	local pseudo_header = haka.vbuffer(12)
+	-- source and destination ipv4 adresses
+	pseudo_header:sub(0,4):setnumber(pkt.ip.src.packed)
+	pseudo_header:sub(4,4):setnumber(pkt.ip.dst.packed)
+	-- padding (null byte)
+	pseudo_header:sub(8,1):setnumber(0)
+	-- UDP protocol number
+	pseudo_header:sub(9,1):setnumber(0x11)
+	-- UDP message length (header + data)
+	pseudo_header:sub(10,2):setnumber(pkt.length)
+	checksum:process(pseudo_header)
+
+	checksum:process(pkt._payload)
+	return checksum:compute()
+end
+
 local udp_dissector = haka.dissector.new{
 	type = haka.dissector.EncapsulatedPacketDissector,
 	name = 'udp'
@@ -13,7 +37,7 @@ udp_dissector.grammar = haka.grammar.record{
 	haka.grammar.field('srcport',   haka.grammar.number(16)),
 	haka.grammar.field('dstport',   haka.grammar.number(16)),
 	haka.grammar.field('length',	haka.grammar.number(16))
-		:validate(function (self) self.len = (8 + #self.payload) end),
+		:validate(function (self) self.len = 8 + #self.payload end),
 	haka.grammar.field('checksum',	haka.grammar.number(16))
 		:validate(function (self)
 			self.checksum = 0
@@ -35,15 +59,8 @@ function udp_dissector.method:forge_payload(pkt, payload)
 	self:validate()
 end
 
-
 function udp_dissector.method:verify_checksum()
 	return compute_checksum(self) == 0
-end
-
-function udp_dissector.method:compute_checksum()
-	self.checksum = 0
-	self.checksum = compute_checksum(self)
-	return self.checksum
 end
 
 function udp_dissector:create(pkt, init)
@@ -55,19 +72,6 @@ function udp_dissector:create(pkt, init)
 	local udp = udp_dissector:new(pkt)
 	udp:parse(pkt, init)
 	return udp
-end
-
-function compute_checksum(pkt)
-	local checksum = ipv4.inet_checksum()
-	local pseudo_header = haka.vbuffer(12)
-	pseudo_header:sub(0,4):setnumber(pkt.ip.src.packed)
-	pseudo_header:sub(4,4):setnumber(pkt.ip.dst.packed)
-	pseudo_header:sub(8,1):setnumber(0)
-	pseudo_header:sub(9,1):setnumber(0x11)
-	pseudo_header:sub(10,2):setnumber(pkt.length)
-	checksum:process(pseudo_header)
-	checksum:process(pkt._payload)
-	return checksum:compute()
 end
 
 ipv4.register_protocol(17, udp_dissector)
