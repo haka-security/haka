@@ -59,7 +59,7 @@ local header = haka.grammar.record{
 	haka.grammar.field('checksum',    haka.grammar.number(16))
 		:validate(function (self)
 			self.checksum = 0
-			self.checksum = ipv4.inet_checksum(self._payload:sub(0, self.hdr_len))
+			self.checksum = ipv4.inet_checksum_compute(self._payload:sub(0, self.hdr_len))
 		end),
 	haka.grammar.field('src',         haka.grammar.number(32)
 		:convert(ipv4_addr_convert, true)),
@@ -89,7 +89,7 @@ function ipv4_dissector.method:parse_payload(pkt, payload, init)
 end
 
 function ipv4_dissector.method:verify_checksum()
-	return ipv4.inet_checksum(self._payload:sub(0, self.hdr_len)) == 0
+	return ipv4.inet_checksum_compute(self._payload:sub(0, self.hdr_len)) == 0
 end
 
 function ipv4_dissector.method:next_dissector()
