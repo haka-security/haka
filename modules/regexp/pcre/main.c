@@ -4,12 +4,13 @@
 
 #include <assert.h>
 #include <pcre.h>
+#include <string.h>
 
 #include <haka/error.h>
 #include <haka/regexp_module.h>
+#include <haka/thread.h>
 
-#define OVECSIZE 0
-#define WSCOUNT 20
+#define WSCOUNT_DEFAULT 20
 
 #define CHECK_REGEXP_TYPE(re)\
 	do {\
@@ -19,7 +20,7 @@
 		}\
 	} while(0);
 
-#define CHECK_REGEXP_STREAM_TYPE(re_ctx)\
+#define CHECK_REGEXP_CTX_TYPE(re_ctx)\
 	do {\
 		if (re_ctx == NULL || re_ctx->regexp_ctx.regexp->module != &HAKA_MODULE) {\
 			error(L"Wrong regexp_ctx struct passed to PCRE module");\
@@ -30,12 +31,14 @@
 struct regexp_pcre {
 	struct regexp regexp;
 	pcre *pcre;
+	atomic_t wscount_max;
 };
 
 struct regexp_ctx_pcre {
 	struct regexp_ctx regexp_ctx;
 	int last_result;
-	int workspace[WSCOUNT];
+	atomic_t wscount;
+	int *workspace;
 };
 
 static int  init(struct parameters *args);
@@ -45,14 +48,14 @@ static int match(const char *pattern, const char *buf, int len);
 static int vbmatch(const char *pattern, struct vbuffer *vbuf);
 
 static struct regexp *compile(const char *pattern);
-static void           free_regexp(struct regexp *re);
-static int            exec(const struct regexp *re, const char *buf, int len);
-static int            vbexec(const struct regexp *re, struct vbuffer *vbuf);
+static void           release_regexp(struct regexp *re);
+static int            exec(struct regexp *re, const char *buf, int len);
+static int            vbexec(struct regexp *re, struct vbuffer *vbuf);
 
-static struct regexp_ctx *get_ctx(const struct regexp *re);
-static void                  free_regexp_ctx(const struct regexp_ctx *re_ctx);
-static int                   feed(const struct regexp_ctx *re_ctx, const char *buf, int len);
-static int                   vbfeed(const struct regexp_ctx *re_ctx, struct vbuffer *vbuf);
+static struct regexp_ctx *get_ctx(struct regexp *re);
+static void                  free_regexp_ctx(struct regexp_ctx *re_ctx);
+static int                   feed(struct regexp_ctx *re_ctx, const char *buf, int len);
+static int                   vbfeed(struct regexp_ctx *re_ctx, struct vbuffer *vbuf);
 
 struct regexp_module HAKA_MODULE = {
 	module: {
@@ -68,7 +71,7 @@ struct regexp_module HAKA_MODULE = {
 	vbmatch: vbmatch,
 
 	compile:     compile,
-	free_regexp: free_regexp,
+	release_regexp: release_regexp,
 	exec:        exec,
 	vbexec:      vbexec,
 
@@ -97,7 +100,7 @@ static int match(const char *pattern, const char *buf, int len)
 
 	ret = exec(re, buf, len);
 
-	free_regexp(re);
+	release_regexp(re);
 
 	return ret;
 }
@@ -119,23 +122,28 @@ static int vbmatch(const char *pattern, struct vbuffer *vbuf)
 	ret = vbfeed(re_ctx, vbuf);
 
 	free_regexp_ctx(re_ctx);
-	free_regexp(re);
+	release_regexp(re);
 
 	return ret;
 }
 
 static struct regexp *compile(const char *pattern)
 {
-	struct regexp_pcre *re = malloc(sizeof(struct regexp_pcre));
 	const char *errorstr;
 	int erroffset;
+	struct regexp_pcre *re = malloc(sizeof(struct regexp_pcre));
+	if (!re) {
+		error(L"memory error");
+		goto error;
+	}
 
-	assert(re);
 
 	re->regexp.module = &HAKA_MODULE;
 	re->pcre = pcre_compile(pattern, 0, &errorstr, &erroffset, NULL);
 	if (re->pcre == NULL)
 		goto error;
+	re->regexp.ref_count = 1;
+	re->wscount_max = WSCOUNT_DEFAULT;
 
 	return (struct regexp *)re;
 
@@ -145,10 +153,13 @@ error:
 	return NULL;
 }
 
-static void free_regexp(struct regexp *_re)
+static void release_regexp(struct regexp *_re)
 {
 	struct regexp_pcre *re = (struct regexp_pcre *)_re;
 	CHECK_REGEXP_TYPE(re);
+
+	if (atomic_dec(&re->regexp.ref_count) != 0)
+		return;
 
 	pcre_free(re->pcre);
 	free(re);
@@ -157,14 +168,14 @@ error:
 	return;
 }
 
-static int exec(const struct regexp *_re, const char *buf, int len)
+static int exec(struct regexp *_re, const char *buf, int len)
 {
 	int ret;
 	struct regexp_pcre *re = (struct regexp_pcre *)_re;
 	CHECK_REGEXP_TYPE(re);
 
 	ret = pcre_exec(re->pcre, NULL, buf, len, 0, 0, NULL,
-			OVECSIZE);
+			0);
 
 	if (ret == 0)
 		return 1;
@@ -181,7 +192,7 @@ error:
 	return -1;
 }
 
-static int vbexec(const struct regexp *re, struct vbuffer *vbuf)
+static int vbexec(struct regexp *re, struct vbuffer *vbuf)
 {
 	int ret;
 	struct regexp_ctx *re_ctx = get_ctx(re);
@@ -193,45 +204,99 @@ static int vbexec(const struct regexp *re, struct vbuffer *vbuf)
 	return ret;
 }
 
-static struct regexp_ctx *get_ctx(const struct regexp *re)
+static struct regexp_ctx *get_ctx(struct regexp *_re)
 {
-	struct regexp_ctx_pcre *re_ctx = malloc(sizeof(struct regexp_ctx_pcre));
-	assert(re_ctx);
+	struct regexp_pcre *re = (struct regexp_pcre *)_re;
+	struct regexp_ctx_pcre *re_ctx;
+	CHECK_REGEXP_TYPE(re);
 
-	re_ctx->regexp_ctx.regexp = re;
+	re_ctx = malloc(sizeof(struct regexp_ctx_pcre));
+	if (!re_ctx) {
+		error(L"memory error");
+		goto error;
+	}
+
+	re_ctx->regexp_ctx.regexp = _re;
 	re_ctx->last_result = PCRE_ERROR_NOMATCH;
-	// TODO vector int workspace[WSCOUNT];
+	re_ctx->wscount = re->wscount_max;
+	re_ctx->workspace = calloc(re_ctx->wscount, sizeof(int));
+	if (!re_ctx->workspace) {
+		error(L"memory error");
+		goto error;
+	}
+
+	atomic_inc(&re->regexp.ref_count);
 
 	return (struct regexp_ctx *)re_ctx;
+error:
+	free(re_ctx->workspace);
+	free(re_ctx);
+	return NULL;
 }
 
-static void free_regexp_ctx(const struct regexp_ctx *_res)
+static void free_regexp_ctx(struct regexp_ctx *_re_ctx)
 {
-	struct regexp_ctx_pcre *re_ctx = (struct regexp_ctx_pcre *)_res;
-	CHECK_REGEXP_STREAM_TYPE(re_ctx);
+	struct regexp_ctx_pcre *re_ctx = (struct regexp_ctx_pcre *)_re_ctx;
+	CHECK_REGEXP_CTX_TYPE(re_ctx);
 
-	// TODO free vector workspace
+	release_regexp(re_ctx->regexp_ctx.regexp);
+	free(re_ctx->workspace);
 	free(re_ctx);
 
 error:
 	return;
 }
 
-static int feed(const struct regexp_ctx *_res, const char *buf, int len)
+static bool workspace_grow(struct regexp_ctx_pcre *re_ctx)
+{
+	struct regexp_pcre *re = (struct regexp_pcre *)re_ctx->regexp_ctx.regexp;
+
+	re_ctx->wscount *= 2;
+
+	/* Here test and assign are not thread safe.
+	 * That could override assigned value
+	 * but the assigned value will be different only when a thread will have
+	 * growth workspace more than once while the other thread will still be
+	 * between test and assign.
+	 * Even that worst case is not dangerous since the only effect will be
+	 * that new regexp_ctx will have undersized workspace.
+	 */
+	if (re_ctx->wscount > re->wscount_max)
+		re->wscount_max = re_ctx->wscount;
+
+	re_ctx->workspace = realloc(re_ctx->workspace, re_ctx->wscount*sizeof(int));
+	if (!re_ctx->workspace) {
+		error(L"memory error");
+		return false;
+	}
+
+	return true;
+}
+
+static int feed(struct regexp_ctx *_re_ctx, const char *buf, int len)
 {
 	int options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
 	struct regexp_pcre *re;
-	struct regexp_ctx_pcre *re_ctx = (struct regexp_ctx_pcre *)_res;
-	CHECK_REGEXP_STREAM_TYPE(re_ctx);
+	struct regexp_ctx_pcre *re_ctx = (struct regexp_ctx_pcre *)_re_ctx;
+	CHECK_REGEXP_CTX_TYPE(re_ctx);
 
-	re = (struct regexp_pcre *)_res->regexp;
+	re = (struct regexp_pcre *)_re_ctx->regexp;
 
 	if (re_ctx->last_result == PCRE_ERROR_PARTIAL)
 		options |= PCRE_DFA_RESTART;
 
-	re_ctx->last_result = pcre_dfa_exec(re->pcre, NULL,
-			buf, len, 0, options, NULL, OVECSIZE,
-			re_ctx->workspace, WSCOUNT);
+	do {
+		/* We run out of space so grow workspace */
+		if (re_ctx->last_result == PCRE_ERROR_DFA_WSSIZE) {
+			if (!workspace_grow(re_ctx)) {
+				goto error;
+			}
+		}
+
+		re_ctx->last_result = pcre_dfa_exec(re->pcre, NULL,
+				buf, len, 0, options, NULL, 0,
+				re_ctx->workspace, re_ctx->wscount);
+	} while(re_ctx->last_result == PCRE_ERROR_DFA_WSSIZE);
 
 	if (re_ctx->last_result == 0)
 		return 1;
@@ -249,7 +314,7 @@ error:
 	return -1;
 }
 
-static int vbfeed(const struct regexp_ctx *re_ctx, struct vbuffer *vbuf)
+static int vbfeed(struct regexp_ctx *re_ctx, struct vbuffer *vbuf)
 {
 	int ret;
 	size_t len;

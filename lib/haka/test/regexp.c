@@ -139,7 +139,7 @@ START_TEST(regexp_exec_should_not_match_when_string_does_not_match)
 }
 END_TEST
 
-START_TEST(regexp_free_should_not_fail)
+START_TEST(regexp_release_should_not_fail)
 {
 	// Given
 	struct regexp_module *rem = some_regexp_module();
@@ -147,7 +147,7 @@ START_TEST(regexp_free_should_not_fail)
 	clear_error();
 
 	// When
-	rem->free_regexp(re);
+	rem->release_regexp(re);
 
 	// Then
 	ck_check_error;
@@ -455,7 +455,7 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, regexp_compile_should_should_fail_with_module_error);
 	tcase_add_test(tcase, regexp_exec_should_match_when_string_match);
 	tcase_add_test(tcase, regexp_exec_should_not_match_when_string_does_not_match);
-	tcase_add_test(tcase, regexp_free_should_not_fail);
+	tcase_add_test(tcase, regexp_release_should_not_fail);
 	tcase_add_test(tcase, regexp_match_should_be_successful_when_string_match);
 	tcase_add_test(tcase, regexp_match_should_not_match_when_string_does_not_match);
 	suite_add_tcase(suite, tcase);

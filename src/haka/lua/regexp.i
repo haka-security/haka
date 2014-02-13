@@ -38,7 +38,7 @@ struct regexp {
                 }
 
                 ~regexp() {
-                        $self->module->free_regexp($self);
+                        $self->module->release_regexp($self);
                 }
         }
 };
