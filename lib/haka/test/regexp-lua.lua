@@ -74,11 +74,23 @@ function test_exec_should_fail_when_pattern_do_not_match ()
         assert(not ret, "Non-matching pattern expected to failed but return match")
 end
 
+function test_get_ctx_should_be_successful ()
+        -- Given
+        local re = rem.re:compile(".*")
+
+        -- When
+        local ret, msg = pcall(function () re:get_ctx() end)
+
+        -- Then
+        assert(ret, string.format("Regexp stream should not failed but failed with message %s", msg))
+end
+
 function test_feed_should_not_fail ()
 	-- Given
 	local re = rem.re:compile(".*")
+        local re_ctx = re:get_ctx()
 	-- When
-	local ret, msg = pcall(function () re:feed("aaa") end)
+	local ret, msg = pcall(function () re_ctx:feed("aaa") end)
 	-- Then
 	assert(ret, string.format("Regexp feed should not failed but failed with message %s", msg))
 end
@@ -86,11 +98,18 @@ end
 function test_feed_should_match_accross_two_string ()
         -- Given
         local re = rem.re:compile("ab")
+        local re_ctx = re:get_ctx()
         -- When
-        local ret = re:feed("aaa")
-        ret = re:feed("bbb")
+        local ret = re_ctx:feed("aaa")
+        ret = re_ctx:feed("bbb")
         -- Then
         assert(ret, "Matching pattern expected to match over two string but failed")
+end
+
+function test_exec_should_accept_vbuffer ()
+        -- Given
+        local re = rem.re:compile("aaa")
+        local vbuf = "todo"
 end
 
 
@@ -103,5 +122,6 @@ test_compile_should_fail_with_bad_pattern()
 test_exec_should_not_fail ()
 test_exec_should_be_successful()
 test_exec_should_fail_when_pattern_do_not_match()
+test_get_ctx_should_be_successful()
 test_feed_should_not_fail()
 test_feed_should_match_accross_two_string ()

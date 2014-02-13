@@ -147,7 +147,7 @@ START_TEST(regexp_free_should_not_fail)
 	clear_error();
 
 	// When
-	rem->free(re);
+	rem->free_regexp(re);
 
 	// Then
 	ck_check_error;
@@ -184,16 +184,34 @@ START_TEST(regexp_match_should_not_match_when_string_does_not_match)
 }
 END_TEST
 
-START_TEST(regexp_feed_should_not_fail_when_feed_twice)
+START_TEST(regexp_get_ctx_should_return_regexp_ctx)
 {
+	struct regexp_ctx *re_ctx;
+
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile(".*");
 	clear_error();
 
 	// When
-	rem->feed(re, "aaa", 3);
-	rem->feed(re, "bbb", 3);
+	re_ctx = rem->get_ctx(re);
+
+	// Then
+	ck_assert_msg(re_ctx != NULL, "get_ctx expected to return a regexp_ctx, but found NULL");
+}
+END_TEST
+
+START_TEST(regexp_feed_should_not_fail_when_feed_twice)
+{
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct regexp *re = rem->compile(".*");
+	struct regexp_ctx *re_ctx = rem->get_ctx(re);
+	clear_error();
+
+	// When
+	rem->feed(re_ctx, "aaa", 3);
+	rem->feed(re_ctx, "bbb", 3);
 
 	// Then
 	ck_check_error;
@@ -207,10 +225,11 @@ START_TEST(regexp_feed_should_match)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile(".*");
+	struct regexp_ctx *re_ctx = rem->get_ctx(re);
 	clear_error();
 
 	// When
-	ret = rem->feed(re, "aaa", 3);
+	ret = rem->feed(re_ctx, "aaa", 3);
 
 	// Then
 	ck_check_error;
@@ -226,11 +245,12 @@ START_TEST(regexp_feed_should_match_accross_two_string)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("ab");
+	struct regexp_ctx *re_ctx = rem->get_ctx(re);
 	clear_error();
 
 	// When
-	ret = rem->feed(re, "aaa", 3);
-	ret = rem->feed(re, "bbb", 3);
+	ret = rem->feed(re_ctx, "aaa", 3);
+	ret = rem->feed(re_ctx, "bbb", 3);
 
 	// Then
 	ck_check_error;
@@ -245,10 +265,11 @@ START_TEST(regexp_feed_should_not_fail_if_no_match)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("abc");
+	struct regexp_ctx *re_ctx = rem->get_ctx(re);
 	clear_error();
 
 	// When
-	ret = rem->feed(re, "aaa", 3);
+	ret = rem->feed(re_ctx, "aaa", 3);
 
 	// Then
 	ck_check_error;
@@ -349,11 +370,12 @@ START_TEST(regexp_vbfeed_should_match_on_vbuffer)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile(".*");
+	struct regexp_ctx *re_ctx = rem->get_ctx(re);
 	struct vbuffer *vb = some_vbuffer("aaa", NULL);
 	clear_error();
 
 	// When
-	ret = rem->vbfeed(re, vb);
+	ret = rem->vbfeed(re_ctx, vb);
 
 	// Then
 	ck_check_error;
@@ -368,13 +390,14 @@ START_TEST(regexp_vbfeed_should_match_on_multiple_vbuffer)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("abbbcccd");
+	struct regexp_ctx *re_ctx = rem->get_ctx(re);
 	struct vbuffer *vb1 = some_vbuffer("aaa", "bbb", NULL);
 	struct vbuffer *vb2 = some_vbuffer("ccc", "ddd", NULL);
 	clear_error();
 
 	// When
-	ret = rem->vbfeed(re, vb1);
-	ret = rem->vbfeed(re, vb2);
+	ret = rem->vbfeed(re_ctx, vb1);
+	ret = rem->vbfeed(re_ctx, vb2);
 
 	// Then
 	ck_check_error;
@@ -438,6 +461,7 @@ Suite* regexp_suite(void)
 	suite_add_tcase(suite, tcase);
 
 	tcase = tcase_create("regexp_feed");
+	tcase_add_test(tcase, regexp_get_ctx_should_return_regexp_ctx);
 	tcase_add_test(tcase, regexp_feed_should_not_fail_when_feed_twice);
 	tcase_add_test(tcase, regexp_feed_should_match);
 	tcase_add_test(tcase, regexp_feed_should_match_accross_two_string);

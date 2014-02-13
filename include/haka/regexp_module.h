@@ -9,22 +9,31 @@
 #include <haka/vbuffer.h>
 
 struct regexp;
+struct regexp_ctx;
 
 struct regexp_module {
 	struct module module;
 
-	struct regexp *(*compile)(const char *pattern);
-	void (*free)(struct regexp *regexp);
-	int (*exec)(const struct regexp *regexp, const char *buffer, int len);
-	int (*match)(const char *pattern, const char *buffer, int len);
-	int (*feed)(const struct regexp *regexp, const char *buffer, int len);
-	int (*vbexec)(const struct regexp *regexp, struct vbuffer *vbuf);
-	int (*vbmatch)(const char *pattern, struct vbuffer *vbuf);
-	int (*vbfeed)(const struct regexp *regexp, struct vbuffer *vbuf);
+	int                    (*match)(const char *pattern, const char *buffer, int len);
+	int                    (*vbmatch)(const char *pattern, struct vbuffer *vbuf);
+
+	struct regexp *        (*compile)(const char *pattern);
+	void                   (*free_regexp)(struct regexp *regexp);
+	int                    (*exec)(const struct regexp *regexp, const char *buffer, int len);
+	int                    (*vbexec)(const struct regexp *regexp, struct vbuffer *vbuf);
+
+	struct regexp_ctx * (*get_ctx)(const struct regexp *regexp);
+	void                   (*free_regexp_ctx)(const struct regexp_ctx *re_ctx);
+	int                    (*feed)(const struct regexp_ctx *re_ctx, const char *buffer, int len);
+	int                    (*vbfeed)(const struct regexp_ctx *re_ctx, struct vbuffer *vbuf);
 };
 
 struct regexp  {
-	struct regexp_module *module;
+	const struct regexp_module *module;
+};
+
+struct regexp_ctx {
+	const struct regexp *regexp;
 };
 
 struct regexp_module *regexp_module_load(const char *module_name, struct parameters *args);
