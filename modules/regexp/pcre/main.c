@@ -10,6 +10,8 @@
 #include <haka/regexp_module.h>
 #include <haka/thread.h>
 
+// workspace vector should contain at least 20 elements
+// see pcreapi(3)
 #define WSCOUNT_DEFAULT 20
 
 #define CHECK_REGEXP_TYPE(re)\
@@ -53,9 +55,9 @@ static int            exec(struct regexp *re, const char *buf, int len);
 static int            vbexec(struct regexp *re, struct vbuffer *vbuf);
 
 static struct regexp_ctx *get_ctx(struct regexp *re);
-static void                  free_regexp_ctx(struct regexp_ctx *re_ctx);
-static int                   feed(struct regexp_ctx *re_ctx, const char *buf, int len);
-static int                   vbfeed(struct regexp_ctx *re_ctx, struct vbuffer *vbuf);
+static void               free_regexp_ctx(struct regexp_ctx *re_ctx);
+static int                feed(struct regexp_ctx *re_ctx, const char *buf, int len);
+static int                vbfeed(struct regexp_ctx *re_ctx, struct vbuffer *vbuf);
 
 struct regexp_module HAKA_MODULE = {
 	module: {
@@ -70,15 +72,15 @@ struct regexp_module HAKA_MODULE = {
 	match:   match,
 	vbmatch: vbmatch,
 
-	compile:     compile,
+	compile:        compile,
 	release_regexp: release_regexp,
-	exec:        exec,
-	vbexec:      vbexec,
+	exec:           exec,
+	vbexec:         vbexec,
 
 	get_ctx:         get_ctx,
 	free_regexp_ctx: free_regexp_ctx,
-	feed:               feed,
-	vbfeed:             vbfeed,
+	feed:            feed,
+	vbfeed:          vbfeed,
 };
 
 static int init(struct parameters *args)
@@ -278,6 +280,8 @@ static bool workspace_grow(struct regexp_ctx_pcre *re_ctx)
 
 static int feed(struct regexp_ctx *_re_ctx, const char *buf, int len)
 {
+	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match
+	 * We use PCRE_DFA_SHORTEST because we want to stop as soon as possible */
 	int options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
 	struct regexp_pcre *re;
 	struct regexp_ctx_pcre *re_ctx = (struct regexp_ctx_pcre *)_re_ctx;
