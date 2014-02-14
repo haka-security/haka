@@ -5,7 +5,10 @@
 include(TestUnit)
 include(TestUnitLua)
 
-TEST_UNIT(libhaka regexp regexp.c)
-target_link_libraries(libhaka-regexp libhaka)
+get_property(module-regexp GLOBAL PROPERTY module-regexp)
+foreach(module IN LISTS module-regexp)
+	TEST_UNIT(MODULE libhaka NAME regexp-${module} FILES regexp.c ENV "HAKA_MODULE=${module}")
+	target_link_libraries(libhaka-regexp-${module} libhaka)
 
-TEST_UNIT_LUA(libhaka regexp-lua)
+	TEST_UNIT_LUA(MODULE libhaka NAME regexp-${module}-lua FILES regexp-lua ENV "HAKA_MODULE=${module}")
+endforeach(module)

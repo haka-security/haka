@@ -28,6 +28,7 @@ macro(DEPENDS_MODULE target name type)
 endmacro(DEPENDS_MODULE)
 
 macro(INSTALL_MODULE target type)
+	set_property(GLOBAL APPEND PROPERTY module-${type} ${target})
 	include_directories(.)
 	target_link_libraries(${target} libhaka)
 	install(TARGETS ${target} LIBRARY DESTINATION ${MODULE_INSTALL_PATH}/${type})

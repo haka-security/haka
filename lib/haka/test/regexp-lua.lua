@@ -3,7 +3,9 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 -- Given
-local rem = require('regexp/pcre')
+local module = os.getenv("HAKA_MODULE")
+print("got env var " .. module)
+local rem = require("regexp/" .. module)
 
 function test_match_should_not_fail ()
         -- When
