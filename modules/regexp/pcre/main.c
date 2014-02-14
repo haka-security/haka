@@ -16,7 +16,7 @@
 	do {\
 		if (re == NULL || re->regexp.module != &HAKA_MODULE) {\
 			error(L"Wrong regexp struct passed to PCRE module");\
-			goto error;\
+			goto type_error;\
 		}\
 	} while(0);
 
@@ -24,7 +24,7 @@
 	do {\
 		if (re_ctx == NULL || re_ctx->regexp_ctx.regexp->module != &HAKA_MODULE) {\
 			error(L"Wrong regexp_ctx struct passed to PCRE module");\
-			goto error;\
+			goto type_error;\
 		}\
 	} while(0);
 
@@ -164,7 +164,7 @@ static void release_regexp(struct regexp *_re)
 	pcre_free(re->pcre);
 	free(re);
 
-error:
+type_error:
 	return;
 }
 
@@ -188,7 +188,7 @@ static int exec(struct regexp *_re, const char *buf, int len)
 			return ret;
 	}
 
-error:
+type_error:
 	return -1;
 }
 
@@ -228,9 +228,12 @@ static struct regexp_ctx *get_ctx(struct regexp *_re)
 	atomic_inc(&re->regexp.ref_count);
 
 	return (struct regexp_ctx *)re_ctx;
+
 error:
-	free(re_ctx->workspace);
+	if (re_ctx != NULL)
+		free(re_ctx->workspace);
 	free(re_ctx);
+type_error:
 	return NULL;
 }
 
@@ -243,7 +246,7 @@ static void free_regexp_ctx(struct regexp_ctx *_re_ctx)
 	free(re_ctx->workspace);
 	free(re_ctx);
 
-error:
+type_error:
 	return;
 }
 
@@ -311,6 +314,7 @@ static int feed(struct regexp_ctx *_re_ctx, const char *buf, int len)
 	}
 
 error:
+type_error:
 	return -1;
 }
 
