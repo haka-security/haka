@@ -118,11 +118,14 @@ static int vbmatch(const char *pattern, struct vbuffer *vbuf)
 		return -1;
 
 	re_ctx = get_ctx(re);
-	if (re_ctx == NULL)
-		return -1;
+	if (re_ctx == NULL) {
+		ret = -1;
+		goto out;
+	}
 
 	ret = vbfeed(re_ctx, vbuf);
 
+out:
 	free_regexp_ctx(re_ctx);
 	release_regexp(re);
 
