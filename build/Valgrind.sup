@@ -26,3 +26,90 @@
    fun:module_load
    ...
 }
+{
+   <check_tcase_create_leak>
+   Memcheck:Leak
+   fun:malloc
+   fun:emalloc
+   ...
+   fun:tcase_create
+   ...
+}
+{
+   <check_tcase_add_test_leak>
+   Memcheck:Leak
+   fun:malloc
+   fun:emalloc
+   ...
+   fun:_tcase_add_test
+   ...
+}
+{
+   <check_srunner_leak>
+   Memcheck:Leak
+   fun:malloc
+   fun:emalloc
+   ...
+   fun:srunner_create
+   ...
+}
+{
+   <check_list_leak>
+   Memcheck:Leak
+   fun:malloc
+   fun:emalloc
+   fun:check_list_create
+   ...
+}
+{
+   <check_list_add_leak>
+   Memcheck:Leak
+   fun:realloc
+   fun:erealloc
+   fun:maybe_grow
+   fun:list_add_end
+   ...
+}
+{
+   <check_suite_create_leak>
+   Memcheck:Leak
+   fun:malloc
+   fun:emalloc
+   fun:suite_create
+   ...
+}
+{
+   <check_srunner_init_leak>
+   Memcheck:Leak
+   fun:malloc
+   fun:emalloc
+   ...
+   fun:srunner_init_logging
+   ...
+}
+{
+   <check_setup_pipe_leak>
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:setup_pipe
+   ...
+}
+{
+   <check_receive_test_result>
+   Memcheck:Leak
+   fun:malloc
+   fun:emalloc
+   ...
+   fun:receive_test_result
+   ...
+}
+{
+   <check_pass_msg_leak>
+   Memcheck:Leak
+   fun:malloc
+   fun:emalloc
+   fun:pass_msg
+   fun:srunner_run_all
+   ...
+}
