@@ -13,6 +13,8 @@
 // workspace vector should contain at least 20 elements
 // see pcreapi(3)
 #define WSCOUNT_DEFAULT 20
+// We don't want workspace to grow over 4 KB = 1024 int32
+#define WS_MAX 1024
 
 #define CHECK_REGEXP_TYPE(re)\
 	do {\
@@ -254,6 +256,11 @@ static bool workspace_grow(struct regexp_ctx_pcre *re_ctx)
 	struct regexp_pcre *re = (struct regexp_pcre *)re_ctx->regexp_ctx.regexp;
 
 	re_ctx->wscount *= 2;
+
+	if (re_ctx->wscount > WS_MAX) {
+		error(L"PCRE workspace too big, max allowed size is %d int", WS_MAX);
+		return false;
+	}
 
 	/* Here test and assign are not thread safe.
 	 * That could override assigned value
