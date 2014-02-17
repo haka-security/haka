@@ -43,7 +43,7 @@ struct regexp_pcre {
 
 struct regexp_ctx_pcre {
 	struct regexp_ctx regexp_ctx;
-	int last_result;
+	bool start;
 	atomic_t wscount;
 	int *workspace;
 };
@@ -222,7 +222,7 @@ static struct regexp_ctx *get_ctx(struct regexp *_re)
 	}
 
 	re_ctx->regexp_ctx.regexp = _re;
-	re_ctx->last_result = PCRE_ERROR_NOMATCH;
+	re_ctx->start = false;
 	re_ctx->wscount = re->wscount_max;
 	re_ctx->workspace = calloc(re_ctx->wscount, sizeof(int));
 	if (!re_ctx->workspace) {
@@ -293,6 +293,7 @@ static int feed(struct regexp_ctx *_re_ctx, const char *buf, int len)
 	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match
 	 * We use PCRE_DFA_SHORTEST because we want to stop as soon as possible */
 	int options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
+	int result = 0;
 	struct regexp_pcre *re;
 	struct regexp_ctx_pcre *re_ctx = (struct regexp_ctx_pcre *)_re_ctx;
 	CHECK_REGEXP_CTX_TYPE(re_ctx);
@@ -304,31 +305,33 @@ static int feed(struct regexp_ctx *_re_ctx, const char *buf, int len)
 
 	re = (struct regexp_pcre *)_re_ctx->regexp;
 
-	if (re_ctx->last_result == PCRE_ERROR_PARTIAL) {
+	if (!re_ctx->start) {
+		re_ctx->start = true;
+	} else {
 		options |= PCRE_DFA_RESTART;
 	}
 
 	do {
 		/* We run out of space so grow workspace */
-		if (re_ctx->last_result == PCRE_ERROR_DFA_WSSIZE) {
+		if (result == PCRE_ERROR_DFA_WSSIZE) {
 			if (!workspace_grow(re_ctx)) {
 				goto error;
 			}
 		}
 
-		re_ctx->last_result = pcre_dfa_exec(re->pcre, NULL,
+		result = pcre_dfa_exec(re->pcre, NULL,
 				buf, len, 0, options, NULL, 0,
 				re_ctx->workspace, re_ctx->wscount);
-	} while(re_ctx->last_result == PCRE_ERROR_DFA_WSSIZE);
+	} while(result == PCRE_ERROR_DFA_WSSIZE);
 
-	if (re_ctx->last_result == 0) return 1;
+	if (result == 0) return 1;
 
-	switch (re_ctx->last_result) {
+	switch (result) {
 		case PCRE_ERROR_NOMATCH:
 		case PCRE_ERROR_PARTIAL:
 			return 0;
 		default:
-			error(L"PCRE internal error %d", re_ctx->last_result);
+			error(L"PCRE internal error %d", result);
 			return -1;
 	}
 

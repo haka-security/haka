@@ -538,6 +538,29 @@ START_TEST(regexp_vbmatch_should_match_on_multiple_vbuffer)
 }
 END_TEST
 
+START_TEST(nonreg_regexp_should_not_match_after_start_of_line_if_pattern_start_with_circum)
+{
+	int ret;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct vbuffer *vb = some_vbuffer("aaa", "abc", NULL);
+	clear_error();
+
+	// When
+	ret = rem->vbmatch("^abc", vb);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret == 0, "regexp expected to not match after start of line, but found ret = %d", ret);
+
+	// Finally
+	vbuffer_free(vb);
+	regexp_module_release(rem);
+
+}
+END_TEST
+
 Suite* regexp_suite(void)
 {
 	Suite *suite = suite_create("regexp_suite");
@@ -572,6 +595,10 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, regexp_vbfeed_should_match_on_multiple_vbuffer);
 	tcase_add_test(tcase, regexp_vbmatch_should_match_on_vbuffer);
 	tcase_add_test(tcase, regexp_vbmatch_should_match_on_multiple_vbuffer);
+	suite_add_tcase(suite, tcase);
+
+	tcase = tcase_create("regexp_nonreg");
+	tcase_add_test(tcase, nonreg_regexp_should_not_match_after_start_of_line_if_pattern_start_with_circum);
 	suite_add_tcase(suite, tcase);
 
 	return suite;
