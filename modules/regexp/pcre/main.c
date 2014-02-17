@@ -7,8 +7,11 @@
 #include <string.h>
 
 #include <haka/error.h>
+#include <haka/log.h>
 #include <haka/regexp_module.h>
 #include <haka/thread.h>
+
+#define LOG_MODULE L"pcre"
 
 // workspace vector should contain at least 20 elements
 // see pcreapi(3)
@@ -256,6 +259,8 @@ static bool workspace_grow(struct regexp_ctx_pcre *re_ctx)
 	struct regexp_pcre *re = (struct regexp_pcre *)re_ctx->regexp_ctx.regexp;
 
 	re_ctx->wscount *= 2;
+
+	messagef(HAKA_LOG_DEBUG, LOG_MODULE, L"growing PCRE workspace to %d int", re_ctx->wscount);
 
 	if (re_ctx->wscount > WS_MAX) {
 		error(L"PCRE workspace too big, max allowed size is %d int", WS_MAX);
