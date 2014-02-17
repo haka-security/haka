@@ -4,6 +4,7 @@
 
 # Tests
 include(TestPcap)
+include(TestUnitLua)
 
 TEST_PCAP(core rule-error)
 TEST_PCAP(core onexit)
@@ -28,3 +29,4 @@ TEST_PCAP(core httpmodif CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka
 TEST_PCAP(core tcpfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/filter/tcpfilter.lua)
 TEST_PCAP(core stats_on_exit CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/stats/stats_on_exit.lua)
 TEST_PCAP(core doc-alert CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/ref/alert-test.lua)
+TEST_UNIT_LUA(MODULE core NAME doc-regexp FILES ../../doc/ref/regexp.lua)
