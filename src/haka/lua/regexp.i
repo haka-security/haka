@@ -25,11 +25,11 @@ struct regexp_ctx {
 %newobject regexp::get_ctx;
 struct regexp {
         %extend {
-                bool exec(const char *STRING, size_t SIZE) {
+                bool match(const char *STRING, size_t SIZE) {
                         return $self->module->exec($self, STRING, SIZE);
                 }
 
-                bool exec(struct vbuffer *vbuf) {
+                bool match(struct vbuffer *vbuf) {
                         return $self->module->vbexec($self, vbuf);
                 }
 

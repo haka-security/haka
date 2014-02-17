@@ -53,7 +53,7 @@ function test_exec_should_not_fail ()
 	-- Given
 	local re = rem.re:compile(".*")
 	-- When
-	local ret, msg = pcall(function () re:exec("aaa") end)
+	local ret, msg = pcall(function () re:match("aaa") end)
 	-- Then
 	assert(ret , string.format("Regexp exec should not failed but failed with message %s", msg))
 end
@@ -62,7 +62,7 @@ function test_exec_should_be_successful ()
         -- Given
         local re = rem.re:compile(".*")
         -- When
-        local ret = re:exec("aaa")
+        local ret = re:match("aaa")
         -- Then
         assert(ret, "Matching pattern expected to match but failed")
 end
@@ -71,7 +71,7 @@ function test_exec_should_fail_when_pattern_do_not_match ()
         -- Given
         local re = rem.re:compile("abc")
         -- When
-        local ret = re:exec("aaa")
+        local ret = re:match("aaa")
         -- Then
         assert(not ret, "Non-matching pattern expected to failed but return match")
 end
