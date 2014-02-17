@@ -39,5 +39,6 @@ struct regexp_ctx {
 };
 
 struct regexp_module *regexp_module_load(const char *module_name, struct parameters *args);
+void regexp_module_release(struct regexp_module *module);
 
 #endif /* _HAKA_LOG_MODULE_H */

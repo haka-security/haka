@@ -15,3 +15,8 @@ struct regexp_module *regexp_module_load(const char *module_name, struct paramet
 
 	return (struct regexp_module *)module;
 }
+
+void regexp_module_release(struct regexp_module *module)
+{
+	module_release((struct module *)module);
+}
