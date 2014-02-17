@@ -18,12 +18,12 @@ struct regexp_module {
 	int                    (*match)(const char *pattern, const char *buffer, int len);
 	int                    (*vbmatch)(const char *pattern, struct vbuffer *vbuf);
 
-	struct regexp *        (*compile)(const char *pattern);
+	struct regexp         *(*compile)(const char *pattern);
 	void                   (*release_regexp)(struct regexp *regexp);
 	int                    (*exec)(struct regexp *regexp, const char *buffer, int len);
 	int                    (*vbexec)(struct regexp *regexp, struct vbuffer *vbuf);
 
-	struct regexp_ctx *    (*get_ctx)(struct regexp *regexp);
+	struct regexp_ctx     *(*get_ctx)(struct regexp *regexp);
 	void                   (*free_regexp_ctx)(struct regexp_ctx *re_ctx);
 	int                    (*feed)(struct regexp_ctx *re_ctx, const char *buffer, int len);
 	int                    (*vbfeed)(struct regexp_ctx *re_ctx, struct vbuffer *vbuf);

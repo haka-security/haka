@@ -20,7 +20,7 @@
 			error(L"Wrong regexp struct passed to PCRE module");\
 			goto type_error;\
 		}\
-	} while(0);
+	} while(0)
 
 #define CHECK_REGEXP_CTX_TYPE(re_ctx)\
 	do {\
@@ -28,7 +28,7 @@
 			error(L"Wrong regexp_ctx struct passed to PCRE module");\
 			goto type_error;\
 		}\
-	} while(0);
+	} while(0)
 
 struct regexp_pcre {
 	struct regexp regexp;
@@ -97,8 +97,7 @@ static int match(const char *pattern, const char *buf, int len)
 	int ret;
 	struct regexp *re = compile(pattern);
 
-	if (re == NULL)
-		return -1;
+	if (re == NULL) return -1;
 
 	ret = exec(re, buf, len);
 
@@ -114,8 +113,7 @@ static int vbmatch(const char *pattern, struct vbuffer *vbuf)
 	struct regexp_ctx *re_ctx;
 
 	re = compile(pattern);
-	if (re == NULL)
-		return -1;
+	if (re == NULL) return -1;
 
 	re_ctx = get_ctx(re);
 	if (re_ctx == NULL) {
@@ -139,14 +137,13 @@ static struct regexp *compile(const char *pattern)
 	struct regexp_pcre *re = malloc(sizeof(struct regexp_pcre));
 	if (!re) {
 		error(L"memory error");
-		goto error;
+		return NULL;
 	}
 
 
 	re->regexp.module = &HAKA_MODULE;
 	re->pcre = pcre_compile(pattern, 0, &errorstr, &erroffset, NULL);
-	if (re->pcre == NULL)
-		goto error;
+	if (re->pcre == NULL) goto error;
 	re->regexp.ref_count = 1;
 	re->wscount_max = WSCOUNT_DEFAULT;
 
@@ -163,8 +160,7 @@ static void release_regexp(struct regexp *_re)
 	struct regexp_pcre *re = (struct regexp_pcre *)_re;
 	CHECK_REGEXP_TYPE(re);
 
-	if (atomic_dec(&re->regexp.ref_count) != 0)
-		return;
+	if (atomic_dec(&re->regexp.ref_count) != 0) return;
 
 	pcre_free(re->pcre);
 	free(re);
@@ -182,8 +178,7 @@ static int exec(struct regexp *_re, const char *buf, int len)
 	ret = pcre_exec(re->pcre, NULL, buf, len, 0, 0, NULL,
 			0);
 
-	if (ret == 0)
-		return 1;
+	if (ret == 0) return 1;
 
 	switch (ret) {
 		case PCRE_ERROR_NOMATCH:
@@ -235,8 +230,7 @@ static struct regexp_ctx *get_ctx(struct regexp *_re)
 	return (struct regexp_ctx *)re_ctx;
 
 error:
-	if (re_ctx != NULL)
-		free(re_ctx->workspace);
+	if (re_ctx != NULL) free(re_ctx->workspace);
 	free(re_ctx);
 type_error:
 	return NULL;
@@ -269,8 +263,9 @@ static bool workspace_grow(struct regexp_ctx_pcre *re_ctx)
 	 * Even that worst case is not dangerous since the only effect will be
 	 * that new regexp_ctx will have undersized workspace.
 	 */
-	if (re_ctx->wscount > re->wscount_max)
+	if (re_ctx->wscount > re->wscount_max) {
 		re->wscount_max = re_ctx->wscount;
+	}
 
 	re_ctx->workspace = realloc(re_ctx->workspace, re_ctx->wscount*sizeof(int));
 	if (!re_ctx->workspace) {
@@ -290,10 +285,16 @@ static int feed(struct regexp_ctx *_re_ctx, const char *buf, int len)
 	struct regexp_ctx_pcre *re_ctx = (struct regexp_ctx_pcre *)_re_ctx;
 	CHECK_REGEXP_CTX_TYPE(re_ctx);
 
+	if (re_ctx->workspace == NULL) {
+		error(L"Invalid re_ctx. NULL workspace");
+		goto error;
+	}
+
 	re = (struct regexp_pcre *)_re_ctx->regexp;
 
-	if (re_ctx->last_result == PCRE_ERROR_PARTIAL)
+	if (re_ctx->last_result == PCRE_ERROR_PARTIAL) {
 		options |= PCRE_DFA_RESTART;
+	}
 
 	do {
 		/* We run out of space so grow workspace */
@@ -308,8 +309,7 @@ static int feed(struct regexp_ctx *_re_ctx, const char *buf, int len)
 				re_ctx->workspace, re_ctx->wscount);
 	} while(re_ctx->last_result == PCRE_ERROR_DFA_WSSIZE);
 
-	if (re_ctx->last_result == 0)
-		return 1;
+	if (re_ctx->last_result == 0) return 1;
 
 	switch (re_ctx->last_result) {
 		case PCRE_ERROR_NOMATCH:

@@ -120,7 +120,6 @@ INLINE uint32 atomic_inc(atomic_t *v) { return __sync_add_and_fetch(v, 1); }
 INLINE uint32 atomic_dec(atomic_t *v) { return __sync_sub_and_fetch(v, 1); }
 INLINE uint32 atomic_get(atomic_t *v) { return *v; }
 INLINE void atomic_set(atomic_t *v, uint32 x) { *v = x; }
-INLINE void atomic_check_and_set(atomic_t *v, uint32 x) { }
 
 
 /* Atomic counter (64 bits) */
