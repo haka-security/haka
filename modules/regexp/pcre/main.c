@@ -334,14 +334,15 @@ type_error:
 
 static int vbfeed(struct regexp_ctx *re_ctx, struct vbuffer *vbuf)
 {
-	int ret;
+	int ret = 0;
 	size_t len;
 	void *iter = NULL;
+	const uint8 *ptr;
 
-	do {
-		const uint8 *ptr = vbuffer_mmap(vbuf, &iter, &len, false);
+	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
 		ret = feed(re_ctx, (const char *)ptr, len);
-	} while (ret == 0 && (vbuf = vbuf->next) != NULL);
+		if (ret != 0) break;
+	}
 
 	return ret;
 }
