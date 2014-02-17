@@ -324,7 +324,7 @@ static int feed(struct regexp_ctx *_re_ctx, const char *buf, int len)
 			return 0;
 		default:
 			error(L"PCRE internal error %d", re_ctx->last_result);
-			return re_ctx->last_result;
+			return -1;
 	}
 
 error:
