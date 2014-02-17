@@ -38,6 +38,8 @@ static void haka_initialized_with_good_path(void)
 			haka_path_s, HAKA_MODULE_PATH);
 
 	module_set_path(path);
+
+	free(path);
 }
 
 START_TEST(regexp_module_load_should_be_successful)
@@ -52,6 +54,9 @@ START_TEST(regexp_module_load_should_be_successful)
 	// Then
 	ck_check_error;
 	ck_assert_msg(module != NULL, "regexp module expected to load, but got NULL module");
+
+	// Finally
+	regexp_module_release(module);
 }
 END_TEST
 
@@ -75,6 +80,9 @@ END_TEST
 static struct regexp_module *some_regexp_module(void)
 {
 	haka_initialized_with_good_path();
+	/* regexp_module_load is sensitive about remaining error
+	 * we have to clear all error before calling it */
+	clear_error();
 	return regexp_module_load(MODULE, NULL);
 }
 
@@ -90,6 +98,10 @@ START_TEST(regexp_compile_should_be_successful)
 	// Then
 	ck_check_error;
 	ck_assert_msg(re != NULL, "compile expected to be successful on valid regexp '.*', but found NULL regexp");
+
+	// Finally
+	rem->release_regexp(re);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -107,6 +119,10 @@ START_TEST(regexp_compile_should_should_fail_with_module_error)
 	const wchar_t *error = clear_error();
 	ck_assert_msg(wcsncmp(error, L"PCRE compilation failed with error '", 36) == 0,
 			"Was expecting 'PCRE compilation failed with error '...', but found '%ls'", error);
+
+	// Finally
+	rem->release_regexp(re);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -123,6 +139,10 @@ START_TEST(regexp_exec_should_match_when_string_match)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret > 0, "exec expected to match, but found ret = %d", ret);
+
+	// Finally
+	rem->release_regexp(re);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -139,6 +159,10 @@ START_TEST(regexp_exec_should_not_match_when_string_does_not_match)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret == 0, "exec expected to not match, but found ret = %d", ret);
+
+	// Finally
+	rem->release_regexp(re);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -154,6 +178,9 @@ START_TEST(regexp_release_should_not_fail)
 
 	// Then
 	ck_check_error;
+
+	// Finally
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -169,6 +196,9 @@ START_TEST(regexp_match_should_be_successful_when_string_match)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret > 0, "match expected to match, but found ret = %d", ret);
+
+	// Finally
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -184,6 +214,9 @@ START_TEST(regexp_match_should_not_match_when_string_does_not_match)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret == 0, "match expected not to match, but found ret = %d", ret);
+
+	// Finally
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -201,6 +234,11 @@ START_TEST(regexp_get_ctx_should_return_regexp_ctx)
 
 	// Then
 	ck_assert_msg(re_ctx != NULL, "get_ctx expected to return a regexp_ctx, but found NULL");
+
+	// Finally
+	rem->free_regexp_ctx(re_ctx);
+	rem->release_regexp(re);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -218,6 +256,11 @@ START_TEST(regexp_feed_should_not_fail_when_feed_twice)
 
 	// Then
 	ck_check_error;
+
+	// Finally
+	rem->free_regexp_ctx(re_ctx);
+	rem->release_regexp(re);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -238,6 +281,10 @@ START_TEST(regexp_feed_should_match)
 	ck_check_error;
 	ck_assert_msg(ret > 0, "feed expected to match, but found ret = %d", ret);
 
+	// Finally
+	rem->free_regexp_ctx(re_ctx);
+	rem->release_regexp(re);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -258,6 +305,11 @@ START_TEST(regexp_feed_should_match_accross_two_string)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret > 0, "feed expected to match accross two string, but found ret = %d", ret);
+
+	// Finally
+	rem->free_regexp_ctx(re_ctx);
+	rem->release_regexp(re);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -277,6 +329,11 @@ START_TEST(regexp_feed_should_not_fail_if_no_match)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret == 0, "feed expected not to fail if no match, but found ret = %d", ret);
+
+	// Finally
+	rem->free_regexp_ctx(re_ctx);
+	rem->release_regexp(re);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -327,6 +384,11 @@ START_TEST(regexp_vbexec_should_match_on_vbuffer)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret > 0, "vbexec expected to match on vbuffer, but found ret = %d", ret);
+
+	// Finally
+	rem->release_regexp(re);
+	vbuffer_free(vb);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -346,6 +408,11 @@ START_TEST(regexp_vbexec_should_match_on_multiple_vbuffer)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret > 0, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
+
+	// Finally
+	rem->release_regexp(re);
+	vbuffer_free(vb);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -363,6 +430,11 @@ START_TEST(regexp_vbexec_should_not_change_vbuffer_flags)
 	// Then
 	ck_check_error;
 	ck_assert_msg(!vbuffer_ismodified(vb), "vbexec expected to not modify vbuffer flags, but found vbuffer is in modified state");
+
+	// Finally
+	rem->release_regexp(re);
+	vbuffer_free(vb);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -383,6 +455,12 @@ START_TEST(regexp_vbfeed_should_match_on_vbuffer)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret > 0, "vbfeed expected to match on vbuffer, but found ret = %d", ret);
+
+	// Finally
+	rem->free_regexp_ctx(re_ctx);
+	rem->release_regexp(re);
+	vbuffer_free(vb);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -406,6 +484,13 @@ START_TEST(regexp_vbfeed_should_match_on_multiple_vbuffer)
 	ck_check_error;
 	ck_assert_msg(ret > 0, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
 
+
+	// Finally
+	rem->free_regexp_ctx(re_ctx);
+	rem->release_regexp(re);
+	vbuffer_free(vb1);
+	vbuffer_free(vb2);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -424,6 +509,10 @@ START_TEST(regexp_vbmatch_should_match_on_vbuffer)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret > 0, "match expected to match on vbuffer, but found ret = %d", ret);
+
+	// Finally
+	vbuffer_free(vb);
+	regexp_module_release(rem);
 }
 END_TEST
 
@@ -442,6 +531,10 @@ START_TEST(regexp_vbmatch_should_match_on_multiple_vbuffer)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret > 0, "match expected to match on multiple vbuffer, but found ret = %d", ret);
+
+	// Finally
+	vbuffer_free(vb);
+	regexp_module_release(rem);
 }
 END_TEST
 
