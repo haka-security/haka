@@ -13,6 +13,9 @@
 
 #define ck_check_error     if (check_error()) { ck_abort_msg("Error: %ls", clear_error()); return; }
 
+#define MODULE_NAME_LEN 254
+static char MODULE[MODULE_NAME_LEN];
+
 static void haka_initialized_with_good_path(void)
 {
 	const char *haka_path_s = getenv("HAKA_PATH");
@@ -44,7 +47,7 @@ START_TEST(regexp_module_load_should_be_successful)
 	clear_error();
 
 	// When
-	struct regexp_module *module = regexp_module_load("regexp/pcre", NULL);
+	struct regexp_module *module = regexp_module_load(MODULE, NULL);
 
 	// Then
 	ck_check_error;
@@ -72,7 +75,7 @@ END_TEST
 static struct regexp_module *some_regexp_module(void)
 {
 	haka_initialized_with_good_path();
-	return regexp_module_load("regexp/pcre", NULL);
+	return regexp_module_load(MODULE, NULL);
 }
 
 START_TEST(regexp_compile_should_be_successful)
@@ -484,6 +487,7 @@ Suite* regexp_suite(void)
 int main(int argc, char *argv[])
 {
 	int number_failed;
+	snprintf(MODULE, MODULE_NAME_LEN, "regexp/%s", getenv("HAKA_MODULE"));
 
 	SRunner *runner = srunner_create(regexp_suite());
 	srunner_set_fork_status(runner, CK_NOFORK);
