@@ -20,7 +20,7 @@ Types
 
         :param pattern: Regular expression pattern
         :paramtype pattern: string
-        :param string: String against wich regular expression is matched
+        :param string: String against which regular expression is matched
         :paramtype string: string
 
         :rtype: bool
@@ -35,7 +35,7 @@ Types
 
         :param pattern: Regular expression pattern
         :paramtype pattern: string
-        :param vbuffer: vbuffer against wich regular expression is matched
+        :param vbuffer: vbuffer against which regular expression is matched
         :paramtype vbuffer: vbuffer
 
         :rtype: bool
@@ -63,7 +63,7 @@ Types
 
         Match the compiled regular expression against a given string.
 
-        :param string: String against wich regular expression is matched
+        :param string: String against which regular expression is matched
         :paramtype string: string
 
         :rtype: bool
@@ -75,7 +75,7 @@ Types
 
         Match the compiled regular expression against a given vbuffer.
 
-        :param vbuffer: vbuffer against wich regular expression is matched
+        :param vbuffer: vbuffer against which regular expression is matched
         :paramtype vbuffer: vbuffer
 
         :rtype: bool
@@ -99,7 +99,7 @@ Types
 
         Match the compiled regular expression across multiple string.
 
-        :param string: String against wich regular expression is matched
+        :param string: String against which regular expression is matched
         :paramtype string: string
 
         :rtype: bool
@@ -111,7 +111,7 @@ Types
 
         Match the compiled regular expression across multiple vbuffer.
 
-        :param vbuffer: vbuffer against wich regular expression is matched
+        :param vbuffer: vbuffer against which regular expression is matched
         :paramtype vbuffer: vbuffer
 
         :rtype: bool
