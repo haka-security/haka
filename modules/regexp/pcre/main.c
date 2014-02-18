@@ -17,7 +17,7 @@
 // see pcreapi(3)
 #define WSCOUNT_DEFAULT 20
 // We don't want workspace to grow over 4 KB = 1024 int32
-#define WS_MAX 1024
+#define WSCOUNT_MAX 1024
 
 #define CHECK_REGEXP_TYPE(re)\
 	do {\
@@ -262,8 +262,8 @@ static bool workspace_grow(struct regexp_ctx_pcre *re_ctx)
 
 	messagef(HAKA_LOG_DEBUG, LOG_MODULE, L"growing PCRE workspace to %d int", re_ctx->wscount);
 
-	if (re_ctx->wscount > WS_MAX) {
-		error(L"PCRE workspace too big, max allowed size is %d int", WS_MAX);
+	if (re_ctx->wscount > WSCOUNT_MAX) {
+		error(L"PCRE workspace too big, max allowed size is %d int", WSCOUNT_MAX);
 		return false;
 	}
 
