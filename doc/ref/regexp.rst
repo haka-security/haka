@@ -23,6 +23,7 @@ Types
         :param string: String against wich regular expression is matched
         :paramtype string: string
 
+        :rtype: bool
         :return: true if pattern matched, false otherwise
 
         :raises Error: if pattern compilation fails
@@ -37,6 +38,7 @@ Types
         :param vbuffer: vbuffer against wich regular expression is matched
         :paramtype vbuffer: vbuffer
 
+        :rtype: bool
         :return: true if pattern matched, false otherwise
 
         :raises Error: if pattern compilation fails
@@ -49,6 +51,7 @@ Types
         :param pattern: Regular expression pattern
         :paramtype pattern: string
 
+        :rtype: :lua:class:`regexp.regexp`
         :return: a regexp object
 
         :raises Error: if pattern compilation fails
@@ -63,6 +66,7 @@ Types
         :param string: String against wich regular expression is matched
         :paramtype string: string
 
+        :rtype: bool
         :return: true if pattern matched, false otherwise
 
         :raises Error: if internal regular expression engine fails
@@ -74,6 +78,7 @@ Types
         :param vbuffer: vbuffer against wich regular expression is matched
         :paramtype vbuffer: vbuffer
 
+        :rtype: bool
         :return: true if pattern matched, false otherwise
 
         :raises Error: if internal regular expression engine fails
@@ -83,6 +88,7 @@ Types
         Create a regexp context that can be eventually used for matching the
         regular expression against chunck of data
 
+        :rtype: :lua:class:`regexp.regexp_ctx`
         :return: a regexp_ctx object
 
         :raises Error: if internal regular expression engine fails
@@ -96,6 +102,7 @@ Types
         :param string: String against wich regular expression is matched
         :paramtype string: string
 
+        :rtype: bool
         :return: true if pattern matched, false otherwise
 
         :raises Error: if internal regular expression engine fails
@@ -107,6 +114,7 @@ Types
         :param vbuffer: vbuffer against wich regular expression is matched
         :paramtype vbuffer: vbuffer
 
+        :rtype: bool
         :return: true if pattern matched, false otherwise
 
         :raises Error: if internal regular expression engine fails
