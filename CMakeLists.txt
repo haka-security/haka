@@ -216,6 +216,7 @@ add_custom_target(pretests-build
 )
 
 add_custom_target(pretests
+	COMMAND rm -rf ${CMAKE_BINARY_DIR}/test
 	COMMAND $(MAKE) install/fast DESTDIR=${CMAKE_BINARY_DIR}/test > /dev/null
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Preparing tests environment..." VERBATIM

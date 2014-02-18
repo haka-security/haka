@@ -17,7 +17,7 @@
 struct packet {
 	struct lua_object        lua_object;
 	atomic_t                 ref;
-	struct vbuffer          *payload;
+	struct vbuffer           payload;
 };
 
 struct packet_module_state;

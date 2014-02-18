@@ -6,3 +6,6 @@ include(TestUnit)
 
 TEST_UNIT(libhaka vbuffer vbuffer.c)
 target_link_libraries(libhaka-vbuffer libhaka)
+
+TEST_UNIT(libhaka vbuffer-stream vbuffer_stream.c)
+target_link_libraries(libhaka-vbuffer-stream libhaka)

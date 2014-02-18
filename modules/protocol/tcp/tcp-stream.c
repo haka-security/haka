@@ -23,13 +23,13 @@ enum tcp_modif_type {
 struct tcp_stream;
 
 struct tcp_stream_chunk_modif {
-	enum tcp_modif_type             type;
-	uint64                          position;
-	size_t                          length;
+	enum tcp_modif_type            type;
+	uint64                         position;
+	size_t                         length;
 };
 
 struct tcp_stream_chunk {
-	struct list                    list;
+	struct list2_elem              list;
 	struct tcp                    *tcp;
 	uint64                         start_seq;
 	uint64                         end_seq;
@@ -37,26 +37,20 @@ struct tcp_stream_chunk {
 	struct vector                  modifs;
 };
 
-struct tcp_stream *tcp_stream_create()
+bool tcp_stream_create(struct tcp_stream *stream)
 {
-	struct tcp_stream *stream = malloc(sizeof(struct tcp_stream));
-	if (!stream) {
-		error(L"memory error");
-		return NULL;
-	}
-
 	memset(stream, 0, sizeof(struct tcp_stream));
 
-	stream->stream = vbuffer_stream();
-	if (!stream->stream) {
-		free(stream);
-		return NULL;
+	if (!vbuffer_stream_init(&stream->stream)) {
+		return false;
 	}
 
-	lua_object_init(&stream->lua_object);
+	stream->lua_object = lua_object_init;
+	list2_init(&stream->current);
+	list2_init(&stream->queued);
+	list2_init(&stream->sent);
 	stream->start_seq = (uint32)-1;
-
-	return stream;
+	return true;
 }
 
 static void tcp_stream_chunk_free(struct tcp_stream_chunk *chunk)
@@ -70,24 +64,26 @@ static void tcp_stream_chunk_free(struct tcp_stream_chunk *chunk)
 	free(chunk);
 }
 
-static void tcp_stream_free_chunks(struct tcp_stream_chunk *chunks)
+static void tcp_stream_free_chunks(struct list2 *list)
 {
-	while (chunks) {
-		struct tcp_stream_chunk *next = list_next(chunks);
-		tcp_stream_chunk_free(chunks);
-		chunks = next;
+	list2_iter iter = list2_begin(list);
+	const list2_iter end = list2_end(list);
+
+	while (iter != end) {
+		struct tcp_stream_chunk *chunk = list2_get(iter, struct tcp_stream_chunk);
+		iter = list2_erase(iter);
+		tcp_stream_chunk_free(chunk);
 	}
 }
 
-void tcp_stream_free(struct tcp_stream *stream)
+void tcp_stream_clear(struct tcp_stream *stream)
 {
-	tcp_stream_free_chunks(stream->first);
-	tcp_stream_free_chunks(stream->queued_first);
-	tcp_stream_free_chunks(stream->sent_first);
+	tcp_stream_free_chunks(&stream->current);
+	tcp_stream_free_chunks(&stream->queued);
+	tcp_stream_free_chunks(&stream->sent);
 
 	lua_object_release(stream, &stream->lua_object);
-	vbuffer_stream_free(stream->stream);
-	free(stream);
+	vbuffer_stream_clear(&stream->stream);
 }
 
 void tcp_stream_init(struct tcp_stream *stream, uint32 seq)
@@ -125,7 +121,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp)
 	}
 
 	chunk->tcp = tcp;
-	list_init(chunk);
+	list2_elem_init(&chunk->list);
 	vector_create(&chunk->modifs, struct tcp_stream_chunk_modif, NULL);
 
 	ref_seq = stream->last_sent_seq + stream->start_seq;
@@ -136,41 +132,49 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp)
 	chunk->offset_seq = 0;
 
 	if (stream->last_seq == chunk->start_seq) {
-		struct tcp_stream_chunk *iter = stream->queued_first;
-
-		list_insert_after(chunk, stream->last, &stream->first, &stream->last);
-		vbuffer_stream_push(stream->stream, tcp->payload);
-		tcp->payload = NULL;
+		list2_insert(list2_end(&stream->current), &chunk->list);
+		vbuffer_stream_push(&stream->stream, &tcp->payload);
 		stream->last_seq = chunk->end_seq;
 
 		/* Check for queued packets */
-		while (iter && iter->start_seq == stream->last_seq) {
-			struct tcp_stream_chunk *next = list_next(iter);
-			list_remove(iter, &stream->queued_first, &stream->queued_last);
+		{
+			list2_iter iter = list2_begin(&stream->queued);
+			const list2_iter end = list2_end(&stream->queued);
 
-			list_insert_after(iter, stream->last, &stream->first, &stream->last);
-			vbuffer_stream_push(stream->stream, iter->tcp->payload);
-			iter->tcp->payload = NULL;
-			stream->last_seq = chunk->end_seq;
+			while (iter != end) {
+				struct tcp_stream_chunk *qchunk = list2_get(iter, struct tcp_stream_chunk);
 
-			iter = next;
+				if (qchunk->start_seq != stream->last_seq) {
+					break;
+				}
+
+				iter = list2_erase(iter);
+
+				list2_insert(list2_end(&stream->current), &qchunk->list);
+				vbuffer_stream_push(&stream->stream, &qchunk->tcp->payload);
+				stream->last_seq = qchunk->end_seq;
+			}
 		}
 	}
 	else if (chunk->start_seq > stream->last_seq) {
 		/* Search for insert point */
-		struct tcp_stream_chunk *iter = stream->queued_first;
+		list2_iter iter = list2_begin(&stream->queued);
+		const list2_iter end = list2_end(&stream->queued);
+		struct tcp_stream_chunk *qchunk = NULL;
 
-		while (iter && iter->start_seq <= chunk->start_seq) {
-			iter = list_next(iter);
+		while (iter != end) {
+			qchunk = list2_get(iter, struct tcp_stream_chunk);
+			if (qchunk->start_seq > chunk->start_seq) break;
+			iter = list2_next(iter);
 		}
 
-		if (iter && chunk->end_seq > iter->start_seq) {
+		if (iter != end && chunk->end_seq > qchunk->start_seq) {
 			message(HAKA_LOG_WARNING, L"tcp-connection", L"retransmit packet (ignored)");
 			tcp_stream_chunk_free(chunk);
 			return false;
 		}
 
-		list_insert_before(chunk, iter, &stream->queued_first, &stream->queued_last);
+		list2_insert(iter, &chunk->list);
 	}
 	else {
 		message(HAKA_LOG_WARNING, L"tcp-connection", L"retransmit packet (ignored)");
@@ -185,38 +189,39 @@ struct tcp *tcp_stream_pop(struct tcp_stream *stream)
 {
 	struct tcp *tcp;
 	struct tcp_stream_chunk *chunk;
-	struct vbuffer *available;
+	struct vbuffer available;
 
-	if (!stream->first) {
+	if (list2_empty(&stream->current)) {
 		// TODO: we should generate a new forged packet in this case
 		// if the vbuffer_stream contains some data
 		return NULL;
 	}
 
-	available = vbuffer_stream_pop(stream->stream);
-	if (!available) {
+	if (!vbuffer_stream_pop(&stream->stream, &available)) {
 		/* No data available yet */
 		return NULL;
 	}
 
-	chunk = stream->first;
+	chunk = list2_first(&stream->current, struct tcp_stream_chunk);
+	list2_erase(&chunk->list);
+
 	tcp = chunk->tcp;
-	assert(tcp);
-	assert(!tcp->payload);
-
-	list_remove(chunk, &stream->first, &stream->last);
 	chunk->tcp = NULL;
-	assert(!stream->sent_last || chunk->start_seq == stream->sent_last->end_seq);
-	list_insert_after(chunk, stream->sent_last, &stream->sent_first, &stream->sent_last);
+	assert(tcp);
+	assert(!vbuffer_isvalid(&tcp->payload));
 
-	chunk->offset_seq = ((int64)vbuffer_size(available)) - (chunk->end_seq - chunk->start_seq);
+	assert(!list2_last(&stream->sent, struct tcp_stream_chunk) ||
+	       chunk->start_seq == list2_last(&stream->sent, struct tcp_stream_chunk)->end_seq);
+	list2_insert(list2_end(&stream->sent), &chunk->list);
+
+	chunk->offset_seq = ((int64)vbuffer_size(&available)) - (chunk->end_seq - chunk->start_seq);
 
 	/* TODO: Compute modifications lists if we want to be able to
 	 * correctly offset seq number that are not aligned with a packet
 	 * boundary */
 
 	/* Update tcp packet */
-	tcp->payload = available;
+	vbuffer_transfer(&tcp->payload, &available);
 	tcp_stream_seq(stream, tcp);
 
 	stream->last_sent_seq = chunk->end_seq;
@@ -233,44 +238,51 @@ void tcp_stream_ack(struct tcp_stream *stream, struct tcp *tcp)
 {
 	uint64 ack = tcp_get_ack_seq(tcp);
 	uint64 seq, new_seq;
-	struct tcp_stream_chunk *iter;
+	struct tcp_stream_chunk *chunk;
+	list2_iter iter, end;
 
-	iter = stream->sent_first;
-	if (!iter) {
+	iter = list2_begin(&stream->sent);
+	end = list2_end(&stream->sent);
+
+	if (iter == end) {
 		return;
 	}
 
-	seq = stream->sent_offset_seq + iter->start_seq;
+	chunk = list2_get(iter, struct tcp_stream_chunk);
+	seq = stream->sent_offset_seq + chunk->start_seq;
 	ack = tcp_remap_seq(ack, seq);
 	ack -= stream->start_seq;
 
-	new_seq = iter->start_seq;
+	new_seq = chunk->start_seq;
 
-	while (iter) {
-		if (seq + (iter->end_seq - iter->start_seq) + iter->offset_seq > ack) {
+	while (iter != end) {
+		chunk = list2_get(iter, struct tcp_stream_chunk);
+
+		if (seq + (chunk->end_seq - chunk->start_seq) + chunk->offset_seq > ack) {
 			break;
 		}
 
-		seq += (iter->end_seq - iter->start_seq) + iter->offset_seq;
-		new_seq = iter->end_seq;
+		seq += (chunk->end_seq - chunk->start_seq) + chunk->offset_seq;
+		new_seq = chunk->end_seq;
 		if (ack <= seq) {
 			break;
 		}
 
-		assert(!list_next(iter) || list_next(iter)->start_seq == iter->end_seq);
+		assert(list2_atend(list2_next(iter)) ||
+		       list2_get(list2_next(iter), struct tcp_stream_chunk)->start_seq == chunk->end_seq);
 
-		iter = list_next(iter);
+		iter = list2_next(iter);
 	}
 
 	/* Find the exact ack position taking into account the modifs
 	 * TODO: Not sure this is really needed. */
-	/*if (iter)
+	/*if (chunk)
 	{
-		const int count = vector_count(&iter->modifs);
+		const int count = vector_count(&chunk->modifs);
 		int i, offset = 0;
 
 		for (i=0; i<count; ++i) {
-			struct tcp_stream_chunk_modif *modif = vector_get(&iter->modifs, struct tcp_stream_chunk_modif, i);
+			struct tcp_stream_chunk_modif *modif = vector_get(&chunk->modifs, struct tcp_stream_chunk_modif, i);
 
 			if (seq + (modif->position - offset) >= ack) {
 				break;

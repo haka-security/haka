@@ -7,6 +7,7 @@
 #include <haka/tcp.h>
 #include <haka/lua/ref.h>
 #include <haka/lua/object.h>
+#include <haka/tcp-stream.h>
 
 
 struct tcp_stream;
@@ -18,8 +19,10 @@ struct tcp_connection {
 	uint16               srcport;
 	uint16               dstport;
 	struct lua_ref       lua_table;
-	struct tcp_stream   *stream_input;
-	struct tcp_stream   *stream_output;
+	bool                 released:1;
+	bool                 dropped:1;
+	struct tcp_stream    stream_input;
+	struct tcp_stream    stream_output;
 };
 
 struct tcp_connection *tcp_connection_new(struct tcp *tcp);
@@ -27,8 +30,10 @@ struct tcp_connection *tcp_connection_get(struct tcp *tcp, bool *direction_in, b
 
 INLINE struct tcp_stream *tcp_connection_get_stream(struct tcp_connection *conn, bool direction_in)
 {
-	if (direction_in) return conn->stream_input;
-	else return conn->stream_output;
+	if (conn->released) return NULL;
+
+	if (direction_in) return &conn->stream_input;
+	else return &conn->stream_output;
 }
 
 void tcp_connection_close(struct tcp_connection *tcp_conn);

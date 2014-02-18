@@ -108,7 +108,7 @@ function dissector.EncapsulatedPacketDissector.method:__init(parent)
 end
 
 function dissector.EncapsulatedPacketDissector.method:parse(pkt, init)
-	self._payload, self._select = pkt.payload:right(0):select()
+	self._payload = pkt.payload
 	self:parse_payload(pkt, self._payload, init)
 end
 
@@ -118,8 +118,6 @@ end
 
 function dissector.EncapsulatedPacketDissector.method:forge(pkt)
 	self:forge_payload(pkt, self._payload)
-	self._select:restore(self._payload)
-	self._select = nil
 	self._payload = nil
 end
 

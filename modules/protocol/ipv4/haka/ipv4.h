@@ -53,11 +53,11 @@ struct ipv4_header {
 
 /* IPv4 opaque structure */
 struct ipv4 {
-	struct packet       *packet;
-	struct lua_object    lua_object;
-	struct vbuffer      *payload;
-	struct vbuffer      *select;
-	bool                 invalid_checksum:1;
+	struct packet          *packet;
+	struct lua_object       lua_object;
+	struct vbuffer          payload;
+	struct vbuffer_iterator select;
+	bool                    invalid_checksum:1;
 };
 
 struct ipv4 *ipv4_dissect(struct packet *packet);
@@ -68,9 +68,9 @@ void ipv4_release(struct ipv4 *ip);
 bool ipv4_verify_checksum(struct ipv4 *ip);
 void ipv4_compute_checksum(struct ipv4 *ip);
 int16 inet_checksum(uint16 *ptr, size_t size);
-int16 inet_checksum_vbuffer(struct vsubbuffer *buf);
+int16 inet_checksum_vbuffer(struct vbuffer_sub *buf);
 int32 inet_checksum_partial(uint16 *ptr, size_t size, bool *odd);
-int32 inet_checksum_vbuffer_partial(struct vsubbuffer *buf, bool *odd);
+int32 inet_checksum_vbuffer_partial(struct vbuffer_sub *buf, bool *odd);
 int16 inet_checksum_reduce(int32 sum);
 size_t ipv4_get_payload_length(struct ipv4 *ip);
 const char *ipv4_get_proto_dissector(struct ipv4 *ip);

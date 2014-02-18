@@ -60,12 +60,12 @@ struct tcp_header {
 
 /* TCP opaque structure */
 struct tcp {
-	struct ipv4         *packet;
-	struct lua_object    lua_object;
-	struct vbuffer      *payload;
-	struct vbuffer      *select;
-	bool                 modified:1;
-	bool                 invalid_checksum:1;
+	struct ipv4            *packet;
+	struct lua_object       lua_object;
+	struct vbuffer          payload;
+	struct vbuffer_iterator select;
+	bool                    modified:1;
+	bool                    invalid_checksum:1;
 };
 
 struct tcp *tcp_dissect(struct ipv4 *packet);

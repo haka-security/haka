@@ -6,294 +6,479 @@
 #include <check.h>
 #include <haka/vbuffer.h>
 #include <haka/error.h>
+#include <haka/types.h>
 
-#define ck_check_error     if (check_error()) { ck_abort_msg("Error"); return; }
+#define ck_check_error     if (check_error()) { ck_abort_msg("Error: %ls", clear_error()); return; }
 
-/*
- * vbuffer
- */
 
-START_TEST(vbuffer_test_create)
+static const size_t size = 150;
+static const char *string = "abcdefghijklmnopqrstuvwxyz";
+
+/* Build a buffer with 2 chunks */
+static void vbuffer_test_build(struct vbuffer *buffer1)
 {
-	clear_error();
+	struct vbuffer buffer2 = vbuffer_init;
 
-	struct vbuffer *buffer = vbuffer_create_new(150);
+	ck_assert(vbuffer_create_new(buffer1, size, true));
 	ck_check_error;
-	ck_assert(buffer != NULL);
-	vbuffer_free(buffer);
+
+	ck_assert(vbuffer_create_from(&buffer2, string, strlen(string)));
+	ck_check_error;
+
+	vbuffer_append(buffer1, &buffer2);
+	ck_check_error;
+
+	vbuffer_release(&buffer2);
+	ck_check_error;
+
+	ck_assert(vbuffer_size(buffer1) == size+strlen(string));
+}
+
+START_TEST(test_create)
+{
+	struct vbuffer buffer = vbuffer_init;
+
+	/* Test if the buffer creation is ok */
+	vbuffer_test_build(&buffer);
+	ck_check_error;
+
+	/* Cleanup */
+	vbuffer_release(&buffer);
 	ck_check_error;
 }
 END_TEST
 
-START_TEST(vbuffer_test_insert)
+START_TEST(test_iterator_available)
 {
-	clear_error();
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_iterator iter;
 
-	struct vbuffer *buffer = vbuffer_create_new(150);
+	vbuffer_test_build(&buffer);
 	ck_check_error;
-	ck_assert(buffer != NULL);
 
-	struct vbuffer *insert = vbuffer_create_new(12);
-	ck_check_error;
-	ck_assert(insert != NULL);
+	/* Check the available size from the beginning */
+	ck_assert(vbuffer_begin(&buffer, &iter));
+	ck_assert_int_eq(vbuffer_iterator_available(&iter), size+strlen(string));
+	ck_assert(vbuffer_iterator_check_available(&iter, size+10, NULL));
+	vbuffer_iterator_clear(&iter);
 
-	vbuffer_insert(buffer, 15, insert);
-	ck_check_error;
-	ck_assert(vbuffer_size(buffer) == 150+12);
+	/* Check the available size from the middle of it */
+	ck_assert(vbuffer_position(&buffer, &iter, 48));
+	ck_assert_int_eq(vbuffer_iterator_available(&iter), size+strlen(string)-48);
+	ck_assert(vbuffer_iterator_check_available(&iter, 10, NULL));
+	vbuffer_iterator_clear(&iter);
 
-	vbuffer_free(buffer);
+	/* Check the available size from the end */
+	ck_assert(vbuffer_end(&buffer, &iter));
+	ck_assert_int_eq(vbuffer_iterator_available(&iter), 0);
+	ck_assert(!vbuffer_iterator_check_available(&iter, 10, NULL));
+	vbuffer_iterator_clear(&iter);
+
+	vbuffer_release(&buffer);
+	vbuffer_iterator_clear(&iter);
 	ck_check_error;
 }
 END_TEST
 
-START_TEST(vbuffer_test_insert_begin)
+static const size_t insert_offset = 21;
+
+/* Build an interleaved buffer with 2 chunks */
+static void vbuffer_test_build2(struct vbuffer *buffer1)
 {
-	clear_error();
+	struct vbuffer buffer2 = vbuffer_init;
+	struct vbuffer_iterator iter;
 
-	struct vbuffer *buffer = vbuffer_create_new(150);
+	ck_assert(vbuffer_create_new(buffer1, size, true));
 	ck_check_error;
-	ck_assert(buffer != NULL);
 
-	struct vbuffer *insert = vbuffer_create_new(103);
+	ck_assert(vbuffer_create_from(&buffer2, string, strlen(string)));
 	ck_check_error;
-	ck_assert(insert != NULL);
 
-	vbuffer_insert(buffer, 0, insert);
+	ck_assert(vbuffer_begin(buffer1, &iter));
+
+	/* Do not use ck_assert_int_eq here as it will call vbuffer_iterator_advance
+	 * twice in this case.
+	 */
+	ck_assert(vbuffer_iterator_advance(&iter, insert_offset) == insert_offset);
+
+	ck_assert_int_eq(vbuffer_iterator_available(&iter), size-insert_offset);
 	ck_check_error;
-	ck_assert(vbuffer_size(buffer) == 150+103);
 
-	vbuffer_free(buffer);
+	vbuffer_iterator_insert(&iter, &buffer2);
+	ck_check_error;
+
+	vbuffer_release(&buffer2);
+	ck_check_error;
+
+	ck_assert_int_eq(vbuffer_size(buffer1), size+strlen(string));
+
+	vbuffer_iterator_clear(&iter);
+	ck_check_error;
+}
+
+START_TEST(test_insert)
+{
+	struct vbuffer buffer = vbuffer_init;
+	vbuffer_test_build2(&buffer);
+	vbuffer_clear(&buffer);
 	ck_check_error;
 }
 END_TEST
 
-START_TEST(vbuffer_test_select)
+START_TEST(test_erase)
 {
-	clear_error();
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_sub sub;
+	vbuffer_test_build2(&buffer);
 
-	struct vbuffer *buffer = vbuffer_create_new(150);
+	/* Erase part of the buffer */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, 30));
 	ck_check_error;
-	ck_assert(buffer != NULL);
 
-	struct vbuffer *ref;
-	struct vbuffer *select = vbuffer_select(buffer, 15, 100, &ref);
-	ck_check_error;
-	ck_assert(select != NULL);
-	ck_assert(vbuffer_size(buffer) == 150-100);
-	ck_assert(vbuffer_size(select) == 100);
+	vbuffer_erase(&sub);
+	ck_assert_int_eq(vbuffer_size(&buffer), size+strlen(string)-30);
+	vbuffer_sub_clear(&sub);
 
-	vbuffer_restore(ref, select);
-	ck_check_error;
-	ck_assert(vbuffer_size(buffer) == 150);
+	/* Erase the rest of the buffer */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, ALL));
+	vbuffer_erase(&sub);
+	ck_assert_int_eq(vbuffer_size(&buffer), 0);
+	vbuffer_sub_clear(&sub);
 
-	vbuffer_free(buffer);
+	vbuffer_release(&buffer);
 	ck_check_error;
 }
 END_TEST
 
-START_TEST(vbuffer_test_select_begin)
+START_TEST(test_extract)
 {
-	clear_error();
+	struct vbuffer buffer = vbuffer_init, extract = vbuffer_init;
+	struct vbuffer_sub sub;
+	vbuffer_test_build2(&buffer);
 
-	struct vbuffer *buffer = vbuffer_create_new(150);
+	/* Extract part of it */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, 12, 100));
 	ck_check_error;
-	ck_assert(buffer != NULL);
 
-	struct vbuffer *ref;
-	struct vbuffer *select = vbuffer_select(buffer, 0, 100, &ref);
+	vbuffer_extract(&sub, &extract);
+	ck_assert_int_eq(vbuffer_size(&extract), 100);
+	ck_assert_int_eq(vbuffer_size(&buffer), size+strlen(string)-100);
+	vbuffer_clear(&extract);
+	vbuffer_sub_clear(&sub);
+
+	/* Extract the rest */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, ALL));
 	ck_check_error;
-	ck_assert(select != NULL);
-	ck_assert(vbuffer_size(buffer) == 150-100);
-	ck_assert(vbuffer_size(select) == 100);
 
-	vbuffer_restore(ref, select);
-	ck_check_error;
-	ck_assert(vbuffer_size(buffer) == 150);
+	vbuffer_extract(&sub, &extract);
+	ck_assert_int_eq(vbuffer_size(&buffer), 0);
+	vbuffer_release(&extract);
+	vbuffer_sub_clear(&sub);
 
-	vbuffer_free(buffer);
+	vbuffer_release(&buffer);
 	ck_check_error;
 }
 END_TEST
 
-Suite* vbuffer_suite(void)
+START_TEST(test_mmap)
 {
-	Suite *suite = suite_create("vbuffer_suite");
-	TCase *tcase = tcase_create("case");
-	tcase_add_test(tcase, vbuffer_test_create);
-	tcase_add_test(tcase, vbuffer_test_insert);
-	tcase_add_test(tcase, vbuffer_test_insert_begin);
-	tcase_add_test(tcase, vbuffer_test_select);
-	tcase_add_test(tcase, vbuffer_test_select_begin);
-	suite_add_tcase(suite, tcase);
-	return suite;
-}
+	struct vbuffer_sub_mmap mmapiter = vbuffer_mmap_init;
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_sub sub;
+	int count = 0;
+	size_t len = 0;
+	uint8 *ptr;
 
-
-/*
- * vbuffer_stream
- */
-
-START_TEST(vbuffer_stream_test_create)
-{
-	clear_error();
-
-	struct vbuffer_stream *stream = vbuffer_stream();
-	ck_check_error;
-	ck_assert(stream != NULL);
-	vbuffer_stream_free(stream);
-	ck_check_error;
-}
-END_TEST
-
-START_TEST(vbuffer_stream_test_push_pop)
-{
-	clear_error();
-
-	struct vbuffer_stream *stream = vbuffer_stream();
-	ck_check_error;
-	ck_assert(stream != NULL);
-
-	struct vbuffer *buffer1 = vbuffer_create_new(150);
-	ck_check_error;
-	ck_assert(buffer1 != NULL);
-	struct vbuffer *buffer2 = vbuffer_create_new(213);
-	ck_check_error;
-	ck_assert(buffer2 != NULL);
-
-	vbuffer_stream_push(stream, buffer1);
-	ck_check_error;
-	buffer1 = vbuffer_stream_pop(stream);
-	ck_check_error;
-	ck_assert(buffer1 != NULL);
-	ck_assert(vbuffer_size(buffer1) == 150);
-
-	vbuffer_stream_push(stream, buffer2);
-	ck_check_error;
-	buffer2 = vbuffer_stream_pop(stream);
-	ck_check_error;
-	ck_assert(buffer2 != NULL);
-	ck_assert(vbuffer_size(buffer2) == 213);
-
-	if (buffer1) vbuffer_free(buffer1);
-	if (buffer2) vbuffer_free(buffer2);
-	vbuffer_stream_free(stream);
-}
-END_TEST
-
-START_TEST(vbuffer_stream_test_push_pop_interleaved)
-{
-	clear_error();
-
-	struct vbuffer_stream *stream = vbuffer_stream();
-	ck_check_error;
-	ck_assert(stream != NULL);
-
-	struct vbuffer *buffer1 = vbuffer_create_new(150);
-	ck_check_error;
-	ck_assert(buffer1 != NULL);
-	struct vbuffer *buffer2 = vbuffer_create_new(213);
-	ck_check_error;
-	ck_assert(buffer2 != NULL);
-
-	vbuffer_stream_push(stream, buffer1);
-	ck_check_error;
-	vbuffer_stream_push(stream, buffer2);
+	vbuffer_test_build2(&buffer);
 	ck_check_error;
 
-	buffer1 = vbuffer_stream_pop(stream);
+	vbuffer_sub_create(&sub, &buffer, 0, ALL);
 	ck_check_error;
-	ck_assert(buffer1 != NULL);
-	ck_assert(vbuffer_size(buffer1) == 150);
 
-	buffer2 = vbuffer_stream_pop(stream);
-	ck_check_error;
-	ck_assert(buffer2 != NULL);
-	ck_assert(vbuffer_size(buffer2) == 213);
+	/* mmap the whole buffer and check the returned memory blocks */
+	while ((ptr = vbuffer_mmap(&sub, &len, false, &mmapiter))) {
+		++count;
+		ck_check_error;
 
-	if (buffer1) vbuffer_free(buffer1);
-	if (buffer2) vbuffer_free(buffer2);
-	vbuffer_stream_free(stream);
+		switch (count) {
+		case 1:  ck_assert_int_eq(len, insert_offset); break;
+		case 2:  ck_assert_int_eq(len, strlen(string)); ck_assert_int_eq(memcmp(ptr, string, strlen(string)), 0); break;
+		case 3:  ck_assert_int_eq(len, size-insert_offset); break;
+		default: ck_abort_msg("too many mmap blocks"); break;
+		}
+	}
+
+	vbuffer_release(&buffer);
 	ck_check_error;
 }
 END_TEST
 
-START_TEST(vbuffer_stream_test_mark)
+START_TEST(test_select)
 {
-	clear_error();
+	struct vbuffer select = vbuffer_init;
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_sub sub;
+	struct vbuffer_iterator ref;
+	vbuffer_test_build2(&buffer);
 
-	struct vbuffer_stream *stream = vbuffer_stream();
-	ck_check_error;
-	ck_assert(stream != NULL);
-
-	struct vbuffer *buffer1 = vbuffer_create_new(150);
-	ck_check_error;
-	ck_assert(buffer1 != NULL);
-	struct vbuffer *buffer2 = vbuffer_create_new(213);
-	ck_check_error;
-	ck_assert(buffer2 != NULL);
-
-	vbuffer_stream_push(stream, buffer1);
+	/* Select sub buffer */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset/2, strlen(string)+insert_offset));
 	ck_check_error;
 
-	struct vbuffer_iterator mark;
-	vbuffer_iterator(vbuffer_stream_data(stream), &mark, 15, false, false);
-	vbuffer_iterator_register(&mark);
+	ck_assert(vbuffer_select(&sub, &select, &ref));
 	ck_check_error;
 
-	vbuffer_stream_push(stream, buffer2);
-	ck_check_error;
+	ck_assert_int_eq(vbuffer_size(&buffer), size-insert_offset);
+	ck_assert_int_eq(vbuffer_size(&select), strlen(string)+insert_offset);
 
-	buffer1 = vbuffer_stream_pop(stream);
+	/* Restore it */
+	ck_assert(vbuffer_restore(&ref, &select));
 	ck_check_error;
-	ck_assert(buffer1 == NULL);
+	ck_assert_int_eq(vbuffer_size(&buffer), size+strlen(string));
 
-	vbuffer_iterator_unregister(&mark);
-	ck_check_error;
-
-	buffer1 = vbuffer_stream_pop(stream);
-	ck_check_error;
-	ck_assert(buffer1 != NULL);
-	ck_assert(vbuffer_size(buffer1) == 150);
-
-	buffer2 = vbuffer_stream_pop(stream);
-	ck_check_error;
-	ck_assert(buffer2 != NULL);
-	ck_assert(vbuffer_size(buffer2) == 213);
-
-	if (buffer1) vbuffer_free(buffer1);
-	if (buffer2) vbuffer_free(buffer2);
-	vbuffer_stream_free(stream);
+	vbuffer_release(&buffer);
 	ck_check_error;
 }
 END_TEST
 
-Suite* vbuffer_stream_suite(void)
+START_TEST(test_flatten)
 {
-	Suite *suite = suite_create("vbuffer_stream_suite");
-	TCase *tcase = tcase_create("case");
-	tcase_add_test(tcase, vbuffer_stream_test_create);
-	tcase_add_test(tcase, vbuffer_stream_test_push_pop);
-	tcase_add_test(tcase, vbuffer_stream_test_push_pop_interleaved);
-	tcase_add_test(tcase, vbuffer_stream_test_mark);
-	suite_add_tcase(suite, tcase);
-	return suite;
-}
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_sub sub;
+	vbuffer_test_build2(&buffer);
 
+	/* Check flatness of part of the buffer */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset+2, strlen(string)/2));
+	ck_check_error;
+	ck_assert(vbuffer_sub_isflat(&sub));
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+
+	/* Check flatness of the whole buffer */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, ALL));
+	ck_check_error;
+	ck_assert(!vbuffer_sub_isflat(&sub));
+	ck_check_error;
+
+	/* Flatten the whole buffer */
+	ck_assert(vbuffer_sub_flatten(&sub, NULL) != NULL);
+	ck_assert(vbuffer_sub_isflat(&sub));
+	ck_check_error;
+	ck_assert_int_eq(vbuffer_size(&buffer), size+strlen(string));
+
+	vbuffer_release(&buffer);
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+}
+END_TEST
+
+START_TEST(test_compact)
+{
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_sub sub;
+	struct vbuffer_iterator iter;
+
+	ck_assert(vbuffer_create_new(&buffer, size, true));
+	ck_check_error;
+
+	/* Add a mark and remove it to split the buffer */
+	ck_assert(vbuffer_position(&buffer, &iter, insert_offset));
+	vbuffer_iterator_mark(&iter, true);
+	vbuffer_iterator_unmark(&iter);
+
+	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, ALL));
+	ck_check_error;
+	ck_assert(!vbuffer_sub_isflat(&sub));
+	ck_check_error;
+
+	/* Compact */
+	ck_assert(vbuffer_sub_compact(&sub));
+	ck_assert(vbuffer_sub_isflat(&sub));
+	ck_check_error;
+	ck_assert_int_eq(vbuffer_size(&buffer), size);
+
+	vbuffer_release(&buffer);
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+}
+END_TEST
+
+START_TEST(test_number)
+{
+	static const int number = 0xdeadbeef;
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_sub sub;
+	vbuffer_test_build2(&buffer);
+
+	/* Check number conversion on a single chunk */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset+2, 4));
+	ck_check_error;
+	ck_assert(vbuffer_sub_isflat(&sub));
+
+	/* Big endian */
+	ck_assert(vbuffer_setnumber(&sub, true, number));
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), number);
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), SWAP_int32(number));
+
+	/* Little endian */
+	ck_assert(vbuffer_setnumber(&sub, false, number));
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), number);
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), SWAP_int32(number));
+
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+
+	/* Check number conversion over a chunk boundary */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset-2, 4));
+	ck_check_error;
+	ck_assert(!vbuffer_sub_isflat(&sub));
+
+	/* Big endian */
+	ck_assert(vbuffer_setnumber(&sub, true, number));
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), number);
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), SWAP_int32(number));
+
+	/* Little endian */
+	ck_assert(vbuffer_setnumber(&sub, false, number));
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), number);
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), SWAP_int32(number));
+
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+
+	vbuffer_release(&buffer);
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+}
+END_TEST
+
+START_TEST(test_bits)
+{
+	static const int number = 0x555;
+	static const int offset = 3;
+	static const int bits = 11;
+
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_sub sub;
+	vbuffer_test_build2(&buffer);
+
+	/* Check number conversion on a single chunk */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset+2, 2));
+	ck_check_error;
+	ck_assert(vbuffer_sub_isflat(&sub));
+
+	/* Little endian */
+	ck_assert(vbuffer_setnumber(&sub, false, 0));
+	ck_assert(vbuffer_setbits(&sub, offset, bits, false, number));
+	ck_assert_int_eq((int)vbuffer_asbits(&sub, offset, bits, false), number);
+
+	/* Big endian */
+	ck_assert(vbuffer_setnumber(&sub, true, 0));
+	ck_assert(vbuffer_setbits(&sub, offset, bits, true, number));
+	ck_assert_int_eq((int)vbuffer_asbits(&sub, offset, bits, true), number);
+
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+
+	/* Check number conversion over a chunk boundary */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset-1, 2));
+	ck_check_error;
+	ck_assert(!vbuffer_sub_isflat(&sub));
+
+	/* Little endian */
+	ck_assert(vbuffer_setbits(&sub, offset, bits, false, number));
+	ck_assert_int_eq((int)vbuffer_asbits(&sub, offset, bits, false), number);
+
+	/* Big endian */
+	ck_assert(vbuffer_setbits(&sub, offset, bits, true, number));
+	ck_assert_int_eq((int)vbuffer_asbits(&sub, offset, bits, true), number);
+
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+
+	vbuffer_release(&buffer);
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+}
+END_TEST
+
+START_TEST(test_string)
+{
+	char str[100];
+	const char *string2 = "01234567890123456789";
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_sub sub;
+	vbuffer_test_build2(&buffer);
+
+	/* Check known string */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset, strlen(string)));
+	ck_check_error;
+	ck_assert(vbuffer_asstring(&sub, str, 100));
+	ck_assert_str_eq(str, string);
+
+	/* Check string set on single chunk */
+	ck_assert(vbuffer_setfixedstring(&sub, string2, strlen(string2)));
+	ck_assert(vbuffer_asstring(&sub, str, 100));
+	str[strlen(string2)] = 0;
+	ck_assert_str_eq(str, string2);
+
+	ck_assert(vbuffer_setstring(&sub, string2, strlen(string2)));
+	ck_assert_int_eq(vbuffer_sub_size(&sub), strlen(string2));
+	ck_assert(vbuffer_asstring(&sub, str, 100));
+	ck_assert_str_eq(str, string2);
+
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+
+	/* Check string set over chunk boundary */
+	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset-10, strlen(string)));
+	ck_check_error;
+
+	ck_assert(vbuffer_setfixedstring(&sub, string2, strlen(string2)));
+	ck_assert(vbuffer_asstring(&sub, str, 100));
+	str[strlen(string2)] = 0;
+	ck_assert_str_eq(str, string2);
+
+	ck_assert(vbuffer_setstring(&sub, string2, strlen(string2)));
+	ck_assert_int_eq(vbuffer_sub_size(&sub), strlen(string2));
+	ck_assert(vbuffer_asstring(&sub, str, 100));
+	ck_assert_str_eq(str, string2);
+
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+
+	vbuffer_release(&buffer);
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+}
+END_TEST
 
 int main(int argc, char *argv[])
 {
 	int number_failed;
 
-	SRunner *runner = srunner_create(vbuffer_suite());
+	Suite *suite = suite_create("vbuffer_suite");
+	TCase *tcase = tcase_create("case");
+	tcase_add_test(tcase, test_create);
+	tcase_add_test(tcase, test_iterator_available);
+	tcase_add_test(tcase, test_insert);
+	tcase_add_test(tcase, test_erase);
+	tcase_add_test(tcase, test_extract);
+	tcase_add_test(tcase, test_mmap);
+	tcase_add_test(tcase, test_select);
+	tcase_add_test(tcase, test_flatten);
+	tcase_add_test(tcase, test_compact);
+	tcase_add_test(tcase, test_number);
+	tcase_add_test(tcase, test_bits);
+	tcase_add_test(tcase, test_string);
+	suite_add_tcase(suite, tcase);
+
+	SRunner *runner = srunner_create(suite);
+#ifdef HAKA_DEBUG
 	srunner_set_fork_status(runner, CK_NOFORK);
+#endif
 	srunner_run_all(runner, CK_VERBOSE);
 	number_failed = srunner_ntests_failed(runner);
-	srunner_free(runner);
-
-	runner = srunner_create(vbuffer_stream_suite());
-	srunner_set_fork_status(runner, CK_NOFORK);
-	srunner_run_all(runner, CK_VERBOSE);
-	number_failed += srunner_ntests_failed(runner);
 	srunner_free(runner);
 
 	return number_failed;

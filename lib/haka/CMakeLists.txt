@@ -25,7 +25,10 @@ add_library(libhaka SHARED
 	timer.c
 	state_machine.c
 	vbuffer.c
+	vbuffer_data.c
+	vbuffer_stream.c
 	container/list.c
+	container/list2.c
 	container/vector.c
 	lua/state.c
 	lua/ref.c

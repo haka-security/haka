@@ -19,7 +19,6 @@
 struct ctable {
 	hash_head_t           hh;
 	struct tcp_connection tcp_conn;
-	bool                  dropped;
 };
 
 static const size_t hash_keysize = 2*sizeof(ipv4addr) + 2*sizeof(uint16);
@@ -83,7 +82,7 @@ static struct ctable *tcp_connection_find(struct tcp *tcp,
 	if (ptr) {
 		mutex_unlock(&ct_mutex);
 		if (direction_in) *direction_in = true;
-		if (dropped) *dropped = ptr->dropped;
+		if (dropped) *dropped = ptr->tcp_conn.dropped;
 		return ptr;
 	}
 
@@ -94,7 +93,7 @@ static struct ctable *tcp_connection_find(struct tcp *tcp,
 	if (ptr) {
 		mutex_unlock(&ct_mutex);
 		if (direction_in) *direction_in = false;
-		if (dropped) *dropped = ptr->dropped;
+		if (dropped) *dropped = ptr->tcp_conn.dropped;
 		return ptr;
 	}
 
@@ -113,14 +112,10 @@ static void tcp_connection_remove(struct ctable *elem)
 
 static void tcp_connection_release(struct ctable *elem, bool freemem)
 {
-	if (elem->tcp_conn.stream_input) {
-		tcp_stream_free(elem->tcp_conn.stream_input);
-		elem->tcp_conn.stream_input = NULL;
-	}
-
-	if (elem->tcp_conn.stream_output) {
-		tcp_stream_free(elem->tcp_conn.stream_output);
-		elem->tcp_conn.stream_output = NULL;
+	if (!elem->tcp_conn.released) {
+		tcp_stream_clear(&elem->tcp_conn.stream_input);
+		tcp_stream_clear(&elem->tcp_conn.stream_output);
+		elem->tcp_conn.released = true;
 	}
 
 	if (freemem) {
@@ -153,15 +148,16 @@ struct tcp_connection *tcp_connection_new(struct tcp *tcp)
 		return NULL;
 	}
 
-	lua_object_init(&ptr->tcp_conn.lua_object);
+	ptr->tcp_conn.lua_object = lua_object_init;
 	ptr->tcp_conn.srcip = ipv4_get_src(tcp->packet);
 	ptr->tcp_conn.dstip = ipv4_get_dst(tcp->packet);
 	ptr->tcp_conn.srcport = tcp_get_srcport(tcp);
 	ptr->tcp_conn.dstport = tcp_get_dstport(tcp);
+	ptr->tcp_conn.released = false;
+	ptr->tcp_conn.dropped = false;
 	lua_ref_init(&ptr->tcp_conn.lua_table);
-	ptr->tcp_conn.stream_input = tcp_stream_create();
-	ptr->tcp_conn.stream_output = tcp_stream_create();
-	ptr->dropped = false;
+	tcp_stream_create(&ptr->tcp_conn.stream_input);
+	tcp_stream_create(&ptr->tcp_conn.stream_output);
 
 	tcp_connection_insert(ptr);
 
@@ -236,5 +232,5 @@ void tcp_connection_drop(struct tcp_connection *tcp_conn)
 	}
 
 	tcp_connection_release(current, false);
-	current->dropped = true;
+	current->tcp_conn.dropped = true;
 }

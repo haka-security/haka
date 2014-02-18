@@ -54,7 +54,7 @@ struct tcp_stream
 	%extend {
 		%immutable;
 		unsigned int lastseq { return tcp_stream_lastseq($self); };
-		struct vbuffer_stream *stream { return $self->stream; };
+		struct vbuffer_stream *stream { return &$self->stream; };
 
 		%rename(init) _init;
 		void _init(unsigned int seq)
@@ -108,10 +108,10 @@ struct tcp {
 		unsigned int urgent_pointer;
 
 		%immutable;
-		struct tcp_flags *flags;
-		struct vbuffer *payload;
-		struct ipv4 *ip;
-		const char *name;
+		struct tcp_flags *flags { return (struct tcp_flags *)$self; }
+		struct vbuffer *payload { return &$self->payload; }
+		struct ipv4 *ip { return $self->packet; }
+		const char *name { return "tcp"; }
 
 		bool verify_checksum();
 		void compute_checksum();
@@ -182,7 +182,7 @@ struct tcp_connection {
 		struct tcp_stream *stream(const char *direction)
 		{
 			const bool direction_in = strcmp(direction, "up") == 0;
-			return (struct tcp_stream *)tcp_connection_get_stream($self, direction_in);
+			return tcp_connection_get_stream($self, direction_in);
 		}
 	}
 };
@@ -236,14 +236,6 @@ TCP_INT_GETSET(res);
 TCP_INT_GETSET(window_size);
 TCP_INT_GETSET(checksum);
 TCP_INT_GETSET(urgent_pointer);
-
-struct vbuffer *tcp_payload_get(struct tcp *tcp) { return tcp->payload; }
-
-struct tcp_flags *tcp_flags_get(struct tcp *tcp) { return (struct tcp_flags *)tcp; }
-
-const char *tcp_name_get(struct tcp *tcp) { return "tcp"; }
-
-struct ipv4 *tcp_ip_get(struct tcp *tcp) { return tcp->packet; }
 
 #define TCP_FLAGS_GETSET(field) \
 	bool tcp_flags_##field##_get(struct tcp_flags *flags) { return tcp_get_flags_##field((struct tcp *)flags); } \

@@ -41,25 +41,22 @@ START_TEST(ipv4_network_check)
 }
 END_TEST
 
-Suite* ipv4_suite(void)
+int main (int argc, char *argv[])
 {
-	Suite *suite = suite_create("ipv4_suite");
+	int number_failed;
 
+	Suite *suite = suite_create("ipv4_suite");
 	TCase *tcase = tcase_create("case");
 	tcase_add_test(tcase, ipv4_addr_check_from_string);
 	tcase_add_test(tcase, ipv4_addr_check_from_bytes);
 	tcase_add_test(tcase, ipv4_addr_check_to_string);
 	tcase_add_test(tcase, ipv4_network_check);
 	suite_add_tcase(suite, tcase);
-	return suite;
-}
 
-int main (int argc, char *argv[])
-{
-	int number_failed;
-	Suite *suite = ipv4_suite();
 	SRunner *runner = srunner_create(suite);
+#ifdef HAKA_DEBUG
 	srunner_set_fork_status(runner, CK_NOFORK);
+#endif
 	srunner_run_all(runner, CK_VERBOSE);
 	number_failed = srunner_ntests_failed(runner);
 	srunner_free(runner);

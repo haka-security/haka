@@ -13,7 +13,7 @@ haka.rule {
 		haka.log.debug("filter", "received stream len=%d", current:available())
 
 		while current:available() > 0 do
-			current:erase(10)
+			current:sub(10, true):erase()
 			print(current:sub(10):asstring())
 		end
 	end

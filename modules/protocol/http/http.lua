@@ -520,7 +520,7 @@ function http_dissector.method:parse(stream, context, f, signal, next_state)
 	if not context._co then
 		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
 			context._mark = stream.current
-			context._mark:register()
+			context._mark:mark()
 		end
 		context._co = coroutine.create(function () f(context) end)
 	end
@@ -618,8 +618,8 @@ function http_dissector.method:send(stream, direction)
 			build_headers(request, self.request.headers, self.request._headers_order)
 			table.insert(request, "\r\n")
 
-			self.request._mark:unregister()
-			self.request._mark:replace(self.request._length, haka.vbuffer(table.concat(request)))
+			self.request._mark:unmark()
+			self.request._mark:sub(self.request._length, true):replace(haka.vbuffer(table.concat(request)))
 			self.request._mark = nil
 		end
 
@@ -641,8 +641,8 @@ function http_dissector.method:send(stream, direction)
 			build_headers(response, self.response.headers, self.response._headers_order)
 			table.insert(response, "\r\n")
 
-			self.response._mark:unregister()
-			self.response._mark:replace(self.response._length, haka.vbuffer(table.concat(response)))
+			self.response._mark:unmark()
+			self.response._mark:sub(self.response._length):replace(haka.vbuffer(table.concat(response)))
 			self.response._mark = nil
 		end
 	end

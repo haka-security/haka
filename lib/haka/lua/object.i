@@ -63,10 +63,7 @@ bool lua_object_ownedbylua(struct lua_object *obj)
 	}
 }
 
-void lua_object_init(struct lua_object *obj)
-{
-	obj->state = NULL;
-}
+const struct lua_object lua_object_init = LUA_OBJECT_INIT;
 
 void lua_object_release(void *ptr, struct lua_object *obj)
 {
