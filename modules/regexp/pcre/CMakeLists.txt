@@ -16,4 +16,7 @@ if(PCRE_FOUND)
 	LUA_LINK(pcre)
 
 	INSTALL_MODULE(pcre regexp)
+
+	# Tests
+	add_subdirectory(test)
 endif()
