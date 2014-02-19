@@ -10,23 +10,48 @@
 #include <haka/vbuffer.h>
 
 struct regexp;
-struct regexp_ctx;
+struct regexp_sink;
+
+#define REGEXP_RESULT_INIT { offset: -1, size: -1 }
+#define REGEXP_RESULT_INITIALIZER(result)\
+	do {\
+		(result)->offset = -1;\
+		(result)->size = -1;\
+	} while(0)
+
+struct regexp_result {
+	size_t offset;
+	size_t size;
+};
+
+#define REGEXP_VBRESULT_INIT { offset: -1, size: -1 }
+#define REGEXP_VBRESULT_INITIALIZER(result)\
+	do {\
+		(result)->offset = -1;\
+		(result)->size = -1;\
+	} while(0)
+
+struct regexp_vbresult {
+	// TODO use subbuffer when it will be available
+	size_t offset;
+	size_t size;
+};
 
 struct regexp_module {
 	struct module module;
 
-	int                    (*match)(const char *pattern, const char *buffer, int len);
-	int                    (*vbmatch)(const char *pattern, struct vbuffer *vbuf);
+	int                    (*match)(const char *pattern, const char *buffer, int len, struct regexp_result *result);
+	int                    (*vbmatch)(const char *pattern, struct vbuffer *vbuf, struct regexp_vbresult *result);
 
 	struct regexp         *(*compile)(const char *pattern);
 	void                   (*release_regexp)(struct regexp *regexp);
-	int                    (*exec)(struct regexp *regexp, const char *buffer, int len);
-	int                    (*vbexec)(struct regexp *regexp, struct vbuffer *vbuf);
+	int                    (*exec)(struct regexp *regexp, const char *buffer, int len, struct regexp_result *result);
+	int                    (*vbexec)(struct regexp *regexp, struct vbuffer *vbuf, struct regexp_vbresult *result);
 
-	struct regexp_ctx     *(*get_ctx)(struct regexp *regexp);
-	void                   (*free_regexp_ctx)(struct regexp_ctx *re_ctx);
-	int                    (*feed)(struct regexp_ctx *re_ctx, const char *buffer, int len);
-	int                    (*vbfeed)(struct regexp_ctx *re_ctx, struct vbuffer *vbuf);
+	struct regexp_sink    *(*get_sink)(struct regexp *regexp);
+	void                   (*free_regexp_sink)(struct regexp_sink *re_sink);
+	int                    (*feed)(struct regexp_sink *re_sink, const char *buffer, int len);
+	int                    (*vbfeed)(struct regexp_sink *re_sink, struct vbuffer *vbuf);
 };
 
 struct regexp  {
@@ -34,8 +59,9 @@ struct regexp  {
 	atomic_t ref_count;
 };
 
-struct regexp_ctx {
+struct regexp_sink {
 	struct regexp *regexp;
+	struct regexp_result result;
 };
 
 struct regexp_module *regexp_module_load(const char *module_name, struct parameters *args);

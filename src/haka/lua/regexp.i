@@ -28,35 +28,101 @@ char *escape_chars(const char *STRING, size_t SIZE) {
 }
 %}
 
-struct regexp_ctx {
+struct regexp_result {
+	int offset;
+	int size;
+
         %extend {
-                bool feed(const char *STRING, size_t SIZE) {
-                        return $self->regexp->module->feed($self, STRING, SIZE);
-                }
-
-                bool feed(struct vbuffer *vbuf) {
-                        return $self->regexp->module->vbfeed($self, vbuf);
-                }
-
-                ~regexp_ctx() {
-                        $self->regexp->module->free_regexp_ctx($self);
+                ~regexp_result() {
+                        free($self);
                 }
         }
 };
 
-%newobject regexp::get_ctx;
+struct regexp_vbresult {
+	int offset;
+	int size;
+
+        %extend {
+                ~regexp_vbresult() {
+                        free($self);
+                }
+        }
+};
+
+struct regexp_sink {
+        %extend {
+                bool feed(const char *STRING, size_t SIZE,
+                                struct regexp_result **OUTPUT) {
+                        int ret = $self->regexp->module->feed($self, STRING, SIZE);
+
+                        if (ret > 0) {
+                                *OUTPUT = malloc(sizeof(struct regexp_result));
+                                **OUTPUT = $self->result;
+                        } else {
+                                *OUTPUT = NULL;
+                        }
+
+                        return ret;
+                }
+
+                bool feed(struct vbuffer *vbuf,
+                                struct regexp_result **OUTPUT) {
+                        int ret = $self->regexp->module->vbfeed($self, vbuf);
+
+                        if (ret > 0) {
+                                *OUTPUT = malloc(sizeof(struct regexp_result));
+                                **OUTPUT = $self->result;
+                        } else {
+                                *OUTPUT = NULL;
+                        }
+
+                        return ret;
+                }
+
+                ~regexp_sink() {
+                        $self->regexp->module->free_regexp_sink($self);
+                }
+        }
+};
+
+%newobject regexp::get_sink;
 struct regexp {
         %extend {
-                bool match(const char *STRING, size_t SIZE) {
-                        return $self->module->exec($self, STRING, SIZE);
+                bool match(const char *STRING, size_t SIZE,
+                                struct regexp_result **OUTPUT) {
+                        *OUTPUT = malloc(sizeof(struct regexp_result));
+                        if (!*OUTPUT)
+                                error(L"memory error");
+
+                        int ret = $self->module->exec($self, STRING, SIZE, *OUTPUT);
+
+                        if (ret <= 0) {
+                                free(*OUTPUT);
+                                *OUTPUT = NULL;
+                        }
+
+                        return ret;
                 }
 
-                bool match(struct vbuffer *vbuf) {
-                        return $self->module->vbexec($self, vbuf);
+                bool match(struct vbuffer *vbuf,
+                                struct regexp_vbresult **OUTPUT) {
+                        *OUTPUT = malloc(sizeof(struct regexp_vbresult));
+                        if (!*OUTPUT)
+                                error(L"memory error");
+
+                        int ret = $self->module->vbexec($self, vbuf, *OUTPUT);
+
+                        if (ret <= 0) {
+                                free(*OUTPUT);
+                                *OUTPUT = NULL;
+                        }
+
+                        return ret;
                 }
 
-                struct regexp_ctx *get_ctx() {
-                        return $self->module->get_ctx($self);
+                struct regexp_sink *get_sink() {
+                        return $self->module->get_sink($self);
                 }
 
                 ~regexp() {
@@ -68,12 +134,36 @@ struct regexp {
 %newobject regexp_module::compile;
 struct regexp_module {
         %extend {
-                bool match(const char *pattern, const char *STRING, size_t SIZE) {
-                        return $self->match(pattern, STRING, SIZE);
+                bool match(const char *pattern, const char *STRING, size_t SIZE,
+                                struct regexp_result **OUTPUT) {
+                        *OUTPUT = malloc(sizeof(struct regexp_vbresult));
+                        if (!*OUTPUT)
+                                error(L"memory error");
+
+                        int ret = $self->match(pattern, STRING, SIZE, *OUTPUT);
+
+                        if (ret <= 0) {
+                                free(*OUTPUT);
+                                *OUTPUT = NULL;
+                        }
+
+                        return ret;
                 }
 
-                bool match(const char *pattern, struct vbuffer *vbuf) {
-                        return $self->vbmatch(pattern, vbuf);
+                bool match(const char *pattern, struct vbuffer *vbuf,
+                                struct regexp_vbresult **OUTPUT) {
+                        *OUTPUT = malloc(sizeof(struct regexp_vbresult));
+                        if (!*OUTPUT)
+                                error(L"memory error");
+
+                        int ret = $self->vbmatch(pattern, vbuf, *OUTPUT);
+
+                        if (ret <= 0) {
+                                free(*OUTPUT);
+                                *OUTPUT = NULL;
+                        }
+
+                        return ret;
                 }
 
                 struct regexp *compile(const char *pattern) {

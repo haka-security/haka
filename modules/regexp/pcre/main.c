@@ -13,11 +13,14 @@
 
 #define LOG_MODULE L"pcre"
 
-// workspace vector should contain at least 20 elements
-// see pcreapi(3)
+/* workspace vector should contain at least 20 elements
+ * see pcreapi(3) */
 #define WSCOUNT_DEFAULT 20
-// We don't want workspace to grow over 4 KB = 1024 int32
+/* We don't want workspace to grow over 4 KB = 1024 int32 */
 #define WSCOUNT_MAX 1024
+/* output vector is set to 3 as we want only 1 result
+ * see pcreapi(3) */
+#define OVECTOR_SIZE 3
 
 #define CHECK_REGEXP_TYPE(re)\
 	do {\
@@ -27,10 +30,10 @@
 		}\
 	} while(0)
 
-#define CHECK_REGEXP_CTX_TYPE(re_ctx)\
+#define CHECK_REGEXP_SINK_TYPE(sink)\
 	do {\
-		if (re_ctx == NULL || re_ctx->regexp_ctx.regexp->module != &HAKA_MODULE) {\
-			error(L"Wrong regexp_ctx struct passed to PCRE module");\
+		if (sink == NULL || sink->regexp_sink.regexp->module != &HAKA_MODULE) {\
+			error(L"Wrong regexp_sink struct passed to PCRE module");\
 			goto type_error;\
 		}\
 	} while(0)
@@ -41,9 +44,11 @@ struct regexp_pcre {
 	atomic_t wscount_max;
 };
 
-struct regexp_ctx_pcre {
-	struct regexp_ctx regexp_ctx;
+struct regexp_sink_pcre {
+	struct regexp_sink regexp_sink;
 	bool start;
+	int match;
+	size_t processed_length;
 	atomic_t wscount;
 	int *workspace;
 };
@@ -51,18 +56,23 @@ struct regexp_ctx_pcre {
 static int  init(struct parameters *args);
 static void cleanup();
 
-static int match(const char *pattern, const char *buf, int len);
-static int vbmatch(const char *pattern, struct vbuffer *vbuf);
+static int                   match(const char *pattern, const char *buf, int len, struct regexp_result *result);
+static int                   vbmatch(const char *pattern, struct vbuffer *vbuf, struct regexp_vbresult *result);
 
-static struct regexp *compile(const char *pattern);
-static void           release_regexp(struct regexp *re);
-static int            exec(struct regexp *re, const char *buf, int len);
-static int            vbexec(struct regexp *re, struct vbuffer *vbuf);
+static struct regexp        *compile(const char *pattern);
+static void                  release_regexp(struct regexp *re);
+static int                   exec(struct regexp *re, const char *buf, int len, struct regexp_result *result);
+static int                   vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresult *result);
 
-static struct regexp_ctx *get_ctx(struct regexp *re);
-static void               free_regexp_ctx(struct regexp_ctx *re_ctx);
-static int                feed(struct regexp_ctx *re_ctx, const char *buf, int len);
-static int                vbfeed(struct regexp_ctx *re_ctx, struct vbuffer *vbuf);
+static struct regexp_sink   *get_sink(struct regexp *re);
+static void                  free_regexp_sink(struct regexp_sink *sink);
+static int                   feed(struct regexp_sink *sink, const char *buf, int len);
+static int                   vbfeed(struct regexp_sink *sink, struct vbuffer *vbuf);
+
+static int                      _exec(struct regexp *re, const char *buf, int len, struct regexp_result *result);
+static int                      _partial_exec(struct regexp_sink *_sink, const char *buf, int len, struct regexp_vbresult *vbresult);
+static struct regexp_sink_pcre *_get_sink(struct regexp *_re);
+static void                     _free_regexp_sink(struct regexp_sink_pcre *sink);
 
 struct regexp_module HAKA_MODULE = {
 	module: {
@@ -82,10 +92,10 @@ struct regexp_module HAKA_MODULE = {
 	exec:           exec,
 	vbexec:         vbexec,
 
-	get_ctx:         get_ctx,
-	free_regexp_ctx: free_regexp_ctx,
-	feed:            feed,
-	vbfeed:          vbfeed,
+	get_sink:         get_sink,
+	free_regexp_sink: free_regexp_sink,
+	feed:             feed,
+	vbfeed:           vbfeed,
 };
 
 static int init(struct parameters *args)
@@ -97,39 +107,30 @@ static void cleanup()
 {
 }
 
-static int match(const char *pattern, const char *buf, int len)
+static int match(const char *pattern, const char *buf, int len, struct regexp_result *result)
 {
-	int ret;
+	int ret = -1;
 	struct regexp *re = compile(pattern);
 
 	if (re == NULL) return -1;
 
-	ret = exec(re, buf, len);
+	ret = exec(re, buf, len, result);
 
 	release_regexp(re);
 
 	return ret;
 }
 
-static int vbmatch(const char *pattern, struct vbuffer *vbuf)
+static int vbmatch(const char *pattern, struct vbuffer *vbuf, struct regexp_vbresult *result)
 {
-	int ret;
+	int ret = -1;
 	struct regexp *re;
-	struct regexp_ctx *re_ctx;
 
 	re = compile(pattern);
 	if (re == NULL) return -1;
 
-	re_ctx = get_ctx(re);
-	if (re_ctx == NULL) {
-		ret = -1;
-		goto out;
-	}
+	ret = vbexec(re, vbuf, result);
 
-	ret = vbfeed(re_ctx, vbuf);
-
-out:
-	free_regexp_ctx(re_ctx);
 	release_regexp(re);
 
 	return ret;
@@ -174,95 +175,101 @@ type_error:
 	return;
 }
 
-static int exec(struct regexp *_re, const char *buf, int len)
+static int exec(struct regexp *re, const char *buf, int len, struct regexp_result *result)
 {
-	int ret;
-	struct regexp_pcre *re = (struct regexp_pcre *)_re;
-	CHECK_REGEXP_TYPE(re);
-
-	ret = pcre_exec(re->pcre, NULL, buf, len, 0, 0, NULL,
-			0);
-
-	if (ret == 0) return 1;
-
-	switch (ret) {
-		case PCRE_ERROR_NOMATCH:
-			return 0;
-		default:
-			error(L"PCRE internal error %d", ret);
-			return ret;
-	}
-
-type_error:
-	return -1;
+	return _exec(re, buf, len, result);
 }
 
-static int vbexec(struct regexp *re, struct vbuffer *vbuf)
+static int vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresult *result)
 {
-	int ret;
-	struct regexp_ctx *re_ctx = get_ctx(re);
+	int ret = -1;
+	size_t len;
+	void *iter = NULL;
+	const uint8 *ptr;
+	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_get_sink(re);
 
-	ret = vbfeed(re_ctx, vbuf);
+	if (sink == NULL)
+		return -1;
 
-	free_regexp_ctx(re_ctx);
+	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
+		ret = _partial_exec(&sink->regexp_sink, (const char *)ptr, len, result);
+		/* if match or something goes wrong avoid parsing more */
+		if (ret != 0) break;
+	}
+
+	ret = sink->match;
+
+	_free_regexp_sink(sink);
 
 	return ret;
 }
 
-static struct regexp_ctx *get_ctx(struct regexp *_re)
+static struct regexp_sink *get_sink(struct regexp *re)
+{
+	return (struct regexp_sink *)_get_sink(re);
+}
+
+static struct regexp_sink_pcre *_get_sink(struct regexp *_re)
 {
 	struct regexp_pcre *re = (struct regexp_pcre *)_re;
-	struct regexp_ctx_pcre *re_ctx;
+	struct regexp_sink_pcre *sink;
 	CHECK_REGEXP_TYPE(re);
 
-	re_ctx = malloc(sizeof(struct regexp_ctx_pcre));
-	if (!re_ctx) {
+	sink = malloc(sizeof(struct regexp_sink_pcre));
+	if (!sink) {
 		error(L"memory error");
 		goto error;
 	}
 
-	re_ctx->regexp_ctx.regexp = _re;
-	re_ctx->start = false;
-	re_ctx->wscount = re->wscount_max;
-	re_ctx->workspace = calloc(re_ctx->wscount, sizeof(int));
-	if (!re_ctx->workspace) {
+	sink->regexp_sink.regexp = _re;
+	sink->start = false;
+	sink->match = 0;
+	sink->processed_length = 0;
+	sink->wscount = re->wscount_max;
+	sink->workspace = calloc(sink->wscount, sizeof(int));
+	if (!sink->workspace) {
 		error(L"memory error");
 		goto error;
 	}
 
 	atomic_inc(&re->regexp.ref_count);
 
-	return (struct regexp_ctx *)re_ctx;
+	return sink;
 
 error:
-	if (re_ctx != NULL) free(re_ctx->workspace);
-	free(re_ctx);
+	if (sink != NULL) free(sink->workspace);
+	free(sink);
 type_error:
 	return NULL;
 }
 
-static void free_regexp_ctx(struct regexp_ctx *_re_ctx)
+static void free_regexp_sink(struct regexp_sink *_sink)
 {
-	struct regexp_ctx_pcre *re_ctx = (struct regexp_ctx_pcre *)_re_ctx;
-	CHECK_REGEXP_CTX_TYPE(re_ctx);
+	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
+	CHECK_REGEXP_SINK_TYPE(sink);
 
-	release_regexp(re_ctx->regexp_ctx.regexp);
-	free(re_ctx->workspace);
-	free(re_ctx);
+	_free_regexp_sink(sink);
 
 type_error:
 	return;
 }
 
-static bool workspace_grow(struct regexp_ctx_pcre *re_ctx)
+static void _free_regexp_sink(struct regexp_sink_pcre *sink)
 {
-	struct regexp_pcre *re = (struct regexp_pcre *)re_ctx->regexp_ctx.regexp;
+	release_regexp(sink->regexp_sink.regexp);
+	free(sink->workspace);
+	free(sink);
+}
 
-	re_ctx->wscount *= 2;
+static bool workspace_grow(struct regexp_sink_pcre *sink)
+{
+	struct regexp_pcre *re = (struct regexp_pcre *)sink->regexp_sink.regexp;
 
-	messagef(HAKA_LOG_DEBUG, LOG_MODULE, L"growing PCRE workspace to %d int", re_ctx->wscount);
+	sink->wscount *= 2;
 
-	if (re_ctx->wscount > WSCOUNT_MAX) {
+	messagef(HAKA_LOG_DEBUG, LOG_MODULE, L"growing PCRE workspace to %d int", sink->wscount);
+
+	if (sink->wscount > WSCOUNT_MAX) {
 		error(L"PCRE workspace too big, max allowed size is %d int", WSCOUNT_MAX);
 		return false;
 	}
@@ -273,14 +280,14 @@ static bool workspace_grow(struct regexp_ctx_pcre *re_ctx)
 	 * growth workspace more than once while the other thread will still be
 	 * between test and assign.
 	 * Even that worst case is not dangerous since the only effect will be
-	 * that new regexp_ctx will have undersized workspace.
+	 * that new regexp_sink will have undersized workspace.
 	 */
-	if (re_ctx->wscount > re->wscount_max) {
-		re->wscount_max = re_ctx->wscount;
+	if (sink->wscount > re->wscount_max) {
+		re->wscount_max = sink->wscount;
 	}
 
-	re_ctx->workspace = realloc(re_ctx->workspace, re_ctx->wscount*sizeof(int));
-	if (!re_ctx->workspace) {
+	sink->workspace = realloc(sink->workspace, sink->wscount*sizeof(int));
+	if (!sink->workspace) {
 		error(L"memory error");
 		return false;
 	}
@@ -288,69 +295,145 @@ static bool workspace_grow(struct regexp_ctx_pcre *re_ctx)
 	return true;
 }
 
-static int feed(struct regexp_ctx *_re_ctx, const char *buf, int len)
+static int feed(struct regexp_sink *sink, const char *buf, int len)
 {
+	return _partial_exec(sink, buf, len, NULL);
+}
+
+static int vbfeed(struct regexp_sink *sink, struct vbuffer *vbuf)
+{
+	int ret = -1;
+	size_t len;
+	void *iter = NULL;
+	const uint8 *ptr;
+
+	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
+		/* We don't use vbresult since we can guarantee that vbuffer
+		 * will be continuous */
+		ret = _partial_exec(sink, (const char *)ptr, len, NULL);
+		if (ret != 0) break;
+	}
+
+	return ret;
+}
+
+static int _exec(struct regexp *_re, const char *buf, int len, struct regexp_result *result)
+{
+	int ret = -1;
+	struct regexp_pcre *re = (struct regexp_pcre *)_re;
+	int ovector[OVECTOR_SIZE] = { 0 };
+	CHECK_REGEXP_TYPE(re);
+
+	ret = pcre_exec(re->pcre, NULL, buf, len, 0, 0, ovector, OVECTOR_SIZE);
+
+	/* Got some match (ret = 0) if we get more than OVECTOR_SIZE */
+	if (ret >= 0) {
+		if (result != NULL) {
+			result->offset = ovector[0];
+			result->size = ovector[1] - ovector[0];
+		}
+		return  1;
+	}
+
+	switch (ret) {
+		case PCRE_ERROR_NOMATCH:
+			return 0;
+		default:
+			error(L"PCRE internal error %d", ret);
+			return -1;
+	}
+
+type_error:
+	return -1;
+}
+
+static int _partial_exec(struct regexp_sink *_sink, const char *buf, int len, struct regexp_vbresult *vbresult)
+{
+	int ret = -1;
 	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match
 	 * We use PCRE_DFA_SHORTEST because we want to stop as soon as possible */
 	int options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
-	int result = 0;
+	int ovector[OVECTOR_SIZE] = { 0 };
 	struct regexp_pcre *re;
-	struct regexp_ctx_pcre *re_ctx = (struct regexp_ctx_pcre *)_re_ctx;
-	CHECK_REGEXP_CTX_TYPE(re_ctx);
+	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
+	CHECK_REGEXP_SINK_TYPE(sink);
 
-	if (re_ctx->workspace == NULL) {
-		error(L"Invalid re_ctx. NULL workspace");
+	if (sink->workspace == NULL) {
+		error(L"Invalid sink. NULL workspace");
 		goto error;
 	}
 
-	re = (struct regexp_pcre *)_re_ctx->regexp;
+	re = (struct regexp_pcre *)_sink->regexp;
 
-	if (!re_ctx->start) {
-		re_ctx->start = true;
+	if (!sink->start) {
+		sink->start = true;
 	} else {
 		options |= PCRE_DFA_RESTART;
 	}
 
 	do {
 		/* We run out of space so grow workspace */
-		if (result == PCRE_ERROR_DFA_WSSIZE) {
-			if (!workspace_grow(re_ctx)) {
+		if (ret == PCRE_ERROR_DFA_WSSIZE) {
+			if (!workspace_grow(sink)) {
 				goto error;
 			}
 		}
 
-		result = pcre_dfa_exec(re->pcre, NULL,
-				buf, len, 0, options, NULL, 0,
-				re_ctx->workspace, re_ctx->wscount);
-	} while(result == PCRE_ERROR_DFA_WSSIZE);
+		ret = pcre_dfa_exec(re->pcre, NULL, buf, len, 0, options, ovector,
+				OVECTOR_SIZE, sink->workspace, sink->wscount);
+	} while(ret == PCRE_ERROR_DFA_WSSIZE);
 
-	if (result == 0) return 1;
+	if (ret >= 0) {
+		/* If no previous partial match
+		 * register start of match */
+		if (sink->match == 0) {
+			if (vbresult) {
+				vbresult->offset = sink->processed_length + ovector[0];
+			}
+			sink->regexp_sink.result.offset = sink->processed_length + ovector[0];
+		}
+		/* If first time we match
+		 * register end of match */
+		if (sink->match != 1) {
+			if (vbresult) {
+				vbresult->size = sink->processed_length + ovector[1] - vbresult->offset;
+			}
+			sink->regexp_sink.result.size = sink->processed_length + ovector[1] - sink->regexp_sink.result.offset;
+		}
+		sink->match = 1;
+		sink->processed_length += len;
+		return sink->match;
+	}
 
-	switch (result) {
-		case PCRE_ERROR_NOMATCH:
+	switch (ret) {
 		case PCRE_ERROR_PARTIAL:
+			/* On first partial match
+			 * register start of match */
+			if (sink->match == 0) {
+				if (vbresult) {
+					vbresult->offset = sink->processed_length + ovector[0];
+				}
+				sink->regexp_sink.result.offset = sink->processed_length + ovector[0];
+			}
+			sink->match = PCRE_ERROR_PARTIAL;
+			sink->processed_length += len;
+			return 0;
+		case PCRE_ERROR_NOMATCH:
+			//if (sink->match == PCRE_ERROR_PARTIAL)
+				// TODO partial fix : retry without restart
+				// On partial -> clone chunk
+				// On NOMACTH : flatten from partial + 1B | recall
+				// feed on partial 1B
+			sink->match = 0;
+			sink->processed_length += len;
 			return 0;
 		default:
-			error(L"PCRE internal error %d", result);
-			return -1;
+			sink->match = -1;
+			error(L"PCRE internal error %d", ret);
+			return sink->match;
 	}
 
 error:
 type_error:
 	return -1;
-}
-
-static int vbfeed(struct regexp_ctx *re_ctx, struct vbuffer *vbuf)
-{
-	int ret = 0;
-	size_t len;
-	void *iter = NULL;
-	const uint8 *ptr;
-
-	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
-		ret = feed(re_ctx, (const char *)ptr, len);
-		if (ret != 0) break;
-	}
-
-	return ret;
 }
