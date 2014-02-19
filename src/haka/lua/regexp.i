@@ -4,6 +4,28 @@
 
 %{
 #include <haka/regexp_module.h>
+
+char *escape_chars(const char *STRING, size_t SIZE) {
+    int iter = 0;
+    char *str;
+    str = malloc(SIZE + 1);
+    if (!str) {
+        error(L"memory error");
+        return NULL;
+    }
+    while (iter < SIZE) {
+        if (STRING[iter] == '%') {
+            str[iter] = 0x5c;
+            iter++;
+        }
+        if (iter < SIZE) {
+           str[iter] = STRING[iter];
+        }
+        iter++;
+    str[SIZE] = '\0';
+    }
+    return str;
+}
 %}
 
 struct regexp_ctx {
@@ -55,7 +77,12 @@ struct regexp_module {
                 }
 
                 struct regexp *compile(const char *pattern) {
-                        return $self->compile(pattern);
+                        char *esc_regex = escape_chars(pattern, strlen(pattern));
+                        if (esc_regex) {
+                            struct regexp *ret = $self->compile(esc_regex);
+                            free(esc_regex);
+                            return ret;
+                        }
                 }
         }
 };

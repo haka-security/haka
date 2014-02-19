@@ -28,7 +28,7 @@ http.install_tcp_rule(80)
 -- 0/**/union/*!50000select*/table_name`foo`/**/
 --
 
-local modsec_regex = "(/\\*!?|\\*/|[';]--|--[\\s\\r\\n\\v\\f]|(?:--[^-]*?-)|([^\\-&])#.*?[\\s\\r\\n\\v\\f]|;?%00)"
+local modsec_regex = "(/%*!?|%*/|[';]--|--[%s%r%n%v%f]|(?:--[^-]*?-)|([^%-&])#.*?[%s%r%n%v%f]|;?%00)"
 
 local re = rem.re:compile(modsec_regex)
 if not re then
