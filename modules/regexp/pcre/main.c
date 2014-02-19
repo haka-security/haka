@@ -70,7 +70,7 @@ static int                   feed(struct regexp_sink *sink, const char *buf, int
 static int                   vbfeed(struct regexp_sink *sink, struct vbuffer *vbuf);
 
 static int                      _exec(struct regexp *re, const char *buf, int len, struct regexp_result *result);
-static int                      _partial_exec(struct regexp_sink *_sink, const char *buf, int len, struct regexp_vbresult *vbresult);
+static int                      _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len, struct regexp_vbresult *vbresult);
 static struct regexp_sink_pcre *_get_sink(struct regexp *_re);
 static void                     _free_regexp_sink(struct regexp_sink_pcre *sink);
 
@@ -192,7 +192,7 @@ static int vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresul
 		return -1;
 
 	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
-		ret = _partial_exec(&sink->regexp_sink, (const char *)ptr, len, result);
+		ret = _partial_exec(sink, (const char *)ptr, len, result);
 		/* if match or something goes wrong avoid parsing more */
 		if (ret != 0) break;
 	}
@@ -295,17 +295,25 @@ static bool workspace_grow(struct regexp_sink_pcre *sink)
 	return true;
 }
 
-static int feed(struct regexp_sink *sink, const char *buf, int len)
+static int feed(struct regexp_sink *_sink, const char *buf, int len)
 {
+	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
+	CHECK_REGEXP_SINK_TYPE(sink);
+
 	return _partial_exec(sink, buf, len, NULL);
+
+type_error:
+	return -1;
 }
 
-static int vbfeed(struct regexp_sink *sink, struct vbuffer *vbuf)
+static int vbfeed(struct regexp_sink *_sink, struct vbuffer *vbuf)
 {
 	int ret = -1;
 	size_t len;
 	void *iter = NULL;
 	const uint8 *ptr;
+	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
+	CHECK_REGEXP_SINK_TYPE(sink);
 
 	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
 		/* We don't use vbresult since we can guarantee that vbuffer
@@ -315,6 +323,9 @@ static int vbfeed(struct regexp_sink *sink, struct vbuffer *vbuf)
 	}
 
 	return ret;
+
+type_error:
+	return -1;
 }
 
 static int _exec(struct regexp *_re, const char *buf, int len, struct regexp_result *result)
@@ -347,7 +358,7 @@ type_error:
 	return -1;
 }
 
-static int _partial_exec(struct regexp_sink *_sink, const char *buf, int len, struct regexp_vbresult *vbresult)
+static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len, struct regexp_vbresult *vbresult)
 {
 	int ret = -1;
 	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match
@@ -355,15 +366,13 @@ static int _partial_exec(struct regexp_sink *_sink, const char *buf, int len, st
 	int options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
 	int ovector[OVECTOR_SIZE] = { 0 };
 	struct regexp_pcre *re;
-	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
-	CHECK_REGEXP_SINK_TYPE(sink);
 
 	if (sink->workspace == NULL) {
 		error(L"Invalid sink. NULL workspace");
 		goto error;
 	}
 
-	re = (struct regexp_pcre *)_sink->regexp;
+	re = (struct regexp_pcre *)sink->regexp_sink.regexp;
 
 	if (!sink->start) {
 		sink->start = true;
@@ -420,7 +429,7 @@ static int _partial_exec(struct regexp_sink *_sink, const char *buf, int len, st
 			return 0;
 		case PCRE_ERROR_NOMATCH:
 			//if (sink->match == PCRE_ERROR_PARTIAL)
-				// TODO partial fix : retry without restart
+				// TODO partial fix : retry without restart
 				// On partial -> clone chunk
 				// On NOMACTH : flatten from partial + 1B | recall
 				// feed on partial 1B
@@ -434,6 +443,5 @@ static int _partial_exec(struct regexp_sink *_sink, const char *buf, int len, st
 	}
 
 error:
-type_error:
 	return -1;
 }
