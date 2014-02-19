@@ -59,6 +59,7 @@ bool            vbuffer_isflat(struct vbuffer *buf);
 size_t          vbuffer_size(struct vbuffer *buf);
 bool            vbuffer_checksize(struct vbuffer *buf, size_t minsize);
 uint8          *vbuffer_mmap(struct vbuffer *buf, void **iter, size_t *len, bool write);
+bool            vbuffer_mmap_end(struct vbuffer *buf, void *iter);
 uint8           vbuffer_getbyte(struct vbuffer *buf, size_t offset);
 void            vbuffer_setbyte(struct vbuffer *buf, size_t offset, uint8 byte);
 bool            vbuffer_ismodified(struct vbuffer *buf);

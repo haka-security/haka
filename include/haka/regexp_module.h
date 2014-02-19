@@ -50,8 +50,8 @@ struct regexp_module {
 
 	struct regexp_sink    *(*get_sink)(struct regexp *regexp);
 	void                   (*free_regexp_sink)(struct regexp_sink *re_sink);
-	int                    (*feed)(struct regexp_sink *re_sink, const char *buffer, int len);
-	int                    (*vbfeed)(struct regexp_sink *re_sink, struct vbuffer *vbuf);
+	int                    (*feed)(struct regexp_sink *re_sink, const char *buffer, int len, bool eof);
+	int                    (*vbfeed)(struct regexp_sink *re_sink, struct vbuffer *vbuf, bool eof);
 };
 
 struct regexp  {

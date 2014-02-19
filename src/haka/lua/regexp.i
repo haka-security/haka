@@ -52,9 +52,9 @@ struct regexp_vbresult {
 
 struct regexp_sink {
         %extend {
-                bool feed(const char *STRING, size_t SIZE,
+                bool feed(const char *STRING, size_t SIZE, bool eof,
                                 struct regexp_result **OUTPUT) {
-                        int ret = $self->regexp->module->feed($self, STRING, SIZE);
+                        int ret = $self->regexp->module->feed($self, STRING, SIZE, eof);
 
                         if (ret > 0) {
                                 *OUTPUT = malloc(sizeof(struct regexp_result));
@@ -66,9 +66,9 @@ struct regexp_sink {
                         return ret;
                 }
 
-                bool feed(struct vbuffer *vbuf,
+                bool feed(struct vbuffer *vbuf, bool eof,
                                 struct regexp_result **OUTPUT) {
-                        int ret = $self->regexp->module->vbfeed($self, vbuf);
+                        int ret = $self->regexp->module->vbfeed($self, vbuf, eof);
 
                         if (ret > 0) {
                                 *OUTPUT = malloc(sizeof(struct regexp_result));

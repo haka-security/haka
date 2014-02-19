@@ -641,6 +641,14 @@ uint8 *vbuffer_mmap(struct vbuffer *buf, void **_iter, size_t *len, bool write)
 	}
 }
 
+bool vbuffer_mmap_end(struct vbuffer *buf, void *_iter)
+{
+	struct vbuffer *iter = (struct vbuffer *)_iter;
+	assert(buf);
+
+	return iter->next == NULL;
+}
+
 bool vbuffer_ismodified(struct vbuffer *buf)
 {
 	struct vbuffer *iter = buf;

@@ -13,6 +13,9 @@
 
 #define LOG_MODULE L"pcre"
 
+/* We enforce multiline on all API */
+#define DEFAULT_COMPILE_OPTIONS PCRE_MULTILINE
+
 /* workspace vector should contain at least 20 elements
  * see pcreapi(3) */
 #define WSCOUNT_DEFAULT 20
@@ -46,7 +49,7 @@ struct regexp_pcre {
 
 struct regexp_sink_pcre {
 	struct regexp_sink regexp_sink;
-	bool start;
+	bool started;
 	int match;
 	size_t processed_length;
 	atomic_t wscount;
@@ -66,11 +69,11 @@ static int                   vbexec(struct regexp *re, struct vbuffer *vbuf, str
 
 static struct regexp_sink   *get_sink(struct regexp *re);
 static void                  free_regexp_sink(struct regexp_sink *sink);
-static int                   feed(struct regexp_sink *sink, const char *buf, int len);
-static int                   vbfeed(struct regexp_sink *sink, struct vbuffer *vbuf);
+static int                   feed(struct regexp_sink *sink, const char *buf, int len, bool eof);
+static int                   vbfeed(struct regexp_sink *sink, struct vbuffer *vbuf, bool eof);
 
 static int                      _exec(struct regexp *re, const char *buf, int len, struct regexp_result *result);
-static int                      _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len, struct regexp_vbresult *vbresult);
+static int                      _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len, struct regexp_vbresult *vbresult, bool eof);
 static struct regexp_sink_pcre *_get_sink(struct regexp *_re);
 static void                     _free_regexp_sink(struct regexp_sink_pcre *sink);
 
@@ -138,6 +141,7 @@ static int vbmatch(const char *pattern, struct vbuffer *vbuf, struct regexp_vbre
 
 static struct regexp *compile(const char *pattern)
 {
+	int options = DEFAULT_COMPILE_OPTIONS;
 	const char *errorstr;
 	int erroffset;
 	struct regexp_pcre *re = malloc(sizeof(struct regexp_pcre));
@@ -148,7 +152,7 @@ static struct regexp *compile(const char *pattern)
 
 
 	re->regexp.module = &HAKA_MODULE;
-	re->pcre = pcre_compile(pattern, 0, &errorstr, &erroffset, NULL);
+	re->pcre = pcre_compile(pattern, options, &errorstr, &erroffset, NULL);
 	if (re->pcre == NULL) goto error;
 	re->regexp.ref_count = 1;
 	re->wscount_max = WSCOUNT_DEFAULT;
@@ -192,7 +196,8 @@ static int vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresul
 		return -1;
 
 	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
-		ret = _partial_exec(sink, (const char *)ptr, len, result);
+		bool eof = vbuffer_mmap_end(vbuf, iter);
+		ret = _partial_exec(sink, (const char *)ptr, len, result, eof);
 		/* if match or something goes wrong avoid parsing more */
 		if (ret != 0) break;
 	}
@@ -222,7 +227,7 @@ static struct regexp_sink_pcre *_get_sink(struct regexp *_re)
 	}
 
 	sink->regexp_sink.regexp = _re;
-	sink->start = false;
+	sink->started = false;
 	sink->match = 0;
 	sink->processed_length = 0;
 	sink->wscount = re->wscount_max;
@@ -295,18 +300,18 @@ static bool workspace_grow(struct regexp_sink_pcre *sink)
 	return true;
 }
 
-static int feed(struct regexp_sink *_sink, const char *buf, int len)
+static int feed(struct regexp_sink *_sink, const char *buf, int len, bool eof)
 {
 	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
 	CHECK_REGEXP_SINK_TYPE(sink);
 
-	return _partial_exec(sink, buf, len, NULL);
+	return _partial_exec(sink, buf, len, NULL, eof);
 
 type_error:
 	return -1;
 }
 
-static int vbfeed(struct regexp_sink *_sink, struct vbuffer *vbuf)
+static int vbfeed(struct regexp_sink *_sink, struct vbuffer *vbuf, bool _eof)
 {
 	int ret = -1;
 	size_t len;
@@ -318,7 +323,8 @@ static int vbfeed(struct regexp_sink *_sink, struct vbuffer *vbuf)
 	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
 		/* We don't use vbresult since we can guarantee that vbuffer
 		 * will be continuous */
-		ret = _partial_exec(sink, (const char *)ptr, len, NULL);
+		bool eof = _eof && vbuffer_mmap_end(vbuf, iter);
+		ret = _partial_exec(sink, (const char *)ptr, len, NULL, eof);
 		if (ret != 0) break;
 	}
 
@@ -358,7 +364,7 @@ type_error:
 	return -1;
 }
 
-static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len, struct regexp_vbresult *vbresult)
+static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len, struct regexp_vbresult *vbresult, bool eof)
 {
 	int ret = -1;
 	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match
@@ -374,11 +380,18 @@ static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len
 
 	re = (struct regexp_pcre *)sink->regexp_sink.regexp;
 
-	if (!sink->start) {
-		sink->start = true;
-	} else {
-		options |= PCRE_DFA_RESTART;
-	}
+	/* If we already match don't bother with regexp again */
+	if (sink->match > 0)
+		return sink->match;
+
+	/* Set pcre exec options */
+	if (sink->started) options |= PCRE_NOTBOL;
+	/* restart dfa only on partial match
+	 * see pcreapi(3) */
+	if (sink->match == PCRE_ERROR_PARTIAL) options |= PCRE_DFA_RESTART;
+	if (!eof) options |= PCRE_NOTEOL;
+
+	if (!sink->started) sink->started = true;
 
 	do {
 		/* We run out of space so grow workspace */

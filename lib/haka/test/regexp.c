@@ -353,8 +353,8 @@ START_TEST(regexp_feed_should_not_fail_when_feed_twice)
 	clear_error();
 
 	// When
-	rem->feed(sink, "aaa", 3);
-	rem->feed(sink, "bbb", 3);
+	rem->feed(sink, "aaa", 3, false);
+	rem->feed(sink, "bbb", 3, true);
 
 	// Then
 	ck_check_error;
@@ -377,7 +377,7 @@ START_TEST(regexp_feed_should_match)
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "aaa", 3);
+	ret = rem->feed(sink, "aaa", 3, true);
 
 	// Then
 	ck_check_error;
@@ -401,8 +401,8 @@ START_TEST(regexp_feed_should_match_accross_two_string)
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "aaa", 3);
-	ret = rem->feed(sink, "bbb", 3);
+	ret = rem->feed(sink, "aaa", 3, false);
+	ret = rem->feed(sink, "bbb", 3, true);
 
 	// Then
 	ck_check_error;
@@ -426,7 +426,7 @@ START_TEST(regexp_feed_should_not_fail_if_no_match)
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "aaa", 3);
+	ret = rem->feed(sink, "aaa", 3, true);
 
 	// Then
 	ck_check_error;
@@ -450,9 +450,9 @@ START_TEST(regexp_feed_should_return_results_on_match)
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "foo b", 5);
-	ret = rem->feed(sink, "ar foo", 6);
-	ret = rem->feed(sink, "fail", 4);
+	ret = rem->feed(sink, "foo b", 5, false);
+	ret = rem->feed(sink, "ar foo", 6, false);
+	ret = rem->feed(sink, "fail", 4, true);
 
 	// Then
 	ck_check_error;
@@ -660,7 +660,7 @@ START_TEST(regexp_vbfeed_should_match_on_vbuffer)
 	clear_error();
 
 	// When
-	ret = rem->vbfeed(sink, vb);
+	ret = rem->vbfeed(sink, vb, true);
 
 	// Then
 	ck_check_error;
@@ -687,8 +687,8 @@ START_TEST(regexp_vbfeed_should_match_on_multiple_vbuffer)
 	clear_error();
 
 	// When
-	ret = rem->vbfeed(sink, vb1);
-	ret = rem->vbfeed(sink, vb2);
+	ret = rem->vbfeed(sink, vb1, false);
+	ret = rem->vbfeed(sink, vb2, true);
 
 	// Then
 	ck_check_error;
@@ -789,6 +789,54 @@ START_TEST(nonreg_regexp_should_not_match_after_start_of_line_if_pattern_start_w
 }
 END_TEST
 
+START_TEST(nonreg_regexp_should_match_end_of_line)
+{
+	int ret;
+	struct regexp_vbresult result;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct vbuffer *vb = some_vbuffer("foo", "abc", NULL);
+	clear_error();
+
+	// When
+	ret = rem->vbmatch("abc$", vb, &result);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret > 0, "regexp expected to match end of line, but found ret = %d", ret);
+
+	// Finally
+	vbuffer_free(vb);
+	regexp_module_release(rem);
+
+}
+END_TEST
+
+START_TEST(nonreg_regexp_should_not_match_end_of_line_before_end)
+{
+	int ret;
+	struct regexp_vbresult result;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct vbuffer *vb = some_vbuffer("aaa", "abc", "foo", NULL);
+	clear_error();
+
+	// When
+	ret = rem->vbmatch("abc$", vb, &result);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret == 0, "regexp expected not to match end of line, but found ret = %d", ret);
+
+	// Finally
+	vbuffer_free(vb);
+	regexp_module_release(rem);
+
+}
+END_TEST
+
 Suite* regexp_suite(void)
 {
 	Suite *suite = suite_create("regexp_suite");
@@ -850,6 +898,8 @@ Suite* regexp_suite(void)
 
 	tcase = tcase_create("regexp_nonreg");
 	tcase_add_test(tcase, nonreg_regexp_should_not_match_after_start_of_line_if_pattern_start_with_circum);
+	tcase_add_test(tcase, nonreg_regexp_should_match_end_of_line);
+	tcase_add_test(tcase, nonreg_regexp_should_not_match_end_of_line_before_end);
 	suite_add_tcase(suite, tcase);
 
 	return suite;

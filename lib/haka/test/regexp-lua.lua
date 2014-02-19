@@ -147,7 +147,7 @@ function test_feed_should_not_fail ()
 	local re = rem.re:compile(".*")
         local sink = re:get_sink()
 	-- When
-	local ret, msg = pcall(function () sink:feed("aaa") end)
+	local ret, msg = pcall(function () sink:feed("aaa", true) end)
 	-- Then
 	assert(ret, string.format("Regexp feed should not failed but failed with message %s", msg))
 end
@@ -157,8 +157,8 @@ function test_feed_should_match_accross_two_string ()
         local re = rem.re:compile("ab")
         local sink = re:get_sink()
         -- When
-        local ret = sink:feed("aaa")
-        ret = sink:feed("bbb")
+        local ret = sink:feed("aaa", false)
+        ret = sink:feed("bbb", true)
         -- Then
         assert(ret, "Matching pattern expected to match over two string but failed")
 end
@@ -168,7 +168,7 @@ function test_feed_should_return_results ()
         local re = rem.re:compile("bar")
         local sink = re:get_sink()
         -- When
-        local ret, result = sink:feed("foo bar foo")
+        local ret, result = sink:feed("foo bar foo", true)
         -- Then
         assert(ret, "Matching pattern expected to match but failed")
         assert(result.offset == 4, "Matching pattern expected to return offset = 4 but found offset = %d", result.offset)
@@ -180,7 +180,7 @@ function test_feed_should_return_nil_results_when_pattern_do_not_match ()
         local re = rem.re:compile("bar")
         local sink = re:get_sink()
         -- When
-        local ret, result = sink:feed("foo")
+        local ret, result = sink:feed("foo", true)
         -- Then
         assert(not ret, "Matching pattern expected to feed but failed")
         assert(not result, "Matching pattern expected to return nil result but got result")
