@@ -5,9 +5,9 @@
 local rem = require('regexp/pcre')
 
 local re = rem.re:compile("foo")
-local re_ctx = re:get_ctx()
+local sink = re:get_sink()
 
-local ret = re_ctx:feed("some fo")
-ret = re_ctx:feed("o over two string")
+local ret = sink:feed("some fo")
+ret = sink:feed("o over two string")
 
 print(ret)
