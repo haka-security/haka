@@ -48,6 +48,13 @@ function test_match_should_return_nil_results_when_pattern_do_not_match ()
         assert(not result, "Matching pattern expected to return nil result but got result")
 end
 
+function test_match_should_be_successful_using_new_escaping_char ()
+		-- When
+		local ret = rem.re:match("%d", "666")
+		-- Then
+		assert(ret, "Matching pattern with special char '%' expected to match but failed")
+end
+
 function test_compile_should_not_fail ()
 	-- When
 	local ret, msg = pcall(function () rem.re:compile(".*") end)
@@ -67,6 +74,13 @@ function test_compile_should_fail_with_bad_pattern ()
         local ret, msg = pcall(function () rem.re:compile("?") end)
         -- Then
         assert(not ret, "Compilation of '?' expected to fail but compile return non nil value")
+end
+
+function test_compile_should_be_successful_using_new_escaping_char ()
+        -- When
+        local ret, msg = pcall(function() rem.re:compile("%d%s") end)
+        -- Then
+        assert(ret, "Compilation of valid regex using special char '%' should not failed but failed")
 end
 
 function test_exec_should_not_fail ()
@@ -174,12 +188,14 @@ end
 
 test_match_should_not_fail()
 test_match_should_be_successful()
+test_match_should_be_successful_using_new_escaping_char()
 test_match_should_fail_when_pattern_do_not_match()
 test_match_should_return_results()
 test_match_should_return_nil_results_when_pattern_do_not_match()
 test_compile_should_not_fail()
 test_compile_should_be_successful()
 test_compile_should_fail_with_bad_pattern()
+test_compile_should_be_successful_using_new_escaping_char ()
 test_exec_should_not_fail()
 test_exec_should_be_successful()
 test_exec_should_fail_when_pattern_do_not_match()

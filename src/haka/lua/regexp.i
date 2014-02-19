@@ -140,7 +140,9 @@ struct regexp_module {
                         if (!*OUTPUT)
                                 error(L"memory error");
 
-                        int ret = $self->match(pattern, STRING, SIZE, *OUTPUT);
+                        char *esc_regexp = escape_chars(pattern, strlen(pattern));
+                        int ret = $self->match(esc_regexp, STRING, SIZE, *OUTPUT);
+                        free(esc_regexp);
 
                         if (ret <= 0) {
                                 free(*OUTPUT);
@@ -156,7 +158,9 @@ struct regexp_module {
                         if (!*OUTPUT)
                                 error(L"memory error");
 
-                        int ret = $self->vbmatch(pattern, vbuf, *OUTPUT);
+                        char *esc_regexp = escape_chars(pattern, strlen(pattern));
+                        int ret = $self->vbmatch(esc_regexp, vbuf, *OUTPUT);
+                        free(esc_regexp);
 
                         if (ret <= 0) {
                                 free(*OUTPUT);
@@ -167,12 +171,10 @@ struct regexp_module {
                 }
 
                 struct regexp *compile(const char *pattern) {
-                        char *esc_regex = escape_chars(pattern, strlen(pattern));
-                        if (esc_regex) {
-                            struct regexp *ret = $self->compile(esc_regex);
-                            free(esc_regex);
-                            return ret;
-                        }
+                    char *esc_regexp = escape_chars(pattern, strlen(pattern));
+                    struct regexp *ret = $self->compile(esc_regexp);
+                    free(esc_regexp);
+                    return ret;
                 }
         }
 };
