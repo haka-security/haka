@@ -861,6 +861,29 @@ START_TEST(nonreg_regexp_should_match_even_with_empty_string)
 }
 END_TEST
 
+START_TEST(nonreg_regexp_should_match_even_when_ending_with_empty_string)
+{
+	int ret;
+	struct regexp_vbresult result;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct vbuffer *vb = some_vbuffer("abc", "", "", "", NULL);
+	clear_error();
+
+	// When
+	ret = rem->vbmatch("abc$", vb, &result);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret > 0, "regexp expected to match, but found ret = %d", ret);
+
+	// Finally
+	vbuffer_free(vb);
+	regexp_module_release(rem);
+}
+END_TEST
+
 START_TEST(nonreg_regexp_should_match_even_with_nul_byte)
 {
 	int ret;
@@ -955,6 +978,7 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, nonreg_regexp_should_match_end_of_line);
 	tcase_add_test(tcase, nonreg_regexp_should_not_match_end_of_line_before_end);
 	tcase_add_test(tcase, nonreg_regexp_should_match_even_with_empty_string);
+	tcase_add_test(tcase, nonreg_regexp_should_match_even_when_ending_with_empty_string);
 	tcase_add_test(tcase, nonreg_regexp_should_match_even_with_nul_byte);
 	suite_add_tcase(suite, tcase);
 

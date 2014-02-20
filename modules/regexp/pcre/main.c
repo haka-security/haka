@@ -76,6 +76,7 @@ static int                      _exec(struct regexp *re, const char *buf, int le
 static int                      _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len, struct regexp_vbresult *vbresult, bool eof);
 static struct regexp_sink_pcre *_get_sink(struct regexp *_re);
 static void                     _free_regexp_sink(struct regexp_sink_pcre *sink);
+static int                      _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer *vbuf, struct regexp_vbresult *result, bool _eof);
 
 struct regexp_module HAKA_MODULE = {
 	module: {
@@ -186,25 +187,13 @@ static int exec(struct regexp *re, const char *buf, int len, struct regexp_resul
 
 static int vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresult *result)
 {
-	int ret = -1;
-	size_t len;
-	void *iter = NULL;
-	const uint8 *ptr;
+	int ret = 0;
 	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_get_sink(re);
 
 	if (sink == NULL)
 		return -1;
 
-	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
-		bool eof = vbuffer_mmap_end(vbuf, iter);
-		/* PCRE partial don't accept empty buffer
-		 * see pcreapi(3) */
-		if (len == 0) continue;
-
-		ret = _partial_exec(sink, (const char *)ptr, len, result, eof);
-		/* if match or something goes wrong avoid parsing more */
-		if (ret != 0) break;
-	}
+	_vbpartial_exec(sink, vbuf, result, true);
 
 	ret = sink->match;
 
@@ -317,26 +306,11 @@ type_error:
 
 static int vbfeed(struct regexp_sink *_sink, struct vbuffer *vbuf, bool _eof)
 {
-	int ret = -1;
-	size_t len;
-	void *iter = NULL;
-	const uint8 *ptr;
 	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
 	CHECK_REGEXP_SINK_TYPE(sink);
 
-	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
-		/* We don't use vbresult since we can guarantee that vbuffer
-		 * will be continuous */
-		bool eof = _eof && vbuffer_mmap_end(vbuf, iter);
-		/* PCRE partial don't accept empty buffer
-		 * see pcreapi(3) */
-		if (len == 0) continue;
 
-		ret = _partial_exec(sink, (const char *)ptr, len, NULL, eof);
-		if (ret != 0) break;
-	}
-
-	return ret;
+	return _vbpartial_exec(sink, vbuf, NULL, _eof);
 
 type_error:
 	return -1;
@@ -465,4 +439,47 @@ static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len
 
 error:
 	return -1;
+}
+
+
+static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer *vbuf, struct regexp_vbresult *result, bool _eof)
+{
+	int ret = 0;
+	size_t len, plen;
+	void *iter = NULL;
+	const uint8 *ptr, *pptr = NULL;
+
+	assert(sink);
+        assert(vbuf);
+
+	/* In order to avoid vbuffer ending with empty chunck,
+	 * we keep previous non-empty ptr in pptr and
+	 * wait for end or next non-empty ptr to match against it */
+	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
+		bool last = vbuffer_mmap_end(vbuf, iter);
+		bool eof = _eof && last;
+		/* PCRE partial don't accept empty buffer see pcreapi(3)
+		 * Skip empty one except for end of vbuffer where we want to send previous valid */
+		if (len == 0 && !last) continue;
+
+		/* We got a new valid pointer, send previous one to pcre */
+		if (pptr) {
+			ret = _partial_exec(sink, (const char *)pptr, plen, result, eof && len == 0);
+			/* if match or something goes wrong avoid parsing more */
+			if (ret != 0) break;
+		}
+
+		/* Finally send last one if it is not empty */
+		if (last && len != 0) {
+			ret = _partial_exec(sink, (const char *)ptr, len, result, eof);
+			/* if match or something goes wrong avoid parsing more */
+			if (ret != 0) break;
+		}
+
+		pptr = ptr;
+		plen = len;
+
+	}
+
+	return sink->match;
 }
