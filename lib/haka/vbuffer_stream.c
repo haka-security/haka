@@ -148,11 +148,11 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer)
 
 	/* Extract buffer data */
 	vbuffer_create_empty(buffer);
-	list2_insert_list(&vbuffer_chunk_end(buffer)->list, &begin->list, &iter->list);
+	list2_insert_list(&vbuffer_chunk_end(buffer)->list, &begin->list, list2_next(&iter->list));
 
 	/* Remove push ctl node */
 	assert(iter == current->ctl_iter.chunk);
-	vbuffer_chunk_clear(current->ctl_iter.chunk);
+	vbuffer_chunk_remove_ctl(iter);
 
 	/* Destroy chunk */
 	list2_erase(&current->list);

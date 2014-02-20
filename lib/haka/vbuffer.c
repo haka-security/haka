@@ -178,6 +178,21 @@ static uint8 *vbuffer_chunk_get_data(struct vbuffer_chunk *chunk, bool write)
 	return ptr + chunk->offset;
 }
 
+struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk)
+{
+	struct vbuffer_chunk *next;
+
+	assert(chunk);
+	assert(chunk->flags.ctl);
+
+	next = vbuffer_chunk_next(chunk);
+
+	next->flags.modified |= chunk->flags.modified;
+	vbuffer_chunk_clear(chunk);
+
+	return next;
+}
+
 
 /*
  * Buffer
@@ -340,19 +355,6 @@ bool vbuffer_ismodified(struct vbuffer *buf)
 	return false;
 }
 
-static void vbuffer_markmodified(struct vbuffer *buf)
-{
-	struct vbuffer_chunk *iter;
-
-	assert(vbuffer_isvalid(buf));
-
-	iter = vbuffer_chunk_begin(buf);
-	while (iter) {
-		iter->flags.modified = true;
-		iter = vbuffer_chunk_next(iter);
-	}
-}
-
 void vbuffer_clearmodified(struct vbuffer *buf)
 {
 	struct vbuffer_chunk *iter;
@@ -372,7 +374,7 @@ bool vbuffer_append(struct vbuffer *buf, struct vbuffer *buffer)
 
 	assert(vbuffer_isvalid(buf));
 
-	vbuffer_markmodified(buffer);
+	vbuffer_chunk_mark_modified(vbuffer_chunk_end(buf));
 
 	list2_insert_list(&vbuffer_chunk_end(buf)->list, list2_begin(list), list2_end(list));
 	assert(list2_empty(list));
@@ -582,8 +584,8 @@ bool vbuffer_iterator_unregister(struct vbuffer_iterator *position)
 
 	return true;
 }
+static struct vbuffer_chunk *_vbuffer_iterator_split(struct vbuffer_iterator *position, bool mark_modified)
 
-static struct vbuffer_chunk *_vbuffer_iterator_split(struct vbuffer_iterator *position)
 {
 	struct vbuffer_chunk *iter;
 	size_t offset;
@@ -591,6 +593,11 @@ static struct vbuffer_chunk *_vbuffer_iterator_split(struct vbuffer_iterator *po
 	assert(_vbuffer_iterator_check(position));
 
 	offset = _vbuffer_iterator_fix(position, &iter);
+
+	if (mark_modified) {
+		if (!vbuffer_chunk_check_writeable(iter)) return NULL;
+		vbuffer_chunk_mark_modified(iter);
+	}
 
 	if (offset == 0 || iter->flags.end) {
 		return iter;
@@ -628,9 +635,9 @@ bool vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *
 	list = vbuffer_chunk_list(buffer);
 	if (list2_empty(list)) return true;
 
-	vbuffer_markmodified(buffer);
+	insert = _vbuffer_iterator_split(position, true);
+	if (!insert) return false;
 
-	insert = _vbuffer_iterator_split(position);
 	list2_insert_list(&insert->list, list2_begin(list), list2_end(list));
 
 	vbuffer_iterator_update(position, insert, 0);
@@ -685,7 +692,12 @@ bool vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct 
 	len = vbuffer_iterator_advance(position, len);
 
 	if (split) {
-		struct vbuffer_chunk *iter = _vbuffer_iterator_split(position);
+		struct vbuffer_chunk *iter = _vbuffer_iterator_split(position, false);
+		if (!iter) {
+			vbuffer_iterator_clear(&begin);
+			return false;
+		}
+
 		vbuffer_iterator_update(position, iter, 0);
 	}
 
@@ -781,7 +793,7 @@ bool vbuffer_iterator_mark(struct vbuffer_iterator *position, bool readonly)
 		return false;
 	}
 
-	insert = _vbuffer_iterator_split(position);
+	insert = _vbuffer_iterator_split(position, false);
 	if (!insert) {
 		vbuffer_chunk_release(chunk);
 		return false;
@@ -805,8 +817,7 @@ bool vbuffer_iterator_unmark(struct vbuffer_iterator *position)
 		return false;
 	}
 
-	next = vbuffer_chunk_next(position->chunk);
-	vbuffer_chunk_clear(position->chunk);
+	next = vbuffer_chunk_remove_ctl(position->chunk);
 
 	vbuffer_iterator_update(position, next, 0);
 	return true;
@@ -1101,14 +1112,13 @@ static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct v
 
 	if (!_vbuffer_sub_check(data)) return NULL;
 
-	_vbuffer_init(buffer);
-
 	if (!data->use_size) {
 		/* Split end first to avoid invalidating the beginning iterator */
 		struct vbuffer_iterator iter;
 		vbuffer_sub_end(data, &iter);
-		end = _vbuffer_iterator_split(&iter);
+		end = _vbuffer_iterator_split(&iter, mark_modified);
 		vbuffer_iterator_clear(&iter);
+		if (!end) return NULL;
 	}
 	else {
 		size = data->length;
@@ -1117,11 +1127,12 @@ static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct v
 	{
 		struct vbuffer_iterator iter;
 		vbuffer_sub_begin(data, &iter);
-		begin = _vbuffer_iterator_split(&iter);
+		begin = _vbuffer_iterator_split(&iter, mark_modified);
 		vbuffer_iterator_clear(&iter);
+		if (!begin) return NULL;
 	}
 
-	if (mark_modified) begin->flags.modified = true;
+	_vbuffer_init(buffer);
 
 	if (data->use_size || !insert_ctl) {
 		list2_iter ctl_insert_iter = list2_prev(&begin->list);
@@ -1136,8 +1147,9 @@ static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct v
 					vbuffer_iterator_init(&splitpos);
 					splitpos.chunk = iter;
 					splitpos.offset = size;
-					end = _vbuffer_iterator_split(&splitpos);
+					end = _vbuffer_iterator_split(&splitpos, mark_modified);
 					vbuffer_iterator_clear(&splitpos);
+					if (!end) return NULL;
 					break;
 				}
 			}
@@ -1162,7 +1174,6 @@ static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct v
 
 	if (begin != end) {
 		list2_insert_list(&vbuffer_chunk_end(buffer)->list, &begin->list, &end->list);
-		if (mark_modified) vbuffer_chunk_end(buffer)->flags.modified = true;
 	}
 
 	if (insert_ctl) {
@@ -1197,9 +1208,7 @@ bool vbuffer_extract(struct vbuffer_sub *data, struct vbuffer *buffer)
 bool vbuffer_select(struct vbuffer_sub *data, struct vbuffer *buffer, struct vbuffer_iterator *ref)
 {
 	struct vbuffer_chunk *iter = _vbuffer_extract(data, buffer, false, true);
-	if (!iter) {
-		return false;
-	}
+	if (!iter) return false;
 
 	if (ref) {
 		vbuffer_iterator_init(ref);
@@ -1226,7 +1235,7 @@ bool vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data)
 
 	list2_insert_list(&position->chunk->list, &vbuffer_chunk_begin(data)->list, &vbuffer_chunk_end(data)->list);
 
-	vbuffer_chunk_clear(position->chunk);
+	vbuffer_chunk_remove_ctl(position->chunk);
 
 	vbuffer_iterator_clear(position);
 	vbuffer_clear(data);
@@ -1237,9 +1246,7 @@ bool vbuffer_erase(struct vbuffer_sub *data)
 {
 	struct vbuffer buffer = vbuffer_init;
 	struct vbuffer_chunk *iter = _vbuffer_extract(data, &buffer, true, false);
-	if (!iter) {
-		return false;
-	}
+	if (!iter) return false;
 
 	vbuffer_release(&buffer);
 	return true;
@@ -1250,20 +1257,17 @@ bool vbuffer_replace(struct vbuffer_sub *data, struct vbuffer *buffer)
 	struct vbuffer_sub new;
 	struct vbuffer erase = vbuffer_init;
 	struct vbuffer_chunk *iter = _vbuffer_extract(data, &erase, true, false);
-	if (!iter) {
-		return false;
-	}
+	if (!iter) return false;
+
 	vbuffer_release(&erase);
 
 	/* Update buffer range */
 	vbuffer_sub_create(&new, buffer, 0, ALL);
 
-	vbuffer_markmodified(buffer);
+	iter->flags.modified = true;
 
 	list2_insert_list(&iter->list, &vbuffer_chunk_begin(buffer)->list, &vbuffer_chunk_end(buffer)->list);
 	vbuffer_clear(buffer);
-
-	iter->flags.modified = true;
 
 	/* Update buffer range */
 	vbuffer_iterator_update(&data->begin, new.begin.chunk, new.begin.offset);

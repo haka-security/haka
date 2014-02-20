@@ -32,6 +32,7 @@ struct list2         *vbuffer_chunk_list(const struct vbuffer *buf);
 struct vbuffer_chunk *vbuffer_chunk_begin(const struct vbuffer *buf);
 struct vbuffer_chunk *vbuffer_chunk_end(const struct vbuffer *buf);
 struct vbuffer_chunk *vbuffer_chunk_next(struct vbuffer_chunk *chunk);
+struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk);
 
 void                  vbuffer_iterator_init(struct vbuffer_iterator *position);
 void                  vbuffer_iterator_update(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, size_t offset);
