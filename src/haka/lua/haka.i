@@ -161,8 +161,8 @@ int _getswigclassmetatable(struct lua_State *L)
 	function haka.pcall(func, ...)
 		assert(func)
 		local args = {...}
-		local ret, msg = xpcall(function () func(unpack(args)) end, debug.format_error)
-		if not ret then
+		local success, msg = xpcall(function () func(unpack(args)) end, debug.format_error)
+		if not success then
 			haka.log.error("core", msg)
 			return false
 		else
