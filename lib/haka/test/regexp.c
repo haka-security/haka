@@ -692,7 +692,7 @@ START_TEST(regexp_vbfeed_should_match_on_multiple_vbuffer)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret > 0, "vbfeed expected to match on multiple vbuffer, but found ret = %d", ret);
 
 
 	// Finally
