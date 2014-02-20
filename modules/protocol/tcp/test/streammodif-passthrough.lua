@@ -9,8 +9,7 @@ require("protocol/tcp-connection")
 haka.rule {
 	hook = haka.event('tcp-connection', 'receive_data'),
 	eval = function (flow, stream)
-		local buf = haka.vbuffer(4)
-		buf:setfixedstring("Haka")
+		local buf = haka.vbuffer("Haka")
 		stream.current:insert(buf)
 	end
 }
@@ -18,6 +17,6 @@ haka.rule {
 haka.rule {
 	hook = haka.event('tcp-connection', 'send_data'),
 	eval = function (flow, stream)
-		stream.current:erase(10)
+		stream.current:sub(10, true):erase()
 	end
 }
