@@ -24,7 +24,8 @@ Types
         :paramtype string: string
 
         :rtype: bool
-        :return: true if pattern matched, false otherwise
+        :rtype: :lua:class:`regexp.regexp_result`
+        :return: (true, :lua:class:`regexp.regexp_result`) if pattern matched, (false, nil) otherwise
 
         :raises Error: if pattern compilation fails
         :raises Error: if internal regular expression engine fails
@@ -39,7 +40,8 @@ Types
         :paramtype vbuffer: vbuffer
 
         :rtype: bool
-        :return: true if pattern matched, false otherwise
+        :rtype: :lua:class:`regexp.regexp_vbresult`
+        :return: (true, :lua:class:`regexp.regexp_vbresult`) if pattern matched, (false, nil) otherwise
 
         :raises Error: if pattern compilation fails
         :raises Error: if internal regular expression engine fails
@@ -67,7 +69,8 @@ Types
         :paramtype string: string
 
         :rtype: bool
-        :return: true if pattern matched, false otherwise
+        :rtype: :lua:class:`regexp.regexp_result`
+        :return: (true, :lua:class:`regexp.regexp_result`) if pattern matched, (false, nil) otherwise
 
         :raises Error: if internal regular expression engine fails
 
@@ -79,45 +82,67 @@ Types
         :paramtype vbuffer: vbuffer
 
         :rtype: bool
-        :return: true if pattern matched, false otherwise
+        :rtype: :lua:class:`regexp.regexp_vbresult`
+        :return: (true, :lua:class:`regexp.regexp_vbresult`) if pattern matched, (false, nil) otherwise
 
         :raises Error: if internal regular expression engine fails
 
-    .. lua:function:: get_ctx()
+    .. lua:function:: get_sink()
 
         Create a regexp context that can be eventually used for matching the
         regular expression against chunck of data
 
-        :rtype: :lua:class:`regexp.regexp_ctx`
-        :return: a regexp_ctx object
+        :rtype: :lua:class:`regexp.regexp_sink`
+        :return: a regexp_sink object
 
         :raises Error: if internal regular expression engine fails
 
-.. lua:class:: regexp_ctx
+.. lua:class:: regexp_sink
 
-    .. lua:function:: feed(string)
+    .. lua:function:: feed(string, eof)
 
         Match the compiled regular expression across multiple string.
 
         :param string: String against which regular expression is matched
         :paramtype string: string
+        :param eof: is this string the last one ?
+        :paramtype eof: bool
 
         :rtype: bool
-        :return: true if pattern matched, false otherwise
+        :rtype: :lua:class:`regexp.regexp_result`
+        :return: (true, :lua:class:`regexp.regexp_result`) if pattern matched, (false, nil) otherwise
 
         :raises Error: if internal regular expression engine fails
 
-    .. lua:function:: feed(vbuffer)
+    .. lua:function:: feed(vbuffer, eof)
 
         Match the compiled regular expression across multiple vbuffer.
 
         :param vbuffer: vbuffer against which regular expression is matched
         :paramtype vbuffer: vbuffer
+        :param eof: is this vbuffer the last one ?
+        :paramtype eof: bool
 
         :rtype: bool
-        :return: true if pattern matched, false otherwise
+        :rtype: :lua:class:`regexp.regexp_result`
+        :return: (true, :lua:class:`regexp.regexp_result`) if pattern matched, (false, nil) otherwise
+        :warning: This function **does not return** a :lua:class:`regexp.regexp_vbresult` since we cannot guarantee that the vbuffer that have been fed into this sink are continuous
 
         :raises Error: if internal regular expression engine fails
+
+.. lua:class:: regexp_result
+
+    A result for a string based matching.
+
+    .. lua:data:: offset (int)
+    .. lua:data:: size (int)
+
+.. lua:class:: regexp_vbresult
+
+    A result for a vbuffer based matching.
+
+    .. lua:data:: offset (int)
+    .. lua:data:: size (int)
 
 Example
 -------
