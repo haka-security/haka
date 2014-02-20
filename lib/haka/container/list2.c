@@ -21,7 +21,7 @@ static void _list2_check(list2_iter begin)
 
 		iter = list2_next(iter);
 
-		if (list2_atend(iter)) {
+		if (iter->is_end) {
 			++end_found;
 			assert(end_found <= 1);
 		}
@@ -50,12 +50,23 @@ static void _list2_check2(list2_iter begin, list2_iter end)
 
 #endif
 
+void list2_init(struct list2 *list)
+{
+	list->head.next = list->head.prev = &list->head;
+#ifdef HAKA_DEBUG
+	list->head.is_end = true;
+	list->head.is_elem = false;
+#endif
+}
+
 list2_iter list2_insert(list2_iter iter, struct list2_elem *list)
 {
 	assert(iter);
 	assert(list);
 	assert(!list->next && !list->prev);
+#ifdef HAKA_DEBUG
 	assert(!list->is_end);
+#endif
 
 	CHECK_LIST(iter);
 
@@ -78,7 +89,9 @@ list2_iter list2_insert_list(list2_iter iter, list2_iter begin, list2_iter end)
 
 	if (begin == end) return iter;
 
+#ifdef HAKA_DEBUG
 	assert(!begin->is_end);
+#endif
 
 	last = end->prev;
 
@@ -103,7 +116,10 @@ list2_iter list2_erase(list2_iter list)
 	CHECK_LIST(list);
 
 	assert(list);
-	assert(!list->is_end);
+
+#ifdef HAKA_DEBUG
+	assert( list->is_elem);
+#endif
 
 	next = list->next;
 	list->next->prev = list->prev;
@@ -111,7 +127,7 @@ list2_iter list2_erase(list2_iter list)
 
 	list->next = list->prev = NULL;
 
-	CHECK_LIST(next);
+	if (next != list) CHECK_LIST(next);
 	return next;
 }
 

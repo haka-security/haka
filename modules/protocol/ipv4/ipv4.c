@@ -20,9 +20,8 @@ static bool ipv4_flatten_header(struct vbuffer *payload, size_t hdrlen)
 	struct vbuffer_sub header_part;
 	size_t len;
 	const uint8 *ptr;
-	if (!vbuffer_sub_create(&header_part, payload, 0, hdrlen)) {
-		return false;
-	}
+
+	vbuffer_sub_create(&header_part, payload, 0, hdrlen);
 
 	ptr = vbuffer_sub_flatten(&header_part, &len);
 	assert(len >= hdrlen);
@@ -36,10 +35,7 @@ static bool ipv4_extract_payload(struct ipv4 *ip, size_t hdrlen, size_t size)
 	/* extract the ip data, we cannot just take everything that is after the header
 	 * as the packet might contains some padding.
 	 */
-	if (!vbuffer_sub_create(&header, &ip->packet->payload, hdrlen, size)) {
-		assert(check_error());
-		return false;
-	}
+	vbuffer_sub_create(&header, &ip->packet->payload, hdrlen, size);
 
 	if (!vbuffer_select(&header, &ip->payload, &ip->select)) {
 		assert(check_error());
@@ -170,6 +166,7 @@ struct ipv4 *ipv4_create(struct packet *packet)
 		}
 
 		vbuffer_append(payload, &header_buffer);
+		vbuffer_release(&header_buffer);
 	}
 
 	if (!ipv4_extract_payload(ip, hdrlen, ALL)) {
@@ -201,7 +198,6 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 
 		vbuffer_restore(&ip->select, &ip->payload);
 
-		vbuffer_clear(&ip->payload);
 		ip->packet = NULL;
 		return packet;
 	}
@@ -217,9 +213,7 @@ struct ipv4_header *ipv4_header(struct ipv4 *ip, bool write)
 	struct ipv4_header *header;
 	size_t len;
 
-	if (!vbuffer_begin(&ip->packet->payload, &begin)) {
-		return NULL;
-	}
+	vbuffer_begin(&ip->packet->payload, &begin);
 
 	header = (struct ipv4_header *)vbuffer_iterator_mmap(&begin, ALL, &len, write);
 	if (!header) {

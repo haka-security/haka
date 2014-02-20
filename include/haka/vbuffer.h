@@ -34,7 +34,7 @@ struct vbuffer_chunk;
 
 struct vbuffer {
 	struct lua_object            lua_object;
-	struct list2                 chunks;
+	struct vbuffer_chunk        *chunks;
 };
 
 extern const struct vbuffer vbuffer_init;
@@ -55,7 +55,7 @@ struct vbuffer_sub {
 };
 
 struct vbuffer_sub_mmap {
-	list2_iter                   data;
+	struct vbuffer_chunk        *data;
 	vbsize                       len;
 };
 
@@ -72,9 +72,9 @@ bool          vbuffer_create_new(struct vbuffer *buffer, size_t size, bool zero)
 bool          vbuffer_create_from(struct vbuffer *buffer, const char *str, size_t len);
 void          vbuffer_clear(struct vbuffer *buf);
 void          vbuffer_release(struct vbuffer *buffer);
-bool          vbuffer_position(const struct vbuffer *buf, struct vbuffer_iterator *position, size_t offset);
-INLINE bool   vbuffer_begin(const struct vbuffer *buf, struct vbuffer_iterator *position);
-INLINE bool   vbuffer_end(const struct vbuffer *buf, struct vbuffer_iterator *position);
+void          vbuffer_position(const struct vbuffer *buf, struct vbuffer_iterator *position, size_t offset);
+INLINE void   vbuffer_begin(const struct vbuffer *buf, struct vbuffer_iterator *position);
+INLINE void   vbuffer_end(const struct vbuffer *buf, struct vbuffer_iterator *position);
 void          vbuffer_setmode(struct vbuffer *buf, bool readonly);
 bool          vbuffer_ismodified(struct vbuffer *buf);
 void          vbuffer_clearmodified(struct vbuffer *buf);
@@ -84,9 +84,9 @@ INLINE bool   vbuffer_check_size(struct vbuffer *buf, size_t minsize, size_t *si
 INLINE bool   vbuffer_isflat(struct vbuffer *buf);
 INLINE const uint8 *vbuffer_flatten(struct vbuffer *buf, size_t *size);
 INLINE bool   vbuffer_clone(struct vbuffer *data, struct vbuffer *buffer, bool copy);
-bool          vbuffer_transfer(struct vbuffer *data, struct vbuffer *buffer);
+void          vbuffer_swap(struct vbuffer *data, struct vbuffer *buffer);
 
-bool          vbuffer_iterator_valid(struct vbuffer_iterator *position);
+bool          vbuffer_iterator_isvalid(const struct vbuffer_iterator *position);
 void          vbuffer_iterator_copy(struct vbuffer_iterator *position, const struct vbuffer_iterator *source);
 void          vbuffer_iterator_clear(struct vbuffer_iterator *position);
 size_t        vbuffer_iterator_available(struct vbuffer_iterator *position);
@@ -104,7 +104,7 @@ bool          vbuffer_iterator_mark(struct vbuffer_iterator *position, bool read
 bool          vbuffer_iterator_unmark(struct vbuffer_iterator *position);
 
 void          vbuffer_sub_clear(struct vbuffer_sub *data);
-bool          vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t offset, size_t length);
+void          vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t offset, size_t length);
 bool          vbuffer_sub_create_from_position(struct vbuffer_sub *data, struct vbuffer_iterator *position, size_t length);
 bool          vbuffer_sub_create_between_position(struct vbuffer_sub *data, struct vbuffer_iterator *begin, struct vbuffer_iterator *end);
 void          vbuffer_sub_begin(struct vbuffer_sub *data, struct vbuffer_iterator *begin);
@@ -143,33 +143,28 @@ bool          vbuffer_setbyte(struct vbuffer_sub *data, size_t offset, uint8 byt
  * Inlines
  */
 
-INLINE bool   vbuffer_begin(const struct vbuffer *buf, struct vbuffer_iterator *position)
+INLINE void   vbuffer_begin(const struct vbuffer *buf, struct vbuffer_iterator *position)
 {
-	return vbuffer_position(buf, position, 0);
+	vbuffer_position(buf, position, 0);
 }
 
-INLINE bool   vbuffer_end(const struct vbuffer *buf, struct vbuffer_iterator *position)
+INLINE void   vbuffer_end(const struct vbuffer *buf, struct vbuffer_iterator *position)
 {
-	return vbuffer_position(buf, position, ALL);
+	vbuffer_position(buf, position, ALL);
 }
 
 INLINE size_t vbuffer_size(struct vbuffer *buf)
 {
 	struct vbuffer_sub sub;
-	if (vbuffer_sub_create(&sub, buf, 0, ALL)) return vbuffer_sub_size(&sub);
-	else return 0;
+	vbuffer_sub_create(&sub, buf, 0, ALL);
+	return vbuffer_sub_size(&sub);
 }
 
 INLINE bool   vbuffer_check_size(struct vbuffer *buf, size_t minsize, size_t *size)
 {
 	struct vbuffer_sub sub;
-	if (vbuffer_sub_create(&sub, buf, 0, ALL)) {
-		return vbuffer_sub_check_size(&sub, minsize, size);
-	}
-	else {
-		if (size) *size = 0;
-		return minsize == 0;
-	}
+	vbuffer_sub_create(&sub, buf, 0, ALL);
+	return vbuffer_sub_check_size(&sub, minsize, size);
 }
 
 INLINE bool   vbuffer_isflat(struct vbuffer *buf)
@@ -189,12 +184,8 @@ INLINE const uint8 *vbuffer_flatten(struct vbuffer *buf, size_t *size)
 INLINE bool   vbuffer_clone(struct vbuffer *data, struct vbuffer *buffer, bool copy)
 {
 	struct vbuffer_sub sub;
-	if (vbuffer_sub_create(&sub, data, 0, ALL)) {
-		return vbuffer_sub_clone(&sub, buffer, copy);
-	}
-	else {
-		return vbuffer_create_empty(buffer);
-	}
+	vbuffer_sub_create(&sub, data, 0, ALL);
+	return vbuffer_sub_clone(&sub, buffer, copy);
 }
 
 #endif /* _HAKA_VBUFFER_H */

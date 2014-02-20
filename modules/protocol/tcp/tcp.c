@@ -27,9 +27,8 @@ static bool tcp_flatten_header(struct vbuffer *payload, size_t hdrlen)
 	struct vbuffer_sub header_part;
 	size_t len;
 	const uint8 *ptr;
-	if (!vbuffer_sub_create(&header_part, payload, 0, hdrlen)) {
-		return false;
-	}
+
+	vbuffer_sub_create(&header_part, payload, 0, hdrlen);
 
 	ptr = vbuffer_sub_flatten(&header_part, &len);
 	assert(len >= hdrlen);
@@ -40,11 +39,7 @@ static bool tcp_extract_payload(struct tcp *tcp, size_t hdrlen, size_t size)
 {
 	struct vbuffer_sub header;
 
-	if (!vbuffer_sub_create(&header, &tcp->packet->payload, hdrlen, ALL)) {
-		assert(check_error());
-		free(tcp);
-		return false;
-	}
+	vbuffer_sub_create(&header, &tcp->packet->payload, hdrlen, ALL);
 
 	if (!vbuffer_select(&header, &tcp->payload, &tcp->select)) {
 		assert(check_error());
@@ -122,6 +117,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 
 static bool tcp_add_header(struct vbuffer *payload)
 {
+	bool ret;
 	const size_t hdrlen = sizeof(struct tcp_header);
 	struct vbuffer header_buffer;
 	struct vbuffer_iterator begin;
@@ -130,12 +126,11 @@ static bool tcp_add_header(struct vbuffer *payload)
 		return false;
 	}
 
-	if (vbuffer_begin(payload, &begin)) {
-		return vbuffer_iterator_insert(&begin, &header_buffer);
-	}
-	else {
-		return vbuffer_append(payload, &header_buffer);
-	}
+	vbuffer_begin(payload, &begin);
+	ret = vbuffer_iterator_insert(&begin, &header_buffer);
+	vbuffer_release(&header_buffer);
+
+	return ret;
 }
 
 struct tcp *tcp_create(struct ipv4 *packet)
@@ -214,7 +209,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 
 			tcp_recompute_checksum(tcp);
 
-			if (!vbuffer_iterator_valid(&tcp->select)) {
+			if (!vbuffer_iterator_isvalid(&tcp->select)) {
 				struct vbuffer_iterator insert;
 				vbuffer_position(&tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
 				vbuffer_iterator_insert(&insert, &tcp->payload);
@@ -225,7 +220,8 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 
 			/* 'packet' is ready to be sent, prepare the next tcp packet
 			 * before returning */
-			vbuffer_transfer(&tcp->payload, &rem_payload);
+			vbuffer_swap(&tcp->payload, &rem_payload);
+			vbuffer_release(&rem_payload);
 
 			rem_pkt = packet_new(0);
 			if (!rem_pkt) {
@@ -263,7 +259,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 		else {
 			tcp_recompute_checksum(tcp);
 
-			if (!vbuffer_iterator_valid(&tcp->select)) {
+			if (!vbuffer_iterator_isvalid(&tcp->select)) {
 				struct vbuffer_iterator insert;
 				vbuffer_position(&tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
 				vbuffer_iterator_insert(&insert, &tcp->payload);
@@ -292,9 +288,7 @@ struct tcp_header *tcp_header(struct tcp *tcp, bool write)
 	struct tcp_header *header;
 	size_t len;
 
-	if (!vbuffer_begin(&tcp->packet->payload, &begin)) {
-		return NULL;
-	}
+	vbuffer_begin(&tcp->packet->payload, &begin);
 
 	header = (struct tcp_header *)vbuffer_iterator_mmap(&begin, ALL, &len, write);
 	if (!header) {
@@ -346,8 +340,13 @@ int16 tcp_checksum(struct tcp *tcp)
 
 	/* compute checksum */
 	sum = inet_checksum_partial((uint16 *)&tcp_pseudo_h, sizeof(struct tcp_pseudo_header), &odd);
-	if (vbuffer_sub_create(&sub, &tcp->packet->payload, 0, ALL)) sum += inet_checksum_vbuffer_partial(&sub, &odd);
-	if (vbuffer_sub_create(&sub, &tcp->payload, 0, ALL)) sum += inet_checksum_vbuffer_partial(&sub, &odd);
+
+	vbuffer_sub_create(&sub, &tcp->packet->payload, 0, ALL);
+	sum += inet_checksum_vbuffer_partial(&sub, &odd);
+
+	vbuffer_sub_create(&sub, &tcp->payload, 0, ALL);
+	sum += inet_checksum_vbuffer_partial(&sub, &odd);
+
 	return inet_checksum_reduce(sum);
 }
 
@@ -402,6 +401,7 @@ uint8 *tcp_resize_payload(struct tcp *tcp, size_t size)
 		}
 
 		vbuffer_append(&tcp->payload, &extra);
+		vbuffer_release(&extra);
 	}
 	else {
 		struct vbuffer_sub sub;

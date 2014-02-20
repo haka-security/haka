@@ -52,6 +52,6 @@ struct vbuffer_data_ctl_mark {
 
 struct vbuffer_data_ctl_mark   *vbuffer_data_ctl_mark();
 
-#define vbuffer_data_cast(data, type)   ((data)->ops == &type ## _ops ? (struct type*)(data) : NULL);
+#define vbuffer_data_cast(data, type)   ((data) ? ((data)->ops == &type ## _ops ? (struct type*)(data) : NULL) : NULL)
 
 #endif /* _HAKA_VBUFFER_DATA_H */

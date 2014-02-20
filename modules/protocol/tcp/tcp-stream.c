@@ -221,7 +221,9 @@ struct tcp *tcp_stream_pop(struct tcp_stream *stream)
 	 * boundary */
 
 	/* Update tcp packet */
-	vbuffer_transfer(&tcp->payload, &available);
+	vbuffer_swap(&tcp->payload, &available);
+	vbuffer_release(&available);
+
 	tcp_stream_seq(stream, tcp);
 
 	stream->last_sent_seq = chunk->end_seq;
@@ -268,7 +270,7 @@ void tcp_stream_ack(struct tcp_stream *stream, struct tcp *tcp)
 			break;
 		}
 
-		assert(list2_atend(list2_next(iter)) ||
+		assert(list2_next(iter) == end ||
 		       list2_get(list2_next(iter), struct tcp_stream_chunk)->start_seq == chunk->end_seq);
 
 		iter = list2_next(iter);

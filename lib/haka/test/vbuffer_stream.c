@@ -94,7 +94,7 @@ START_TEST(test_mark)
 	for (i=0; i<NUM; ++i) {
 		struct vbuffer buffer;
 		vbuffer_create_new(&buffer, sizes[i], true);
-		ck_assert(vbuffer_position(&buffer, &marks[i], mark_offsets[i]));
+		vbuffer_position(&buffer, &marks[i], mark_offsets[i]);
 		ck_assert(vbuffer_iterator_mark(&marks[i], false));
 
 		vbuffer_stream_push(&stream, &buffer);

@@ -9,6 +9,7 @@
 
 
 struct vbuffer_chunk_flags {
+	bool   end:1;
 	bool   modified:1;
 	bool   writable:1;
 	bool   ctl:1;
@@ -26,5 +27,13 @@ struct vbuffer_chunk {
 void                  vbuffer_chunk_clear(struct vbuffer_chunk *chunk);
 struct vbuffer_chunk *vbuffer_chunk_create(struct vbuffer_data *data, size_t offset, size_t length);
 struct vbuffer_chunk *vbuffer_chunk_create_ctl(struct vbuffer_data *data);
+
+struct list2         *vbuffer_chunk_list(const struct vbuffer *buf);
+struct vbuffer_chunk *vbuffer_chunk_begin(const struct vbuffer *buf);
+struct vbuffer_chunk *vbuffer_chunk_end(const struct vbuffer *buf);
+struct vbuffer_chunk *vbuffer_chunk_next(struct vbuffer_chunk *chunk);
+
+void                  vbuffer_iterator_init(struct vbuffer_iterator *position);
+void                  vbuffer_iterator_update(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, size_t offset);
 
 #endif /* _HAKA_VBUFFER_PRIVATE_H */

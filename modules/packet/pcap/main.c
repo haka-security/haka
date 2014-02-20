@@ -347,8 +347,7 @@ static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 	*data_offset = size;
 
 	if (size > 0) {
-		if (!vbuffer_sub_create(&sub, &pkt->data, 0, size)) return -1;
-
+		vbuffer_sub_create(&sub, &pkt->data, 0, size);
 		data = vbuffer_sub_flatten(&sub, &len);
 		assert(len >= *data_offset);
 		assert(data);
@@ -394,11 +393,11 @@ static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 
 static bool packet_build_payload(struct pcap_packet *packet)
 {
+	struct vbuffer_sub sub;
 	size_t data_offset;
 	get_protocol(packet, &data_offset);
 
-	struct vbuffer_sub sub;
-	if (!vbuffer_sub_create(&sub, &packet->data, data_offset, ALL)) return false;
+	vbuffer_sub_create(&sub, &packet->data, data_offset, ALL);
 
 	return vbuffer_select(&sub, &packet->core_packet.payload, &packet->select);
 }
@@ -641,11 +640,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 		return NULL;
 	}
 
-	if (!vbuffer_sub_create(&sub, &packet->data, 0, data_offset)) {
-		vbuffer_release(&packet->data);
-		free(packet);
-		return NULL;
-	}
+	vbuffer_sub_create(&sub, &packet->data, 0, data_offset);
 
 	data = vbuffer_mmap(&sub, &len, true, NULL);
 	assert(data || len == 0);

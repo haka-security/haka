@@ -57,19 +57,19 @@ START_TEST(test_iterator_available)
 	ck_check_error;
 
 	/* Check the available size from the beginning */
-	ck_assert(vbuffer_begin(&buffer, &iter));
+	vbuffer_begin(&buffer, &iter);
 	ck_assert_int_eq(vbuffer_iterator_available(&iter), size+strlen(string));
 	ck_assert(vbuffer_iterator_check_available(&iter, size+10, NULL));
 	vbuffer_iterator_clear(&iter);
 
 	/* Check the available size from the middle of it */
-	ck_assert(vbuffer_position(&buffer, &iter, 48));
+	vbuffer_position(&buffer, &iter, 48);
 	ck_assert_int_eq(vbuffer_iterator_available(&iter), size+strlen(string)-48);
 	ck_assert(vbuffer_iterator_check_available(&iter, 10, NULL));
 	vbuffer_iterator_clear(&iter);
 
 	/* Check the available size from the end */
-	ck_assert(vbuffer_end(&buffer, &iter));
+	vbuffer_end(&buffer, &iter);
 	ck_assert_int_eq(vbuffer_iterator_available(&iter), 0);
 	ck_assert(!vbuffer_iterator_check_available(&iter, 10, NULL));
 	vbuffer_iterator_clear(&iter);
@@ -94,7 +94,7 @@ static void vbuffer_test_build2(struct vbuffer *buffer1)
 	ck_assert(vbuffer_create_from(&buffer2, string, strlen(string)));
 	ck_check_error;
 
-	ck_assert(vbuffer_begin(buffer1, &iter));
+	vbuffer_begin(buffer1, &iter);
 
 	/* Do not use ck_assert_int_eq here as it will call vbuffer_iterator_advance
 	 * twice in this case.
@@ -132,7 +132,7 @@ START_TEST(test_erase)
 	vbuffer_test_build2(&buffer);
 
 	/* Erase part of the buffer */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, 30));
+	vbuffer_sub_create(&sub, &buffer, 0, 30);
 	ck_check_error;
 
 	vbuffer_erase(&sub);
@@ -140,7 +140,7 @@ START_TEST(test_erase)
 	vbuffer_sub_clear(&sub);
 
 	/* Erase the rest of the buffer */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, ALL));
+	vbuffer_sub_create(&sub, &buffer, 0, ALL);
 	vbuffer_erase(&sub);
 	ck_assert_int_eq(vbuffer_size(&buffer), 0);
 	vbuffer_sub_clear(&sub);
@@ -157,7 +157,7 @@ START_TEST(test_extract)
 	vbuffer_test_build2(&buffer);
 
 	/* Extract part of it */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, 12, 100));
+	vbuffer_sub_create(&sub, &buffer, 12, 100);
 	ck_check_error;
 
 	vbuffer_extract(&sub, &extract);
@@ -167,7 +167,7 @@ START_TEST(test_extract)
 	vbuffer_sub_clear(&sub);
 
 	/* Extract the rest */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, ALL));
+	vbuffer_sub_create(&sub, &buffer, 0, ALL);
 	ck_check_error;
 
 	vbuffer_extract(&sub, &extract);
@@ -222,7 +222,7 @@ START_TEST(test_select)
 	vbuffer_test_build2(&buffer);
 
 	/* Select sub buffer */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset/2, strlen(string)+insert_offset));
+	vbuffer_sub_create(&sub, &buffer, insert_offset/2, strlen(string)+insert_offset);
 	ck_check_error;
 
 	ck_assert(vbuffer_select(&sub, &select, &ref));
@@ -248,14 +248,14 @@ START_TEST(test_flatten)
 	vbuffer_test_build2(&buffer);
 
 	/* Check flatness of part of the buffer */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset+2, strlen(string)/2));
+	vbuffer_sub_create(&sub, &buffer, insert_offset+2, strlen(string)/2);
 	ck_check_error;
 	ck_assert(vbuffer_sub_isflat(&sub));
 	vbuffer_sub_clear(&sub);
 	ck_check_error;
 
 	/* Check flatness of the whole buffer */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, ALL));
+	vbuffer_sub_create(&sub, &buffer, 0, ALL);
 	ck_check_error;
 	ck_assert(!vbuffer_sub_isflat(&sub));
 	ck_check_error;
@@ -282,11 +282,11 @@ START_TEST(test_compact)
 	ck_check_error;
 
 	/* Add a mark and remove it to split the buffer */
-	ck_assert(vbuffer_position(&buffer, &iter, insert_offset));
+	vbuffer_position(&buffer, &iter, insert_offset);
 	vbuffer_iterator_mark(&iter, true);
 	vbuffer_iterator_unmark(&iter);
 
-	ck_assert(vbuffer_sub_create(&sub, &buffer, 0, ALL));
+	vbuffer_sub_create(&sub, &buffer, 0, ALL);
 	ck_check_error;
 	ck_assert(!vbuffer_sub_isflat(&sub));
 	ck_check_error;
@@ -311,7 +311,7 @@ START_TEST(test_number)
 	vbuffer_test_build2(&buffer);
 
 	/* Check number conversion on a single chunk */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset+2, 4));
+	vbuffer_sub_create(&sub, &buffer, insert_offset+2, 4);
 	ck_check_error;
 	ck_assert(vbuffer_sub_isflat(&sub));
 
@@ -329,7 +329,7 @@ START_TEST(test_number)
 	ck_check_error;
 
 	/* Check number conversion over a chunk boundary */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset-2, 4));
+	vbuffer_sub_create(&sub, &buffer, insert_offset-2, 4);
 	ck_check_error;
 	ck_assert(!vbuffer_sub_isflat(&sub));
 
@@ -363,7 +363,7 @@ START_TEST(test_bits)
 	vbuffer_test_build2(&buffer);
 
 	/* Check number conversion on a single chunk */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset+2, 2));
+	vbuffer_sub_create(&sub, &buffer, insert_offset+2, 2);
 	ck_check_error;
 	ck_assert(vbuffer_sub_isflat(&sub));
 
@@ -381,7 +381,7 @@ START_TEST(test_bits)
 	ck_check_error;
 
 	/* Check number conversion over a chunk boundary */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset-1, 2));
+	vbuffer_sub_create(&sub, &buffer, insert_offset-1, 2);
 	ck_check_error;
 	ck_assert(!vbuffer_sub_isflat(&sub));
 
@@ -411,7 +411,7 @@ START_TEST(test_string)
 	vbuffer_test_build2(&buffer);
 
 	/* Check known string */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset, strlen(string)));
+	vbuffer_sub_create(&sub, &buffer, insert_offset, strlen(string));
 	ck_check_error;
 	ck_assert(vbuffer_asstring(&sub, str, 100));
 	ck_assert_str_eq(str, string);
@@ -431,7 +431,7 @@ START_TEST(test_string)
 	ck_check_error;
 
 	/* Check string set over chunk boundary */
-	ck_assert(vbuffer_sub_create(&sub, &buffer, insert_offset-10, strlen(string)));
+	vbuffer_sub_create(&sub, &buffer, insert_offset-10, strlen(string));
 	ck_check_error;
 
 	ck_assert(vbuffer_setfixedstring(&sub, string2, strlen(string2)));

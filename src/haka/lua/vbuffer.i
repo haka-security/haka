@@ -141,7 +141,7 @@ struct vbuffer_sub {
 			return sub;
 		}
 
-		struct vbuffer_iterator *pos(int offset)
+		struct vbuffer_iterator *pos(int offset = ALL)
 		{
 			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
@@ -171,7 +171,11 @@ struct vbuffer_sub {
 				return NULL;
 			}
 
-			vbuffer_asstring($self, str, len+1);
+			if (vbuffer_asstring($self, str, len+1) == (size_t)-1) {
+				free(str);
+				return NULL;
+			}
+
 			return str;
 		}
 
@@ -246,7 +250,7 @@ struct vbuffer {
 			vbuffer_setbyte(&sub, index-1, value);
 		}
 
-		struct vbuffer_iterator *pos(int offset)
+		struct vbuffer_iterator *pos(int offset = ALL)
 		{
 			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
@@ -254,11 +258,7 @@ struct vbuffer {
 				return NULL;
 			}
 
-			if (!vbuffer_position($self, iter, offset)) {
-				free(iter);
-				return NULL;
-			}
-
+			vbuffer_position($self, iter, offset);
 			return iter;
 		}
 
@@ -270,11 +270,7 @@ struct vbuffer {
 				return NULL;
 			}
 
-			if (!vbuffer_sub_create(sub, $self, offset, size)) {
-				free(sub);
-				return NULL;
-			}
-
+			vbuffer_sub_create(sub, $self, offset, size);
 			return sub;
 		}
 
@@ -353,10 +349,7 @@ struct vbuffer_stream {
 				error(L"memory error");
 				return NULL;
 			}
-			if (!vbuffer_stream_current($self, iter)) {
-				free(iter);
-				return NULL;
-			}
+			vbuffer_stream_current($self, iter);
 			return iter;
 		}
 	}
