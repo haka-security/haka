@@ -837,6 +837,60 @@ START_TEST(nonreg_regexp_should_not_match_end_of_line_before_end)
 }
 END_TEST
 
+START_TEST(nonreg_regexp_should_match_even_with_empty_string)
+{
+	int ret;
+	struct regexp_vbresult result;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct vbuffer *vb = some_vbuffer("a", "", "", "bc", NULL);
+	clear_error();
+
+	// When
+	ret = rem->vbmatch("abc", vb, &result);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret > 0, "regexp expected to match, but found ret = %d", ret);
+
+	// Finally
+	vbuffer_free(vb);
+	regexp_module_release(rem);
+
+}
+END_TEST
+
+START_TEST(nonreg_regexp_should_match_even_with_nul_byte)
+{
+	int ret;
+	struct regexp_vbresult result;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	// A vbuffer of 4 bytes with "abc\0"
+	size_t len = 4;
+	struct vbuffer *vb = vbuffer_create_new(len);
+	void *iter = NULL;
+	uint8 *ptr = vbuffer_mmap(vb, &iter, &len, true);
+	memcpy(ptr, "abc", len);
+	vbuffer_clearmodified(vb);
+	clear_error();
+
+	// When
+	ret = rem->vbmatch("abc", vb, &result);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret > 0, "regexp expected to match, but found ret = %d", ret);
+
+	// Finally
+	vbuffer_free(vb);
+	regexp_module_release(rem);
+
+}
+END_TEST
+
 Suite* regexp_suite(void)
 {
 	Suite *suite = suite_create("regexp_suite");
@@ -900,6 +954,8 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, nonreg_regexp_should_not_match_after_start_of_line_if_pattern_start_with_circum);
 	tcase_add_test(tcase, nonreg_regexp_should_match_end_of_line);
 	tcase_add_test(tcase, nonreg_regexp_should_not_match_end_of_line_before_end);
+	tcase_add_test(tcase, nonreg_regexp_should_match_even_with_empty_string);
+	tcase_add_test(tcase, nonreg_regexp_should_match_even_with_nul_byte);
 	suite_add_tcase(suite, tcase);
 
 	return suite;

@@ -197,6 +197,10 @@ static int vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresul
 
 	while ((ptr = vbuffer_mmap(vbuf, &iter, &len, false))) {
 		bool eof = vbuffer_mmap_end(vbuf, iter);
+		/* PCRE partial don't accept empty buffer
+		 * see pcreapi(3) */
+		if (len == 0) continue;
+
 		ret = _partial_exec(sink, (const char *)ptr, len, result, eof);
 		/* if match or something goes wrong avoid parsing more */
 		if (ret != 0) break;
@@ -324,6 +328,10 @@ static int vbfeed(struct regexp_sink *_sink, struct vbuffer *vbuf, bool _eof)
 		/* We don't use vbresult since we can guarantee that vbuffer
 		 * will be continuous */
 		bool eof = _eof && vbuffer_mmap_end(vbuf, iter);
+		/* PCRE partial don't accept empty buffer
+		 * see pcreapi(3) */
+		if (len == 0) continue;
+
 		ret = _partial_exec(sink, (const char *)ptr, len, NULL, eof);
 		if (ret != 0) break;
 	}
