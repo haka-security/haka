@@ -26,7 +26,7 @@ struct vbuffer_chunk {
 
 void                  vbuffer_chunk_clear(struct vbuffer_chunk *chunk);
 struct vbuffer_chunk *vbuffer_chunk_create(struct vbuffer_data *data, size_t offset, size_t length);
-struct vbuffer_chunk *vbuffer_chunk_create_ctl(struct vbuffer_data *data);
+struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_data *data, struct vbuffer_chunk *insert);
 
 struct list2         *vbuffer_chunk_list(const struct vbuffer *buf);
 struct vbuffer_chunk *vbuffer_chunk_begin(const struct vbuffer *buf);

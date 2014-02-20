@@ -491,7 +491,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 					return ENOMEM;
 				}
 
-				vbuffer_setmode(&packet->data, passthrough);
+				vbuffer_setwritable(&packet->data, passthrough);
 
 				/* fill packet data structure */
 				packet->header = *header;

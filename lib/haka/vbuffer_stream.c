@@ -72,17 +72,16 @@ bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data)
 		return false;
 	}
 
-	ctl = vbuffer_chunk_create_ctl(&chunk->ctl_data->super.super);
+	ctl = vbuffer_chunk_insert_ctl(&chunk->ctl_data->super.super, vbuffer_chunk_end(data));
 	if (!ctl) {
 		free(chunk);
 		return false;
 	}
 
-	list2_insert(list2_end(&stream->chunks), &chunk->list);
-
 	end = vbuffer_chunk_end(&stream->data);
 	list2_insert_list(&end->list, &vbuffer_chunk_begin(data)->list, &vbuffer_chunk_end(data)->list);
-	list2_insert(&end->list, &ctl->list);
+
+	list2_insert(list2_end(&stream->chunks), &chunk->list);
 
 	vbuffer_clear(data);
 
@@ -148,6 +147,8 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer)
 
 	/* Extract buffer data */
 	vbuffer_create_empty(buffer);
+	vbuffer_setwritable(buffer, !iter->flags.writable);
+
 	list2_insert_list(&vbuffer_chunk_end(buffer)->list, &begin->list, list2_next(&iter->list));
 
 	/* Remove push ctl node */

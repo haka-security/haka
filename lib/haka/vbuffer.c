@@ -58,7 +58,7 @@ void vbuffer_chunk_clear(struct vbuffer_chunk *chunk)
 	vbuffer_chunk_release(chunk);
 }
 
-static struct vbuffer_chunk *vbuffer_chunk_create_end()
+static struct vbuffer_chunk *vbuffer_chunk_create_end(bool writable)
 {
 	struct vbuffer_chunk *chunk = malloc(sizeof(struct vbuffer_chunk));
 	if (!chunk) {
@@ -71,7 +71,7 @@ static struct vbuffer_chunk *vbuffer_chunk_create_end()
 	chunk->offset = 0;
 	chunk->data = NULL;
 	chunk->flags.modified = false;
-	chunk->flags.writable = false;
+	chunk->flags.writable = writable;
 	chunk->flags.ctl = true;
 	chunk->flags.end = true;
 
@@ -119,9 +119,14 @@ struct vbuffer_chunk *vbuffer_chunk_create(struct vbuffer_data *data, size_t off
 	return chunk;
 }
 
-struct vbuffer_chunk *vbuffer_chunk_create_ctl(struct vbuffer_data *data)
+struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_data *data, struct vbuffer_chunk *insert)
 {
-	struct vbuffer_chunk *chunk = malloc(sizeof(struct vbuffer_chunk));
+	struct vbuffer_chunk *chunk;
+
+	assert(data);
+	assert(insert);
+
+	chunk = malloc(sizeof(struct vbuffer_chunk));
 	if (!chunk) {
 		if (data) data->ops->free(data);
 		error(L"memory error");
@@ -133,13 +138,15 @@ struct vbuffer_chunk *vbuffer_chunk_create_ctl(struct vbuffer_data *data)
 	chunk->offset = 0;
 	chunk->data = data;
 	chunk->flags.modified = false;
-	chunk->flags.writable = true;
+	chunk->flags.writable = insert->flags.writable;
 	chunk->flags.ctl = true;
 	chunk->flags.end = false;
 	if (data) data->ops->addref(data);
 	vbuffer_chunk_addref(chunk);
 
 	list2_elem_init(&chunk->list);
+	list2_insert(&insert->list, &chunk->list);
+
 	return chunk;
 }
 
@@ -200,10 +207,10 @@ struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk)
 
 const struct vbuffer vbuffer_init = { LUA_OBJECT_INIT, NULL };
 
-static bool _vbuffer_init(struct vbuffer *buffer)
+static bool _vbuffer_init(struct vbuffer *buffer, bool writable)
 {
 	buffer->lua_object = lua_object_init;
-	buffer->chunks = vbuffer_chunk_create_end();
+	buffer->chunks = vbuffer_chunk_create_end(writable);
 	return buffer->chunks != NULL;
 }
 
@@ -214,7 +221,7 @@ bool vbuffer_isvalid(const struct vbuffer *buffer)
 
 bool vbuffer_create_empty(struct vbuffer *buffer)
 {
-	return _vbuffer_init(buffer);
+	return _vbuffer_init(buffer, true);
 }
 
 struct list2 *vbuffer_chunk_list(const struct vbuffer *buf)
@@ -242,7 +249,7 @@ static bool vbuffer_create_from_data(struct vbuffer *buffer, struct vbuffer_data
 		return false;
 	}
 
-	_vbuffer_init(buffer);
+	_vbuffer_init(buffer, true);
 	list2_insert(&vbuffer_chunk_end(buffer)->list, &chunk->list);
 	return true;
 }
@@ -325,7 +332,7 @@ void vbuffer_position(const struct vbuffer *buf, struct vbuffer_iterator *positi
 	}
 }
 
-void vbuffer_setmode(struct vbuffer *buf, bool readonly)
+void vbuffer_setwritable(struct vbuffer *buf, bool readonly)
 {
 	struct vbuffer_chunk *iter;
 
@@ -337,6 +344,12 @@ void vbuffer_setmode(struct vbuffer *buf, bool readonly)
 		iter = vbuffer_chunk_next(iter);
 
 	}
+}
+
+bool vbuffer_iswritable(struct vbuffer *buf)
+{
+	assert(vbuffer_isvalid(buf));
+	return vbuffer_chunk_end(buf)->flags.writable;
 }
 
 bool vbuffer_ismodified(struct vbuffer *buf)
@@ -783,23 +796,17 @@ bool vbuffer_iterator_mark(struct vbuffer_iterator *position, bool readonly)
 
 	if (!_vbuffer_iterator_check(position)) return false;
 
+	insert = _vbuffer_iterator_split(position, false);
+	if (!insert) return false;
+
 	mark = vbuffer_data_ctl_mark();
 	if (!mark) {
 		return false;
 	}
 
-	chunk = vbuffer_chunk_create_ctl(&mark->super.super);
-	if (!chunk) {
-		return false;
-	}
+	chunk = vbuffer_chunk_insert_ctl(&mark->super.super, insert);
+	if (!chunk) return false;
 
-	insert = _vbuffer_iterator_split(position, false);
-	if (!insert) {
-		vbuffer_chunk_release(chunk);
-		return false;
-	}
-
-	list2_insert(&insert->list, &chunk->list);
 	vbuffer_iterator_update(position, chunk, 0);
 	return true;
 }
@@ -1132,7 +1139,7 @@ static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct v
 		if (!begin) return NULL;
 	}
 
-	_vbuffer_init(buffer);
+	_vbuffer_init(buffer, begin->flags.writable);
 
 	if (data->use_size || !insert_ctl) {
 		list2_iter ctl_insert_iter = list2_prev(&begin->list);
@@ -1184,13 +1191,12 @@ static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct v
 			return NULL;
 		}
 
-		mark = vbuffer_chunk_create_ctl(&ctl->super.super);
+		mark = vbuffer_chunk_insert_ctl(&ctl->super.super, end);
 		if (!mark) {
 			vbuffer_clear(buffer);
 			return NULL;
 		}
 
-		list2_insert(&end->list, &mark->list);
 		return mark;
 	}
 	else {
@@ -1421,7 +1427,7 @@ bool vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, bool co
 
 	if (!_vbuffer_sub_check(data)) return false;
 
-	_vbuffer_init(buffer);
+	_vbuffer_init(buffer, true);
 	end = vbuffer_chunk_end(buffer);
 
 	size = 0;
@@ -1431,6 +1437,7 @@ bool vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, bool co
 			struct vbuffer_chunk *clone = vbuffer_chunk_clone(chunk, copy);
 			list2_insert(&end->list, &clone->list);
 
+			end->flags.writable = clone->flags.writable;
 			size += clone->size;
 		}
 	}
