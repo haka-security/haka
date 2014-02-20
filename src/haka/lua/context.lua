@@ -53,9 +53,9 @@ end
 function Context.method:scope(context, func)
 	local old = self.context
 	self.context = context
-	local ret, msg = haka.pcall(func)
+	local success, msg = xpcall(func, debug.format_error)
 	self.context = old
-	if not ret then error(msg) end
+	if not success then error(msg) end
 end
 
 function Context.method:install_dissector(dissector)
