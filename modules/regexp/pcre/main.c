@@ -114,8 +114,12 @@ static void cleanup()
 static int match(const char *pattern, const char *buf, int len, struct regexp_result *result)
 {
 	int ret = -1;
-	struct regexp *re = compile(pattern);
+	struct regexp *re;
 
+	assert(pattern);
+	assert(buf);
+
+	re = compile(pattern);
 	if (re == NULL) return -1;
 
 	ret = exec(re, buf, len, result);
@@ -129,6 +133,9 @@ static int vbmatch(const char *pattern, struct vbuffer *vbuf, struct regexp_vbre
 {
 	int ret = -1;
 	struct regexp *re;
+
+	assert(pattern);
+	assert(vbuf);
 
 	re = compile(pattern);
 	if (re == NULL) return -1;
@@ -145,7 +152,11 @@ static struct regexp *compile(const char *pattern)
 	int options = DEFAULT_COMPILE_OPTIONS;
 	const char *errorstr;
 	int erroffset;
-	struct regexp_pcre *re = malloc(sizeof(struct regexp_pcre));
+	struct regexp_pcre *re;
+
+	assert(pattern);
+
+	re = malloc(sizeof(struct regexp_pcre));
 	if (!re) {
 		error(L"memory error");
 		return NULL;
@@ -169,6 +180,7 @@ error:
 static void release_regexp(struct regexp *_re)
 {
 	struct regexp_pcre *re = (struct regexp_pcre *)_re;
+
 	CHECK_REGEXP_TYPE(re);
 
 	if (atomic_dec(&re->regexp.ref_count) != 0) return;
@@ -182,13 +194,21 @@ type_error:
 
 static int exec(struct regexp *re, const char *buf, int len, struct regexp_result *result)
 {
+	assert(re);
+	assert(buf);
+
 	return _exec(re, buf, len, result);
 }
 
 static int vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresult *result)
 {
 	int ret = 0;
-	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_get_sink(re);
+	struct regexp_sink_pcre *sink;
+
+	assert(re);
+	assert(vbuf);
+
+	sink = (struct regexp_sink_pcre *)_get_sink(re);
 
 	if (sink == NULL)
 		return -1;
@@ -204,6 +224,8 @@ static int vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresul
 
 static struct regexp_sink *get_sink(struct regexp *re)
 {
+	assert(re);
+
 	return (struct regexp_sink *)_get_sink(re);
 }
 
@@ -211,6 +233,7 @@ static struct regexp_sink_pcre *_get_sink(struct regexp *_re)
 {
 	struct regexp_pcre *re = (struct regexp_pcre *)_re;
 	struct regexp_sink_pcre *sink;
+
 	CHECK_REGEXP_TYPE(re);
 
 	sink = malloc(sizeof(struct regexp_sink_pcre));
@@ -244,6 +267,7 @@ type_error:
 static void free_regexp_sink(struct regexp_sink *_sink)
 {
 	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
+
 	CHECK_REGEXP_SINK_TYPE(sink);
 
 	_free_regexp_sink(sink);
@@ -254,6 +278,8 @@ type_error:
 
 static void _free_regexp_sink(struct regexp_sink_pcre *sink)
 {
+	assert(sink);
+
 	release_regexp(sink->regexp_sink.regexp);
 	free(sink->workspace);
 	free(sink);
@@ -261,7 +287,11 @@ static void _free_regexp_sink(struct regexp_sink_pcre *sink)
 
 static bool workspace_grow(struct regexp_sink_pcre *sink)
 {
-	struct regexp_pcre *re = (struct regexp_pcre *)sink->regexp_sink.regexp;
+	struct regexp_pcre *re;
+
+	assert(sink);
+
+	re = (struct regexp_pcre *)sink->regexp_sink.regexp;
 
 	sink->wscount *= 2;
 
@@ -296,7 +326,9 @@ static bool workspace_grow(struct regexp_sink_pcre *sink)
 static int feed(struct regexp_sink *_sink, const char *buf, int len, bool eof)
 {
 	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
+
 	CHECK_REGEXP_SINK_TYPE(sink);
+	assert(buf);
 
 	return _partial_exec(sink, buf, len, NULL, eof);
 
@@ -307,8 +339,9 @@ type_error:
 static int vbfeed(struct regexp_sink *_sink, struct vbuffer *vbuf, bool _eof)
 {
 	struct regexp_sink_pcre *sink = (struct regexp_sink_pcre *)_sink;
-	CHECK_REGEXP_SINK_TYPE(sink);
 
+	CHECK_REGEXP_SINK_TYPE(sink);
+	assert(vbuf);
 
 	return _vbpartial_exec(sink, vbuf, NULL, _eof);
 
@@ -321,7 +354,9 @@ static int _exec(struct regexp *_re, const char *buf, int len, struct regexp_res
 	int ret = -1;
 	struct regexp_pcre *re = (struct regexp_pcre *)_re;
 	int ovector[OVECTOR_SIZE] = { 0 };
+
 	CHECK_REGEXP_TYPE(re);
+	assert(buf);
 
 	ret = pcre_exec(re->pcre, NULL, buf, len, 0, 0, ovector, OVECTOR_SIZE);
 
@@ -354,6 +389,9 @@ static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len
 	int options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
 	int ovector[OVECTOR_SIZE] = { 0 };
 	struct regexp_pcre *re;
+
+	assert(sink);
+	assert(buf);
 
 	if (sink->workspace == NULL) {
 		error(L"Invalid sink. NULL workspace");
