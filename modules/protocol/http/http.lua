@@ -461,7 +461,7 @@ local function parse_header(http)
 		local name, value = line:match("([^%s]+):%s*(.+)")
 		if not name then
 			http._invalid = string.format("invalid http header '%s'", safe_string(line))
-			return
+			return 0
 		end
 
 		http.headers[name] = value
@@ -522,7 +522,10 @@ function http_dissector.method:parse(stream, context, f, signal, next_state)
 			context._mark = stream.current
 			context._mark:mark()
 		end
-		context._co = coroutine.create(function () f(context) end)
+		context._co = coroutine.create(function ()
+			local success, msg = pcall(f, context)
+			if not success then context._error = msg end
+		end)
 	end
 
 	context._stream = stream.current
@@ -532,7 +535,7 @@ function http_dissector.method:parse(stream, context, f, signal, next_state)
 	if coroutine.status(context._co) == "dead" then
 		context._co = nil
 
-		if not context._invalid then
+		if not context._invalid and not context._error then
 			self._state = next_state
 			
 			if not haka.pcall(haka.context.signal, haka.context, self, signal, context) then
@@ -542,11 +545,15 @@ function http_dissector.method:parse(stream, context, f, signal, next_state)
 
 			return true
 		else
-			haka.alert{
-				description = context._invalid,
-				severity = 'low'
-			}
-			self:drop()
+			if context._error then
+				error(context._error)
+			else
+				haka.alert{
+					description = context._invalid,
+					severity = 'low'
+				}
+				self:drop()
+			end
 			return false
 		end
 	end
