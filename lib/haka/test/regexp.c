@@ -914,6 +914,29 @@ START_TEST(nonreg_regexp_should_match_even_with_nul_byte)
 }
 END_TEST
 
+START_TEST(nonreg_regexp_should_match_even_with_a_partial_failed)
+{
+	int ret;
+	struct regexp_vbresult result;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct vbuffer *vb = some_vbuffer("fo", "bar", NULL);
+	clear_error();
+
+	// When
+	ret = rem->vbmatch("foo|bar", vb, &result);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret > 0, "regexp expected to match, but found ret = %d", ret);
+
+	// Finally
+	vbuffer_free(vb);
+	regexp_module_release(rem);
+}
+END_TEST
+
 Suite* regexp_suite(void)
 {
 	Suite *suite = suite_create("regexp_suite");
@@ -980,6 +1003,7 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, nonreg_regexp_should_match_even_with_empty_string);
 	tcase_add_test(tcase, nonreg_regexp_should_match_even_when_ending_with_empty_string);
 	tcase_add_test(tcase, nonreg_regexp_should_match_even_with_nul_byte);
+	tcase_add_test(tcase, nonreg_regexp_should_match_even_with_a_partial_failed);
 	suite_add_tcase(suite, tcase);
 
 	return suite;

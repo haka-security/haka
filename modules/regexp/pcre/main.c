@@ -384,9 +384,7 @@ type_error:
 static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len, struct regexp_vbresult *vbresult, bool eof)
 {
 	int ret = -1;
-	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match
-	 * We use PCRE_DFA_SHORTEST because we want to stop as soon as possible */
-	int options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
+	int options;
 	int ovector[OVECTOR_SIZE] = { 0 };
 	struct regexp_pcre *re;
 
@@ -404,6 +402,10 @@ static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len
 	if (sink->match > 0)
 		return sink->match;
 
+try_again:
+	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match
+	 * We use PCRE_DFA_SHORTEST because we want to stop as soon as possible */
+	options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
 	/* Set pcre exec options */
 	if (sink->started) options |= PCRE_NOTBOL;
 	/* restart dfa only on partial match
@@ -461,11 +463,16 @@ static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len
 			sink->processed_length += len;
 			return 0;
 		case PCRE_ERROR_NOMATCH:
-			//if (sink->match == PCRE_ERROR_PARTIAL)
-				// TODO partial fix : retry without restart
-				// On partial -> clone chunk
-				// On NOMACTH : flatten from partial + 1B | recall
-				// feed on partial 1B
+			/* pcre cannot see a new match when it failed a partial
+			 * we workaround this by running it again on current
+			 * data.
+			 * This leave the following case unhandled :
+			 * Try to match /aabc|abd/ on "aab", "d"
+			 */
+			if (sink->match == PCRE_ERROR_PARTIAL) {
+				sink->match = 0;
+				goto try_again;
+			}
 			sink->match = 0;
 			sink->processed_length += len;
 			return 0;
