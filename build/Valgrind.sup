@@ -1,3 +1,4 @@
+# luajit
 {
    <luajit_str_new>
    Memcheck:Cond
@@ -20,9 +21,20 @@
    Memcheck:Addr4
    obj:*/libluajit-5.1.so.2.0.2
 }
+
+# haka
 {
    <strlen_release>
    Memcheck:Addr4
    fun:module_load
    ...
+}
+{
+   <dlopen_unreleased>
+   Memcheck:Leak
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:module_load
+   fun:main
 }
