@@ -58,6 +58,7 @@ struct vbuffer_iterator {
 				return NULL;
 			}
 
+			vbuffer_sub_register(sub);
 			return sub;
 		}
 	}
@@ -120,6 +121,7 @@ struct vbuffer_sub {
 				return NULL;
 			}
 
+			vbuffer_iterator_register(ref);
 			*OUTPUT = select;
 			return ref;
 		}
@@ -138,6 +140,7 @@ struct vbuffer_sub {
 				return NULL;
 			}
 
+			vbuffer_sub_register(sub);
 			return sub;
 		}
 
@@ -154,6 +157,7 @@ struct vbuffer_sub {
 				return NULL;
 			}
 
+			vbuffer_iterator_register(iter);
 			return iter;
 		}
 
@@ -259,6 +263,7 @@ struct vbuffer {
 			}
 
 			vbuffer_position($self, iter, offset);
+			vbuffer_iterator_register(iter);
 			return iter;
 		}
 
@@ -271,6 +276,7 @@ struct vbuffer {
 			}
 
 			vbuffer_sub_create(sub, $self, offset, size);
+			vbuffer_sub_register(sub);
 			return sub;
 		}
 

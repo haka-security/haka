@@ -555,25 +555,32 @@ bool vbuffer_iterator_check_available(struct vbuffer_iterator *position, size_t 
 	return _vbuffer_iterator_check_available(position, NULL, minsize, size);
 }
 
-void vbuffer_iterator_register(struct vbuffer_iterator *position)
+bool vbuffer_iterator_register(struct vbuffer_iterator *position)
 {
 	assert(position);
+
+	if (!_vbuffer_iterator_check(position)) return false;
 
 	if (!position->registered) {
 		position->registered = true;
 		vbuffer_chunk_addref(position->chunk);
-
 	}
+
+	return true;
 }
 
-void vbuffer_iterator_unregister(struct vbuffer_iterator *position)
+bool vbuffer_iterator_unregister(struct vbuffer_iterator *position)
 {
 	assert(position);
+
+	if (!_vbuffer_iterator_check(position)) return false;
 
 	if (position->registered) {
 		vbuffer_chunk_release(position->chunk);
 		position->registered = false;
 	}
+
+	return true;
 }
 
 static struct vbuffer_chunk *_vbuffer_iterator_split(struct vbuffer_iterator *position)
@@ -828,6 +835,20 @@ void vbuffer_sub_clear(struct vbuffer_sub *data)
 {
 	vbuffer_iterator_clear(&data->begin);
 	if (!data->use_size) vbuffer_iterator_clear(&data->end);
+}
+
+bool vbuffer_sub_register(struct vbuffer_sub *data)
+{
+	bool ret = vbuffer_iterator_register(&data->begin);
+	if (!data->use_size) ret &= vbuffer_iterator_register(&data->end);
+	return ret;
+}
+
+bool vbuffer_sub_unregister(struct vbuffer_sub *data)
+{
+	bool ret = vbuffer_iterator_unregister(&data->begin);
+	if (!data->use_size) ret &= vbuffer_iterator_unregister(&data->end);
+	return ret;
 }
 
 void vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t offset, size_t length)

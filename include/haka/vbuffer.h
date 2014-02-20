@@ -91,8 +91,8 @@ void          vbuffer_iterator_copy(struct vbuffer_iterator *position, const str
 void          vbuffer_iterator_clear(struct vbuffer_iterator *position);
 size_t        vbuffer_iterator_available(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_check_available(struct vbuffer_iterator *position, size_t minsize, size_t *size);
-void          vbuffer_iterator_register(struct vbuffer_iterator *position);
-void          vbuffer_iterator_unregister(struct vbuffer_iterator *position);
+bool          vbuffer_iterator_register(struct vbuffer_iterator *position);
+bool          vbuffer_iterator_unregister(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *buffer);
 size_t        vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len);
 bool          vbuffer_iterator_iseof(struct vbuffer_iterator *position);
@@ -104,6 +104,8 @@ bool          vbuffer_iterator_mark(struct vbuffer_iterator *position, bool read
 bool          vbuffer_iterator_unmark(struct vbuffer_iterator *position);
 
 void          vbuffer_sub_clear(struct vbuffer_sub *data);
+bool          vbuffer_sub_register(struct vbuffer_sub *data);
+bool          vbuffer_sub_unregister(struct vbuffer_sub *data);
 void          vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t offset, size_t length);
 bool          vbuffer_sub_create_from_position(struct vbuffer_sub *data, struct vbuffer_iterator *position, size_t length);
 bool          vbuffer_sub_create_between_position(struct vbuffer_sub *data, struct vbuffer_iterator *begin, struct vbuffer_iterator *end);
