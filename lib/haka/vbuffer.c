@@ -754,7 +754,7 @@ bool vbuffer_iterator_setbyte(struct vbuffer_iterator *position, uint8 byte)
 bool vbuffer_iterator_isend(struct vbuffer_iterator *position)
 {
 	struct vbuffer_chunk *iter;
-	size_t offset;
+	UNUSED size_t offset;
 
 	if (!_vbuffer_iterator_check(position)) return false;
 
