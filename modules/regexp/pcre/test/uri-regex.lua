@@ -31,9 +31,6 @@ http.install_tcp_rule(80)
 local modsec_regex = "(/%*!?|%*/|[';]--|--[%s%r%n%v%f]|(?:--[^-]*?-)|([^%-&])#.*?[%s%r%n%v%f]|;?%00)"
 
 local re = rem.re:compile(modsec_regex)
-if not re then
-	error("regex compile failed")
-end
 
 haka.rule {
 	hook = haka.event('http', 'request'),
@@ -42,9 +39,9 @@ haka.rule {
 		if re:match(uri) then
 			haka.alert{
 				severity = 'medium',
-			    method = {
+				method = {
 					description = string.format("SQLi comment sequences detected in %s", uri)
-			    },
+				},
 				sources = { haka.alert.address(http.connection.srcip) },
 			}
 		end
