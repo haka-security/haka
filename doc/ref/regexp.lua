@@ -5,7 +5,7 @@
 local rem = require('regexp/pcre')
 
 local re = rem.re:compile("foo")
-local sink = re:get_sink()
+local sink = re:create_sink()
 
 local ret = sink:feed("some fo", false)
 ret = sink:feed("o over two string", true)

@@ -67,14 +67,14 @@ static void                  release_regexp(struct regexp *re);
 static int                   exec(struct regexp *re, const char *buf, int len, struct regexp_result *result);
 static int                   vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresult *result);
 
-static struct regexp_sink   *get_sink(struct regexp *re);
+static struct regexp_sink   *create_sink(struct regexp *re);
 static void                  free_regexp_sink(struct regexp_sink *sink);
 static int                   feed(struct regexp_sink *sink, const char *buf, int len, bool eof);
 static int                   vbfeed(struct regexp_sink *sink, struct vbuffer *vbuf, bool eof);
 
 static int                      _exec(struct regexp *re, const char *buf, int len, struct regexp_result *result);
 static int                      _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len, struct regexp_vbresult *vbresult, bool eof);
-static struct regexp_sink_pcre *_get_sink(struct regexp *_re);
+static struct regexp_sink_pcre *_create_sink(struct regexp *_re);
 static void                     _free_regexp_sink(struct regexp_sink_pcre *sink);
 static int                      _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer *vbuf, struct regexp_vbresult *result, bool _eof);
 
@@ -96,7 +96,7 @@ struct regexp_module HAKA_MODULE = {
 	exec:           exec,
 	vbexec:         vbexec,
 
-	get_sink:         get_sink,
+	create_sink:      create_sink,
 	free_regexp_sink: free_regexp_sink,
 	feed:             feed,
 	vbfeed:           vbfeed,
@@ -208,7 +208,7 @@ static int vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresul
 	assert(re);
 	assert(vbuf);
 
-	sink = (struct regexp_sink_pcre *)_get_sink(re);
+	sink = _create_sink(re);
 
 	if (sink == NULL)
 		return -1;
@@ -222,14 +222,14 @@ static int vbexec(struct regexp *re, struct vbuffer *vbuf, struct regexp_vbresul
 	return ret;
 }
 
-static struct regexp_sink *get_sink(struct regexp *re)
+static struct regexp_sink *create_sink(struct regexp *re)
 {
 	assert(re);
 
-	return (struct regexp_sink *)_get_sink(re);
+	return (struct regexp_sink *)_create_sink(re);
 }
 
-static struct regexp_sink_pcre *_get_sink(struct regexp *_re)
+static struct regexp_sink_pcre *_create_sink(struct regexp *_re)
 {
 	struct regexp_pcre *re = (struct regexp_pcre *)_re;
 	struct regexp_sink_pcre *sink;
@@ -509,14 +509,8 @@ static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer *vbuf, 
 
 		/* We got a new valid pointer, send previous one to pcre */
 		if (pptr) {
+			/* eof if last is empty */
 			ret = _partial_exec(sink, (const char *)pptr, plen, result, eof && len == 0);
-			/* if match or something goes wrong avoid parsing more */
-			if (ret != 0) break;
-		}
-
-		/* Finally send last one if it is not empty */
-		if (last && len != 0) {
-			ret = _partial_exec(sink, (const char *)ptr, len, result, eof);
 			/* if match or something goes wrong avoid parsing more */
 			if (ret != 0) break;
 		}
@@ -524,6 +518,11 @@ static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer *vbuf, 
 		pptr = ptr;
 		plen = len;
 
+	}
+
+	/* Finally send last one if it is not empty */
+	if (len != 0) {
+		ret = _partial_exec(sink, (const char *)pptr, plen, result, _eof);
 	}
 
 	return sink->match;

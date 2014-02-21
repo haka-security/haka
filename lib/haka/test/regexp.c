@@ -322,7 +322,7 @@ START_TEST(regexp_match_should_not_fail_without_results)
 }
 END_TEST
 
-START_TEST(regexp_get_sink_should_return_regexp_sink)
+START_TEST(regexp_create_sink_should_return_regexp_sink)
 {
 	struct regexp_sink *sink;
 
@@ -332,10 +332,10 @@ START_TEST(regexp_get_sink_should_return_regexp_sink)
 	clear_error();
 
 	// When
-	sink = rem->get_sink(re);
+	sink = rem->create_sink(re);
 
 	// Then
-	ck_assert_msg(sink != NULL, "get_sink expected to return a regexp_sink, but found NULL");
+	ck_assert_msg(sink != NULL, "create_sink expected to return a regexp_sink, but found NULL");
 
 	// Finally
 	rem->free_regexp_sink(sink);
@@ -349,7 +349,7 @@ START_TEST(regexp_feed_should_not_fail_when_feed_twice)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile(".*");
-	struct regexp_sink *sink = rem->get_sink(re);
+	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
 	// When
@@ -373,7 +373,7 @@ START_TEST(regexp_feed_should_match)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile(".*");
-	struct regexp_sink *sink = rem->get_sink(re);
+	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
 	// When
@@ -397,7 +397,7 @@ START_TEST(regexp_feed_should_match_accross_two_string)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("ab");
-	struct regexp_sink *sink = rem->get_sink(re);
+	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
 	// When
@@ -422,7 +422,7 @@ START_TEST(regexp_feed_should_not_fail_if_no_match)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("abc");
-	struct regexp_sink *sink = rem->get_sink(re);
+	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
 	// When
@@ -446,7 +446,7 @@ START_TEST(regexp_feed_should_return_results_on_match)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("bar");
-	struct regexp_sink *sink = rem->get_sink(re);
+	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
 	// When
@@ -655,7 +655,7 @@ START_TEST(regexp_vbfeed_should_match_on_vbuffer)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile(".*");
-	struct regexp_sink *sink = rem->get_sink(re);
+	struct regexp_sink *sink = rem->create_sink(re);
 	struct vbuffer *vb = some_vbuffer("aaa", NULL);
 	clear_error();
 
@@ -681,7 +681,7 @@ START_TEST(regexp_vbfeed_should_match_on_multiple_vbuffer)
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("abbbcccd");
-	struct regexp_sink *sink = rem->get_sink(re);
+	struct regexp_sink *sink = rem->create_sink(re);
 	struct vbuffer *vb1 = some_vbuffer("aaa", "bbb", NULL);
 	struct vbuffer *vb2 = some_vbuffer("ccc", "ddd", NULL);
 	clear_error();
@@ -966,7 +966,7 @@ Suite* regexp_suite(void)
 	suite_add_tcase(suite, tcase);
 
 	tcase = tcase_create("regexp_feed");
-	tcase_add_test(tcase, regexp_get_sink_should_return_regexp_sink);
+	tcase_add_test(tcase, regexp_create_sink_should_return_regexp_sink);
 	tcase_add_test(tcase, regexp_feed_should_not_fail_when_feed_twice);
 	tcase_add_test(tcase, regexp_feed_should_match);
 	tcase_add_test(tcase, regexp_feed_should_match_accross_two_string);

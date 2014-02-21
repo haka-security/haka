@@ -48,7 +48,7 @@ struct regexp_module {
 	int                    (*exec)(struct regexp *regexp, const char *buffer, int len, struct regexp_result *result);
 	int                    (*vbexec)(struct regexp *regexp, struct vbuffer *vbuf, struct regexp_vbresult *result);
 
-	struct regexp_sink    *(*get_sink)(struct regexp *regexp);
+	struct regexp_sink    *(*create_sink)(struct regexp *regexp);
 	void                   (*free_regexp_sink)(struct regexp_sink *re_sink);
 	int                    (*feed)(struct regexp_sink *re_sink, const char *buffer, int len, bool eof);
 	int                    (*vbfeed)(struct regexp_sink *re_sink, struct vbuffer *vbuf, bool eof);

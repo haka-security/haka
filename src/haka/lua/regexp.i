@@ -52,12 +52,14 @@ struct regexp_vbresult {
 
 struct regexp_sink {
         %extend {
-                bool feed(const char *STRING, size_t SIZE, bool eof,
+                bool feed(const char *STRING, size_t SIZE, bool eof=false,
                                 struct regexp_result **OUTPUT) {
                         int ret = $self->regexp->module->feed($self, STRING, SIZE, eof);
 
                         if (ret > 0) {
                                 *OUTPUT = malloc(sizeof(struct regexp_result));
+                                if (!*OUTPUT)
+                                        error(L"memory error");
                                 **OUTPUT = $self->result;
                         } else {
                                 *OUTPUT = NULL;
@@ -66,12 +68,14 @@ struct regexp_sink {
                         return ret;
                 }
 
-                bool feed(struct vbuffer *vbuf, bool eof,
+                bool feed(struct vbuffer *vbuf, bool eof=false,
                                 struct regexp_result **OUTPUT) {
                         int ret = $self->regexp->module->vbfeed($self, vbuf, eof);
 
                         if (ret > 0) {
                                 *OUTPUT = malloc(sizeof(struct regexp_result));
+                                if (!*OUTPUT)
+                                        error(L"memory error");
                                 **OUTPUT = $self->result;
                         } else {
                                 *OUTPUT = NULL;
@@ -86,7 +90,7 @@ struct regexp_sink {
         }
 };
 
-%newobject regexp::get_sink;
+%newobject regexp::create_sink;
 struct regexp {
         %extend {
                 bool match(const char *STRING, size_t SIZE,
@@ -121,8 +125,8 @@ struct regexp {
                         return ret;
                 }
 
-                struct regexp_sink *get_sink() {
-                        return $self->module->get_sink($self);
+                struct regexp_sink *create_sink() {
+                        return $self->module->create_sink($self);
                 }
 
                 ~regexp() {

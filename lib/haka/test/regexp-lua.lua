@@ -131,12 +131,12 @@ function test_exec_should_return_nil_results_when_pattern_do_not_match ()
         assert(not result, "Matching pattern expected to return nil result but got result")
 end
 
-function test_get_sink_should_be_successful ()
+function test_create_sink_should_be_successful ()
         -- Given
         local re = rem.re:compile(".*")
 
         -- When
-        local ret, msg = pcall(function () re:get_sink() end)
+        local ret, msg = pcall(function () re:create_sink() end)
 
         -- Then
         assert(ret, string.format("Regexp stream should not failed but failed with message %s", msg))
@@ -145,7 +145,7 @@ end
 function test_feed_should_not_fail ()
 	-- Given
 	local re = rem.re:compile(".*")
-        local sink = re:get_sink()
+        local sink = re:create_sink()
 	-- When
 	local ret, msg = pcall(function () sink:feed("aaa", true) end)
 	-- Then
@@ -155,9 +155,9 @@ end
 function test_feed_should_match_accross_two_string ()
         -- Given
         local re = rem.re:compile("ab")
-        local sink = re:get_sink()
+        local sink = re:create_sink()
         -- When
-        local ret = sink:feed("aaa", false)
+        local ret = sink:feed("aaa")
         ret = sink:feed("bbb", true)
         -- Then
         assert(ret, "Matching pattern expected to match over two string but failed")
@@ -166,7 +166,7 @@ end
 function test_feed_should_return_results ()
         -- Given
         local re = rem.re:compile("bar")
-        local sink = re:get_sink()
+        local sink = re:create_sink()
         -- When
         local ret, result = sink:feed("foo bar foo", true)
         -- Then
@@ -178,7 +178,7 @@ end
 function test_feed_should_return_nil_results_when_pattern_do_not_match ()
         -- Given
         local re = rem.re:compile("bar")
-        local sink = re:get_sink()
+        local sink = re:create_sink()
         -- When
         local ret, result = sink:feed("foo", true)
         -- Then
@@ -201,7 +201,7 @@ test_exec_should_be_successful()
 test_exec_should_fail_when_pattern_do_not_match()
 test_exec_should_return_results()
 test_exec_should_return_nil_results_when_pattern_do_not_match()
-test_get_sink_should_be_successful()
+test_create_sink_should_be_successful()
 test_feed_should_not_fail()
 test_feed_should_match_accross_two_string()
 test_feed_should_return_results()
