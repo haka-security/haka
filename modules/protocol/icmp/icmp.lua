@@ -15,7 +15,7 @@ icmp_dissector.grammar = haka.grammar.record{
 	haka.grammar.field('checksum', haka.grammar.number(16))
 		:validate(function (self)
 			self.checksum = 0
-			self.checksum = self._payload:inet_checksum()
+			self.checksum = ipv4.inet_checksum_compute(self._payload)
 		end),
 	haka.grammar.field('payload',  haka.grammar.bytes())
 }:compile()
@@ -26,7 +26,7 @@ function icmp_dissector.method:parse_payload(pkt, payload, init)
 end
 
 function icmp_dissector.method:verify_checksum()
-	return self._payload:inet_checksum() == 0
+	return ipv4.inet_checksum_compute(self._payload) == 0
 end
 
 function icmp_dissector.method:forge_payload(pkt, payload)

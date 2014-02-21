@@ -100,7 +100,9 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	vbuffer_begin(payload, &hdrleniter);
 	*(uint8 *)&hdrlen = vbuffer_iterator_getbyte(&hdrleniter);
 
-	if (!ipv4_flatten_header(payload, hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET)) {
+	header_len = hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET;
+
+	if (!ipv4_flatten_header(payload, header_len)) {
 		assert(check_error());
 		free(ip);
 		return NULL;
@@ -128,7 +130,6 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 		return NULL;
 	}
 
-	header_len = hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET;
 	if (!ipv4_extract_payload(ip, header_len, ipv4_get_len(ip) - header_len)) {
 		assert(check_error());
 		free(ip);

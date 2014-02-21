@@ -283,7 +283,7 @@ static void *thread_main_loop(void *_state)
 		/* The packet can be NULL in case of failure in packet receive */
 		if (pkt) {
 			state->stats.total_packets++;
-			//state->stats.total_bytes += vbuffer_size(packet_payload(pkt));
+			state->stats.total_bytes += vbuffer_size(packet_payload(pkt));
 
 			filter_wrapper(state, pkt);
 			pkt = NULL;

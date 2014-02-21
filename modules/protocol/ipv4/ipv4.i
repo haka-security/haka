@@ -159,7 +159,8 @@ struct inet_checksum {
 			$self->value += inet_checksum_vbuffer_partial(&sub, &$self->odd);
 		}
 
-		int compute() {
+		%rename(reduce) _reduce;
+		int _reduce() {
 			return SWAP_FROM_IPV4(int16, inet_checksum_reduce($self->value));
 		}
 	}
@@ -315,7 +316,10 @@ struct ipv4 *ipv4_create(struct packet *DISOWN_SUCCESS_ONLY);
 %newobject ipv4_forge;
 struct packet *ipv4_forge(struct ipv4 *pkt);
 
-int lua_inet_checksum_sub(struct vbuffer_sub *buf);
+%rename(inet_checksum_compute) lua_inet_checksum_sub;
+int lua_inet_checksum_sub(struct vbuffer_sub *sub);
+
+%rename(inet_checksum_compute) lua_inet_checksum;
 int lua_inet_checksum(struct vbuffer *buf);
 
 %{
@@ -364,12 +368,6 @@ int lua_inet_checksum(struct vbuffer *buf);
 
 %luacode {
 	local this = unpack({...})
-
-	swig.getclassmetatable('vbuffer')['.fn'].inet_checksum = this.lua_inet_checksum
-	swig.getclassmetatable('vbuffer_sub')['.fn'].inet_checksum = this.lua_inet_checksum_sub
-
-	this.lua_inet_checksum = nil
-	this.lua_inet_checksum_sub = nil
 
 	local ipv4_protocol_dissectors = {}
 

@@ -626,7 +626,7 @@ function http_dissector.method:send(stream, direction)
 			table.insert(request, "\r\n")
 
 			self.request._mark:unmark()
-			self.request._mark:sub(self.request._length, true):replace(haka.vbuffer(table.concat(request)))
+			self.request._mark:sub(self.request._length):replace(haka.vbuffer(table.concat(request)))
 			self.request._mark = nil
 		end
 
