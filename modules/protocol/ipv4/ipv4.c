@@ -59,6 +59,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 		uint8    hdr_len:4;
 #endif
 	} hdrlen;
+	size_t header_len;
 
 	assert(packet);
 	payload = packet_payload(packet);
@@ -127,7 +128,8 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 		return NULL;
 	}
 
-	if (!ipv4_extract_payload(ip, hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET, ipv4_get_len(ip))) {
+	header_len = hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET;
+	if (!ipv4_extract_payload(ip, header_len, ipv4_get_len(ip) - header_len)) {
 		assert(check_error());
 		free(ip);
 		return NULL;
