@@ -74,6 +74,7 @@ static struct vbuffer_chunk *vbuffer_chunk_create_end(bool writable)
 	chunk->flags.writable = writable;
 	chunk->flags.ctl = true;
 	chunk->flags.end = true;
+	chunk->flags.eof = true;
 
 	list2_elem_init(&chunk->list);
 	vbuffer_chunk_addref(chunk);
@@ -112,6 +113,7 @@ struct vbuffer_chunk *vbuffer_chunk_create(struct vbuffer_data *data, size_t off
 	chunk->flags.writable = true;
 	chunk->flags.ctl = false;
 	chunk->flags.end = false;
+	chunk->flags.eof = false;
 	if (data) data->ops->addref(data);
 	vbuffer_chunk_addref(chunk);
 
@@ -141,6 +143,7 @@ struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_data *data, struct
 	chunk->flags.writable = insert->flags.writable;
 	chunk->flags.ctl = true;
 	chunk->flags.end = false;
+	chunk->flags.eof = false;
 	if (data) data->ops->addref(data);
 	vbuffer_chunk_addref(chunk);
 
@@ -748,9 +751,22 @@ bool vbuffer_iterator_setbyte(struct vbuffer_iterator *position, uint8 byte)
 	return true;
 }
 
-/*bool vbuffer_iterator_iseof(struct vbuffer_iterator *position)
+bool vbuffer_iterator_isend(struct vbuffer_iterator *position)
 {
-}*/
+	struct vbuffer_chunk *iter;
+	size_t offset;
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	offset = _vbuffer_iterator_fix(position, &iter);
+
+	if (iter->flags.end && iter->flags.eof) {
+		assert(offset == 0);
+		return true;
+	}
+
+	return false;
+}
 
 uint8 *vbuffer_iterator_mmap(struct vbuffer_iterator *position, size_t maxsize, size_t *size, bool write)
 {

@@ -20,6 +20,7 @@ struct vbuffer_stream {
 bool   vbuffer_stream_init(struct vbuffer_stream *stream);
 void   vbuffer_stream_clear(struct vbuffer_stream *stream);
 bool   vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *buffer);
+void   vbuffer_stream_finish(struct vbuffer_stream *stream);
 bool   vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer);
 struct vbuffer *vbuffer_stream_data(struct vbuffer_stream *stream);
 void   vbuffer_stream_current(struct vbuffer_stream *stream, struct vbuffer_iterator *position);

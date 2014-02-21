@@ -10,6 +10,7 @@
 
 struct vbuffer_chunk_flags {
 	bool   end:1;
+	bool   eof:1;
 	bool   modified:1;
 	bool   writable:1;
 	bool   ctl:1;

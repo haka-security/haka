@@ -46,6 +46,8 @@ START_TEST(test_push_pop)
 		ck_check_error;
 	}
 
+	vbuffer_stream_finish(&stream);
+
 	vbuffer_stream_clear(&stream);
 	ck_check_error;
 }
@@ -68,6 +70,8 @@ START_TEST(test_push_pop_interleaved)
 		ck_assert_int_eq(vbuffer_size(vbuffer_stream_data(&stream)), size);
 		ck_check_error;
 	}
+
+	vbuffer_stream_finish(&stream);
 
 	for (i=0; i<NUM; ++i) {
 		struct vbuffer buffer;
@@ -103,6 +107,8 @@ START_TEST(test_mark)
 		ck_check_error;
 	}
 
+	vbuffer_stream_finish(&stream);
+
 	for (i=0; i<NUM; ++i) {
 		struct vbuffer buffer;
 		ck_assert(!vbuffer_stream_pop(&stream, &buffer));
@@ -112,6 +118,48 @@ START_TEST(test_mark)
 		ck_assert_int_eq(vbuffer_size(&buffer), sizes[i]);
 		size -= sizes[i];
 		ck_assert_int_eq(vbuffer_size(vbuffer_stream_data(&stream)), size);
+		vbuffer_clear(&buffer);
+		ck_check_error;
+	}
+
+	vbuffer_stream_clear(&stream);
+	ck_check_error;
+}
+END_TEST
+
+START_TEST(test_eof)
+{
+	int i;
+	size_t size = 0;
+	struct vbuffer_stream stream;
+	struct vbuffer_iterator iter;
+	ck_assert(vbuffer_stream_init(&stream));
+	ck_check_error;
+
+	for (i=0; i<NUM; ++i) {
+		struct vbuffer buffer;
+		vbuffer_create_new(&buffer, sizes[i], true);
+		vbuffer_stream_push(&stream, &buffer);
+		size += sizes[i];
+		ck_assert_int_eq(vbuffer_size(vbuffer_stream_data(&stream)), size);
+		ck_check_error;
+	}
+
+	vbuffer_begin(vbuffer_stream_data(&stream), &iter);
+	ck_assert(!vbuffer_iterator_isend(&iter));
+
+	vbuffer_iterator_advance(&iter, 1<<30);
+	ck_assert_int_eq(vbuffer_iterator_available(&iter), 0);
+	ck_assert(!vbuffer_iterator_isend(&iter));
+
+	vbuffer_stream_finish(&stream);
+
+	ck_assert(vbuffer_iterator_isend(&iter));
+
+	for (i=0; i<NUM; ++i) {
+		struct vbuffer buffer;
+		ck_assert(vbuffer_stream_pop(&stream, &buffer));
+		ck_assert_int_eq(vbuffer_size(&buffer), sizes[i]);
 		vbuffer_clear(&buffer);
 		ck_check_error;
 	}
@@ -131,6 +179,7 @@ int main(int argc, char *argv[])
 	tcase_add_test(tcase, test_push_pop);
 	tcase_add_test(tcase, test_push_pop_interleaved);
 	tcase_add_test(tcase, test_mark);
+	tcase_add_test(tcase, test_eof);
 	suite_add_tcase(suite, tcase);
 
 	SRunner *runner = srunner_create(suite);

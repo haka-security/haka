@@ -29,11 +29,10 @@ struct vbuffer_iterator {
 
 		void mark(bool readonly = false);
 		void unmark();
-		void advance(int size);
-		void clear();
+		int advance(int size);
 		void insert(struct vbuffer *data);
-		int  available();
 		void restore(struct vbuffer *data) { vbuffer_restore($self, data); }
+		int  available();
 
 		%rename(check_available) _check_available;
 		bool _check_available(int size, int *OUTPUT)
@@ -61,6 +60,9 @@ struct vbuffer_iterator {
 			vbuffer_sub_register(sub);
 			return sub;
 		}
+
+		%immutable;
+		bool isend { return vbuffer_iterator_isend($self); }
 	}
 };
 
@@ -198,7 +200,7 @@ LUA_OBJECT(struct vbuffer);
 
 struct vbuffer {
 	%extend {
-		vbuffer(size_t size)
+		vbuffer(size_t size, bool zero=true)
 		{
 			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
 			if (!buf) {
@@ -206,7 +208,7 @@ struct vbuffer {
 				return NULL;
 			}
 
-			if (!vbuffer_create_new(buf, size, true)) {
+			if (!vbuffer_create_new(buf, size, zero)) {
 				free(buf);
 				return NULL;
 			}
@@ -330,6 +332,8 @@ struct vbuffer_stream {
 		{
 			vbuffer_stream_push($self, DISOWN_SUCCESS_ONLY);
 		}
+
+		void finish();
 
 		%rename(pop) _pop;
 		struct vbuffer *_pop()

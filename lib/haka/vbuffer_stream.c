@@ -42,6 +42,7 @@ bool vbuffer_stream_init(struct vbuffer_stream *stream)
 {
 	stream->lua_object = lua_object_init;
 	vbuffer_create_empty(&stream->data);
+	stream->data.chunks->flags.eof = false;
 	list2_init(&stream->chunks);
 	list2_init(&stream->read_chunks);
 	return true;
@@ -59,7 +60,14 @@ void vbuffer_stream_clear(struct vbuffer_stream *stream)
 bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data)
 {
 	struct vbuffer_chunk *ctl, *end;
-	struct vbuffer_stream_chunk *chunk = malloc(sizeof(struct vbuffer_stream_chunk));
+	struct vbuffer_stream_chunk *chunk;
+
+	if (stream->data.chunks->flags.eof) {
+		error(L"stream marked as finished");
+		return false;
+	}
+
+	chunk = malloc(sizeof(struct vbuffer_stream_chunk));
 	if (!chunk) {
 		error(L"memory error");
 		return false;
@@ -88,6 +96,12 @@ bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data)
 	vbuffer_iterator_init(&chunk->ctl_iter);
 	vbuffer_iterator_update(&chunk->ctl_iter, ctl, 0);
 	return true;
+}
+
+void vbuffer_stream_finish(struct vbuffer_stream *stream)
+{
+	assert(stream);
+	stream->data.chunks->flags.eof = true;
 }
 
 bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer)
