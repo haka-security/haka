@@ -132,36 +132,36 @@ struct ipv4_addr {
 	}
 };
 
-struct inet_checksum {
+%rename(inet_checksum) checksum_partial;
+struct checksum_partial {
 	%extend {
-		inet_checksum() {
-			struct inet_checksum *ret = malloc(sizeof(struct inet_checksum));
+		checksum_partial() {
+			struct checksum_partial *ret = malloc(sizeof(struct checksum_partial));
 			if (!ret) {
 				error(L"memory error");
 				return NULL;
 			}
-			ret->odd = false;
-			ret->value = 0;
+			*ret = checksum_partial_init;
 			return ret;
 		}
 
-		~inet_checksum() {
+		~checksum_partial() {
 			free($self);
 		}
 
 		void process(struct vbuffer_sub *sub) {
-			$self->value += inet_checksum_vbuffer_partial(sub, &$self->odd);
+			inet_checksum_vbuffer_partial($self, sub);
 		}
 
 		void process(struct vbuffer *buf) {
 			struct vbuffer_sub sub;
 			vbuffer_sub_create(&sub, buf, 0, ALL);
-			$self->value += inet_checksum_vbuffer_partial(&sub, &$self->odd);
+			inet_checksum_vbuffer_partial($self, &sub);
 		}
 
 		%rename(reduce) _reduce;
 		int _reduce() {
-			return SWAP_FROM_IPV4(int16, inet_checksum_reduce($self->value));
+			return SWAP_FROM_IPV4(int16, inet_checksum_reduce($self));
 		}
 	}
 };

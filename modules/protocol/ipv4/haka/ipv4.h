@@ -67,15 +67,24 @@ struct ipv4_header *ipv4_header(struct ipv4 *ip, bool write);
 void ipv4_release(struct ipv4 *ip);
 bool ipv4_verify_checksum(struct ipv4 *ip);
 void ipv4_compute_checksum(struct ipv4 *ip);
-int16 inet_checksum(uint16 *ptr, size_t size);
-int16 inet_checksum_vbuffer(struct vbuffer_sub *buf);
-int32 inet_checksum_partial(uint16 *ptr, size_t size, bool *odd);
-int32 inet_checksum_vbuffer_partial(struct vbuffer_sub *buf, bool *odd);
-int16 inet_checksum_reduce(int32 sum);
 size_t ipv4_get_payload_length(struct ipv4 *ip);
 const char *ipv4_get_proto_dissector(struct ipv4 *ip);
 void ipv4_register_proto_dissector(uint8 proto, const char *dissector);
 void ipv4_action_drop(struct ipv4 *ip);
+
+struct checksum_partial {
+	bool    odd;
+	uint8   leftover;
+	int32   csum;
+};
+
+extern struct checksum_partial checksum_partial_init;
+
+int16 inet_checksum(const uint8 *ptr, size_t size);
+int16 inet_checksum_vbuffer(struct vbuffer_sub *buf);
+void  inet_checksum_partial(struct checksum_partial *csum, const uint8 *ptr, size_t size);
+void  inet_checksum_vbuffer_partial(struct checksum_partial *csum, struct vbuffer_sub *buf);
+int16 inet_checksum_reduce(struct checksum_partial *csum);
 
 
 #define IPV4_GETSET_FIELD(type, field) \

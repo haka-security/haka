@@ -251,82 +251,145 @@ void ipv4_release(struct ipv4 *ip)
 	free(ip);
 }
 
-/* compute tcp checksum RFC #1071 */
-//TODO: To be optimized
-int32 inet_checksum_partial(uint16 *ptr, size_t size, bool *odd)
-{
-	register long sum = 0;
+/* compute inet checksum RFC #1071 */
 
-	if (*odd) {
-#ifdef HAKA_LITTLEENDIAN
-		sum += (*(uint8 *)ptr) << 8;
-#else
-		sum += *(uint8 *)ptr;
-#endif
-		ptr = (uint16 *)(((uint8 *)ptr) + 1);
-		--size;
+struct checksum_partial checksum_partial_init = { false, 0, 0 };
+
+#define REDUCE_DECL \
+	union { \
+		uint16  s[2]; \
+		uint32  l; \
+	} reduce_util;
+
+typedef union {
+	uint8   c[2];
+	uint16  s;
+} swap_util_t;
+
+#define ADD_CARRY(x) (x > 0xffffUL ? x -= 0xffffUL : x)
+#define REDUCE       { reduce_util.l = sum; sum = reduce_util.s[0] + reduce_util.s[1]; ADD_CARRY(sum); }
+
+void inet_checksum_partial(struct checksum_partial *csum, const uint8 *ptr, size_t size)
+{
+	register int sum = csum->csum;
+	register int len = size;
+	register uint16 *w;
+	int byte_swapped = 0;
+	REDUCE_DECL;
+	swap_util_t swap_util;
+
+	if (csum->odd) {
+		/* The last partial checksum len was not even. We need to take
+		 * the leftover char into account.
+		 */
+		swap_util.c[0] = csum->leftover;
+		swap_util.c[1] = *ptr++;
+		sum += swap_util.s;
+		len--;
 	}
 
-	while (size > 1) {
-		sum += *ptr++;
-		size -= 2;
+	/* Make sure that the pointer is aligned on 16 bit boundary */
+	if ((1 & (ptrdiff_t)ptr) && (len > 0)) {
+		REDUCE;
+		sum <<= 8;
+		swap_util.c[0] = *ptr++;
+		len--;
+		byte_swapped = 1;
 	}
 
-	*odd = size > 0;
+	w = (uint16 *)ptr;
 
-	if (*odd) {
-#ifdef HAKA_LITTLEENDIAN
-		sum += *(uint8 *)ptr;
-#else
-		sum += (*(uint8 *)ptr) << 8;
-#endif
+	/* Unrolled loop */
+	while ((len -= 32) >= 0) {
+		sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
+		sum += w[4]; sum += w[5]; sum += w[6]; sum += w[7];
+		sum += w[8]; sum += w[9]; sum += w[10]; sum += w[11];
+		sum += w[12]; sum += w[13]; sum += w[14]; sum += w[15];
+		w += 16;
 	}
+	len += 32;
 
-	return sum;
-}
+	while ((len -= 8) >= 0) {
+		sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
+		w += 4;
+	}
+	len += 8;
 
-int16 inet_checksum_reduce(int32 sum)
-{
-	while (sum >> 16)
-		sum = (sum & 0xffff) + (sum >> 16);
+	if (len != 0 || byte_swapped) {
+		REDUCE;
+		while ((len -= 2) >= 0) {
+			sum += *w++;
+		}
 
-	return ~sum;
-}
+		if (byte_swapped) {
+			REDUCE;
+			sum <<= 8;
 
-int16 inet_checksum(uint16 *ptr, size_t size)
-{
-	bool odd = false;
-	const int32 sum = inet_checksum_partial(ptr, size, &odd);
-	return inet_checksum_reduce(sum);
-}
-
-int32 inet_checksum_vbuffer_partial(struct vbuffer_sub *buf, bool *odd)
-{
-	int32 sum = 0;
-	uint8 *data;
-	size_t len;
-	struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
-
-	while ((data = vbuffer_mmap(buf, &len, false, &iter))) {
-		if (len > 0) {
-			sum += inet_checksum_partial((uint16 *)data, len, odd);
+			if (len == -1) {
+				swap_util.c[1] = *(uint8 *)w;
+				sum += swap_util.s;
+				len = 0;
+			} else {
+				csum->leftover = swap_util.c[0];
+				len = -1;
+			}
+		} else if (len == -1) {
+			csum->leftover = *(uint8 *)w;
 		}
 	}
 
-	return sum;
+	/* Update csum context */
+	csum->odd = (len == -1);
+	csum->csum = sum;
+}
+
+int16 inet_checksum_reduce(struct checksum_partial *csum)
+{
+	register int32 sum = csum->csum;
+	REDUCE_DECL;
+
+	if (csum->odd) {
+		swap_util_t swap_util;
+		swap_util.c[0] = csum->leftover;
+		swap_util.c[1] = 0;
+		sum += swap_util.s;
+	}
+
+	REDUCE;
+	return (~sum & 0xffff);
+}
+
+int16 inet_checksum(const uint8 *ptr, size_t size)
+{
+	struct checksum_partial csum = checksum_partial_init;
+	inet_checksum_partial(&csum, ptr, size);
+	return inet_checksum_reduce(&csum);
+}
+
+void inet_checksum_vbuffer_partial(struct checksum_partial *csum, struct vbuffer_sub *buf)
+{
+	struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
+	uint8 *data;
+	size_t len;
+
+	while ((data = vbuffer_mmap(buf, &len, false, &iter))) {
+		if (len > 0) {
+			inet_checksum_partial(csum, data, len);
+		}
+	}
 }
 
 int16 inet_checksum_vbuffer(struct vbuffer_sub *buf)
 {
-	bool odd = false;
-	const int32 sum = inet_checksum_vbuffer_partial(buf, &odd);
-	return inet_checksum_reduce(sum);
+	struct checksum_partial csum = checksum_partial_init;
+	inet_checksum_vbuffer_partial(&csum, buf);
+	return inet_checksum_reduce(&csum);
 }
 
 bool ipv4_verify_checksum(struct ipv4 *ip)
 {
 	IPV4_CHECK(ip, false);
-	return inet_checksum((uint16 *)ipv4_header(ip, false), ipv4_get_hdr_len(ip)) == 0;
+	return inet_checksum((uint8 *)ipv4_header(ip, false), ipv4_get_hdr_len(ip)) == 0;
 }
 
 void ipv4_compute_checksum(struct ipv4 *ip)
@@ -335,7 +398,7 @@ void ipv4_compute_checksum(struct ipv4 *ip)
 	struct ipv4_header *header = ipv4_header(ip, true);
 	if (header) {
 		header->checksum = 0;
-		header->checksum = inet_checksum((uint16 *)header, ipv4_get_hdr_len(ip));
+		header->checksum = inet_checksum((uint8 *)header, ipv4_get_hdr_len(ip));
 		ip->invalid_checksum = false;
 	}
 }
