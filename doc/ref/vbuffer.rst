@@ -7,6 +7,9 @@
 Buffers
 =======
 
+Virtual buffer allows to access memory data using scatter lists. This enable
+easy and efficient modifications on memory data.
+
 Buffer
 ------
 
@@ -14,90 +17,233 @@ Buffer
 
 .. lua:class:: vbuffer
 
-    .. lua:function:: vbuffer(size)
+    The main buffer object holds a list of memory chunks.
 
-        Allocates a new buffer of given ``size``.
+    .. lua:function:: vbuffer(size, zero=true)
+
+        :param size: Requested memory size
+        :param zero: Zero the memory
+
+        Allocate a new buffer.
 
     .. lua:function:: vbuffer(string)
 
-        Allocates a new buffer from a ``string``. The string will be copied
+        :param string: Source data
+
+        Allocate a new buffer from a ``string``. The string will be copied
         into the allocated buffer.
 
-    .. lua:method:: insert(offset, data)
+    .. lua:method:: pos(offset)
 
-        :param data: Buffer
-        :paramtype data: :lua:class:`vbuffer`
+        :param offset: Position offset, if nil the end position will be returned
+        :returns: Return an iterator inside this buffer
+        :rtype: :lua:class:`vbuffer_iterator`
 
-        Inserts a buffer ``data`` at the specified ``offset``.
+        Return an iterator at the given offset in the buffer.
+
+    .. lua:method:: sub(offset=0, size=nil)
+
+        :param offset: Position offset
+        :param size: Size of the requested sub buffer, if nil all available data will be returned
+        :returns: Return a part of the buffer
+        :rtype: :lua:class:`vbuffer_sub`
+
+        Return a sub part of the buffer.
 
     .. lua:method:: append(data)
 
-        :param data: Buffer
+        :param data: Data to append
         :paramtype data: :lua:class:`vbuffer`
 
         Inserts a buffer ``data`` at the end of the current buffer.
 
-    .. lua:method:: replace(data, offset = 0, length = ALL)
+    .. lua:method:: clone(copy=false)
+
+        :param copy: Copy or share the memory data.
+        :returns: Return the cloned buffer
+        :rtype: :lua:class:`vbuffer`
+
+        Clone the buffer and optionally copy or share the memory data.
+
+    .. lua:data:: modified
+
+        Hold the state of the buffer. It is ``true`` if the buffer has been modified.
+
+
+Sub buffer
+----------
+
+.. lua:class:: vbuffer_sub
+
+    Object used to represent a sub part of a buffer.
+
+    .. lua:method:: pos(offset)
+
+        :param offset: Position offset, if nil the end position will be returned
+        :returns: Return an iterator inside this sub buffer
+        :rtype: :lua:class:`vbuffer_iterator`
+
+        Return an iterator at the given offset in the sub buffer.
+
+    .. lua:method:: sub(offset=0, size=nil)
+
+        :param offset: Position offset
+        :param size: Size of the requested sub buffer, if nil all available data will be returned
+        :returns: Return a part of the sub buffer
+        :rtype: :lua:class:`vbuffer_sub`
+
+        Return a sub part of the sub buffer.
+
+    .. lua:method:: zero()
+
+        Zero the sub buffer memory data.
+
+    .. lua:method:: erase()
+
+        Erase the sub buffer.
+
+    .. lua:method:: replace(data)
 
         :param data: Buffer
         :paramtype data: :lua:class:`vbuffer`
 
-        Replaces part of this buffer by some new ``data``.
+        Replace the sub buffer data by the ``data``.
 
-    .. lua:method:: erase(offset, length = ALL)
+    .. lua:method:: isflat()
 
-        Erases part of this buffer.
+        Return ``true`` if the buffer is flat (ie. it is made of one one memory chunk).
 
-    .. lua:method:: select(offset = 0, length = ALL)
+    .. lua:method:: flatten()
 
-        :returns: Return the data and the reference to be used in :lua:func:`vbuffer:restore`
-        :rtype: :lua:class:`vbuffer`
+        Replace the sub buffer by a flat buffer contaning only one memory chunk. The memory
+        will be copied if needed.
 
-        Selects part of this buffer to create a view to this part.
+    .. lua:method:: size()
 
-    .. lua:method:: restore(data)
+        Compute the size of the sub buffer.
 
-        :param data: Buffer
-        :paramtype data: :lua:class:`vbuffer`
+    .. lua:method:: check_size(size)
 
-        Restore selected part of a buffer.
+        :param size: Minimum buffer size to check for
 
-    .. lua:method:: sub(offset = 0, length = ALL)
+        Check if the buffer size is at least ``size``.
 
-        :returns: Return a buffer view
-        :rtype: :lua:class:`vbuffer`
+    .. lua:method:: select()
 
-        Create a view of part of this buffer.
+        :param data: Return a reference iterator and the extracted buffer.
+        :paramtype data: :lua:class:`vbuffer_iterator` and :lua:class:`vbuffer`
 
-    .. lua:method:: asnumber(endian = 'big', offset = 0, length = ALL)
+        Select the sub buffer. The content of it will be extracted from the
+        buffer. To reinsert the data, you can use :lua:func:`vbuffer_iterator::restore()`
+        with the reference iterator that is returned as the first value.
+
+    .. lua:method:: asnumber(endian = 'big')
 
         :param endian: Endianness of data (``'big'`` or ``'little'``)
 
-        Read the buffer as a number.
+        Read the sub buffer and convert it as a number.
 
-    .. lua:method:: setnumber(value, endian = 'big', offset = 0, length = ALL)
+    .. lua:method:: setnumber(value, endian = 'big')
+
+        :param value: Value to set
+        :param endian: Endianness of data (``'big'`` or ``'little'``)
 
         Write a number to the buffer.
 
     .. lua:method:: asbits(offset, length, endian = 'big')
 
+        :param offset: Bit positon offset
+        :param length: Size in bits
+        :param endian: Endianness of data (``'big'`` or ``'little'``)
+
         Read some bits the buffer and convert it to a number.
 
     .. lua:method:: setbits(value, offset, length, endian = 'big')
 
+        :param value: Value to set
+        :param offset: Bit positon offset
+        :param length: Size in bits
+        :param endian: Endianness of data (``'big'`` or ``'little'``)
+
         Write a number to some bits of the buffer.
 
-    .. lua:method:: asstring(offset = 0, length = ALL)
+    .. lua:method:: asstring()
 
-        Read part of the buffer as a string.
+        Read the sub buffer and convert it to a string.
 
-    .. lua:method:: setstring(value, offset = 0, length = ALL)
+    .. lua:method:: setstring(value)
 
-        Replace part of the buffer with a given string.
+        :param value: Value to set
 
-    .. lua:method:: setfixedstring(value, offset = 0, length = ALL)
+        Replace the sub buffer by the given string.
 
-        Replace, in-place, part of the buffer with a given string.
+    .. lua:method:: setfixedstring(value)
+
+        :param value: Value to set
+
+        Replace, in-place, the sub buffer by the given string.
+
+
+Iterator
+--------
+
+.. lua:class:: vbuffer_iterator
+
+    Iterator on a buffer.
+
+    .. lua:method:: mark(readonly=false)
+
+        :param readonly: State of the mark
+
+        Create a mark in the buffer at the iterator position.
+
+    .. lua:method:: unmark()
+
+        Remove a mark in the buffer. The iterator must point to a previously
+        created mark.
+
+    .. lua:method:: advance(size)
+
+        :param size: Amount of bytes to skip
+        :returns: The real amount of bytes skipped. This value can be smaller than size if not enough data are available.
+
+        Advance the iterator of the given ``size`` bytes.
+
+    .. lua:method:: available()
+
+        Return the amount of bytes available after the iterator position.
+
+    .. lua:method:: check_available(size)
+
+        :param size: Minimum available bytes to check for
+
+        Check if the iterator has at least ``size`` bytes available.
+
+    .. lua:method:: insert(data)
+
+        :param data: Buffer to insert
+
+        Insert some data at the iterator position.
+
+    .. lua:method:: restore(data)
+
+        :param data: Buffer to restore
+
+        Restore data at the iterator position. This iterator must point to
+        the reference returned by the function :lua:func:`vbuffer_sub::select()`.
+
+    .. lua:method:: sub(size)
+
+        :param size: Size of the requested sub buffer, if nil all available data will be returned
+        :returns: Return a part of the sub buffer
+        :rtype: :lua:class:`vbuffer_sub`
+
+        Create a sub buffer from the iterator position.
+
+    .. data:: isend
+
+        ``true`` if the iterator is at the end of buffer and no more data can
+        be available even later in case of a stream.
 
 
 Stream
@@ -107,34 +253,31 @@ Stream
 
     .. lua:function:: vbuffer_stream()
 
-        Creates a new buffer stream.
+        Create a new buffer stream.
 
     .. lua:method:: push(data)
 
-        :param data: Buffer
+        :param data: Buffer data
         :paramtype data: :lua:class:`vbuffer`
 
         Push some data to the stream.
 
+    .. lua:method:: finish()
+
+        Mark the end of the stream. Any call to :lua:func:`vbuffer_stream:push()`
+        will result to an error.
+
     .. lua:method:: pop()
 
-        :returns: Return a buffer
+        :returns: Extracted data from the stream
         :rtype: :lua:class:`vbuffer`
 
-        Pop data from the stream.
+        Pop available data from the stream.
 
     .. lua:data:: data
 
-        All available data in the stream.
+        All available data in the stream (as :lua:class:`vbuffer`).
 
     .. lua:data:: current
 
-        Current stream position.
-
-
-Iterator
---------
-
-.. lua:class:: vbuffer_iterator
-
-    Iterator on a buffer.
+        Current stream position (as :lua:class:`vbuffer_iterator`).
