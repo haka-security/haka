@@ -11,6 +11,6 @@ haka.rule {
 	eval = function (flow, stream)
 		local current = stream.current
 		haka.log.debug("filter", "received stream len=%d", current:available())
-		print(current:sub():asstring())
+		print(current:sub('all'):asstring())
 	end
 }

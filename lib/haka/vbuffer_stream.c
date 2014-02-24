@@ -53,8 +53,8 @@ void vbuffer_stream_clear(struct vbuffer_stream *stream)
 	_vbuffer_stream_free_chunks(&stream->chunks);
 	_vbuffer_stream_free_chunks(&stream->read_chunks);
 
-	lua_object_release(stream, &stream->lua_object);
 	vbuffer_release(&stream->data);
+	lua_object_release(stream, &stream->lua_object);
 }
 
 bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data)
@@ -93,7 +93,7 @@ bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data)
 
 	vbuffer_clear(data);
 
-	vbuffer_iterator_init(&chunk->ctl_iter);
+	chunk->ctl_iter = vbuffer_iterator_init;
 	vbuffer_iterator_update(&chunk->ctl_iter, ctl, 0);
 	return true;
 }

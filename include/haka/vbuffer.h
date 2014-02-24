@@ -45,6 +45,8 @@ struct vbuffer_iterator {
 	bool                         registered:1;
 };
 
+extern const struct vbuffer_iterator vbuffer_iterator_init;
+
 struct vbuffer_sub {
 	struct vbuffer_iterator      begin;
 	bool                         use_size:1;
@@ -97,6 +99,7 @@ bool          vbuffer_iterator_unregister(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *buffer);
 size_t        vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len);
 bool          vbuffer_iterator_isend(struct vbuffer_iterator *position);
+bool          vbuffer_iterator_split(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct vbuffer_sub *sub, bool split);
 uint8         vbuffer_iterator_getbyte(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_setbyte(struct vbuffer_iterator *position, uint8 byte);

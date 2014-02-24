@@ -412,6 +412,8 @@ void vbuffer_swap(struct vbuffer *a, struct vbuffer *b)
  * Iterators
  */
 
+const struct vbuffer_iterator vbuffer_iterator_init = { NULL, 0, false };
+
 static bool _vbuffer_iterator_check(const struct vbuffer_iterator *position)
 {
 	assert(position);
@@ -432,13 +434,6 @@ static bool _vbuffer_iterator_check(const struct vbuffer_iterator *position)
 	return true;
 }
 
-void vbuffer_iterator_init(struct vbuffer_iterator *position)
-{
-	position->chunk = NULL;
-	position->offset = 0;
-	position->registered = false;
-}
-
 bool vbuffer_iterator_isvalid(const struct vbuffer_iterator *position)
 {
 	assert(position);
@@ -447,7 +442,7 @@ bool vbuffer_iterator_isvalid(const struct vbuffer_iterator *position)
 
 void vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_iterator *dst)
 {
-	vbuffer_iterator_init(dst);
+	*dst = vbuffer_iterator_init;
 
 	if (!_vbuffer_iterator_check(src)) return;
 
@@ -707,6 +702,17 @@ size_t vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len)
 	return (len - clen);
 }
 
+bool vbuffer_iterator_split(struct vbuffer_iterator *position)
+{
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	struct vbuffer_chunk *iter = _vbuffer_iterator_split(position, false);
+	if (!iter) return false;
+
+	vbuffer_iterator_update(position, iter, 0);
+	return true;
+}
+
 bool vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct vbuffer_sub *sub, bool split)
 {
 	struct vbuffer_iterator begin;
@@ -885,8 +891,8 @@ static bool _vbuffer_sub_check(const struct vbuffer_sub *data)
 static void vbuffer_sub_init(struct vbuffer_sub *data)
 {
 	assert(data);
-	vbuffer_iterator_init(&data->begin);
-	vbuffer_iterator_init(&data->end);
+	data->begin = vbuffer_iterator_init;
+	data->end = vbuffer_iterator_init;
 	data->use_size = false;
 }
 
@@ -1211,7 +1217,7 @@ static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct v
 				}
 				else {
 					struct vbuffer_iterator splitpos;
-					vbuffer_iterator_init(&splitpos);
+					splitpos = vbuffer_iterator_init;
 					splitpos.chunk = iter;
 					splitpos.offset = size;
 					end = _vbuffer_iterator_split(&splitpos, mark_modified);
@@ -1277,7 +1283,7 @@ bool vbuffer_select(struct vbuffer_sub *data, struct vbuffer *buffer, struct vbu
 	if (!iter) return false;
 
 	if (ref) {
-		vbuffer_iterator_init(ref);
+		*ref = vbuffer_iterator_init;
 		ref->chunk = iter;
 		ref->offset = 0;
 	}

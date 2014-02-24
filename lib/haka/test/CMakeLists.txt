@@ -12,6 +12,7 @@ TEST_UNIT(MODULE libhaka NAME vbuffer-stream FILES vbuffer_stream.c)
 target_link_libraries(libhaka-vbuffer-stream libhaka)
 
 TEST_UNIT_LUA(MODULE libhaka NAME vbuffer FILES vbuffer.lua)
+TEST_UNIT_LUA(MODULE libhaka NAME vbuffer_stream_blocking FILES vbuffer_stream_blocking.lua)
 
 get_property(module-regexp GLOBAL PROPERTY module-regexp)
 foreach(module IN LISTS module-regexp)

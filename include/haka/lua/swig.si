@@ -164,3 +164,14 @@ APPLY_OUTPUT(const char *)
 	$1 = ($ltype)lua_tostring(L, $input);
 	$2 = lua_rawlen(L, $input);
 %}
+
+%typemap(in, numinputs=0) bool *YIELD (bool temp=false)
+%{ $1 = &temp; %}
+
+%typemap(argout) bool *YIELD
+%{
+	if (*$1) {
+		lua_pop(L, SWIG_arg);
+		return -1;
+	}
+%}

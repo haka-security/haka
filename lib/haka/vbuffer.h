@@ -39,7 +39,6 @@ struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk);
 	for (var = vbuffer_chunk_begin(buf); iter; \
 		iter = vbuffer_chunk_next(iter))
 
-void                  vbuffer_iterator_init(struct vbuffer_iterator *position);
 void                  vbuffer_iterator_update(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, size_t offset);
 
 #endif /* _HAKA_VBUFFER_PRIVATE_H */
