@@ -50,9 +50,16 @@ local function test_setbit_too_small()
 	assert(not success and msg == "setbits: invalid bit size", "failed to detect invalid setbits size")
 end
 
+local function test_insert_on_itself()
+	local buf = haka.vbuffer(10)
+	local success, msg = pcall(function () buf:pos(4):insert(buf) end)
+	assert(not success and msg == "circular buffer insertion", "failed to detect insert on itself")
+end
+
 test_invalid_iterator_erase_from_start()
 test_invalid_iterator_erase()
 test_asbit_empty()
 test_setbit_empty()
 test_asbit_too_small()
 test_setbit_too_small()
+test_insert_on_itself()

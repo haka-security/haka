@@ -103,6 +103,7 @@ bool          vbuffer_iterator_setbyte(struct vbuffer_iterator *position, uint8 
 uint8        *vbuffer_iterator_mmap(struct vbuffer_iterator *position, size_t maxsize, size_t *size, bool write);
 bool          vbuffer_iterator_mark(struct vbuffer_iterator *position, bool readonly);
 bool          vbuffer_iterator_unmark(struct vbuffer_iterator *position);
+bool          vbuffer_iterator_isinsertable(struct vbuffer_iterator *position, struct vbuffer *buffer);
 
 void          vbuffer_sub_clear(struct vbuffer_sub *data);
 bool          vbuffer_sub_register(struct vbuffer_sub *data);

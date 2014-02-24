@@ -847,6 +847,20 @@ bool vbuffer_iterator_unmark(struct vbuffer_iterator *position)
 	return true;
 }
 
+bool vbuffer_iterator_isinsertable(struct vbuffer_iterator *position, struct vbuffer *buffer)
+{
+	struct vbuffer_chunk *iter = vbuffer_chunk_begin(buffer);
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	while (iter) {
+		if (iter == position->chunk) return false;
+		iter = vbuffer_chunk_next(iter);
+	}
+
+	return true;
+}
+
 
 /*
  * Sub buffer

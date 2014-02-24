@@ -30,8 +30,28 @@ struct vbuffer_iterator {
 		void mark(bool readonly = false);
 		void unmark();
 		int advance(int size);
-		void insert(struct vbuffer *data);
-		void restore(struct vbuffer *data) { vbuffer_restore($self, data); }
+
+		%rename(insert) _insert;
+		void _insert(struct vbuffer *data)
+		{
+			if (!vbuffer_iterator_isinsertable($self, data)) {
+				error(L"circular buffer insertion");
+				return;
+			}
+
+			vbuffer_iterator_insert($self, data);
+		}
+
+		void restore(struct vbuffer *data)
+		{
+			if (!vbuffer_iterator_isinsertable($self, data)) {
+				error(L"circular buffer insertion");
+				return;
+			}
+
+			vbuffer_restore($self, data);
+		}
+
 		int  available();
 
 		%rename(check_available) _check_available;
@@ -88,7 +108,15 @@ struct vbuffer_sub {
 		int  size();
 		void zero() { vbuffer_zero($self); }
 		void erase() { vbuffer_erase($self); }
-		void replace(struct vbuffer *data) { vbuffer_replace($self, data); }
+		void replace(struct vbuffer *data)
+		{
+			if (!vbuffer_iterator_isinsertable(&$self->begin, data)) {
+				error(L"circular buffer insertion");
+				return;
+			}
+
+			vbuffer_replace($self, data);
+		}
 		bool isflat();
 
 		%rename(flatten) _flatten;
