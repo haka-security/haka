@@ -130,8 +130,8 @@ Sub buffer
 
     .. lua:method:: select()
 
-        :param data: Return a reference iterator and the extracted buffer.
-        :paramtype data: :lua:class:`vbuffer_iterator` and :lua:class:`vbuffer`
+        :returns: Return a reference iterator and the extracted buffer.
+        :rtype: :lua:class:`vbuffer_iterator` and :lua:class:`vbuffer`
 
         Select the sub buffer. The content of it will be extracted from the
         buffer. To reinsert the data, you can use :lua:func:`vbuffer_iterator::restore()`
