@@ -313,6 +313,11 @@ struct vbuffer {
 		%rename(append) _append;
 		void _append(struct vbuffer *buffer)
 		{
+			if ($self == buffer) {
+				error(L"circular buffer insertion");
+				return;
+			}
+
 			vbuffer_append($self, buffer);
 		}
 
