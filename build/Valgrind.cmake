@@ -29,6 +29,11 @@ macro(CHECK_VALGRIND name)
 
 		message("")
 		message("-- Memory error check")
+		if(VALGRIND_ERROR GREATER 0 OR VALGRIND_REACHABLE GREATER 0)
+			execute_process(COMMAND gawk -f ${CTEST_MODULE_DIR}/FilterValgrind.awk "${CMAKE_CURRENT_SOURCE_DIR}/${name}-valgrind.txt"
+				OUTPUT_VARIABLE VALGRIND_ERRORS)
+			message("${VALGRIND_ERRORS}")
+		endif()
 		message("Valgrind log is at ${CMAKE_CURRENT_SOURCE_DIR}/${name}-valgrind.txt")
 		if(VALGRIND_ERROR GREATER 0 OR VALGRIND_REACHABLE GREATER 0)
 			message(FATAL_ERROR "Memory error detected: ${VALGRIND_ERROR} error found, ${VALGRIND_REACHABLE} bytes still reachable memory found")
