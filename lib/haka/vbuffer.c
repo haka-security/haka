@@ -422,7 +422,8 @@ static bool _vbuffer_iterator_check(const struct vbuffer_iterator *position)
 	}
 
 	if (position->registered) {
-		if (!position->chunk->data && !position->chunk->flags.end) {
+		if ((!position->chunk->data && !position->chunk->flags.end) ||
+		    position->offset > position->chunk->size) {
 			error(L"invalid buffer iterator");
 			return false;
 		}
@@ -1572,13 +1573,24 @@ static uint8 setbits(uint8 x, int off, int size, uint8 v)
 
 int64 vbuffer_asbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool bigendian)
 {
+	const size_t length = vbuffer_sub_size(data);
 	uint8 temp[8];
 	int64 ret = 0;
 	int i, off = offset, shiftbits = 0;
 	const size_t begin = offset >> 3;
 	const size_t end = (offset + bits + 7) >> 3;
-	offset &= (1 << 3);
+	offset &= ((1 << 3)-1);
 	assert(offset < 8);
+
+	if (begin >= length) {
+		error(L"asbits: invalid bit offset");
+		return -1;
+	}
+
+	if (end > length) {
+		error(L"asbits: invalid bit size");
+		return -1;
+	}
 
 	if (end > 8) {
 		error(L"asbits: unsupported size");
@@ -1608,26 +1620,37 @@ int64 vbuffer_asbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool 
 bool vbuffer_setbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool bigendian, int64 num)
 {
 	if (bits > 64) {
-		error(L"setbit: unsupported size %llu", bits);
+		error(L"setbits: unsupported size %llu", bits);
 		return false;
 	}
 
 	if ((num < 0 && (-num & ((1ULL << bits)-1)) != -num) ||
 	    (num >= 0 && (num & ((1ULL << bits)-1)) != num)) {
-		error(L"setbit: invalid number, value does not fit in %d bits", bits);
+		error(L"setbits: invalid number, value does not fit in %d bits", bits);
 		return false;
 	}
 
 	{
+		const size_t length = vbuffer_sub_size(data);
 		uint8 temp[8];
 		int i, off = offset;
 		const size_t begin = offset >> 3;
 		const size_t end = (offset + bits + 7) >> 3;
-		offset &= (1 << 3);
+		offset &= ((1 << 3)-1);
 		assert(offset < 8);
 
+		if (begin >= length) {
+			error(L"setbits: invalid bit offset");
+			return -1;
+		}
+
+		if (end > length) {
+			error(L"setbits: invalid bit size");
+			return -1;
+		}
+
 		if (end > 8) {
-			error(L"setbit: unsupported size");
+			error(L"setbits: unsupported size");
 			return false;
 		}
 
