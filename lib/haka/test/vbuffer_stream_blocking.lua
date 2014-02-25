@@ -4,21 +4,16 @@
 
 local function gen_stream(f)
 	local stream = haka.vbuffer_stream()
-	local co = coroutine.create(function (iter)
-		local iter_async = haka.vbuffer_iterator_blocking(iter)
-		local ret, msg = pcall(f, iter_async)
-		if not ret then print(msg) end
-	end)
+	local manager = haka.vbuffer_stream_comanager:new(stream)
+	manager:start(f)
 
-	local i = 9
-	while coroutine.status(co) ~= "dead" do
+	for i=10,1,-1 do
 		stream:push(haka.vbuffer("Haka"))
-		if i == 0 then
+		if i == 1 then
 			stream:finish()
 		end
 
-		coroutine.resume(co, stream.current)
-		i = i-1
+		manager:process()
 	end
 end
 

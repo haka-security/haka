@@ -827,3 +827,39 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 	end
 }
 #endif
+
+%luacode {
+	haka.vbuffer_stream_comanager = class('VbufferStreamCoManager')
+
+	function haka.vbuffer_stream_comanager.method:__init(stream)
+		self._co = {}
+		self._stream = stream
+	end
+
+	local function wrapper(manager, f)
+		return function (iter)
+			local blocking_iter = haka.vbuffer_iterator_blocking(iter)
+			local ret, msg = xpcall(function () f(blocking_iter) end, debug.format_error)
+			if not ret then
+				manager._error = msg
+			end
+		end
+	end
+
+	function haka.vbuffer_stream_comanager.method:start(f)
+		table.insert(self._co, coroutine.create(wrapper(self, f)))
+	end
+
+	function haka.vbuffer_stream_comanager.method:process()
+		for i,co in ipairs(self._co) do
+			coroutine.resume(co, self._stream.current)
+			if self._error then
+				error(self._error)
+			end
+
+			if coroutine.status(co) == "dead" then
+				table.remove(self._co, i)
+			end
+		end
+	end
+}
