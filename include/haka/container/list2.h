@@ -58,11 +58,11 @@ INLINE void      *_list2_getuserptr(struct list2_elem *l, size_t offset)
 #ifdef HAKA_DEBUG
 	assert(l->is_elem);
 #endif
-	return ((l) ? (void*)((char*)(l)-(offset)) : NULL);
+	return ((l) ? (void *)((char *)(l)-(offset)) : NULL);
 }
 
-#define list2_get(iter, type)          ((type*)_list2_getuserptr(iter, offsetof(type, list)))
-#define list2_first(l, type)           ((type*)(list2_empty((l)) ? NULL : _list2_getuserptr(list2_begin(l), offsetof(type, list))))
-#define list2_last(l, type)            ((type*)(list2_empty((l)) ? NULL : _list2_getuserptr(list2_prev(list2_end(l)), offsetof(type, list))))
+#define list2_get(iter, type, list)          ((type*)_list2_getuserptr(iter, offsetof(type, list)))
+#define list2_first(l, type, list)           ((type*)(list2_empty((l)) ? NULL : _list2_getuserptr(list2_begin(l), offsetof(type, list))))
+#define list2_last(l, type, list)            ((type*)(list2_empty((l)) ? NULL : _list2_getuserptr(list2_prev(list2_end(l)), offsetof(type, list))))
 
 #endif /* _HAKA_CONTAINER_LIST2_H */

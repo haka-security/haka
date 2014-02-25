@@ -70,7 +70,7 @@ static void tcp_stream_free_chunks(struct list2 *list)
 	const list2_iter end = list2_end(list);
 
 	while (iter != end) {
-		struct tcp_stream_chunk *chunk = list2_get(iter, struct tcp_stream_chunk);
+		struct tcp_stream_chunk *chunk = list2_get(iter, struct tcp_stream_chunk, list);
 		iter = list2_erase(iter);
 		tcp_stream_chunk_free(chunk);
 	}
@@ -142,7 +142,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp)
 			const list2_iter end = list2_end(&stream->queued);
 
 			while (iter != end) {
-				struct tcp_stream_chunk *qchunk = list2_get(iter, struct tcp_stream_chunk);
+				struct tcp_stream_chunk *qchunk = list2_get(iter, struct tcp_stream_chunk, list);
 
 				if (qchunk->start_seq != stream->last_seq) {
 					break;
@@ -163,7 +163,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp)
 		struct tcp_stream_chunk *qchunk = NULL;
 
 		while (iter != end) {
-			qchunk = list2_get(iter, struct tcp_stream_chunk);
+			qchunk = list2_get(iter, struct tcp_stream_chunk, list);
 			if (qchunk->start_seq > chunk->start_seq) break;
 			iter = list2_next(iter);
 		}
@@ -202,7 +202,7 @@ struct tcp *tcp_stream_pop(struct tcp_stream *stream)
 		return NULL;
 	}
 
-	chunk = list2_first(&stream->current, struct tcp_stream_chunk);
+	chunk = list2_first(&stream->current, struct tcp_stream_chunk, list);
 	list2_erase(&chunk->list);
 
 	tcp = chunk->tcp;
@@ -210,8 +210,8 @@ struct tcp *tcp_stream_pop(struct tcp_stream *stream)
 	assert(tcp);
 	assert(!vbuffer_isvalid(&tcp->payload));
 
-	assert(!list2_last(&stream->sent, struct tcp_stream_chunk) ||
-	       chunk->start_seq == list2_last(&stream->sent, struct tcp_stream_chunk)->end_seq);
+	assert(!list2_last(&stream->sent, struct tcp_stream_chunk, list) ||
+	       chunk->start_seq == list2_last(&stream->sent, struct tcp_stream_chunk, list)->end_seq);
 	list2_insert(list2_end(&stream->sent), &chunk->list);
 
 	chunk->offset_seq = ((int64)vbuffer_size(&available)) - (chunk->end_seq - chunk->start_seq);
@@ -250,7 +250,7 @@ void tcp_stream_ack(struct tcp_stream *stream, struct tcp *tcp)
 		return;
 	}
 
-	chunk = list2_get(iter, struct tcp_stream_chunk);
+	chunk = list2_get(iter, struct tcp_stream_chunk, list);
 	seq = stream->sent_offset_seq + chunk->start_seq;
 	ack = tcp_remap_seq(ack, seq);
 	ack -= stream->start_seq;
@@ -258,7 +258,7 @@ void tcp_stream_ack(struct tcp_stream *stream, struct tcp *tcp)
 	new_seq = chunk->start_seq;
 
 	while (iter != end) {
-		chunk = list2_get(iter, struct tcp_stream_chunk);
+		chunk = list2_get(iter, struct tcp_stream_chunk, list);
 
 		if (seq + (chunk->end_seq - chunk->start_seq) + chunk->offset_seq > ack) {
 			break;
@@ -271,7 +271,7 @@ void tcp_stream_ack(struct tcp_stream *stream, struct tcp *tcp)
 		}
 
 		assert(list2_next(iter) == end ||
-		       list2_get(list2_next(iter), struct tcp_stream_chunk)->start_seq == chunk->end_seq);
+		       list2_get(list2_next(iter), struct tcp_stream_chunk, list)->start_seq == chunk->end_seq);
 
 		iter = list2_next(iter);
 	}

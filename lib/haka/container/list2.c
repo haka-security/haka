@@ -95,6 +95,7 @@ list2_iter list2_insert_list(list2_iter iter, list2_iter begin, list2_iter end)
 
 	last = end->prev;
 
+	/* Remove [begin; end[ from the old list and move it inside the new one */
 	begin->prev->next = end;
 	end->prev = begin->prev;
 

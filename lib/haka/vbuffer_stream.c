@@ -32,7 +32,7 @@ static void _vbuffer_stream_free_chunks(struct list2 *chunks)
 	const list2_iter end = list2_end(chunks);
 
 	while (iter != end) {
-		struct vbuffer_stream_chunk *chunk = list2_get(iter, struct vbuffer_stream_chunk);
+		struct vbuffer_stream_chunk *chunk = list2_get(iter, struct vbuffer_stream_chunk, list);
 		iter = list2_erase(iter);
 		_vbuffer_stream_free_chunk(chunk);
 	}
@@ -106,8 +106,8 @@ void vbuffer_stream_finish(struct vbuffer_stream *stream)
 
 bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer)
 {
-	struct vbuffer_stream_chunk *current = list2_first(&stream->chunks, struct vbuffer_stream_chunk);
-	struct vbuffer_stream_chunk *read_last = list2_last(&stream->read_chunks, struct vbuffer_stream_chunk);
+	struct vbuffer_stream_chunk *current = list2_first(&stream->chunks, struct vbuffer_stream_chunk, list);
+	struct vbuffer_stream_chunk *read_last = list2_last(&stream->read_chunks, struct vbuffer_stream_chunk, list);
 	struct vbuffer_chunk *begin, *iter;
 	bool keep_for_read = false;
 
@@ -161,7 +161,7 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer)
 
 	/* Extract buffer data */
 	vbuffer_create_empty(buffer);
-	vbuffer_setwritable(buffer, !iter->flags.writable);
+	vbuffer_setwritable(buffer, iter->flags.writable);
 
 	list2_insert_list(&vbuffer_chunk_end(buffer)->list, &begin->list, list2_next(&iter->list));
 
@@ -194,6 +194,6 @@ void vbuffer_stream_current(struct vbuffer_stream *stream, struct vbuffer_iterat
 	iter = list2_prev(iter);
 	if (iter == end) return;
 
-	current = list2_get(iter, struct vbuffer_stream_chunk);
-	vbuffer_iterator_copy(position, &current->ctl_iter);
+	current = list2_get(iter, struct vbuffer_stream_chunk, list);
+	vbuffer_iterator_copy(&current->ctl_iter, position);
 }

@@ -105,14 +105,6 @@ static uint8 *vbuffer_data_ctl_get(struct vbuffer_data *_buf, bool write)
 static void vbuffer_data_ctl_select_free(struct vbuffer_data *_buf)
 {
 	struct vbuffer_data_ctl_select *select = (struct vbuffer_data_ctl_select *)_buf;
-
-	/*struct vbuffer *iter = select->ctl;
-	while (iter && iter->data != _buf) {
-		struct vbuffer *cur = iter;
-		iter = iter->next;
-		vbuffer_free_elem(cur);
-	}*/
-
 	free(select);
 }
 
@@ -133,7 +125,6 @@ struct vbuffer_data_ctl_select *vbuffer_data_ctl_select()
 
 	buf->super.super.ops = &vbuffer_data_ctl_select_ops;
 	atomic_set(&buf->super.ref, 0);
-	//buf->ctl = NULL;
 	return buf;
 }
 

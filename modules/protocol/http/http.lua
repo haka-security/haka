@@ -537,7 +537,7 @@ function http_dissector.method:parse(stream, context, f, signal, next_state)
 
 		if not context._invalid and not context._error then
 			self._state = next_state
-			
+
 			if not haka.pcall(haka.context.signal, haka.context, self, signal, context) then
 				self:drop()
 				return false

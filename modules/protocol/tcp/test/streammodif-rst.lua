@@ -18,7 +18,7 @@ haka.rule {
 			while current:available() > 0 do
 				local buf = haka.vbuffer(4)
 				buf:sub():setfixedstring("Haka")
-		
+
 				current:insert(buf)
 				current:advance(10)
 			end

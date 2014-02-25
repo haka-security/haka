@@ -34,7 +34,7 @@ haka.rule {
 			npkt.flags.all = pkt.flags.all
 			npkt.dstport = pkt.dstport+10
 			npkt.srcport = pkt.srcport+10
-			
+
 			local payload = pkt.payload:clone()
 			npkt.payload:append(payload)
 

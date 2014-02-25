@@ -66,16 +66,16 @@ extern const struct vbuffer_sub_mmap vbuffer_mmap_init;
  * Functions
  */
 
-bool          vbuffer_isvalid(const struct vbuffer *buffer);
-bool          vbuffer_create_empty(struct vbuffer *buffer);
-bool          vbuffer_create_new(struct vbuffer *buffer, size_t size, bool zero);
-bool          vbuffer_create_from(struct vbuffer *buffer, const char *str, size_t len);
+bool          vbuffer_isvalid(const struct vbuffer *buf);
+bool          vbuffer_create_empty(struct vbuffer *buf);
+bool          vbuffer_create_new(struct vbuffer *buf, size_t size, bool zero);
+bool          vbuffer_create_from(struct vbuffer *buf, const char *str, size_t len);
 void          vbuffer_clear(struct vbuffer *buf);
-void          vbuffer_release(struct vbuffer *buffer);
+void          vbuffer_release(struct vbuffer *buf);
 void          vbuffer_position(const struct vbuffer *buf, struct vbuffer_iterator *position, size_t offset);
 INLINE void   vbuffer_begin(const struct vbuffer *buf, struct vbuffer_iterator *position);
 INLINE void   vbuffer_end(const struct vbuffer *buf, struct vbuffer_iterator *position);
-void          vbuffer_setwritable(struct vbuffer *buf, bool readonly);
+void          vbuffer_setwritable(struct vbuffer *buf, bool writable);
 bool          vbuffer_iswritable(struct vbuffer *buf);
 bool          vbuffer_ismodified(struct vbuffer *buf);
 void          vbuffer_clearmodified(struct vbuffer *buf);
@@ -85,10 +85,10 @@ INLINE bool   vbuffer_check_size(struct vbuffer *buf, size_t minsize, size_t *si
 INLINE bool   vbuffer_isflat(struct vbuffer *buf);
 INLINE const uint8 *vbuffer_flatten(struct vbuffer *buf, size_t *size);
 INLINE bool   vbuffer_clone(struct vbuffer *data, struct vbuffer *buffer, bool copy);
-void          vbuffer_swap(struct vbuffer *data, struct vbuffer *buffer);
+void          vbuffer_swap(struct vbuffer *a, struct vbuffer *b);
 
 bool          vbuffer_iterator_isvalid(const struct vbuffer_iterator *position);
-void          vbuffer_iterator_copy(struct vbuffer_iterator *position, const struct vbuffer_iterator *source);
+void          vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_iterator *dst);
 void          vbuffer_iterator_clear(struct vbuffer_iterator *position);
 size_t        vbuffer_iterator_available(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_check_available(struct vbuffer_iterator *position, size_t minsize, size_t *size);
