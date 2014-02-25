@@ -13,8 +13,9 @@ endif()
 macro(VALGRIND name)
 	if (DO_VALGRIND)
 		execute_process(COMMAND ${VALGRIND_COMMAND} --leak-check=full --gen-suppressions=all
-			--suppressions=${CTEST_MODULE_DIR}/Valgrind.sup --show-reachable=yes
-			--log-file=${name}-valgrind.txt ${ARGN})
+			--suppressions=${CTEST_MODULE_DIR}/Valgrind.sup
+			--suppressions=${CTEST_MODULE_DIR}/Valgrind-check.sup
+			--show-reachable=yes --log-file=${name}-valgrind.txt ${ARGN})
 	else()
 		execute_process(COMMAND ${ARGN})
 	endif()
