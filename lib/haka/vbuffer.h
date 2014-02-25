@@ -21,8 +21,8 @@ struct vbuffer_chunk {
 	atomic_t                    ref;
 	struct vbuffer_chunk_flags  flags;
 	struct vbuffer_data        *data;
-	vbsize                      offset;
-	vbsize                      size;
+	vbsize_t                    offset;
+	vbsize_t                    size;
 };
 
 void                  vbuffer_chunk_clear(struct vbuffer_chunk *chunk);

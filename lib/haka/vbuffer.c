@@ -1071,7 +1071,7 @@ static struct vbuffer_chunk *_vbuffer_sub_iterate(struct vbuffer_sub *data, size
 
 		offset = _vbuffer_iterator_fix(&begin, &iter->data);
 		if (data->use_size) iter->len = data->length;
-		else iter->len = (vbsize)-1;
+		else iter->len = (vbsize_t)-1;
 
 		vbuffer_iterator_clear(&begin);
 	}

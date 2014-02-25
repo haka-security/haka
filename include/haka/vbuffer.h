@@ -16,7 +16,7 @@
 
 #define ALL   (size_t)-1
 
-typedef uint32 vbsize;
+typedef uint32 vbsize_t;
 struct vbuffer_data;
 
 struct vbuffer_data_ops {
@@ -41,7 +41,7 @@ extern const struct vbuffer vbuffer_init;
 
 struct vbuffer_iterator {
 	struct vbuffer_chunk        *chunk;
-	vbsize                       offset;
+	vbsize_t                     offset;
 	bool                         registered:1;
 };
 
@@ -49,14 +49,14 @@ struct vbuffer_sub {
 	struct vbuffer_iterator      begin;
 	bool                         use_size:1;
 	union {
-		vbsize                   length;
+		vbsize_t                 length;
 		struct vbuffer_iterator  end;
 	};
 };
 
 struct vbuffer_sub_mmap {
 	struct vbuffer_chunk        *data;
-	vbsize                       len;
+	vbsize_t                     len;
 };
 
 extern const struct vbuffer_sub_mmap vbuffer_mmap_init;
