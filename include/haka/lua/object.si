@@ -80,6 +80,42 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 	}
 }
 
+%typemap(in,numinputs=0) typeptr** OUTPUT_DISOWN ($*ltype temp)
+%{ temp = ($*ltype)0; $1 = &temp; %}
+
+%typemap(argout) typeptr** OUTPUT_DISOWN {
+	if ($1) {
+		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->lua_object, $*descriptor, 0)) {
+			SWIG_execfail;
+		}
+		else {
+			SWIG_arg++;
+		}
+	}
+	else {
+		lua_pushnil(L);
+		SWIG_arg++;
+	}
+}
+
+%typemap(in,numinputs=0) typeptr** OUTPUT ($*ltype temp)
+%{ temp = ($*ltype)0; $1 = &temp; %}
+
+%typemap(argout) typeptr** OUTPUT {
+	if ($1) {
+		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->lua_object, $*descriptor, 1)) {
+			SWIG_execfail;
+		}
+		else {
+			SWIG_arg++;
+		}
+	}
+	else {
+		lua_pushnil(L);
+		SWIG_arg++;
+	}
+}
+
 %enddef
 
 %define LUA_OBJECT(typeptr)

@@ -35,13 +35,16 @@
 		int32   value;
 	};
 
-	static int lua_inet_checksum(struct vbuffer *buf, size_t offset, size_t len)
+	static int lua_inet_checksum_sub(struct vbuffer_sub *buf)
 	{
-		struct vsubbuffer sub;
-		if (!vbuffer_sub(buf, offset, len, &sub)) {
-			return 0;
-		}
-		return SWAP_FROM_IPV4(int16, inet_checksum_vbuffer(&sub));
+		return SWAP_FROM_IPV4(int16, inet_checksum_vbuffer(buf));
+	}
+
+	static int lua_inet_checksum(struct vbuffer *buf)
+	{
+		struct vbuffer_sub sub;
+		vbuffer_sub_create(&sub, buf, 0, ALL);
+		return lua_inet_checksum_sub(&sub);
 	}
 %}
 
@@ -146,16 +149,18 @@ struct inet_checksum {
 			free($self);
 		}
 
-		void _process(struct vbuffer *buf, int offset = 0, int len = -1) {
-			struct vsubbuffer sub;
-			if (!vbuffer_sub(buf, offset, len, &sub)) {
-				assert(check_error());
-				return;
-			}
-			$self->value += inet_checksum_vbuffer_partial(&sub);
+		void process(struct vbuffer_sub *sub) {
+			$self->value += inet_checksum_vbuffer_partial(sub, &$self->odd);
 		}
 
-		int compute() {
+		void process(struct vbuffer *buf) {
+			struct vbuffer_sub sub;
+			vbuffer_sub_create(&sub, buf, 0, ALL);
+			$self->value += inet_checksum_vbuffer_partial(&sub, &$self->odd);
+		}
+
+		%rename(reduce) _reduce;
+		int _reduce() {
 			return SWAP_FROM_IPV4(int16, inet_checksum_reduce($self->value));
 		}
 	}
@@ -311,8 +316,11 @@ struct ipv4 *ipv4_create(struct packet *DISOWN_SUCCESS_ONLY);
 %newobject ipv4_forge;
 struct packet *ipv4_forge(struct ipv4 *pkt);
 
-%rename(_inet_checksum) lua_inet_checksum;
-int lua_inet_checksum(struct vbuffer *buf, int offset = 0, int len = -1);
+%rename(inet_checksum_compute) lua_inet_checksum_sub;
+int lua_inet_checksum_sub(struct vbuffer_sub *sub);
+
+%rename(inet_checksum_compute) lua_inet_checksum;
+int lua_inet_checksum(struct vbuffer *buf);
 
 %{
 	#define IPV4_INT_GETSET(field) \
@@ -338,7 +346,7 @@ int lua_inet_checksum(struct vbuffer *buf, int offset = 0, int len = -1);
 
 	const char *ipv4_name_get(struct ipv4 *ip) { return "ipv4"; }
 
-	struct vbuffer *ipv4_payload_get(struct ipv4 *ip) { return ip->payload; }
+	struct vbuffer *ipv4_payload_get(struct ipv4 *ip) { return &ip->payload; }
 
 	struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
 
@@ -360,22 +368,6 @@ int lua_inet_checksum(struct vbuffer *buf, int offset = 0, int len = -1);
 
 %luacode {
 	local this = unpack({...})
-
-	function this.inet_checksum_compute(buf, off, len)
-		if type(buf) == 'userdata' then
-			buf = buf:right(0)
-		end
-		local buf, off, len = buf:repr(off or 0, len)
-		return this._inet_checksum(buf, off, len)
-	end
-
-	swig.getclassmetatable('inet_checksum')['.fn'].process = function (self, buf, off, len)
-		if type(buf) == 'userdata' then
-			buf = buf:right(0)
-		end
-		local buf, off, len = buf:repr(off or 0, len)
-		return self:_process(buf, off, len)
-	end
 
 	local ipv4_protocol_dissectors = {}
 

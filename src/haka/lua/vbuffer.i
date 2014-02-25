@@ -5,6 +5,7 @@
 %{
 #include <string.h>
 #include <haka/vbuffer.h>
+#include <haka/vbuffer_stream.h>
 #include <haka/error.h>
 
 %}
@@ -22,210 +23,158 @@ struct vbuffer_iterator {
 	%extend {
 		~vbuffer_iterator()
 		{
-			vbuffer_iterator_unregister($self);
+			vbuffer_iterator_clear($self);
 			free($self);
 		}
 
-		%rename(advance) _advance;
-		void _advance(int size)
+		void mark(bool readonly = false);
+		void unmark();
+		int advance(int size);
+
+		%rename(insert) _insert;
+		void _insert(struct vbuffer *data)
 		{
-			vbuffer_iterator_advance($self, size);
+			if (!vbuffer_iterator_isinsertable($self, data)) {
+				error(L"circular buffer insertion");
+				return;
+			}
+
+			vbuffer_iterator_insert($self, data);
+		}
+
+		void restore(struct vbuffer *data)
+		{
+			if (!vbuffer_iterator_isinsertable($self, data)) {
+				error(L"circular buffer insertion");
+				return;
+			}
+
+			vbuffer_restore($self, data);
+		}
+
+		int  available();
+
+		%rename(check_available) _check_available;
+		bool _check_available(int size, int *OUTPUT)
+		{
+			size_t available;
+			bool ret = vbuffer_iterator_check_available($self, size, &available);
+			*OUTPUT = available;
+			return ret;
 		}
 
 		%rename(sub) _sub;
-		struct vsubbuffer *_sub(int size, bool advance = true)
+		struct vbuffer_sub *_sub(int size = ALL, bool split = false)
 		{
-			struct vsubbuffer *sub = malloc(sizeof(struct vsubbuffer));
+			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
 			if (!sub) {
 				error(L"memory error");
 				return NULL;
 			}
 
-			if (!vbuffer_iterator_sub($self, sub, size, advance)) {
+			if (!vbuffer_iterator_sub($self, size, sub, split)) {
 				free(sub);
 				return NULL;
 			}
 
-			vbuffer_iterator_register(&sub->position);
+			vbuffer_sub_register(sub);
 			return sub;
 		}
 
-		%rename(clear) _clear;
-		void _clear()
-		{
-			vbuffer_iterator_clear($self);
-		}
+		%immutable;
+		bool isend { return vbuffer_iterator_isend($self); }
 	}
 };
 
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator);
 
 
-LUA_OBJECT(struct vbuffer);
-%newobject vbuffer::iter;
-%newobject vbuffer::_extract;
+%newobject vbuffer_sub::_sub;
+%newobject vbuffer_sub::pos;
+%newobject vbuffer_sub::select;
 
-struct vbuffer {
+struct vbuffer_sub {
 	%extend {
-		vbuffer(size_t size)
+		~vbuffer_sub()
 		{
-			struct vbuffer *buf = vbuffer_create_new(size);
-			if (!buf) return NULL;
-
-			vbuffer_zero(buf, true);
-			return buf;
+			vbuffer_sub_clear($self);
+			free($self);
 		}
 
-		~vbuffer()
-		{
-			if ($self)
-				vbuffer_free($self);
-		}
+		size_t __len(void *dummy) { return vbuffer_sub_size($self); }
+		int __getitem(int index) { return vbuffer_getbyte($self, index-1); }
+		void __setitem(int index, int value) { vbuffer_setbyte($self, index-1, value); }
 
-		size_t __len(void *dummy)
+		int  size();
+		void zero() { vbuffer_zero($self); }
+		void erase() { vbuffer_erase($self); }
+		void replace(struct vbuffer *data)
 		{
-			return vbuffer_size($self);
-		}
-
-		int __getitem(int index)
-		{
-			return vbuffer_getbyte($self, index-1);
-		}
-
-		void __setitem(int index, int value)
-		{
-			return vbuffer_setbyte($self, index-1, value);
-		}
-
-		%rename(insert) _insert;
-		void _insert(int offset, struct vbuffer *DISOWN_SUCCESS_ONLY)
-		{
-			if (!DISOWN_SUCCESS_ONLY) {
-				error(L"invalid parameter");
+			if (!vbuffer_iterator_isinsertable(&$self->begin, data)) {
+				error(L"circular buffer insertion");
 				return;
 			}
 
-			vbuffer_insert($self, offset, DISOWN_SUCCESS_ONLY, true);
+			vbuffer_replace($self, data);
+		}
+		bool isflat();
+
+		%rename(flatten) _flatten;
+		void _flatten() { vbuffer_sub_flatten($self, NULL); }
+
+		%rename(check_size) _check_size;
+		bool _check_size(int size, int *OUTPUT)
+		{
+			size_t available;
+			bool ret = vbuffer_sub_check_size($self, size, &available);
+			*OUTPUT = available;
+			return ret;
 		}
 
-		void append(struct vbuffer *DISOWN_SUCCESS_ONLY, bool modify = true)
+		struct vbuffer_iterator *select(struct vbuffer **OUTPUT)
 		{
-			if (!DISOWN_SUCCESS_ONLY) {
-				error(L"invalid parameter");
-				return;
-			}
+			struct vbuffer *select = malloc(sizeof(struct vbuffer));
+			struct vbuffer_iterator *ref= malloc(sizeof(struct vbuffer_iterator));
 
-			vbuffer_insert($self, ALL, DISOWN_SUCCESS_ONLY, modify);
-		}
+			*OUTPUT = NULL;
 
-		void replace(struct vbuffer *DISOWN_SUCCESS_ONLY, int off = 0, int len = -1)
-		{
-			if (!DISOWN_SUCCESS_ONLY) {
-				error(L"invalid parameter");
-				return;
-			}
-
-			vbuffer_erase($self, off, len);
-			vbuffer_insert($self, off, DISOWN_SUCCESS_ONLY, true);
-		}
-
-		%rename(asnumber) _asnumber;
-		int _asnumber(const char *endian = NULL, int off = 0, int len = -1)
-		{
-			struct vsubbuffer sub;
-			if (!vbuffer_sub($self, off, len, &sub)) {
-				return 0;
-			}
-			return vsubbuffer_asnumber(&sub, endian ? strcmp(endian, "big") == 0 : true);
-		}
-
-		%rename(setnumber) _setnumber;
-		void _setnumber(int num, const char *endian = NULL, int off = 0, int len = -1)
-		{
-			struct vsubbuffer sub;
-			if (!vbuffer_sub($self, off, len, &sub)) {
-				return;
-			}
-			return vsubbuffer_setnumber(&sub, endian ? strcmp(endian, "big") == 0 : true, num);
-		}
-
-		%rename(asbits) _asbits;
-		int _asbits(int off, int len, const char *endian = "big")
-		{
-			struct vsubbuffer sub;
-			if (!vbuffer_sub($self, off / 8, (len + 7) / 8, &sub)) {
-				return 0;
-			}
-			return vsubbuffer_asbits(&sub, off % 8, len, endian ? strcmp(endian, "big") == 0 : true);
-		}
-
-		%rename(setbits) _setbits;
-		void _setbits(int num, int off, int len, const char *endian = "big")
-		{
-			struct vsubbuffer sub;
-			if (!vbuffer_sub($self, off / 8, (len + 7) / 8, &sub)) {
-				return;
-			}
-			return vsubbuffer_setbits(&sub, off % 8, len, endian ? strcmp(endian, "big") == 0 : true, num);
-		}
-
-		%rename(asstring) _asstring;
-		temporary_string _asstring(int off = 0, int len = -1)
-		{
-			char *str;
-			struct vsubbuffer sub;
-			if (!vbuffer_sub($self, off, len, &sub)) {
-				return NULL;
-			}
-
-			str = malloc(sub.length+1);
-			if (!str) {
+			if (!select || !ref) {
+				free(select);
+				free(ref);
 				error(L"memory error");
 				return NULL;
 			}
 
-			vsubbuffer_asstring(&sub, str, sub.length);
-			str[sub.length] = 0;
-			return str;
-		}
-
-		%rename(setfixedstring) _setfixedstring;
-		void _setfixedstring(const char *str, int off = 0, int len = -1)
-		{
-			struct vsubbuffer sub;
-			if (!vbuffer_sub($self, off, len, &sub)) {
-				return;
-			}
-			vsubbuffer_setfixedstring(&sub, str, strlen(str));
-		}
-
-		%rename(setstring) _setstring;
-		void _setstring(const char *str, int off = 0, int len = -1)
-		{
-			struct vsubbuffer sub;
-			if (!vbuffer_sub($self, off, len, &sub)) {
-				return;
-			}
-			vsubbuffer_setstring(&sub, str, strlen(str));
-		}
-
-		%rename(extract) _extract;
-		struct vbuffer *_extract(bool modified=true, int off = 0, int len = -1)
-		{
-			struct vbuffer *ret = vbuffer_extract($self, off, len, modified);
-			if (!ret) {
+			if (!vbuffer_select($self, select, ref)) {
+				free(select);
+				free(ref);
 				return NULL;
 			}
-			return ret;
+
+			vbuffer_iterator_register(ref);
+			*OUTPUT = select;
+			return ref;
 		}
 
-		%rename(erase) _erase;
-		void _erase(int off = 0, int len = -1)
+		%rename(sub) _sub;
+		struct vbuffer_sub *_sub(int offset=0, int size=ALL)
 		{
-			vbuffer_erase($self, off, len);
+			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
+			if (!sub) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_sub_sub($self, offset, size, sub)) {
+				free(sub);
+				return NULL;
+			}
+
+			vbuffer_sub_register(sub);
+			return sub;
 		}
 
-		struct vbuffer_iterator *iter()
+		struct vbuffer_iterator *pos(int offset = ALL)
 		{
 			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
@@ -233,156 +182,224 @@ struct vbuffer {
 				return NULL;
 			}
 
-			if (!vbuffer_iterator($self, iter, false, false)) {
+			if (!vbuffer_sub_position($self, iter, offset)) {
 				free(iter);
 				return NULL;
 			}
 
-			//vbuffer_iterator_register(iter);
+			vbuffer_iterator_register(iter);
 			return iter;
 		}
 
+		int  asnumber(const char *endian = NULL) { return vbuffer_asnumber($self, endian ? strcmp(endian, "big") == 0 : true); }
+		void setnumber(int value, const char *endian = NULL) { vbuffer_setnumber($self, endian ? strcmp(endian, "big") == 0 : true, value); }
+		int  asbits(int offset, int bits, const char *endian = NULL) { return vbuffer_asbits($self, offset, bits, endian ? strcmp(endian, "big") == 0 : true); }
+		void setbits(int offset, int bits, int value, const char *endian = NULL) { vbuffer_setbits($self, offset, bits, endian ? strcmp(endian, "big") == 0 : true, value); }
+
+		temporary_string asstring()
+		{
+			const size_t len = vbuffer_sub_size($self);
+			char *str = malloc(len+1);
+			if (!str) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (vbuffer_asstring($self, str, len+1) == (size_t)-1) {
+				free(str);
+				return NULL;
+			}
+
+			return str;
+		}
+
+		void setfixedstring(const char *STRING, size_t SIZE) { vbuffer_setfixedstring($self, STRING, SIZE); }
+		void setstring(const char *STRING, size_t SIZE) { vbuffer_setstring($self, STRING, SIZE); }
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub);
+
+
+LUA_OBJECT(struct vbuffer);
+%newobject vbuffer::_sub;
+%newobject vbuffer::pos;
+%newobject vbuffer::_clone;
+
+struct vbuffer {
+	%extend {
+		vbuffer(size_t size, bool zero=true)
+		{
+			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
+			if (!buf) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_create_new(buf, size, zero)) {
+				free(buf);
+				return NULL;
+			}
+
+			return buf;
+		}
+
+		vbuffer(const char *STRING, size_t SIZE)
+		{
+			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
+			if (!buf) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_create_from(buf, STRING, SIZE)) {
+				free(buf);
+				return NULL;
+			}
+
+			return buf;
+		}
+
+		~vbuffer()
+		{
+			if ($self) {
+				vbuffer_release($self);
+				free($self);
+			}
+		}
+
+		size_t __len(void *dummy) { return vbuffer_size($self); }
+
+		int __getitem(int index)
+		{
+			struct vbuffer_sub sub;
+			vbuffer_sub_create(&sub, $self, 0, ALL);
+			return vbuffer_getbyte(&sub, index-1);
+		}
+
+		void __setitem(int index, int value)
+		{
+			struct vbuffer_sub sub;
+			vbuffer_sub_create(&sub, $self, 0, ALL);
+			vbuffer_setbyte(&sub, index-1, value);
+		}
+
+		struct vbuffer_iterator *pos(int offset = ALL)
+		{
+			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+			if (!iter) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			vbuffer_position($self, iter, offset);
+			vbuffer_iterator_register(iter);
+			return iter;
+		}
+
+		struct vbuffer_sub *_sub(int offset=0, int size=ALL)
+		{
+			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
+			if (!sub) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			vbuffer_sub_create(sub, $self, offset, size);
+			vbuffer_sub_register(sub);
+			return sub;
+		}
+
+		%rename(append) _append;
+		void _append(struct vbuffer *buffer)
+		{
+			if ($self == buffer) {
+				error(L"circular buffer insertion");
+				return;
+			}
+
+			vbuffer_append($self, buffer);
+		}
+
+		%rename(clone) _clone;
+		struct vbuffer *_clone(bool copy = false)
+		{
+			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
+			if (!buf) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_clone($self, buf, copy)) {
+				free(buf);
+				return NULL;
+			}
+
+			return buf;
+		}
+
 		%immutable;
-		bool modified;
+		bool modified { return vbuffer_ismodified($self); }
 	}
 };
 
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 
-%{
-	bool vbuffer_modified_get(struct vbuffer *buf) { return vbuffer_ismodified(buf); }
-%}
+
+LUA_OBJECT(struct vbuffer_stream);
+%newobject vbuffer_stream::_pop;
+%newobject vbuffer_stream::current;
+
+struct vbuffer_stream {
+	%extend {
+		~vbuffer_stream()
+		{
+			if ($self) {
+				vbuffer_stream_clear($self);
+				free($self);
+			}
+		}
+
+		%rename(push) _push;
+		void _push(struct vbuffer *DISOWN_SUCCESS_ONLY)
+		{
+			vbuffer_stream_push($self, DISOWN_SUCCESS_ONLY);
+		}
+
+		void finish();
+
+		%rename(pop) _pop;
+		struct vbuffer *_pop()
+		{
+			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
+			if (!buf) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_stream_pop($self, buf)) {
+				return NULL;
+			}
+
+			return buf;
+		}
+
+		%immutable;
+		struct vbuffer *data { return vbuffer_stream_data($self); }
+		struct vbuffer_iterator *current {
+			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+			if (!iter) {
+				error(L"memory error");
+				return NULL;
+			}
+			vbuffer_stream_current($self, iter);
+			return iter;
+		}
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 
 %luacode {
-	local this = unpack({...})
-
-	local subbuffer = class('VSubBuffer')
-
-	function subbuffer.method:__init(buf, off, len)
-		self.buf = buf
-		self.off = off or 0
-		self.len = len or -1
-	end
-
-	local function _sub(self, off, len)
-		off = off or 0
-		if self.len ~= -1 and off > self.len then
-			error("invalid offset")
-		end
-
-		if len and self.len ~= -1 then
-			if off + len > self.len then
-				error("invalid length")
-			end
-		end
-
-		return self.buf, off + self.off, len or self.len
-	end
-
-	subbuffer.method.repr = _sub
-
-	function subbuffer.method:sub(off, len)
-		local buf, off, len = _sub(self, off, len)
-		return subbuffer:new(buf, off, len)
-	end
-
-	function subbuffer.method:right(off)
-		local buf, off = _sub(self, off)
-		return subbuffer:new(buf, off)
-	end
-
-	function subbuffer.method:left(off)
-		local buf, off = _sub(self, off)
-		return subbuffer:new(buf, 0, off)
-	end
-
-	function subbuffer.method:erase(off, len)
-		local buf, off, len = _sub(self, off, len)
-		return buf:erase(off, len)
-	end
-
-	function subbuffer.method:insert(off, data)
-		local buf, off = _sub(self, off)
-		return buf:insert(off, data)
-	end
-
-	function subbuffer.method:append(data)
-		local buf, off = _sub(self, off)
-		return buf:append(data)
-	end
-
-	function subbuffer.method:replace(data, off, len)
-		local buf, off, len = _sub(self, off, len)
-		buf:erase(off, len)
-		return buf:insert(off, data)
-	end
-
-	function subbuffer.method:extract(modified, off, len)
-		local buf, off, len = _sub(self, off, len)
-		return buf:extract(modified, off, len)
-	end
-
-	function subbuffer.method:asnumber(endian, off, len)
-		local buf, off, len = _sub(self, off, len)
-		return buf:asnumber(endian, off, len)
-	end
-
-	function subbuffer.method:setnumber(num, endian, off, len)
-		local buf, off, len = _sub(self, off, len)
-		return buf:setnumber(num, endian, off, len)
-	end
-
-	function subbuffer.method:asbits(off, len, endian)
-		local offB, offb = math.floor(off / 8), off % 8
-		local buf, off = _sub(self, offB, math.ceil(len / 8))
-		return buf:asbits(offb + off*8, len, endian)
-	end
-
-	function subbuffer.method:setbits(num, off, len, endian)
-		local offB, offb = math.floor(off / 8), off % 8
-		local buf, off = _sub(self, offB, math.ceil(len / 8))
-		return buf:setbits(num, offb + off*8, len, endian)
-	end
-
-	function subbuffer.method:asstring(off, len)
-		local buf, off, len = _sub(self, off, len)
-		return buf:asstring(off, len)
-	end
-
-	function subbuffer.method:setfixedstring(str, off, len)
-		local buf, off, len = _sub(self, off, len)
-		return buf:setfixedstring(str, off, len)
-	end
-
-	function subbuffer.method:setstring(str, off, len)
-		local buf, off, len = _sub(self, off, len)
-		return buf:setstring(str, off, len)
-	end
-
-	function subbuffer.method:__index(off)
-		if type(off) == 'number' then
-			local buf, off = _sub(self, off, 1)
-			return buf[off]
-		end
-	end
-
-	function subbuffer.method:__newindex(off, num)
-		if type(off) == 'number' then
-			local buf, off = _sub(self, off, 1)
-			buf[off] = num
-		end
-	end
-
-	function subbuffer:__len()
-		local buf, off, len = _sub(self, 0)
-		if len and len >= 0 then
-			return len
-		else
-			return #buf - off
-		end
-	end
-
-	swig.getclassmetatable('vbuffer')['.fn'].sub = function (self, off, len) return subbuffer:new(self, off, len) end
-	swig.getclassmetatable('vbuffer')['.fn'].right = function (self, off) return subbuffer:new(self, off) end
-	swig.getclassmetatable('vbuffer')['.fn'].left = function (self, len) return subbuffer:new(self, 0, len) end
+	swig.getclassmetatable('vbuffer')['.fn'].sub = swig.getclassmetatable('vbuffer')['.fn']._sub
 }

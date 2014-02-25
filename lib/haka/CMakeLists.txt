@@ -25,7 +25,10 @@ add_library(libhaka SHARED
 	timer.c
 	state_machine.c
 	vbuffer.c
+	vbuffer_data.c
+	vbuffer_stream.c
 	container/list.c
+	container/list2.c
 	container/vector.c
 	lua/state.c
 	lua/ref.c
@@ -48,3 +51,5 @@ set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 
 # Install
 install(TARGETS libhaka LIBRARY DESTINATION ${HAKA_INSTALL_PREFIX}/lib)
+
+add_subdirectory(test)

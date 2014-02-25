@@ -69,6 +69,10 @@ set(CMAKE_C_FLAGS_COVERAGE "${CMAKE_C_FLAGS_DEBUG} --coverage")
 set(CMAKE_LD_FLAGS_COVERAGE "${CMAKE_LD_FLAGS_DEBUG} --coverage")
 set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
 
+# The RelWithDebInfo options should be the same as Release
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE} -g")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFOK "${CMAKE_CXX_FLAGS_RELEASE} -g")
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(HAKA_DEBUG 1)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Coverage")
@@ -216,6 +220,7 @@ add_custom_target(pretests-build
 )
 
 add_custom_target(pretests
+	COMMAND rm -rf ${CMAKE_BINARY_DIR}/test
 	COMMAND $(MAKE) install/fast DESTDIR=${CMAKE_BINARY_DIR}/test > /dev/null
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Preparing tests environment..." VERBATIM

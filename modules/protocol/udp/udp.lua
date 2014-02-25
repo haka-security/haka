@@ -25,7 +25,7 @@ local function compute_checksum(pkt)
 	checksum:process(pseudo_header)
 
 	checksum:process(pkt._payload)
-	return checksum:compute()
+	return checksum:reduce()
 end
 
 local udp_dissector = haka.dissector.new{

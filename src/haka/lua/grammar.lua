@@ -508,12 +508,18 @@ function grammar_dg.Bytes.method:parse(cur, init, input, ctx)
 		error("byte primitive requires aligned bits")
 	end
 
+	local sub
+
 	local size = self.size(cur, ctx)
-	if size and size < 0 then
-		error("byte count must not be negative")
+	if size then
+		if size < 0 then
+			error("byte count must not be negative")
+		end
+		sub = input:sub(ctx._offset, size)
+	else
+		sub = input:sub(ctx._offset)
 	end
 
-	local sub = input:sub(ctx._offset, size)
 	ctx:advance(#sub)
 
 	if self.name then

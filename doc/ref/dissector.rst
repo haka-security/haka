@@ -12,4 +12,4 @@ Dissector
 .. lua:function:: new(d)
 
 Register a new dissector. ``d`` should be a table containg a dissector type (``type`` field)
-such as ``EncapsulatedPacketDissector`` and a dissecor name (``name`` field).
+such as ``EncapsulatedPacketDissector`` and a dissector name (``name`` field).

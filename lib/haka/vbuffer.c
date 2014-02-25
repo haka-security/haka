@@ -11,66 +11,196 @@
 #include <haka/log.h>
 #include <haka/thread.h>
 
-#define EXCHANGE(a, b)    { typeof(a) tmp = (a); (a) = (b); (b) = tmp; }
+#include "vbuffer.h"
+#include "vbuffer_data.h"
 
 
 /*
  * Buffer data
  */
 
-struct vbuffer_data_basic {
-	struct vbuffer_data  super;
-	atomic_t             ref;
-	size_t               size;
-	uint8                buffer[0];
-};
-
-static struct vbuffer_data_ops vbuffer_data_basic_ops;
-
-#define VBUFFER_DATA_BASIC  \
-	struct vbuffer_data_basic *buf = (struct vbuffer_data_basic *)_buf; \
-	assert(buf->super.ops == &vbuffer_data_basic_ops)
-
-static void vbuffer_data_basic_addref(struct vbuffer_data *_buf)
+static void vbuffer_data_release(struct vbuffer_data *data)
 {
-	VBUFFER_DATA_BASIC;
-
-	atomic_inc(&buf->ref);
-}
-
-static void vbuffer_data_basic_release(struct vbuffer_data *_buf)
-{
-	VBUFFER_DATA_BASIC;
-
-	if (atomic_dec(&buf->ref) == 0) {
-		free(buf);
+	if (data && data->ops->release(data)) {
+		data->ops->free(data);
 	}
 }
 
-static uint8 *vbuffer_data_basic_get(struct vbuffer_data *_buf, bool write)
+
+/*
+ * Buffer chunk
+ */
+
+static void vbuffer_chunk_addref(struct vbuffer_chunk *chunk)
 {
-	VBUFFER_DATA_BASIC;
-	return buf->buffer;
+	atomic_inc(&chunk->ref);
 }
 
-static struct vbuffer_data_ops vbuffer_data_basic_ops = {
-	addref:  vbuffer_data_basic_addref,
-	release: vbuffer_data_basic_release,
-	get:     vbuffer_data_basic_get
-};
-
-static struct vbuffer_data_basic *vbuffer_data_basic(size_t size)
+static void vbuffer_chunk_release(struct vbuffer_chunk *chunk)
 {
-	struct vbuffer_data_basic *buf = malloc(sizeof(struct vbuffer_data_basic) + size);
-	if (!buf) {
+	if (atomic_dec(&chunk->ref) == 0) {
+		assert(!chunk->data);
+		assert(!list2_elem_check(&chunk->list));
+		free(chunk);
+	}
+}
+
+void vbuffer_chunk_clear(struct vbuffer_chunk *chunk)
+{
+	if (chunk->list.next) {
+		assert(chunk->list.prev);
+		list2_erase(&chunk->list);
+	}
+
+	vbuffer_data_release(chunk->data);
+	chunk->data = NULL;
+
+	vbuffer_chunk_release(chunk);
+}
+
+static struct vbuffer_chunk *vbuffer_chunk_create_end(bool writable)
+{
+	struct vbuffer_chunk *chunk = malloc(sizeof(struct vbuffer_chunk));
+	if (!chunk) {
 		error(L"memory error");
 		return NULL;
 	}
 
-	buf->super.ops = &vbuffer_data_basic_ops;
-	buf->size = size;
-	atomic_set(&buf->ref, 0);
-	return buf;
+	atomic_set(&chunk->ref, 0);
+	chunk->size = 0;
+	chunk->offset = 0;
+	chunk->data = NULL;
+	chunk->flags.modified = false;
+	chunk->flags.writable = writable;
+	chunk->flags.ctl = true;
+	chunk->flags.end = true;
+	chunk->flags.eof = true;
+
+	list2_elem_init(&chunk->list);
+	vbuffer_chunk_addref(chunk);
+
+	chunk->list.next = chunk->list.prev = &chunk->list;
+#ifdef HAKA_DEBUG
+	chunk->list.is_end = true;
+#endif
+	return chunk;
+}
+
+struct vbuffer_chunk *vbuffer_chunk_clone(struct vbuffer_chunk *chunk, bool copy)
+{
+	struct vbuffer_chunk *clone = vbuffer_chunk_create(chunk->data, chunk->offset, chunk->size);
+	if (!clone) return NULL;
+
+	clone->flags = chunk->flags;
+	return clone;
+}
+
+struct vbuffer_chunk *vbuffer_chunk_create(struct vbuffer_data *data, size_t offset,
+		size_t length)
+{
+	struct vbuffer_chunk *chunk = malloc(sizeof(struct vbuffer_chunk));
+	if (!chunk) {
+		if (data) data->ops->free(data);
+		error(L"memory error");
+		return NULL;
+	}
+
+	atomic_set(&chunk->ref, 0);
+	chunk->size = length;
+	chunk->offset = offset;
+	chunk->data = data;
+	chunk->flags.modified = false;
+	chunk->flags.writable = true;
+	chunk->flags.ctl = false;
+	chunk->flags.end = false;
+	chunk->flags.eof = false;
+	if (data) data->ops->addref(data);
+	vbuffer_chunk_addref(chunk);
+
+	list2_elem_init(&chunk->list);
+	return chunk;
+}
+
+struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_data *data, struct vbuffer_chunk *insert)
+{
+	struct vbuffer_chunk *chunk;
+
+	assert(data);
+	assert(insert);
+
+	chunk = malloc(sizeof(struct vbuffer_chunk));
+	if (!chunk) {
+		if (data) data->ops->free(data);
+		error(L"memory error");
+		return NULL;
+	}
+
+	atomic_set(&chunk->ref, 0);
+	chunk->size = 0;
+	chunk->offset = 0;
+	chunk->data = data;
+	chunk->flags.modified = false;
+	chunk->flags.writable = insert->flags.writable;
+	chunk->flags.ctl = true;
+	chunk->flags.end = false;
+	chunk->flags.eof = false;
+	if (data) data->ops->addref(data);
+	vbuffer_chunk_addref(chunk);
+
+	list2_elem_init(&chunk->list);
+	list2_insert(&insert->list, &chunk->list);
+
+	return chunk;
+}
+
+INLINE bool vbuffer_chunk_check_writeable(struct vbuffer_chunk *chunk)
+{
+	if (!chunk->flags.writable) {
+		error(L"read only buffer");
+		return false;
+	}
+	return true;
+}
+
+INLINE void vbuffer_chunk_mark_modified(struct vbuffer_chunk *chunk)
+{
+	chunk->flags.modified = true;
+}
+
+static uint8 *vbuffer_chunk_get_data(struct vbuffer_chunk *chunk, bool write)
+{
+	uint8 *ptr;
+
+	if (write && !vbuffer_chunk_check_writeable(chunk)) {
+		return NULL;
+	}
+
+	assert(!chunk->flags.ctl);
+
+	ptr = chunk->data->ops->get(chunk->data, write);
+	if (!ptr) {
+		assert(write); /* read should always be successful */
+		assert(check_error());
+		return NULL;
+	}
+
+	if (write) vbuffer_chunk_mark_modified(chunk);
+	return ptr + chunk->offset;
+}
+
+struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk)
+{
+	struct vbuffer_chunk *next;
+
+	assert(chunk);
+	assert(chunk->flags.ctl);
+
+	next = vbuffer_chunk_next(chunk);
+
+	next->flags.modified |= chunk->flags.modified;
+	vbuffer_chunk_clear(chunk);
+
+	return next;
 }
 
 
@@ -78,636 +208,203 @@ static struct vbuffer_data_basic *vbuffer_data_basic(size_t size)
  * Buffer
  */
 
-INLINE bool vbuffer_check_writeable(struct vbuffer *buf)
+const struct vbuffer vbuffer_init = { LUA_OBJECT_INIT, NULL };
+
+static bool _vbuffer_init(struct vbuffer *buffer, bool writable)
 {
-	if (!buf->flags.writable) {
-		error(L"read only buffer");
-		return false;
-	}
-	return true;
+	assert(buffer);
+	buffer->lua_object = lua_object_init;
+	buffer->chunks = vbuffer_chunk_create_end(writable);
+	return buffer->chunks != NULL;
 }
 
-INLINE void vbuffer_mark_modified(struct vbuffer *buf)
+bool vbuffer_isvalid(const struct vbuffer *buffer)
 {
-	buf->flags.modified = true;
+	assert(buffer);
+	return buffer->chunks != NULL;
 }
 
-struct vbuffer *vbuffer_create_new(size_t size)
+bool vbuffer_create_empty(struct vbuffer *buffer)
 {
-	struct vbuffer *ret;
-	struct vbuffer_data_basic *data = vbuffer_data_basic(size);
-	if (!data) {
-		return NULL;
-	}
-
-	ret = vbuffer_create_from(&data->super, size);
-	if (!ret) {
-		free(data);
-		return NULL;
-	}
-
-	return ret;
+	return _vbuffer_init(buffer, true);
 }
 
-struct vbuffer *vbuffer_create_from(struct vbuffer_data *data, size_t length)
+struct list2 *vbuffer_chunk_list(const struct vbuffer *buf)
 {
-	struct vbuffer *ret = malloc(sizeof(struct vbuffer));
-	if (!ret) {
-		error(L"memory error");
-		return NULL;
-	}
-
-	lua_object_init(&ret->lua_object);
-	ret->next = NULL;
-	ret->length = length;
-	ret->offset = 0;
-	ret->data = data;
-	ret->flags.modified = false;
-	ret->flags.writable = true;
-	data->ops->addref(data);
-	ret->iterators = NULL;
-
-	return ret;
-}
-
-bool vbuffer_zero(struct vbuffer *buf, bool mark_modified)
-{
-	void *iter = NULL;
-	uint8 *data;
-	size_t len;
-
-	if (mark_modified) {
-		if (!vbuffer_check_writeable(buf)) {
-			return false;
-		}
-
-		vbuffer_mark_modified(buf);
-	}
-
-	while ((data = vbuffer_mmap(buf, &iter, &len, false))) {
-		memset(data, 0, len);
-	}
-
-	return true;
-}
-
-void vbuffer_setmode(struct vbuffer *buf, bool readonly)
-{
-	buf->flags.writable = !readonly;
-}
-
-static struct vbuffer *vbuffer_get(struct vbuffer *buf, size_t *off, bool keeplast)
-{
-	struct vbuffer *iter = buf, *last = NULL;
-	while (iter) {
-		last = iter;
-		if (iter->length + keeplast > *off) {
-			return iter;
-		}
-
-		*off -= iter->length;
-		iter = iter->next;
-	}
-
-	*off = last->length;
-	return last;
-}
-
-static struct vbuffer *vbuffer_getlast(struct vbuffer *buf)
-{
-	struct vbuffer *iter = buf, *last = NULL;
-	while (iter) {
-		last = iter;
-		iter = iter->next;
-	}
-	return last;
-}
-
-static struct vbuffer *vbuffer_split_force(struct vbuffer *buf, size_t off)
-{
-	struct vbuffer *newbuf;
-
-	assert(off <= buf->length);
-
-	newbuf = malloc(sizeof(struct vbuffer));
-	if (!newbuf) {
-		error(L"memory error");
-		return NULL;
-	}
-
-	lua_object_init(&newbuf->lua_object);
-
-	newbuf->data = buf->data;
-	newbuf->data->ops->addref(newbuf->data);
-
-	newbuf->length = buf->length - off;
-	newbuf->offset = buf->offset + off;
-	buf->length = off;
-
-	newbuf->next = buf->next;
-	buf->next = newbuf;
-
-	newbuf->flags = buf->flags;
-
-	{
-		struct vbuffer_iterator *iter = buf->iterators;
-		while (iter) {
-			if (iter->offset > off ||
-			    (iter->offset == off && iter->post)) {
-				break;
-			}
-			iter = list_next(iter);
-		}
-
-		newbuf->iterators = iter;
-		if (iter) {
-			if (iter->list.prev) {
-				iter->list.prev->next = NULL;
-				iter->list.prev = NULL;
-			}
-			else {
-				assert(buf->iterators == iter);
-				buf->iterators = NULL;
-			}
-		}
-
-		while (iter) {
-			iter->buffer = newbuf;
-			assert(iter->offset >= off);
-			iter->offset -= off;
-			iter = list_next(iter);
-		}
-	}
-
-	return newbuf;
-}
-
-static struct vbuffer *vbuffer_split(struct vbuffer *buf, size_t off)
-{
-	assert(off <= buf->length);
-
-	if (off == 0) {
-		return buf;
-	}
-	else if (off < buf->length) {
-		return vbuffer_split_force(buf, off);
-	}
-	else {
-		return buf->next;
-	}
-}
-
-struct vbuffer *vbuffer_extract(struct vbuffer *buf, size_t off, size_t len, bool mark_modified)
-{
-	struct vbuffer *begin, *iter, *end;
-
-	if (mark_modified && !vbuffer_check_writeable(buf)) {
-		return NULL;
-	}
-
-	begin = vbuffer_get(buf, &off, true);
-	if (!begin) {
-		error(L"invalid offset");
-		return NULL;
-	}
-
-	if (len == 0) {
-		iter = vbuffer_split(begin, off);
-		if (!iter) {
-			iter = vbuffer_split_force(begin, off);
-			begin->next = NULL;
-		}
-		else {
-			begin->next = vbuffer_split_force(iter, 0);
-		}
-
-		iter->next = NULL;
-		return iter;
-	}
-	else if (begin == buf && off == 0) {
-		iter = vbuffer_split_force(begin, off);
-	}
-	else {
-		iter = vbuffer_split(begin, off);
-	}
-
-	if (!iter && check_error()) {
-		return NULL;
-	}
-
-	if (mark_modified) vbuffer_mark_modified(begin);
-
-	end = NULL;
-
-	if (len != ALL) {
-		while (iter) {
-			if (len <= iter->length) {
-				end = vbuffer_split(iter, len);
-				if (!iter && check_error()) {
-					return NULL;
-				}
-
-				iter->next = NULL;
-				break;
-			}
-
-			len -= iter->length;
-			iter = iter->next;
-		}
-
-		if (!iter && len > 0) {
-			error(L"invalid size");
-			return NULL;
-		}
-
-		iter = begin->next;
-		begin->next = end;
-		assert(iter != buf);
-		if (mark_modified) vbuffer_mark_modified(iter);
-		return iter;
-	}
-	else {
-		if (!iter) {
-			iter = vbuffer_split_force(begin, begin->length);
-		}
-
-		begin->next = NULL;
-		assert(iter != buf);
-		if (mark_modified) vbuffer_mark_modified(iter);
-		return iter;
-	}
-}
-
-static void vbuffer_free_elem(struct vbuffer *buf)
-{
-	struct vbuffer_iterator *iter = buf->iterators;
-	while (iter) {
-		struct vbuffer_iterator *cur = iter;
-		iter = list_next(iter);
-
-		assert(cur->registered);
-		cur->registered = false;
-		vbuffer_iterator_clear(cur);
-	}
-
-	buf->data->ops->release(buf->data);
-	buf->next = NULL;
-	free(buf);
-}
-
-void vbuffer_free(struct vbuffer *buf)
-{
-	lua_object_release(buf, &buf->lua_object);
-
-	struct vbuffer *iter = buf;
-	while (iter) {
-		struct vbuffer *cur = iter;
-		iter = iter->next;
-		vbuffer_free_elem(cur);
-	}
-}
-
-static uint8 *vbuffer_get_data(struct vbuffer *buf, bool write)
-{
-	uint8 *ptr;
-
-	if (write && !vbuffer_check_writeable(buf)) {
-		return NULL;
-	}
-
-	ptr = buf->data->ops->get(buf->data, write);
-	if (!ptr) {
-		assert(write); /* read should always be successful */
-		assert(check_error());
-		return NULL;
-	}
-
-	if (write) vbuffer_mark_modified(buf);
-	return ptr + buf->offset;
-}
-
-uint8 vbuffer_getbyte(struct vbuffer *buf, size_t offset)
-{
-	struct vbuffer *iter = vbuffer_get(buf, &offset, false);
-	if (!iter) {
-		error(L"invalid offset");
-		return 0;
-	}
-
-	return *(vbuffer_get_data(iter, false) + offset);
-}
-
-void vbuffer_setbyte(struct vbuffer *buf, size_t offset, uint8 byte)
-{
-	uint8 *ptr;
-	struct vbuffer *iter = vbuffer_get(buf, &offset, false);
-	if (!iter) {
-		error(L"invalid offset");
-		return;
-	}
-
-	ptr = vbuffer_get_data(iter, true);
-	if (!ptr) {
-		return;
-	}
-
-	*(ptr + offset) = byte;
-}
-
-static void _vbuffer_update_iterators(struct vbuffer *buf)
-{
-	struct vbuffer_iterator *iter = buf->iterators;
-	while (iter) {
-		iter->buffer = buf;
-		iter = list_next(iter);
-	}
-}
-
-static void _vbuffer_exchange(struct vbuffer *a, struct vbuffer *b)
-{
-	EXCHANGE(a->length, b->length);
-	EXCHANGE(a->offset, b->offset);
-	EXCHANGE(a->data, b->data);
-	EXCHANGE(a->next, b->next);
-	EXCHANGE(a->flags, b->flags);
-	EXCHANGE(a->iterators, b->iterators);
-	_vbuffer_update_iterators(a);
-	_vbuffer_update_iterators(b);
-}
-
-static struct vbuffer *_vbuffer_insert(struct vbuffer *buf, size_t off, struct vbuffer *data, bool mark_modified)
-{
-	struct vbuffer *iter, *end;
-
-	assert(data);
-	assert(buf != data);
-	assert(!lua_object_ownedbylua(&data->lua_object));
-
-	if (mark_modified && !vbuffer_check_writeable(buf)) {
-		return NULL;
-	}
-
-	iter = vbuffer_get(buf, &off, true);
-	if (!iter) {
-		error(L"invalid offset");
-		return NULL;
-	}
-
-	lua_object_release(data, &data->lua_object);
-
-	end = data;
-	while (end->next) {
-		end = end->next;
-	}
-
-	if (off == 0) {
-		_vbuffer_exchange(data, iter);
-		if (end == data) end = iter;
-
-		end->next = data;
-		assert(end->next != end);
-
-		if (mark_modified) vbuffer_mark_modified(iter);
-	}
-	else {
-		vbuffer_split(iter, off);
-		end->next = iter->next;
-		assert(end->next != end);
-		iter->next = data;
-		assert(iter->next != iter);
-
-		if (mark_modified) vbuffer_mark_modified(iter);
-	}
-
-	return end;
-}
-
-bool vbuffer_insert(struct vbuffer *buf, size_t off, struct vbuffer *data, bool mark_modified)
-{
-	if (off == ALL) {
-		struct vbuffer *last = vbuffer_getlast(buf);
-		assert(last);
-		return _vbuffer_insert(last, last->length, data, mark_modified) != NULL;
-	}
-	else {
-		return _vbuffer_insert(buf, off, data, mark_modified) != NULL;
-	}
-}
-
-bool vbuffer_erase(struct vbuffer *buf, size_t off, size_t len)
-{
-	if (len == 0) {
-		return true;
-	}
-
-	struct vbuffer *erased = vbuffer_extract(buf, off, len, true);
-	if (!erased && check_error()) {
-		return false;
-	}
-
-	vbuffer_free(erased);
-	return true;
-}
-
-size_t vbuffer_size(struct vbuffer *buf)
-{
-	size_t size = 0;
-	struct vbuffer *iter = buf;
-
-	while (iter) {
-		size += iter->length;
-		iter = iter->next;
-	}
-
-	return size;
-}
-
-bool vbuffer_checksize(struct vbuffer *buf, size_t minsize)
-{
-	size_t size = 0;
-	struct vbuffer *iter = buf;
-
-	while (iter) {
-		size += iter->length;
-		if (size >= minsize) {
-			return true;
-		}
-
-		iter = iter->next;
-	}
-
-	return false;
-}
-
-bool vbuffer_compact(struct vbuffer *buf)
-{
-	struct vbuffer *iter = buf, *next;
-	while (iter) {
-		next = iter->next;
-		assert(next != iter);
-		if (next) {
-			if (next->data == iter->data) {
-				if (iter->offset + iter->length == next->offset) {
-					iter->length += next->length;
-					iter->next = next->next;
-					iter->flags.modified |= next->flags.modified;
-					iter->flags.writable &= next->flags.writable;
-					next->next = NULL;
-					vbuffer_free(next);
-					next = iter;
-				}
-			}
-		}
-
-		iter = next;
-	}
-	return true;
-}
-
-bool vbuffer_flatten(struct vbuffer *buf)
-{
-	if (!vbuffer_isflat(buf)) {
-		vbuffer_compact(buf);
-		if (!vbuffer_isflat(buf)) {
-			struct vbuffer *iter = buf;
-			const size_t size = vbuffer_size(buf);
-			struct vbuffer_data_basic *flat;
-			uint8 *ptr;
-
-			flat = vbuffer_data_basic(size);
-			if (!flat) {
-				return false;
-			}
-
-			ptr = flat->buffer;
-
-			while (iter) {
-				memcpy(ptr, vbuffer_get_data(iter, false), iter->length);
-				ptr += iter->length;
-				iter = iter->next;
-			}
-
-			if (buf->next) {
-				vbuffer_free(buf->next);
-				buf->next = NULL;
-			}
-
-			buf->data->ops->release(buf->data);
-			buf->data = &flat->super;
-			flat->super.ops->addref(&flat->super);
-
-			buf->offset = 0;
-			buf->length = size;
-		}
-	}
-	return true;
-}
-
-bool vbuffer_isflat(struct vbuffer *buf)
-{
-	return !buf->next;
-}
-
-uint8 *vbuffer_mmap(struct vbuffer *buf, void **_iter, size_t *len, bool write)
-{
-	struct vbuffer **iter = (struct vbuffer **)_iter;
 	assert(buf);
+	assert(buf->chunks);
+	return (struct list2 *)&buf->chunks->list;
+}
 
-	if (write && !vbuffer_check_writeable(buf)) {
-		return NULL;
+struct vbuffer_chunk *vbuffer_chunk_begin(const struct vbuffer *buf)
+{
+	assert(buf);
+	assert(buf->chunks);
+	return list2_get(list2_next(&buf->chunks->list), struct vbuffer_chunk, list);
+}
+
+struct vbuffer_chunk *vbuffer_chunk_end(const struct vbuffer *buf)
+{
+	assert(buf);
+	assert(buf->chunks);
+	return buf->chunks;
+}
+
+static bool vbuffer_create_from_data(struct vbuffer *buffer, struct vbuffer_data *data, size_t offset, size_t length)
+{
+	struct vbuffer_chunk *chunk = vbuffer_chunk_create(data, offset, length);
+	if (!chunk) {
+		return false;
 	}
 
-	if (iter) {
-		if (!*iter) {
-			*iter = buf;
-		}
-		else {
-			*iter = (*iter)->next;
+	_vbuffer_init(buffer, true);
+	list2_insert(&vbuffer_chunk_end(buffer)->list, &chunk->list);
+	return true;
+}
+
+bool vbuffer_create_new(struct vbuffer *buffer, size_t size, bool zero)
+{
+	struct vbuffer_data_basic *data = vbuffer_data_basic(size, zero);
+	if (!data) {
+		return false;
+	}
+
+	if (!vbuffer_create_from_data(buffer, &data->super, 0, size)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool vbuffer_create_from(struct vbuffer *buffer, const char *str, size_t len)
+{
+	struct vbuffer_data_basic *data = vbuffer_data_basic(len, false);
+	if (!data) {
+		return false;
+	}
+
+	memcpy(data->buffer, str, len);
+
+	if (!vbuffer_create_from_data(buffer, &data->super, 0, len)) {
+		return false;
+	}
+
+	return true;
+}
+
+struct vbuffer_chunk *vbuffer_chunk_next(struct vbuffer_chunk *chunk)
+{
+	assert(chunk);
+
+	if (chunk->flags.end) return NULL;
+
+	return list2_get(list2_next(&chunk->list), struct vbuffer_chunk, list);
+}
+
+void vbuffer_clear(struct vbuffer *buf)
+{
+	if (vbuffer_isvalid(buf)) {
+		struct vbuffer_chunk *iter = vbuffer_chunk_begin(buf);
+		while (!iter->flags.end) {
+			struct vbuffer_chunk *cur = iter;
+			iter = vbuffer_chunk_next(iter);
+
+			vbuffer_chunk_clear(cur);
 		}
 
-		if (*iter) {
-			if (len) *len = (*iter)->length;
-			if (write) vbuffer_mark_modified(*iter);
-			return vbuffer_get_data(*iter, write);
-		}
-		else {
-			return NULL;
-		}
+		vbuffer_chunk_clear(buf->chunks);
+		buf->chunks = NULL;
+	}
+}
+
+void vbuffer_release(struct vbuffer *buffer)
+{
+	vbuffer_clear(buffer);
+	lua_object_release(buffer, &buffer->lua_object);
+}
+
+void vbuffer_position(const struct vbuffer *buf, struct vbuffer_iterator *position, size_t offset)
+{
+	assert(vbuffer_isvalid(buf));
+
+	if (offset == ALL) {
+		position->chunk = buf->chunks;
+		position->offset = 0;
+		position->registered = false;
 	}
 	else {
-		if (len) *len = buf->length;
-		if (write) vbuffer_mark_modified(buf);
-		return vbuffer_get_data(buf, write);
+		position->chunk = vbuffer_chunk_begin(buf);
+		position->offset = 0;
+		position->registered = false;
+		if (offset > 0) vbuffer_iterator_advance(position, offset);
 	}
+}
+
+void vbuffer_setwritable(struct vbuffer *buf, bool writable)
+{
+	struct vbuffer_chunk *iter;
+
+	assert(vbuffer_isvalid(buf));
+
+	VBUFFER_FOR_EACH(buf, iter) {
+		iter->flags.writable = writable;
+	}
+}
+
+bool vbuffer_iswritable(struct vbuffer *buf)
+{
+	assert(vbuffer_isvalid(buf));
+	return vbuffer_chunk_end(buf)->flags.writable;
 }
 
 bool vbuffer_ismodified(struct vbuffer *buf)
 {
-	struct vbuffer *iter = buf;
-	while (iter) {
+	struct vbuffer_chunk *iter;
+
+	assert(vbuffer_isvalid(buf));
+
+	VBUFFER_FOR_EACH(buf, iter) {
 		if (iter->flags.modified) {
 			return true;
 		}
-		iter = iter->next;
 	}
 	return false;
 }
 
 void vbuffer_clearmodified(struct vbuffer *buf)
 {
-	struct vbuffer *iter = buf;
-	while (iter) {
+	struct vbuffer_chunk *iter;
+
+	assert(vbuffer_isvalid(buf));
+
+	VBUFFER_FOR_EACH(buf, iter) {
 		iter->flags.modified = false;
-		iter = iter->next;
 	}
 }
 
-static void vbuffer_register_iterator(struct vbuffer *buf, struct vbuffer_iterator *iterator)
+bool vbuffer_append(struct vbuffer *buf, struct vbuffer *buffer)
 {
-	struct vbuffer_iterator *last = NULL;
-	struct vbuffer_iterator *iter = buf->iterators;
+	struct list2 *list = vbuffer_chunk_list(buffer);
 
-	assert(iterator->buffer == buf);
+	assert(vbuffer_isvalid(buf));
 
-	while (iter) {
-		assert(iter->buffer == buf);
-		if (iter->offset > iterator->offset ||
-		    (iter->offset == iterator->offset &&
-		     !iterator->post && iter->post)) {
-			break;
-		}
+	vbuffer_chunk_mark_modified(vbuffer_chunk_end(buf));
 
-		last = iter;
-		iter = list_next(iter);
-	}
+	list2_insert_list(&vbuffer_chunk_end(buf)->list, list2_begin(list), list2_end(list));
+	assert(list2_empty(list));
 
-	if (last) {
-		list_insert_after(iterator, last, &buf->iterators, NULL);
-	}
-	else {
-		list_insert_before(iterator, NULL, &buf->iterators, NULL);
-	}
+	return true;
 }
 
-static void vbuffer_unregister_iterator(struct vbuffer *buf, struct vbuffer_iterator *iterator)
+void vbuffer_swap(struct vbuffer *a, struct vbuffer *b)
 {
-	assert(iterator->buffer == buf);
+	struct vbuffer_chunk *tmp;
 
-#ifdef HAKA_DEBUG
-	{
-		struct vbuffer_iterator *iter = buf->iterators;
-		while (iter) {
-			assert(iter->buffer == buf);
-			if (iter == iterator) {
-				break;
-			}
-			iter = list_next(iter);
-		}
-		assert(iter);
-	}
-#endif
+	assert(vbuffer_isvalid(b));
 
-	list_remove(iterator, &buf->iterators, NULL);
+	tmp = a->chunks;
+	a->chunks = b->chunks;
+	b->chunks = tmp;
 }
 
 
@@ -715,293 +412,461 @@ static void vbuffer_unregister_iterator(struct vbuffer *buf, struct vbuffer_iter
  * Iterators
  */
 
-bool vbuffer_iterator(struct vbuffer *buf, struct vbuffer_iterator *iter, bool post, bool readonly)
+static bool _vbuffer_iterator_check(const struct vbuffer_iterator *position)
 {
-	list_init(iter);
-	iter->buffer = buf;
-	iter->offset = 0;
-	iter->post = post;
-	iter->readonly = readonly;
-	iter->registered = false;
-	return true;
-}
+	assert(position);
 
-bool vbuffer_iterator_clear(struct vbuffer_iterator *iter)
-{
-	if (iter->registered) {
-		vbuffer_unregister_iterator(iter->buffer, iter);
-		iter->registered = false;
-	}
-
-	iter->buffer = NULL;
-	iter->offset = 0;
-	return true;
-}
-
-static bool vbuffer_iterator_check(struct vbuffer_iterator *iter, bool modify, bool move)
-{
-	if (!iter || iter->offset > iter->buffer->length) {
-		error(L"invalid buffer iterator");
+	if (!vbuffer_iterator_isvalid(position)) {
+		error(L"empty iterator");
 		return false;
 	}
 
-	if (move && iter->registered) {
-		error(L"buffer iterator is not movable");
-		return false;
-	}
-
-	if (modify && iter->readonly) {
-		error(L"read only iterator");
-		return false;
+	if (position->registered) {
+		if ((!position->chunk->data && !position->chunk->flags.end) ||
+		    position->offset > position->chunk->size) {
+			error(L"invalid buffer iterator");
+			return false;
+		}
 	}
 
 	return true;
 }
 
-bool vbuffer_iterator_register(struct vbuffer_iterator *iter)
+void vbuffer_iterator_init(struct vbuffer_iterator *position)
 {
-	if (!vbuffer_iterator_check(iter, false, false)) {
-		return false;
-	}
-
-	if (!iter->registered) {
-		vbuffer_register_iterator(iter->buffer, iter);
-		iter->registered = true;
-		return true;
-	}
-	else {
-		return false;
-	}
+	position->chunk = NULL;
+	position->offset = 0;
+	position->registered = false;
 }
 
-bool vbuffer_iterator_unregister(struct vbuffer_iterator *iter)
+bool vbuffer_iterator_isvalid(const struct vbuffer_iterator *position)
 {
-	if (!vbuffer_iterator_check(iter, false, false)) {
-		return false;
-	}
-
-	if (!iter->registered) {
-		vbuffer_unregister_iterator(iter->buffer, iter);
-		iter->registered = false;
-		return true;
-	}
-	else {
-		return false;
-	}
+	assert(position);
+	return position->chunk != NULL;
 }
 
-bool vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_iterator *dst)
+void vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_iterator *dst)
 {
-	list_init(dst);
+	vbuffer_iterator_init(dst);
 
-	dst->buffer = src->buffer;
+	if (!_vbuffer_iterator_check(src)) return;
+
+	dst->chunk = src->chunk;
 	dst->offset = src->offset;
-	dst->post = false;
-	dst->readonly = src->readonly;
-	dst->registered = false;
-	return true;
 }
 
-bool vbuffer_iterator_sub(struct vbuffer_iterator *iter, struct vsubbuffer *buffer, size_t len, bool advance)
+void vbuffer_iterator_clear(struct vbuffer_iterator *position)
 {
-	if (!vbuffer_iterator_check(iter, false, advance)) {
-		return false;
+	assert(position);
+
+	if (position->chunk) {
+		if (position->registered) {
+			vbuffer_chunk_release(position->chunk);
+			position->registered = false;
+		}
+
+		position->chunk = NULL;
+	}
+}
+
+void vbuffer_iterator_update(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, size_t offset)
+{
+	assert(position);
+	assert(chunk);
+
+	if (position->chunk != chunk) {
+		if (position->registered) {
+			vbuffer_chunk_release(position->chunk);
+			vbuffer_chunk_addref(chunk);
+		}
+
+		position->chunk = chunk;
 	}
 
-	if (len != ALL) {
-		if (!vbuffer_checksize(iter->buffer, iter->offset + len)) {
-			error(L"invalid size");
-			return false;
+	position->offset = offset;
+}
+
+static size_t _vbuffer_iterator_fix(struct vbuffer_iterator *position, struct vbuffer_chunk **riter)
+{
+	assert(position);
+	assert(riter);
+
+	if (position->offset > position->chunk->size) {
+		size_t offset = position->offset;
+		struct vbuffer_chunk *iter = position->chunk;
+		while (!iter->flags.end) {
+			if (offset > iter->size) {
+				offset -= iter->size;
+			}
+			else {
+				break;
+			}
+
+			iter = vbuffer_chunk_next(iter);
 		}
+
+		*riter = iter;
+		return offset;
 	}
 	else {
-		len = vbuffer_size(iter->buffer);
-		if (len < iter->offset) {
-			error(L"invalid size");
+		*riter = position->chunk;
+		return position->offset;
+	}
+}
+
+size_t vbuffer_iterator_available(struct vbuffer_iterator *position)
+{
+	size_t size = 0;
+	vbuffer_iterator_check_available(position, (size_t)-1, &size);
+	return size;
+}
+
+static bool _vbuffer_iterator_check_available(struct vbuffer_iterator *position, struct vbuffer_iterator *end, size_t minsize, size_t *size)
+{
+	struct vbuffer_chunk *iter, *enditer = NULL;
+	size_t offset, endoffset = 0;
+	size_t cursize = 0;
+
+	if (!_vbuffer_iterator_check(position)) {
+		if (size) *size = (size_t)-1;
+		return false;
+	}
+
+	if (minsize == 0) {
+		if (size) *size = minsize;
+		return true;
+	}
+
+	offset = _vbuffer_iterator_fix(position, &iter);
+	if (end) {
+		if (!_vbuffer_iterator_check(end)) {
+			if (size) *size = (size_t)-1;
 			return false;
 		}
 
-		len -= iter->offset;
+		endoffset = _vbuffer_iterator_fix(end, &enditer);
 	}
 
-	vbuffer_iterator_copy(iter, &buffer->position);
-	buffer->length = len;
+	while (!iter->flags.end) {
+		if (enditer && enditer == iter) {
+			if (offset > endoffset) {
+				error(L"invalid buffer end");
+				return false;
+			}
 
-	if (advance) {
-		vbuffer_iterator_advance(iter, len);
+			cursize += endoffset - offset;
+			offset = 0;
+
+			if (cursize >= minsize) {
+				if (size) *size = minsize;
+				return true;
+			}
+
+			break;
+		}
+		else {
+			cursize += iter->size - offset;
+			offset = 0;
+
+			if (cursize >= minsize) {
+				if (size) *size = minsize;
+				return true;
+			}
+		}
+
+		iter = vbuffer_chunk_next(iter);
+	}
+
+	if (size) *size = cursize;
+	return false;
+}
+
+bool vbuffer_iterator_check_available(struct vbuffer_iterator *position, size_t minsize, size_t *size)
+{
+	return _vbuffer_iterator_check_available(position, NULL, minsize, size);
+}
+
+bool vbuffer_iterator_register(struct vbuffer_iterator *position)
+{
+	assert(position);
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	if (!position->registered) {
+		position->registered = true;
+		vbuffer_chunk_addref(position->chunk);
 	}
 
 	return true;
 }
 
-size_t vbuffer_iterator_read(struct vbuffer_iterator *iterator, uint8 *buffer, size_t len, bool advance)
+bool vbuffer_iterator_unregister(struct vbuffer_iterator *position)
 {
-	size_t clen = len;
-	struct vbuffer *iter = iterator->buffer;
-	size_t offset = iterator->offset;
+	assert(position);
 
-	if (!vbuffer_iterator_check(iterator, false, advance)) {
-		return (size_t)-1;
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	if (position->registered) {
+		vbuffer_chunk_release(position->chunk);
+		position->registered = false;
 	}
 
-	while (iter) {
-		size_t buflen = iter->length - offset;
-		if (buflen > clen) {
-			buflen = clen;
-		}
-
-		memcpy(buffer, vbuffer_get_data(iter, false) + offset, buflen);
-		buffer += buflen;
-		clen -= buflen;
-
-		if (clen == 0) {
-			offset += buflen;
-			break;
-		}
-		else {
-			offset = 0;
-		}
-
-		iter = iter->next;
-	}
-
-	if (advance) {
-		assert(!iterator->registered);
-		iterator->buffer = iter;
-		iterator->offset = offset;
-	}
-
-	return (len - clen);
-}
-
-size_t vbuffer_iterator_write(struct vbuffer_iterator *iterator, uint8 *buffer, size_t len, bool advance)
-{
-	size_t clen = len;
-	struct vbuffer *iter = iterator->buffer;
-	size_t offset = iterator->offset;
-
-	if (!vbuffer_iterator_check(iterator, true, advance)) {
-		return (size_t)-1;
-	}
-
-	while (iter) {
-		uint8 *ptr = vbuffer_get_data(iter, true);
-		if (!ptr) {
-			break;
-		}
-
-		size_t buflen = iter->length - offset;
-		if (buflen > clen) {
-			buflen = clen;
-		}
-
-		memcpy(ptr + offset, buffer, buflen);
-		buffer += buflen;
-		clen -= buflen;
-
-		if (clen == 0) {
-			offset += buflen;
-			break;
-		}
-		else {
-			offset = 0;
-		}
-
-		iter = iter->next;
-	}
-
-	if (advance) {
-		assert(!iterator->registered);
-		iterator->buffer = iter;
-		iterator->offset = offset;
-	}
-
-	return (len - clen);
-}
-
-bool vbuffer_iterator_insert(struct vbuffer_iterator *iter, struct vbuffer *data)
-{
-	struct vbuffer *last;
-
-	if (!vbuffer_iterator_check(iter, true, true)) {
-		return false;
-	}
-
-	last = _vbuffer_insert(iter->buffer, iter->offset, data, true);
-	assert(!iter->registered);
-	iter->buffer = last;
-	iter->offset = last->length;
 	return true;
 }
 
-bool vbuffer_iterator_erase(struct vbuffer_iterator *iter, size_t len)
+static struct vbuffer_chunk *_vbuffer_iterator_split(struct vbuffer_iterator *position, bool mark_modified)
 {
-	bool ret;
+	struct vbuffer_chunk *iter, *newchunk;
+	size_t offset;
 
-	if (!vbuffer_iterator_check(iter, true, true)) {
-		return false;
+	assert(_vbuffer_iterator_check(position));
+
+	offset = _vbuffer_iterator_fix(position, &iter);
+
+	if (mark_modified) {
+		if (!vbuffer_chunk_check_writeable(iter)) return NULL;
+		vbuffer_chunk_mark_modified(iter);
 	}
 
-	ret = vbuffer_erase(iter->buffer, iter->offset, len);
-	assert(!iter->registered);
-	iter->buffer = iter->buffer->next;
-	iter->offset = 0;
+	if (offset == 0 || iter->flags.end) {
+		return iter;
+	}
+
+	if (offset == iter->size) {
+		return vbuffer_chunk_next(iter);
+	}
+
+	/* Split and create a new chunk */
+	assert(!iter->flags.ctl);
+
+	newchunk = vbuffer_chunk_create(iter->data,
+			iter->offset + offset,
+			iter->size - offset);
+
+	iter->size = offset;
+	newchunk->flags = iter->flags;
+	list2_insert(list2_next(&iter->list), &newchunk->list);
+
+	return newchunk;
+}
+
+bool vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *buffer)
+{
+	struct list2 *list;
+	struct vbuffer_chunk *insert;
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	assert(vbuffer_isvalid(buffer));
+
+	list = vbuffer_chunk_list(buffer);
+	if (list2_empty(list)) return true;
+
+	insert = _vbuffer_iterator_split(position, true);
+	if (!insert) return false;
+
+	list2_insert_list(&insert->list, list2_begin(list), list2_end(list));
+
+	vbuffer_iterator_update(position, insert, 0);
+
+	assert(list2_empty(list));
+	return true;
+}
+
+size_t vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len)
+{
+	size_t clen = len;
+	struct vbuffer_chunk *iter;
+	size_t offset, endoffset = 0;
+
+	if (!_vbuffer_iterator_check(position)) return (size_t)-1;
+
+	offset = _vbuffer_iterator_fix(position, &iter);
+	assert(iter);
+
+	while (!iter->flags.end) {
+		if (offset > iter->size) {
+			offset -= iter->size;
+		}
+		else {
+			const size_t buflen = iter->size - offset;
+			if (buflen >= clen) {
+				endoffset = offset + clen;
+				clen = 0;
+				break;
+			}
+
+			clen -= buflen;
+			offset = 0;
+		}
+
+		iter = vbuffer_chunk_next(iter);
+	}
+
+	vbuffer_iterator_update(position, iter, endoffset);
+	return (len - clen);
+}
+
+bool vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct vbuffer_sub *sub, bool split)
+{
+	struct vbuffer_iterator begin;
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	vbuffer_iterator_copy(position, &begin);
+	len = vbuffer_iterator_advance(position, len);
+
+	if (split) {
+		struct vbuffer_chunk *iter = _vbuffer_iterator_split(position, false);
+		if (!iter) {
+			vbuffer_iterator_clear(&begin);
+			return false;
+		}
+
+		vbuffer_iterator_update(position, iter, 0);
+	}
+
+	const bool ret = vbuffer_sub_create_from_position(sub, &begin, len);
+	vbuffer_iterator_clear(&begin);
+
 	return ret;
 }
 
-size_t vbuffer_iterator_advance(struct vbuffer_iterator *iterator, size_t len)
-{
-	size_t clen = len;
-	struct vbuffer *iter = iterator->buffer, *last = NULL;
-	size_t offset = iterator->offset;
-	iterator->offset = 0;
-
-	if (!vbuffer_iterator_check(iterator, false, true)) {
-		return (size_t)-1;
-	}
-
-	assert(iter);
-	assert(!iterator->registered);
-
-	while (iter) {
-		const size_t buflen = iter->length - offset;
-		assert(iter->length >= offset);
-
-		last = iter;
-
-		if (buflen >= clen) {
-			iterator->offset = offset + clen;
-			iterator->buffer = iter;
-			return 0;
-		}
-
-		clen -= buflen;
-		offset = 0;
-		iter = iter->next;
-	}
-
-	iterator->buffer = last;
-	iterator->offset = last->length;
-
-	return (len - clen);
-}
-
-static uint8 *vbuffer_iterator_get_data(struct vbuffer_iterator *iterator, bool write)
+uint8 vbuffer_iterator_getbyte(struct vbuffer_iterator *position)
 {
 	uint8 *ptr;
-	struct vbuffer *iter = iterator->buffer;
-	size_t offset = iterator->offset;
+	size_t length;
 
-	if (!vbuffer_iterator_check(iterator, write, false)) {
-		return NULL;
+	if (!_vbuffer_iterator_check(position)) return -1;
+
+	ptr = vbuffer_iterator_mmap(position, 1, &length, false);
+	if (!ptr || length < 1) return -1;
+
+	return *ptr;
+
+}
+
+bool vbuffer_iterator_setbyte(struct vbuffer_iterator *position, uint8 byte)
+{
+	uint8 *ptr;
+	size_t length;
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	ptr = vbuffer_iterator_mmap(position, 1, &length, true);
+	if (!ptr || length < 1) return false;
+
+	*ptr = byte;
+	return true;
+}
+
+bool vbuffer_iterator_isend(struct vbuffer_iterator *position)
+{
+	struct vbuffer_chunk *iter;
+	UNUSED size_t offset;
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	offset = _vbuffer_iterator_fix(position, &iter);
+
+	if (iter->flags.end && iter->flags.eof) {
+		assert(offset == 0);
+		return true;
 	}
 
-	ptr = vbuffer_get_data(iter, write);
-	if (!ptr) {
-		return NULL;
+	return false;
+}
+
+uint8 *vbuffer_iterator_mmap(struct vbuffer_iterator *position, size_t maxsize, size_t *size, bool write)
+{
+	struct vbuffer_chunk *iter;
+	size_t offset;
+
+	if (!_vbuffer_iterator_check(position)) return NULL;
+
+	if (maxsize == 0) return NULL;
+
+	offset = _vbuffer_iterator_fix(position, &iter);
+
+	while (!iter->flags.end) {
+		size_t len = iter->size;
+
+		assert(offset <= len);
+		len -= offset;
+
+		if (!iter->flags.ctl && len > 0) {
+			if (maxsize != ALL && len > maxsize) {
+				if (size) *size = maxsize;
+				vbuffer_iterator_update(position, iter, offset + maxsize);
+			}
+			else {
+				if (size) *size = len;
+				vbuffer_iterator_update(position, vbuffer_chunk_next(iter), 0);
+			}
+			return vbuffer_chunk_get_data(iter, write) + offset;
+		}
+
+		offset = 0;
+		iter = vbuffer_chunk_next(iter);
 	}
 
-	return ptr + offset;
+	return NULL;
+}
+
+bool vbuffer_iterator_mark(struct vbuffer_iterator *position, bool readonly)
+{
+	struct vbuffer_data_ctl_mark *mark;
+	struct vbuffer_chunk *chunk;
+	struct vbuffer_chunk *insert;
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	insert = _vbuffer_iterator_split(position, false);
+	if (!insert) return false;
+
+	mark = vbuffer_data_ctl_mark();
+	if (!mark) {
+		return false;
+	}
+
+	chunk = vbuffer_chunk_insert_ctl(&mark->super.super, insert);
+	if (!chunk) return false;
+
+	vbuffer_iterator_update(position, chunk, 0);
+	return true;
+}
+
+bool vbuffer_iterator_unmark(struct vbuffer_iterator *position)
+{
+	struct vbuffer_data_ctl_mark *mark;
+	struct vbuffer_chunk *next;
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	mark = vbuffer_data_cast(position->chunk->data, vbuffer_data_ctl_mark);
+	if (!mark) {
+		error(L"iterator is not a mark");
+		return false;
+	}
+
+	next = vbuffer_chunk_remove_ctl(position->chunk);
+
+	vbuffer_iterator_update(position, next, 0);
+	return true;
+}
+
+bool vbuffer_iterator_isinsertable(struct vbuffer_iterator *position, struct vbuffer *buffer)
+{
+	struct vbuffer_chunk *iter = vbuffer_chunk_begin(buffer);
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	while (iter) {
+		if (iter == position->chunk) return false;
+		iter = vbuffer_chunk_next(iter);
+	}
+
+	return true;
 }
 
 
@@ -1009,189 +874,709 @@ static uint8 *vbuffer_iterator_get_data(struct vbuffer_iterator *iterator, bool 
  * Sub buffer
  */
 
-bool vbuffer_sub(struct vbuffer *buf, size_t offset, size_t length, struct vsubbuffer *sub)
+static bool _vbuffer_sub_check(const struct vbuffer_sub *data)
 {
-	vbuffer_iterator(buf, &sub->position, false, false);
-	vbuffer_iterator_advance(&sub->position, offset);
+	assert(data);
+	if (!_vbuffer_iterator_check(&data->begin)) return false;
+	if (!data->use_size && !_vbuffer_iterator_check(&data->end)) return false;
+	return true;
+}
 
-	if (length != ALL) {
-		if (!vbuffer_checksize(sub->position.buffer, sub->position.offset + length)) {
-			error(L"invalid size");
-			return false;
-		}
+static void vbuffer_sub_init(struct vbuffer_sub *data)
+{
+	assert(data);
+	vbuffer_iterator_init(&data->begin);
+	vbuffer_iterator_init(&data->end);
+	data->use_size = false;
+}
+
+void vbuffer_sub_clear(struct vbuffer_sub *data)
+{
+	vbuffer_iterator_clear(&data->begin);
+	if (!data->use_size) vbuffer_iterator_clear(&data->end);
+}
+
+bool vbuffer_sub_register(struct vbuffer_sub *data)
+{
+	bool ret = vbuffer_iterator_register(&data->begin);
+	if (!data->use_size) ret &= vbuffer_iterator_register(&data->end);
+	return ret;
+}
+
+bool vbuffer_sub_unregister(struct vbuffer_sub *data)
+{
+	bool ret = vbuffer_iterator_unregister(&data->begin);
+	if (!data->use_size) ret &= vbuffer_iterator_unregister(&data->end);
+	return ret;
+}
+
+void vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t offset, size_t length)
+{
+	vbuffer_sub_init(data);
+
+	vbuffer_begin(buffer, &data->begin);
+	vbuffer_iterator_advance(&data->begin, offset);
+
+	data->use_size = false;
+	if (length == ALL) {
+		vbuffer_end(buffer, &data->end);
 	}
 	else {
-		length = vbuffer_size(sub->position.buffer);
-		if (length < sub->position.offset) {
-			error(L"invalid size");
-			return false;
-		}
-
-		length -= sub->position.offset;
+		vbuffer_iterator_copy(&data->begin, &data->end);
+		vbuffer_iterator_advance(&data->end, length);
 	}
+}
 
-	sub->length = length;
+bool vbuffer_sub_create_from_position(struct vbuffer_sub *data, struct vbuffer_iterator *position, size_t length)
+{
+	vbuffer_sub_init(data);
+
+	vbuffer_iterator_copy(position, &data->begin);
+	data->use_size = true;
+	data->length = length;
 	return true;
 }
 
-bool vsubbuffer_sub(struct vsubbuffer *buf, size_t offset, size_t length, struct vsubbuffer *sub)
+bool vbuffer_sub_create_between_position(struct vbuffer_sub *data, struct vbuffer_iterator *begin, struct vbuffer_iterator *end)
 {
-	sub->position = buf->position;
-	vbuffer_iterator_advance(&sub->position, offset);
+	vbuffer_sub_init(data);
 
-	if (length != ALL) {
-		if (length+offset > buf->length) {
-			error(L"invalid size");
-			return false;
-		}
-	}
-	else {
-		length = buf->length;
-		if (length < offset) {
-			error(L"invalid size");
-			return false;
-		}
-
-		length -= offset;
-	}
-
-	sub->length = length;
+	vbuffer_iterator_copy(begin, &data->begin);
+	data->use_size = false;
+	vbuffer_iterator_copy(end, &data->end);
 	return true;
 }
 
-bool vsubbuffer_isflat(struct vsubbuffer *buf)
+void vbuffer_sub_begin(struct vbuffer_sub *data, struct vbuffer_iterator *begin)
 {
-	return (buf->position.buffer->length >= buf->position.offset + buf->length);
+	vbuffer_iterator_copy(&data->begin, begin);
 }
 
-bool vsubbuffer_flatten(struct vsubbuffer *buf)
+void vbuffer_sub_end(struct vbuffer_sub *data, struct vbuffer_iterator *end)
 {
-	if (!vsubbuffer_isflat(buf)) {
-		struct vbuffer_iterator iter;
-		struct vbuffer *flat;
-		uint8 *ptr;
-		UNUSED size_t len;
-
-		vbuffer_iterator_copy(&buf->position, &iter);
-
-		flat = vbuffer_create_new(buf->length);
-		if (!flat) {
-			return false;
-		}
-
-		ptr = vbuffer_mmap(flat, NULL, NULL, true);
-		len = vbuffer_iterator_read(&iter, ptr, buf->length, false);
-		assert(len == buf->length);
-
-		vbuffer_erase(iter.buffer, iter.offset, buf->length);
-		vbuffer_insert(iter.buffer, iter.offset, flat, true);
-	}
-	return true;
+	vbuffer_iterator_copy(&data->end, end);
 }
 
-size_t vsubbuffer_size(struct vsubbuffer *buf)
+bool vbuffer_sub_position(struct vbuffer_sub *data, struct vbuffer_iterator *iter, size_t offset)
 {
-	return buf->length;
-}
-
-uint8 *vsubbuffer_mmap(struct vsubbuffer *buf, void **_iter, size_t *remlen, size_t *len, bool write)
-{
-	struct vbuffer **iter = (struct vbuffer **)_iter;
-	size_t offset;
+	assert(data);
 	assert(iter);
-	assert(remlen);
 
-	if (!*iter) {
-		*iter = buf->position.buffer;
-		offset = buf->position.offset;
-		*remlen = buf->length;
+	if (offset == ALL) {
+		if (data->use_size) {
+			vbuffer_iterator_copy(&data->begin, iter);
+			vbuffer_iterator_advance(iter, data->length);
+		}
+		else vbuffer_iterator_copy(&data->end, iter);
 	}
 	else {
-		*iter = (*iter)->next;
-		offset = 0;
+		vbuffer_iterator_copy(&data->begin, iter);
+		if (offset > 0) vbuffer_iterator_advance(iter, offset);
+	}
+	return true;
+}
+
+bool vbuffer_sub_sub(struct vbuffer_sub *data, size_t offset, size_t length, struct vbuffer_sub *buffer)
+{
+	assert(buffer);
+
+	vbuffer_sub_position(data, &buffer->begin, offset);
+	if (length == ALL) {
+		buffer->use_size = false;
+		vbuffer_sub_position(data, &buffer->end, ALL);
+	}
+	else {
+		buffer->use_size = true;
+		buffer->length = length;
+	}
+	return true;
+}
+
+size_t vbuffer_sub_size(struct vbuffer_sub *data)
+{
+	size_t size;
+	vbuffer_sub_check_size(data, (size_t)-1, &size);
+	return size;
+}
+
+bool vbuffer_sub_check_size(struct vbuffer_sub *data, size_t minsize, size_t *size)
+{
+	assert(data);
+
+	if (!_vbuffer_sub_check(data)) return false;
+
+	if (data->use_size) {
+		if (minsize == ALL) minsize = data->length;
+		return vbuffer_iterator_check_available(&data->begin, minsize, size);
+	}
+	else {
+		return _vbuffer_iterator_check_available(&data->begin, &data->end, minsize, size);
+	}
+}
+
+size_t vbuffer_sub_read(struct vbuffer_sub *data, uint8 *dst, size_t size)
+{
+	struct vbuffer_sub_mmap mmapiter = vbuffer_mmap_init;
+	uint8 *ptr;
+	size_t len, ret = 0;
+
+	if (!_vbuffer_sub_check(data)) return false;
+
+	while (size > 0 && (ptr = vbuffer_mmap(data, &len, false, &mmapiter))) {
+		if (len > size) len = size;
+
+		memcpy(dst, ptr, len);
+		dst += len;
+		size -= len;
+		ret += len;
 	}
 
-	if (*iter) {
-		uint8 *ptr = vbuffer_get_data(*iter, write);
+	return ret;
+}
+
+size_t vbuffer_sub_write(struct vbuffer_sub *data, const uint8 *src, size_t size)
+{
+	struct vbuffer_sub_mmap mmapiter = vbuffer_mmap_init;
+	uint8 *ptr;
+	size_t len, ret = 0;
+
+	if (!_vbuffer_sub_check(data)) return false;
+
+	while (size > 0 && (ptr = vbuffer_mmap(data, &len, true, &mmapiter))) {
+		if (len > size) len = size;
+
+		memcpy(ptr, src, len);
+		src += len;
+		size -= len;
+		ret += len;
+	}
+
+	return ret;
+}
+
+const struct vbuffer_sub_mmap vbuffer_mmap_init = { NULL, 0 };
+
+static struct vbuffer_chunk *_vbuffer_sub_iterate(struct vbuffer_sub *data, size_t *start, size_t *len, struct vbuffer_sub_mmap *iter)
+{
+	size_t offset = 0;
+	struct vbuffer_chunk *chunk;
+
+	assert(iter);
+	assert(len);
+
+	if (!iter->data) {
+		/* Initialize iterator data */
+		struct vbuffer_iterator begin;
+		vbuffer_sub_begin(data, &begin);
+
+		offset = _vbuffer_iterator_fix(&begin, &iter->data);
+		if (data->use_size) iter->len = data->length;
+		else iter->len = (vbsize)-1;
+
+		vbuffer_iterator_clear(&begin);
+	}
+
+	/* Check if we are at the end of the sub buffer */
+	if (iter->data->flags.end || iter->len == 0) {
+		return NULL;
+	}
+
+	chunk = iter->data;
+	iter->data = vbuffer_chunk_next(iter->data);
+
+	assert(offset <= chunk->size);
+	*start = offset;
+
+	*len = chunk->size - offset;
+
+	if (data->use_size) {
+		if (iter->len >= *len) {
+			iter->len -= *len;
+		}
+		else {
+			*len = iter->len;
+			iter->len = 0;
+		}
+	}
+	else {
+		size_t endoffset;
+		struct vbuffer_chunk *end = NULL;
+		endoffset = _vbuffer_iterator_fix(&data->end, &end);
+
+		if (chunk == end) {
+			if (endoffset < offset) {
+				error(L"invalid buffer end");
+				return NULL;
+			}
+			else {
+				*len = endoffset - offset;
+
+				/* Set len to 0 to mark for the iterator end */
+				iter->len = 0;
+			}
+		}
+	}
+
+	return chunk;
+}
+
+uint8 *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *iter)
+{
+	size_t offset;
+	struct vbuffer_chunk *chunk;
+	struct vbuffer_sub_mmap _iter;
+
+	if (!iter) {
+		_iter = vbuffer_mmap_init;
+		iter = &_iter;
+	}
+
+	while ((chunk = _vbuffer_sub_iterate(data, &offset, len, iter))) {
+		uint8 *ptr;
+
+		if (chunk->flags.ctl || *len == 0) {
+			continue;
+		}
+
+		ptr = vbuffer_chunk_get_data(chunk, write);
 		if (!ptr) {
 			return NULL;
 		}
 
-		*len = (*iter)->length - offset;
-		if (*remlen >= *len) {
-			*remlen -= *len;
-			return ptr + offset;
-		}
-		else {
-			*len = *remlen;
-			*remlen = 0;
-			return ptr + offset;
-		}
+		assert(offset <= chunk->size);
+		ptr += offset;
+
+		return ptr;
+	}
+
+	return NULL;
+}
+
+bool vbuffer_zero(struct vbuffer_sub *data)
+{
+	struct vbuffer_sub_mmap mmapiter = vbuffer_mmap_init;
+	uint8 *ptr;
+	size_t len;
+
+	if (!_vbuffer_sub_check(data)) return false;
+
+	while ((ptr = vbuffer_mmap(data, &len, true, &mmapiter))) {
+		memset(ptr, 0, len);
+	}
+
+	return check_error();
+}
+
+static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct vbuffer *buffer,
+		bool mark_modified, bool insert_ctl)
+{
+	struct vbuffer_chunk *begin, *end = NULL, *iter;
+	size_t size = 0;
+
+	assert(data);
+	assert(buffer);
+
+	if (!_vbuffer_sub_check(data)) return NULL;
+
+	if (!data->use_size) {
+		/* Split end first to avoid invalidating the beginning iterator */
+		struct vbuffer_iterator iter;
+		vbuffer_sub_end(data, &iter);
+		end = _vbuffer_iterator_split(&iter, mark_modified);
+		vbuffer_iterator_clear(&iter);
+		if (!end) return NULL;
 	}
 	else {
-		return NULL;
+		size = data->length;
+	}
+
+	{
+		struct vbuffer_iterator iter;
+		vbuffer_sub_begin(data, &iter);
+		begin = _vbuffer_iterator_split(&iter, mark_modified);
+		vbuffer_iterator_clear(&iter);
+		if (!begin) return NULL;
+	}
+
+	_vbuffer_init(buffer, begin->flags.writable);
+
+	if (data->use_size || !insert_ctl) {
+		list2_iter ctl_insert_iter = list2_prev(&begin->list);
+		iter = begin;
+		while (!iter->flags.end) {
+			if (data->use_size) {
+				if (size > iter->size) {
+					size -= iter->size;
+				}
+				else {
+					struct vbuffer_iterator splitpos;
+					vbuffer_iterator_init(&splitpos);
+					splitpos.chunk = iter;
+					splitpos.offset = size;
+					end = _vbuffer_iterator_split(&splitpos, mark_modified);
+					vbuffer_iterator_clear(&splitpos);
+					if (!end) return NULL;
+					break;
+				}
+			}
+			else {
+				if (iter == end) {
+					break;
+				}
+			}
+
+			if (iter->flags.ctl && !insert_ctl) {
+				list2_iter eraseiter = list2_erase(&iter->list);
+				ctl_insert_iter = list2_insert(list2_next(ctl_insert_iter), &iter->list);
+				iter = list2_get(eraseiter, struct vbuffer_chunk, list);
+			}
+			else {
+				iter = vbuffer_chunk_next(iter);
+			}
+		}
+
+		if (!end) end = iter;
+	}
+
+	if (begin != end) {
+		list2_insert_list(&vbuffer_chunk_end(buffer)->list, &begin->list, &end->list);
+	}
+
+	if (insert_ctl) {
+		struct vbuffer_chunk *mark;
+		struct vbuffer_data_ctl_select *ctl = vbuffer_data_ctl_select();
+		if (!ctl) {
+			vbuffer_clear(buffer);
+			return NULL;
+		}
+
+		mark = vbuffer_chunk_insert_ctl(&ctl->super.super, end);
+		if (!mark) {
+			vbuffer_clear(buffer);
+			return NULL;
+		}
+
+		return mark;
+	}
+	else {
+		return end;
 	}
 }
 
-int64 vsubbuffer_asnumber(struct vsubbuffer *buf, bool bigendian)
+bool vbuffer_extract(struct vbuffer_sub *data, struct vbuffer *buffer)
+{
+	const bool ret = _vbuffer_extract(data, buffer, true, false) != NULL;
+	vbuffer_sub_clear(data);
+	return ret;
+}
+
+bool vbuffer_select(struct vbuffer_sub *data, struct vbuffer *buffer, struct vbuffer_iterator *ref)
+{
+	struct vbuffer_chunk *iter = _vbuffer_extract(data, buffer, false, true);
+	if (!iter) return false;
+
+	if (ref) {
+		vbuffer_iterator_init(ref);
+		ref->chunk = iter;
+		ref->offset = 0;
+	}
+
+	vbuffer_sub_clear(data);
+	return true;
+}
+
+bool vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data)
+{
+	struct vbuffer_data_ctl_select *ctl;
+
+	assert(data);
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	ctl = vbuffer_data_cast(position->chunk->data, vbuffer_data_ctl_select);
+	if (!ctl) {
+		error(L"invalid restore iterator");
+		return false;
+	}
+
+	list2_insert_list(&position->chunk->list, &vbuffer_chunk_begin(data)->list, &vbuffer_chunk_end(data)->list);
+
+	vbuffer_chunk_remove_ctl(position->chunk);
+
+	vbuffer_iterator_clear(position);
+	vbuffer_clear(data);
+	return true;
+}
+
+bool vbuffer_erase(struct vbuffer_sub *data)
+{
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_chunk *iter = _vbuffer_extract(data, &buffer, true, false);
+	if (!iter) return false;
+
+	vbuffer_release(&buffer);
+	return true;
+}
+
+bool vbuffer_replace(struct vbuffer_sub *data, struct vbuffer *buffer)
+{
+	struct vbuffer_sub new;
+	struct vbuffer erase = vbuffer_init;
+	struct vbuffer_chunk *iter = _vbuffer_extract(data, &erase, true, false);
+	if (!iter) return false;
+
+	vbuffer_release(&erase);
+
+	/* Update buffer range */
+	vbuffer_sub_create(&new, buffer, 0, ALL);
+
+	iter->flags.modified = true;
+
+	list2_insert_list(&iter->list, &vbuffer_chunk_begin(buffer)->list, &vbuffer_chunk_end(buffer)->list);
+	vbuffer_clear(buffer);
+
+	/* Update buffer range */
+	vbuffer_iterator_update(&data->begin, new.begin.chunk, new.begin.offset);
+	if (data->use_size) {
+		data->length = new.length;
+	}
+	else {
+		vbuffer_iterator_update(&data->end, iter, 0);
+	}
+
+	return true;
+}
+
+bool vbuffer_sub_isflat(struct vbuffer_sub *data)
+{
+	size_t offset;
+	struct vbuffer_chunk *iter;
+
+	if (!_vbuffer_sub_check(data)) return false;
+
+	offset = _vbuffer_iterator_fix(&data->begin, &iter);
+
+	if (data->use_size) {
+		return iter->size <= offset + data->length;
+	}
+	else {
+		struct vbuffer_chunk *enditer;
+		const size_t endoffset = _vbuffer_iterator_fix(&data->end, &enditer);
+		return iter == enditer || (endoffset == 0 && vbuffer_chunk_next(iter) == enditer);
+	}
+}
+
+static bool _vbuffer_compact(struct vbuffer_sub *data, bool *has_ctl, size_t *rsize)
+{
+	struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
+	size_t offset, len, size;
+	struct vbuffer_chunk *chunk, *prev = NULL;
+
+	if (!_vbuffer_sub_check(data)) return false;
+
+	size = 0;
+
+	while ((chunk = _vbuffer_sub_iterate(data, &offset, &len, &iter))) {
+		size += len;
+
+		if (has_ctl && chunk->flags.ctl) *has_ctl = true;
+
+		if (prev) {
+			if (prev->data == chunk->data) {
+				if (prev->offset + prev->size == chunk->offset) {
+					if (!data->use_size && chunk == data->end.chunk) {
+						vbuffer_iterator_update(&data->end, prev, prev->size + data->end.offset);
+					}
+
+					prev->size += chunk->size;
+					prev->flags.modified |= chunk->flags.modified;
+					prev->flags.writable &= chunk->flags.writable;
+
+					vbuffer_chunk_clear(chunk);
+					continue;
+				}
+			}
+		}
+
+		prev = chunk;
+	}
+
+	if (rsize) *rsize = size;
+
+	return true;
+}
+
+static const uint8 *_vbuffer_sub_flatten(struct vbuffer_sub *data, size_t size)
+{
+	struct vbuffer flat = vbuffer_init;
+	struct vbuffer_iterator flatbegin;
+	struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
+	size_t offset, len;
+	struct vbuffer_chunk *chunk;
+	uint8 *dst, *dsti;
+
+	if (!vbuffer_create_new(&flat, size, false)) {
+		return NULL;
+	}
+
+	vbuffer_begin(&flat, &flatbegin);
+	dst = flatbegin.chunk->data->ops->get(flatbegin.chunk->data, true);
+	assert(dst);
+
+	dsti = dst;
+
+	while ((chunk = _vbuffer_sub_iterate(data, &offset, &len, &iter))) {
+		uint8 *ptr;
+
+		assert(!chunk->flags.ctl);
+		assert(size >= len);
+
+		ptr = vbuffer_chunk_get_data(chunk, false);
+		assert(ptr);
+		assert(offset <= chunk->size);
+		ptr += offset;
+
+		memcpy(dsti, ptr, len);
+		dsti += len;
+		size -= len;
+	}
+
+	vbuffer_replace(data, &flat);
+	vbuffer_release(&flat);
+
+	return dst;
+}
+
+const uint8 *vbuffer_sub_flatten(struct vbuffer_sub *data, size_t *rsize)
+{
+	if (!_vbuffer_sub_check(data)) return NULL;
+
+	if (!vbuffer_sub_isflat(data)) {
+		bool has_ctl = false;
+		size_t size;
+		if (!_vbuffer_compact(data, &has_ctl, &size) || has_ctl) {
+			error(L"buffer cannot be flatten");
+			return NULL;
+		}
+
+		if (!vbuffer_sub_isflat(data)) {
+			if (rsize) *rsize = size;
+			return _vbuffer_sub_flatten(data, size);
+		}
+	}
+
+	{
+		struct vbuffer_iterator iter;
+		vbuffer_iterator_copy(&data->begin, &iter);
+		assert(vbuffer_sub_isflat(data));
+		return vbuffer_iterator_mmap(&iter, ALL, rsize, false);
+	}
+}
+
+bool vbuffer_sub_compact(struct vbuffer_sub *data)
+{
+	return _vbuffer_compact(data, NULL, NULL);
+}
+
+bool vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, bool copy)
+{
+	struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
+	size_t offset, len, size;
+	struct vbuffer_chunk *chunk;
+	struct vbuffer_chunk *end;
+
+	if (!_vbuffer_sub_check(data)) return false;
+
+	_vbuffer_init(buffer, true);
+	end = vbuffer_chunk_end(buffer);
+
+	size = 0;
+
+	while ((chunk = _vbuffer_sub_iterate(data, &offset, &len, &iter))) {
+		if (!chunk->flags.ctl) {
+			struct vbuffer_chunk *clone = vbuffer_chunk_clone(chunk, copy);
+			list2_insert(&end->list, &clone->list);
+
+			end->flags.writable = clone->flags.writable;
+			size += clone->size;
+		}
+	}
+
+	if (copy) {
+		/* Use flatten to copy the data */
+		_vbuffer_sub_flatten(data, size);
+	}
+
+	return true;
+}
+
+int64 vbuffer_asnumber(struct vbuffer_sub *data, bool bigendian)
 {
 	uint8 temp[8];
 	const uint8 *ptr;
+	const size_t length = vbuffer_sub_size(data);
 
-	if (buf->length > 8) {
-		error(L"unsupported size");
+	if (length > 8) {
+		error(L"asnumber: unsupported size %llu", length);
 		return 0;
 	}
 
-	if (vsubbuffer_isflat(buf)) {
-		ptr = vbuffer_iterator_get_data(&buf->position, false);
+	if (vbuffer_sub_isflat(data)) {
+		size_t mmaplen;
+		struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
+		ptr = vbuffer_mmap(data, &mmaplen, false, &iter);
 		if (!ptr) {
 			return 0;
 		}
+
+		assert(mmaplen == length);
 	}
 	else {
-		vbuffer_iterator_read(&buf->position, temp, buf->length, false);
+		vbuffer_sub_read(data, temp, length);
 		ptr = temp;
 	}
 
-	switch (buf->length) {
+	switch (length) {
 	case 1: return *ptr;
 	case 2: return bigendian ? SWAP_FROM_BE(int16, *(int16*)ptr) : SWAP_FROM_LE(int16, *(int16*)ptr);
 	case 4: return bigendian ? SWAP_FROM_BE(int32, *(int32*)ptr) : SWAP_FROM_LE(int32, *(int32*)ptr);
 	case 8: return bigendian ? SWAP_FROM_BE(int64, *(int64*)ptr) : SWAP_FROM_LE(int64, *(int64*)ptr);
 	default:
-		error(L"unsupported size");
+		error(L"asnumber: unsupported size %llu", length);
 		return 0;
 	}
 }
 
-void vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num)
+bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 {
-	if (buf->length > 8) {
-		error(L"unsupported size");
-		return;
+	const size_t length = vbuffer_sub_size(data);
+
+	if (length > 8) {
+		error(L"setnumber: unsupported size %llu", length);
+		return false;
 	}
 
-	if ((num < 0 && (-num & ((1ULL << buf->length*8)-1)) != -num) ||
-	    (num >= 0 && (num & ((1ULL << buf->length*8)-1)) != num)) {
-		error(L"invalid number, value does not fit in %d bytes", buf->length);
-		return;
+	if ((num < 0 && (-num & ((1ULL << (length*8))-1)) != -num) ||
+	    (num >= 0 && (num & ((1ULL << (length*8))-1)) != num)) {
+		error(L"setnumber: invalid number, value does not fit in %d bytes", length);
+		return false;
 	}
 
-	if (vsubbuffer_isflat(buf)) {
-		uint8 *ptr = vbuffer_iterator_get_data(&buf->position, true);
+	if (vbuffer_sub_isflat(data)) {
+		size_t mmaplen;
+		struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
+		uint8 *ptr = vbuffer_mmap(data, &mmaplen, true, &iter);
 		if (!ptr) {
-			return;
+			return false;
 		}
 
-		switch (buf->length) {
+		switch (length) {
 		case 1: *ptr = num; break;
 		case 2: *(int16*)ptr = bigendian ? SWAP_TO_BE(int16, (int16)num) : SWAP_TO_LE(int16, (int16)num); break;
 		case 4: *(int32*)ptr = bigendian ? SWAP_TO_BE(int32, (int32)num) : SWAP_TO_LE(int32, (int32)num); break;
 		case 8: *(int64*)ptr = bigendian ? SWAP_TO_BE(int64, num) : SWAP_TO_LE(int64, num); break;
 		default:
-			error(L"unsupported size");
-			return;
+			error(L"setnumber: unsupported size %llu", length);
+			return false;
 		}
 	}
 	else {
@@ -1203,123 +1588,124 @@ void vsubbuffer_setnumber(struct vsubbuffer *buf, bool bigendian, int64 num)
 			uint8 data[8];
 		} temp;
 
-		switch (buf->length) {
+		switch (length) {
 		case 1: temp.i8 = num; break;
 		case 2: temp.i16 = bigendian ? SWAP_TO_BE(int16, (int16)num) : SWAP_TO_LE(int16, (int16)num); break;
 		case 4: temp.i32 = bigendian ? SWAP_TO_BE(int32, (int32)num) : SWAP_TO_LE(int32, (int32)num); break;
 		case 8: temp.i64 = bigendian ? SWAP_TO_BE(int64, num) : SWAP_TO_LE(int64, num); break;
 		default:
-			error(L"unsupported size");
-			return;
+			error(L"setnumber: unsupported size %llu", length);
+			return false;
 		}
 
-		vbuffer_iterator_write(&buf->position, temp.data, buf->length, false);
+		vbuffer_sub_write(data, temp.data, length);
 	}
+
+	return true;
 }
 
 static uint8 getbits(uint8 x, int off, int size)
 {
-#if HAKA_LITTLEENDIAN
-	return (x >> (8-off-size)) & ((1 << size)-1);
-#else
 	return (x >> off) & ((1 << size)-1);
-#endif
 }
 
 static uint8 setbits(uint8 x, int off, int size, uint8 v)
 {
-#if HAKA_LITTLEENDIAN
-	return (x & ~(((1 << size)-1) << (8-off-size))) | ((v & ((1 << size)-1)) << (8-off-size));
-#else
-	return (x & ~(((1 << size)-1) << off)) | ((v & ((1 << size)-1)) << off));
-#endif
+	/* The first block erase the bits, the second one will set them */
+	return (x & ~(((1 << size)-1) << off)) | ((v & ((1 << size)-1)) << off);
 }
 
-int64 vsubbuffer_asbits(struct vsubbuffer *buf, size_t offset, size_t bits, bool bigendian)
+int64 vbuffer_asbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool bigendian)
 {
-#if HAKA_LITTLEENDIAN
-	if (!bigendian) {
-#else
-	if (bigendian) {
-#endif
-		int64 n = vsubbuffer_asnumber(buf, bigendian);
-		return (n >> offset) & ((1 << (bits))-1);
-	}
-	else {
-		uint8 temp[8];
-		int64 ret = 0;
-		int i, off = offset, shiftbits = 0;
-		const size_t end = (offset + bits + 7) >> 3;
-		assert(offset < 8);
+	const size_t length = vbuffer_sub_size(data);
+	uint8 temp[8];
+	int64 ret = 0;
+	int i, off = offset, shiftbits = 0;
+	const size_t begin = offset >> 3;
+	const size_t end = (offset + bits + 7) >> 3;
+	offset &= ((1 << 3)-1);
+	assert(offset < 8);
 
-		if (end > 8) {
-			error(L"unsupported size");
-			return -1;
+	if (begin >= length) {
+		error(L"asbits: invalid bit offset");
+		return -1;
+	}
+
+	if (end > length) {
+		error(L"asbits: invalid bit size");
+		return -1;
+	}
+
+	if (end > 8) {
+		error(L"asbits: unsupported size");
+		return -1;
+	}
+
+	vbuffer_sub_read(data, temp, end);
+
+	for (i=begin; i<end; ++i) {
+		const int size = bits > 8-off ? 8-off : bits;
+
+		if (bigendian) {
+			ret = (ret << size) | getbits(temp[i], off, size);
+		}
+		else {
+			ret = ret | (getbits(temp[i], off, size) << shiftbits);
+			shiftbits += size;
 		}
 
-		vbuffer_iterator_read(&buf->position, temp, end, false);
-
-		for (i=0; i<end; ++i) {
-			const int size = bits > 8-off ? 8-off : bits;
-
-			if (bigendian) {
-				ret = (ret << size) | getbits(temp[i], off, size);
-			}
-			else {
-				ret = ret | (getbits(temp[i], off, size) >> shiftbits);
-				shiftbits += size;
-			}
-
-			off = 0;
-			bits -= size;
-		}
-
-		return ret;
+		off = 0;
+		bits -= size;
 	}
+
+	return ret;
 }
 
-void vsubbuffer_setbits(struct vsubbuffer *buf, size_t offset, size_t bits, bool bigendian, int64 num)
+bool vbuffer_setbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool bigendian, int64 num)
 {
 	if (bits > 64) {
-		error(L"unsupported size");
-		return;
+		error(L"setbits: unsupported size %llu", bits);
+		return false;
 	}
 
 	if ((num < 0 && (-num & ((1ULL << bits)-1)) != -num) ||
 	    (num >= 0 && (num & ((1ULL << bits)-1)) != num)) {
-		error(L"invalid number, value does not fit in %d bits", bits);
-		return;
+		error(L"setbits: invalid number, value does not fit in %d bits", bits);
+		return false;
 	}
 
-#if HAKA_LITTLEENDIAN
-	if (!bigendian) {
-#else
-	if (bigendian) {
-#endif
-		int64 n = vsubbuffer_asnumber(buf, bigendian);
-		n &= ~(((1 << (bits))-1) << offset);
-		n |= (num & ((1 << (bits))-1)) << offset;
-		vsubbuffer_setnumber(buf, bigendian, n);
-	}
-	else {
+	{
+		const size_t length = vbuffer_sub_size(data);
 		uint8 temp[8];
-		int i, off = offset, shiftbits = 0;
+		int i, off = offset;
+		const size_t begin = offset >> 3;
 		const size_t end = (offset + bits + 7) >> 3;
+		offset &= ((1 << 3)-1);
 		assert(offset < 8);
 
-		if (end > 8) {
-			error(L"unsupported size");
-			return;
+		if (begin >= length) {
+			error(L"setbits: invalid bit offset");
+			return -1;
 		}
 
-		vbuffer_iterator_read(&buf->position, temp, end, false);
+		if (end > length) {
+			error(L"setbits: invalid bit size");
+			return -1;
+		}
 
-		for (i=0; i<end; ++i) {
+		if (end > 8) {
+			error(L"setbits: unsupported size");
+			return false;
+		}
+
+		vbuffer_sub_read(data, temp, end);
+
+		for (i=begin; i<end; ++i) {
 			const int size = bits > 8-off ? 8-off : bits;
+			bits -= size;
 
 			if (bigendian) {
-				shiftbits += size;
-				temp[i] = setbits(temp[i], off, size, num >> (bits-shiftbits));
+				temp[i] = setbits(temp[i], off, size, num >> bits);
 			}
 			else {
 				temp[i] = setbits(temp[i], off, size, num);
@@ -1329,105 +1715,49 @@ void vsubbuffer_setbits(struct vsubbuffer *buf, size_t offset, size_t bits, bool
 			off = 0;
 		}
 
-		vbuffer_iterator_write(&buf->position, temp, end, false);
+		vbuffer_sub_write(data, temp, end);
 	}
+
+	return true;
 }
 
-size_t vsubbuffer_asstring(struct vsubbuffer *buf, char *str, size_t len)
+size_t vbuffer_asstring(struct vbuffer_sub *data, char *str, size_t len)
 {
-	struct vbuffer *buffer = buf->position.buffer;
-	size_t offset = buf->position.offset;
-	int i;
+	size_t size = vbuffer_sub_read(data, (uint8 *)str, len);
+	if (check_error()) return (size_t)-1;
 
-	if (len > buf->length) {
-		len = buf->length;
-	}
-
-	if (len == 0) {
-		return 0;
-	}
-
-	for (i=0; i<len; ++i, ++offset) {
-		buffer = vbuffer_get(buffer, &offset, false);
-		if (!buffer) {
-			error(L"invalid sub buffer");
-			return 0;
-		}
-
-		str[i] = *(vbuffer_get_data(buffer, false) + offset);
-	}
-
-	return len;
+	if (size == len) --size;
+	str[size] = '\0';
+	return size;
 }
 
-size_t vsubbuffer_setfixedstring(struct vsubbuffer *buf, const char *str, size_t len)
+size_t vbuffer_setfixedstring(struct vbuffer_sub *data, const char *str, size_t len)
 {
-	struct vbuffer *buffer = buf->position.buffer;
-	size_t offset = buf->position.offset;
-	int i;
-
-	if (len > buf->length) {
-		len = buf->length;
-	}
-
-	if (len == 0) {
-		return 0;
-	}
-
-	for (i=0; i<len; ++i, ++offset) {
-		uint8 *ptr;
-		buffer = vbuffer_get(buffer, &offset, false);
-		if (!buffer) {
-			error(L"invalid sub buffer");
-			return 0;
-		}
-
-		ptr = vbuffer_get_data(buffer, true);
-		if (!ptr) {
-			return 0;
-		}
-		*(ptr + offset) = str[i];
-	}
-
-	return len;
+	return vbuffer_sub_write(data, (const uint8 *)str, len);
 }
 
-void vsubbuffer_setstring(struct vsubbuffer *buf, const char *str, size_t len)
+bool vbuffer_setstring(struct vbuffer_sub *data, const char *str, size_t len)
 {
-	struct vbuffer *modif;
-	uint8 *ptr;
-
-	vbuffer_erase(buf->position.buffer, buf->position.offset, buf->length);
-
-	modif = vbuffer_create_new(len);
-	if (!modif) {
-		return;
-	}
-
-	ptr = vbuffer_mmap(modif, NULL, NULL, true);
-	assert(ptr);
-	memcpy(ptr, str, len);
-
-	vbuffer_insert(buf->position.buffer, buf->position.offset, modif, true);
-	buf->length = len;
+	bool ret;
+	struct vbuffer newbuf = vbuffer_init;
+	if (!vbuffer_create_from(&newbuf, str, len)) return false;
+	ret = vbuffer_replace(data, &newbuf);
+	vbuffer_release(&newbuf);
+	return ret;
 }
 
-uint8 vsubbuffer_getbyte(struct vsubbuffer *buf, size_t offset)
+uint8 vbuffer_getbyte(struct vbuffer_sub *data, size_t offset)
 {
-	if (offset >= buf->length) {
-		error(L"invalid offset");
-		return 0;
-	}
-
-	return vbuffer_getbyte(buf->position.buffer, buf->position.offset + offset);
+	struct vbuffer_iterator iter;
+	vbuffer_iterator_copy(&data->begin, &iter);
+	vbuffer_iterator_advance(&iter, offset);
+	return vbuffer_iterator_getbyte(&iter);
 }
 
-void vsubbuffer_setbyte(struct vsubbuffer *buf, size_t offset, uint8 byte)
+bool vbuffer_setbyte(struct vbuffer_sub *data, size_t offset, uint8 byte)
 {
-	if (offset >= buf->length) {
-		error(L"invalid offset");
-		return;
-	}
-
-	vbuffer_setbyte(buf->position.buffer, buf->position.offset + offset, byte);
+	struct vbuffer_iterator iter;
+	vbuffer_iterator_copy(&data->begin, &iter);
+	vbuffer_iterator_advance(&iter, offset);
+	return vbuffer_iterator_setbyte(&iter, byte);
 }

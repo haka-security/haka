@@ -221,18 +221,11 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 
 	memset(state->current_packet, 0, sizeof(struct nfqueue_packet));
 
-	state->current_packet->core_packet.payload = vbuffer_create_new(packet_len);
-	if (!state->current_packet->core_packet.payload) {
+	if (!vbuffer_create_from(&state->current_packet->core_packet.payload, packet_data, packet_len)) {
 		free(state->current_packet);
 		state->error = ENOMEM;
 		return 0;
 	}
-
-	/* The copy is needed as the packet buffer will be overridden when the next
-	 * packet will arrive.
-	 */
-	memcpy(vbuffer_mmap(state->current_packet->core_packet.payload, NULL, NULL, false),
-		packet_data, packet_len);
 
 	time_gettimestamp(&state->current_packet->timestamp);
 	state->current_packet->id = ntohl(packet_hdr->packet_id);
@@ -549,7 +542,7 @@ static bool pass_through()
 }
 
 static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt,
-		uint8 *data, size_t len)
+		const uint8 *data, size_t len)
 {
 	if (pcap->pf) {
 		struct pcap_pkthdr hdr;
@@ -582,10 +575,10 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			*pkt = (struct packet*)state->current_packet;
 
 			if (pcap) {
-				uint8 *data;
+				const uint8 *data;
 				size_t len;
-				assert(vbuffer_isflat((*pkt)->payload));
-				data = vbuffer_mmap((*pkt)->payload, NULL, &len, false);
+				assert(vbuffer_isflat(&(*pkt)->payload));
+				data = vbuffer_flatten(&(*pkt)->payload, &len);
 				assert(data);
 
 				dump_pcap(&pcap->in, state->current_packet, data, len);
@@ -609,19 +602,16 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	int ret;
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
-	if (pkt->core_packet.payload) {
-		uint8 *data;
+	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
+		const uint8 *data;
 		size_t len;
 
-		if (!vbuffer_flatten(pkt->core_packet.payload)) {
+		data = vbuffer_flatten(&pkt->core_packet.payload, &len);
+		if (!data) {
 			assert(check_error());
-			vbuffer_free(pkt->core_packet.payload);
-			pkt->core_packet.payload = NULL;
+			vbuffer_clear(&pkt->core_packet.payload);
 			return;
 		}
-
-		data = vbuffer_mmap(pkt->core_packet.payload, NULL, &len, false);
-		assert(data);
 
 		if (pkt->id == -1) {
 			if (result == FILTER_ACCEPT) {
@@ -643,8 +633,8 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 				break;
 			}
 
-			if (vbuffer_ismodified(pkt->core_packet.payload)) {
-				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, len, data);
+			if (vbuffer_ismodified(&pkt->core_packet.payload)) {
+				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, len, (uint8 *)data);
 			}
 			else {
 				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, 0, NULL);
@@ -668,8 +658,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 			message(HAKA_LOG_ERROR, MODULE_NAME, L"packet verdict failed");
 		}
 
-		vbuffer_free(pkt->core_packet.payload);
-		pkt->core_packet.payload = NULL;
+		vbuffer_clear(&pkt->core_packet.payload);
 	}
 }
 
@@ -688,10 +677,11 @@ static void packet_do_release(struct packet *orig_pkt)
 {
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
-	if (orig_pkt->payload) {
+	if (vbuffer_isvalid(&orig_pkt->payload)) {
 		packet_verdict(orig_pkt, FILTER_DROP);
 	}
 
+	vbuffer_release(&pkt->core_packet.payload);
 	free(pkt);
 }
 
@@ -699,7 +689,7 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 {
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
-	if (orig_pkt->payload) {
+	if (vbuffer_isvalid(&orig_pkt->payload)) {
 		if (pkt->id == -1)
 			return STATUS_FORGED;
 		else
@@ -720,14 +710,11 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 	memset(packet, 0, sizeof(struct nfqueue_packet));
 
-	packet->core_packet.payload = vbuffer_create_new(size);
-	if (!packet->core_packet.payload) {
+	if (!vbuffer_create_new(&packet->core_packet.payload, size, true)) {
 		assert(check_error());
 		free(packet);
 		return NULL;
 	}
-
-	vbuffer_zero(packet->core_packet.payload, true);
 
 	packet->id = -1;
 	packet->state = state;
@@ -740,24 +727,19 @@ static bool send_packet(struct packet *orig_pkt)
 {
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 	bool ret;
-	uint8 *data;
+	const uint8 *data;
 	size_t len;
 
-	if (!vbuffer_flatten(pkt->core_packet.payload)) {
+	data = vbuffer_flatten(&pkt->core_packet.payload, &len);
+	if (!data) {
 		assert(check_error());
-		vbuffer_free(pkt->core_packet.payload);
-		pkt->core_packet.payload = NULL;
+		vbuffer_clear(&pkt->core_packet.payload);
 		return false;
 	}
 
-	data = vbuffer_mmap(pkt->core_packet.payload, NULL, &len, false);
-	assert(data);
-
 	ret = socket_send_packet(pkt->state->send_fd, data, len);
 
-	vbuffer_free(pkt->core_packet.payload);
-	pkt->core_packet.payload = NULL;
-
+	vbuffer_clear(&pkt->core_packet.payload);
 	return ret;
 }
 

@@ -5,7 +5,6 @@
 %module tcp
 
 %{
-#include <haka/stream.h>
 #include <haka/tcp.h>
 #include <haka/tcp-connection.h>
 #include <haka/tcp-stream.h>
@@ -19,7 +18,6 @@ struct tcp_stream;
 
 %include "haka/lua/ipv4-addr.si"
 %include "haka/lua/swig.si"
-%include "haka/lua/stream.si"
 %include "haka/lua/ref.si"
 %include "haka/lua/ipv4.si"
 %include "typemaps.i"
@@ -47,7 +45,7 @@ STRUCT_UNKNOWN_KEY_ERROR(tcp_flags);
 
 LUA_OBJECT(struct tcp);
 LUA_OBJECT(struct tcp_connection);
-LUA_OBJECT_CAST(struct tcp_stream, struct stream);
+LUA_OBJECT(struct tcp_stream);
 
 %newobject tcp_stream::_pop;
 
@@ -55,41 +53,40 @@ struct tcp_stream
 {
 	%extend {
 		%immutable;
-		unsigned int lastseq;
+		unsigned int lastseq { return tcp_stream_lastseq($self); };
+		struct vbuffer_stream *stream { return &$self->stream; };
 
 		%rename(init) _init;
 		void _init(unsigned int seq)
 		{
-			tcp_stream_init((struct stream *)$self, seq);
+			tcp_stream_init($self, seq);
 		}
 
 		%rename(push) _push;
 		void _push(struct tcp *DISOWN_SUCCESS_ONLY)
 		{
-			tcp_stream_push((struct stream *)$self, DISOWN_SUCCESS_ONLY);
+			tcp_stream_push($self, DISOWN_SUCCESS_ONLY);
 		}
 
 		%rename(pop) _pop;
 		struct tcp *_pop()
 		{
-			return tcp_stream_pop((struct stream *)$self);
+			return tcp_stream_pop($self);
 		}
 
 		%rename(seq) _seq;
 		void _seq(struct tcp *tcp)
 		{
-			tcp_stream_seq((struct stream *)$self, tcp);
+			tcp_stream_seq($self, tcp);
 		}
 
 		%rename(ack) _ack;
 		void _ack(struct tcp *tcp)
 		{
-			tcp_stream_ack((struct stream *)$self, tcp);
+			tcp_stream_ack($self, tcp);
 		}
 	}
 };
-
-BASIC_STREAM(tcp_stream)
 
 %newobject tcp::forge;
 
@@ -111,10 +108,10 @@ struct tcp {
 		unsigned int urgent_pointer;
 
 		%immutable;
-		struct tcp_flags *flags;
-		struct vbuffer *payload;
-		struct ipv4 *ip;
-		const char *name;
+		struct tcp_flags *flags { return (struct tcp_flags *)$self; }
+		struct vbuffer *payload { return &$self->payload; }
+		struct ipv4 *ip { return $self->packet; }
+		const char *name { return "tcp"; }
 
 		bool verify_checksum();
 		void compute_checksum();
@@ -185,7 +182,7 @@ struct tcp_connection {
 		struct tcp_stream *stream(const char *direction)
 		{
 			const bool direction_in = strcmp(direction, "up") == 0;
-			return (struct tcp_stream *)tcp_connection_get_stream($self, direction_in);
+			return tcp_connection_get_stream($self, direction_in);
 		}
 	}
 };
@@ -240,14 +237,6 @@ TCP_INT_GETSET(window_size);
 TCP_INT_GETSET(checksum);
 TCP_INT_GETSET(urgent_pointer);
 
-struct vbuffer *tcp_payload_get(struct tcp *tcp) { return tcp->payload; }
-
-struct tcp_flags *tcp_flags_get(struct tcp *tcp) { return (struct tcp_flags *)tcp; }
-
-const char *tcp_name_get(struct tcp *tcp) { return "tcp"; }
-
-struct ipv4 *tcp_ip_get(struct tcp *tcp) { return tcp->packet; }
-
 #define TCP_FLAGS_GETSET(field) \
 	bool tcp_flags_##field##_get(struct tcp_flags *flags) { return tcp_get_flags_##field((struct tcp *)flags); } \
 	void tcp_flags_##field##_set(struct tcp_flags *flags, bool v) { return tcp_set_flags_##field((struct tcp *)flags, v); }
@@ -263,8 +252,6 @@ TCP_FLAGS_GETSET(cwr);
 
 unsigned int tcp_flags_all_get(struct tcp_flags *flags) { return tcp_get_flags((struct tcp *)flags); }
 void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set_flags((struct tcp *)flags, v); }
-
-unsigned int tcp_stream_lastseq_get(struct tcp_stream *s) { return tcp_stream_lastseq((struct stream *)s); }
 
 %}
 

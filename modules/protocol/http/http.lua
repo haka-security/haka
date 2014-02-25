@@ -291,33 +291,27 @@ module.cookies.split = cookies_split
 -- HTTP dissector
 --
 
-local function getchar(stream)
-	local char
-
+local function getchar(context)
 	while true do
-		char = stream:getchar()
-		if char == -1 then
+		if not context._stream:check_available(2) and not context._stream:check_available(1) then
 			coroutine.yield()
 		else
-			break
+			return context._stream:sub(1):asnumber()
 		end
 	end
-
-	return char
 end
 
-local function read_line(stream)
+local function read_line(context)
 	local line = ""
 	local char, c
 	local read = 0
-
 	while true do
-		c = getchar(stream)
+		c = getchar(context)
 		read = read+1
 		char = str(c)
 
 		if c == 0xd then
-			c = getchar(stream)
+			c = getchar(context)
 			read = read+1
 
 			if c == 0xa then
@@ -435,65 +429,64 @@ function http_dissector.method:reset()
 	self.flow = nil
 end
 
-local function build_headers(stream, headers, headers_order)
+local function build_headers(result, headers, headers_order)
 	for _, name in pairs(headers_order) do
 		local value = headers[name]
 		if value then
-			stream:insert(name)
-			stream:insert(": ")
-			stream:insert(value)
-			stream:insert("\r\n")
+			table.insert(result, name)
+			table.insert(result, ": ")
+			table.insert(result, value)
+			table.insert(result, "\r\n")
 		end
 	end
 	local headers_copy = dict(headers_order)
 	for name, value in sorted_pairs(headers) do
 		if value and not contains(headers_copy, name) then
-			stream:insert(name)
-			stream:insert(": ")
-			stream:insert(value)
-			stream:insert("\r\n")
+			table.insert(result, name)
+			table.insert(result, ": ")
+			table.insert(result, value)
+			table.insert(result, "\r\n")
 		end
 	end
 end
 
-local function parse_header(stream, http)
+local function parse_header(http)
 	local total_len = 0
 
 	http.headers = {}
 	http._headers_order = {}
-	line, len = read_line(stream)
+	line, len = read_line(http)
 	total_len = total_len + len
 	while #line > 0 do
 		local name, value = line:match("([^%s]+):%s*(.+)")
 		if not name then
 			http._invalid = string.format("invalid http header '%s'", safe_string(line))
-			return
+			return 0
 		end
 
 		http.headers[name] = value
 		table.insert(http._headers_order, name)
-		line, len = read_line(stream)
+		line, len = read_line(http)
 		total_len = total_len + len
 	end
 
 	return total_len
 end
 
-local function parse_request(stream, http)
+local function parse_request(http)
 	local len, total_len
 
-	local line, len = read_line(stream)
+	local line, len = read_line(http)
 	total_len = len
-
 	http.method, http.uri, http.version = line:match("([^%s]+) ([^%s]+) (.+)")
 	if not http.method then
 		http._invalid = string.format("invalid http request '%s'", safe_string(line))
 		return
 	end
 
-	total_len = total_len + parse_header(stream, http)
+	total_len = total_len + parse_header(http)
 
-	http.data = stream
+	--http.data = stream
 	http._length = total_len
 
 	http.dump = dump
@@ -501,10 +494,10 @@ local function parse_request(stream, http)
 	return true
 end
 
-local function parse_response(stream, http)
+local function parse_response(http)
 	local len, total_len
 
-	local line, len = read_line(stream)
+	local line, len = read_line(http)
 	total_len = len
 
 	http.version, http.status, http.reason = line:match("([^%s]+) ([^%s]+) (.+)")
@@ -513,9 +506,9 @@ local function parse_response(stream, http)
 		return
 	end
 
-	total_len = total_len + parse_header(stream, http)
+	total_len = total_len + parse_header(http)
 
-	http.data = stream
+	--http.data = stream
 	http._length = total_len
 
 	http.dump = dump
@@ -526,17 +519,25 @@ end
 function http_dissector.method:parse(stream, context, f, signal, next_state)
 	if not context._co then
 		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-			context._mark = stream:mark()
+			context._mark = stream.current
+			context._mark:mark()
 		end
-		context._co = coroutine.create(function () f(stream, context) end)
+		context._co = coroutine.create(function ()
+			local success, msg = pcall(f, context)
+			if not success then context._error = msg end
+		end)
 	end
 
+	context._stream = stream.current
 	coroutine.resume(context._co)
+	context._stream = nil
 
 	if coroutine.status(context._co) == "dead" then
-		if not context._invalid then
+		context._co = nil
+
+		if not context._invalid and not context._error then
 			self._state = next_state
-			
+
 			if not haka.pcall(haka.context.signal, haka.context, self, signal, context) then
 				self:drop()
 				return false
@@ -544,11 +545,15 @@ function http_dissector.method:parse(stream, context, f, signal, next_state)
 
 			return true
 		else
-			haka.alert{
-				description = context._invalid,
-				severity = 'low'
-			}
-			self:drop()
+			if context._error then
+				error(context._error)
+			else
+				haka.alert{
+					description = context._invalid,
+					severity = 'low'
+				}
+				self:drop()
+			end
 			return false
 		end
 	end
@@ -610,18 +615,19 @@ function http_dissector.method:send(stream, direction)
 		self._state = 3
 
 		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-			stream:seek(self.request._mark, true)
-			self.request._mark = nil
+			local request = {}
+			table.insert(request, self.request.method)
+			table.insert(request, " ")
+			table.insert(request, self.request.uri)
+			table.insert(request, " ")
+			table.insert(request, self.request.version)
+			table.insert(request, "\r\n")
+			build_headers(request, self.request.headers, self.request._headers_order)
+			table.insert(request, "\r\n")
 
-			stream:erase(self.request._length)
-			stream:insert(self.request.method)
-			stream:insert(" ")
-			stream:insert(self.request.uri)
-			stream:insert(" ")
-			stream:insert(self.request.version)
-			stream:insert("\r\n")
-			build_headers(stream, self.request.headers, self.request._headers_order)
-			stream:insert("\r\n")
+			self.request._mark:unmark()
+			self.request._mark:sub(self.request._length):replace(haka.vbuffer(table.concat(request)))
+			self.request._mark = nil
 		end
 
 	elseif self._state == 5 and direction == 'down' then
@@ -632,18 +638,19 @@ function http_dissector.method:send(stream, direction)
 		end
 
 		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-			stream:seek(self.response._mark, true)
-			self.response._mark = nil
+			local response = {}
+			table.insert(response, self.response.version)
+			table.insert(response, " ")
+			table.insert(response, self.response.status)
+			table.insert(response, " ")
+			table.insert(response, self.response.reason)
+			table.insert(response, "\r\n")
+			build_headers(response, self.response.headers, self.response._headers_order)
+			table.insert(response, "\r\n")
 
-			stream:erase(self.response._length)
-			stream:insert(self.response.version)
-			stream:insert(" ")
-			stream:insert(self.response.status)
-			stream:insert(" ")
-			stream:insert(self.response.reason)
-			stream:insert("\r\n")
-			build_headers(stream, self.response.headers, self.response._headers_order)
-			stream:insert("\r\n")
+			self.response._mark:unmark()
+			self.response._mark:sub(self.response._length):replace(haka.vbuffer(table.concat(response)))
+			self.response._mark = nil
 		end
 	end
 end

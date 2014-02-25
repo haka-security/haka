@@ -86,8 +86,8 @@ const char *packet_dissector(struct packet *pkt)
 
 struct vbuffer *packet_payload(struct packet *pkt)
 {
-	assert(pkt->payload);
-	return pkt->payload;
+	assert(vbuffer_isvalid(&pkt->payload));
+	return &pkt->payload;
 }
 
 int packet_receive(struct packet **pkt)
@@ -97,9 +97,9 @@ int packet_receive(struct packet **pkt)
 
 	ret = packet_module->receive(get_capture_state(), pkt);
 	if (!ret && *pkt) {
-		lua_object_init(&(*pkt)->lua_object);
+		(*pkt)->lua_object = lua_object_init;
 		atomic_set(&(*pkt)->ref, 1);
-		assert((*pkt)->payload);
+		assert(vbuffer_isvalid(&(*pkt)->payload));
 		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%lli",
 				packet_module->get_id(*pkt));
 	}
@@ -160,9 +160,9 @@ struct packet *packet_new(size_t size)
 		return NULL;
 	}
 
-	lua_object_init(&pkt->lua_object);
+	pkt->lua_object = lua_object_init;
 	atomic_set(&pkt->ref, 1);
-	assert(pkt->payload);
+	assert(vbuffer_isvalid(&pkt->payload));
 
 	return pkt;
 }

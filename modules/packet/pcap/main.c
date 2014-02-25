@@ -52,7 +52,8 @@ struct pcap_packet {
 	struct time                 timestamp;
 	struct packet_module_state *state;
 	struct pcap_pkthdr          header;
-	struct vbuffer             *data;
+	struct vbuffer              data;
+	struct vbuffer_iterator     select;
 	uint64                      id;
 	int                         link_type;
 	bool                        captured;
@@ -318,19 +319,45 @@ static struct packet_module_state *init_state(int thread_id)
 	return state;
 }
 
+static int get_link_type_offset(struct pcap_packet *pkt)
+{
+	size_t size;
+
+	switch (pkt->link_type)
+	{
+	case DLT_LINUX_SLL: size = sizeof(struct linux_sll_header); break;
+	case DLT_EN10MB:    size = sizeof(struct ethhdr); break;
+	case DLT_IPV4:
+	case DLT_RAW:       size = 0; break;
+	case DLT_NULL:      size = 4; break;
+
+	default:            assert(!"unsupported link type"); return -1;
+	}
+
+	return size;
+}
+
 static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 {
-	size_t len = (size_t)-1;
-	uint8* data = NULL;
-	if (pkt->data) data = vbuffer_mmap(pkt->data, NULL, &len, false);
+	size_t len, size;
+	struct vbuffer_sub sub;
+	const uint8* data = NULL;
+
+	size = get_link_type_offset(pkt);
+	*data_offset = size;
+
+	if (size > 0) {
+		vbuffer_sub_create(&sub, &pkt->data, 0, size);
+		data = vbuffer_sub_flatten(&sub, &len);
+		assert(len >= *data_offset);
+		assert(data);
+	}
 
 	switch (pkt->link_type)
 	{
 	case DLT_LINUX_SLL:
 		{
 			struct linux_sll_header *eh = (struct linux_sll_header *)data;
-			*data_offset = sizeof(struct linux_sll_header);
-			assert(len >= *data_offset);
 			if (eh) return ntohs(eh->protocol);
 			else return 0;
 		}
@@ -339,8 +366,6 @@ static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 	case DLT_EN10MB:
 		{
 			struct ethhdr *eh = (struct ethhdr *)data;
-			*data_offset = sizeof(struct ethhdr);
-			assert(len >= *data_offset);
 			if (eh) return ntohs(eh->h_proto);
 			else return 0;
 		}
@@ -348,12 +373,10 @@ static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 
 	case DLT_IPV4:
 	case DLT_RAW:
-		*data_offset = 0;
 		return ETH_P_IP;
 
 	case DLT_NULL:
 		*data_offset = 4;
-		assert(len >= *data_offset);
 		if (*(uint32 *)data == PF_INET) {
 			return ETH_P_IP;
 		}
@@ -363,26 +386,20 @@ static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 		break;
 
 	default:
-		*data_offset = 0;
-		assert(0);
+		assert(!"unsupported link type");
 		return -1;
 	}
 }
 
 static bool packet_build_payload(struct pcap_packet *packet)
 {
+	struct vbuffer_sub sub;
 	size_t data_offset;
 	get_protocol(packet, &data_offset);
-	if (data_offset > 0) {
-		packet->core_packet.payload = vbuffer_extract(packet->data, data_offset, ALL, false);
-		if (!packet->core_packet.payload) {
-			return false;
-		}
-	}
-	else {
-		packet->core_packet.payload = packet->data;
-	}
-	return true;
+
+	vbuffer_sub_create(&sub, &packet->data, data_offset, ALL);
+
+	return vbuffer_select(&sub, &packet->core_packet.payload, &packet->select);
 }
 
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
@@ -469,16 +486,14 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 				list_init(packet);
 
-				packet->data = vbuffer_create_new(header->caplen);
-				if (!packet->data) {
+				if (!vbuffer_create_from(&packet->data, (char *)p, header->caplen)) {
 					free(packet);
 					return ENOMEM;
 				}
 
-				vbuffer_setmode(packet->data, passthrough);
+				vbuffer_setwritable(&packet->data, !passthrough);
 
 				/* fill packet data structure */
-				memcpy(vbuffer_mmap(packet->data, NULL, NULL, false), p, header->caplen);
 				packet->header = *header;
 				packet->state = state;
 				packet->captured = true;
@@ -507,7 +522,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				}
 
 				if (!packet_build_payload(packet)) {
-					vbuffer_free(packet->data);
+					vbuffer_release(&packet->data);
 					free(packet);
 					return ENOMEM;
 				}
@@ -524,27 +539,19 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	/* dump capture in pcap file */
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 
-	if (pkt->data) {
-		if (pkt->data != pkt->core_packet.payload) {
-			size_t data_offset;
-			get_protocol(pkt, &data_offset);
-			vbuffer_insert(pkt->data, data_offset, pkt->core_packet.payload, false);
-		}
-		pkt->core_packet.payload = NULL;
+	if (vbuffer_isvalid(&pkt->data)) {
+		vbuffer_restore(&pkt->select, &pkt->core_packet.payload);
 
 		if (pkt->state->pf && result == FILTER_ACCEPT) {
-			uint8 *data;
+			const uint8 *data;
 			size_t len;
 
-			if (!vbuffer_flatten(pkt->data)) {
+			data = vbuffer_flatten(&pkt->data, &len);
+			if (!data) {
 				assert(check_error());
-				vbuffer_free(pkt->data);
-				pkt->data = NULL;
+				vbuffer_clear(&pkt->data);
 				return;
 			}
-
-			data = vbuffer_mmap(pkt->data, NULL, &len, false);
-			assert(data);
 
 			if (pkt->header.caplen != len) {
 				pkt->header.len = len;
@@ -554,8 +561,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 			pcap_dump((u_char *)pkt->state->pf, &(pkt->header), data);
 		}
 
-		vbuffer_free(pkt->data);
-		pkt->data = NULL;
+		vbuffer_clear(&pkt->data);
 	}
 }
 
@@ -582,10 +588,12 @@ static void packet_do_release(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 
-	if (pkt->data) {
+	if (vbuffer_isvalid(&pkt->data)) {
 		packet_verdict(orig_pkt, FILTER_DROP);
 	}
 
+	vbuffer_release(&pkt->core_packet.payload);
+	vbuffer_release(&pkt->data);
 	free(pkt);
 }
 
@@ -593,7 +601,7 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 
-	if (pkt->data && !list_next(pkt) && !list_prev(pkt)) {
+	if (vbuffer_isvalid(&pkt->data) && !list_next(pkt) && !list_prev(pkt)) {
 		if (pkt->captured)
 			return STATUS_NORMAL;
 		else
@@ -607,7 +615,8 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 static struct packet *new_packet(struct packet_module_state *state, size_t size)
 {
 	uint8 *data;
-	size_t data_offset;
+	size_t data_offset, len;
+	struct vbuffer_sub sub;
 	struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
 	if (!packet) {
 		error(L"Memory error");
@@ -622,20 +631,20 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	packet->link_type = state->link_type;
 	time_gettimestamp(&packet->timestamp);
 
-	get_protocol(packet, &data_offset);
+	data_offset = get_link_type_offset(packet);
 	size += data_offset;
 
-	packet->data = vbuffer_create_new(size);
-	if (!packet->data) {
+	if (!vbuffer_create_new(&packet->data, size, true)) {
 		assert(check_error());
 		free(packet);
 		return NULL;
 	}
 
-	data = vbuffer_mmap(packet->data, NULL, NULL, true);
-	assert(data);
+	vbuffer_sub_create(&sub, &packet->data, 0, data_offset);
 
-	memset(data, 0, size);
+	data = vbuffer_mmap(&sub, &len, true, NULL);
+	assert(data || len == 0);
+	assert(len == data_offset);
 
 	packet->header.len = size;
 	packet->header.caplen = size;
@@ -671,7 +680,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	}
 
 	if (!packet_build_payload(packet)) {
-		vbuffer_free(packet->data);
+		vbuffer_release(&packet->data);
 		free(packet);
 		return NULL;
 	}
@@ -688,7 +697,7 @@ static bool send_packet(struct packet *orig_pkt)
 		return false;
 	}
 
-	assert(pkt->data);
+	assert(vbuffer_isvalid(&pkt->data));
 	assert(!list_next(pkt) && !list_prev(pkt));
 
 	list_insert_after(pkt, pkt->state->sent_tail, &pkt->state->sent_head, &pkt->state->sent_tail);

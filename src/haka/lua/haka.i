@@ -13,7 +13,6 @@
 #include <haka/packet_module.h>
 #include <haka/thread.h>
 #include <haka/module.h>
-#include <haka/stream.h>
 #include <haka/alert.h>
 #include <haka/config.h>
 
@@ -23,7 +22,6 @@ char *module_suffix = HAKA_MODULE_SUFFIX;
 %}
 
 %include "haka/lua/swig.si"
-%include "haka/lua/stream.si"
 
 %nodefaultctor;
 %nodefaultdtor;
@@ -37,10 +35,6 @@ const char *module_get_path();
 %immutable;
 char *module_prefix;
 char *module_suffix;
-
-struct stream {
-};
-BASIC_STREAM(stream)
 
 struct time {
 	int    secs;
@@ -167,8 +161,8 @@ int _getswigclassmetatable(struct lua_State *L)
 	function haka.pcall(func, ...)
 		assert(func)
 		local args = {...}
-		local ret, msg = xpcall(function () func(unpack(args)) end, debug.format_error)
-		if not ret then
+		local success, msg = xpcall(function () func(unpack(args)) end, debug.format_error)
+		if not success then
 			haka.log.error("core", msg)
 			return false
 		else
