@@ -125,6 +125,11 @@ struct vbuffer_iterator {
 
 		struct vbuffer_sub *sub(const char *mode, bool split = false)
 		{
+                        if (!mode) {
+				error(L"missing mode parameter");
+				return NULL;
+                        }
+
 			if (strcmp(mode, "available") == 0 ||
 			    strcmp(mode, "all") == 0) {
 				return vbuffer_iterator__sub($self, ALL, split);
@@ -340,6 +345,11 @@ struct vbuffer_iterator_blocking {
 
 		struct vbuffer_sub *sub(lua_State *L, const char *mode, bool split = false, bool *YIELD)
 		{
+                        if (!mode) {
+				error(L"missing mode parameter");
+				return NULL;
+                        }
+
 			if (strcmp(mode, "all") == 0) {
 				$self->size = ALL;
 				$self->remsize = ALL;
@@ -481,6 +491,11 @@ struct vbuffer_sub {
 
 		struct vbuffer_sub *sub(int offset, const char *mode)
 		{
+                        if (!mode) {
+				error(L"missing mode parameter");
+				return NULL;
+                        }
+
 			if (strcmp(mode, "all") == 0) {
 				return vbuffer_sub_sub__SWIG_0($self, offset, -1);
 			}
@@ -509,8 +524,13 @@ struct vbuffer_sub {
 
 		struct vbuffer_iterator *pos(const char *pos)
 		{
-			if (strcmp(pos, "begin")) return vbuffer_sub_pos__SWIG_0($self, 0);
-			else if (strcmp(pos, "end")) return vbuffer_sub_pos__SWIG_0($self, -1);
+                        if (!pos) {
+				error(L"missing pos parameter");
+				return NULL;
+                        }
+
+			if (strcmp(pos, "begin") == 0) return vbuffer_sub_pos__SWIG_0($self, 0);
+			else if (strcmp(pos, "end") == 0) return vbuffer_sub_pos__SWIG_0($self, -1);
 			else {
 				error(L"unknown buffer position: %s", pos);
 				return NULL;
@@ -625,8 +645,13 @@ struct vbuffer {
 
 		struct vbuffer_iterator *pos(const char *pos)
 		{
-			if (strcmp(pos, "begin")) return vbuffer_pos__SWIG_0($self, 0);
-			else if (strcmp(pos, "end")) return vbuffer_pos__SWIG_0($self, -1);
+                        if (!pos) {
+				error(L"missing pos parameter");
+				return NULL;
+                        }
+
+			if (strcmp(pos, "begin") == 0) return vbuffer_pos__SWIG_0($self, 0);
+			else if (strcmp(pos, "end") == 0) return vbuffer_pos__SWIG_0($self, -1);
 			else {
 				error(L"unknown buffer position: %s", pos);
 				return NULL;
@@ -648,6 +673,11 @@ struct vbuffer {
 
 		struct vbuffer_sub *sub(int offset, const char *mode)
 		{
+                        if (!mode) {
+				error(L"missing mode parameter");
+				return NULL;
+                        }
+
 			if (strcmp(mode, "all") == 0) {
 				return vbuffer_sub__SWIG_0($self, offset, -1);
 			}
