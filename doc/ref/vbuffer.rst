@@ -158,11 +158,11 @@ Sub buffer
 
         Read some bits the buffer and convert it to a number.
 
-    .. lua:method:: setbits(value, offset, length, endian = 'big')
+    .. lua:method:: setbits(offset, length, value, endian = 'big')
 
-        :param value: Value to set
         :param offset: Bit positon offset
         :param length: Size in bits
+        :param value: Value to set
         :param endian: Endianness of data (``'big'`` or ``'little'``)
 
         Write a number to some bits of the buffer.
