@@ -490,7 +490,7 @@ error:
 static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer_sub *vbuf, struct regexp_vbresult *result, bool _eof)
 {
 	int ret = 0;
-	size_t len, plen;
+	size_t len, plen = 0;
 	struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
 	const uint8 *pptr = NULL;
 
