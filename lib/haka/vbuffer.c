@@ -1078,6 +1078,7 @@ static struct vbuffer_chunk *_vbuffer_sub_iterate(struct vbuffer_sub *data, size
 
 	/* Check if we are at the end of the sub buffer */
 	if (iter->data->flags.end || iter->len == 0) {
+		*len = 0;
 		return NULL;
 	}
 

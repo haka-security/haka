@@ -19,3 +19,4 @@ Welcome to Haka's Reference Guide!
     grammar.rst
     state_machine.rst
     extmodules.rst
+    regexp.rst

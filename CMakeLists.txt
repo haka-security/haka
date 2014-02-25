@@ -241,9 +241,9 @@ add_subdirectory(external)
 include_directories(${UTHASH_INCLUDE})
 
 add_subdirectory(doc)
-add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(modules)
+add_subdirectory(lib)
 add_subdirectory(sample)
 add_subdirectory(include)
 

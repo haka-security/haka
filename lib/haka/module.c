@@ -112,10 +112,11 @@ struct module *module_load(const char *module_name, struct parameters *args)
 		}
 
 		if (module->init(args) || check_error()) {
-			if (check_error())
+			if (check_error()) {
 				error(L"unable to initialize module: %ls", clear_error());
-			else
+			} else {
 				error(L"unable to initialize module");
+			}
 
 			dlclose(module->handle);
 			free(full_module_name);

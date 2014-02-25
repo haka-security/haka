@@ -19,5 +19,5 @@ TEST_PCAP(ipv4 setfields-passthrough OPTIONS --pass-through)
 TEST_PCAP(ipv4 create)
 # TEST_PCAP(ipv4 options)
 
-TEST_UNIT(ipv4 unit unit.c)
+TEST_UNIT(MODULE ipv4 NAME unit FILES unit.c)
 target_link_libraries(ipv4-unit ipv4)

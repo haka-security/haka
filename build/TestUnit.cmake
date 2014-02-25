@@ -3,14 +3,32 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 # This test will run a Check unit test program build from the sources
-# files given as argument.
+# TEST_UNIT_FILES given as argument.
 
 find_package(Check REQUIRED)
 
-macro(TEST_UNIT module name files)
-	add_executable(${module}-${name} ${files})
-	target_link_libraries(${module}-${name} ${CHECK_LIBRARIES})
-	set_property(TARGET ${module}-${name} APPEND PROPERTY INCLUDE_DIRECTORIES ${CHECK_INCLUDE_DIRS})
-	add_test(${module}-${name} ${CMAKE_CURRENT_BINARY_DIR}/${module}-${name})
-	set_tests_properties(${module}-${name} PROPERTIES ENVIRONMENT "LD_LIBRARY_PATH=${LUA_LIBRARY_DIR}")
+macro(TEST_UNIT)
+	set(oneValueArgs MODULE NAME)
+	set(multiValueArgs FILES ENV)
+	cmake_parse_arguments(TEST_UNIT "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+	add_executable(${TEST_UNIT_MODULE}-${TEST_UNIT_NAME} ${TEST_UNIT_FILES})
+	target_link_libraries(${TEST_UNIT_MODULE}-${TEST_UNIT_NAME} ${CHECK_LIBRARIES})
+	set_property(TARGET ${TEST_UNIT_MODULE}-${TEST_UNIT_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${CHECK_INCLUDE_DIRS})
+	set_property(TARGET ${TEST_UNIT_MODULE}-${TEST_UNIT_NAME} APPEND PROPERTY LINK_FLAGS -Wl,--exclude-libs,ALL)
+	add_test(NAME ${TEST_UNIT_MODULE}-${TEST_UNIT_NAME}-unit
+		COMMAND ${CMAKE_COMMAND}
+		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
+		-DCTEST_MODULE_BINARY_DIR=${CTEST_MODULE_BINARY_DIR}
+		-DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+		-DEXE=${CMAKE_CURRENT_BINARY_DIR}/${TEST_UNIT_MODULE}-${TEST_UNIT_NAME}
+		-DTEST_RUNDIR=${TEST_RUNDIR}
+		-DHAKA_INSTALL_PREFIX=${HAKA_INSTALL_PREFIX}
+		-DSRC=${CTEST_MODULE_DIR}/empty.pcap
+		-DDST=${TEST_UNIT_NAME}-out
+		-DDIFF=${DIFF_COMMAND}
+		-P ${CTEST_MODULE_DIR}/TestUnitRun.cmake)
+	list(APPEND TEST_UNIT_ENV "LD_LIBRARY_PATH=${LUA_LIBRARY_DIR}")
+	list(APPEND TEST_UNIT_ENV "HAKA_PATH=${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}")
+	set_tests_properties(${TEST_UNIT_MODULE}-${TEST_UNIT_NAME}-unit PROPERTIES ENVIRONMENT "${TEST_UNIT_ENV}")
 endmacro(TEST_UNIT)

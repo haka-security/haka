@@ -5,10 +5,18 @@
 include(TestUnit)
 include(TestUnitLua)
 
-TEST_UNIT(libhaka vbuffer vbuffer.c)
+TEST_UNIT(MODULE libhaka NAME vbuffer FILES vbuffer.c)
 target_link_libraries(libhaka-vbuffer libhaka)
 
-TEST_UNIT(libhaka vbuffer-stream vbuffer_stream.c)
+TEST_UNIT(MODULE libhaka NAME vbuffer-stream FILES vbuffer_stream.c)
 target_link_libraries(libhaka-vbuffer-stream libhaka)
 
-TEST_UNIT_LUA(libhaka vbuffer)
+TEST_UNIT_LUA(MODULE libhaka NAME vbuffer FILES vbuffer.lua)
+
+get_property(module-regexp GLOBAL PROPERTY module-regexp)
+foreach(module IN LISTS module-regexp)
+	TEST_UNIT(MODULE libhaka NAME regexp-${module} FILES regexp.c ENV "HAKA_MODULE=${module}")
+	target_link_libraries(libhaka-regexp-${module} libhaka)
+
+	TEST_UNIT_LUA(MODULE libhaka NAME regexp-${module} FILES regexp-lua ENV "HAKA_MODULE=${module}")
+endforeach(module)

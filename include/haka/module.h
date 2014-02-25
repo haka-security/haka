@@ -20,6 +20,7 @@ struct module {
 		MODULE_PACKET,
 		MODULE_LOG,
 		MODULE_ALERT,
+		MODULE_REGEXP,
 		MODULE_EXTENSION,
 	} type;
 

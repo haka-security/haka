@@ -30,5 +30,5 @@ TEST_PCAP(tcp streammodif-rst)
 
 TEST_PCAP(tcp create)
 
-TEST_UNIT(tcp unit unit.c)
+TEST_UNIT(MODULE tcp NAME unit FILES unit.c)
 target_link_libraries(tcp-unit tcp)
