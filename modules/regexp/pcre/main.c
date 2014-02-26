@@ -403,9 +403,8 @@ static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len
 		return sink->match;
 
 try_again:
-	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match
-	 * We use PCRE_DFA_SHORTEST because we want to stop as soon as possible */
-	options = PCRE_PARTIAL_SOFT | PCRE_DFA_SHORTEST;
+	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match */
+	options = PCRE_PARTIAL_SOFT;
 	/* Set pcre exec options */
 	if (sink->started) options |= PCRE_NOTBOL;
 	/* restart dfa only on partial match
