@@ -100,7 +100,7 @@ bool          vbuffer_iterator_insert(struct vbuffer_iterator *position, struct 
 size_t        vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len);
 bool          vbuffer_iterator_isend(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_split(struct vbuffer_iterator *position);
-bool          vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct vbuffer_sub *sub, bool split);
+size_t        vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct vbuffer_sub *sub, bool split);
 uint8         vbuffer_iterator_getbyte(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_setbyte(struct vbuffer_iterator *position, uint8 byte);
 uint8        *vbuffer_iterator_mmap(struct vbuffer_iterator *position, size_t maxsize, size_t *size, bool write);

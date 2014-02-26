@@ -713,11 +713,11 @@ bool vbuffer_iterator_split(struct vbuffer_iterator *position)
 	return true;
 }
 
-bool vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct vbuffer_sub *sub, bool split)
+size_t vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct vbuffer_sub *sub, bool split)
 {
 	struct vbuffer_iterator begin;
 
-	if (!_vbuffer_iterator_check(position)) return false;
+	if (!_vbuffer_iterator_check(position)) return -1;
 
 	vbuffer_iterator_copy(position, &begin);
 	len = vbuffer_iterator_advance(position, len);
@@ -725,17 +725,20 @@ bool vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct 
 	if (split) {
 		struct vbuffer_chunk *iter = _vbuffer_iterator_split(position, false);
 		if (!iter) {
+                        assert(check_error());
+                        vbuffer_iterator_update(position, begin.chunk, begin.offset);
 			vbuffer_iterator_clear(&begin);
-			return false;
+			return -1;
 		}
 
 		vbuffer_iterator_update(position, iter, 0);
 	}
 
 	const bool ret = vbuffer_sub_create_from_position(sub, &begin, len);
+        if (!ret) len = -1;
 	vbuffer_iterator_clear(&begin);
 
-	return ret;
+	return len;
 }
 
 uint8 vbuffer_iterator_getbyte(struct vbuffer_iterator *position)

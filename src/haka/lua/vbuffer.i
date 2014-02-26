@@ -18,16 +18,18 @@ static bool vbuffer_iterator__check_available(struct vbuffer_iterator *iter, int
 
 static struct vbuffer_sub *vbuffer_iterator__sub(struct vbuffer_iterator *iter, size_t size, bool split)
 {
+	size_t len;
 	struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
 	if (!sub) {
 		error(L"memory error");
 		return NULL;
 	}
 
-	if (!vbuffer_iterator_sub(iter, size, sub, split)) {
-		free(sub);
-		return NULL;
-	}
+       len = vbuffer_iterator_sub(iter, size, sub, split);
+       if (len == (size_t)-1) {
+               free(sub);
+               return NULL;
+       }
 
 	vbuffer_sub_register(sub);
 	return sub;
