@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <check.h>
+#include <haka/config.h>
 #include <haka/vbuffer.h>
 #include <haka/error.h>
 #include <haka/types.h>
@@ -402,6 +403,46 @@ START_TEST(test_bits)
 }
 END_TEST
 
+START_TEST(test_bits_endian)
+{
+	static const int number = 0x5;
+	static const int offset = 0;
+	static const int bits = 4;
+#ifdef HAKA_BIGENDIAN
+	static const bool bigendian = true;
+#else
+	static const bool bigendian = false;
+#endif
+
+	struct vbuffer buffer = vbuffer_init;
+	struct vbuffer_sub sub;
+	vbuffer_test_build(&buffer);
+
+	/* Check number conversion on a single chunk */
+	vbuffer_sub_create(&sub, &buffer, 2, 1);
+	ck_check_error;
+
+	/* Same endianness */
+	ck_assert(vbuffer_setnumber(&sub, bigendian, 0));
+	ck_assert(vbuffer_setbits(&sub, offset, bits, bigendian, number));
+	ck_assert_int_eq((int)vbuffer_asbits(&sub, offset, bits, bigendian), number);
+	ck_assert_int_eq(vbuffer_asnumber(&sub, bigendian), number);
+
+	/* Different endianness */
+	ck_assert(vbuffer_setnumber(&sub, !bigendian, 0));
+	ck_assert(vbuffer_setbits(&sub, offset, bits, !bigendian, number));
+	ck_assert_int_eq((int)vbuffer_asbits(&sub, offset, bits, !bigendian), number);
+	ck_assert_int_eq(vbuffer_asnumber(&sub, !bigendian), number<<4);
+
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+
+	vbuffer_release(&buffer);
+	vbuffer_sub_clear(&sub);
+	ck_check_error;
+}
+END_TEST
+
 START_TEST(test_string)
 {
 	char str[100];
@@ -470,6 +511,7 @@ int main(int argc, char *argv[])
 	tcase_add_test(tcase, test_compact);
 	tcase_add_test(tcase, test_number);
 	tcase_add_test(tcase, test_bits);
+	tcase_add_test(tcase, test_bits_endian);
 	tcase_add_test(tcase, test_string);
 	suite_add_tcase(suite, tcase);
 

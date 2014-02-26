@@ -1611,13 +1611,27 @@ bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 	return true;
 }
 
-static uint8 getbits(uint8 x, int off, int size)
+static uint8 getbits(uint8 x, int off, int size, bool bigendian)
 {
+#ifdef HAKA_BIGENDIAN
+	if (!bigendian)
+#else
+	if (bigendian)
+#endif
+		off = 8-off-size;
+
 	return (x >> off) & ((1 << size)-1);
 }
 
-static uint8 setbits(uint8 x, int off, int size, uint8 v)
+static uint8 setbits(uint8 x, int off, int size, uint8 v, bool bigendian)
 {
+#ifdef HAKA_BIGENDIAN
+	if (!bigendian)
+#else
+	if (bigendian)
+#endif
+		off = 8-off-size;
+
 	/* The first block erase the bits, the second one will set them */
 	return (x & ~(((1 << size)-1) << off)) | ((v & ((1 << size)-1)) << off);
 }
@@ -1654,10 +1668,10 @@ int64 vbuffer_asbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool 
 		const int size = bits > 8-off ? 8-off : bits;
 
 		if (bigendian) {
-			ret = (ret << size) | getbits(temp[i], off, size);
+			ret = (ret << size) | getbits(temp[i], off, size, true);
 		}
 		else {
-			ret = ret | (getbits(temp[i], off, size) << shiftbits);
+			ret = ret | (getbits(temp[i], off, size, false) << shiftbits);
 			shiftbits += size;
 		}
 
@@ -1712,10 +1726,10 @@ bool vbuffer_setbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool 
 			bits -= size;
 
 			if (bigendian) {
-				temp[i] = setbits(temp[i], off, size, num >> bits);
+				temp[i] = setbits(temp[i], off, size, num >> bits, true);
 			}
 			else {
-				temp[i] = setbits(temp[i], off, size, num);
+				temp[i] = setbits(temp[i], off, size, num, false);
 				num >>= size;
 			}
 
