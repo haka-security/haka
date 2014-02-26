@@ -14,7 +14,7 @@ include(Valgrind)
 
 message("Executing TZ=\"Europe/Paris\" LANG=\"C\" LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" ${EXE}")
 
-VALGRIND(${DST} --show-reachable=yes ${EXE} RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)
+VALGRIND(${DST} ${EXE} RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)
 
 execute_process(COMMAND cat ${DST}-tmp.txt OUTPUT_VARIABLE CONTENT)
 message("${CONTENT}")
