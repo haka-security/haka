@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local rem = require("regexp/pcre")
+
 local grammar_dg = {}
 
 --
@@ -538,6 +540,33 @@ function grammar_dg.Bytes.method:parse(cur, init, input, ctx)
 	end
 end
 
+grammar_dg.Token = class('DGToken', grammar_dg.Primitive)
+
+function grammar_dg.Token.method:__init(re, name)
+	super(grammar_dg.Token).__init(self)
+	self.re = re
+	self.name = name
+end
+
+function grammar_dg.Token.method:parse(cur, init, input, ctx)
+	if not ctx.sink then
+		ctx.sink = self.re:create_sink()
+	end
+
+
+	-- TODO copy blocking iterator
+	local copy = input:copy()
+	local match, result = ctx.sink:feed(copy:sub("all"), false)
+
+	if match then
+		local string = input:sub(result.size):asstring()
+		if self.name then
+			cur[self.name] = string
+		end
+		ctx.sink = nil
+	end
+end
+
 
 local grammar = {}
 
@@ -839,6 +868,16 @@ function grammar.Bits.method:compile()
 	return grammar_dg.Bits:new(self.bits)
 end
 
+grammar.Token = class('Token', grammar.Entity)
+
+function grammar.Token.method:__init(pattern)
+	self.pattern = "^(?:"..pattern..")"
+end
+
+function grammar.Token.method:compile()
+	local re = rem.re:compile(self.pattern)
+	return grammar_dg.Token:new(re, self.named)
+end
 
 grammar.Verify = class('Verify', grammar.Entity)
 
@@ -880,6 +919,10 @@ end
 
 function grammar.number(bits)
 	return grammar.Number:new(bits)
+end
+
+function grammar.token(pattern)
+	return grammar.Token:new(pattern)
 end
 
 grammar.flag = grammar.number(1):convert(grammar.converter.bool, false)

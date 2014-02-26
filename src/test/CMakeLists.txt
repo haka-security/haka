@@ -32,3 +32,4 @@ TEST_PCAP(core tcpfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka
 TEST_PCAP(core stats_on_exit CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/stats/stats_on_exit.lua)
 TEST_PCAP(core doc-alert CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/ref/alert-test.lua)
 TEST_UNIT_LUA(MODULE core NAME doc-regexp FILES ../../doc/ref/regexp.lua)
+TEST_PCAP(core token-grammar)
