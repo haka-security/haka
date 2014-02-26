@@ -457,7 +457,7 @@ function grammar_dg.Number.method:parse(cur, init, input, ctx)
 					return sub:asbits(bitoffset, self.size, self.endian)
 				end,
 				function (this, newvalue)
-					return sub:setbits(newvalue, bitoffset, self.size, self.endian)
+					return sub:setbits(bitoffset, self.size, newvalue, self.endian)
 				end
 			)
 		end
@@ -468,6 +468,8 @@ function grammar_dg.Number.method:parse(cur, init, input, ctx)
 			local initval = init[self.name]
 			if initval then
 				cur[self.name] = initval
+			elseif self.validate then
+				cur._validate[self.validate] = cur
 			end
 		else
 			cur[self.name] = nil
