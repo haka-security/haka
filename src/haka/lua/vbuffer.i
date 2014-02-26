@@ -262,6 +262,7 @@ static int _wrap_vbuffer_iterator_blocking__sub_available_blocking(lua_State* L)
 %newobject vbuffer_iterator_blocking::sub;
 %newobject vbuffer_iterator_blocking::_sub_blocking;
 %newobject vbuffer_iterator_blocking::_sub_available_blocking;
+%newobject vbuffer_iterator_blocking::_copy;
 
 struct vbuffer_iterator_blocking {
 	%extend {
@@ -296,6 +297,29 @@ struct vbuffer_iterator_blocking {
 		void insert(struct vbuffer *data) { vbuffer_iterator_insert(&$self->super.super, data); }
 		int  available() { return vbuffer_iterator_available(&$self->super.super); }
 		bool check_available(int size, int *OUTPUT) { vbuffer_iterator_lua__check_available(&$self->super, size, OUTPUT); }
+
+		%rename(copy) _copy;
+		struct vbuffer_iterator_lua *_copy()
+		{
+			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
+			if (!iter) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			vbuffer_iterator_copy(&$self->super.super, &iter->super);
+			vbuffer_iterator_register(&iter->super);
+			iter->meter = $self->super.meter;
+			return iter;
+		}
+
+		void move_to(struct vbuffer_iterator_lua *iter)
+		{
+			vbuffer_iterator_clear(&$self->super.super);
+			vbuffer_iterator_copy(&iter->super, &$self->super.super);
+			vbuffer_iterator_register(&$self->super.super);
+			$self->super.meter = iter->meter;
+		}
 
 #ifdef USE_C_YIELD
 		int  _advance_blocking(lua_State *L, struct vbuffer_iterator *update_iter, bool *YIELD)
@@ -420,14 +444,6 @@ struct vbuffer_iterator_blocking {
 		%immutable;
 		struct vbuffer_iterator_lua *_iter { return &$self->super; }
 #endif
-
-		void move_to(struct vbuffer_iterator_lua *iter)
-		{
-			vbuffer_iterator_clear(&$self->super.super);
-			vbuffer_iterator_copy(&iter->super, &$self->super.super);
-			vbuffer_iterator_register(&$self->super.super);
-			$self->super.meter = iter->meter;
-		}
 
 		%immutable;
 		bool isend { return vbuffer_iterator_isend(&$self->super.super); }
@@ -852,18 +868,47 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 
 #ifndef USE_C_YIELD
 %luacode {
-	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].advance = function (self, size)
-		local remsize = size
-		while true do
-			local adv = self._iter:advance(remsize)
-			remsize = remsize-adv
-			if remsize == 0 or self.isend then break end
-
+	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].wait = function (self)
+		while not self._iter.isend and
+		      not self._iter:check_available(1) do
 			local iter = coroutine.yield()
 			self:_update_iter(iter)
 		end
+		return not self._iter.isend
+	end
 
-		return size-remsize
+	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].advance = function (self, size_or_mode)
+		if size_or_mode == 'available' then
+			return self._iter:advance(-1)
+		else
+			local size
+			local available
+
+			if size_or_mode == 'all' then
+			else
+				size = tonumber(size_or_mode)
+			end
+
+			local remsize = size or -1
+			while true do
+				local adv = self._iter:advance(remsize)
+
+				if self.isend then break end
+
+				if available then
+					if adv > 0 then return adv end
+				else
+					if remsize >= 0 then remsize = remsize-adv end
+					if remsize == 0 then break end
+				end
+
+				local iter = coroutine.yield()
+				self:_update_iter(iter)
+			end
+
+			if size then return size-remsize
+			else return 0 end
+		end
 	end
 
 	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].sub = function (self, size_or_mode, split)
@@ -886,15 +931,15 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 		local iter = self._iter:copy()
 
 		while true do
-			local adv = self._iter:advance(remsize or -1)
+			local adv = self._iter:advance(remsize)
 			if not begin and adv > 0 then begin = iter end
 
-			if remsize then remsize = remsize-adv end
 			if self.isend then break end
 
 			if available then
 				if adv > 0 then break end
 			else
+				if remsize >= 0 then remsize = remsize-adv end
 				if remsize == 0 then break end
 			end
 
@@ -903,6 +948,10 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 		end
 
 		if begin then
+			if split then
+				self._iter:sub(0, true)
+			end
+
 			return haka.vbuffer_sub(begin, self._iter)
 		else
 			return nil
@@ -949,8 +998,10 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 	end
 
 	function haka.vbuffer_stream_comanager.method:process(id)
-		assert(self._co[id])
-		return process_one(self, id, self._co[id])
+		assert(self._co[id] ~= nil)
+		if self._co[id] then
+			return process_one(self, id, self._co[id])
+		end
 	end
 
 	function haka.vbuffer_stream_comanager.method:process_all()

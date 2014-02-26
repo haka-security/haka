@@ -291,36 +291,69 @@ module.cookies.split = cookies_split
 -- HTTP dissector
 --
 
-local function getchar(context)
+local function getchar(iter)
+	local sub
 	while true do
-		if not context._stream:check_available(2) and not context._stream:check_available(1) then
-			coroutine.yield()
-		else
-			return context._stream:sub(1):asnumber()
-		end
+		sub = iter:sub(1)
+		if not sub then return end
+		return str(sub:asnumber())
 	end
 end
 
-local function read_line(context)
+local function safe_string(str)
+	local len = #str
+	local sstr = {}
+
+	for i=1,len do
+		local b = str:byte(i)
+
+		if b >= 0x20 and b <= 0x7e then
+			sstr[i] = string.char(b)
+		else
+			sstr[i] = string.format('\\x%x', b)
+		end
+	end
+
+	return table.concat(sstr)
+end
+
+local function read_line(iter, http)
 	local line = ""
 	local char, c
 	local read = 0
 	while true do
-		c = getchar(context)
-		read = read+1
-		char = str(c)
+		char = getchar(iter)
+		if not char then
+			haka.alert{
+				description = string.format("invalid http line '%s'", safe_string(line)),
+				severity = 'low'
+			}
+			http:drop()
+			return
+		end
 
-		if c == 0xd then
-			c = getchar(context)
+		read = read+1
+
+		if char == '\r' then
+			c = getchar(iter)
+			if not c then
+				haka.alert{
+					description = string.format("invalid http line '%s'", safe_string(line .. char)),
+					severity = 'low'
+				}
+				http:drop()
+				return
+			end
+
 			read = read+1
 
-			if c == 0xa then
+			if c == '\n' then
 				return line, read
 			else
 				line = line .. char
-				char = str(c)
+				char = c
 			end
-		elseif c == 0xa then
+		elseif char == '\n' then
 			return line, read
 		end
 
@@ -373,23 +406,6 @@ local function dump(t, indent)
 	end
 end
 
-local function safe_string(str)
-	local len = #str
-	local sstr = {}
-
-	for i=1,len do
-		local b = str:byte(i)
-
-		if b >= 0x20 and b <= 0x7e then
-			sstr[i] = string.char(b)
-		else
-			sstr[i] = string.format('\\x%x', b)
-		end
-	end
-
-	return table.concat(sstr)
-end
-
 
 local http_dissector = haka.dissector.new{
 	type = haka.dissector.FlowDissector,
@@ -412,7 +428,7 @@ function http_dissector.method:__init(flow)
 	if flow then
 		self.connection = flow.connection
 	end
-	self._state = 0
+	self._state = 'request'
 end
 
 function http_dissector.method:continue()
@@ -450,128 +466,101 @@ local function build_headers(result, headers, headers_order)
 	end
 end
 
-local function parse_header(http)
+local function parse_header(iter, http, data)
 	local total_len = 0
 
-	http.headers = {}
-	http._headers_order = {}
-	line, len = read_line(http)
+	data.headers = {}
+	data._headers_order = {}
+
+	local line, len = read_line(iter, http)
+	if not line then return 0 end
+
 	total_len = total_len + len
 	while #line > 0 do
 		local name, value = line:match("([^%s]+):%s*(.+)")
 		if not name then
-			http._invalid = string.format("invalid http header '%s'", safe_string(line))
+			haka.alert{
+				description = string.format("invalid http header '%s'", safe_string(line)),
+				severity = 'low'
+			}
+			http:drop()
 			return 0
 		end
 
-		http.headers[name] = value
-		table.insert(http._headers_order, name)
-		line, len = read_line(http)
+		data.headers[name] = value
+		table.insert(data._headers_order, name)
+		line, len = read_line(iter, http)
+		if not line then return 0 end
+
 		total_len = total_len + len
 	end
 
 	return total_len
 end
 
-local function parse_request(http)
+local function parse_request(iter, http, request)
 	local len, total_len
 
-	local line, len = read_line(http)
+	local line, len = read_line(iter, http)
+	if not line then return end
+
 	total_len = len
-	http.method, http.uri, http.version = line:match("([^%s]+) ([^%s]+) (.+)")
-	if not http.method then
-		http._invalid = string.format("invalid http request '%s'", safe_string(line))
+	request.method, request.uri, request.version = line:match("([^%s]+) ([^%s]+) (.+)")
+	if not request.method then
+		haka.alert{
+			description = string.format("invalid http request '%s'", safe_string(line)),
+			severity = 'low'
+		}
+		http:drop()
 		return
 	end
 
-	total_len = total_len + parse_header(http)
+	total_len = total_len + parse_header(iter, http, request)
 
-	--http.data = stream
-	http._length = total_len
+	request._length = total_len
 
-	http.dump = dump
+	request.dump = dump
 
 	return true
 end
 
-local function parse_response(http)
+local function parse_response(iter, http, response)
 	local len, total_len
 
-	local line, len = read_line(http)
+	local line, len = read_line(iter, http)
+	if not line then return 0 end
+
 	total_len = len
 
-	http.version, http.status, http.reason = line:match("([^%s]+) ([^%s]+) (.+)")
-	if not http.version then
-		http._invalid = string.format("invalid http response '%s'", safe_string(line))
+	response.version, response.status, response.reason = line:match("([^%s]+) ([^%s]+) (.+)")
+	if not response.version then
+		haka.alert{
+			description = string.format("invalid http response '%s'", safe_string(line)),
+			severity = 'low'
+		}
+		http:drop()
 		return
 	end
 
-	total_len = total_len + parse_header(http)
+	total_len = total_len + parse_header(iter, http, response)
 
-	--http.data = stream
-	http._length = total_len
+	response._length = total_len
 
-	http.dump = dump
+	response.dump = dump
 
 	return true
 end
 
-function http_dissector.method:parse(iter, context, f, signal, next_state)
-	if not context._co then
-		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-			context._mark = iter:copy()
-			context._mark:mark()
-		end
-		context._co = coroutine.create(function ()
-			local success, msg = pcall(f, context)
-			if not success then context._error = msg end
-		end)
-	end
-
-	context._stream = iter
-	coroutine.resume(context._co)
-	context._stream = nil
-
-	if coroutine.status(context._co) == "dead" then
-		context._co = nil
-
-		if not context._invalid and not context._error then
-			self._state = next_state
-
-			if not haka.pcall(haka.context.signal, haka.context, self, signal, context) then
-				self:drop()
-				return false
-			end
-
-			return true
-		else
-			if context._error then
-				error(context._error)
-			else
-				haka.alert{
-					description = context._invalid,
-					severity = 'low'
-				}
-				self:drop()
-			end
-			return false
-		end
-	end
-end
-
-function http_dissector.method:receive(flow, stream, direction)
+function http_dissector.method:receive(flow, iter, direction)
 	assert(flow == self.flow)
 	
-	if #stream == 0 then return end
+	local mark
 	
-	local iter = stream:pos(0)
-
 	if direction == 'up' then
-		if self._state == 0 or self._state == 1 then
-			if self._state == 0 then
+		while iter:wait() do
+			if self._state == 'request' then
 				self.request = {}
 				self.response = nil
-				self._state = 1
 				
 				self.request.split_uri = function (self)
 					if self._splitted_uri then
@@ -590,72 +579,98 @@ function http_dissector.method:receive(flow, stream, direction)
 						return self._cookies
 					end
 				end
-			end
+	
+				if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
+					mark = iter:copy()
+					mark:mark()
+				end
 
-			if self:parse(iter, self.request, parse_request, http_dissector.events.request, 2) then
-				return self:send(iter, direction)
+				parse_request(iter, self, self.request)
+				if not self:continue() then return end
+
+				if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events.request, self.request) then
+					self:drop()
+				end
+
+				if not self:continue() then return end
+
+				self:send(iter, mark, direction)
+				self._state = 'response'
+			else
+				iter:advance('available')
 			end
 		end
 	else
-		if self._state == 3 or self._state == 4 then
-			if self._state == 3 then
+		while iter:wait() do
+			if self._state == 'response' then
 				self.response = {}
-				self._state = 4
-			end
 
-			if self:parse(iter, self.response, parse_response, http_dissector.events.response, 5) then
-				return self:send(iter, direction)
+				if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
+					mark = iter:copy()
+					mark:mark()
+				end
+				
+				parse_response(iter, self, self.response)
+				if not self:continue() then return end
+
+				if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events.response, self.response) then
+					self:drop()
+				end
+
+				if not self:continue() then return end
+				
+				self:send(iter, mark, direction)
+				self._state = 'request'
+			else
+				iter:advance('available')
 			end
 		end
 	end
 end
 
-function http_dissector.method:send(iter, direction)
-	if not self:continue() then
-		return
-	end
-
-	if self._state == 2 and direction == 'up' then
-		self._state = 3
-
-		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-			local request = {}
-			table.insert(request, self.request.method)
-			table.insert(request, " ")
-			table.insert(request, self.request.uri)
-			table.insert(request, " ")
-			table.insert(request, self.request.version)
-			table.insert(request, "\r\n")
-			build_headers(request, self.request.headers, self.request._headers_order)
-			table.insert(request, "\r\n")
-
-			self.request._mark:unmark()
-			self.request._mark:sub(self.request._length):replace(haka.vbuffer(table.concat(request)))
-			self.request._mark = nil
+function http_dissector.method:send(iter, mark, direction)
+	if direction == 'up' then
+		if haka.packet.mode() == haka.packet.PASSTHROUGH then
+			return
 		end
 
-	elseif self._state == 5 and direction == 'down' then
+		local request = {}
+		table.insert(request, self.request.method)
+		table.insert(request, " ")
+		table.insert(request, self.request.uri)
+		table.insert(request, " ")
+		table.insert(request, self.request.version)
+		table.insert(request, "\r\n")
+		build_headers(request, self.request.headers, self.request._headers_order)
+		table.insert(request, "\r\n")
+
+		mark:unmark()
+		iter:move_to(mark)
+
+		iter:sub(self.request._length, true):replace(haka.vbuffer(table.concat(request)))
+	else
 		if self.request.method == 'CONNECT' then
-			self._state = 6 -- We should not expect a request nor response anymore
-		else
-			self._state = 0
+			self._state = 'connect' -- We should not expect a request nor response anymore
 		end
 
-		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-			local response = {}
-			table.insert(response, self.response.version)
-			table.insert(response, " ")
-			table.insert(response, self.response.status)
-			table.insert(response, " ")
-			table.insert(response, self.response.reason)
-			table.insert(response, "\r\n")
-			build_headers(response, self.response.headers, self.response._headers_order)
-			table.insert(response, "\r\n")
-
-			self.response._mark:unmark()
-			self.response._mark:sub(self.response._length):replace(haka.vbuffer(table.concat(response)))
-			self.response._mark = nil
+		if haka.packet.mode() == haka.packet.PASSTHROUGH then
+			return
 		end
+
+		local response = {}
+		table.insert(response, self.response.version)
+		table.insert(response, " ")
+		table.insert(response, self.response.status)
+		table.insert(response, " ")
+		table.insert(response, self.response.reason)
+		table.insert(response, "\r\n")
+		build_headers(response, self.response.headers, self.response._headers_order)
+		table.insert(response, "\r\n")
+
+		mark:unmark()
+		iter:move_to(mark)
+	
+		iter:sub(self.response._length, true):replace(haka.vbuffer(table.concat(response)))
 	end
 end
 
@@ -672,6 +687,8 @@ function module.install_tcp_rule(port)
 end
 
 http_dissector.connections = haka.events.StaticEventConnections:new()
-http_dissector.connections:register(haka.event('tcp-connection', 'receive_data'), haka.events.method(haka.events.self, http_dissector.method.receive))
+http_dissector.connections:register(haka.event('tcp-connection', 'receive_data'),
+	haka.events.method(haka.events.self, http_dissector.method.receive),
+	{coroutine=true})
 
 return module
