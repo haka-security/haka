@@ -7,34 +7,6 @@
 #include <haka/vbuffer.h>
 #include <haka/vbuffer_stream.h>
 #include <haka/error.h>
-
-static bool vbuffer_iterator__check_available(struct vbuffer_iterator *iter, int size, int *OUTPUT)
-{
-	size_t available;
-	bool ret = vbuffer_iterator_check_available(iter, size, &available);
-	*OUTPUT = available;
-	return ret;
-}
-
-static struct vbuffer_sub *vbuffer_iterator__sub(struct vbuffer_iterator *iter, size_t size, bool split)
-{
-	size_t len;
-	struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
-	if (!sub) {
-		error(L"memory error");
-		return NULL;
-	}
-
-       len = vbuffer_iterator_sub(iter, size, sub, split);
-       if (len == (size_t)-1) {
-               free(sub);
-               return NULL;
-       }
-
-	vbuffer_sub_register(sub);
-	return sub;
-}
-
 %}
 
 %import "haka/lua/config.si"
@@ -55,68 +27,125 @@ static struct vbuffer_sub *vbuffer_iterator__sub(struct vbuffer_iterator *iter, 
 
 %{
 
+struct vbuffer_iterator_lua {
+	struct vbuffer_iterator     super;
+	size_t                      meter;
+};
+
 struct vbuffer_iterator_blocking {
-	struct vbuffer_iterator  iterator;
+	struct vbuffer_iterator_lua super;
 
 #ifdef USE_C_YIELD
-	struct vbuffer_iterator  begin;
-	size_t                   size;
-	size_t                   remsize;
-	bool                     split;
+	struct vbuffer_iterator     begin;
+	size_t                      size;
+	size_t                      remsize;
+	bool                        split;
 #endif
 };
 
+static bool vbuffer_iterator_lua__check_available(struct vbuffer_iterator_lua *iter, int size, int *OUTPUT)
+{
+	size_t available;
+	bool ret = vbuffer_iterator_check_available(&iter->super, size, &available);
+	*OUTPUT = available;
+	return ret;
+}
+
+static struct vbuffer_sub *vbuffer_iterator__sub(struct vbuffer_iterator_lua *iter, size_t size, bool split)
+{
+	size_t len;
+	struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
+
+	if (!sub) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	len = vbuffer_iterator_sub(&iter->super, size, sub, split);
+	if (len == (size_t)-1) {
+		free(sub);
+		return NULL;
+	}
+
+	iter->meter += len;
+	vbuffer_sub_register(sub);
+
+	return sub;
+}
+
 %}
 
-%newobject vbuffer_iterator::sub;
-%newobject vbuffer_iterator::_copy;
+%newobject vbuffer_iterator_lua::sub;
+%newobject vbuffer_iterator_lua::_copy;
 
-struct vbuffer_iterator {
+%rename(vbuffer_iterator) vbuffer_iterator_lua;
+struct vbuffer_iterator_lua {
 	%extend {
-		~vbuffer_iterator()
+		~vbuffer_iterator_lua()
 		{
-			vbuffer_iterator_clear($self);
-			free($self);
+			vbuffer_iterator_clear(&$self->super);
+			free(&$self->super);
 		}
 
-		void mark(bool readonly = false);
-		void unmark();
-		int advance(int size);
+		%rename(mark) _mark;
+		void _mark(bool readonly = false)
+		{
+			vbuffer_iterator_mark(&$self->super, readonly);
+		}
+
+		%rename(unmark) _unmark;
+		void _unmark()
+		{
+			vbuffer_iterator_unmark(&$self->super);
+		}
+
+		%rename(advance) _advance;
+		int _advance(int size)
+		{
+			size_t len = vbuffer_iterator_advance(&$self->super, size);
+                        if (len != (size_t)-1) $self->meter += len;
+			return len;
+		}
 
 		%rename(insert) _insert;
 		void _insert(struct vbuffer *data)
 		{
-			if (!vbuffer_iterator_isinsertable($self, data)) {
+			if (!vbuffer_iterator_isinsertable(&$self->super, data)) {
 				error(L"circular buffer insertion");
 				return;
 			}
 
-			vbuffer_iterator_insert($self, data);
+			vbuffer_iterator_insert(&$self->super, data);
 		}
 
 		void restore(struct vbuffer *data)
 		{
-			if (!vbuffer_iterator_isinsertable($self, data)) {
+			if (!vbuffer_iterator_isinsertable(&$self->super, data)) {
 				error(L"circular buffer insertion");
 				return;
 			}
 
-			vbuffer_restore($self, data);
+			vbuffer_restore(&$self->super, data);
 		}
 
-		int  available();
+		%rename(available) _available;
+		int _available()
+		{
+			return vbuffer_iterator_available(&$self->super);
+		}
 
 		%rename(copy) _copy;
-		struct vbuffer_iterator *_copy()
+		struct vbuffer_iterator_lua *_copy()
 		{
-			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
 			if (!iter) {
 				error(L"memory error");
 				return NULL;
 			}
 
-			vbuffer_iterator_copy($self, iter);
-			vbuffer_iterator_register(iter);
+			vbuffer_iterator_copy(&$self->super, &iter->super);
+			vbuffer_iterator_register(&iter->super);
+			iter->meter = $self->meter;
 			return iter;
 		}
 
@@ -142,12 +171,21 @@ struct vbuffer_iterator {
 			}
 		}
 
+		void move_to(struct vbuffer_iterator_lua *iter)
+		{
+			vbuffer_iterator_clear(&$self->super);
+			vbuffer_iterator_copy(&iter->super, &$self->super);
+			vbuffer_iterator_register(&$self->super);
+			$self->meter = iter->meter;
+		}
+
 		%immutable;
-		bool isend { return vbuffer_iterator_isend($self); }
+		size_t meter { return $self->meter; }
+		bool isend { return vbuffer_iterator_isend(&$self->super); }
 	}
 };
 
-STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator);
+STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator_lua);
 
 
 %{
@@ -161,14 +199,14 @@ static int _advance_blocking_until(lua_State *L, struct vbuffer_iterator_blockin
 	struct vbuffer_iterator iter;
 
 	if (update_iter) {
-		vbuffer_iterator_clear(&self->iterator);
-		vbuffer_iterator_copy(update_iter, &self->iterator);
-		vbuffer_iterator_register(&self->iterator);
+		vbuffer_iterator_clear(&self->super.super);
+		vbuffer_iterator_copy(update_iter, &self->super.super);
+		vbuffer_iterator_register(&self->super.super);
 	}
 
-	vbuffer_iterator_copy(&self->iterator, &iter);
+	vbuffer_iterator_copy(&self->super.super, &iter);
 
-	adv = vbuffer_iterator_advance(&self->iterator, self->remsize);
+	adv = vbuffer_iterator_advance(&self->super.super, self->remsize);
 	if (adv > 0 && !vbuffer_iterator_isvalid(&self->begin)) {
 		vbuffer_iterator_copy(&iter, &self->begin);
 		vbuffer_iterator_register(&self->begin);
@@ -176,7 +214,7 @@ static int _advance_blocking_until(lua_State *L, struct vbuffer_iterator_blockin
 
 	self->remsize -= adv;
 
-	if (self->remsize > 0 && !vbuffer_iterator_isend(&self->iterator)) {
+	if (self->remsize > 0 && !vbuffer_iterator_isend(&self->super.super)) {
 		lua_pop(L, 1);
 		return lua_yieldk(L, 0, 0, cont);
 	}
@@ -191,20 +229,20 @@ static int _advance_blocking(lua_State *L, struct vbuffer_iterator_blocking *sel
 	struct vbuffer_iterator iter;
 
 	if (update_iter) {
-		vbuffer_iterator_clear(&self->iterator);
-		vbuffer_iterator_copy(update_iter, &self->iterator);
-		vbuffer_iterator_register(&self->iterator);
+		vbuffer_iterator_clear(&self->super.super);
+		vbuffer_iterator_copy(update_iter, &self->super.super);
+		vbuffer_iterator_register(&self->super.super);
 	}
 
-	vbuffer_iterator_copy(&self->iterator, &iter);
+	vbuffer_iterator_copy(&self->super.super, &iter);
 
-	adv = vbuffer_iterator_advance(&self->iterator, self->remsize);
+	adv = vbuffer_iterator_advance(&self->super.super, self->remsize);
 	if (adv > 0 && !vbuffer_iterator_isvalid(&self->begin)) {
 		vbuffer_iterator_copy(&iter, &self->begin);
 		vbuffer_iterator_register(&self->begin);
 	}
 
-	if (adv == 0 && !vbuffer_iterator_isend(&self->iterator)) {
+	if (adv == 0 && !vbuffer_iterator_isend(&self->super.super)) {
 		lua_pop(L, 1);
 		return lua_yieldk(L, 0, 0, cont);
 	}
@@ -227,7 +265,7 @@ static int _wrap_vbuffer_iterator_blocking__sub_available_blocking(lua_State* L)
 
 struct vbuffer_iterator_blocking {
 	%extend {
-		vbuffer_iterator_blocking(struct vbuffer_iterator *src)
+		vbuffer_iterator_blocking(struct vbuffer_iterator_lua *src)
 		{
 			struct vbuffer_iterator_blocking *iter = malloc(sizeof(struct vbuffer_iterator_blocking));
 			if (!iter) {
@@ -238,8 +276,9 @@ struct vbuffer_iterator_blocking {
 #ifdef USE_C_YIELD
 			iter->begin = vbuffer_iterator_init;
 #endif
-			vbuffer_iterator_copy(src, &iter->iterator);
-			vbuffer_iterator_register(&iter->iterator);
+			vbuffer_iterator_copy(&src->super, &iter->super.super);
+			vbuffer_iterator_register(&iter->super.super);
+			iter->super.meter = src->meter;
 			return iter;
 		}
 
@@ -248,15 +287,15 @@ struct vbuffer_iterator_blocking {
 #ifdef USE_C_YIELD
 			vbuffer_iterator_clear(&$self->begin);
 #endif
-			vbuffer_iterator_clear(&$self->iterator);
+			vbuffer_iterator_clear(&$self->super.super);
 			free($self);
 		}
 
-		void mark(bool readonly = false) { vbuffer_iterator_mark(&$self->iterator, readonly); }
-		void unmark() { vbuffer_iterator_unmark(&$self->iterator); }
-		void insert(struct vbuffer *data) { vbuffer_iterator_insert(&$self->iterator, data); }
-		int  available() { return vbuffer_iterator_available(&$self->iterator); }
-		bool check_available(int size, int *OUTPUT) { vbuffer_iterator__check_available(&$self->iterator, size, OUTPUT); }
+		void mark(bool readonly = false) { vbuffer_iterator_mark(&$self->super.super, readonly); }
+		void unmark() { vbuffer_iterator_unmark(&$self->super.super); }
+		void insert(struct vbuffer *data) { vbuffer_iterator_insert(&$self->super.super, data); }
+		int  available() { return vbuffer_iterator_available(&$self->super.super); }
+		bool check_available(int size, int *OUTPUT) { vbuffer_iterator_lua__check_available(&$self->super, size, OUTPUT); }
 
 #ifdef USE_C_YIELD
 		int  _advance_blocking(lua_State *L, struct vbuffer_iterator *update_iter, bool *YIELD)
@@ -282,10 +321,10 @@ struct vbuffer_iterator_blocking {
 				}
 
 				if (self->split) {
-					vbuffer_iterator_split(&self->iterator);
+					vbuffer_iterator_split(&self->super.super);
 				}
 
-				if (!vbuffer_sub_create_between_position(sub, &self->begin, &self->iterator)) {
+				if (!vbuffer_sub_create_between_position(sub, &self->begin, &self->super.super)) {
 					free(sub);
 					vbuffer_iterator_clear(&$self->begin);
 					return NULL;
@@ -313,10 +352,10 @@ struct vbuffer_iterator_blocking {
 				}
 
 				if (self->split) {
-					vbuffer_iterator_split(&self->iterator);
+					vbuffer_iterator_split(&self->super.super);
 				}
 
-				if (!vbuffer_sub_create_between_position(sub, &self->begin, &self->iterator)) {
+				if (!vbuffer_sub_create_between_position(sub, &self->begin, &self->super.super)) {
 					free(sub);
 					vbuffer_iterator_clear(&$self->begin);
 					return NULL;
@@ -371,19 +410,27 @@ struct vbuffer_iterator_blocking {
 		}
 
 #else
-		void _update_iter(struct vbuffer_iterator *update_iter)
+		void _update_iter(struct vbuffer_iterator_lua *update_iter)
 		{
-			vbuffer_iterator_clear(&self->iterator);
-			vbuffer_iterator_copy(update_iter, &self->iterator);
-			vbuffer_iterator_register(&self->iterator);
+			vbuffer_iterator_clear(&$self->super.super);
+			vbuffer_iterator_copy(&update_iter->super, &$self->super.super);
+			vbuffer_iterator_register(&$self->super.super);
 		}
 
 		%immutable;
-		struct vbuffer_iterator *_iter { return &$self->iterator; }
+		struct vbuffer_iterator_lua *_iter { return &$self->super; }
 #endif
 
+		void move_to(struct vbuffer_iterator_lua *iter)
+		{
+			vbuffer_iterator_clear(&$self->super.super);
+			vbuffer_iterator_copy(&iter->super, &$self->super.super);
+			vbuffer_iterator_register(&$self->super.super);
+			$self->super.meter = iter->meter;
+		}
+
 		%immutable;
-		bool isend { return vbuffer_iterator_isend(&$self->iterator); }
+		bool isend { return vbuffer_iterator_isend(&$self->super.super); }
 	}
 };
 
@@ -396,7 +443,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator_blocking);
 
 struct vbuffer_sub {
 	%extend {
-		vbuffer_sub(struct vbuffer_iterator *begin, struct vbuffer_iterator *end)
+		vbuffer_sub(struct vbuffer_iterator_lua *begin, struct vbuffer_iterator_lua *end)
 		{
 			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
 			if (!sub) {
@@ -404,7 +451,7 @@ struct vbuffer_sub {
 				return NULL;
 			}
 
-			if (!vbuffer_sub_create_between_position(sub, begin, end)) {
+			if (!vbuffer_sub_create_between_position(sub, &begin->super, &end->super)) {
 				free(sub);
 				return NULL;
 			}
@@ -449,10 +496,10 @@ struct vbuffer_sub {
 			return ret;
 		}
 
-		struct vbuffer_iterator *select(struct vbuffer **OUTPUT)
+		struct vbuffer_iterator_lua *select(struct vbuffer **OUTPUT)
 		{
 			struct vbuffer *select = malloc(sizeof(struct vbuffer));
-			struct vbuffer_iterator *ref= malloc(sizeof(struct vbuffer_iterator));
+			struct vbuffer_iterator_lua *ref = malloc(sizeof(struct vbuffer_iterator_lua));
 
 			*OUTPUT = NULL;
 
@@ -463,13 +510,14 @@ struct vbuffer_sub {
 				return NULL;
 			}
 
-			if (!vbuffer_select($self, select, ref)) {
+			if (!vbuffer_select($self, select, &ref->super)) {
 				free(select);
 				free(ref);
 				return NULL;
 			}
 
-			vbuffer_iterator_register(ref);
+			vbuffer_iterator_register(&ref->super);
+			ref->meter = 0;
 			*OUTPUT = select;
 			return ref;
 		}
@@ -507,24 +555,25 @@ struct vbuffer_sub {
 			}
 		}
 
-		struct vbuffer_iterator *pos(int offset)
+		struct vbuffer_iterator_lua *pos(int offset)
 		{
-			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
 			if (!iter) {
 				error(L"memory error");
 				return NULL;
 			}
 
-			if (!vbuffer_sub_position($self, iter, offset == -1 ? ALL : offset)) {
+			if (!vbuffer_sub_position($self, &iter->super, offset == -1 ? ALL : offset)) {
 				free(iter);
 				return NULL;
 			}
 
-			vbuffer_iterator_register(iter);
+			vbuffer_iterator_register(&iter->super);
+			iter->meter = 0;
 			return iter;
 		}
 
-		struct vbuffer_iterator *pos(const char *pos)
+		struct vbuffer_iterator_lua *pos(const char *pos)
 		{
 			if (!pos) {
 				error(L"missing pos parameter");
@@ -632,20 +681,21 @@ struct vbuffer {
 			vbuffer_setbyte(&sub, index-1, value);
 		}
 
-		struct vbuffer_iterator *pos(int offset)
+		struct vbuffer_iterator_lua *pos(int offset)
 		{
-			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
 			if (!iter) {
 				error(L"memory error");
 				return NULL;
 			}
 
-			vbuffer_position($self, iter, offset == -1 ? ALL : offset);
-			vbuffer_iterator_register(iter);
+			vbuffer_position($self, &iter->super, offset == -1 ? ALL : offset);
+			vbuffer_iterator_register(&iter->super);
+			iter->meter = 0;
 			return iter;
 		}
 
-		struct vbuffer_iterator *pos(const char *pos)
+		struct vbuffer_iterator_lua *pos(const char *pos)
 		{
 			if (!pos) {
 				error(L"missing pos parameter");
@@ -784,14 +834,15 @@ struct vbuffer_stream {
 
 		%immutable;
 		struct vbuffer *data { return vbuffer_stream_data($self); }
-		struct vbuffer_iterator *current {
-			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+		struct vbuffer_iterator_lua *current {
+			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
 			if (!iter) {
 				error(L"memory error");
 				return NULL;
 			}
-			vbuffer_stream_current($self, iter);
-			vbuffer_iterator_register(iter);
+			vbuffer_stream_current($self, &iter->super);
+			vbuffer_iterator_register(&iter->super);
+			iter->meter = 0;
 			return iter;
 		}
 	}

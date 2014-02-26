@@ -32,10 +32,6 @@ grammar_dg.ParseContext.property.init = {
 	get = function (self) return self._initctxs ~= nil end
 }
 
-grammar_dg.ParseContext.property.offset = {
-	get = function (self) return self._offset end
-}
-
 local function revalidate(self)
 	local validate = self._validate
 	self._validate = {}
@@ -44,10 +40,8 @@ local function revalidate(self)
 	end
 end
 
-function grammar_dg.ParseContext.method:__init(input, topctx, init)
-	self._input = input
-	self._offset = 0
-	self._length = #input
+function grammar_dg.ParseContext.method:__init(iter, topctx, init)
+	self.iter = iter
 	self._bitoffset = 0
 	self._marks = {}
 	self._ctxs = {}
@@ -62,11 +56,8 @@ function grammar_dg.ParseContext.method:__init(input, topctx, init)
 	self.current.validate = revalidate
 end
 
-function grammar_dg.ParseContext.method:advance(size)
-	self._offset = self._offset + size
-	if self._offset > self._length then
-		error("invalid buffer size")
-	end
+function grammar_dg.ParseContext.method:update(iter)
+	self.iter:move_to(iter)
 end
 
 function grammar_dg.ParseContext.method:parse(entity)
@@ -102,28 +93,34 @@ function grammar_dg.ParseContext.method:push(ctx, name)
 end
 
 function grammar_dg.ParseContext.method:pushmark()
-	self._marks[#self._marks+1] = { self._offset, self._bitoffset, 0, self._bitoffset }
+	self._marks[#self._marks+1] = {
+		iter = self.iter:copy(),
+		bitoffset = self._bitoffset,
+		max_meter = 0,
+		max_iter = self.iter:copy(),
+		max_bitoffset = self._bitoffset
+	}
 end
 
 function grammar_dg.ParseContext.method:popmark()
 	local mark = self._marks[#self._marks]
-	self._offset = mark[1]
-	self:advance(mark[3])
-	self._bitoffset = mark[4]
+	self.iter:move_to(mark.max_iter)
+	self._bitoffset = mark.max_bitoffset
 	self._marks[#self._marks] = nil
 end
 
 function grammar_dg.ParseContext.method:seekmark()
 	local mark = self._marks[#self._marks]
-	local len = self._offset - mark[1]
-	if len >= mark[3] then
-		mark[3] = len
-		if self._bitoffset > mark[4] then
-			mark[4] = self._bitoffset
+	local len = self.iter.meter - mark.iter.meter
+	if len >= mark.max_meter then
+		mark.max_iter = self.iter:copy()
+		mark.max_meter = len
+		if self._bitoffset > mark.max_bitoffset then
+			mark.max_bitoffset = self._bitoffset
 		end
 	end
-	self._offset = mark[1]
-	self._bitoffset = mark[2]
+	self.iter:move_to(mark.iter)
+	self._bitoffset = mark.bitoffset
 end
 
 
@@ -419,7 +416,7 @@ end
 grammar_dg.Primitive = class('DGPrimitive', grammar_dg.Entity)
 
 function grammar_dg.Primitive.method:apply(ctx)
-	self:parse(ctx.current, ctx.current_init, ctx._input, ctx)
+	self:parse(ctx.current, ctx.current_init, ctx.iter, ctx)
 end
 
 grammar_dg.Number = class('DGNumber', grammar_dg.Primitive)
@@ -434,11 +431,11 @@ end
 function grammar_dg.Number.method:parse(cur, init, input, ctx)
 	local bitoffset = ctx._bitoffset
 	local size, bit = math.ceil((bitoffset + self.size) / 8), (bitoffset + self.size) % 8
-	local sub = input:sub(ctx._offset, size)
+	local sub = input:copy():sub(size)
 	if bit ~= 0 then
-		ctx:advance(size-1)
+		input:advance(size-1)
 	else
-		ctx:advance(size)
+		input:advance(size)
 	end
 
 	ctx._bitoffset = bit
@@ -489,9 +486,9 @@ function grammar_dg.Bits.method:parse(cur, init, input, ctx)
 	local bitoffset = ctx._bitoffset + size
 	local size, bit = math.ceil(bitoffset / 8), bitoffset % 8
 	if bit ~= 0 then
-		ctx:advance(size-1)
+		input:advance(size-1)
 	else
-		ctx:advance(size)
+		input:advance(size)
 	end
 
 	ctx._bitoffset = bit
@@ -515,14 +512,12 @@ function grammar_dg.Bytes.method:parse(cur, init, input, ctx)
 	local size = self.size(cur, ctx)
 	if size then
 		if size < 0 then
-			error("byte count must not be negative")
+			error("byte count must not be negative, got "..size)
 		end
-		sub = input:sub(ctx._offset, size)
+		sub = input:sub(size)
 	else
-		sub = input:sub(ctx._offset)
+		sub = input:sub("all")
 	end
-
-	ctx:advance(#sub)
 
 	if self.name then
 		if self.converter then
@@ -897,7 +892,7 @@ function grammar.padding(args)
 	if args.align then
 		local align = args.align
 		return grammar.Bits:new(function (self, ctx)
-			local rem = (ctx.offset * 8 + ctx._bitoffset) % align
+			local rem = (ctx.iter.meter * 8 + ctx._bitoffset) % align
 			if rem > 0 then return align -rem
 			else return 0 end
 		end)
