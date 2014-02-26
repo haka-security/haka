@@ -1517,7 +1517,7 @@ int64 vbuffer_asnumber(struct vbuffer_sub *data, bool bigendian)
 	const size_t length = vbuffer_sub_size(data);
 
 	if (length > 8) {
-		error(L"asnumber: unsupported size %llu", length);
+		error(L"asnumber: unsupported size %zu", length);
 		return 0;
 	}
 
@@ -1542,7 +1542,7 @@ int64 vbuffer_asnumber(struct vbuffer_sub *data, bool bigendian)
 	case 4: return bigendian ? SWAP_FROM_BE(int32, *(int32*)ptr) : SWAP_FROM_LE(int32, *(int32*)ptr);
 	case 8: return bigendian ? SWAP_FROM_BE(int64, *(int64*)ptr) : SWAP_FROM_LE(int64, *(int64*)ptr);
 	default:
-		error(L"asnumber: unsupported size %llu", length);
+		error(L"asnumber: unsupported size %zu", length);
 		return 0;
 	}
 }
@@ -1552,7 +1552,7 @@ bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 	const size_t length = vbuffer_sub_size(data);
 
 	if (length > 8) {
-		error(L"setnumber: unsupported size %llu", length);
+		error(L"setnumber: unsupported size %zu", length);
 		return false;
 	}
 
@@ -1576,7 +1576,7 @@ bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 		case 4: *(int32*)ptr = bigendian ? SWAP_TO_BE(int32, (int32)num) : SWAP_TO_LE(int32, (int32)num); break;
 		case 8: *(int64*)ptr = bigendian ? SWAP_TO_BE(int64, num) : SWAP_TO_LE(int64, num); break;
 		default:
-			error(L"setnumber: unsupported size %llu", length);
+			error(L"setnumber: unsupported size %zu", length);
 			return false;
 		}
 	}
@@ -1595,7 +1595,7 @@ bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 		case 4: temp.i32 = bigendian ? SWAP_TO_BE(int32, (int32)num) : SWAP_TO_LE(int32, (int32)num); break;
 		case 8: temp.i64 = bigendian ? SWAP_TO_BE(int64, num) : SWAP_TO_LE(int64, num); break;
 		default:
-			error(L"setnumber: unsupported size %llu", length);
+			error(L"setnumber: unsupported size %zu", length);
 			return false;
 		}
 
@@ -1665,7 +1665,7 @@ int64 vbuffer_asbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool 
 bool vbuffer_setbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool bigendian, int64 num)
 {
 	if (bits > 64) {
-		error(L"setbits: unsupported size %llu", bits);
+		error(L"setbits: unsupported size %zu", bits);
 		return false;
 	}
 
