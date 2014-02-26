@@ -4,16 +4,27 @@
 
 local events = {}
 
+--
+-- Event
+--
 
 events.Event = class('Event')
 
-function events.Event.method:__init(name, continue)
+function events.Event.method:__init(name, continue, signal)
 	self.name = name
 	self.continue = continue
+	self.signal = signal or function (f, options, ...) return f(...) end
 end
 
 
+--
+-- Connections
+--
+
 events.EventConnections = class('EventConnections')
+
+function events.EventConnections.method:_done()
+end
 
 function events.EventConnections.method:signal(emitter, event, ...)
 	local listeners = self:_get(event)
@@ -21,20 +32,22 @@ function events.EventConnections.method:signal(emitter, event, ...)
 		haka.log.debug("event", "signal '%s', %d listeners", event.name, #listeners)
 
 		for _, listener in ipairs(listeners) do
-			self:_signal(listener, emitter, ...)
-	
+			event.signal(listener.f, listener.options, emitter, ...)
 			if not event.continue(emitter) then
+				self:_done()
 				return true
 			end
 		end
 	end
+	
+	self:_done()
 	return true
 end
 
 
 events.StaticEventConnections = class('StaticEventConnections', events.EventConnections)
 
-function events.StaticEventConnections.method:register(event, func)
+function events.StaticEventConnections.method:register(event, func, options)
 	assert(isa(event, events.Event), "event expected")
 	assert(type(func) == 'function', "function expected")
 
@@ -44,11 +57,7 @@ function events.StaticEventConnections.method:register(event, func)
 		self[event] = listeners
 	end
 
-	table.insert(listeners, func)
-end
-
-function events.StaticEventConnections.method:_signal(listener, emitter, ...)
-	listener(emitter, ...)
+	table.insert(listeners, {f=func, options=options})
 end
 
 function events.StaticEventConnections.method:_get(event)
@@ -58,6 +67,8 @@ end
 
 events.ObjectEventConnections = class('ObjectEventConnections', events.EventConnections)
 
+events.self = {}
+
 function events.ObjectEventConnections.method:__init(object, connections)
 	assert(object)
 	assert(connections)
@@ -65,12 +76,26 @@ function events.ObjectEventConnections.method:__init(object, connections)
 	self.connections = connections
 end
 
-function events.ObjectEventConnections.method:_signal(listener, emitter, ...)
-	listener(self.object, emitter, ...)
+function events.ObjectEventConnections.method:_done()
+	events.ObjectEventConnections.current = self.prev_object
 end
 
 function events.ObjectEventConnections.method:_get(event)
+	self.prev_object = events.ObjectEventConnections.current
+	events.ObjectEventConnections.current = self.object
+
 	return self.connections[event]
 end
+
+function events.method(object, func)
+	return function (...)
+		if object == events.self then
+			return func(events.ObjectEventConnections.current, ...)
+		else
+			return func(object, ...)
+		end
+	end
+end
+
 
 haka.events = events

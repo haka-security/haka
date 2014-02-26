@@ -383,7 +383,7 @@ function tcp_connection_dissector.method:_send(direction)
 
 	if not haka.pcall(haka.context.signal, haka.context, self,
 			tcp_connection_dissector.events.send_data,
-			stream.stream, direction) then
+			stream.stream.current:sub('available'), direction) then
 		return self:drop()
 	end
 

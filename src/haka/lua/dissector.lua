@@ -32,9 +32,9 @@ function dissector.Dissector.__class_init(self, cls)
 	cls.options = {}
 end
 
-function dissector.Dissector.register_event(cls, name, continue)
+function dissector.Dissector.register_event(cls, name, continue, signal, options)
 	continue = continue or function (self) return self:continue() end
-	cls.events[name] = haka.events.Event:new(string.format('%s:%s', cls.name, name), continue)
+	cls.events[name] = haka.events.Event:new(string.format('%s:%s', cls.name, name), continue, signal, options)
 end
 
 function dissector.Dissector.inherit_events(cls)
@@ -169,7 +169,21 @@ end
 
 dissector.FlowDissector = class('FlowDissector', dissector.Dissector)
 
-dissector.FlowDissector:register_event('receive_data')
+local function stream_wrapper(f, options, self, stream, ...)
+	if options and options.coroutine then
+		local comanager = self[stream]
+		if not comanager then
+			comanager = haka.vbuffer_stream_comanager:new(stream)
+			self[stream] = comanager
+		end
+	
+		comanager:process(f)
+	else
+		f(self, stream.current:sub('available'), ...)
+	end
+end
+
+dissector.FlowDissector:register_event('receive_data', nil, stream_wrapper)
 dissector.FlowDissector:register_event('send_data')
 
 function dissector.FlowDissector.method:connections()

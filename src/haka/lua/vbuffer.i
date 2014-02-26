@@ -125,10 +125,10 @@ struct vbuffer_iterator {
 
 		struct vbuffer_sub *sub(const char *mode, bool split = false)
 		{
-                        if (!mode) {
+			if (!mode) {
 				error(L"missing mode parameter");
 				return NULL;
-                        }
+			}
 
 			if (strcmp(mode, "available") == 0 ||
 			    strcmp(mode, "all") == 0) {
@@ -345,10 +345,10 @@ struct vbuffer_iterator_blocking {
 
 		struct vbuffer_sub *sub(lua_State *L, const char *mode, bool split = false, bool *YIELD)
 		{
-                        if (!mode) {
+			if (!mode) {
 				error(L"missing mode parameter");
 				return NULL;
-                        }
+			}
 
 			if (strcmp(mode, "all") == 0) {
 				$self->size = ALL;
@@ -491,10 +491,10 @@ struct vbuffer_sub {
 
 		struct vbuffer_sub *sub(int offset, const char *mode)
 		{
-                        if (!mode) {
+			if (!mode) {
 				error(L"missing mode parameter");
 				return NULL;
-                        }
+			}
 
 			if (strcmp(mode, "all") == 0) {
 				return vbuffer_sub_sub__SWIG_0($self, offset, -1);
@@ -524,10 +524,10 @@ struct vbuffer_sub {
 
 		struct vbuffer_iterator *pos(const char *pos)
 		{
-                        if (!pos) {
+			if (!pos) {
 				error(L"missing pos parameter");
 				return NULL;
-                        }
+			}
 
 			if (strcmp(pos, "begin") == 0) return vbuffer_sub_pos__SWIG_0($self, 0);
 			else if (strcmp(pos, "end") == 0) return vbuffer_sub_pos__SWIG_0($self, -1);
@@ -645,10 +645,10 @@ struct vbuffer {
 
 		struct vbuffer_iterator *pos(const char *pos)
 		{
-                        if (!pos) {
+			if (!pos) {
 				error(L"missing pos parameter");
 				return NULL;
-                        }
+			}
 
 			if (strcmp(pos, "begin") == 0) return vbuffer_pos__SWIG_0($self, 0);
 			else if (strcmp(pos, "end") == 0) return vbuffer_pos__SWIG_0($self, -1);
@@ -673,10 +673,10 @@ struct vbuffer {
 
 		struct vbuffer_sub *sub(int offset, const char *mode)
 		{
-                        if (!mode) {
+			if (!mode) {
 				error(L"missing mode parameter");
 				return NULL;
-                        }
+			}
 
 			if (strcmp(mode, "all") == 0) {
 				return vbuffer_sub__SWIG_0($self, offset, -1);
@@ -877,19 +877,33 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 	end
 
 	function haka.vbuffer_stream_comanager.method:start(f)
-		table.insert(self._co, coroutine.create(wrapper(self, f)))
+		self._co[f] = coroutine.create(wrapper(self, f))
 	end
 
-	function haka.vbuffer_stream_comanager.method:process()
-		for i,co in ipairs(self._co) do
-			coroutine.resume(co, self._stream.current)
-			if self._error then
-				error(self._error)
-			end
+	local function process_one(self, f, co)
+		coroutine.resume(co, self._stream.current)
+		if self._error then
+			error(self._error)
+		end
 
-			if coroutine.status(co) == "dead" then
-				table.remove(self._co, i)
-			end
+		if coroutine.status(co) == "dead" then
+			self._co[f] = false
+		end
+	end
+
+	function haka.vbuffer_stream_comanager.method:process(f)
+		if self._co[f] == nil then
+			self:start(f)
+		end
+
+		if self._co[f] then
+			return process_one(self, f, self._co[f])
+		end
+	end
+
+	function haka.vbuffer_stream_comanager.method:process_all()
+		for f,co in pairs(self._co) do
+			process_one(self, f, co)
 		end
 	end
 }

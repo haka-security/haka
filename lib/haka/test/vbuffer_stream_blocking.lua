@@ -13,7 +13,7 @@ local function gen_stream(f)
 			stream:finish()
 		end
 
-		manager:process()
+		manager:process_all()
 	end
 end
 

@@ -516,10 +516,10 @@ local function parse_response(http)
 	return true
 end
 
-function http_dissector.method:parse(stream, context, f, signal, next_state)
+function http_dissector.method:parse(iter, context, f, signal, next_state)
 	if not context._co then
 		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-			context._mark = stream.current
+			context._mark = iter:copy()
 			context._mark:mark()
 		end
 		context._co = coroutine.create(function ()
@@ -528,7 +528,7 @@ function http_dissector.method:parse(stream, context, f, signal, next_state)
 		end)
 	end
 
-	context._stream = stream.current
+	context._stream = iter
 	coroutine.resume(context._co)
 	context._stream = nil
 
@@ -561,6 +561,8 @@ end
 
 function http_dissector.method:receive(flow, stream, direction)
 	assert(flow == self.flow)
+	
+	local iter = stream:pos(0)
 
 	if direction == 'up' then
 		if self._state == 0 or self._state == 1 then
@@ -588,8 +590,8 @@ function http_dissector.method:receive(flow, stream, direction)
 				end
 			end
 
-			if self:parse(stream, self.request, parse_request, http_dissector.events.request, 2) then
-				return self:send(stream, direction)
+			if self:parse(iter, self.request, parse_request, http_dissector.events.request, 2) then
+				return self:send(iter, direction)
 			end
 		end
 	else
@@ -599,14 +601,14 @@ function http_dissector.method:receive(flow, stream, direction)
 				self._state = 4
 			end
 
-			if self:parse(stream, self.response, parse_response, http_dissector.events.response, 5) then
-				return self:send(stream, direction)
+			if self:parse(iter, self.response, parse_response, http_dissector.events.response, 5) then
+				return self:send(iter, direction)
 			end
 		end
 	end
 end
 
-function http_dissector.method:send(stream, direction)
+function http_dissector.method:send(iter, direction)
 	if not self:continue() then
 		return
 	end
@@ -668,6 +670,6 @@ function module.install_tcp_rule(port)
 end
 
 http_dissector.connections = haka.events.StaticEventConnections:new()
-http_dissector.connections:register(haka.event('tcp-connection', 'receive_data'), http_dissector.method.receive)
+http_dissector.connections:register(haka.event('tcp-connection', 'receive_data'), haka.events.method(haka.events.self, http_dissector.method.receive))
 
 return module
