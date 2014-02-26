@@ -21,8 +21,11 @@ function haka.rule(r)
 	assert(r.hook, "not hook defined for rule")
 	assert(isa(r.hook, haka.events.Event), "rule hook must be an event")
 	assert(type(r.eval) == 'function', "rule eval function expected")
+	
+	local options = {}
+	if r.coroutine then options.coroutine = true end
 
-	haka.context.connections:register(r.hook, r.eval, r.options)
+	haka.context.connections:register(r.hook, r.eval, options)
 end
 
 -- Load interactive.lua as a different file to allow to compile it

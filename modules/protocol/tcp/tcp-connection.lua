@@ -188,7 +188,7 @@ tcp_connection_dissector.states.syn_received = tcp_connection_dissector.states:s
 tcp_connection_dissector.states.established = tcp_connection_dissector.states:state{
 	input = function (context, pkt)
 		if pkt.flags.fin then
-			context.flow:push(pkt, context.input)
+			context.flow:push(pkt, context.input, true)
 			return context.states.fin_wait_1
 		else
 			context.flow:push(pkt, context.input)
@@ -196,7 +196,7 @@ tcp_connection_dissector.states.established = tcp_connection_dissector.states:st
 	end,
 	output = function (context, pkt)
 		if pkt.flags.fin then
-			context.flow:push(pkt, context.output)
+			context.flow:push(pkt, context.output, true)
 			context.input, context.output = context.output, context.input
 			return context.states.fin_wait_1
 		else
@@ -208,6 +208,7 @@ tcp_connection_dissector.states.established = tcp_connection_dissector.states:st
 tcp_connection_dissector.states.fin_wait_1 = tcp_connection_dissector.states:state{
 	output = function (context, pkt)
 		if pkt.flags.fin then
+			context.flow:finish(context.output)
 			if pkt.flags.ack then
 				context.flow:_sendpkt(pkt, context.output)
 				return context.states.closing
@@ -216,7 +217,7 @@ tcp_connection_dissector.states.fin_wait_1 = tcp_connection_dissector.states:sta
 				return context.states.timed_wait
 			end
 		elseif pkt.flags.ack then
-			context.flow:push(pkt, context.output)
+			context.flow:push(pkt, context.output, true)
 			return context.states.fin_wait_2
 		else
 			haka.log.error('tcp-connection', "invalid tcp termination handshake")
@@ -346,13 +347,26 @@ function tcp_connection_dissector.method:_close()
 	self.states = nil
 end
 
-function tcp_connection_dissector.method:push(pkt, direction)
+function tcp_connection_dissector.method:get_comanager(direction)
+	if not self.costream then
+		self.costream = {}
+	end
+	
+	if not self.costream[direction] then
+		self.costream[direction] = haka.vbuffer_stream_comanager:new(self.stream[direction].stream)
+	end
+	
+	return self.costream[direction]
+end
+
+function tcp_connection_dissector.method:push(pkt, direction, finish)
 	local stream = self.stream[direction]
 
 	stream:push(pkt)
+	if finish then stream.stream:finish() end
 
 	local current = stream.stream.current
-	if current and current:check_available(1) then
+	if (current and current:check_available(1)) or finish then
 		if not haka.pcall(haka.context.signal, haka.context, self,
 				tcp_connection_dissector.events.receive_data,
 				stream.stream, direction) then
@@ -362,6 +376,18 @@ function tcp_connection_dissector.method:push(pkt, direction)
 
 	if self:continue() then
 		return self:_send(direction)
+	end
+end
+
+function tcp_connection_dissector.method:finish(direction)
+	local stream = self.stream[direction]
+
+	stream.stream:finish()
+
+	if not haka.pcall(haka.context.signal, haka.context, self,
+			tcp_connection_dissector.events.receive_data,
+			stream.stream, direction) then
+		return self:drop()
 	end
 end
 

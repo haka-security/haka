@@ -562,6 +562,8 @@ end
 function http_dissector.method:receive(flow, stream, direction)
 	assert(flow == self.flow)
 	
+	if #stream == 0 then return end
+	
 	local iter = stream:pos(0)
 
 	if direction == 'up' then

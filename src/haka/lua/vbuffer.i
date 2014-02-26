@@ -876,34 +876,33 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 		end
 	end
 
-	function haka.vbuffer_stream_comanager.method:start(f)
-		self._co[f] = coroutine.create(wrapper(self, f))
+	function haka.vbuffer_stream_comanager.method:start(id, f)
+		self._co[id] = coroutine.create(wrapper(self, f))
 	end
 
-	local function process_one(self, f, co)
+	function haka.vbuffer_stream_comanager.method:has(id)
+		return self._co[id] ~= nil
+	end
+
+	local function process_one(self, id, co)
 		coroutine.resume(co, self._stream.current)
 		if self._error then
 			error(self._error)
 		end
 
 		if coroutine.status(co) == "dead" then
-			self._co[f] = false
+			self._co[id] = false
 		end
 	end
 
-	function haka.vbuffer_stream_comanager.method:process(f)
-		if self._co[f] == nil then
-			self:start(f)
-		end
-
-		if self._co[f] then
-			return process_one(self, f, self._co[f])
-		end
+	function haka.vbuffer_stream_comanager.method:process(id)
+		assert(self._co[id])
+		return process_one(self, id, self._co[id])
 	end
 
 	function haka.vbuffer_stream_comanager.method:process_all()
-		for f,co in pairs(self._co) do
-			process_one(self, f, co)
+		for id,co in pairs(self._co) do
+			process_one(self, id, co)
 		end
 	end
 }

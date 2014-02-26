@@ -5,7 +5,7 @@
 local function gen_stream(f)
 	local stream = haka.vbuffer_stream()
 	local manager = haka.vbuffer_stream_comanager:new(stream)
-	manager:start(f)
+	manager:start(0, f)
 
 	for i=10,1,-1 do
 		stream:push(haka.vbuffer("Haka"))
