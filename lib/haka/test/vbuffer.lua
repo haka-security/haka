@@ -44,10 +44,22 @@ local function test_asbit_too_small()
 	assert(not success and msg == "asbits: invalid bit size", "failed to detect invalid asbits size")
 end
 
+local function test_asnumber_too_big()
+	local buf = haka.vbuffer(10)
+	local success, msg = pcall(function () buf:sub():asnumber() end)
+	assert(not success and msg == "asnumber: unsupported size 10", "failed to detect invalid asnumber size")
+end
+
+local function test_setbit_too_big()
+	local buf = haka.vbuffer(8)
+	local success, msg = pcall(function () buf:sub():setbits(12, 2000, 2000) end)
+	assert(not success and msg == "setbits: unsupported size 2000", "failed to detect invalid setbits size too big")
+end
+
 local function test_setbit_too_small()
 	local buf = haka.vbuffer(2)
 	local success, msg = pcall(function () buf:sub():setbits(12, 24, 0) end)
-	assert(not success and msg == "setbits: invalid bit size", "failed to detect invalid setbits size")
+	assert(not success and msg == "setbits: invalid bit size", "failed to detect invalid setbits size too small")
 end
 
 local function test_insert_on_itself()
@@ -68,5 +80,7 @@ test_asbit_empty()
 test_setbit_empty()
 test_asbit_too_small()
 test_setbit_too_small()
+test_setbit_too_big()
+test_asnumber_too_big()
 test_insert_on_itself()
 test_append_on_itself()
