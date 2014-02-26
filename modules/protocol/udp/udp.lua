@@ -66,7 +66,7 @@ end
 function udp_dissector:create(pkt, init)
 	if not init then init = {} end
 	if not init.length then init.length = 8 end
-	pkt.payload:append(haka.vbuffer(init.length))
+	pkt.payload:pos(0):insert(haka.vbuffer(init.length))
 	pkt.proto = 17
 
 	local udp = udp_dissector:new(pkt)
