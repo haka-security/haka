@@ -193,14 +193,14 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator_lua);
 #ifdef USE_C_YIELD
 
 static int _advance_blocking_until(lua_State *L, struct vbuffer_iterator_blocking *self,
-		struct vbuffer_iterator *update_iter, lua_CFunction cont)
+		struct vbuffer_iterator_lua *update_iter, lua_CFunction cont)
 {
 	size_t adv;
 	struct vbuffer_iterator iter;
 
 	if (update_iter) {
 		vbuffer_iterator_clear(&self->super.super);
-		vbuffer_iterator_copy(update_iter, &self->super.super);
+		vbuffer_iterator_copy(&update_iter->super, &self->super.super);
 		vbuffer_iterator_register(&self->super.super);
 	}
 
@@ -223,14 +223,14 @@ static int _advance_blocking_until(lua_State *L, struct vbuffer_iterator_blockin
 }
 
 static int _advance_blocking(lua_State *L, struct vbuffer_iterator_blocking *self,
-		struct vbuffer_iterator *update_iter, lua_CFunction cont)
+		struct vbuffer_iterator_lua *update_iter, lua_CFunction cont)
 {
 	size_t adv;
 	struct vbuffer_iterator iter;
 
 	if (update_iter) {
 		vbuffer_iterator_clear(&self->super.super);
-		vbuffer_iterator_copy(update_iter, &self->super.super);
+		vbuffer_iterator_copy(&update_iter->super, &self->super.super);
 		vbuffer_iterator_register(&self->super.super);
 	}
 
@@ -322,7 +322,7 @@ struct vbuffer_iterator_blocking {
 		}
 
 #ifdef USE_C_YIELD
-		int  _advance_blocking(lua_State *L, struct vbuffer_iterator *update_iter, bool *YIELD)
+		int  _advance_blocking(lua_State *L, struct vbuffer_iterator_lua *update_iter, bool *YIELD)
 		{
 			const int ret = _advance_blocking_until(L, $self, update_iter, _wrap_vbuffer_iterator_blocking__advance_blocking);
 			if (YIELD) *YIELD = (ret == -1);
@@ -331,7 +331,7 @@ struct vbuffer_iterator_blocking {
 			return $self->size - $self->remsize;
 		}
 
-		struct vbuffer_sub *_sub_blocking(lua_State *L, struct vbuffer_iterator *update_iter, bool *YIELD)
+		struct vbuffer_sub *_sub_blocking(lua_State *L, struct vbuffer_iterator_lua *update_iter, bool *YIELD)
 		{
 			const int ret = _advance_blocking_until(L, $self, update_iter, _wrap_vbuffer_iterator_blocking__sub_blocking);
 			if (YIELD) *YIELD = (ret == -1);
@@ -362,7 +362,7 @@ struct vbuffer_iterator_blocking {
 			return NULL;
 		}
 
-		struct vbuffer_sub *_sub_available_blocking(lua_State *L, struct vbuffer_iterator *update_iter, bool *YIELD)
+		struct vbuffer_sub *_sub_available_blocking(lua_State *L, struct vbuffer_iterator_lua *update_iter, bool *YIELD)
 		{
 			const int ret = _advance_blocking(L, $self, update_iter, _wrap_vbuffer_iterator_blocking__sub_available_blocking);
 			if (YIELD) *YIELD = (ret == -1);
