@@ -62,6 +62,13 @@ function grammar_dg.ParseContext.method:update(iter)
 	self.iter:move_to(iter)
 end
 
+function grammar_dg.ParseContext.method:lookahead()
+	local iter = self.iter:copy()
+	local la = self.iter:sub(1):asnumber()
+	self:update(iter)
+	return la
+end
+
 function grammar_dg.ParseContext.method:parse(entity)
 	local iter = entity
 	while iter do
