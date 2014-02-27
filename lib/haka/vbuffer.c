@@ -778,6 +778,23 @@ bool vbuffer_iterator_isend(struct vbuffer_iterator *position)
 
 	offset = _vbuffer_iterator_fix(position, &iter);
 
+	if (iter->flags.end) {
+		assert(offset == 0);
+		return true;
+	}
+
+	return false;
+}
+
+bool vbuffer_iterator_iseof(struct vbuffer_iterator *position)
+{
+	struct vbuffer_chunk *iter;
+	UNUSED size_t offset;
+
+	if (!_vbuffer_iterator_check(position)) return false;
+
+	offset = _vbuffer_iterator_fix(position, &iter);
+
 	if (iter->flags.end && iter->flags.eof) {
 		assert(offset == 0);
 		return true;

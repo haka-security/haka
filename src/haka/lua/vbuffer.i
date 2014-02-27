@@ -144,8 +144,11 @@ struct vbuffer_iterator_lua {
 				return NULL;
 			}
 
-			if (strcmp(mode, "available") == 0 ||
-			    strcmp(mode, "all") == 0) {
+			if (strcmp(mode, "available") == 0) {
+				if (vbuffer_iterator_isend(&$self->super)) return NULL;
+				return vbuffer_iterator_lua_sub__SWIG_0($self, -1, split);
+			}
+			else if (strcmp(mode, "all") == 0) {
 				return vbuffer_iterator_lua_sub__SWIG_0($self, -1, split);
 			}
 			else {
@@ -174,7 +177,7 @@ struct vbuffer_iterator_lua {
 
 		%immutable;
 		size_t meter { return $self->meter; }
-		bool isend { return vbuffer_iterator_isend(&$self->super); }
+		bool iseof { return vbuffer_iterator_iseof(&$self->super); }
 	}
 };
 
@@ -224,7 +227,7 @@ struct vbuffer_iterator_blocking {
 		%immutable;
 		struct vbuffer_iterator_lua *_iter { return &$self->super; }
 
-		bool isend { return vbuffer_iterator_isend(&$self->super.super); }
+		bool iseof { return vbuffer_iterator_iseof(&$self->super.super); }
 	}
 };
 
@@ -244,7 +247,7 @@ struct vbuffer_iterator_blocking {
 				begin = iter
 			end
 
-			if self.isend then break end
+			if self.iseof then break end
 
 			remsize = remsize-adv
 			if remsize <= 0 then
@@ -277,7 +280,7 @@ struct vbuffer_iterator_blocking {
 			while true do
 				local adv = self._iter:advance(remsize)
 
-				if self.isend then break end
+				if self.iseof then break end
 
 				if available then
 					if adv > 0 then return adv end
@@ -318,7 +321,7 @@ struct vbuffer_iterator_blocking {
 			local adv = self._iter:advance(remsize)
 			if not begin and adv > 0 then begin = iter end
 
-			if self.isend then break end
+			if self.iseof then break end
 
 			if available then
 				if adv > 0 then break end

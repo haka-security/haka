@@ -21,7 +21,7 @@ function haka.event(dname, name)
 	if not event then
 		error(string.format("unknown event '%s' on dissector '%s'", name, dname))
 	end
-	
+
 	return event
 end
 
@@ -181,7 +181,10 @@ local function stream_wrapper(f, options, self, stream, ...)
 
 		comanager:process(f)
 	else
-		f(self, stream.current:sub('available'), ...)
+		local sub = stream.current:sub('available')
+		if sub then
+			f(self, stream.current:sub('available'), ...)
+		end
 	end
 end
 

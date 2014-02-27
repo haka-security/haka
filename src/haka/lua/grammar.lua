@@ -555,23 +555,33 @@ function grammar_dg.Token.method:__init(re, name)
 	self.name = name
 end
 
-function grammar_dg.Token.method:parse(cur, init, input, ctx)
+function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 	if not ctx.sink then
 		ctx.sink = self.re:create_sink()
 	end
 
+	local begin = iter:copy()
 
-	-- TODO copy blocking iterator
-	local copy = input:copy()
-	local match, result = ctx.sink:feed(copy:sub("all"), false)
+	while true do
+		local sub = iter:sub('available')
+		if not sub then break end
 
-	if match then
-		local string = input:sub(result.size):asstring()
-		if self.name then
-			cur[self.name] = string
+		local match, result = ctx.sink:feed(sub, false)
+		if not match and not ctx.sink:ispartial() then break end
+
+		if match then
+			local string = begin:sub(result.size):asstring()
+			iter:move_to(begin)
+			if self.name then
+				cur[self.name] = string
+			end
+			ctx.sink = nil
+			return
 		end
-		ctx.sink = nil
 	end
+
+	error("no match")
+
 end
 
 

@@ -9,19 +9,25 @@ local grammar = haka.grammar.record{
 	haka.grammar.field("word1", haka.grammar.token("[^ \r\n]+")),
 	haka.grammar.token(" "),
 	haka.grammar.field("word2", haka.grammar.token("[^\r\n]+")),
+	haka.grammar.token("[\r\n]*"),
 }:compile()
 
 haka.rule{
 	-- Intercept tcp packets
 	hook = haka.event('tcp-connection', 'receive_data'),
-	eval = function (flow, input)
-		local ctx = class('ctx'):new()
-		grammar:parseall(input:pos("begin"), ctx, nil)
-		if ctx.word1 then
-			print("word1= "..ctx.word1)
-		end
-		if ctx.word2 then
-			print("word2= "..ctx.word2)
+	eval = function (flow, input, direction)
+		if direction == 'up' then
+			local ctx = class('ctx'):new()
+			local iter = input:pos("begin")
+			if iter:available() > 0 then
+				grammar:parseall(iter, ctx, nil)
+				if ctx.word1 then
+					print("word1= "..ctx.word1)
+				end
+				if ctx.word2 then
+					print("word2= "..ctx.word2)
+				end
+			end
 		end
 	end
 }

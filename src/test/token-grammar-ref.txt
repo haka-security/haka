@@ -1,10 +1,11 @@
-debug tcp-connection: opening connection 127.0.0.1:59430 -> 127.0.0.1:2888
+debug tcp-connection: opening connection 127.0.0.1:53318 -> 127.0.0.1:2888
+debug pcre: growing PCRE workspace to 40 int
 word1= hello
-word2= world
-word1= header1:
-word2= lol
-word1= header2:
-word2= bar
-word1= header3:
-word2= foo
-debug tcp-connection: closing connection 127.0.0.1:59430 -> 127.0.0.1:2888
+word2= word
+word1= two
+word2= word
+word1= of
+word2= course
+word1= it
+word2= works
+debug tcp-connection: closing connection 127.0.0.1:53318 -> 127.0.0.1:2888

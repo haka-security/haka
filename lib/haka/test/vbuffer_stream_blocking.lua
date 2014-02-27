@@ -22,7 +22,7 @@ local function test_stream_blocking_advance()
 	local loop = 0
 
 	gen_stream(function (iter)
-		while not iter.isend do
+		while not iter.iseof do
 			count = count + iter:advance(10)
 			loop = loop+1
 		end

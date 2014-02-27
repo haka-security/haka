@@ -33,3 +33,4 @@ TEST_PCAP(core stats_on_exit CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/
 TEST_PCAP(core doc-alert CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/ref/alert-test.lua)
 TEST_UNIT_LUA(MODULE core NAME doc-regexp FILES ../../doc/ref/regexp.lua)
 TEST_PCAP(core token-grammar)
+TEST_PCAP(core token-grammar-coroutine)

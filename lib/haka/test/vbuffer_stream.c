@@ -146,15 +146,15 @@ START_TEST(test_eof)
 	}
 
 	vbuffer_begin(vbuffer_stream_data(&stream), &iter);
-	ck_assert(!vbuffer_iterator_isend(&iter));
+	ck_assert(!vbuffer_iterator_iseof(&iter));
 
 	vbuffer_iterator_advance(&iter, 1<<30);
 	ck_assert_int_eq(vbuffer_iterator_available(&iter), 0);
-	ck_assert(!vbuffer_iterator_isend(&iter));
+	ck_assert(!vbuffer_iterator_iseof(&iter));
 
 	vbuffer_stream_finish(&stream);
 
-	ck_assert(vbuffer_iterator_isend(&iter));
+	ck_assert(vbuffer_iterator_iseof(&iter));
 
 	for (i=0; i<NUM; ++i) {
 		struct vbuffer buffer;

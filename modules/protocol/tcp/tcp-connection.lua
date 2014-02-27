@@ -25,7 +25,7 @@ function tcp_connection_dissector:receive(pkt)
 					return pkt:drop()
 				end
 			end)
-	
+
 			if not pkt:continue() then
 				return
 			end
@@ -397,7 +397,7 @@ end
 
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
 	self:_send(direction)
-	
+
 	self.stream[direction]:seq(pkt)
 	self.stream[haka.dissector.other_direction(direction)]:ack(pkt)
 	pkt:send()
@@ -407,9 +407,11 @@ function tcp_connection_dissector.method:_send(direction)
 	local stream = self.stream[direction]
 	local other_stream = self.stream[haka.dissector.other_direction(direction)]
 
-	if not haka.pcall(haka.context.signal, haka.context, self,
-			tcp_connection_dissector.events.send_data,
-			stream.stream.current:sub('available'), direction) then
+	local sub = stream.stream.current:sub('available')
+
+	if sub and not haka.pcall(haka.context.signal, haka.context,
+			self, tcp_connection_dissector.events.send_data,
+			sub, direction) then
 		return self:drop()
 	end
 

@@ -1,0 +1,6 @@
+debug tcp-connection: opening connection 127.0.0.1:59430 -> 127.0.0.1:2888
+hello_world= hello world
+header1: lol
+header2: bar
+header3: foo
+debug tcp-connection: closing connection 127.0.0.1:59430 -> 127.0.0.1:2888
