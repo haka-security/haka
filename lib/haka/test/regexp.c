@@ -141,7 +141,7 @@ START_TEST(regexp_exec_should_match_when_string_match)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "exec expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "exec expected to match, but found ret = %d", ret);
 
 	// Finally
 	rem->release_regexp(re);
@@ -164,7 +164,7 @@ START_TEST(regexp_exec_should_not_match_when_string_does_not_match)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret == 0, "exec expected to not match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_NOMATCH, "exec expected to not match, but found ret = %d", ret);
 
 	// Finally
 	rem->release_regexp(re);
@@ -187,7 +187,7 @@ START_TEST(regexp_exec_should_return_results_on_match)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "exec expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "exec expected to match, but found ret = %d", ret);
 	ck_assert_msg(result.offset == 4, "exec expected to result with offset = 4, but found offset = %d", result.offset);
 	ck_assert_msg(result.size == 3, "exec expected to result with size = 3, but found size = %d", result.size);
 
@@ -211,7 +211,7 @@ START_TEST(regexp_exec_should_not_fail_without_results)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "exec expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "exec expected to match, but found ret = %d", ret);
 
 	// Finally
 	rem->release_regexp(re);
@@ -251,7 +251,7 @@ START_TEST(regexp_match_should_be_successful_when_string_match)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "match expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "match expected to match, but found ret = %d", ret);
 
 	// Finally
 	regexp_module_release(rem);
@@ -272,7 +272,7 @@ START_TEST(regexp_match_should_not_match_when_string_does_not_match)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret == 0, "match expected not to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_NOMATCH, "match expected not to match, but found ret = %d", ret);
 
 	// Finally
 	regexp_module_release(rem);
@@ -293,7 +293,7 @@ START_TEST(regexp_match_should_return_results_on_match)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "match expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "match expected to match, but found ret = %d", ret);
 	ck_assert_msg(result.offset == 4, "match expected to result with offset = 4, but found offset = %d", result.offset);
 	ck_assert_msg(result.size == 3, "match expected to result with size = 3, but found size = %d", result.size);
 
@@ -315,7 +315,7 @@ START_TEST(regexp_match_should_not_fail_without_results)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "match expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "match expected to match, but found ret = %d", ret);
 
 	// Finally
 	regexp_module_release(rem);
@@ -381,7 +381,7 @@ START_TEST(regexp_feed_should_match)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "feed expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "feed expected to match, but found ret = %d", ret);
 
 	// Finally
 	rem->free_regexp_sink(sink);
@@ -406,7 +406,7 @@ START_TEST(regexp_feed_should_match_accross_two_string)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "feed expected to match accross two string, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "feed expected to match accross two string, but found ret = %d", ret);
 
 	// Finally
 	rem->free_regexp_sink(sink);
@@ -426,11 +426,11 @@ START_TEST(regexp_feed_should_not_fail_if_no_match)
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "aaa", 3, true);
+	ret = rem->feed(sink, "ddd", 3, true);
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret == 0, "feed expected not to fail if no match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_NOMATCH, "feed expected not to fail if no match, but found ret = %d", ret);
 
 	// Finally
 	rem->free_regexp_sink(sink);
@@ -456,9 +456,33 @@ START_TEST(regexp_feed_should_return_results_on_match)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "feed expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "feed expected to match, but found ret = %d", ret);
 	ck_assert_msg(sink->result.offset == 4, "feed expected result with offset = 4, but found offset = %d", sink->result.offset);
 	ck_assert_msg(sink->result.size == 3, "feed expected result with size = 3, but found size = %d", sink->result.size);
+
+	// Finally
+	rem->free_regexp_sink(sink);
+	rem->release_regexp(re);
+	regexp_module_release(rem);
+}
+END_TEST
+
+START_TEST(regexp_feed_should_return_partial_on_partial_match)
+{
+	int ret;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct regexp *re = rem->compile("abc");
+	struct regexp_sink *sink = rem->create_sink(re);
+	clear_error();
+
+	// When
+	ret = rem->feed(sink, "a", 1, true);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret == REGEXP_PARTIAL, "feed expected to return REGEXP_PARTIAL on partial match, but found ret = %d", ret);
 
 	// Finally
 	rem->free_regexp_sink(sink);
@@ -507,7 +531,7 @@ START_TEST(regexp_vbexec_should_match_on_vbuffer)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "vbexec expected to match on vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "vbexec expected to match on vbuffer, but found ret = %d", ret);
 
 	// Finally
 	rem->release_regexp(re);
@@ -534,7 +558,7 @@ START_TEST(regexp_vbexec_should_match_on_multiple_vbuffer)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
 
 	// Finally
 	rem->release_regexp(re);
@@ -585,7 +609,7 @@ START_TEST(regexp_vbexec_should_return_results_on_match_on_single_vbuffer)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "vbexec expected to match on single vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "vbexec expected to match on single vbuffer, but found ret = %d", ret);
 	ck_assert_msg(result.offset == 4, "vbexec expected to result with offset = 4, but found offset = %d", result.offset);
 	ck_assert_msg(result.size == 3, "vbexec expected to result with size = 3, but found size = %d", result.size);
 
@@ -614,7 +638,7 @@ START_TEST(regexp_vbexec_should_return_results_on_match_on_multiple_vbuffer)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
 	ck_assert_msg(result.offset == 4, "vbexec expected to result with offset = 4, but found offset = %d", result.offset);
 	ck_assert_msg(result.size == 3, "vbexec expected to result with size = 3, but found size = %d", result.size);
 
@@ -642,7 +666,7 @@ START_TEST(regexp_vbexec_should_not_fail_without_results)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
 
 	// Finally
 	rem->release_regexp(re);
@@ -669,7 +693,7 @@ START_TEST(regexp_vbfeed_should_match_on_vbuffer)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "vbfeed expected to match on vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "vbfeed expected to match on vbuffer, but found ret = %d", ret);
 
 	// Finally
 	rem->free_regexp_sink(sink);
@@ -701,7 +725,7 @@ START_TEST(regexp_vbfeed_should_match_on_multiple_vbuffer)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "vbfeed expected to match on multiple vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "vbfeed expected to match on multiple vbuffer, but found ret = %d", ret);
 
 
 	// Finally
@@ -717,6 +741,35 @@ START_TEST(regexp_vbfeed_should_return_results_on_match)
 {
 }
 END_TEST
+
+START_TEST(regexp_vbfeed_should_return_partial_on_partial_match)
+{
+	int ret;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct regexp *re = rem->compile("abc");
+	struct regexp_sink *sink = rem->create_sink(re);
+	struct vbuffer vb;
+        struct vbuffer_sub sb;
+        some_vbuffer(&vb, &sb, "aaa", NULL);
+	clear_error();
+
+	// When
+	ret = rem->vbfeed(sink, &sb, true);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret == REGEXP_PARTIAL, "vbfeed expected to return REGEXP_PARTIAL on partial match, but found ret = %d", ret);
+
+	// Finally
+	rem->free_regexp_sink(sink);
+	rem->release_regexp(re);
+	vbuffer_release(&vb);
+	regexp_module_release(rem);
+}
+END_TEST
+
 
 START_TEST(regexp_vbmatch_should_match_on_vbuffer)
 {
@@ -735,7 +788,7 @@ START_TEST(regexp_vbmatch_should_match_on_vbuffer)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "match expected to match on vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "match expected to match on vbuffer, but found ret = %d", ret);
 
 	// Finally
 	vbuffer_release(&vb);
@@ -760,7 +813,7 @@ START_TEST(regexp_vbmatch_should_match_on_multiple_vbuffer)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "match expected to match on multiple vbuffer, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "match expected to match on multiple vbuffer, but found ret = %d", ret);
 
 	// Finally
 	vbuffer_release(&vb);
@@ -795,7 +848,7 @@ START_TEST(nonreg_regexp_should_not_match_after_start_of_line_if_pattern_start_w
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret == 0, "regexp expected to not match after start of line, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_NOMATCH, "regexp expected to not match after start of line, but found ret = %d", ret);
 
 	// Finally
 	vbuffer_release(&vb);
@@ -821,7 +874,7 @@ START_TEST(nonreg_regexp_should_match_end_of_line)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "regexp expected to match end of line, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "regexp expected to match end of line, but found ret = %d", ret);
 
 	// Finally
 	vbuffer_release(&vb);
@@ -847,7 +900,7 @@ START_TEST(nonreg_regexp_should_not_match_end_of_line_before_end)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret == 0, "regexp expected not to match end of line, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_NOMATCH, "regexp expected not to match end of line, but found ret = %d", ret);
 
 	// Finally
 	vbuffer_release(&vb);
@@ -873,7 +926,7 @@ START_TEST(nonreg_regexp_should_match_even_with_empty_string)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "regexp expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "regexp expected to match, but found ret = %d", ret);
 
 	// Finally
 	vbuffer_release(&vb);
@@ -899,7 +952,7 @@ START_TEST(nonreg_regexp_should_match_even_when_ending_with_empty_string)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "regexp expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "regexp expected to match, but found ret = %d", ret);
 
 	// Finally
 	vbuffer_release(&vb);
@@ -925,7 +978,7 @@ START_TEST(nonreg_regexp_should_match_even_with_nul_byte)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "regexp expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "regexp expected to match, but found ret = %d", ret);
 
 	// Finally
 	vbuffer_release(&vb);
@@ -951,11 +1004,40 @@ START_TEST(nonreg_regexp_should_match_even_with_a_partial_failed)
 
 	// Then
 	ck_check_error;
-	ck_assert_msg(ret > 0, "regexp expected to match, but found ret = %d", ret);
+	ck_assert_msg(ret == REGEXP_MATCH, "regexp expected to match, but found ret = %d", ret);
 
 	// Finally
 	vbuffer_release(&vb);
 	regexp_module_release(rem);
+}
+END_TEST
+
+START_TEST(nonreg_vbfeed_should_not_return_partial_after_start_of_line_if_pattern_start_with_circum)
+{
+	int ret;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	struct vbuffer vb;
+        struct vbuffer_sub sb;
+	struct regexp *re = rem->compile("^abc");
+	struct regexp_sink *sink = rem->create_sink(re);
+        some_vbuffer(&vb, &sb, "aaa", NULL);
+	clear_error();
+
+	// When
+	ret = rem->vbfeed(sink, &sb, true);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret == REGEXP_NOMATCH, "vbfeed expected to not match after start of line, but found ret = %d", ret);
+
+	// Finally
+	rem->free_regexp_sink(sink);
+	rem->release_regexp(re);
+	vbuffer_release(&vb);
+	regexp_module_release(rem);
+
 }
 END_TEST
 
@@ -994,6 +1076,7 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, regexp_feed_should_match_accross_two_string);
 	tcase_add_test(tcase, regexp_feed_should_not_fail_if_no_match);
 	tcase_add_test(tcase, regexp_feed_should_return_results_on_match);
+	tcase_add_test(tcase, regexp_feed_should_return_partial_on_partial_match);
 	suite_add_tcase(suite, tcase);
 
 	tcase = tcase_create("regexp_vbexec");
@@ -1016,6 +1099,7 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, regexp_vbfeed_should_match_on_vbuffer);
 	tcase_add_test(tcase, regexp_vbfeed_should_match_on_multiple_vbuffer);
 	tcase_add_test(tcase, regexp_vbfeed_should_return_results_on_match);
+	tcase_add_test(tcase, regexp_vbfeed_should_return_partial_on_partial_match);
 	suite_add_tcase(suite, tcase);
 
 	tcase = tcase_create("regexp_nonreg");
@@ -1026,6 +1110,7 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, nonreg_regexp_should_match_even_when_ending_with_empty_string);
 	tcase_add_test(tcase, nonreg_regexp_should_match_even_with_nul_byte);
 	tcase_add_test(tcase, nonreg_regexp_should_match_even_with_a_partial_failed);
+	tcase_add_test(tcase, nonreg_vbfeed_should_not_return_partial_after_start_of_line_if_pattern_start_with_circum);
 	suite_add_tcase(suite, tcase);
 
 	return suite;

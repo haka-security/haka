@@ -9,6 +9,11 @@
 #include <haka/thread.h>
 #include <haka/vbuffer.h>
 
+#define REGEXP_MATCH    1
+#define REGEXP_NOMATCH  0
+#define REGEXP_ERROR   -1
+#define REGEXP_PARTIAL -2
+
 struct regexp;
 struct regexp_sink;
 
