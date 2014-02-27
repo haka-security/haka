@@ -1,5 +1,4 @@
 debug tcp-connection: opening connection 127.0.0.1:53318 -> 127.0.0.1:2888
-debug pcre: growing PCRE workspace to 40 int
 word1= hello
 word2= word
 word1= two

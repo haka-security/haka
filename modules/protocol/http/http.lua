@@ -288,27 +288,16 @@ module.cookies.split = cookies_split
 
 
 --
--- HTTP dissector
---
-
-local http_dissector = haka.dissector.new{
-	type = haka.dissector.FlowDissector,
-	name = 'http'
-}
-
-http_dissector:register_event('request')
-http_dissector:register_event('response')
-
-http_dissector.property.connection = {
-	get = function (self)
-		self.connection = self.flow.connection
-		return self.connection
-	end
-}
-
---
 -- HTTP Grammar
 --
+
+local begin_grammar = haka.grammar.verify(function (self, ctx)
+	self._length = ctx.iter.meter
+end)
+
+local end_grammar = haka.grammar.verify(function (self, ctx)
+	self._length = ctx.iter.meter-self._length
+end)
 
 -- http separator tokens
 local WS = haka.grammar.token('[[:blank:]]+')
@@ -381,15 +370,39 @@ local headers = haka.grammar.record{
 
 -- http request
 local request = haka.grammar.record{
+	begin_grammar,
 	request_line,
-	headers
+	headers,
+	end_grammar
 }:compile()
 
 -- http response
 local response = haka.grammar.record{
+	begin_grammar,
 	response_line,
-	headers
+	headers,
+	end_grammar
 }:compile()
+
+
+--
+-- HTTP dissector
+--
+
+local http_dissector = haka.dissector.new{
+	type = haka.dissector.FlowDissector,
+	name = 'http'
+}
+
+http_dissector:register_event('request')
+http_dissector:register_event('response')
+
+http_dissector.property.connection = {
+	get = function (self)
+		self.connection = self.flow.connection
+		return self.connection
+	end
+}
 
 function http_dissector.method:__init(flow)
 	super(http_dissector).__init(self)
@@ -435,6 +448,80 @@ local function build_headers(result, headers, headers_order)
 	end
 end
 
+-- The comparison is broken in Lua 5.1, so we need to reimplement the
+-- string comparison
+local function string_compare(a, b)
+	if type(a) == "string" and type(b) == "string" then
+		local i = 1
+		local sa = #a
+		local sb = #b
+
+		while true do
+			if i > sa then
+				return false
+			elseif i > sb then
+				return true
+			end
+
+			if a:byte(i) < b:byte(i) then
+				return true
+			elseif a:byte(i) > b:byte(i) then
+				return false
+			end
+
+			i = i+1
+		end
+
+		return false
+	else
+		return a < b
+	end
+end
+
+local function dump(t, indent)
+	if not indent then indent = "" end
+
+	for n, v in sorted_pairs(t) do
+		if n ~= '__property' and n ~= '_validate' then
+			if type(v) == "table" then
+				print(indent, n)
+				dump(v, indent .. "  ")
+			elseif type(v) ~= "thread" and
+				type(v) ~= "userdata" and
+				type(v) ~= "function" then
+				print(indent, n, "=", v)
+			end
+		end
+	end
+end
+
+local function convert_headers(hdrs)
+	local headers = {}
+	local headers_order = {}
+	for _, header in ipairs(hdrs) do
+		if header.name then
+			headers[header.name] = header.value
+			table.insert(headers_order, header.name)
+		end
+	end
+	return headers, headers_order
+end
+
+local function convert_request(request)
+	request.version = string.format("HTTP/%s", request.version._num)
+	request.headers, request._headers_order = convert_headers(request.headers)
+	request.dump = dump
+	return request
+end
+
+local function convert_response(response)
+	response.version = string.format("HTTP/%s", response.version._num)
+	response.status = response.status._num
+	response.headers, response._headers_order = convert_headers(response.headers)
+	response.dump = dump
+	return response
+end
+
 local ctx_object = class('http_ctx')
 
 function http_dissector.method:receive(flow, iter, direction)
@@ -474,6 +561,8 @@ function http_dissector.method:receive(flow, iter, direction)
 				request:parseall(iter, self.request)
 				if not self:continue() then return end
 
+				self.request = convert_request(self.request)
+
 				if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events.request, self.request) then
 					self:drop()
 				end
@@ -497,6 +586,8 @@ function http_dissector.method:receive(flow, iter, direction)
 
 				response:parseall(iter, self.response)
 				if not self:continue() then return end
+
+				self.response = convert_response(self.response)
 
 				if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events.response, self.response) then
 					self:drop()

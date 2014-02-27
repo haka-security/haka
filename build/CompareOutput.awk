@@ -32,6 +32,10 @@ $0 ~ /^debug packet:/ {
 	next;
 }
 
+$0 ~ /^debug pcre:/ {
+	next;
+}
+
 $0 ~ /^debug state-machine:/ {
 	next;
 }

@@ -227,6 +227,7 @@ struct vbuffer_iterator_blocking {
 		%immutable;
 		struct vbuffer_iterator_lua *_iter { return &$self->super; }
 
+		size_t meter { return $self->super.meter; }
 		bool iseof { return vbuffer_iterator_iseof(&$self->super.super); }
 	}
 };

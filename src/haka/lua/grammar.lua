@@ -569,9 +569,8 @@ function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 
 	while true do
 		local sub = iter:sub('available')
-		if not sub then break end
 
-		local match, result = ctx.sink:feed(sub, false)
+		local match, result = ctx.sink:feed(sub or "", iter.iseof)
 		if not match and not ctx.sink:ispartial() then break end
 
 		if match then
@@ -583,6 +582,8 @@ function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 			ctx.sink = nil
 			return
 		end
+
+		if not sub then break end
 	end
 
 	error("no match")
