@@ -16,15 +16,6 @@
 %nodefaultctor;
 %nodefaultdtor;
 
-#ifdef HAKA_LUA52
-/* On Lua52, it is possible to use the lua_yieldk function to implements
- * blocking operation in C.
- * It is not activated for now to avoid differences between LuaJit and
- * standard Lua.
- */
-//#define USE_C_YIELD
-#endif
-
 %{
 
 struct vbuffer_iterator_lua {
@@ -34,49 +25,12 @@ struct vbuffer_iterator_lua {
 
 struct vbuffer_iterator_blocking {
 	struct vbuffer_iterator_lua super;
-
-#ifdef USE_C_YIELD
-	struct vbuffer_iterator     begin;
-	size_t                      size;
-	size_t                      remsize;
-	bool                        split;
-#endif
 };
-
-static bool vbuffer_iterator_lua__check_available(struct vbuffer_iterator_lua *iter, int size, int *OUTPUT)
-{
-	size_t available;
-	bool ret = vbuffer_iterator_check_available(&iter->super, size, &available);
-	*OUTPUT = available;
-	return ret;
-}
-
-static struct vbuffer_sub *vbuffer_iterator__sub(struct vbuffer_iterator_lua *iter, size_t size, bool split)
-{
-	size_t len;
-	struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
-
-	if (!sub) {
-		error(L"memory error");
-		return NULL;
-	}
-
-	len = vbuffer_iterator_sub(&iter->super, size, sub, split);
-	if (len == (size_t)-1) {
-		free(sub);
-		return NULL;
-	}
-
-	iter->meter += len;
-	vbuffer_sub_register(sub);
-
-	return sub;
-}
 
 %}
 
 %newobject vbuffer_iterator_lua::sub;
-%newobject vbuffer_iterator_lua::_copy;
+%newobject vbuffer_iterator_lua::copy;
 
 %rename(vbuffer_iterator) vbuffer_iterator_lua;
 struct vbuffer_iterator_lua {
@@ -87,29 +41,30 @@ struct vbuffer_iterator_lua {
 			free(&$self->super);
 		}
 
-		%rename(mark) _mark;
-		void _mark(bool readonly = false)
+		void mark(bool readonly = false)
 		{
 			vbuffer_iterator_mark(&$self->super, readonly);
 		}
 
-		%rename(unmark) _unmark;
-		void _unmark()
+		void unmark()
 		{
 			vbuffer_iterator_unmark(&$self->super);
 		}
 
-		%rename(advance) _advance;
-		int _advance(int size)
+		int advance(int size)
 		{
 			size_t len = vbuffer_iterator_advance(&$self->super, size);
-                        if (len != (size_t)-1) $self->meter += len;
+			if (len != (size_t)-1) $self->meter += len;
 			return len;
 		}
 
-		%rename(insert) _insert;
-		void _insert(struct vbuffer *data)
+		void insert(struct vbuffer *data)
 		{
+			if (!data) {
+				error(L"missing data parameter");
+				return;
+			}
+
 			if (!vbuffer_iterator_isinsertable(&$self->super, data)) {
 				error(L"circular buffer insertion");
 				return;
@@ -120,6 +75,11 @@ struct vbuffer_iterator_lua {
 
 		void restore(struct vbuffer *data)
 		{
+			if (!data) {
+				error(L"missing data parameter");
+				return;
+			}
+
 			if (!vbuffer_iterator_isinsertable(&$self->super, data)) {
 				error(L"circular buffer insertion");
 				return;
@@ -128,14 +88,12 @@ struct vbuffer_iterator_lua {
 			vbuffer_restore(&$self->super, data);
 		}
 
-		%rename(available) _available;
-		int _available()
+		int available()
 		{
 			return vbuffer_iterator_available(&$self->super);
 		}
 
-		%rename(copy) _copy;
-		struct vbuffer_iterator_lua *_copy()
+		struct vbuffer_iterator_lua *copy()
 		{
 			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
 			if (!iter) {
@@ -149,10 +107,35 @@ struct vbuffer_iterator_lua {
 			return iter;
 		}
 
-		%rename(check_available) _check_available;
-		bool _check_available(int size, int *OUTPUT);
+		bool check_available(int size, int *OUTPUT)
+		{
+			size_t available;
+			bool ret = vbuffer_iterator_check_available(&$self->super, size, &available);
+			*OUTPUT = available;
+			return ret;
+		}
 
-		struct vbuffer_sub *sub(int size, bool split = false) { return vbuffer_iterator__sub($self, size, split); }
+		struct vbuffer_sub *sub(int size, bool split = false)
+		{
+			size_t len;
+			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
+
+			if (!sub) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			len = vbuffer_iterator_sub(&$self->super, size == -1 ? ALL : size, sub, split);
+			if (len == (size_t)-1) {
+				free(sub);
+				return NULL;
+			}
+
+			$self->meter += len;
+			vbuffer_sub_register(sub);
+
+			return sub;
+		}
 
 		struct vbuffer_sub *sub(const char *mode, bool split = false)
 		{
@@ -163,7 +146,7 @@ struct vbuffer_iterator_lua {
 
 			if (strcmp(mode, "available") == 0 ||
 			    strcmp(mode, "all") == 0) {
-				return vbuffer_iterator__sub($self, ALL, split);
+				return vbuffer_iterator_lua_sub__SWIG_0($self, -1, split);
 			}
 			else {
 				error(L"unknown sub buffer mode: %s", mode);
@@ -184,6 +167,11 @@ struct vbuffer_iterator_lua {
 			$self->meter = iter->meter;
 		}
 
+		void move_to(struct vbuffer_iterator_blocking *iter)
+		{
+			vbuffer_iterator_lua_move_to__SWIG_0($self, &iter->super);
+		}
+
 		%immutable;
 		size_t meter { return $self->meter; }
 		bool isend { return vbuffer_iterator_isend(&$self->super); }
@@ -193,81 +181,8 @@ struct vbuffer_iterator_lua {
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator_lua);
 
 
-%{
-
-#ifdef USE_C_YIELD
-
-static int _advance_blocking_until(lua_State *L, struct vbuffer_iterator_blocking *self,
-		struct vbuffer_iterator_lua *update_iter, lua_CFunction cont)
-{
-	size_t adv;
-	struct vbuffer_iterator iter;
-
-	if (update_iter) {
-		vbuffer_iterator_clear(&self->super.super);
-		vbuffer_iterator_copy(&update_iter->super, &self->super.super);
-		vbuffer_iterator_register(&self->super.super);
-	}
-
-	vbuffer_iterator_copy(&self->super.super, &iter);
-
-	adv = vbuffer_iterator_advance(&self->super.super, self->remsize);
-	if (adv > 0 && !vbuffer_iterator_isvalid(&self->begin)) {
-		vbuffer_iterator_copy(&iter, &self->begin);
-		vbuffer_iterator_register(&self->begin);
-	}
-
-	self->remsize -= adv;
-
-	if (self->remsize > 0 && !vbuffer_iterator_isend(&self->super.super)) {
-		lua_pop(L, 1);
-		return lua_yieldk(L, 0, 0, cont);
-	}
-
-	return 0;
-}
-
-static int _advance_blocking(lua_State *L, struct vbuffer_iterator_blocking *self,
-		struct vbuffer_iterator_lua *update_iter, lua_CFunction cont)
-{
-	size_t adv;
-	struct vbuffer_iterator iter;
-
-	if (update_iter) {
-		vbuffer_iterator_clear(&self->super.super);
-		vbuffer_iterator_copy(&update_iter->super, &self->super.super);
-		vbuffer_iterator_register(&self->super.super);
-	}
-
-	vbuffer_iterator_copy(&self->super.super, &iter);
-
-	adv = vbuffer_iterator_advance(&self->super.super, self->remsize);
-	if (adv > 0 && !vbuffer_iterator_isvalid(&self->begin)) {
-		vbuffer_iterator_copy(&iter, &self->begin);
-		vbuffer_iterator_register(&self->begin);
-	}
-
-	if (adv == 0 && !vbuffer_iterator_isend(&self->super.super)) {
-		lua_pop(L, 1);
-		return lua_yieldk(L, 0, 0, cont);
-	}
-
-	self->remsize -= adv;
-	return 0;
-}
-
-static int _wrap_vbuffer_iterator_blocking__advance_blocking(lua_State* L);
-static int _wrap_vbuffer_iterator_blocking__sub_blocking(lua_State* L);
-static int _wrap_vbuffer_iterator_blocking__sub_available_blocking(lua_State* L);
-
-#endif
-
-%}
-
 %newobject vbuffer_iterator_blocking::sub;
-%newobject vbuffer_iterator_blocking::_sub_blocking;
-%newobject vbuffer_iterator_blocking::_sub_available_blocking;
-%newobject vbuffer_iterator_blocking::_copy;
+%newobject vbuffer_iterator_blocking::copy;
 
 struct vbuffer_iterator_blocking {
 	%extend {
@@ -279,9 +194,6 @@ struct vbuffer_iterator_blocking {
 				return NULL;
 			}
 
-#ifdef USE_C_YIELD
-			iter->begin = vbuffer_iterator_init;
-#endif
 			vbuffer_iterator_copy(&src->super, &iter->super.super);
 			vbuffer_iterator_register(&iter->super.super);
 			iter->super.meter = src->meter;
@@ -290,160 +202,18 @@ struct vbuffer_iterator_blocking {
 
 		~vbuffer_iterator_blocking()
 		{
-#ifdef USE_C_YIELD
-			vbuffer_iterator_clear(&$self->begin);
-#endif
 			vbuffer_iterator_clear(&$self->super.super);
 			free($self);
 		}
 
-		void mark(bool readonly = false) { vbuffer_iterator_mark(&$self->super.super, readonly); }
-		void unmark() { vbuffer_iterator_unmark(&$self->super.super); }
-		void insert(struct vbuffer *data) { vbuffer_iterator_insert(&$self->super.super, data); }
-		int  available() { return vbuffer_iterator_available(&$self->super.super); }
-		bool check_available(int size, int *OUTPUT) { vbuffer_iterator_lua__check_available(&$self->super, size, OUTPUT); }
+		void mark(bool readonly = false) { vbuffer_iterator_lua_mark(&$self->super, readonly); }
+		void unmark() { vbuffer_iterator_lua_unmark(&$self->super); }
+		void insert(struct vbuffer *data) { vbuffer_iterator_lua_insert(&$self->super, data); }
+		int  available() { return vbuffer_iterator_lua_available(&$self->super); }
+		struct vbuffer_iterator_lua *copy() { return vbuffer_iterator_lua_copy(&$self->super); }
+		void move_to(struct vbuffer_iterator_lua *iter) { return vbuffer_iterator_lua_move_to__SWIG_0(&$self->super, iter); }
+		void move_to(struct vbuffer_iterator_blocking *iter) { return vbuffer_iterator_lua_move_to__SWIG_1(&$self->super, iter); }
 
-		%rename(copy) _copy;
-		struct vbuffer_iterator_lua *_copy()
-		{
-			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
-			if (!iter) {
-				error(L"memory error");
-				return NULL;
-			}
-
-			vbuffer_iterator_copy(&$self->super.super, &iter->super);
-			vbuffer_iterator_register(&iter->super);
-			iter->meter = $self->super.meter;
-			return iter;
-		}
-
-		void move_to(struct vbuffer_iterator_lua *iter)
-		{
-			if (!iter) {
-				error(L"invalid source iterator");
-				return;
-			}
-
-			vbuffer_iterator_clear(&$self->super.super);
-			vbuffer_iterator_copy(&iter->super, &$self->super.super);
-			vbuffer_iterator_register(&$self->super.super);
-			$self->super.meter = iter->meter;
-		}
-
-#ifdef USE_C_YIELD
-		int  _advance_blocking(lua_State *L, struct vbuffer_iterator_lua *update_iter, bool *YIELD)
-		{
-			const int ret = _advance_blocking_until(L, $self, update_iter, _wrap_vbuffer_iterator_blocking__advance_blocking);
-			if (YIELD) *YIELD = (ret == -1);
-
-			vbuffer_iterator_clear(&$self->begin);
-			return $self->size - $self->remsize;
-		}
-
-		struct vbuffer_sub *_sub_blocking(lua_State *L, struct vbuffer_iterator_lua *update_iter, bool *YIELD)
-		{
-			const int ret = _advance_blocking_until(L, $self, update_iter, _wrap_vbuffer_iterator_blocking__sub_blocking);
-			if (YIELD) *YIELD = (ret == -1);
-
-			if (ret >= 0 && self->remsize < self->size) {
-				struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
-				if (!sub) {
-					error(L"memory error");
-					vbuffer_iterator_clear(&$self->begin);
-					return NULL;
-				}
-
-				if (self->split) {
-					vbuffer_iterator_split(&self->super.super);
-				}
-
-				if (!vbuffer_sub_create_between_position(sub, &self->begin, &self->super.super)) {
-					free(sub);
-					vbuffer_iterator_clear(&$self->begin);
-					return NULL;
-				}
-
-				vbuffer_sub_register(sub);
-				vbuffer_iterator_clear(&$self->begin);
-				return sub;
-			}
-
-			return NULL;
-		}
-
-		struct vbuffer_sub *_sub_available_blocking(lua_State *L, struct vbuffer_iterator_lua *update_iter, bool *YIELD)
-		{
-			const int ret = _advance_blocking(L, $self, update_iter, _wrap_vbuffer_iterator_blocking__sub_available_blocking);
-			if (YIELD) *YIELD = (ret == -1);
-
-			if (ret >= 0 && self->remsize < self->size) {
-				struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
-				if (!sub) {
-					error(L"memory error");
-					vbuffer_iterator_clear(&$self->begin);
-					return NULL;
-				}
-
-				if (self->split) {
-					vbuffer_iterator_split(&self->super.super);
-				}
-
-				if (!vbuffer_sub_create_between_position(sub, &self->begin, &self->super.super)) {
-					free(sub);
-					vbuffer_iterator_clear(&$self->begin);
-					return NULL;
-				}
-
-				vbuffer_sub_register(sub);
-				vbuffer_iterator_clear(&$self->begin);
-				return sub;
-			}
-
-			return NULL;
-		}
-
-		int  advance(lua_State *L, int size, bool *YIELD)
-		{
-			$self->size = size;
-			$self->remsize = size;
-			return vbuffer_iterator_blocking__advance_blocking($self, L, NULL, YIELD);
-		}
-
-		struct vbuffer_sub *sub(lua_State *L, int size, bool split = false, bool *YIELD)
-		{
-			$self->size = size;
-			$self->remsize = size;
-			$self->split = split;
-			return vbuffer_iterator_blocking__sub_blocking($self, L, NULL, YIELD);
-		}
-
-		struct vbuffer_sub *sub(lua_State *L, const char *mode, bool split = false, bool *YIELD)
-		{
-			if (!mode) {
-				error(L"missing mode parameter");
-				return NULL;
-			}
-
-			if (strcmp(mode, "all") == 0) {
-				$self->size = ALL;
-				$self->remsize = ALL;
-				$self->split = split;
-				return vbuffer_iterator_blocking__sub_blocking($self, L, NULL, YIELD);
-			}
-			else if (strcmp(mode, "available") == 0) {
-				$self->size = ALL;
-				$self->remsize = ALL;
-				$self->split = split;
-				return vbuffer_iterator_blocking__sub_available_blocking($self, L, NULL, YIELD);
-			}
-			else {
-				error(L"unknown sub buffer mode: %s", mode);
-				return NULL;
-			}
-		}
-
-#else
 		void _update_iter(struct vbuffer_iterator_lua *update_iter)
 		{
 			vbuffer_iterator_clear(&$self->super.super);
@@ -453,12 +223,125 @@ struct vbuffer_iterator_blocking {
 
 		%immutable;
 		struct vbuffer_iterator_lua *_iter { return &$self->super; }
-#endif
 
-		%immutable;
 		bool isend { return vbuffer_iterator_isend(&$self->super.super); }
 	}
 };
+
+%luacode {
+	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].check_available = function (self, size)
+		local ret, avail = self._iter:check_available(size)
+		if ret then return ret, avail end
+
+		local begin
+
+		local remsize = size
+		while true do
+			iter = self._iter:copy()
+			local adv = self._iter:advance(remsize)
+
+			if not begin and adv > 0 then
+				begin = iter
+			end
+
+			if self.isend then break end
+
+			remsize = remsize-adv
+			if remsize <= 0 then
+				break
+			end
+
+			local iter = coroutine.yield()
+			self:_update_iter(iter)
+		end
+
+		if begin then self:move_to(begin) end
+
+		if remsize <= 0 then return true, size
+		else return false, size-remsize end
+	end
+
+	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].advance = function (self, size_or_mode)
+		if size_or_mode == 'available' then
+			return self._iter:advance(-1)
+		else
+			local size
+			local available
+
+			if size_or_mode == 'all' then
+			else
+				size = tonumber(size_or_mode)
+			end
+
+			local remsize = size or -1
+			while true do
+				local adv = self._iter:advance(remsize)
+
+				if self.isend then break end
+
+				if available then
+					if adv > 0 then return adv end
+				else
+					if remsize >= 0 then remsize = remsize-adv end
+					if remsize == 0 then break end
+				end
+
+				local iter = coroutine.yield()
+				self:_update_iter(iter)
+			end
+
+			if size then return size-remsize
+			else return 0 end
+		end
+	end
+
+	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].sub = function (self, size_or_mode, split)
+		local size
+		local available = false
+
+		if size_or_mode == 'available' then
+			available = true
+		elseif size_or_mode == 'all' then
+		else
+			size = tonumber(size_or_mode)
+		end
+
+		if size == 0 then
+			return self._iter:sub(0)
+		end
+
+		local remsize = size or -1
+		local begin
+		local iter = self._iter:copy()
+
+		while true do
+			local adv = self._iter:advance(remsize)
+			if not begin and adv > 0 then begin = iter end
+
+			if self.isend then break end
+
+			if available then
+				if adv > 0 then break end
+			else
+				if remsize >= 0 then remsize = remsize-adv end
+				if remsize == 0 then break end
+			end
+
+			iter = coroutine.yield()
+			self:_update_iter(iter)
+		end
+
+		if begin then
+			if split then
+				self._iter:sub(0, true)
+			end
+
+			return haka.vbuffer_sub(begin, self._iter)
+		else
+			return nil
+		end
+	end
+}
 
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator_blocking);
 
@@ -876,99 +759,6 @@ struct vbuffer_stream {
 
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 
-#ifndef USE_C_YIELD
-%luacode {
-	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].wait = function (self)
-		while not self._iter.isend and
-		      not self._iter:check_available(1) do
-			local iter = coroutine.yield()
-			self:_update_iter(iter)
-		end
-		return not self._iter.isend
-	end
-
-	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].advance = function (self, size_or_mode)
-		if size_or_mode == 'available' then
-			return self._iter:advance(-1)
-		else
-			local size
-			local available
-
-			if size_or_mode == 'all' then
-			else
-				size = tonumber(size_or_mode)
-			end
-
-			local remsize = size or -1
-			while true do
-				local adv = self._iter:advance(remsize)
-
-				if self.isend then break end
-
-				if available then
-					if adv > 0 then return adv end
-				else
-					if remsize >= 0 then remsize = remsize-adv end
-					if remsize == 0 then break end
-				end
-
-				local iter = coroutine.yield()
-				self:_update_iter(iter)
-			end
-
-			if size then return size-remsize
-			else return 0 end
-		end
-	end
-
-	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].sub = function (self, size_or_mode, split)
-		local size
-		local available = false
-
-		if size_or_mode == 'available' then
-			available = true
-		elseif size_or_mode == 'all' then
-		else
-			size = tonumber(size_or_mode)
-		end
-
-		if size == 0 then
-			return self._iter:sub(0)
-		end
-
-		local remsize = size or -1
-		local begin
-		local iter = self._iter:copy()
-
-		while true do
-			local adv = self._iter:advance(remsize)
-			if not begin and adv > 0 then begin = iter end
-
-			if self.isend then break end
-
-			if available then
-				if adv > 0 then break end
-			else
-				if remsize >= 0 then remsize = remsize-adv end
-				if remsize == 0 then break end
-			end
-
-			iter = coroutine.yield()
-			self:_update_iter(iter)
-		end
-
-		if begin then
-			if split then
-				self._iter:sub(0, true)
-			end
-
-			return haka.vbuffer_sub(begin, self._iter)
-		else
-			return nil
-		end
-	end
-}
-#endif
 
 %luacode {
 	haka.vbuffer_stream_comanager = class('VbufferStreamCoManager')

@@ -557,7 +557,7 @@ function http_dissector.method:receive(flow, iter, direction)
 	local mark
 	
 	if direction == 'up' then
-		while iter:wait() do
+		while iter:check_available(1) do
 			if self._state == 'request' then
 				self.request = {}
 				self.response = nil
@@ -601,7 +601,7 @@ function http_dissector.method:receive(flow, iter, direction)
 			end
 		end
 	else
-		while iter:wait() do
+		while iter:check_available(1) do
 			if self._state == 'response' then
 				self.response = {}
 
