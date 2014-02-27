@@ -226,9 +226,6 @@ function grammar_dg.Entity.method:genproperty(obj, name, get, set)
 end
 
 function grammar_dg.Entity.method:parseall(input, ctx, init)
-	if swig_type(input) ~= "struct vbuffer_iterator_lua *|vbuffer_iterator_lua *" then
-		error("input is required to be a vbuffer_iterator_lua, got "..swig_type(input))
-	end
 	local ctx = grammar_dg.ParseContext:new(input, ctx, init)
 	return ctx:parse(self)
 end
