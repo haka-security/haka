@@ -291,122 +291,6 @@ module.cookies.split = cookies_split
 -- HTTP dissector
 --
 
-local function getchar(iter)
-	local sub
-	while true do
-		sub = iter:sub(1)
-		if not sub then return end
-		return str(sub:asnumber())
-	end
-end
-
-local function safe_string(str)
-	local len = #str
-	local sstr = {}
-
-	for i=1,len do
-		local b = str:byte(i)
-
-		if b >= 0x20 and b <= 0x7e then
-			sstr[i] = string.char(b)
-		else
-			sstr[i] = string.format('\\x%x', b)
-		end
-	end
-
-	return table.concat(sstr)
-end
-
-local function read_line(iter, http)
-	local line = ""
-	local char, c
-	local read = 0
-	while true do
-		char = getchar(iter)
-		if not char then
-			haka.alert{
-				description = string.format("invalid http line '%s'", safe_string(line)),
-				severity = 'low'
-			}
-			http:drop()
-			return
-		end
-
-		read = read+1
-
-		if char == '\r' then
-			c = getchar(iter)
-			if not c then
-				haka.alert{
-					description = string.format("invalid http line '%s'", safe_string(line .. char)),
-					severity = 'low'
-				}
-				http:drop()
-				return
-			end
-
-			read = read+1
-
-			if c == '\n' then
-				return line, read
-			else
-				line = line .. char
-				char = c
-			end
-		elseif char == '\n' then
-			return line, read
-		end
-
-		line = line .. char
-	end
-end
-
--- The comparison is broken in Lua 5.1, so we need to reimplement the
--- string comparison
-local function string_compare(a, b)
-	if type(a) == "string" and type(b) == "string" then
-		local i = 1
-		local sa = #a
-		local sb = #b
-
-		while true do
-			if i > sa then
-				return false
-			elseif i > sb then
-				return true
-			end
-
-			if a:byte(i) < b:byte(i) then
-				return true
-			elseif a:byte(i) > b:byte(i) then
-				return false
-			end
-
-			i = i+1
-		end
-
-		return false
-	else
-		return a < b
-	end
-end
-
-local function dump(t, indent)
-	if not indent then indent = "" end
-
-	for n, v in sorted_pairs(t) do
-		if type(v) == "table" then
-			print(indent, n)
-			dump(v, indent .. "  ")
-		elseif type(v) ~= "thread" and
-			type(v) ~= "userdata" and
-			type(v) ~= "function" then
-			print(indent, n, "=", v)
-		end
-	end
-end
-
-
 local http_dissector = haka.dissector.new{
 	type = haka.dissector.FlowDissector,
 	name = 'http'
@@ -421,6 +305,91 @@ http_dissector.property.connection = {
 		return self.connection
 	end
 }
+
+--
+-- HTTP Grammar
+--
+
+-- http separator tokens
+local WS = haka.grammar.token('[[:blank:]]+')
+local CRLF = haka.grammar.token('[%r]?%n')
+
+-- http request version
+local version = haka.grammar.record{
+	haka.grammar.token('HTTP/'),
+	haka.grammar.field('_num', haka.grammar.token('[0-9]+%.[0-9]+'))
+}:extra{
+	num = function (self)
+		return tonumber(self._num)
+	end
+}
+
+-- http response status code
+local status = haka.grammar.record{
+	haka.grammar.field('_num', haka.grammar.token('[0-9]{3}'))
+}:extra{
+	num = function (self)
+		return tonumber(self._num)
+	end
+}
+
+-- http request line
+local request_line = haka.grammar.record{
+	haka.grammar.field('method', haka.grammar.token('[^()<>@,;:%\\"/%[%]?={}[:blank:]]+')),
+	WS,
+	haka.grammar.field('uri', haka.grammar.token('[[:alnum:][:punct:]]+')),
+	WS,
+	haka.grammar.field('version', version),
+	CRLF
+}
+
+-- http reply line
+local response_line = haka.grammar.record{
+	haka.grammar.field('version', version),
+	WS,
+	haka.grammar.field('status', status),
+	WS,
+	haka.grammar.field('reason', haka.grammar.token('[^%r%n]+')),
+	CRLF
+}
+
+-- headers list
+local header = haka.grammar.record{
+	haka.grammar.field('name', haka.grammar.token('[^:[:blank:]]+')),
+	haka.grammar.token(':'),
+	WS,
+	haka.grammar.field('value', haka.grammar.token('[^%r%n]+')),
+	CRLF
+}
+
+local header_or_crlf = haka.grammar.branch(
+	{
+		header = header,
+		crlf = CRLF
+	},
+	function (self, ctx)
+		local la = ctx:lookahead()
+		if la == 0xa or la == 0xd then return 'crlf'
+		else return 'header' end
+	end
+)
+
+local headers = haka.grammar.record{
+	haka.grammar.field('headers', haka.grammar.array(header_or_crlf):
+		options{ untilcond = function (elem, ctx) return elem and not elem.name end })
+}
+
+-- http request
+local request = haka.grammar.record{
+	request_line,
+	headers
+}:compile()
+
+-- http response
+local response = haka.grammar.record{
+	response_line,
+	headers
+}:compile()
 
 function http_dissector.method:__init(flow)
 	super(http_dissector).__init(self)
@@ -466,102 +435,19 @@ local function build_headers(result, headers, headers_order)
 	end
 end
 
-local function parse_header(iter, http, data)
-	local total_len = 0
-
-	data.headers = {}
-	data._headers_order = {}
-
-	local line, len = read_line(iter, http)
-	if not line then return 0 end
-
-	total_len = total_len + len
-	while #line > 0 do
-		local name, value = line:match("([^%s]+):%s*(.+)")
-		if not name then
-			haka.alert{
-				description = string.format("invalid http header '%s'", safe_string(line)),
-				severity = 'low'
-			}
-			http:drop()
-			return 0
-		end
-
-		data.headers[name] = value
-		table.insert(data._headers_order, name)
-		line, len = read_line(iter, http)
-		if not line then return 0 end
-
-		total_len = total_len + len
-	end
-
-	return total_len
-end
-
-local function parse_request(iter, http, request)
-	local len, total_len
-
-	local line, len = read_line(iter, http)
-	if not line then return end
-
-	total_len = len
-	request.method, request.uri, request.version = line:match("([^%s]+) ([^%s]+) (.+)")
-	if not request.method then
-		haka.alert{
-			description = string.format("invalid http request '%s'", safe_string(line)),
-			severity = 'low'
-		}
-		http:drop()
-		return
-	end
-
-	total_len = total_len + parse_header(iter, http, request)
-
-	request._length = total_len
-
-	request.dump = dump
-
-	return true
-end
-
-local function parse_response(iter, http, response)
-	local len, total_len
-
-	local line, len = read_line(iter, http)
-	if not line then return 0 end
-
-	total_len = len
-
-	response.version, response.status, response.reason = line:match("([^%s]+) ([^%s]+) (.+)")
-	if not response.version then
-		haka.alert{
-			description = string.format("invalid http response '%s'", safe_string(line)),
-			severity = 'low'
-		}
-		http:drop()
-		return
-	end
-
-	total_len = total_len + parse_header(iter, http, response)
-
-	response._length = total_len
-
-	response.dump = dump
-
-	return true
-end
+local ctx_object = class('http_ctx')
 
 function http_dissector.method:receive(flow, iter, direction)
 	assert(flow == self.flow)
-	
+
 	local mark
-	
+
 	if direction == 'up' then
 		while iter:check_available(1) do
 			if self._state == 'request' then
-				self.request = {}
+				self.request = ctx_object:new()
 				self.response = nil
-				
+
 				self.request.split_uri = function (self)
 					if self._splitted_uri then
 						return self._splitted_uri
@@ -579,13 +465,13 @@ function http_dissector.method:receive(flow, iter, direction)
 						return self._cookies
 					end
 				end
-	
+
 				if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
 					mark = iter:copy()
 					mark:mark()
 				end
 
-				parse_request(iter, self, self.request)
+				request:parseall(iter, self.request)
 				if not self:continue() then return end
 
 				if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events.request, self.request) then
@@ -603,14 +489,13 @@ function http_dissector.method:receive(flow, iter, direction)
 	else
 		while iter:check_available(1) do
 			if self._state == 'response' then
-				self.response = {}
-
+				self.response = ctx_object:new()
 				if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
 					mark = iter:copy()
 					mark:mark()
 				end
-				
-				parse_response(iter, self, self.response)
+
+				response:parseall(iter, self.response)
 				if not self:continue() then return end
 
 				if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events.response, self.response) then
@@ -618,7 +503,7 @@ function http_dissector.method:receive(flow, iter, direction)
 				end
 
 				if not self:continue() then return end
-				
+
 				self:send(iter, mark, direction)
 				self._state = 'request'
 			else
@@ -669,7 +554,7 @@ function http_dissector.method:send(iter, mark, direction)
 
 		mark:unmark()
 		iter:move_to(mark)
-	
+
 		iter:sub(self.response._length, true):replace(haka.vbuffer(table.concat(response)))
 	end
 end
