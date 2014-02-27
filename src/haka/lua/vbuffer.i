@@ -173,6 +173,11 @@ struct vbuffer_iterator_lua {
 
 		void move_to(struct vbuffer_iterator_lua *iter)
 		{
+			if (!iter) {
+				error(L"invalid source iterator");
+				return;
+			}
+
 			vbuffer_iterator_clear(&$self->super);
 			vbuffer_iterator_copy(&iter->super, &$self->super);
 			vbuffer_iterator_register(&$self->super);
@@ -315,6 +320,11 @@ struct vbuffer_iterator_blocking {
 
 		void move_to(struct vbuffer_iterator_lua *iter)
 		{
+			if (!iter) {
+				error(L"invalid source iterator");
+				return;
+			}
+
 			vbuffer_iterator_clear(&$self->super.super);
 			vbuffer_iterator_copy(&iter->super, &$self->super.super);
 			vbuffer_iterator_register(&$self->super.super);
