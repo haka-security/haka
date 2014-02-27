@@ -20,7 +20,6 @@ interfaces = "eth0"
 #dump = yes
 #dump_input = "/tmp/input.pcap"
 #dump_output = "/tmp/output.pcap"
-#dump_drop = "/tmp/drop.pcap"
 
 [log]
 # Select the log module
