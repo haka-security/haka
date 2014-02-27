@@ -61,7 +61,7 @@ enum alert_node_type { HAKA_ALERT_NODE_ADDRESS, HAKA_ALERT_NODE_SERVICE };
 	} else {
 		$1 = 0;
 		lua_pushstring(L,"Expecting string array");
-		lua_error(L);
+		SWIG_fail;
 	}
 }
 

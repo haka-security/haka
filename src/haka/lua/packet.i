@@ -13,11 +13,9 @@
 #include <haka/packet_module.h>
 #include <haka/error.h>
 
-void lua_pushppacket(lua_State *L, struct packet *pkt)
+bool lua_pushppacket(lua_State *L, struct packet *pkt)
 {
-	if (!lua_object_push(L, pkt, &pkt->lua_object, SWIGTYPE_p_packet, 1)) {
-		lua_error(L);
-	}
+	return lua_object_push(L, pkt, &pkt->lua_object, SWIGTYPE_p_packet, 1);
 }
 
 %}

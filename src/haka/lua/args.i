@@ -16,7 +16,7 @@
 	} else {
 		$1 = 0; $2 = 0;
 		lua_pushstring(L,"Expecting argv array");
-		lua_error(L);
+		SWIG_fail;
 	}
 }
 
