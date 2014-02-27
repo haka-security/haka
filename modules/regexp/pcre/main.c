@@ -50,7 +50,6 @@ struct regexp_pcre {
 struct regexp_sink_pcre {
 	struct regexp_sink regexp_sink;
 	bool started;
-	int match;
 	size_t processed_length;
 	atomic_t wscount;
 	int *workspace;
@@ -214,7 +213,7 @@ static int vbexec(struct regexp *re, struct vbuffer_sub *vbuf, struct regexp_vbr
 
 	_vbpartial_exec(sink, vbuf, result, true);
 
-	ret = sink->match;
+	ret = sink->regexp_sink.match;
 	if (ret == REGEXP_PARTIAL) ret = REGEXP_NOMATCH;
 
 	_free_regexp_sink(sink);
@@ -244,7 +243,7 @@ static struct regexp_sink_pcre *_create_sink(struct regexp *_re)
 
 	sink->regexp_sink.regexp = _re;
 	sink->started = false;
-	sink->match = REGEXP_NOMATCH;
+	sink->regexp_sink.match = REGEXP_NOMATCH;
 	sink->processed_length = 0;
 	sink->wscount = re->wscount_max;
 	sink->workspace = calloc(sink->wscount, sizeof(int));
@@ -399,8 +398,8 @@ static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len
 	re = (struct regexp_pcre *)sink->regexp_sink.regexp;
 
 	/* If we already match don't bother with regexp again */
-	if (sink->match > 0)
-		return sink->match;
+	if (sink->regexp_sink.match > 0)
+		return sink->regexp_sink.match;
 
 try_again:
 	/* We use PCRE_PARTIAL_SOFT because we are only interested in full match */
@@ -409,7 +408,7 @@ try_again:
 	if (sink->started) options |= PCRE_NOTBOL;
 	/* restart dfa only on partial match
 	 * see pcreapi(3) */
-	if (sink->match == REGEXP_PARTIAL) options |= PCRE_DFA_RESTART;
+	if (sink->regexp_sink.match == REGEXP_PARTIAL) options |= PCRE_DFA_RESTART;
 	if (!eof) options |= PCRE_NOTEOL;
 
 	if (!sink->started) sink->started = true;
@@ -429,7 +428,7 @@ try_again:
 	if (ret >= 0) {
 		/* If no previous partial match
 		 * register start of match */
-		if (sink->match == REGEXP_NOMATCH) {
+		if (sink->regexp_sink.match == REGEXP_NOMATCH) {
 			if (vbresult) {
 				vbresult->offset = sink->processed_length + ovector[0];
 			}
@@ -437,30 +436,30 @@ try_again:
 		}
 		/* If first time we match
 		 * register end of match */
-		if (sink->match != REGEXP_MATCH) {
+		if (sink->regexp_sink.match != REGEXP_MATCH) {
 			if (vbresult) {
 				vbresult->size = sink->processed_length + ovector[1] - vbresult->offset;
 			}
 			sink->regexp_sink.result.size = sink->processed_length + ovector[1] - sink->regexp_sink.result.offset;
 		}
-		sink->match = REGEXP_MATCH;
+		sink->regexp_sink.match = REGEXP_MATCH;
 		sink->processed_length += len;
-		return sink->match;
+		return sink->regexp_sink.match;
 	}
 
 	switch (ret) {
 		case PCRE_ERROR_PARTIAL:
 			/* On first partial match
 			 * register start of match */
-			if (sink->match == REGEXP_NOMATCH) {
+			if (sink->regexp_sink.match == REGEXP_NOMATCH) {
 				if (vbresult) {
 					vbresult->offset = sink->processed_length + ovector[0];
 				}
 				sink->regexp_sink.result.offset = sink->processed_length + ovector[0];
 			}
-			sink->match = REGEXP_PARTIAL;
+			sink->regexp_sink.match = REGEXP_PARTIAL;
 			sink->processed_length += len;
-			return sink->match;
+			return sink->regexp_sink.match;
 		case PCRE_ERROR_NOMATCH:
 			/* pcre cannot see a new match when it failed a partial
 			 * we workaround this by running it again on current
@@ -468,17 +467,17 @@ try_again:
 			 * This leave the following case unhandled :
 			 * Try to match /aabc|abd/ on "aab", "d"
 			 */
-			if (sink->match == REGEXP_PARTIAL) {
-				sink->match = REGEXP_NOMATCH;
+			if (sink->regexp_sink.match == REGEXP_PARTIAL) {
+				sink->regexp_sink.match = REGEXP_NOMATCH;
 				goto try_again;
 			}
-			sink->match = REGEXP_NOMATCH;
+			sink->regexp_sink.match = REGEXP_NOMATCH;
 			sink->processed_length += len;
-			return sink->match;
+			return sink->regexp_sink.match;
 		default:
-			sink->match = REGEXP_ERROR;
+			sink->regexp_sink.match = REGEXP_ERROR;
 			error(L"PCRE internal error %d", ret);
-			return sink->match;
+			return sink->regexp_sink.match;
 	}
 
 error:
@@ -521,5 +520,5 @@ static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer_sub *vb
 
 	} while (pptr != NULL);
 
-	return sink->match;
+	return sink->regexp_sink.match;
 }

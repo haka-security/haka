@@ -66,6 +66,7 @@ struct regexp  {
 
 struct regexp_sink {
 	struct regexp *regexp;
+	int match;
 	struct regexp_result result;
 };
 

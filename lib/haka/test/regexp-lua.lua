@@ -186,6 +186,17 @@ function test_feed_should_return_nil_results_when_pattern_do_not_match ()
         assert(not result, "Matching pattern expected to return nil result but got result")
 end
 
+function test_feed_should_set_sink_to_partial ()
+        -- Given
+        local re = rem.re:compile("abc")
+        local sink = re:create_sink()
+        local ret, result = sink:feed("aaa", true)
+        -- When
+	local partial = sink:ispartial()
+        -- Then
+        assert(partial, "Partial matching pattern expected to set sink to partial result don't")
+end
+
 test_match_should_not_fail()
 test_match_should_be_successful()
 test_match_should_be_successful_using_new_escaping_char()
@@ -206,3 +217,4 @@ test_feed_should_not_fail()
 test_feed_should_match_accross_two_string()
 test_feed_should_return_results()
 test_feed_should_return_nil_results_when_pattern_do_not_match()
+test_feed_should_set_sink_to_partial()

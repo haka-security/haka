@@ -56,7 +56,7 @@ struct regexp_sink {
                                 struct regexp_result **OUTPUT) {
                         int ret = $self->regexp->module->feed($self, STRING, SIZE, eof);
 
-                        if (ret > 0) {
+                        if (ret == REGEXP_MATCH) {
                                 *OUTPUT = malloc(sizeof(struct regexp_result));
                                 if (!*OUTPUT)
                                         error(L"memory error");
@@ -65,14 +65,14 @@ struct regexp_sink {
                                 *OUTPUT = NULL;
                         }
 
-                        return ret;
+                        return (ret == REGEXP_MATCH);
                 }
 
                 bool feed(struct vbuffer_sub *vbuf, bool eof=false,
                                 struct regexp_result **OUTPUT) {
                         int ret = $self->regexp->module->vbfeed($self, vbuf, eof);
 
-                        if (ret > 0) {
+                        if (ret == REGEXP_MATCH) {
                                 *OUTPUT = malloc(sizeof(struct regexp_result));
                                 if (!*OUTPUT)
                                         error(L"memory error");
@@ -81,8 +81,12 @@ struct regexp_sink {
                                 *OUTPUT = NULL;
                         }
 
-                        return ret;
+                        return (ret == REGEXP_MATCH);
                 }
+
+		bool ispartial() {
+			return ($self->match == REGEXP_PARTIAL);
+		}
 
                 ~regexp_sink() {
                         $self->regexp->module->free_regexp_sink($self);
@@ -101,12 +105,12 @@ struct regexp {
 
                         int ret = $self->module->exec($self, STRING, SIZE, *OUTPUT);
 
-                        if (ret <= 0) {
+                        if (ret != REGEXP_MATCH) {
                                 free(*OUTPUT);
                                 *OUTPUT = NULL;
                         }
 
-                        return ret;
+                        return (ret == REGEXP_MATCH);
                 }
 
                 bool match(struct vbuffer_sub *vbuf,
@@ -117,12 +121,12 @@ struct regexp {
 
                         int ret = $self->module->vbexec($self, vbuf, *OUTPUT);
 
-                        if (ret <= 0) {
+                        if (ret != REGEXP_MATCH) {
                                 free(*OUTPUT);
                                 *OUTPUT = NULL;
                         }
 
-                        return ret;
+                        return (ret == REGEXP_MATCH);
                 }
 
                 struct regexp_sink *create_sink() {
@@ -148,12 +152,12 @@ struct regexp_module {
                         int ret = $self->match(esc_regexp, STRING, SIZE, *OUTPUT);
                         free(esc_regexp);
 
-                        if (ret <= 0) {
+                        if (ret != REGEXP_MATCH) {
                                 free(*OUTPUT);
                                 *OUTPUT = NULL;
                         }
 
-                        return ret;
+                        return (ret == REGEXP_MATCH);
                 }
 
                 bool match(const char *pattern, struct vbuffer_sub *vbuf,
@@ -171,7 +175,7 @@ struct regexp_module {
                                 *OUTPUT = NULL;
                         }
 
-                        return ret;
+                        return (ret == REGEXP_MATCH);
                 }
 
                 struct regexp *compile(const char *pattern) {
