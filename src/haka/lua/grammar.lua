@@ -64,9 +64,14 @@ end
 
 function grammar_dg.ParseContext.method:lookahead()
 	local iter = self.iter:copy()
-	local la = self.iter:sub(1):asnumber()
-	self:update(iter)
-	return la
+	local sub = self.iter:sub(1)
+	if sub then
+		local la = sub:asnumber()
+		self:update(iter)
+		return la
+	else
+		return -1
+	end
 end
 
 function grammar_dg.ParseContext.method:parse(entity)
