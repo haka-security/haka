@@ -51,6 +51,9 @@ ipv4network ipv4_network_from_string(const char *string)
 
 	ipv4network netaddr;
 	netaddr.net = ipv4_addr_from_string(tmp);
+	if (check_error()) {
+		return ipv4_network_zero;
+	}
 
 	if ((sscanf(string + slash_index, "/%hhu", &netaddr.mask) != 1) ||
 		(netaddr.mask > 32 || netaddr.mask < 0)) {
