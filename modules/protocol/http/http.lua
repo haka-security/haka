@@ -558,7 +558,16 @@ function http_dissector.method:receive(flow, iter, direction)
 					mark:mark()
 				end
 
-				request:parseall(iter, self.request)
+				local err
+				self.request, err = request:parseall(iter, self.request)
+				if err then
+					haka.alert{
+						description = err:__tostring(),
+						severity = 'low'
+					}
+					self:drop()
+					return
+				end
 				if not self:continue() then return end
 
 				self.request = convert_request(self.request)
@@ -584,7 +593,16 @@ function http_dissector.method:receive(flow, iter, direction)
 					mark:mark()
 				end
 
-				response:parseall(iter, self.response)
+				local err
+				self.response, err = response:parseall(iter, self.response)
+				if err then
+					haka.alert{
+						description = err.__tostring(),
+						severity = 'low'
+					}
+					self:drop()
+					return
+				end
 				if not self:continue() then return end
 
 				self.response = convert_response(self.response)

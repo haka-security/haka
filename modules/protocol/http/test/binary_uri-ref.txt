@@ -1,16 +1,7 @@
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 127.0.0.1:42072 -> 127.0.0.1:80
-HTTP REQUEST
- _headers_order
-   1 = Host
- _length = 46
- headers
-   Host = 127.0.0.1
- method = GET
- uri = /Ž™ÿ
- version = HTTP/1.1
 info alert: id = <>
 	severity = low
-	description = invalid http header '<html><head>'
+	description = Parse error at byte 5 : pattern /^(?:[[:blank:]]+)/ doesn't match against `\x4\x8e\x99\xff`
 debug tcp-connection: dropping connection 127.0.0.1:42072 -> 127.0.0.1:80
 debug tcp-connection: closing connection 127.0.0.1:42072 -> 127.0.0.1:80

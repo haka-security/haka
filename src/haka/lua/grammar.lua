@@ -76,10 +76,11 @@ end
 
 function grammar_dg.ParseContext.method:parse(entity)
 	local iter = entity
+	local err
 	while iter do
-		iter = iter:next(self)
+		iter, err = iter:next(self)
 	end
-	return self._ctxs[1]
+	return self._ctxs[1], err
 end
 
 function grammar_dg.ParseContext.method:pop()
@@ -148,8 +149,12 @@ function grammar_dg.Entity.method:__init()
 end
 
 function grammar_dg.Entity.method:next(ctx)
-	self:apply(ctx)
-	return self._next
+	local err = self:apply(ctx)
+	if err then
+		return nil, err
+	else
+		return self._next, nil
+	end
 end
 
 function grammar_dg.Entity.method:_lasts(lasts, set)
@@ -383,7 +388,7 @@ function grammar_dg.Error.method:__init(msg)
 end
 
 function grammar_dg.Error.method:apply()
-	error(self.msg)
+	return haka.grammar.ParseError:new(self, nil, self.msg)
 end
 
 grammar_dg.Check = class('DGCheck', grammar_dg.Control)
@@ -430,7 +435,7 @@ end
 grammar_dg.Primitive = class('DGPrimitive', grammar_dg.Entity)
 
 function grammar_dg.Primitive.method:apply(ctx)
-	self:parse(ctx.current, ctx.current_init, ctx.iter, ctx)
+	return self:parse(ctx.current, ctx.current_init, ctx.iter, ctx)
 end
 
 grammar_dg.Number = class('DGNumber', grammar_dg.Primitive)
@@ -518,7 +523,7 @@ end
 
 function grammar_dg.Bytes.method:parse(cur, init, input, ctx)
 	if ctx._bitoffset ~= 0 then
-		error("byte primitive requires aligned bits")
+		return haka.grammar.ParseError:new(self, input, "byte primitive requires aligned bits")
 	end
 
 	local sub
@@ -526,7 +531,7 @@ function grammar_dg.Bytes.method:parse(cur, init, input, ctx)
 	local size = self.size(cur, ctx)
 	if size then
 		if size < 0 then
-			error("byte count must not be negative, got "..size)
+			return haka.grammar.ParsError:new(self, input, "byte count must not be negative, got "..size)
 		end
 		sub = input:sub(size)
 	else
@@ -554,8 +559,9 @@ end
 
 grammar_dg.Token = class('DGToken', grammar_dg.Primitive)
 
-function grammar_dg.Token.method:__init(re, name)
+function grammar_dg.Token.method:__init(pattern, re, name)
 	super(grammar_dg.Token).__init(self)
+	self.pattern = pattern
 	self.re = re
 	self.name = name
 end
@@ -586,7 +592,19 @@ function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 		if not sub then break end
 	end
 
-	error("no match")
+	-- No match found return an error
+	local line = begin:copy():sub('available')
+	if line then
+		line = safe_string(line:asstring())
+	else
+		line = ""
+	end
+
+	if line:len() > 100 then
+		line = line:sub(0, 100).."..."
+	end
+
+	return haka.grammar.ParseError:new(self, begin:copy(), "pattern /"..self.pattern.."/ doesn't match against `"..line.."`")
 
 end
 
@@ -899,7 +917,7 @@ end
 
 function grammar.Token.method:compile()
 	local re = rem.re:compile(self.pattern)
-	return grammar_dg.Token:new(re, self.named)
+	return grammar_dg.Token:new(self.pattern, re, self.named)
 end
 
 grammar.Verify = class('Verify', grammar.Entity)
@@ -990,5 +1008,27 @@ function grammar.new()
 	return {}
 end
 
+--
+-- Parsing Error
+--
+
+grammar.ParseError = class("ParseError")
+
+function grammar.ParseError.method:__init(entity, iterator, description)
+	self.entity = entity
+	self.iterator = iterator
+	self.description = description
+end
+
+function grammar.ParseError.method:__tostring()
+	local string = "Parse error"
+	if self.entity.name then
+		string = string.." in entity `"..self.entity.name.."`"
+	end
+	string = string.." at byte "..self.iterator.meter
+	string = string.." : "..self.description
+
+	return string
+end
 
 haka.grammar = grammar
