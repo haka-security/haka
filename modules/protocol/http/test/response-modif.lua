@@ -20,9 +20,14 @@ haka.rule {
 		print("HTTP RESPONSE")
 		http.response:dump()
 
+		-- Modify a part of the response
+		http.response.version = "HTTP/2.0"
+		-- Remove a header
 		http.response.headers["Server"] = nil
+		-- Add a header
 		http.response.headers["Haka"] = "Done"
-
+		-- Modify a header
+		http.response.headers["Date"] = "Sat, 34 Jun 2048 15:14:20 GMT"
 		print("HTTP MODIFIED RESPONSE")
 		http.response:dump()
 	end

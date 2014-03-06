@@ -26,11 +26,10 @@ HTTP MODIFIED REQUEST
    Accept = */*
    Connection = Keep-Alive
    Haka = Done
-   Host = 10.2.104.129
-   User-Agent = Haka
+   Host = haka.powered.tld
  method = GET
  uri = /twiki/bin/view/
- version = HTTP/1.1
+ version = HTTP/2.0
 HTTP RESPONSE
  _headers_order
    1 = Date

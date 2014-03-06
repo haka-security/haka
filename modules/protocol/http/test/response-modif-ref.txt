@@ -46,11 +46,11 @@ HTTP MODIFIED RESPONSE
  headers
    Connection = Keep-Alive
    Content-Type = text/html; charset=ISO-8859-1
-   Date = Fri, 25 Oct 2013 14:18:57 GMT
+   Date = Sat, 34 Jun 2048 15:14:20 GMT
    Haka = Done
    Keep-Alive = timeout=15, max=100
    Transfer-Encoding = chunked
  reason = OK
  status = 200
- version = HTTP/1.1
+ version = HTTP/2.0
 debug tcp-connection: closing connection 192.168.10.10:56353 -> 192.168.20.1:80

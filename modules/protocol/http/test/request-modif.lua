@@ -11,8 +11,13 @@ haka.rule {
 	eval = function (http, request)
 		print("HTTP REQUEST")
 		request:dump()
-
-		request.headers["User-Agent"] = "Haka"
+		-- We change a part of the request
+		request.version = "HTTP/2.0"
+		-- We change an existing header
+		request.headers["Host"] = "haka.powered.tld"
+		-- We destroy one
+		request.headers["User-Agent"] = nil
+		-- and we create a new one
 		request.headers["Haka"] = "Done"
 
 		print("HTTP MODIFIED REQUEST")
