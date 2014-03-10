@@ -39,7 +39,7 @@ function events.EventConnections.method:signal(emitter, event, ...)
 			end
 		end
 	end
-	
+
 	self:_done()
 	return true
 end

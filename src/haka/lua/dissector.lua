@@ -61,7 +61,7 @@ end
 
 
 --
--- Packet base dissector
+-- Packet based dissector
 --
 
 dissector.PacketDissector = class('PacketDissector', dissector.Dissector)
@@ -166,7 +166,7 @@ end
 
 
 --
--- Flow base dissector
+-- Flow based dissector
 --
 
 dissector.FlowDissector = class('FlowDissector', dissector.Dissector)

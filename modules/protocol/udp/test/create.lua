@@ -17,15 +17,15 @@ haka.rule {
 				error("loop detected")
 			end
 			counter = counter-1
-			
+
 			local npkt = haka.dissector.get('raw'):create()
 			npkt = haka.dissector.get('ipv4'):create(npkt)
 			npkt.src = ipv4.addr(192, 168, 0, 1)
 			npkt.dst = ipv4.addr("192.168.0.2")
-	
+
 			npkt = haka.dissector.get('udp'):create(npkt,
 				{ srcport = 3333, dstport = 4444 })
-	
+
 			npkt:inject()
 		end
 	end

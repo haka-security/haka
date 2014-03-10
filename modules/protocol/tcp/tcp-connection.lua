@@ -351,11 +351,11 @@ function tcp_connection_dissector.method:get_comanager(direction)
 	if not self.costream then
 		self.costream = {}
 	end
-	
+
 	if not self.costream[direction] then
 		self.costream[direction] = haka.vbuffer_stream_comanager:new(self.stream[direction].stream)
 	end
-	
+
 	return self.costream[direction]
 end
 

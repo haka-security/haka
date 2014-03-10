@@ -21,7 +21,7 @@ haka.rule {
 				flow.connection.srcip, flow.connection.srcport,
 				flow.connection.dstip, flow.connection.dstport,
 				direction, #sub)
-			
+
 			table.insert(data, sub:asstring())
 		end
 

@@ -245,10 +245,6 @@ Iterator
         ``true`` if the iterator is at the end of buffer and no more data can
         be available even later in case of a stream.
 
-    .. data:: iseof
-
-        ``true`` if the iterator is at the end of buffer.
-
 
 Stream
 ------

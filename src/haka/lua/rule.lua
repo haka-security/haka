@@ -21,7 +21,7 @@ function haka.rule(r)
 	assert(r.hook, "not hook defined for rule")
 	assert(isa(r.hook, haka.events.Event), "rule hook must be an event")
 	assert(type(r.eval) == 'function', "rule eval function expected")
-	
+
 	local options = {}
 	if r.coroutine then options.coroutine = true end
 
