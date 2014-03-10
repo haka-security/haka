@@ -203,8 +203,8 @@ local function uri_split(uri)
 	if query and query ~= '' then
 		splitted_uri.query = query
 		local args = {}
-		string.gsub(splitted_uri.query, '([^=&]+)=([^&?]*)&?',
-		    function(p, q) args[p] = q return '' end)
+		string.gsub(splitted_uri.query, '([^=&]+)(=?([^&?]*))&?',
+		    function(p, q, r) args[p] = r or true return '' end)
 		splitted_uri.args = args
 	end
 
@@ -273,7 +273,7 @@ end
 local function cookies_split(cookie_line)
 	local cookies = {}
 	if cookie_line then
-		string.gsub(cookie_line, '([^=;]+)=([^;?]*);?',
+		string.gsub(cookie_line, '([^=;]+)=([^;]*);?',
 		    function(p, q) cookies[p] = q return '' end)
 	end
 	setmetatable(cookies, mt_cookie)
@@ -303,7 +303,7 @@ end)
 local WS = haka.grammar.token('[[:blank:]]+')
 local CRLF = haka.grammar.token('[%r]?%n')
 
--- http request version
+-- http request/response version
 local version = haka.grammar.record{
 	haka.grammar.token('HTTP/'),
 	haka.grammar.field('_num', haka.grammar.token('[0-9]+%.[0-9]+'))
@@ -448,36 +448,6 @@ local function build_headers(result, headers, headers_order)
 	end
 end
 
--- The comparison is broken in Lua 5.1, so we need to reimplement the
--- string comparison
-local function string_compare(a, b)
-	if type(a) == "string" and type(b) == "string" then
-		local i = 1
-		local sa = #a
-		local sb = #b
-
-		while true do
-			if i > sa then
-				return false
-			elseif i > sb then
-				return true
-			end
-
-			if a:byte(i) < b:byte(i) then
-				return true
-			elseif a:byte(i) > b:byte(i) then
-				return false
-			end
-
-			i = i+1
-		end
-
-		return false
-	else
-		return a < b
-	end
-end
-
 local function dump(t, indent)
 	if not indent then indent = "" end
 
@@ -588,6 +558,14 @@ function http_dissector.method:receive(flow, iter, direction)
 		while iter:check_available(1) do
 			if self._state == 'response' then
 				self.response = ctx_object:new()
+				self.response.split_cookies = function (self)
+					if self._cookies then
+						return self._cookies
+					else
+						self._cookies = cookies_split(self.headers['Set-Cookie'])
+						return self._cookies
+					end
+				end
 				if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
 					mark = iter:copy()
 					mark:mark()
