@@ -158,7 +158,7 @@ struct vbuffer_data_ops vbuffer_data_ctl_mark_ops = {
 	get:     vbuffer_data_ctl_get
 };
 
-struct vbuffer_data_ctl_mark *vbuffer_data_ctl_mark()
+struct vbuffer_data_ctl_mark *vbuffer_data_ctl_mark(bool readonly)
 {
 	struct vbuffer_data_ctl_mark *buf = malloc(sizeof(struct vbuffer_data_ctl_mark));
 	if (!buf) {
@@ -168,5 +168,6 @@ struct vbuffer_data_ctl_mark *vbuffer_data_ctl_mark()
 
 	buf->super.super.ops = &vbuffer_data_ctl_mark_ops;
 	atomic_set(&buf->super.ref, 0);
+	buf->readonly = readonly;
 	return buf;
 }

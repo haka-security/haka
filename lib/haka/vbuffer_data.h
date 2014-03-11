@@ -48,9 +48,10 @@ extern struct vbuffer_data_ops vbuffer_data_ctl_mark_ops;
 
 struct vbuffer_data_ctl_mark {
 	struct vbuffer_data_ctl      super;
+	bool                         readonly:1;
 };
 
-struct vbuffer_data_ctl_mark   *vbuffer_data_ctl_mark();
+struct vbuffer_data_ctl_mark   *vbuffer_data_ctl_mark(bool readonly);
 
 #define vbuffer_data_cast(data, type)   ((data) ? ((data)->ops == &type ## _ops ? (struct type*)(data) : NULL) : NULL)
 

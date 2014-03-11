@@ -850,7 +850,7 @@ bool vbuffer_iterator_mark(struct vbuffer_iterator *position, bool readonly)
 	insert = _vbuffer_iterator_split(position, false);
 	if (!insert) return false;
 
-	mark = vbuffer_data_ctl_mark();
+	mark = vbuffer_data_ctl_mark(readonly);
 	if (!mark) {
 		return false;
 	}
