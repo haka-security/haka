@@ -288,15 +288,203 @@ module.cookies.split = cookies_split
 
 
 --
+-- HTTP dissector
+--
+
+local http_dissector = haka.dissector.new{
+	type = haka.dissector.FlowDissector,
+	name = 'http'
+}
+
+http_dissector:register_event('request')
+http_dissector:register_event('response')
+http_dissector:register_event('request_data', nil, haka.dissector.FlowDissector.stream_wrapper)
+http_dissector:register_event('response_data', nil, haka.dissector.FlowDissector.stream_wrapper)
+
+http_dissector.property.connection = {
+	get = function (self)
+		self.connection = self.flow.connection
+		return self.connection
+	end
+}
+
+function http_dissector.method:__init(flow)
+	super(http_dissector).__init(self)
+	self.flow = flow
+	if flow then
+		self.connection = flow.connection
+	end
+	self._state = 'request'
+end
+
+function http_dissector.method:continue()
+	return self.flow ~= nil
+end
+
+function http_dissector.method:drop()
+	self.flow:drop()
+	self.flow = nil
+end
+
+function http_dissector.method:reset()
+	self.flow:reset()
+	self.flow = nil
+end
+
+function http_dissector.method:push_data(current, data, last, signal)
+	if not current.data then
+		current.data = haka.vbuffer_sub_stream()
+	end
+
+	current.data:push(data)
+	if last then current.data:finish() end
+
+	if not haka.pcall(haka.context.signal, haka.context, self,
+			signal, current.data) then
+		self:drop()
+		return true
+	end
+
+	current.data:pop()
+end
+
+local function convert_headers(hdrs)
+	local headers = {}
+	local headers_order = {}
+	for _, header in ipairs(hdrs) do
+		if header.name then
+			headers[header.name] = header.value
+			table.insert(headers_order, header.name)
+		end
+	end
+	return headers, headers_order
+end
+
+local convert = {}
+
+local function dump(t, indent)
+	if not indent then indent = "" end
+
+	for n, v in sorted_pairs(t) do
+		if n ~= '__property' and n ~= '_validate' then
+			if type(v) == "table" then
+				print(indent, n)
+				dump(v, indent .. "  ")
+			elseif type(v) ~= "thread" and
+				type(v) ~= "userdata" and
+				type(v) ~= "function" then
+				print(indent, n, "=", v)
+			end
+		end
+	end
+end
+
+function convert.request(request)
+	request.version = string.format("HTTP/%s", request.version._num)
+	request.headers, request._headers_order = convert_headers(request.headers)
+	request.dump = dump
+	return request
+end
+
+function convert.response(response)
+	response.version = string.format("HTTP/%s", response.version._num)
+	response.status = response.status._num
+	response.headers, response._headers_order = convert_headers(response.headers)
+	response.dump = dump
+	return response
+end
+
+local function build_headers(result, headers, headers_order)
+	for _, name in pairs(headers_order) do
+		local value = headers[name]
+		if value then
+			table.insert(result, name)
+			table.insert(result, ": ")
+			table.insert(result, value)
+			table.insert(result, "\r\n")
+		end
+	end
+	local headers_copy = dict(headers_order)
+	for name, value in sorted_pairs(headers) do
+		if value and not contains(headers_copy, name) then
+			table.insert(result, name)
+			table.insert(result, ": ")
+			table.insert(result, value)
+			table.insert(result, "\r\n")
+		end
+	end
+end
+
+function http_dissector.method:send(iter, mark)
+	mark:unmark()
+	local len = iter.meter - mark.meter
+
+	if self._state == 'request' then
+		if haka.packet.mode() == haka.packet.PASSTHROUGH then
+			return
+		end
+
+		local request = {}
+		table.insert(request, self.request.method)
+		table.insert(request, " ")
+		table.insert(request, self.request.uri)
+		table.insert(request, " ")
+		table.insert(request, self.request.version)
+		table.insert(request, "\r\n")
+		build_headers(request, self.request.headers, self.request._headers_order)
+		table.insert(request, "\r\n")
+
+		iter:move_to(mark)
+		iter:sub(len, true):replace(haka.vbuffer(table.concat(request)))
+	else
+		if self.request.method == 'CONNECT' then
+			self._state = 'connect' -- We should not expect a request nor response anymore
+		end
+
+		if haka.packet.mode() == haka.packet.PASSTHROUGH then
+			return
+		end
+
+		local response = {}
+		table.insert(response, self.response.version)
+		table.insert(response, " ")
+		table.insert(response, self.response.status)
+		table.insert(response, " ")
+		table.insert(response, self.response.reason)
+		table.insert(response, "\r\n")
+		build_headers(response, self.response.headers, self.response._headers_order)
+		table.insert(response, "\r\n")
+
+		iter:move_to(mark)
+		iter:sub(len, true):replace(haka.vbuffer(table.concat(response)))
+	end
+end
+
+function http_dissector.method:trigger_event(ctx, iter, mark)
+	local type = self._state
+	local converted = convert[type](ctx)
+	ctx.http = nil
+
+	if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events[type], converted) then
+		self:drop()
+	end
+
+	if not self:continue() then
+		return true
+	end
+
+	self:send(iter, mark)
+	ctx.http = self
+end
+
+
+--
 -- HTTP Grammar
 --
 
-local begin_grammar = haka.grammar.verify(function (self, ctx)
-	self._length = ctx.iter.meter
-end)
-
-local end_grammar = haka.grammar.verify(function (self, ctx)
-	self._length = ctx.iter.meter-self._length
+local begin_grammar = haka.grammar.execute(function (self, ctx)
+	ctx.mark = ctx.iter:copy()
+	ctx.mark:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
 end)
 
 -- http separator tokens
@@ -350,6 +538,13 @@ local header = haka.grammar.record{
 	haka.grammar.field('value', haka.grammar.token('[^%r%n]+')),
 	CRLF
 }
+:extra{
+	function (self, ctx)
+		if self.name:lower() == 'content-length' then
+			ctx.content_length = tonumber(self.value)
+		end
+	end
+}
 
 local header_or_crlf = haka.grammar.branch(
 	{
@@ -363,134 +558,40 @@ local header_or_crlf = haka.grammar.branch(
 	end
 )
 
-local headers = haka.grammar.record{
-	haka.grammar.field('headers', haka.grammar.array(header_or_crlf):
-		options{ untilcond = function (elem, ctx) return elem and not elem.name end })
+local headers = haka.grammar.array(header_or_crlf):
+	options{ untilcond = function (elem, ctx) return elem and not elem.name end }
+
+local body = haka.grammar.bytes()
+	:options{
+		count = function (self, ctx) return ctx.content_length or 0 end,
+		chunked = function (self, sub, last, ctx)
+			ctx.top.http:push_data(self, sub, last, http_dissector.events[ctx.top.http._state .. '_data'])
+		end
+	}
+
+local message = haka.grammar.record{
+	haka.grammar.field('headers', headers),
+	haka.grammar.execute(function (self, ctx)
+		ctx.top.http:trigger_event(ctx.top, ctx.iter, ctx.mark)
+		ctx.mark = nil
+	end),
+	haka.grammar.field('body', body)
 }
 
 -- http request
 local request = haka.grammar.record{
 	begin_grammar,
 	request_line,
-	headers,
-	end_grammar
+	message
 }:compile()
 
 -- http response
 local response = haka.grammar.record{
 	begin_grammar,
 	response_line,
-	headers,
-	end_grammar
+	message
 }:compile()
 
-
---
--- HTTP dissector
---
-
-local http_dissector = haka.dissector.new{
-	type = haka.dissector.FlowDissector,
-	name = 'http'
-}
-
-http_dissector:register_event('request')
-http_dissector:register_event('response')
-
-http_dissector.property.connection = {
-	get = function (self)
-		self.connection = self.flow.connection
-		return self.connection
-	end
-}
-
-function http_dissector.method:__init(flow)
-	super(http_dissector).__init(self)
-	self.flow = flow
-	if flow then
-		self.connection = flow.connection
-	end
-	self._state = 'request'
-end
-
-function http_dissector.method:continue()
-	return self.flow ~= nil
-end
-
-function http_dissector.method:drop()
-	self.flow:drop()
-	self.flow = nil
-end
-
-function http_dissector.method:reset()
-	self.flow:reset()
-	self.flow = nil
-end
-
-local function build_headers(result, headers, headers_order)
-	for _, name in pairs(headers_order) do
-		local value = headers[name]
-		if value then
-			table.insert(result, name)
-			table.insert(result, ": ")
-			table.insert(result, value)
-			table.insert(result, "\r\n")
-		end
-	end
-	local headers_copy = dict(headers_order)
-	for name, value in sorted_pairs(headers) do
-		if value and not contains(headers_copy, name) then
-			table.insert(result, name)
-			table.insert(result, ": ")
-			table.insert(result, value)
-			table.insert(result, "\r\n")
-		end
-	end
-end
-
-local function dump(t, indent)
-	if not indent then indent = "" end
-
-	for n, v in sorted_pairs(t) do
-		if n ~= '__property' and n ~= '_validate' then
-			if type(v) == "table" then
-				print(indent, n)
-				dump(v, indent .. "  ")
-			elseif type(v) ~= "thread" and
-				type(v) ~= "userdata" and
-				type(v) ~= "function" then
-				print(indent, n, "=", v)
-			end
-		end
-	end
-end
-
-local function convert_headers(hdrs)
-	local headers = {}
-	local headers_order = {}
-	for _, header in ipairs(hdrs) do
-		if header.name then
-			headers[header.name] = header.value
-			table.insert(headers_order, header.name)
-		end
-	end
-	return headers, headers_order
-end
-
-local function convert_request(request)
-	request.version = string.format("HTTP/%s", request.version._num)
-	request.headers, request._headers_order = convert_headers(request.headers)
-	request.dump = dump
-	return request
-end
-
-local function convert_response(response)
-	response.version = string.format("HTTP/%s", response.version._num)
-	response.status = response.status._num
-	response.headers, response._headers_order = convert_headers(response.headers)
-	response.dump = dump
-	return response
-end
 
 local ctx_object = class('http_ctx')
 
@@ -503,6 +604,7 @@ function http_dissector.method:receive(flow, iter, direction)
 		while iter:check_available(1) do
 			if self._state == 'request' then
 				self.request = ctx_object:new()
+				self.request.http = self
 				self.response = nil
 
 				self.request.split_uri = function (self)
@@ -523,9 +625,6 @@ function http_dissector.method:receive(flow, iter, direction)
 					end
 				end
 
-				mark = iter:copy()
-				mark:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
-
 				local err
 				self.request, err = request:parseall(iter, self.request)
 				if err then
@@ -536,17 +635,9 @@ function http_dissector.method:receive(flow, iter, direction)
 					self:drop()
 					return
 				end
-				if not self:continue() then return end
-
-				self.request = convert_request(self.request)
-
-				if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events.request, self.request) then
-					self:drop()
-				end
 
 				if not self:continue() then return end
 
-				self:send(iter, mark, direction)
 				self._state = 'response'
 			else
 				iter:advance('available')
@@ -556,6 +647,7 @@ function http_dissector.method:receive(flow, iter, direction)
 		while iter:check_available(1) do
 			if self._state == 'response' then
 				self.response = ctx_object:new()
+				self.response.http = self
 
 				self.response.split_cookies = function (self)
 					if self._cookies then
@@ -565,9 +657,6 @@ function http_dissector.method:receive(flow, iter, direction)
 						return self._cookies
 					end
 				end
-
-				mark = iter:copy()
-				mark:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
 
 				local err
 				self.response, err = response:parseall(iter, self.response)
@@ -581,66 +670,11 @@ function http_dissector.method:receive(flow, iter, direction)
 				end
 				if not self:continue() then return end
 
-				self.response = convert_response(self.response)
-
-				if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events.response, self.response) then
-					self:drop()
-				end
-
-				if not self:continue() then return end
-
-				self:send(iter, mark, direction)
 				self._state = 'request'
 			else
 				iter:advance('available')
 			end
 		end
-	end
-end
-
-function http_dissector.method:send(iter, mark, direction)
-	mark:unmark()
-
-	if direction == 'up' then
-		if haka.packet.mode() == haka.packet.PASSTHROUGH then
-			return
-		end
-
-		local request = {}
-		table.insert(request, self.request.method)
-		table.insert(request, " ")
-		table.insert(request, self.request.uri)
-		table.insert(request, " ")
-		table.insert(request, self.request.version)
-		table.insert(request, "\r\n")
-		build_headers(request, self.request.headers, self.request._headers_order)
-		table.insert(request, "\r\n")
-
-		iter:move_to(mark)
-
-		iter:sub(self.request._length, true):replace(haka.vbuffer(table.concat(request)))
-	else
-		if self.request.method == 'CONNECT' then
-			self._state = 'connect' -- We should not expect a request nor response anymore
-		end
-
-		if haka.packet.mode() == haka.packet.PASSTHROUGH then
-			return
-		end
-
-		local response = {}
-		table.insert(response, self.response.version)
-		table.insert(response, " ")
-		table.insert(response, self.response.status)
-		table.insert(response, " ")
-		table.insert(response, self.response.reason)
-		table.insert(response, "\r\n")
-		build_headers(response, self.response.headers, self.response._headers_order)
-		table.insert(response, "\r\n")
-
-		iter:move_to(mark)
-
-		iter:sub(self.response._length, true):replace(haka.vbuffer(table.concat(response)))
 	end
 end
 

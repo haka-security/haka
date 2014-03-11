@@ -6,7 +6,6 @@ HTTP REQUEST
    2 = Accept
    3 = Host
    4 = Connection
- _length = 120
  headers
    Accept = */*
    Connection = Keep-Alive
@@ -23,7 +22,6 @@ HTTP RESPONSE
    4 = Connection
    5 = Transfer-Encoding
    6 = Content-Type
- _length = 223
  headers
    Connection = Keep-Alive
    Content-Type = text/html; charset=ISO-8859-1
@@ -42,7 +40,6 @@ HTTP MODIFIED RESPONSE
    4 = Connection
    5 = Transfer-Encoding
    6 = Content-Type
- _length = 223
  headers
    Connection = Keep-Alive
    Content-Type = text/html; charset=ISO-8859-1

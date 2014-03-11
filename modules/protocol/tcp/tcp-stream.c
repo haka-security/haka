@@ -41,7 +41,7 @@ bool tcp_stream_create(struct tcp_stream *stream)
 {
 	memset(stream, 0, sizeof(struct tcp_stream));
 
-	if (!vbuffer_stream_init(&stream->stream)) {
+	if (!vbuffer_stream_init(&stream->stream, NULL)) {
 		return false;
 	}
 
@@ -133,7 +133,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp)
 
 	if (stream->last_seq == chunk->start_seq) {
 		list2_insert(list2_end(&stream->current), &chunk->list);
-		vbuffer_stream_push(&stream->stream, &tcp->payload);
+		vbuffer_stream_push(&stream->stream, &tcp->payload, NULL);
 		stream->last_seq = chunk->end_seq;
 
 		/* Check for queued packets */
@@ -151,7 +151,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp)
 				iter = list2_erase(iter);
 
 				list2_insert(list2_end(&stream->current), &qchunk->list);
-				vbuffer_stream_push(&stream->stream, &qchunk->tcp->payload);
+				vbuffer_stream_push(&stream->stream, &qchunk->tcp->payload, NULL);
 				stream->last_seq = qchunk->end_seq;
 			}
 		}
@@ -197,7 +197,7 @@ struct tcp *tcp_stream_pop(struct tcp_stream *stream)
 		return NULL;
 	}
 
-	if (!vbuffer_stream_pop(&stream->stream, &available)) {
+	if (!vbuffer_stream_pop(&stream->stream, &available, NULL)) {
 		/* No data available yet */
 		return NULL;
 	}

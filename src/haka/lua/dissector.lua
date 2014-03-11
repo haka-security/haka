@@ -171,9 +171,15 @@ end
 
 dissector.FlowDissector = class('FlowDissector', dissector.Dissector)
 
-local function stream_wrapper(f, options, self, stream, ...)
+function dissector.FlowDissector.stream_wrapper(f, options, self, stream, ...)
+	local current = stream.current
+	if (not current or not current:check_available(1)) and
+	   not stream.isfinished then
+		return
+	end
+
 	if options and options.coroutine then
-		local comanager = self:get_comanager(...)
+		local comanager = self:get_comanager(stream, ...)
 		if not comanager:has(f) then
 			local args = {...}
 			comanager:start(f, function (iter) return f(self, iter, unpack(args)) end)
@@ -188,7 +194,7 @@ local function stream_wrapper(f, options, self, stream, ...)
 	end
 end
 
-dissector.FlowDissector:register_event('receive_data', nil, stream_wrapper)
+dissector.FlowDissector:register_event('receive_data', nil, dissector.FlowDissector.stream_wrapper)
 dissector.FlowDissector:register_event('send_data')
 
 function dissector.FlowDissector.method:connections()
@@ -202,8 +208,16 @@ function dissector.FlowDissector.method:continue()
 	error("not implemented")
 end
 
-function dissector.FlowDissector.method:get_comanager()
-	error("not implemented")
+function dissector.FlowDissector.method:get_comanager(stream)
+	if not self._costream then
+		self._costream = {}
+	end
+
+	if not self._costream[stream] then
+		self._costream[stream] = haka.vbuffer_stream_comanager:new(stream)
+	end
+
+	return self._costream[stream]
 end
 
 

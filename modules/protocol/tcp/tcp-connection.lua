@@ -347,31 +347,16 @@ function tcp_connection_dissector.method:_close()
 	self.states = nil
 end
 
-function tcp_connection_dissector.method:get_comanager(direction)
-	if not self.costream then
-		self.costream = {}
-	end
-
-	if not self.costream[direction] then
-		self.costream[direction] = haka.vbuffer_stream_comanager:new(self.stream[direction].stream)
-	end
-
-	return self.costream[direction]
-end
-
 function tcp_connection_dissector.method:push(pkt, direction, finish)
 	local stream = self.stream[direction]
 
 	stream:push(pkt)
 	if finish then stream.stream:finish() end
 
-	local current = stream.stream.current
-	if (current and current:check_available(1)) or finish then
-		if not haka.pcall(haka.context.signal, haka.context, self,
-				tcp_connection_dissector.events.receive_data,
-				stream.stream, direction) then
-			return self:drop()
-		end
+	if not haka.pcall(haka.context.signal, haka.context, self,
+			tcp_connection_dissector.events.receive_data,
+			stream.stream, direction) then
+		return self:drop()
 	end
 
 	if self:continue() then

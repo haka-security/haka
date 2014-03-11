@@ -6,7 +6,6 @@ HTTP REQUEST
    2 = Accept
    3 = Host
    4 = Connection
- _length = 1457
  headers
    Accept = */*
    Connection = Keep-Alive
@@ -23,7 +22,6 @@ HTTP RESPONSE
    4 = Keep-Alive
    5 = Connection
    6 = Content-Type
- _length = 224
  headers
    Connection = Keep-Alive
    Content-Length = 1630

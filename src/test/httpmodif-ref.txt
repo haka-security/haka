@@ -13,7 +13,6 @@ info alert: id = <>
    5 = Keep-Alive
    6 = Connection
    7 = Content-Type
- _length = 233
  headers
    Connection = Close
    Content-Length = 0
@@ -47,7 +46,6 @@ info alert: id = <>
    5 = Keep-Alive
    6 = Connection
    7 = Content-Type
- _length = 233
  headers
    Connection = Close
    Content-Length = 0
@@ -77,7 +75,6 @@ info alert: id = <>
    5 = Keep-Alive
    6 = Connection
    7 = Content-Type
- _length = 233
  headers
    Connection = Close
    Content-Length = 0
@@ -118,7 +115,6 @@ info alert: id = <>
    3 = Content-Length
    4 = Connection
    5 = Content-Type
- _length = 187
  headers
    Connection = Close
    Content-Length = 0

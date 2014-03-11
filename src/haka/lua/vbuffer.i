@@ -6,12 +6,14 @@
 #include <string.h>
 #include <haka/vbuffer.h>
 #include <haka/vbuffer_stream.h>
+#include <haka/vbuffer_sub_stream.h>
 #include <haka/error.h>
 %}
 
 %import "haka/lua/config.si"
 %include "haka/lua/swig.si"
 %include "haka/lua/object.si"
+%include "haka/lua/vbuffer.si"
 
 %nodefaultctor;
 %nodefaultdtor;
@@ -531,7 +533,6 @@ struct vbuffer_sub {
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub);
 
 
-LUA_OBJECT(struct vbuffer);
 %newobject vbuffer::sub;
 %newobject vbuffer::pos;
 %newobject vbuffer::_clone;
@@ -693,7 +694,6 @@ struct vbuffer {
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 
 
-LUA_OBJECT(struct vbuffer_stream);
 %newobject vbuffer_stream::_pop;
 %newobject vbuffer_stream::current;
 
@@ -707,7 +707,7 @@ struct vbuffer_stream {
 				return NULL;
 			}
 
-			if (!vbuffer_stream_init(stream)) {
+			if (!vbuffer_stream_init(stream, NULL)) {
 				free(stream);
 				return NULL;
 			}
@@ -724,7 +724,7 @@ struct vbuffer_stream {
 		%rename(push) _push;
 		void _push(struct vbuffer *data)
 		{
-			vbuffer_stream_push($self, data);
+			vbuffer_stream_push($self, data, NULL);
 		}
 
 		void finish();
@@ -738,7 +738,7 @@ struct vbuffer_stream {
 				return NULL;
 			}
 
-			if (!vbuffer_stream_pop($self, buf)) {
+			if (!vbuffer_stream_pop($self, buf, NULL)) {
 				return NULL;
 			}
 
@@ -758,10 +758,65 @@ struct vbuffer_stream {
 			iter->meter = 0;
 			return iter;
 		}
+		bool isfinished { return vbuffer_stream_isfinished($self); }
 	}
 };
 
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
+
+
+%newobject vbuffer_sub_stream::current;
+
+struct vbuffer_sub_stream {
+	%extend {
+		vbuffer_sub_stream()
+		{
+			struct vbuffer_sub_stream *stream = malloc(sizeof(struct vbuffer_sub_stream));
+			if (!stream) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_sub_stream_init(stream)) {
+				free(stream);
+				return NULL;
+			}
+
+			return stream;
+		}
+
+		~vbuffer_sub_stream()
+		{
+			vbuffer_stream_clear(&$self->stream);
+			free($self);
+		}
+
+		void push(struct vbuffer_sub *data);
+		void pop();
+
+		void finish()
+		{
+			vbuffer_stream_finish(&$self->stream);
+		}
+
+		%immutable;
+		struct vbuffer *data { return vbuffer_stream_data(&$self->stream); }
+		struct vbuffer_iterator_lua *current {
+			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
+			if (!iter) {
+				error(L"memory error");
+				return NULL;
+			}
+			vbuffer_stream_current(&$self->stream, &iter->super);
+			vbuffer_iterator_register(&iter->super);
+			iter->meter = 0;
+			return iter;
+		}
+		bool isfinished { return vbuffer_stream_isfinished(&$self->stream); }
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 
 
 %luacode {

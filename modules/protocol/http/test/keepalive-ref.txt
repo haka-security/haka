@@ -6,7 +6,6 @@ HTTP REQUEST
    2 = Accept
    3 = Host
    4 = Connection
- _length = 127
  headers
    Accept = */*
    Connection = Keep-Alive
@@ -23,7 +22,6 @@ HTTP RESPONSE
    4 = Connection
    5 = Transfer-Encoding
    6 = Content-Type
- _length = 223
  headers
    Connection = Keep-Alive
    Content-Type = text/html; charset=ISO-8859-1
@@ -40,7 +38,6 @@ HTTP REQUEST
    2 = Accept
    3 = Host
    4 = Connection
- _length = 122
  headers
    Accept = */*
    Connection = Keep-Alive
@@ -57,7 +54,6 @@ HTTP RESPONSE
    4 = Keep-Alive
    5 = Connection
    6 = Content-Type
- _length = 222
  headers
    Connection = Keep-Alive
    Content-Length = 291
@@ -75,7 +71,6 @@ HTTP REQUEST
    3 = Accept
    4 = Host
    5 = Connection
- _length = 204
  headers
    Accept = */*
    Connection = Keep-Alive
@@ -96,7 +91,6 @@ HTTP RESPONSE
    7 = Keep-Alive
    8 = Connection
    9 = Content-Type
- _length = 297
  headers
    Accept-Ranges = bytes
    Connection = Keep-Alive
@@ -117,7 +111,6 @@ HTTP REQUEST
    3 = Accept
    4 = Host
    5 = Connection
- _length = 205
  headers
    Accept = */*
    Connection = Keep-Alive
@@ -138,7 +131,6 @@ HTTP RESPONSE
    7 = Keep-Alive
    8 = Connection
    9 = Content-Type
- _length = 298
  headers
    Accept-Ranges = bytes
    Connection = Keep-Alive

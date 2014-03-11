@@ -1316,7 +1316,6 @@ bool vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data)
 {
 	struct vbuffer_data_ctl_select *ctl;
 
-	assert(data);
 	if (!_vbuffer_iterator_check(position)) return false;
 
 	ctl = vbuffer_data_cast(position->chunk->data, vbuffer_data_ctl_select);
@@ -1325,12 +1324,14 @@ bool vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data)
 		return false;
 	}
 
-	list2_insert_list(&position->chunk->list, &vbuffer_chunk_begin(data)->list, &vbuffer_chunk_end(data)->list);
+	if (data) {
+		list2_insert_list(&position->chunk->list, &vbuffer_chunk_begin(data)->list, &vbuffer_chunk_end(data)->list);
+		vbuffer_clear(data);
+	}
 
 	vbuffer_chunk_remove_ctl(position->chunk);
 
 	vbuffer_iterator_clear(position);
-	vbuffer_clear(data);
 	return true;
 }
 

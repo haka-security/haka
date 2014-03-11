@@ -20,6 +20,7 @@ struct tcp_stream;
 %include "haka/lua/swig.si"
 %include "haka/lua/ref.si"
 %include "haka/lua/ipv4.si"
+%include "haka/lua/vbuffer.si"
 %include "typemaps.i"
 
 %nodefaultctor;

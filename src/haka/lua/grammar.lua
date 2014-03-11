@@ -391,15 +391,15 @@ function grammar_dg.Error.method:apply()
 	return haka.grammar.ParseError:new(self, nil, self.msg)
 end
 
-grammar_dg.Check = class('DGCheck', grammar_dg.Control)
+grammar_dg.Execute = class('DGExecute', grammar_dg.Control)
 
-function grammar_dg.Check.method:__init(check)
+function grammar_dg.Execute.method:__init(callback)
 	super(grammar_dg.Error).__init(self)
-	self.check = check
+	self.callback = callback
 end
 
-function grammar_dg.Check.method:apply(ctx)
-	self.check(ctx.current, ctx)
+function grammar_dg.Execute.method:apply(ctx)
+	self.callback(ctx.current, ctx)
 end
 
 grammar_dg.Branch = class('DGBranch', grammar_dg.Control)
@@ -515,15 +515,16 @@ end
 
 grammar_dg.Bytes = class('DGBytes', grammar_dg.Primitive)
 
-function grammar_dg.Bytes.method:__init(size, name)
+function grammar_dg.Bytes.method:__init(size, name, chunked)
 	super(grammar_dg.Bytes).__init(self)
 	self.size = size
 	self.name = name
+	self.chunked = chunked
 end
 
-function grammar_dg.Bytes.method:parse(cur, init, input, ctx)
+function grammar_dg.Bytes.method:parse(cur, init, iter, ctx)
 	if ctx._bitoffset ~= 0 then
-		return haka.grammar.ParseError:new(self, input, "byte primitive requires aligned bits")
+		return haka.grammar.ParseError:new(self, iter, "byte primitive requires aligned bits")
 	end
 
 	local sub
@@ -531,28 +532,50 @@ function grammar_dg.Bytes.method:parse(cur, init, input, ctx)
 	local size = self.size(cur, ctx)
 	if size then
 		if size < 0 then
-			return haka.grammar.ParsError:new(self, input, "byte count must not be negative, got "..size)
+			return haka.grammar.ParsError:new(self, iter, "byte count must not be negative, got "..size)
 		end
-		sub = input:sub(size)
 	else
-		sub = input:sub("all")
+		size = 'all'
 	end
 
-	if self.name then
-		if self.converter then
-			cur:addproperty(self.name,
-				function (this) return self.converter.get(sub) end,
-				function (this, newvalue) sub = self.converter.set(newvalue) end
-			)
-		else
-			cur[self.name] = sub
+	if self.chunked then
+		while size == 'all' or size > 0 do
+			local begin = iter:copy()
+			local sub = iter:sub('available')
+			if not sub then break end
+
+			if size ~= 'all' then
+				local subsize = #sub
+				if subsize > size then
+					iter:move_to(begin)
+					sub = iter:sub(size)
+					subsize = size
+				end
+
+				size = size - subsize
+			end
+
+			self.chunked(cur, sub, size == 0 or iter.iseof, ctx)
 		end
-	end
+	else
+		sub = iter:sub(size)
 
-	if self.name and init then
-		local initval = init[self.name]
-		if initval then
-			sub:replace(initval)
+		if self.name then
+			if self.converter then
+				cur:addproperty(self.name,
+					function (this) return self.converter.get(sub) end,
+					function (this, newvalue) sub = self.converter.set(newvalue) end
+				)
+			else
+				cur[self.name] = sub
+			end
+		end
+
+		if self.name and init then
+			local initval = init[self.name]
+			if initval then
+				sub:replace(initval)
+			end
 		end
 	end
 end
@@ -887,14 +910,14 @@ function grammar.Bytes.method:compile()
 		self.count = function (self) return count end
 	end
 
-	local ret = grammar_dg.Bytes:new(self.count, self.named)
+	local ret = grammar_dg.Bytes:new(self.count, self.named, self.chunked)
 	if self.converter then ret:convert(self.converter, self.memoize) end
 	if self.validate then ret:validate(self.validate) end
 	return ret
 end
 
 grammar.Bytes._options = {}
-function grammar.Bytes._options.chunked(self) self.chunked = true end
+function grammar.Bytes._options.chunked(self, callback) self.chunked = callback end
 function grammar.Bytes._options.count(self, count) self.count = count end
 
 
@@ -924,14 +947,14 @@ function grammar.Token.method:compile()
 	return grammar_dg.Token:new(self.pattern, re, self.named)
 end
 
-grammar.Verify = class('Verify', grammar.Entity)
+grammar.Execute = class('Execute', grammar.Entity)
 
-function grammar.Verify.method:__init(func)
+function grammar.Execute.method:__init(func)
 	self.func = func
 end
 
-function grammar.Verify.method:compile()
-	return grammar_dg.Check:new(self.func)
+function grammar.Execute.method:compile()
+	return grammar_dg.Execute:new(self.func)
 end
 
 
@@ -996,15 +1019,15 @@ function grammar.field(name, field)
 end
 
 function grammar.verify(func, msg)
-	if msg then
-		return grammar.Verify:new(function (self, ctx)
-			if not func(self, ctx) then
-				error(msg)
-			end
-		end)
-	else
-		return grammar.Verify:new(func)
-	end
+	return grammar.Execute:new(function (self, ctx)
+		if not func(self, ctx) then
+			error(msg)
+		end
+	end)
+end
+
+function grammar.execute(func)
+	return grammar.Execute:new(func)
 end
 
 

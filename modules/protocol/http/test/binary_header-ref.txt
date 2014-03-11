@@ -3,7 +3,6 @@ debug tcp-connection: opening connection 127.0.0.1:42073 -> 127.0.0.1:80
 HTTP REQUEST
  _headers_order
    1 = Host
- _length = 37
  headers
    Host = Ž™ÿ
  method = GET
@@ -20,7 +19,6 @@ HTTP RESPONSE
    7 = Vary
    8 = Content-Type
    9 = X-Pad
- _length = 283
  headers
    Accept-Ranges = bytes
    Content-Length = 18
