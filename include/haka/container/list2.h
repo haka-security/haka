@@ -47,7 +47,7 @@ INLINE list2_iter list2_next(const list2_iter iter) { return iter->next; }
 INLINE list2_iter list2_prev(const list2_iter iter) { return iter->prev; }
 
 void              list2_init(struct list2 *list);
-list2_iter        list2_insert(list2_iter iter, struct list2_elem *list);
+list2_iter        list2_insert(list2_iter iter, struct list2_elem *elem);
 list2_iter        list2_insert_list(list2_iter iter, list2_iter begin, list2_iter end);
 list2_iter        list2_erase(list2_iter list);
 INLINE bool       list2_empty(const struct list2 *list) { return list2_begin(list) == list2_end(list); }

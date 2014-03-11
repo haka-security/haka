@@ -27,7 +27,8 @@ struct vbuffer_chunk {
 
 void                  vbuffer_chunk_clear(struct vbuffer_chunk *chunk);
 struct vbuffer_chunk *vbuffer_chunk_create(struct vbuffer_data *data, size_t offset, size_t length);
-struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_data *data, struct vbuffer_chunk *ctl);
+struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_chunk *ctl, struct vbuffer_data *data);
+struct vbuffer_chunk *vbuffer_chunk_clone(struct vbuffer_chunk *chunk, bool copy);
 
 struct list2         *vbuffer_chunk_list(const struct vbuffer *buf);
 struct vbuffer_chunk *vbuffer_chunk_begin(const struct vbuffer *buf);
@@ -36,8 +37,8 @@ struct vbuffer_chunk *vbuffer_chunk_next(struct vbuffer_chunk *chunk);
 struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk);
 
 #define VBUFFER_FOR_EACH(buf, var) \
-	for (var = vbuffer_chunk_begin(buf); iter; \
-		iter = vbuffer_chunk_next(iter))
+	for (var = vbuffer_chunk_begin(buf); var; \
+		var = vbuffer_chunk_next(var))
 
 void                  vbuffer_iterator_update(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, size_t offset);
 

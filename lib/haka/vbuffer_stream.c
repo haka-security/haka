@@ -80,7 +80,7 @@ bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data)
 		return false;
 	}
 
-	ctl = vbuffer_chunk_insert_ctl(&chunk->ctl_data->super.super, vbuffer_chunk_end(data));
+	ctl = vbuffer_chunk_insert_ctl(vbuffer_chunk_end(data), &chunk->ctl_data->super.super);
 	if (!ctl) {
 		free(chunk);
 		return false;

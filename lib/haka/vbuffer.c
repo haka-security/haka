@@ -121,7 +121,7 @@ struct vbuffer_chunk *vbuffer_chunk_create(struct vbuffer_data *data, size_t off
 	return chunk;
 }
 
-struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_data *data, struct vbuffer_chunk *insert)
+struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_chunk *insert, struct vbuffer_data *data)
 {
 	struct vbuffer_chunk *chunk;
 
@@ -855,7 +855,7 @@ bool vbuffer_iterator_mark(struct vbuffer_iterator *position, bool readonly)
 		return false;
 	}
 
-	chunk = vbuffer_chunk_insert_ctl(&mark->super.super, insert);
+	chunk = vbuffer_chunk_insert_ctl(insert, &mark->super.super);
 	if (!chunk) return false;
 
 	vbuffer_iterator_update(position, chunk, 0);
@@ -1277,7 +1277,7 @@ static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct v
 			return NULL;
 		}
 
-		mark = vbuffer_chunk_insert_ctl(&ctl->super.super, end);
+		mark = vbuffer_chunk_insert_ctl(end, &ctl->super.super);
 		if (!mark) {
 			vbuffer_clear(buffer);
 			return NULL;
