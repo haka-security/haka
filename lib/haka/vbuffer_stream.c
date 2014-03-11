@@ -38,6 +38,32 @@ static void _vbuffer_stream_free_chunks(struct list2 *chunks)
 	}
 }
 
+static void _vbuffer_stream_cleanup(struct vbuffer_stream *stream)
+{
+	list2_iter iter = list2_begin(vbuffer_chunk_list(&stream->data));
+	list2_iter iter_read_chunk = list2_begin(&stream->read_chunks);
+	const list2_iter end = list2_end(vbuffer_chunk_list(&stream->data));
+	const list2_iter end_read_chunk = list2_end(&stream->read_chunks);
+
+	while (iter != end && iter_read_chunk != end_read_chunk) {
+		struct vbuffer_chunk *chunk = list2_get(iter, struct vbuffer_chunk, list);
+		struct vbuffer_stream_chunk *read_chunk = list2_get(iter_read_chunk, struct vbuffer_stream_chunk, list);
+
+		if (chunk->data->ops == &vbuffer_data_ctl_mark_ops)
+			return;
+
+		if (chunk->data->ops == &vbuffer_data_ctl_push_ops) {
+			assert(chunk->data == &read_chunk->ctl_data->super.super);
+
+			iter_read_chunk = list2_erase(iter_read_chunk);
+			_vbuffer_stream_free_chunk(read_chunk);
+		}
+
+		iter = list2_erase(iter);
+		vbuffer_chunk_clear(chunk);
+	}
+}
+
 bool vbuffer_stream_init(struct vbuffer_stream *stream)
 {
 	stream->lua_object = lua_object_init;
@@ -107,13 +133,17 @@ void vbuffer_stream_finish(struct vbuffer_stream *stream)
 bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer)
 {
 	struct vbuffer_stream_chunk *current = list2_first(&stream->chunks, struct vbuffer_stream_chunk, list);
-	struct vbuffer_stream_chunk *read_last = list2_last(&stream->read_chunks, struct vbuffer_stream_chunk, list);
-	struct vbuffer_chunk *begin, *iter;
+	struct vbuffer_stream_chunk *read_last;
+	struct vbuffer_chunk *begin, *iter, *start_of_keep, *end;
 	bool keep_for_read = false;
 
 	if (!current) {
 		return false;
 	}
+
+	_vbuffer_stream_cleanup(stream);
+
+	read_last = list2_last(&stream->read_chunks, struct vbuffer_stream_chunk, list);
 
 	if (read_last) {
 		begin = vbuffer_chunk_next(read_last->ctl_iter.chunk);
@@ -128,6 +158,7 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer)
 	while (true) {
 		assert(!iter->flags.end);
 
+		// Until end of pushed chunk
 		if (iter->data == &current->ctl_data->super.super) {
 			break;
 		}
@@ -146,32 +177,66 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer)
 			}
 
 			if (iter->data->ops == &vbuffer_data_ctl_mark_ops) {
-				/* Mark found, nothing to pop */
-				return false;
+				struct vbuffer_data_ctl_mark *ctl_mark_data = (struct vbuffer_data_ctl_mark *)iter->data;
+				if (!ctl_mark_data->readonly) {
+					/* Read/write mark found, nothing to pop */
+					return false;
+				}
+				if (!keep_for_read) {
+					keep_for_read = true;
+					start_of_keep = iter;
+				}
 			}
 		}
 
 		iter = vbuffer_chunk_next(iter);
 	}
 
-	if (keep_for_read) {
-		//TODO
-		return false;
-	}
+	assert(iter == current->ctl_iter.chunk);
 
-	/* Extract buffer data */
+	/* Init output buffer */
 	vbuffer_create_empty(buffer);
 	vbuffer_setwritable(buffer, iter->flags.writable);
+	end = vbuffer_chunk_end(buffer);
 
-	list2_insert_list(&vbuffer_chunk_end(buffer)->list, &begin->list, list2_next(&iter->list));
+	/* Set output buffer */
+	if (keep_for_read) {
+		/* Extract chunks from begin to start_of_keep */
+		list2_insert_list(&end->list, &begin->list, &start_of_keep->list);
 
-	/* Remove push ctl node */
-	assert(iter == current->ctl_iter.chunk);
-	vbuffer_chunk_remove_ctl(iter);
+		/* Clone from start_of_keep until push_ctl without marks */
+		struct vbuffer_chunk *chunk;
 
-	/* Destroy chunk */
+
+		for (chunk = start_of_keep; chunk != current->ctl_iter.chunk; chunk = vbuffer_chunk_next(chunk)) {
+			if (chunk->flags.ctl) {
+				continue;
+			}
+
+			struct vbuffer_chunk *clone = vbuffer_chunk_clone(chunk, false);
+			list2_insert(&end->list, &clone->list);
+
+			chunk->flags.writable = false;
+			end->flags.writable = clone->flags.writable;
+		}
+	} else {
+		/* Extract buffer data */
+		list2_insert_list(&end->list, &begin->list, list2_next(&iter->list));
+
+		/* Remove push ctl node */
+		vbuffer_chunk_remove_ctl(iter);
+	}
+
+	/* Update stream->chunks and stream->read_chunks */
 	list2_erase(&current->list);
-	_vbuffer_stream_free_chunk(current);
+	if (keep_for_read) {
+		/* Move current to read_chunks */
+		list2_insert(list2_end(&stream->read_chunks), &current->list);
+	} else {
+		/* Destroy chunk */
+		_vbuffer_stream_free_chunk(current);
+	}
+
 
 	return true;
 }
@@ -186,7 +251,12 @@ void vbuffer_stream_current(struct vbuffer_stream *stream, struct vbuffer_iterat
 	list2_iter iter, end = list2_end(&stream->chunks);
 	struct vbuffer_stream_chunk *current;
 
-	vbuffer_begin(&stream->data, position);
+	if (list2_empty(&stream->read_chunks)) {
+		vbuffer_begin(&stream->data, position);
+	} else {
+		current = list2_last(&stream->read_chunks, struct vbuffer_stream_chunk, list);
+		vbuffer_iterator_copy(&current->ctl_iter, position);
+	}
 
 	iter = list2_prev(end);
 	if (iter == end) return;
