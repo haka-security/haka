@@ -523,10 +523,8 @@ function http_dissector.method:receive(flow, iter, direction)
 					end
 				end
 
-				if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-					mark = iter:copy()
-					mark:mark()
-				end
+				mark = iter:copy()
+				mark:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
 
 				local err
 				self.request, err = request:parseall(iter, self.request)
@@ -558,6 +556,7 @@ function http_dissector.method:receive(flow, iter, direction)
 		while iter:check_available(1) do
 			if self._state == 'response' then
 				self.response = ctx_object:new()
+
 				self.response.split_cookies = function (self)
 					if self._cookies then
 						return self._cookies
@@ -566,10 +565,9 @@ function http_dissector.method:receive(flow, iter, direction)
 						return self._cookies
 					end
 				end
-				if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-					mark = iter:copy()
-					mark:mark()
-				end
+
+				mark = iter:copy()
+				mark:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
 
 				local err
 				self.response, err = response:parseall(iter, self.response)
@@ -601,6 +599,8 @@ function http_dissector.method:receive(flow, iter, direction)
 end
 
 function http_dissector.method:send(iter, mark, direction)
+	mark:unmark()
+
 	if direction == 'up' then
 		if haka.packet.mode() == haka.packet.PASSTHROUGH then
 			return
@@ -616,7 +616,6 @@ function http_dissector.method:send(iter, mark, direction)
 		build_headers(request, self.request.headers, self.request._headers_order)
 		table.insert(request, "\r\n")
 
-		mark:unmark()
 		iter:move_to(mark)
 
 		iter:sub(self.request._length, true):replace(haka.vbuffer(table.concat(request)))
@@ -639,7 +638,6 @@ function http_dissector.method:send(iter, mark, direction)
 		build_headers(response, self.response.headers, self.response._headers_order)
 		table.insert(response, "\r\n")
 
-		mark:unmark()
 		iter:move_to(mark)
 
 		iter:sub(self.response._length, true):replace(haka.vbuffer(table.concat(response)))

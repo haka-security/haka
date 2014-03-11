@@ -572,6 +572,8 @@ function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 	end
 
 	local begin = iter:copy()
+	local mark = iter:copy()
+	mark:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
 
 	while true do
 		local sub = iter:sub('available')
@@ -580,6 +582,7 @@ function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 		if not match and not ctx.sink:ispartial() then break end
 
 		if match then
+			mark:unmark()
 			local string = begin:sub(result.size):asstring()
 			iter:move_to(begin)
 			if self.name then
@@ -593,6 +596,7 @@ function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 	end
 
 	-- No match found return an error
+	mark:unmark()
 	local line = begin:copy():sub('available')
 	if line then
 		line = safe_string(line:asstring())
