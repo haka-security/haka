@@ -36,14 +36,14 @@ local udp_dissector = haka.dissector.new{
 udp_dissector.grammar = haka.grammar.record{
 	haka.grammar.field('srcport',   haka.grammar.number(16)),
 	haka.grammar.field('dstport',   haka.grammar.number(16)),
-	haka.grammar.field('length',	haka.grammar.number(16))
+	haka.grammar.field('length',    haka.grammar.number(16))
 		:validate(function (self) self.len = 8 + #self.payload end),
-	haka.grammar.field('checksum',	haka.grammar.number(16))
+	haka.grammar.field('checksum',  haka.grammar.number(16))
 		:validate(function (self)
 			self.checksum = 0
 			self.checksum = compute_checksum(self)
 		end),
-	haka.grammar.field('payload',	haka.grammar.bytes())
+	haka.grammar.field('payload',   haka.grammar.bytes())
 }:compile()
 
 function udp_dissector.method:parse_payload(pkt, payload, init)
