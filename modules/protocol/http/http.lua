@@ -661,7 +661,7 @@ http_dissector.states.request = http_dissector.states:state{
 		end
 
 		local err
-		self.request, err = request:parseall(iter, self.request)
+		self.request, err = request:parse(iter, self.request)
 		if err then
 			haka.alert{
 				description = string.format("invalid http %s", err.rule),
@@ -708,7 +708,7 @@ http_dissector.states.response = http_dissector.states:state{
 		end
 
 		local err
-		self.response, err = response:parseall(iter, self.response)
+		self.response, err = response:parse(iter, self.response)
 		if err then
 			haka.alert{
 				description = string.format("invalid http %s", err.rule),

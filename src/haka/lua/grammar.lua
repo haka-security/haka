@@ -281,7 +281,7 @@ function grammar_dg.Entity.method:genproperty(obj, name, get, set)
 	obj:addproperty(name, fget, fset)
 end
 
-function grammar_dg.Entity.method:parseall(input, ctx, init)
+function grammar_dg.Entity.method:parse(input, ctx, init)
 	local ctx = grammar_dg.ParseContext:new(input, ctx, init)
 	return ctx:parse(self)
 end
@@ -487,7 +487,7 @@ end
 grammar_dg.Primitive = class('DGPrimitive', grammar_dg.Entity)
 
 function grammar_dg.Primitive.method:apply(ctx)
-	return self:parse(ctx.current, ctx.current_init, ctx.iter, ctx)
+	return self:_parse(ctx.current, ctx.current_init, ctx.iter, ctx)
 end
 
 grammar_dg.Number = class('DGNumber', grammar_dg.Primitive)
@@ -499,7 +499,7 @@ function grammar_dg.Number.method:__init(rule, id, size, endian, name)
 	self.name = name
 end
 
-function grammar_dg.Number.method:parse(cur, init, input, ctx)
+function grammar_dg.Number.method:_parse(cur, init, input, ctx)
 	local bitoffset = ctx._bitoffset
 	local size, bit = math.ceil((bitoffset + self.size) / 8), (bitoffset + self.size) % 8
 
@@ -553,7 +553,7 @@ function grammar_dg.Bits.method:__init(rule, id, size)
 	self.size = size
 end
 
-function grammar_dg.Bits.method:parse(cur, init, input, ctx)
+function grammar_dg.Bits.method:_parse(cur, init, input, ctx)
 	local size = self.size(cur, ctx)
 	local bitoffset = ctx._bitoffset + size
 	local size, bit = math.ceil(bitoffset / 8), bitoffset % 8
@@ -576,7 +576,7 @@ function grammar_dg.Bytes.method:__init(rule, id, size, name, chunked)
 	self.chunked = chunked
 end
 
-function grammar_dg.Bytes.method:parse(cur, init, iter, ctx)
+function grammar_dg.Bytes.method:_parse(cur, init, iter, ctx)
 	if ctx._bitoffset ~= 0 then
 		return ctx:error(nil, self, "byte primitive requires aligned bits")
 	end
@@ -642,7 +642,7 @@ function grammar_dg.Token.method:__init(rule, id, pattern, re, name)
 	self.name = name
 end
 
-function grammar_dg.Token.method:parse(cur, init, iter, ctx)
+function grammar_dg.Token.method:_parse(cur, init, iter, ctx)
 	if not ctx.sink then
 		ctx.sink = self.re:create_sink()
 	end

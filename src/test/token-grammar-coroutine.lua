@@ -30,7 +30,7 @@ haka.rule{
 			local ctx = class('ctx'):new()
 			local mark = iter:copy()
 			mark:mark()
-			grammar:parseall(iter, ctx, nil)
+			grammar:parse(iter, ctx, nil)
 			print("hello_world= "..ctx.hello_world)
 			for _,header in ipairs(ctx.headers) do
 				print(header.name..": "..header.value)

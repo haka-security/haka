@@ -20,7 +20,7 @@ haka.rule{
 			local ctx = class('ctx'):new()
 			local iter = input:pos("begin")
 			if iter:available() > 0 then
-				local ctx, err = grammar:parseall(iter, ctx, nil)
+				local ctx, err = grammar:parse(iter, ctx, nil)
 				if err then
 					print("Parsing error : "..err)
 					return

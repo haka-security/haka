@@ -85,7 +85,7 @@ ipv4_dissector.grammar = header:compile()
 
 function ipv4_dissector.method:parse_payload(pkt, payload, init)
 	self.raw = pkt
-	ipv4_dissector.grammar:parseall(payload:pos("begin"), self, init)
+	ipv4_dissector.grammar:parse(payload:pos("begin"), self, init)
 end
 
 function ipv4_dissector.method:verify_checksum()

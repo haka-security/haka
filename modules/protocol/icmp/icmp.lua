@@ -24,7 +24,7 @@ icmp_dissector.grammar.packet = haka.grammar.record{
 
 function icmp_dissector.method:parse_payload(pkt, payload, init)
 	self.ip = pkt
-	icmp_dissector.grammar.packet:parseall(payload:pos("begin"), self, init)
+	icmp_dissector.grammar.packet:parse(payload:pos("begin"), self, init)
 end
 
 function icmp_dissector.method:verify_checksum()
