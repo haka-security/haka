@@ -36,6 +36,8 @@ struct vbuffer_iterator_blocking {
 
 %rename(vbuffer_iterator) vbuffer_iterator_lua;
 struct vbuffer_iterator_lua {
+	int meter;
+
 	%extend {
 		~vbuffer_iterator_lua()
 		{
@@ -177,8 +179,12 @@ struct vbuffer_iterator_lua {
 			vbuffer_iterator_lua_move_to__SWIG_0($self, &iter->super);
 		}
 
+		bool wait()
+		{
+			return vbuffer_iterator_iseof(&$self->super);
+		}
+
 		%immutable;
-		size_t meter { return $self->meter; }
 		bool iseof { return vbuffer_iterator_iseof(&$self->super); }
 	}
 };
@@ -226,13 +232,18 @@ struct vbuffer_iterator_blocking {
 			vbuffer_iterator_register(&$self->super.super);
 		}
 
+		int meter;
+
 		%immutable;
 		struct vbuffer_iterator_lua *_iter { return &$self->super; }
-
-		size_t meter { return $self->super.meter; }
 		bool iseof { return vbuffer_iterator_iseof(&$self->super.super); }
 	}
 };
+
+%{
+	int vbuffer_iterator_blocking_meter_get(struct vbuffer_iterator_blocking *iter) { return iter->super.meter; }
+	void vbuffer_iterator_blocking_meter_set(struct vbuffer_iterator_blocking *iter, int meter) { iter->super.meter = meter; }
+%}
 
 %luacode {
 	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].check_available = function (self, size)
@@ -346,6 +357,21 @@ struct vbuffer_iterator_blocking {
 		else
 			return nil
 		end
+	end
+
+	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].wait = function (self)
+		local iter = self._iter:copy()
+		while true do
+			local adv = iter:advance(-1)
+
+			if adv > 0 then break end
+			if iter.iseof then return false end
+
+			iter = coroutine.yield()
+			self:_update_iter(iter)
+		end
+
+		return true
 	end
 }
 

@@ -539,22 +539,22 @@ function grammar_dg.Bytes.method:parse(cur, init, iter, ctx)
 	end
 
 	if self.chunked then
-		while size == 'all' or size > 0 do
-			local begin = iter:copy()
-			local sub = iter:sub('available')
-			if not sub then break end
-
+		while (size == 'all' or size > 0) and iter:wait() do
 			if size ~= 'all' then
-				local subsize = #sub
+				local subsize = iter:available()
 				if subsize > size then
-					iter:move_to(begin)
 					sub = iter:sub(size)
 					subsize = size
+				else
+					sub = iter:sub('available')
 				end
 
 				size = size - subsize
+			else
+				sub = iter:sub('available')
 			end
 
+			if not sub then break end
 			self.chunked(cur, sub, size == 0 or iter.iseof, ctx)
 		end
 	else
@@ -594,20 +594,27 @@ function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 		ctx.sink = self.re:create_sink()
 	end
 
-	local begin = iter:copy()
-	local mark = iter:copy()
-	mark:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
+	local begin
 
 	while true do
+		iter:wait()
+
+		if not begin then
+			begin = iter:copy()
+			begin:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
+		end
+
 		local sub = iter:sub('available')
 
 		local match, result = ctx.sink:feed(sub or "", iter.iseof)
 		if not match and not ctx.sink:ispartial() then break end
 
 		if match then
-			mark:unmark()
-			local string = begin:sub(result.size):asstring()
 			iter:move_to(begin)
+			iter:unmark()
+
+			local string = iter:sub(result.size, true):asstring()
+
 			if self.name then
 				cur[self.name] = string
 			end
@@ -619,7 +626,7 @@ function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 	end
 
 	-- No match found return an error
-	mark:unmark()
+	begin:unmark()
 	local line = begin:copy():sub('available')
 	if line then
 		line = safe_string(line:asstring())
@@ -631,8 +638,7 @@ function grammar_dg.Token.method:parse(cur, init, iter, ctx)
 		line = line:sub(0, 100).."..."
 	end
 
-	return haka.grammar.ParseError:new(self, begin:copy(), "pattern /"..self.pattern.."/ doesn't match against `"..line.."`")
-
+	return haka.grammar.ParseError:new(self, begin, "pattern /"..self.pattern.."/ doesn't match against `"..line.."`")
 end
 
 
