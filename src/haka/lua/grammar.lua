@@ -38,6 +38,41 @@ end
 
 grammar_dg.Context = class('DGContext')
 
+grammar_dg.ArrayContext = class('DGArrayContext', grammar_dg.Context)
+
+function grammar_dg.ArrayContext.method:__init(entity, create)
+	self._entity = entity
+	self._create = create
+end
+
+function grammar_dg.ArrayContext.method:remove(el)
+	local index
+	if type(el) == 'number' then
+		index = el
+	else
+		for i, value in pairs(self) do
+			if value == el then
+				index = i
+				break
+			end
+		end
+	end
+
+	if not index then
+		return
+	end
+
+	self[index]._sub:erase()
+	table.remove(self, index)
+end
+
+function grammar_dg.ArrayContext.method:append(init)
+	local ctx = grammar_dg.Context:new()
+	local vbuf = self._create(ctx, self._entity, init)
+	self[#self]._sub:pos('end'):insert(vbuf)
+	table.insert(self, ctx)
+end
+
 grammar_dg.ParseContext = class('DGParseContext')
 
 grammar_dg.ParseContext.property.top = {
@@ -113,11 +148,11 @@ function grammar_dg.ParseContext.method:parse(entity)
 	return self._ctxs[1], err
 end
 
-function grammar_dg.ParseContext.method:create(entity)
+function grammar_dg.ParseContext.method:init(entity)
 	local iter = entity
 	local err
 	while iter do
-		err = iter:_create(self)
+		err = iter:init(self)
 		if err then
 			break
 		end
@@ -208,7 +243,7 @@ function grammar_dg.Entity.method:next(ctx)
 	return self._next
 end
 
-function grammar_dg.Entity.method:_create(ctx)
+function grammar_dg.Entity.method:init(ctx)
 end
 
 function grammar_dg.Entity.method:_apply(ctx)
@@ -307,7 +342,7 @@ end
 
 function grammar_dg.Entity.method:create(input, ctx, init)
 	local ctx = grammar_dg.ParseContext:new(input, ctx, init)
-	return ctx:create(self)
+	return ctx:init(self)
 end
 
 grammar_dg.Control = class('DGControl', grammar_dg.Entity)
@@ -419,17 +454,23 @@ end
 
 grammar_dg.ArrayStart = class('DGArrayStart', grammar_dg.Control)
 
-function grammar_dg.ArrayStart.method:__init(name, rule)
+function grammar_dg.ArrayStart.method:__init(name, rule, entity, create)
 	super(grammar_dg.ArrayStart).__init(self)
 	self.name = name
 	self.rule = rule
+	self.entity = entity
+	self.create = create
 end
 
 function grammar_dg.ArrayStart.method:_apply(ctx)
+	haka.debug.debugger.breakpoint()
 	local cur = ctx.current
-	local array = ctx:push({}, self.name)
+	local cur = ctx.current
 	if self.name then
+		local array = ctx:push(grammar_dg.ArrayContext:new(self.entity, self.create), self.name)
 		cur[self.name] = array
+	else
+		ctx:push(nil, nil)
 	end
 end
 
@@ -450,9 +491,31 @@ function grammar_dg.ArrayPush.method:__init()
 end
 
 function grammar_dg.ArrayPush.method:_apply(ctx)
+	haka.debug.debugger.breakpoint()
 	local cur = ctx.current
+	if isa(cur, grammar_dg.ArrayContext) then
+		cur._entitybegin = ctx.iter:copy()
+	end
 	local new = ctx:push(nil, #cur+1)
 	table.insert(cur, new)
+end
+
+grammar_dg.ArrayPop = class('DGArrayPop', grammar_dg.Control)
+
+function grammar_dg.ArrayPop.method:__init()
+	super(grammar_dg.ArrayPop).__init(self)
+end
+
+function grammar_dg.ArrayPop.method:_apply(ctx)
+	haka.debug.debugger.breakpoint()
+	local cur = ctx.current
+	local entityresult = ctx.current
+	ctx:pop()
+	local arrayresult = ctx.current
+	if isa(arrayresult, grammar_dg.ArrayContext) then
+		entityresult._sub = haka.vbuffer_sub(arrayresult._entitybegin, ctx.iter)
+		ctx.iter:split()
+	end
 end
 
 grammar_dg.Error = class('DGError', grammar_dg.Control)
@@ -514,7 +577,7 @@ function grammar_dg.Primitive.method:_apply(ctx)
 	return self:_parse(ctx.current, ctx.iter, ctx)
 end
 
-function grammar_dg.Primitive.method:_create(ctx)
+function grammar_dg.Primitive.method:init(ctx)
 	return self:_init(ctx.current, ctx.iter, ctx, ctx.current_init)
 end
 
@@ -934,10 +997,11 @@ function grammar.Array.method:__init(entity)
 end
 
 function grammar.Array.method:compile(rule, id)
-	local start = grammar_dg.ArrayStart:new(self.named, self.rule)
-	local finish = grammar_dg.ArrayFinish:new()
+	local entity = self.entity:compile(self.rule or rule, id)
+	local start = grammar_dg.ArrayStart:new(self.named, self.rule, entity, self.create)
+	local finish = grammar_dg.ContextPop:new()
 
-	local pop = grammar_dg.ContextPop:new()
+	local pop = grammar_dg.ArrayPop:new()
 	local inner = grammar_dg.ArrayPush:new()
 	inner:add(self.entity:compile(self.rule or rule, id))
 	inner:add(pop)
@@ -973,6 +1037,9 @@ function grammar.Array._options.whilecond(self, condition)
 	end
 end
 
+function grammar.Array._options.create(self, f)
+	self.create = f
+end
 
 grammar.Regex = class('Regex', grammar.Entity)
 

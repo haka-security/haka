@@ -34,3 +34,4 @@ TEST_PCAP(core doc-alert CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/../../doc/ref/alert-
 TEST_UNIT_LUA(MODULE core NAME doc-regexp FILES ../../doc/ref/regexp.lua)
 TEST_PCAP(core token-grammar)
 TEST_PCAP(core token-grammar-coroutine)
+TEST_PCAP(core grammar-array-setter)
