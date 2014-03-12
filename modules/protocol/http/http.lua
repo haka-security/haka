@@ -314,7 +314,8 @@ function http_dissector.method:__init(flow)
 	if flow then
 		self.connection = flow.connection
 	end
-	self._state = 'request'
+	self.states = http_dissector.states:instanciate()
+	self.states.http = self
 end
 
 function http_dissector.method:continue()
@@ -419,7 +420,7 @@ function http_dissector.method:send(iter, mark)
 	mark:unmark()
 	local len = iter.meter - mark.meter
 
-	if self._state == 'request' then
+	if self.states.state.name == 'request' then
 		if haka.packet.mode() == haka.packet.PASSTHROUGH then
 			return
 		end
@@ -437,10 +438,6 @@ function http_dissector.method:send(iter, mark)
 		iter:move_to(mark)
 		iter:sub(len, true):replace(haka.vbuffer(table.concat(request)))
 	else
-		if self.request.method == 'CONNECT' then
-			self._state = 'connect' -- We should not expect a request nor response anymore
-		end
-
 		if haka.packet.mode() == haka.packet.PASSTHROUGH then
 			return
 		end
@@ -461,11 +458,11 @@ function http_dissector.method:send(iter, mark)
 end
 
 function http_dissector.method:trigger_event(ctx, iter, mark)
-	local type = self._state
-	local converted = convert[type](ctx)
+	local state = self.states.state.name
+	local converted = convert[state](ctx)
 	ctx.http = nil
 
-	if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events[type], converted) then
+	if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events[state], converted) then
 		self:drop()
 	end
 
@@ -540,8 +537,13 @@ local header = haka.grammar.record{
 }
 :extra{
 	function (self, ctx)
-		if self.name:lower() == 'content-length' then
+		local lower_name =  self.name:lower()
+		if lower_name == 'content-length' then
 			ctx.content_length = tonumber(self.value)
+			ctx.mode = 'content'
+		elseif lower_name == 'transfer-encoding' and
+		       self.value:lower() == 'chunked' then
+			ctx.mode = 'chunked'
 		end
 	end
 }
@@ -561,13 +563,39 @@ local header_or_crlf = haka.grammar.branch(
 local headers = haka.grammar.array(header_or_crlf):
 	options{ untilcond = function (elem, ctx) return elem and not elem.name end }
 
-local body = haka.grammar.bytes()
-	:options{
-		count = function (self, ctx) return ctx.content_length or 0 end,
+-- http chunk
+local chunk = haka.grammar.record{
+	haka.grammar.field('chunk_size', haka.grammar.token('[0-9a-fA-F]+')),
+	CRLF,
+	haka.grammar.bytes():options{
+		count = function (self, context) return tonumber(self.chunk_size, 16) end,
 		chunked = function (self, sub, last, ctx)
-			ctx.top.http:push_data(self, sub, last, http_dissector.events[ctx.top.http._state .. '_data'])
+			ctx.top.http:push_data(self, sub, last, http_dissector.events[ctx.top.http.states.state.name .. '_data'])
 		end
-	}
+	},
+	haka.grammar.optional(CRLF, function (self, context) return tonumber(self.chunk_size, 16) > 0 end)
+}
+
+local chunks = haka.grammar.record{
+	haka.grammar.array(chunk):options{
+		untilcond = function (elem) return elem and tonumber(elem.chunk_size, 16) == 0 end
+	},
+	haka.grammar.field('headers', headers)
+}
+
+local body = haka.grammar.branch(
+	{
+		content = haka.grammar.bytes():options{
+			count = function (self, ctx) return ctx.content_length or 0 end,
+			chunked = function (self, sub, last, ctx)
+				ctx.top.http:push_data(self, sub, last, http_dissector.events[ctx.top.http.states.state.name .. '_data'])
+			end
+		},
+		chunked = chunks,
+		default = true
+	}, 
+	function (self, ctx) return ctx.mode end
+)
 
 local message = haka.grammar.record{
 	haka.grammar.field('headers', headers),
@@ -593,88 +621,124 @@ local response = haka.grammar.record{
 }:compile()
 
 
+http_dissector.states = haka.state_machine.new("http")
+
+http_dissector.states:default{
+	error = function (context)
+		context.http:drop()
+	end,
+	update = function (context, direction, iter)
+		return context[direction](context, iter)
+	end
+}
+
 local ctx_object = class('http_ctx')
+
+http_dissector.states.request = http_dissector.states:state{
+	up = function (context, iter)
+		local self = context.http
+
+		self.request = ctx_object:new()
+		self.request.http = self
+		self.response = nil
+
+		self.request.split_uri = function (self)
+			if self._splitted_uri then
+				return self._splitted_uri
+			else
+				self._splitted_uri = uri_split(self.uri)
+				return self._splitted_uri
+			end
+		end
+
+		self.request.split_cookies = function (self)
+			if self._cookies then
+				return self._cookies
+			else
+				self._cookies = cookies_split(self.headers['Cookie'])
+				return self._cookies
+			end
+		end
+
+		local err
+		self.request, err = request:parseall(iter, self.request)
+		if err then
+			haka.alert{
+				description = err:__tostring(),
+				severity = 'low'
+			}
+			self:drop()
+			return
+		end
+
+		if not self:continue() then return end
+
+		return context.states.response
+	end,
+	down = function (context)
+		haka.alert{
+			description = "http: unexpected data from server",
+			severity = 'low'
+		}
+		return context.states.ERROR
+	end
+}
+
+http_dissector.states.response = http_dissector.states:state{
+	up = function (context, iter)
+		haka.alert{
+			description = "http: unexpected data from client",
+			severity = 'low'
+		}
+		return context.states.ERROR
+	end,
+	down = function (context, iter)
+		local self = context.http
+
+		self.response = ctx_object:new()
+		self.response.http = self
+
+		self.response.split_cookies = function (self)
+			if self._cookies then
+				return self._cookies
+			else
+				self._cookies = cookies_split(self.headers['Set-Cookie'])
+				return self._cookies
+			end
+		end
+
+		local err
+		self.response, err = response:parseall(iter, self.response)
+		if err then
+			haka.alert{
+				description = err:__tostring(),
+				severity = 'low'
+			}
+			self:drop()
+			return
+		end
+
+		if not self:continue() then return end
+
+		return context.states.request
+	end,
+}
+
+http_dissector.states.connect = http_dissector.states:state{
+	update = function (context, iter)
+		iter:advance('all')
+	end
+}
+
+http_dissector.states.initial = http_dissector.states.request
 
 function http_dissector.method:receive(flow, iter, direction)
 	assert(flow == self.flow)
 
-	local mark
-
-	if direction == 'up' then
-		while iter:check_available(1) do
-			if self._state == 'request' then
-				self.request = ctx_object:new()
-				self.request.http = self
-				self.response = nil
-
-				self.request.split_uri = function (self)
-					if self._splitted_uri then
-						return self._splitted_uri
-					else
-						self._splitted_uri = uri_split(self.uri)
-						return self._splitted_uri
-					end
-				end
-
-				self.request.split_cookies = function (self)
-					if self._cookies then
-						return self._cookies
-					else
-						self._cookies = cookies_split(self.headers['Cookie'])
-						return self._cookies
-					end
-				end
-
-				local err
-				self.request, err = request:parseall(iter, self.request)
-				if err then
-					haka.alert{
-						description = err:__tostring(),
-						severity = 'low'
-					}
-					self:drop()
-					return
-				end
-
-				if not self:continue() then return end
-
-				self._state = 'response'
-			else
-				iter:advance('available')
-			end
-		end
-	else
-		while iter:check_available(1) do
-			if self._state == 'response' then
-				self.response = ctx_object:new()
-				self.response.http = self
-
-				self.response.split_cookies = function (self)
-					if self._cookies then
-						return self._cookies
-					else
-						self._cookies = cookies_split(self.headers['Set-Cookie'])
-						return self._cookies
-					end
-				end
-
-				local err
-				self.response, err = response:parseall(iter, self.response)
-				if err then
-					haka.alert{
-						description = err.__tostring(),
-						severity = 'low'
-					}
-					self:drop()
-					return
-				end
-				if not self:continue() then return end
-
-				self._state = 'request'
-			else
-				iter:advance('available')
-			end
-		end
+	while iter:wait() do
+		self.states:update(direction, iter)
+		
+		if not self:continue() then break end
 	end
 end
 
