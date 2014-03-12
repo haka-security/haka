@@ -107,12 +107,21 @@ function dissector.EncapsulatedPacketDissector.method:__init(parent)
 	self._parent = parent
 end
 
-function dissector.EncapsulatedPacketDissector.method:parse(pkt, init)
+function dissector.EncapsulatedPacketDissector.method:parse(pkt)
 	self._select, self._payload = pkt.payload:sub(0, 'all'):select()
-	self:parse_payload(pkt, self._payload, init)
+	self:parse_payload(pkt, self._payload)
 end
 
-function dissector.EncapsulatedPacketDissector.method:parse_payload(pkt, payload, init)
+function dissector.EncapsulatedPacketDissector.method:parse_payload(pkt, payload)
+	error("not implemented")
+end
+
+function dissector.EncapsulatedPacketDissector.method:create(init, pkt)
+	self._select, self._payload = pkt.payload:sub(0, 'all'):select()
+	self:create_payload(pkt, self._payload, init)
+end
+
+function dissector.EncapsulatedPacketDissector.method:create_payload(pkt, payload, init)
 	error("not implemented")
 end
 

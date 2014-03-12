@@ -83,9 +83,14 @@ local header = haka.grammar.record{
 
 ipv4_dissector.grammar = header:compile()
 
-function ipv4_dissector.method:parse_payload(pkt, payload, init)
+function ipv4_dissector.method:parse_payload(pkt, payload)
 	self.raw = pkt
-	ipv4_dissector.grammar:parse(payload:pos("begin"), self, init)
+	ipv4_dissector.grammar:parse(payload:pos("begin"), self)
+end
+
+function ipv4_dissector.method:create_payload(pkt, payload, init)
+	self.raw = pkt
+	ipv4_dissector.grammar:create(payload:pos("begin"), self, init)
 end
 
 function ipv4_dissector.method:verify_checksum()
@@ -121,7 +126,7 @@ function ipv4_dissector:create(pkt, init)
 	pkt.payload:append(haka.vbuffer(init.hdr_len))
 
 	local ip = ipv4_dissector:new(pkt)
-	ip:parse(pkt, init)
+	ip:create(init, pkt)
 
 	return ip
 end
