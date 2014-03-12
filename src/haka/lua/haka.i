@@ -35,6 +35,7 @@ const char *module_get_path();
 %immutable;
 char *module_prefix;
 char *module_suffix;
+%mutable;
 
 struct time {
 	int    secs;
