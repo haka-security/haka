@@ -53,7 +53,8 @@ bool lua_ref_clear(struct lua_ref *ref)
 void lua_ref_push(struct lua_State *state, struct lua_ref *ref)
 {
 	if (lua_ref_isvalid(ref)) {
-		assert(state == ref->state->L);
+		struct lua_state *mainthread = lua_state_get(state);
+		assert(mainthread == ref->state);
 		lua_rawgeti(state, LUA_REGISTRYINDEX, ref->ref);
 	}
 	else {
