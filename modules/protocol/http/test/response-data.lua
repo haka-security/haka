@@ -15,7 +15,7 @@ haka.rule {
 			local sub = iter:sub('available')
 			if not sub then break end
 
-			print(sub:asstring())
+			print(safe_string(sub:asstring()))
 		end
 	end
 }
