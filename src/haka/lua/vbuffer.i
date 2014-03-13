@@ -408,6 +408,21 @@ struct vbuffer_sub {
 			return sub;
 		}
 
+		vbuffer_sub(struct vbuffer_iterator_lua *begin, struct vbuffer_iterator_blocking *end)
+		{
+			return new_vbuffer_sub__SWIG_0(begin, &end->super);
+		}
+
+		vbuffer_sub(struct vbuffer_iterator_blocking *begin, struct vbuffer_iterator_lua *end)
+		{
+			return new_vbuffer_sub__SWIG_0(&begin->super, end);
+		}
+
+		vbuffer_sub(struct vbuffer_iterator_blocking *begin, struct vbuffer_iterator_blocking *end)
+		{
+			return new_vbuffer_sub__SWIG_0(&begin->super, &end->super);
+		}
+
 		~vbuffer_sub()
 		{
 			vbuffer_sub_clear($self);
