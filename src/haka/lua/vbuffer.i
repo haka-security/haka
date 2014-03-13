@@ -534,21 +534,19 @@ struct vbuffer_sub {
 		int  asbits(int offset, int bits, const char *endian = NULL) { return vbuffer_asbits($self, offset, bits, endian ? strcmp(endian, "big") == 0 : true); }
 		void setbits(int offset, int bits, int value, const char *endian = NULL) { vbuffer_setbits($self, offset, bits, endian ? strcmp(endian, "big") == 0 : true, value); }
 
-		temporary_string asstring()
+		void asstring(char **TEMP_OUTPUT, size_t *TEMP_SIZE)
 		{
-			const size_t len = vbuffer_sub_size($self);
-			char *str = malloc(len+1);
-			if (!str) {
+			*TEMP_SIZE = vbuffer_sub_size($self);
+			*TEMP_OUTPUT = malloc(*TEMP_SIZE+1);
+			if (!*TEMP_OUTPUT) {
 				error(L"memory error");
-				return NULL;
+				return;
 			}
 
-			if (vbuffer_asstring($self, str, len+1) == (size_t)-1) {
-				free(str);
-				return NULL;
+			if (vbuffer_asstring($self, *TEMP_OUTPUT, *TEMP_SIZE+1) == (size_t)-1) {
+				free(*TEMP_OUTPUT);
+				*TEMP_OUTPUT = NULL;
 			}
-
-			return str;
 		}
 
 		void setfixedstring(const char *STRING, size_t SIZE) { vbuffer_setfixedstring($self, STRING, SIZE); }

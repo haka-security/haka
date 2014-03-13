@@ -60,21 +60,19 @@ struct time {
 		%immutable;
 		double seconds;
 
-		temporary_string __tostring()
+		void __tostring(char **TEMP_OUTPUT)
 		{
-			char *ret = malloc(TIME_BUFSIZE);
-			if (!ret) {
+			*TEMP_OUTPUT = malloc(TIME_BUFSIZE);
+			if (!*TEMP_OUTPUT) {
 				error(L"memory error");
-				return NULL;
+				return;
 			}
 
-			if (!time_tostring($self, ret, TIME_BUFSIZE)) {
+			if (!time_tostring($self, *TEMP_OUTPUT, TIME_BUFSIZE)) {
 				assert(check_error());
-				free(ret);
-				return NULL;
+				free(*TEMP_OUTPUT);
+				*TEMP_OUTPUT = NULL;
 			}
-
-			return ret;
 		}
 	}
 };

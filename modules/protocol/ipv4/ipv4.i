@@ -117,15 +117,15 @@ struct ipv4_addr {
 			return $self->addr <= addr->addr;
 		}
 
-		temporary_string __tostring()
+		void __tostring(char **TEMP_OUTPUT)
 		{
-			char *buffer = malloc(IPV4_ADDR_STRING_MAXLEN + 1);
-			if (!buffer) {
+			*TEMP_OUTPUT = malloc(IPV4_ADDR_STRING_MAXLEN + 1);
+			if (!*TEMP_OUTPUT) {
 				error(L"memory error");
-				return NULL;
+				return;
 			}
-			ipv4_addr_to_string($self->addr, buffer, IPV4_ADDR_STRING_MAXLEN + 1);
-			return buffer;
+
+			ipv4_addr_to_string($self->addr, *TEMP_OUTPUT, IPV4_ADDR_STRING_MAXLEN + 1);
 		}
 
 		int packed;
@@ -213,17 +213,16 @@ struct ipv4_network {
 				free($self);
 		}
 
-		temporary_string __tostring()
+		void __tostring(char **TEMP_OUTPUT)
 		{
-			char *buffer = malloc(IPV4_NETWORK_STRING_MAXLEN + 1);
-			if (!buffer) {
+			*TEMP_OUTPUT = malloc(IPV4_NETWORK_STRING_MAXLEN + 1);
+			if (!*TEMP_OUTPUT) {
 				error(L"memory error");
-				return NULL;
+				return;
 			}
-			ipv4_network_to_string($self->net, buffer,
-					IPV4_NETWORK_STRING_MAXLEN + 1);
 
-			return buffer;
+			ipv4_network_to_string($self->net, *TEMP_OUTPUT,
+					IPV4_NETWORK_STRING_MAXLEN + 1);
 		}
 
 		%rename(contains) _contains;

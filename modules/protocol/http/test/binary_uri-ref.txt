@@ -2,6 +2,6 @@ debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 127.0.0.1:42072 -> 127.0.0.1:80
 info alert: id = <>
 	severity = low
-	description = Parse error at byte 5 : pattern /^(?:[[:blank:]]+)/ doesn't match against `\x4\x8e\x99\xff`
+	description = Parse error at byte 5 : pattern /^(?:[[:blank:]]+)/ doesn't match against `\x4\x8e\x99\xff\x0\x11\xed\xde\xad\xbe\xef HTTP/1.1\xd\xaHost: 127.0.0.1\xd\xa\xd\xa`
 debug tcp-connection: dropping connection 127.0.0.1:42072 -> 127.0.0.1:80
 debug tcp-connection: closing connection 127.0.0.1:42072 -> 127.0.0.1:80
