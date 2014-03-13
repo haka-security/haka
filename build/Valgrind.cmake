@@ -10,23 +10,23 @@ if(VALGRIND_COMMAND AND NOT "$ENV{QUICK}" STREQUAL "yes")
 	set(DO_VALGRIND 1)
 endif()
 
-macro(_VALGRIND name options)
+macro(RUN_VALGRIND name reachable)
 	if (DO_VALGRIND)
 		execute_process(COMMAND ${VALGRIND_COMMAND} --leak-check=full --gen-suppressions=all
 			--suppressions=${CTEST_MODULE_DIR}/Valgrind.sup
 			--suppressions=${CTEST_MODULE_DIR}/Valgrind-check.sup
-			${options} --log-file=${name}-valgrind.txt ${ARGN})
+			--show-reachable=${reachable} --log-file=${name}-valgrind.txt ${ARGN})
 	else()
 		execute_process(COMMAND ${ARGN})
 	endif()
-endmacro(_VALGRIND)
+endmacro(RUN_VALGRIND)
 
 macro(VALGRIND name)
-	_VALGRIND(name "" ${ARGN})
+	RUN_VALGRIND(${name} no ${ARGN})
 endmacro(VALGRIND)
 
 macro(VALGRIND_FULL name)
-	_VALGRIND(name "--show-reachable=yes" ${ARGN})
+	RUN_VALGRIND(${name} yes ${ARGN})
 	set(DO_VALGRIND_FULL 1)
 endmacro(VALGRIND_FULL)
 
