@@ -25,7 +25,10 @@ local function dict(table)
 	return ret
 end
 
-local _unreserved = dict({45, 46, 95, 126})
+local _unreserved = dict({string.byte("-"),
+				string.byte("."),
+				string.byte("_"),
+				string.byte("~")})
 
 local function uri_safe_decode(uri)
 	local uri = string.gsub(uri, '%%(%x%x)',
