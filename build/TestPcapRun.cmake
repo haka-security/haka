@@ -17,7 +17,7 @@ include(Valgrind)
 
 message("Executing TZ=\"Europe/Paris\" LANG=\"C\" LC_ALL=\"C\" LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" ${EXE} -d --no-pass-through ${EXE_OPTIONS} -o ${DST}.pcap ${SRC} ${CONF}")
 
-VALGRIND(${DST} ${EXE} -d --no-pass-through ${EXE_OPTIONS} -o ${DST}.pcap ${SRC} ${CONF}
+VALGRIND_FULL(${DST} ${EXE} -d --no-pass-through ${EXE_OPTIONS} -o ${DST}.pcap ${SRC} ${CONF}
 	RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)
 
 execute_process(COMMAND cat ${DST}-tmp.txt OUTPUT_VARIABLE CONTENT)
