@@ -184,6 +184,11 @@ struct vbuffer_iterator_lua {
 			return vbuffer_iterator_iseof(&$self->super);
 		}
 
+		void split()
+		{
+			vbuffer_iterator_split(&$self->super);
+		}
+
 		%immutable;
 		bool iseof { return vbuffer_iterator_iseof(&$self->super); }
 	}
@@ -224,6 +229,8 @@ struct vbuffer_iterator_blocking {
 		struct vbuffer_iterator_lua *copy() { return vbuffer_iterator_lua_copy(&$self->super); }
 		void move_to(struct vbuffer_iterator_lua *iter) { return vbuffer_iterator_lua_move_to__SWIG_0(&$self->super, iter); }
 		void move_to(struct vbuffer_iterator_blocking *iter) { return vbuffer_iterator_lua_move_to__SWIG_1(&$self->super, iter); }
+		void split() { vbuffer_iterator_lua_split(&$self->super); }
+
 
 		void _update_iter(struct vbuffer_iterator_lua *update_iter)
 		{
