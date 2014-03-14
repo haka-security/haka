@@ -757,6 +757,6 @@ end
 http_dissector.connections = haka.events.StaticEventConnections:new()
 http_dissector.connections:register(haka.event('tcp-connection', 'receive_data'),
 	haka.events.method(haka.events.self, http_dissector.method.receive),
-	{coroutine=true})
+	{streamed=true})
 
 return module

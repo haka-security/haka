@@ -8,7 +8,7 @@ require("protocol/tcp-connection")
 
 haka.rule {
 	hook = haka.event('tcp-connection', 'receive_data'),
-	coroutine = true,
+	streamed = true,
 	eval = function (flow, iter, direction)
 		local sub
 		local data = {}

@@ -23,7 +23,7 @@ function haka.rule(r)
 	assert(type(r.eval) == 'function', "rule eval function expected")
 
 	local options = {}
-	if r.coroutine then options.coroutine = true end
+	if r.streamed then options.streamed = true end
 
 	haka.context.connections:register(r.hook, r.eval, options)
 end

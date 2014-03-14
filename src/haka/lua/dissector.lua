@@ -187,7 +187,7 @@ function dissector.FlowDissector.stream_wrapper(f, options, self, stream, ...)
 		return
 	end
 
-	if options and options.coroutine then
+	if options and options.streamed then
 		local comanager = self:get_comanager(stream, ...)
 		if not comanager:has(f) then
 			local args = {...}

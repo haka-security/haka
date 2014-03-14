@@ -24,7 +24,7 @@ local grammar = haka.grammar.record{
 haka.rule{
 	-- Intercept tcp packets
 	hook = haka.event('tcp-connection', 'receive_data'),
-	coroutine = true,
+	streamed = true,
 	eval = function (flow, iter, direction)
 		if direction == 'up' then
 			local ctx = class('ctx'):new()

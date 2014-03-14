@@ -8,7 +8,7 @@ http.install_tcp_rule(80)
 
 haka.rule {
 	hook = haka.event('http', 'response_data'),
-	coroutine = true,
+	streamed = true,
 	eval = function (http, iter)
 		print("== RESPONSE DATA ==")
 		while true do
