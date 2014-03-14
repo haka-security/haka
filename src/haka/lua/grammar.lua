@@ -799,14 +799,26 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 			iter:move_to(begin)
 			iter:unmark()
 
-			local string = iter:sub(result.size, true):asstring()
+			local sub = iter:sub(result.size, true)
+			local string = sub:asstring()
 
 			if self.converter then
 				string = self.converter.get(string)
 			end
 
 			if self.name then
-				res[self.name] = string
+				res:addproperty(self.name,
+					function (this)
+						return string
+					end,
+					function (this, newvalue)
+						if self.converter then
+							newvalue = self.converter.set(newvalue)
+						end
+						sub:setstring(newvalue)
+						string = newvalue
+					end
+				)
 			end
 			ctx.sink = nil
 			return
