@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 export HAKA_TEST_FIX=$(pwd)/haka-test-fix
+export QUICK=yes
 
 for i in $(seq $1 $2)
 do
