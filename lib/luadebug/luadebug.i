@@ -65,9 +65,17 @@ void lua_luadebug_debugger_break();
 	local this = unpack({...})
 	local color = require("color")
 
-	function this.hide_underscore(name)
+	function this.hide_underscore(name, value)
 		if type(name) == "string" then
 			return name:sub(1, 1) == "_"
+		else
+			return false
+		end
+	end
+
+	function this.hide_function(name, value)
+		if type(value) == "function" then
+			return true
 		else
 			return false
 		end
@@ -77,6 +85,15 @@ void lua_luadebug_debugger_break();
 		return function (...)
 			p(data, ...)
 		end
+	end
+
+	local function _hidden(key, value, hidden)
+		for _,i in pairs(hidden) do
+			if i(key, value) then
+				return true
+			end
+		end
+		return false
 	end
 
 	local __pprint
@@ -97,13 +114,13 @@ void lua_luadebug_debugger_break();
 				local has_value = false
 
 				for key, _ in pairs(meta[".get"]) do
-					if not hidden or not hidden(key) then
+					local success, child_obj = pcall(function () return obj[key] end)
+					if not _hidden(key, child_obj, hidden) then
 						if not has_value then
 							out(title, "{")
 							has_value = true
 						end
 
-						local success, child_obj = pcall(function () return obj[key] end)
 						if success then
 							__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
 						else
@@ -130,7 +147,7 @@ void lua_luadebug_debugger_break();
 			out(title, "{")
 
 			for key, value in pairs(obj) do
-				if not hidden or not hidden(key) then
+				if not _hidden(key, value, hidden) then
 					__pprint(value, indent .. "  ", tostring(key), visited, hidden, depth-1, out)
 				end
 			end
@@ -152,7 +169,7 @@ void lua_luadebug_debugger_break();
 			local vars = {}
 
 			for key, value in pairs(obj) do
-				if key ~= '__property' and (not hidden or not hidden(key)) then
+				if key ~= '__property' and (not _hidden(key, value, hidden)) then
 					__pprint(value, indent .. "  ", tostring(key), visited, hidden, depth-1, out)
 					vars[key] = true
 				end
@@ -161,9 +178,9 @@ void lua_luadebug_debugger_break();
 			local property = rawget(obj, '__property')
 			if property then
 				for key, _ in pairs(property) do
-					if not vars[key] and (not hidden or not hidden(key)) then
+					local success, child_obj = pcall(function () return obj[key] end)
+					if not vars[key] and (not _hidden(key, child_obj, hidden)) then
 						vars[key] = true
-						local success, child_obj = pcall(function () return obj[key] end)
 						if success then
 							__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
 						else
@@ -175,9 +192,9 @@ void lua_luadebug_debugger_break();
 			end
 
 			for key, _ in pairs(meta.property) do
-				if not vars[key] and (not hidden or not hidden(key)) then
+				local success, child_obj = pcall(function () return obj[key] end)
+				if not vars[key] and (not _hidden(key, child_obj, hidden)) then
 					vars[key] = true
-					local success, child_obj = pcall(function () return obj[key] end)
 					if success then
 						__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
 					else
@@ -242,6 +259,14 @@ void lua_luadebug_debugger_break();
 	end
 
 	function this.pprint(obj, indent, depth, hide, out)
+		if not hide then
+			hide = {}
+		end
+
+		if type(hide) == "function" then
+			hide = { hide }
+		end
+
 		if num then
 			__pprint(obj, indent or "", nil, {}, hide, depth or -1, out or print)
 		else
