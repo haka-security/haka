@@ -70,7 +70,7 @@ elseif(EXISTS "${REF}.pcap")
 endif()
 
 if(EXISTS "${REFPCAP}")
-	execute_process(COMMAND bash ${CTEST_MODULE_DIR}/ComparePcap.sh ${DST}.pcap ${REFPCAP}
+	execute_process(COMMAND bash ${CTEST_MODULE_DIR}/ComparePcap.sh ${REFPCAP} ${DST}.pcap
 		RESULT_VARIABLE HAD_ERROR OUTPUT_VARIABLE CONTENT)
 	if(HAD_ERROR)
 		message("${CONTENT}")
