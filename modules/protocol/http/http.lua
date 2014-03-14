@@ -90,13 +90,11 @@ local convert = {}
 
 function convert.request(request)
 	request.headers, request._headers_order = convert_headers(request.headers)
-	request.dump = dump
 	return request
 end
 
 function convert.response(response)
 	response.headers, response._headers_order = convert_headers(response.headers)
-	response.dump = dump
 	return response
 end
 
