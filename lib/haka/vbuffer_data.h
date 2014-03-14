@@ -7,6 +7,8 @@
 
 #include <haka/thread.h>
 
+void vbuffer_data_release(struct vbuffer_data *data);
+
 extern struct vbuffer_data_ops vbuffer_data_basic_ops;
 
 struct vbuffer_data_basic {

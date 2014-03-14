@@ -112,14 +112,45 @@ bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data, vo
 		return false;
 	}
 
-	ctl = vbuffer_chunk_insert_ctl(vbuffer_chunk_end(data), &chunk->ctl_data->super.super);
+	/* Move the end of the vbuffer, this allow an iterator placed at the
+	 * end of the vbuffer to be put before a new chunk pushed in the stream.
+	 */
+	end = vbuffer_chunk_end(&stream->data);
+	if (!end->data) {
+		struct vbuffer_data_ctl_push *end_data = vbuffer_data_ctl_push(stream, NULL);
+		if (!end_data) {
+			free(chunk);
+			return false;
+		}
+
+		end->data = &end_data->super.super;
+		end_data->super.super.ops->addref(&end_data->super.super);
+	}
+
+	ctl = vbuffer_chunk_create(&chunk->ctl_data->super.super, 0, 0);
 	if (!ctl) {
 		free(chunk);
 		return false;
 	}
 
-	end = vbuffer_chunk_end(&stream->data);
-	list2_insert_list(&end->list, &vbuffer_chunk_begin(data)->list, &vbuffer_chunk_end(data)->list);
+	list2_insert(list2_next(&end->list), &ctl->list);
+
+	ctl->flags = end->flags;
+	ctl->flags.ctl = true;
+	ctl->flags.writable = vbuffer_iswritable(data);
+
+	end->flags.end = false;
+	end->flags.eof = false;
+
+#ifdef HAKA_DEBUG
+	assert(end->list.is_end);
+	end->list.is_end = false;
+	ctl->list.is_end = true;
+#endif
+
+	stream->data.chunks = ctl;
+
+	list2_insert_list(&ctl->list, &vbuffer_chunk_begin(data)->list, &vbuffer_chunk_end(data)->list);
 
 	list2_insert(list2_end(&stream->chunks), &chunk->list);
 
@@ -151,6 +182,7 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, v
 	struct vbuffer_stream_chunk *read_last;
 	struct vbuffer_chunk *begin, *iter, *start_of_keep, *end;
 	bool keep_for_read = false;
+	bool left_over_end_found = false;
 
 	if (!current) {
 		return false;
@@ -167,22 +199,39 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, v
 		begin = vbuffer_chunk_begin(&stream->data);
 	}
 
+	if (!begin->flags.end && begin->data &&
+	    begin->data->ops == &vbuffer_data_ctl_push_ops) {
+		struct vbuffer_data_ctl_push *ctl_data = (struct vbuffer_data_ctl_push *)begin->data;
+		if (ctl_data->stream == stream && ctl_data->chunk == NULL) {
+			/* This chunk is a left over of a pop stream chunk, remove it */
+			begin = vbuffer_chunk_remove_ctl(begin);
+			left_over_end_found = true;
+		}
+	}
+
 	iter = begin;
 
 	/* Check if the data can be pop */
 	while (true) {
-		assert(!iter->flags.end);
-
-		// Until end of pushed chunk
+		/* Until end of pushed chunk */
 		if (iter->data == &current->ctl_data->super.super) {
 			break;
 		}
 
+		assert(!iter->flags.end);
+
 		if (iter->flags.ctl) {
-#ifdef HAKA_DEBUG
-			/* A push ctl node must be from another stream */
 			if (iter->data->ops == &vbuffer_data_ctl_push_ops) {
 				struct vbuffer_data_ctl_push *ctl_data = (struct vbuffer_data_ctl_push *)iter->data;
+
+				if (!left_over_end_found && ctl_data->stream == stream && ctl_data->chunk == NULL) {
+					iter = vbuffer_chunk_remove_ctl(iter);
+					left_over_end_found = true;
+					continue;
+				}
+
+#ifdef HAKA_DEBUG
+				/* A push ctl node must be from another stream */
 				assert(ctl_data->stream != stream);
 			}
 #endif
@@ -241,10 +290,18 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, v
 	}
 	else {
 		/* Extract buffer data */
-		list2_insert_list(&end->list, &begin->list, list2_next(&iter->list));
+		list2_insert_list(&end->list, &begin->list, &iter->list);
 
 		/* Remove push ctl node */
-		vbuffer_chunk_remove_ctl(iter);
+		if (!iter->flags.end) {
+			vbuffer_chunk_remove_ctl(iter);
+		}
+		else {
+			/* Recreate end chunk */
+			struct vbuffer_data_ctl_push *ctl_data = (struct vbuffer_data_ctl_push *)iter->data;
+			assert(iter->data->ops == &vbuffer_data_ctl_push_ops);
+			ctl_data->chunk = NULL;
+		}
 	}
 
 	/* Update stream->chunks and stream->read_chunks */

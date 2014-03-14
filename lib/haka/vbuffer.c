@@ -16,18 +16,6 @@
 
 
 /*
- * Buffer data
- */
-
-static void vbuffer_data_release(struct vbuffer_data *data)
-{
-	if (data && data->ops->release(data)) {
-		data->ops->free(data);
-	}
-}
-
-
-/*
  * Buffer chunk
  */
 
@@ -1253,9 +1241,15 @@ static struct vbuffer_chunk *_vbuffer_extract(struct vbuffer_sub *data, struct v
 			}
 
 			if (iter->flags.ctl && !insert_ctl) {
-				list2_iter eraseiter = list2_erase(&iter->list);
-				ctl_insert_iter = list2_insert(list2_next(ctl_insert_iter), &iter->list);
-				iter = list2_get(eraseiter, struct vbuffer_chunk, list);
+				if (iter == begin) {
+					begin = vbuffer_chunk_next(begin);
+					iter = begin;
+				}
+				else {
+					list2_iter eraseiter = list2_erase(&iter->list);
+					ctl_insert_iter = list2_insert(list2_next(ctl_insert_iter), &iter->list);
+					iter = list2_get(eraseiter, struct vbuffer_chunk, list);
+				}
 			}
 			else {
 				iter = vbuffer_chunk_next(iter);

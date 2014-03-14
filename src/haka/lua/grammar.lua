@@ -100,6 +100,12 @@ grammar_dg.ParseContext.property.init = {
 	get = function (self) return self._initresults ~= nil end
 }
 
+grammar_dg.ParseContext.property.retain_mark = {
+	get = function (self)
+		return self._retain_mark[#self._retain_mark]
+	end
+}
+
 local function revalidate(self)
 	local validate = self._validate
 	self._validate = {}
@@ -114,6 +120,7 @@ function grammar_dg.ParseContext.method:__init(iter, topresult, init)
 	self._marks = {}
 	self._results = {}
 	self._validate = {}
+	self._retain_mark = {}
 	self:push(topresult)
 
 	if init then
@@ -539,6 +546,31 @@ end
 
 function grammar_dg.Execute.method:_apply(ctx)
 	self.callback(ctx.result, ctx)
+end
+
+grammar_dg.Retain = class('DGRetain', grammar_dg.Control)
+
+function grammar_dg.Retain.method:__init(readonly)
+	super(grammar_dg.Error).__init(self)
+	self.readonly = readonly
+end
+
+function grammar_dg.Retain.method:_apply(ctx)
+	-- We try to mark the incoming data, so wait for them
+	-- to arrive before marking the end of a previous chunk
+	ctx.iter:wait()
+
+	local mark = ctx.iter:copy()
+	mark:mark(self.readonly)
+	table.insert(ctx._retain_mark, mark)
+end
+
+grammar_dg.Release = class('DGRelease', grammar_dg.Control)
+
+function grammar_dg.Release.method:_apply(ctx)
+	local mark = ctx._retain_mark[#ctx._retain_mark]
+	ctx._retain_mark[#ctx._retain_mark] = nil
+	mark:unmark()
 end
 
 grammar_dg.Branch = class('DGBranch', grammar_dg.Control)
@@ -1124,6 +1156,22 @@ function grammar.Execute.method:compile(rule, id)
 	return grammar_dg.Execute:new(rule, id, self.func)
 end
 
+grammar.Retain = class('Retain', grammar.Entity)
+
+function grammar.Retain.method:__init(readonly)
+	self.readonly = readonly
+end
+
+function grammar.Retain.method:compile(rule, id)
+	return grammar_dg.Retain:new(self.readonly)
+end
+
+grammar.Release = class('Release', grammar.Entity)
+
+function grammar.Release.method:compile(rule, id)
+	return grammar_dg.Release:new()
+end
+
 
 function grammar.record(entities)
 	return grammar.Record:new(entities)
@@ -1196,6 +1244,16 @@ end
 function grammar.execute(func)
 	return grammar.Execute:new(func)
 end
+
+function grammar.retain(readonly)
+	if readonly == nil then
+		readonly = haka.packet.mode() == haka.packet.PASSTHROUGH
+	end
+
+	return grammar.Retain:new(readonly)
+end
+
+grammar.release = grammar.Release:new()
 
 
 --

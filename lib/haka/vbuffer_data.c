@@ -12,6 +12,14 @@
 #include "vbuffer_data.h"
 
 
+void vbuffer_data_release(struct vbuffer_data *data)
+{
+	if (data && data->ops->release(data)) {
+		data->ops->free(data);
+	}
+}
+
+
 /*
  * Basic data
  */

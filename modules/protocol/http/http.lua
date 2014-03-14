@@ -402,7 +402,6 @@ local function build_headers(result, headers, headers_order)
 end
 
 function http_dissector.method:send(iter, mark)
-	mark:unmark()
 	local len = iter.meter - mark.meter
 
 	if self.states.state.name == 'request' then
@@ -539,11 +538,14 @@ http_dissector.grammar.headers = haka.grammar.array(http_dissector.grammar.heade
 
 -- http chunk
 http_dissector.grammar.chunk = haka.grammar.record{
+	haka.grammar.retain(),
 	haka.grammar.field('chunk_size', haka.grammar.token('[0-9a-fA-F]+')
 		:convert(haka.grammar.converter.tonumber("%x", 16))),
+	haka.grammar.execute(function (self, ctx) ctx.chunk_size = self.chunk_size end),
+	haka.grammar.release,
 	http_dissector.grammar.CRLF,
 	haka.grammar.bytes():options{
-		count = function (self, context) return self.chunk_size end,
+		count = function (self, ctx) return ctx.chunk_size end,
 		chunked = function (self, sub, last, ctx)
 			ctx.top.http:push_data(self, sub, last, http_dissector.events[ctx.top.http.states.state.name .. '_data'])
 		end
@@ -556,7 +558,9 @@ http_dissector.grammar.chunks = haka.grammar.record{
 	haka.grammar.array(http_dissector.grammar.chunk):options{
 		untilcond = function (elem) return elem and elem.chunk_size == 0 end
 	},
-	haka.grammar.field('headers', http_dissector.grammar.headers)
+	haka.grammar.retain(),
+	haka.grammar.field('headers', http_dissector.grammar.headers),
+	haka.grammar.release
 }
 
 http_dissector.grammar.body = haka.grammar.branch(
@@ -576,22 +580,22 @@ http_dissector.grammar.body = haka.grammar.branch(
 http_dissector.grammar.message = haka.grammar.record{
 	haka.grammar.field('headers', http_dissector.grammar.headers),
 	haka.grammar.execute(function (self, ctx)
-		ctx.top.http:trigger_event(ctx.top, ctx.iter, ctx.mark)
-		ctx.mark = nil
+		ctx.top.http:trigger_event(ctx.top, ctx.iter, ctx.retain_mark)
 	end),
+	haka.grammar.release,
 	haka.grammar.field('body', http_dissector.grammar.body)
 }
 
 -- http request
 http_dissector.grammar.request = haka.grammar.record{
-	begin_grammar,
+	haka.grammar.retain(),
 	http_dissector.grammar.request_line,
 	http_dissector.grammar.message
 }
 
 -- http response
 http_dissector.grammar.response = haka.grammar.record{
-	begin_grammar,
+	haka.grammar.retain(),
 	http_dissector.grammar.response_line,
 	http_dissector.grammar.message
 }
