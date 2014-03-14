@@ -41,7 +41,7 @@ elseif(EXISTS "${REF}.txt")
 endif()
 
 if(EXISTS "${REFTXT}")
-	execute_process(COMMAND ${DIFF} ${DST}.txt ${REFTXT} RESULT_VARIABLE HAD_ERROR OUTPUT_VARIABLE CONTENT)
+	execute_process(COMMAND ${DIFF} -u ${REFTXT} ${DST}.txt RESULT_VARIABLE HAD_ERROR OUTPUT_VARIABLE CONTENT)
 	if(HAD_ERROR)
 		message("${CONTENT}")
 	endif(HAD_ERROR)

@@ -6,6 +6,7 @@
 
 %{
 #include <stdint.h>
+#include <unistd.h>
 #include <wchar.h>
 
 #include "app.h"
@@ -15,9 +16,15 @@
 #include <haka/module.h>
 #include <haka/alert.h>
 #include <haka/config.h>
+#include <haka/colors.h>
 
 char *module_prefix = HAKA_MODULE_PREFIX;
 char *module_suffix = HAKA_MODULE_SUFFIX;
+
+static bool stdout_support_colors()
+{
+	return colors_supported(STDOUT_FILENO);
+}
 
 %}
 
@@ -36,6 +43,8 @@ const char *module_get_path();
 char *module_prefix;
 char *module_suffix;
 %mutable;
+
+bool stdout_support_colors();
 
 struct time {
 	int    secs;
