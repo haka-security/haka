@@ -17,18 +17,18 @@ function sorted_pairs(t, f)
 end
 
 function safe_string(str)
-       local len = #str
-       local sstr = {}
+	local len = #str
+	local sstr = {}
 
-       for i=1,len do
-               local b = str:byte(i)
-
-               if b >= 0x20 and b <= 0x7e then
-                       sstr[i] = string.char(b)
-               else
-                       sstr[i] = string.format('\\x%x', b)
-               end
-       end
-
-       return table.concat(sstr)
+	for i=1,len do
+		local b = str:byte(i)
+		
+		if b >= 0x20 and b <= 0x7e then
+			sstr[i] = string.char(b)
+		else
+			sstr[i] = string.format('\\x%x', b)
+		end
+	end
+	
+	return table.concat(sstr)
 end
