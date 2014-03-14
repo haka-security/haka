@@ -13,7 +13,7 @@ HTTP REQUEST
    User-Agent = Wget/1.13.4 (linux-gnu)
  method = GET
  uri = /twiki/bin/view/
- version = HTTP/1.1
+ version = 1.1
 HTTP RESPONSE
  _headers_order
    1 = Date
@@ -31,7 +31,7 @@ HTTP RESPONSE
    Transfer-Encoding = chunked
  reason = OK
  status = 200
- version = HTTP/1.1
+ version = 1.1
 HTTP REQUEST
  _headers_order
    1 = User-Agent
@@ -45,7 +45,7 @@ HTTP REQUEST
    User-Agent = Wget/1.13.4 (linux-gnu)
  method = GET
  uri = /robots.txt
- version = HTTP/1.1
+ version = 1.1
 HTTP RESPONSE
  _headers_order
    1 = Date
@@ -63,7 +63,7 @@ HTTP RESPONSE
    Server = Apache/2.2.8 (Ubuntu) DAV/2
  reason = Not Found
  status = 404
- version = HTTP/1.1
+ version = 1.1
 HTTP REQUEST
  _headers_order
    1 = Referer
@@ -79,7 +79,7 @@ HTTP REQUEST
    User-Agent = Wget/1.13.4 (linux-gnu)
  method = GET
  uri = /twiki/pub/TWiki/TWikiLogos/twikiRobot46x50.gif
- version = HTTP/1.1
+ version = 1.1
 HTTP RESPONSE
  _headers_order
    1 = Date
@@ -103,7 +103,7 @@ HTTP RESPONSE
    Server = Apache/2.2.8 (Ubuntu) DAV/2
  reason = OK
  status = 200
- version = HTTP/1.1
+ version = 1.1
 HTTP REQUEST
  _headers_order
    1 = Referer
@@ -119,7 +119,7 @@ HTTP REQUEST
    User-Agent = Wget/1.13.4 (linux-gnu)
  method = GET
  uri = /twiki/pub/TWiki/TWikiLogos/twikiRobot131x64.gif
- version = HTTP/1.1
+ version = 1.1
 HTTP RESPONSE
  _headers_order
    1 = Date
@@ -143,5 +143,5 @@ HTTP RESPONSE
    Server = Apache/2.2.8 (Ubuntu) DAV/2
  reason = OK
  status = 200
- version = HTTP/1.1
+ version = 1.1
 debug tcp-connection: closing connection 10.2.96.127:57838 -> 10.2.104.129:80

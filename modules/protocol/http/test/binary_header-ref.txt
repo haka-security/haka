@@ -7,7 +7,7 @@ HTTP REQUEST
    Host = Ž™ÿ
  method = GET
  uri = /
- version = HTTP/1.1
+ version = 1.1
 HTTP RESPONSE
  _headers_order
    1 = Date
@@ -31,5 +31,5 @@ HTTP RESPONSE
    X-Pad = avoid browser bug
  reason = OK
  status = 200
- version = HTTP/1.1
+ version = 1.1
 debug tcp-connection: closing connection 127.0.0.1:42073 -> 127.0.0.1:80

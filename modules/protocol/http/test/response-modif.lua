@@ -21,7 +21,7 @@ haka.rule {
 		http.response:dump()
 
 		-- Modify a part of the response
-		http.response.version = "HTTP/2.0"
+		http.response.version = "2.0"
 		-- Remove a header
 		http.response.headers["Server"] = nil
 		-- Add a header

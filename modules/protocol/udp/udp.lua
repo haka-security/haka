@@ -33,7 +33,9 @@ local udp_dissector = haka.dissector.new{
 	name = 'udp'
 }
 
-udp_dissector.grammar = haka.grammar.record{
+udp_dissector.grammar = haka.grammar:new("udp")
+
+udp_dissector.grammar.packet = haka.grammar.record{
 	haka.grammar.field('srcport',   haka.grammar.number(16)),
 	haka.grammar.field('dstport',   haka.grammar.number(16)),
 	haka.grammar.field('length',    haka.grammar.number(16))
@@ -48,7 +50,7 @@ udp_dissector.grammar = haka.grammar.record{
 
 function udp_dissector.method:parse_payload(pkt, payload, init)
 	self.ip = pkt
-	udp_dissector.grammar:parseall(payload:pos("begin"), self, init)
+	udp_dissector.grammar.packet:parseall(payload:pos("begin"), self, init)
 end
 
 function udp_dissector.method:forge_payload(pkt, payload)

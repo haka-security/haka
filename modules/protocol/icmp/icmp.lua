@@ -9,7 +9,9 @@ local icmp_dissector = haka.dissector.new{
 	name = 'icmp'
 }
 
-icmp_dissector.grammar = haka.grammar.record{
+icmp_dissector.grammar = haka.grammar:new("icmp")
+
+icmp_dissector.grammar.packet = haka.grammar.record{
 	haka.grammar.field('type',     haka.grammar.number(8)),
 	haka.grammar.field('code',     haka.grammar.number(8)),
 	haka.grammar.field('checksum', haka.grammar.number(16))
@@ -22,7 +24,7 @@ icmp_dissector.grammar = haka.grammar.record{
 
 function icmp_dissector.method:parse_payload(pkt, payload, init)
 	self.ip = pkt
-	icmp_dissector.grammar:parseall(payload:pos("begin"), self, init)
+	icmp_dissector.grammar.packet:parseall(payload:pos("begin"), self, init)
 end
 
 function icmp_dissector.method:verify_checksum()

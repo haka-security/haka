@@ -384,15 +384,12 @@ local function dump(t, indent)
 end
 
 function convert.request(request)
-	request.version = string.format("HTTP/%s", request.version._num)
 	request.headers, request._headers_order = convert_headers(request.headers)
 	request.dump = dump
 	return request
 end
 
 function convert.response(response)
-	response.version = string.format("HTTP/%s", response.version._num)
-	response.status = response.status._num
 	response.headers, response._headers_order = convert_headers(response.headers)
 	response.dump = dump
 	return response
@@ -432,7 +429,7 @@ function http_dissector.method:send(iter, mark)
 		table.insert(request, self.request.method)
 		table.insert(request, " ")
 		table.insert(request, self.request.uri)
-		table.insert(request, " ")
+		table.insert(request, " HTTP/")
 		table.insert(request, self.request.version)
 		table.insert(request, "\r\n")
 		build_headers(request, self.request.headers, self.request._headers_order)
@@ -446,6 +443,7 @@ function http_dissector.method:send(iter, mark)
 		end
 
 		local response = {}
+		table.insert(response, "HTTP/")
 		table.insert(response, self.response.version)
 		table.insert(response, " ")
 		table.insert(response, self.response.status)
@@ -482,61 +480,55 @@ end
 -- HTTP Grammar
 --
 
+http_dissector.grammar = haka.grammar:new("http")
+
 local begin_grammar = haka.grammar.execute(function (self, ctx)
 	ctx.mark = ctx.iter:copy()
 	ctx.mark:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
 end)
 
 -- http separator tokens
-local WS = haka.grammar.token('[[:blank:]]+')
-local CRLF = haka.grammar.token('[%r]?%n')
+http_dissector.grammar.WS = haka.grammar.token('[[:blank:]]+')
+http_dissector.grammar.CRLF = haka.grammar.token('[%r]?%n')
 
 -- http request/response version
-local version = haka.grammar.record{
+http_dissector.grammar.version = haka.grammar.record{
 	haka.grammar.token('HTTP/'),
-	haka.grammar.field('_num', haka.grammar.token('[0-9]+%.[0-9]+'))
-}:extra{
-	num = function (self)
-		return tonumber(self._num)
-	end
+	haka.grammar.field('version', haka.grammar.token('[0-9]+%.[0-9]+'))
 }
 
 -- http response status code
-local status = haka.grammar.record{
-	haka.grammar.field('_num', haka.grammar.token('[0-9]{3}'))
-}:extra{
-	num = function (self)
-		return tonumber(self._num)
-	end
+http_dissector.grammar.status = haka.grammar.record{
+	haka.grammar.field('status', haka.grammar.token('[0-9]{3}'))
 }
 
 -- http request line
-local request_line = haka.grammar.record{
+http_dissector.grammar.request_line = haka.grammar.record{
 	haka.grammar.field('method', haka.grammar.token('[^()<>@,;:%\\"/%[%]?={}[:blank:]]+')),
-	WS,
+	http_dissector.grammar.WS,
 	haka.grammar.field('uri', haka.grammar.token('[[:alnum:][:punct:]]+')),
-	WS,
-	haka.grammar.field('version', version),
-	CRLF
+	http_dissector.grammar.WS,
+	http_dissector.grammar.version,
+	http_dissector.grammar.CRLF
 }
 
 -- http reply line
-local response_line = haka.grammar.record{
-	haka.grammar.field('version', version),
-	WS,
-	haka.grammar.field('status', status),
-	WS,
+http_dissector.grammar.response_line = haka.grammar.record{
+	http_dissector.grammar.version,
+	http_dissector.grammar.WS,
+	http_dissector.grammar.status,
+	http_dissector.grammar.WS,
 	haka.grammar.field('reason', haka.grammar.token('[^%r%n]+')),
-	CRLF
+	http_dissector.grammar.CRLF
 }
 
 -- headers list
-local header = haka.grammar.record{
+http_dissector.grammar.header = haka.grammar.record{
 	haka.grammar.field('name', haka.grammar.token('[^:[:blank:]]+')),
 	haka.grammar.token(':'),
-	WS,
+	http_dissector.grammar.WS,
 	haka.grammar.field('value', haka.grammar.token('[^%r%n]+')),
-	CRLF
+	http_dissector.grammar.CRLF
 }
 :extra{
 	function (self, ctx)
@@ -551,10 +543,10 @@ local header = haka.grammar.record{
 	end
 }
 
-local header_or_crlf = haka.grammar.branch(
+http_dissector.grammar.header_or_crlf = haka.grammar.branch(
 	{
-		header = header,
-		crlf = CRLF
+		header = http_dissector.grammar.header,
+		crlf = http_dissector.grammar.CRLF
 	},
 	function (self, ctx)
 		local la = ctx:lookahead()
@@ -563,30 +555,32 @@ local header_or_crlf = haka.grammar.branch(
 	end
 )
 
-local headers = haka.grammar.array(header_or_crlf):
+http_dissector.grammar.headers = haka.grammar.array(http_dissector.grammar.header_or_crlf):
 	options{ untilcond = function (elem, ctx) return elem and not elem.name end }
 
 -- http chunk
-local chunk = haka.grammar.record{
-	haka.grammar.field('chunk_size', haka.grammar.token('[0-9a-fA-F]+')),
-	CRLF,
+http_dissector.grammar.chunk = haka.grammar.record{
+	haka.grammar.field('chunk_size', haka.grammar.token('[0-9a-fA-F]+')
+		:convert(haka.grammar.converter.tonumber("%x", 16))),
+	http_dissector.grammar.CRLF,
 	haka.grammar.bytes():options{
-		count = function (self, context) return tonumber(self.chunk_size, 16) end,
+		count = function (self, context) return self.chunk_size end,
 		chunked = function (self, sub, last, ctx)
 			ctx.top.http:push_data(self, sub, last, http_dissector.events[ctx.top.http.states.state.name .. '_data'])
 		end
 	},
-	haka.grammar.optional(CRLF, function (self, context) return tonumber(self.chunk_size, 16) > 0 end)
+	haka.grammar.optional(http_dissector.grammar.CRLF,
+		function (self, context) return self.chunk_size > 0 end)
 }
 
-local chunks = haka.grammar.record{
-	haka.grammar.array(chunk):options{
-		untilcond = function (elem) return elem and tonumber(elem.chunk_size, 16) == 0 end
+http_dissector.grammar.chunks = haka.grammar.record{
+	haka.grammar.array(http_dissector.grammar.chunk):options{
+		untilcond = function (elem) return elem and elem.chunk_size == 0 end
 	},
-	haka.grammar.field('headers', headers)
+	haka.grammar.field('headers', http_dissector.grammar.headers)
 }
 
-local body = haka.grammar.branch(
+http_dissector.grammar.body = haka.grammar.branch(
 	{
 		content = haka.grammar.bytes():options{
 			count = function (self, ctx) return ctx.content_length or 0 end,
@@ -594,34 +588,37 @@ local body = haka.grammar.branch(
 				ctx.top.http:push_data(self, sub, last, http_dissector.events[ctx.top.http.states.state.name .. '_data'])
 			end
 		},
-		chunked = chunks,
+		chunked = http_dissector.grammar.chunks,
 		default = true
 	}, 
 	function (self, ctx) return ctx.mode end
 )
 
-local message = haka.grammar.record{
-	haka.grammar.field('headers', headers),
+http_dissector.grammar.message = haka.grammar.record{
+	haka.grammar.field('headers', http_dissector.grammar.headers),
 	haka.grammar.execute(function (self, ctx)
 		ctx.top.http:trigger_event(ctx.top, ctx.iter, ctx.mark)
 		ctx.mark = nil
 	end),
-	haka.grammar.field('body', body)
+	haka.grammar.field('body', http_dissector.grammar.body)
 }
 
 -- http request
-local request = haka.grammar.record{
+http_dissector.grammar.request = haka.grammar.record{
 	begin_grammar,
-	request_line,
-	message
-}:compile()
+	http_dissector.grammar.request_line,
+	http_dissector.grammar.message
+}
 
 -- http response
-local response = haka.grammar.record{
+http_dissector.grammar.response = haka.grammar.record{
 	begin_grammar,
-	response_line,
-	message
-}:compile()
+	http_dissector.grammar.response_line,
+	http_dissector.grammar.message
+}
+
+local request = http_dissector.grammar.request:compile()
+local response = http_dissector.grammar.response:compile()
 
 
 http_dissector.states = haka.state_machine.new("http")
@@ -667,7 +664,7 @@ http_dissector.states.request = http_dissector.states:state{
 		self.request, err = request:parseall(iter, self.request)
 		if err then
 			haka.alert{
-				description = err:__tostring(),
+				description = string.format("invalid http %s", err.rule),
 				severity = 'low'
 			}
 			self:drop()
@@ -714,7 +711,7 @@ http_dissector.states.response = http_dissector.states:state{
 		self.response, err = response:parseall(iter, self.response)
 		if err then
 			haka.alert{
-				description = err:__tostring(),
+				description = string.format("invalid http %s", err.rule),
 				severity = 'low'
 			}
 			self:drop()

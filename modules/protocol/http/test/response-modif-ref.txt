@@ -13,7 +13,7 @@ HTTP REQUEST
    User-Agent = Wget/1.13.4 (linux-gnu)
  method = GET
  uri = /twiki/bin/view
- version = HTTP/1.1
+ version = 1.1
 HTTP RESPONSE
  _headers_order
    1 = Date
@@ -31,7 +31,7 @@ HTTP RESPONSE
    Transfer-Encoding = chunked
  reason = OK
  status = 200
- version = HTTP/1.1
+ version = 1.1
 HTTP MODIFIED RESPONSE
  _headers_order
    1 = Date
@@ -49,5 +49,5 @@ HTTP MODIFIED RESPONSE
    Transfer-Encoding = chunked
  reason = OK
  status = 200
- version = HTTP/2.0
+ version = 2.0
 debug tcp-connection: closing connection 192.168.10.10:56353 -> 192.168.20.1:80

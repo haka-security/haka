@@ -1,7 +1,8 @@
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 127.0.0.1:42069 -> 127.0.0.1:80
+debug grammar: parse error at byte 12 for field 2 in request_line: token /[[:blank:]]+/ doesn't match
 info alert: id = <>
 	severity = low
-	description = Parse error at byte 12 : pattern /^(?:[[:blank:]]+)/ doesn't match against `(\x90\xfd4<)\xa3\x9aM$?\xf7\x1\x9c\xa0\x95\xeb\xda\xe6\xeav\xa9q0\xf6\xc9\xa\x98\x8\xb4-\xa6\xa90~:\...`
+	description = invalid http request_line
 debug tcp-connection: dropping connection 127.0.0.1:42069 -> 127.0.0.1:80
 debug tcp-connection: closing connection 127.0.0.1:42069 -> 127.0.0.1:80

@@ -12,7 +12,7 @@ haka.rule {
 		print("HTTP REQUEST")
 		request:dump()
 		-- We change a part of the request
-		request.version = "HTTP/2.0"
+		request.version = "2.0"
 		-- We change an existing header
 		request.headers["Host"] = "haka.powered.tld"
 		-- We destroy one
