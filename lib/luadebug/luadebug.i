@@ -113,7 +113,7 @@ void lua_luadebug_debugger_break();
 			else
 				local has_value = false
 
-				for key, _ in pairs(meta[".get"]) do
+				for key, _ in sorted_pairs(meta[".get"]) do
 					local success, child_obj = pcall(function () return obj[key] end)
 					if not _hidden(key, child_obj, hidden) then
 						if not has_value then
@@ -146,7 +146,7 @@ void lua_luadebug_debugger_break();
 		else
 			out(title, "{")
 
-			for key, value in pairs(obj) do
+			for key, value in sorted_pairs(obj) do
 				if not _hidden(key, value, hidden) then
 					__pprint(value, indent .. "  ", tostring(key), visited, hidden, depth-1, out)
 				end
@@ -168,7 +168,7 @@ void lua_luadebug_debugger_break();
 
 			local vars = {}
 
-			for key, value in pairs(obj) do
+			for key, value in sorted_pairs(obj) do
 				if key ~= '__property' and (not _hidden(key, value, hidden)) then
 					__pprint(value, indent .. "  ", tostring(key), visited, hidden, depth-1, out)
 					vars[key] = true
@@ -177,7 +177,7 @@ void lua_luadebug_debugger_break();
 
 			local property = rawget(obj, '__property')
 			if property then
-				for key, _ in pairs(property) do
+				for key, _ in sorted_pairs(property) do
 					local success, child_obj = pcall(function () return obj[key] end)
 					if not vars[key] and (not _hidden(key, child_obj, hidden)) then
 						vars[key] = true
@@ -191,7 +191,7 @@ void lua_luadebug_debugger_break();
 				end
 			end
 
-			for key, _ in pairs(meta.property) do
+			for key, _ in sorted_pairs(meta.property) do
 				local success, child_obj = pcall(function () return obj[key] end)
 				if not vars[key] and (not _hidden(key, child_obj, hidden)) then
 					vars[key] = true
