@@ -2,7 +2,12 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local function default_cmp(a, b)
+	return tostring(a) < tostring(b)
+end
+
 function sorted_pairs(t, f)
+	f = f or default_cmp
 	local a = {}
 	for n in pairs(t) do table.insert(a, n) end
 	table.sort(a, f)
