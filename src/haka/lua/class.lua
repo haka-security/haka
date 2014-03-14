@@ -45,7 +45,7 @@ function BaseClass.view(cls)
 end
 
 
-local function new_instance(cls, ...)
+function new_instance(cls, ...)
 	local instance = {}
 	setmetatable(instance, cls)
 

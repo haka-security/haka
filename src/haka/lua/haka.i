@@ -166,6 +166,10 @@ int _getswigclassmetatable(struct lua_State *L)
 		return ret
 	end
 
+	function haka.abort()
+		error(nil)
+	end
+
 	function haka.pcall(func, ...)
 		assert(func)
 		local args = {...}

@@ -41,8 +41,12 @@ struct packet {
 		}
 
 		void drop();
-		%rename(continue) _continue;
-		bool _continue();
+
+		bool _continue()
+		{
+			assert($self);
+			return packet_state($self) != STATUS_SENT;
+		}
 	}
 };
 
@@ -122,11 +126,6 @@ void packet__inject(struct packet *pkt)
 	}
 }
 
-bool packet__continue(struct packet *pkt)
-{
-	assert(pkt);
-	return packet_state(pkt) != STATUS_SENT;
-}
 %}
 
 %luacode{
@@ -139,14 +138,8 @@ bool packet__continue(struct packet *pkt)
 
 	raw_dissector.options.drop_unknown_dissector = false
 
-	function raw_dissector.method:emit()
-		if not haka.pcall(haka.context.signal, haka.context, self, raw_dissector.events.receive_packet) then
-			return self:drop()
-		end
-
-		if not self:continue() then
-			return
-		end
+	function raw_dissector.method:receive()
+		haka.context:signal(self, raw_dissector.events.receive_packet)
 
 		local dissector = self.dissector
 		if dissector then
@@ -166,8 +159,8 @@ bool packet__continue(struct packet *pkt)
 		end
 	end
 
-	function raw_dissector:receive(pkt)
-		return pkt:emit()
+	function raw_dissector:new(pkt)
+		return pkt
 	end
 
 	function raw_dissector:create(size)
@@ -175,14 +168,7 @@ bool packet__continue(struct packet *pkt)
 	end
 
 	function raw_dissector.method:send()
-		if not haka.pcall(haka.context.signal, haka.context, self, raw_dissector.events.send_packet) then
-			return self:drop()
-		end
-
-		if not self:continue() then
-			return
-		end
-
+		haka.context:signal(self, raw_dissector.events.send_packet)
 		return this._send(self)
 	end
 
@@ -190,9 +176,17 @@ bool packet__continue(struct packet *pkt)
 		return this._inject(self)
 	end
 
+	function raw_dissector.method:continue()
+		if not self:_continue() then
+			haka.abort()
+		end
+	end
+
 	swig.getclassmetatable('packet')['.fn'].send = raw_dissector.method.send
-	swig.getclassmetatable('packet')['.fn'].emit = raw_dissector.method.emit
+	swig.getclassmetatable('packet')['.fn'].receive = raw_dissector.method.receive
 	swig.getclassmetatable('packet')['.fn'].inject = raw_dissector.method.inject
+	swig.getclassmetatable('packet')['.fn'].continue = raw_dissector.method.continue
+	swig.getclassmetatable('packet')['.fn'].error = swig.getclassmetatable('packet')['.fn'].drop
 
 	function haka.filter(pkt)
 		raw_dissector:receive(pkt)

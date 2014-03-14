@@ -238,10 +238,15 @@ struct tcp *tcp_stream_pop(struct tcp_stream *stream)
 
 void tcp_stream_ack(struct tcp_stream *stream, struct tcp *tcp)
 {
-	uint64 ack = tcp_get_ack_seq(tcp);
-	uint64 seq, new_seq;
+	uint64 ack, seq, new_seq;
 	struct tcp_stream_chunk *chunk;
 	list2_iter iter, end;
+
+	if (tcp->packet == NULL) {
+		return;
+	}
+
+	ack = tcp_get_ack_seq(tcp);
 
 	iter = list2_begin(&stream->sent);
 	end = list2_end(&stream->sent);

@@ -18,17 +18,13 @@ function tcp_connection_dissector:receive(pkt)
 	if not connection then
 		if pkt.flags.syn and not pkt.flags.ack then
 			local data = haka.context.newscope()
-			local self = tcp_connection_dissector:new()
+			local self = new_instance(tcp_connection_dissector)
 
 			haka.context:scope(data, function ()
-				if not haka.pcall(haka.context.signal, haka.context, self, tcp_connection_dissector.events.new_connection, pkt) then
-					return pkt:drop()
-				end
+				self:trigger('new_connection', pkt)
 			end)
 
-			if not pkt:continue() then
-				return
-			end
+			pkt:continue()
 
 			connection = pkt:newconnection()
 			connection.data = data
@@ -55,12 +51,21 @@ function tcp_connection_dissector:receive(pkt)
 
 	local dissector = connection.data:namespace('tcp-connection')
 
-	haka.context:scope(connection.data, function ()
-		return dissector:emit(pkt, direction)
-	end)
+	local ret, err = xpcall(function ()
+		haka.context:scope(connection.data, function ()
+			return dissector:emit(pkt, direction)
+		end)
+	
+		if dissector._restart then
+			return tcp_connection_dissector:receive(pkt)
+		end
+	end, debug.format_error)
 
-	if dissector._restart then
-		return tcp_connection_dissector:receive(pkt)
+	if not ret then
+		if err then
+			haka.log.error(dissector.name, err)
+			dissector:error()
+		end
 	end
 end
 
@@ -104,10 +109,9 @@ tcp_connection_dissector.states:default{
 
 tcp_connection_dissector.states.reset = tcp_connection_dissector.states:state{
 	enter = function (context)
-		haka.pcall(haka.context.signal, haka.context, context.flow, tcp_connection_dissector.events.end_connection)
-
 		context.flow.stream = nil
 		context.flow.connection:drop()
+		context.flow:trigger('end_connection')
 	end,
 	timeouts = {
 		[60] = function (context)
@@ -286,9 +290,7 @@ tcp_connection_dissector.states.closing = tcp_connection_dissector.states:state{
 
 tcp_connection_dissector.states.timed_wait = tcp_connection_dissector.states:state{
 	enter = function (context)
-		if not haka.pcall(haka.context.signal, haka.context, context.flow, tcp_connection_dissector.events.end_connection) then
-			return context.states.ERROR
-		end
+		context.flow:trigger('end_connection')
 	end,
 	input = function (context, pkt)
 		if pkt.flags.syn then
@@ -353,15 +355,8 @@ function tcp_connection_dissector.method:push(pkt, direction, finish)
 	stream:push(pkt)
 	if finish then stream.stream:finish() end
 
-	if not haka.pcall(haka.context.signal, haka.context, self,
-			tcp_connection_dissector.events.receive_data,
-			stream.stream, direction) then
-		return self:drop()
-	end
-
-	if self:continue() then
-		return self:_send(direction)
-	end
+	self:trigger('receive_data', stream.stream, direction)
+	return self:_send(direction)
 end
 
 function tcp_connection_dissector.method:finish(direction)
@@ -369,15 +364,13 @@ function tcp_connection_dissector.method:finish(direction)
 
 	stream.stream:finish()
 
-	if not haka.pcall(haka.context.signal, haka.context, self,
-			tcp_connection_dissector.events.receive_data,
-			stream.stream, direction) then
-		return self:drop()
-	end
+	self:trigger('receive_data', stream.stream, direction)
 end
 
 function tcp_connection_dissector.method:continue()
-	return self.stream ~= nil
+	if not self.stream then
+		haka.abort()
+	end
 end
 
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
@@ -394,18 +387,14 @@ function tcp_connection_dissector.method:_send(direction)
 
 	local sub = stream.stream.current:sub('available')
 
-	if sub and not haka.pcall(haka.context.signal, haka.context,
-			self, tcp_connection_dissector.events.send_data,
-			sub, direction) then
-		return self:drop()
+	if sub then
+		self:trigger('send_data', sub, direction)
 	end
 
 	local pkt = stream:pop()
 	while pkt do
-		if pkt:continue() then
-			other_stream:ack(pkt)
-			pkt:send()
-		end
+		other_stream:ack(pkt)
+		pkt:send()
 
 		pkt = stream:pop()
 	end

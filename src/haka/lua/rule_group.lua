@@ -22,13 +22,15 @@ function rule_group.method:eval(...)
 	for _, rule in ipairs(self.rules) do
 		local ret = rule(...)
 
-		if not self.event_continue(...) or
-		   not self.continue(ret, ...) then
+		self.event_continue(...)
+
+		if not self.continue(ret, ...) then
 			return
 		end
 	end
 
 	self.fini(...)
+	self.event_continue(...)
 end
 
 

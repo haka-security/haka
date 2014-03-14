@@ -322,7 +322,9 @@ function http_dissector.method:__init(flow)
 end
 
 function http_dissector.method:continue()
-	return self.flow ~= nil
+	if not self.flow then
+		haka.abort()
+	end
 end
 
 function http_dissector.method:drop()
@@ -446,13 +448,7 @@ function http_dissector.method:trigger_event(ctx, iter, mark)
 	local converted = convert[state](ctx)
 	ctx.http = nil
 
-	if not haka.pcall(haka.context.signal, haka.context, self, http_dissector.events[state], converted) then
-		self:drop()
-	end
-
-	if not self:continue() then
-		return true
-	end
+	self:trigger(state, converted)
 
 	self:send(iter, mark)
 	ctx.http = self
@@ -651,10 +647,8 @@ http_dissector.states.request = http_dissector.states:state{
 				severity = 'low'
 			}
 			self:drop()
-			return
+			return haka.abort()
 		end
-
-		if not self:continue() then return end
 
 		return context.states.response
 	end,
@@ -698,10 +692,8 @@ http_dissector.states.response = http_dissector.states:state{
 				severity = 'low'
 			}
 			self:drop()
-			return
+			return haka.abort()
 		end
-
-		if not self:continue() then return end
 
 		return context.states.request
 	end,
@@ -720,8 +712,6 @@ function http_dissector.method:receive(flow, iter, direction)
 
 	while iter:wait() do
 		self.states:update(direction, iter)
-		
-		if not self:continue() then break end
 	end
 end
 

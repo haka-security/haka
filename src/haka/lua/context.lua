@@ -55,7 +55,7 @@ function Context.method:scope(context, func)
 	self.context = context
 	local success, msg = xpcall(func, debug.format_error)
 	self.context = old
-	if not success then error(msg) end
+	if not success then error(msg, 0) end
 end
 
 function Context.method:install_dissector(dissector)

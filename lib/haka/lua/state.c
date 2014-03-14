@@ -64,7 +64,7 @@ void (*lua_state_error_hook)(struct lua_State *L) = NULL;
 
 int lua_state_error_formater(lua_State *L)
 {
-	if (lua_state_error_hook) {
+	if (lua_state_error_hook && !lua_isnil(L, -1)) {
 		lua_state_error_hook(L);
 	}
 

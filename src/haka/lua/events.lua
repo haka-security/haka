@@ -33,10 +33,7 @@ function events.EventConnections.method:signal(emitter, event, ...)
 
 		for _, listener in ipairs(listeners) do
 			event.signal(listener.f, listener.options, emitter, ...)
-			if not event.continue(emitter) then
-				self:_done()
-				return true
-			end
+			event.continue(emitter)
 		end
 	end
 
