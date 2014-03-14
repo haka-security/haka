@@ -5,6 +5,7 @@
 local rem = require("regexp/pcre")
 
 local grammar_dg = {}
+local grammar = {}
 
 --
 -- Parsing Error
@@ -33,19 +34,19 @@ end
 
 
 --
--- Grammar graph context
+-- Grammar result
 --
 
-grammar_dg.Context = class('DGContext')
+grammar.Result = class('Result')
 
-grammar_dg.ArrayContext = class('DGArrayContext', grammar_dg.Context)
+grammar.ArrayResult = class('DGArrayContext', grammar.Result)
 
-function grammar_dg.ArrayContext.method:__init(entity, create)
+function grammar.ArrayResult.method:__init(entity, create)
 	self._entity = entity
 	self._create = create
 end
 
-function grammar_dg.ArrayContext.method:remove(el)
+function grammar.ArrayResult.method:remove(el)
 	local index
 	if type(el) == 'number' then
 		index = el
@@ -66,33 +67,37 @@ function grammar_dg.ArrayContext.method:remove(el)
 	table.remove(self, index)
 end
 
-function grammar_dg.ArrayContext.method:append(init)
-	local ctx = grammar_dg.Context:new()
-	local vbuf = self._create(ctx, self._entity, init)
+function grammar.ArrayResult.method:append(init)
+	local result = grammar.Result:new()
+	local vbuf = self._create(result, self._entity, init)
 	self[#self]._sub:pos('end'):insert(vbuf)
-	table.insert(self, ctx)
+	table.insert(self, result)
 end
+
+--
+-- Parse Context
+--
 
 grammar_dg.ParseContext = class('DGParseContext')
 
 grammar_dg.ParseContext.property.top = {
-	get = function (self) return self._ctxs[1] end
+	get = function (self) return self._results[1] end
 }
 
-grammar_dg.ParseContext.property.current = {
-	get = function (self) return self._ctxs[#self._ctxs] end
+grammar_dg.ParseContext.property.result = {
+	get = function (self) return self._results[#self._results] end
 }
 
 grammar_dg.ParseContext.property.current_init = {
 	get = function (self)
-		if self._initctxs then
-			return self._initctxs[#self._initctxs]
+		if self._initresults then
+			return self._initresults[#self._initresults]
 		end
 	end
 }
 
 grammar_dg.ParseContext.property.init = {
-	get = function (self) return self._initctxs ~= nil end
+	get = function (self) return self._initresults ~= nil end
 }
 
 local function revalidate(self)
@@ -103,20 +108,20 @@ local function revalidate(self)
 	end
 end
 
-function grammar_dg.ParseContext.method:__init(iter, topctx, init)
+function grammar_dg.ParseContext.method:__init(iter, topresult, init)
 	self.iter = iter
 	self._bitoffset = 0
 	self._marks = {}
-	self._ctxs = {}
+	self._results = {}
 	self._validate = {}
-	self:push(topctx)
+	self:push(topresult)
 
 	if init then
-		self._initctxs = { init }
-		self._initctxs_count = 1
+		self._initresults = { init }
+		self._initresults_count = 1
 	end
 
-	self.current.validate = revalidate
+	self.result.validate = revalidate
 end
 
 function grammar_dg.ParseContext.method:update(iter)
@@ -145,7 +150,7 @@ function grammar_dg.ParseContext.method:parse(entity)
 		end
 		iter = iter:next(self)
 	end
-	return self._ctxs[1], err
+	return self._results[1], err
 end
 
 function grammar_dg.ParseContext.method:init(entity)
@@ -158,29 +163,29 @@ function grammar_dg.ParseContext.method:init(entity)
 		end
 		iter = iter:next(self)
 	end
-	return self._ctxs[1], err
+	return self._results[1], err
 end
 
 function grammar_dg.ParseContext.method:pop()
-	self._ctxs[#self._ctxs] = nil
+	self._results[#self._results] = nil
 
-	if self._initctxs then
-		self._initctxs[self._initctxs_count] = nil
-		self._initctxs_count = self._initctxs_count-1
+	if self._initresults then
+		self._initresults[self._initresults_count] = nil
+		self._initresults_count = self._initresults_count-1
 	end
 end
 
-function grammar_dg.ParseContext.method:push(ctx)
-	local new = ctx or grammar_dg.Context:new()
+function grammar_dg.ParseContext.method:push(result)
+	local new = result or grammar.Result:new()
 	new._validate = self._validate
-	self._ctxs[#self._ctxs+1] = new
-	if self._initctxs then
-		local curinit = self._initctxs[#self._initctxs]
-		self._initctxs_count = self._initctxs_count+1
+	self._results[#self._results+1] = new
+	if self._initresults then
+		local curinit = self._initresults[#self._initresults]
+		self._initresults_count = self._initresults_count+1
 		if curinit then
-			self._initctxs[self._initctxs_count] = curinit[name]
+			self._initresults[self._initresults_count] = curinit[name]
 		else
-			self._initctxs[#self._initctxs+1] = nil
+			self._initresults[#self._initresults+1] = nil
 		end
 	end
 	return new
@@ -347,13 +352,13 @@ end
 
 grammar_dg.Control = class('DGControl', grammar_dg.Entity)
 
-grammar_dg.ContextPop = class('DGContextPop', grammar_dg.Control)
+grammar.ResultPop = class('DGContextPop', grammar_dg.Control)
 
-function grammar_dg.ContextPop.method:__init()
-	super(grammar_dg.ContextPop).__init(self)
+function grammar.ResultPop.method:__init()
+	super(grammar.ResultPop).__init(self)
 end
 
-function grammar_dg.ContextPop.method:_apply(ctx)
+function grammar.ResultPop.method:_apply(ctx)
 	ctx:pop()
 end
 
@@ -366,16 +371,16 @@ end
 
 function grammar_dg.RecordStart.method:_apply(ctx)
 	if self.name then
-		local cur = ctx.current
+		local res = ctx.result
 		local new = ctx:push(nil, self.name)
 
 		if self.converter then
-			cur:addproperty(self.name,
+			res:addproperty(self.name,
 				function (ctx) return self.converter.get(new) end,
 				function (ctx, newvalue) new = self.converter.set(newvalue) end
 			)
 		else
-			cur:addproperty(self.name,
+			res:addproperty(self.name,
 				function (ctx) return new end
 			)
 		end
@@ -401,17 +406,17 @@ end
 
 function grammar_dg.RecordFinish.method:_apply(ctx)
 	local top = ctx.top
-	local cur = ctx.current
+	local res = ctx.result
 	if self._pop then
 		ctx:pop()
 	end
 
 	for _, func in ipairs(self._onfinish) do
-		func(cur, ctx)
+		func(res, ctx)
 	end
 
 	for name, func in pairs(self._extra) do
-		cur[name] = func(cur, ctx)
+		res[name] = func(res, ctx)
 	end
 end
 
@@ -425,7 +430,7 @@ end
 
 function grammar_dg.UnionStart.method:_apply(ctx)
 	if self.name then
-		local cur = ctx.current
+		local res = ctx.result
 		local new = ctx:push(nil, self.name)
 	end
 
@@ -463,12 +468,10 @@ function grammar_dg.ArrayStart.method:__init(name, rule, entity, create)
 end
 
 function grammar_dg.ArrayStart.method:_apply(ctx)
-	haka.debug.debugger.breakpoint()
-	local cur = ctx.current
-	local cur = ctx.current
+	local res = ctx.result
 	if self.name then
-		local array = ctx:push(grammar_dg.ArrayContext:new(self.entity, self.create), self.name)
-		cur[self.name] = array
+		local array = ctx:push(grammar.ArrayResult:new(self.entity, self.create), self.name)
+		res[self.name] = array
 	else
 		ctx:push(nil, nil)
 	end
@@ -491,13 +494,12 @@ function grammar_dg.ArrayPush.method:__init()
 end
 
 function grammar_dg.ArrayPush.method:_apply(ctx)
-	haka.debug.debugger.breakpoint()
-	local cur = ctx.current
-	if isa(cur, grammar_dg.ArrayContext) then
-		cur._entitybegin = ctx.iter:copy()
+	local res = ctx.result
+	if isa(res, grammar.ArrayResult) then
+		res._entitybegin = ctx.iter:copy()
 	end
-	local new = ctx:push(nil, #cur+1)
-	table.insert(cur, new)
+	local new = ctx:push(nil, #res+1)
+	table.insert(res, new)
 end
 
 grammar_dg.ArrayPop = class('DGArrayPop', grammar_dg.Control)
@@ -507,12 +509,10 @@ function grammar_dg.ArrayPop.method:__init()
 end
 
 function grammar_dg.ArrayPop.method:_apply(ctx)
-	haka.debug.debugger.breakpoint()
-	local cur = ctx.current
-	local entityresult = ctx.current
+	local entityresult = ctx.result
 	ctx:pop()
-	local arrayresult = ctx.current
-	if isa(arrayresult, grammar_dg.ArrayContext) then
+	local arrayresult = ctx.result
+	if isa(arrayresult, grammar.ArrayResult) then
 		entityresult._sub = haka.vbuffer_sub(arrayresult._entitybegin, ctx.iter)
 		ctx.iter:split()
 	end
@@ -538,7 +538,7 @@ function grammar_dg.Execute.method:__init(rule, id, callback)
 end
 
 function grammar_dg.Execute.method:_apply(ctx)
-	self.callback(ctx.current, ctx)
+	self.callback(ctx.result, ctx)
 end
 
 grammar_dg.Branch = class('DGBranch', grammar_dg.Control)
@@ -554,7 +554,7 @@ function grammar_dg.Branch.method:case(key, entity)
 end
 
 function grammar_dg.Branch.method:next(ctx)
-	local next = self.cases[self.selector(ctx.current, ctx)]
+	local next = self.cases[self.selector(ctx.result, ctx)]
 	if next then return next
 	else return self._next end
 end
@@ -574,11 +574,11 @@ end
 grammar_dg.Primitive = class('DGPrimitive', grammar_dg.Entity)
 
 function grammar_dg.Primitive.method:_apply(ctx)
-	return self:_parse(ctx.current, ctx.iter, ctx)
+	return self:_parse(ctx.result, ctx.iter, ctx)
 end
 
 function grammar_dg.Primitive.method:init(ctx)
-	return self:_init(ctx.current, ctx.iter, ctx, ctx.current_init)
+	return self:_init(ctx.result, ctx.iter, ctx, ctx.current_init)
 end
 
 grammar_dg.Number = class('DGNumber', grammar_dg.Primitive)
@@ -590,7 +590,7 @@ function grammar_dg.Number.method:__init(rule, id, size, endian, name)
 	self.name = name
 end
 
-function grammar_dg.Number.method:_parse(cur, input, ctx)
+function grammar_dg.Number.method:_parse(res, input, ctx)
 	local bitoffset = ctx._bitoffset
 	local size, bit = math.ceil((bitoffset + self.size) / 8), (bitoffset + self.size) % 8
 
@@ -605,14 +605,14 @@ function grammar_dg.Number.method:_parse(cur, input, ctx)
 
 	if bitoffset == 0 and bit == 0 then
 		if self.name then
-			self:genproperty(cur, self.name,
+			self:genproperty(res, self.name,
 				function (this) return sub:asnumber(self.endian) end,
 				function (this, newvalue) return sub:setnumber(newvalue, self.endian) end
 			)
 		end
 	else
 		if self.name then
-			self:genproperty(cur, self.name,
+			self:genproperty(res, self.name,
 				function (this)
 					return sub:asbits(bitoffset, self.size, self.endian)
 				end,
@@ -624,19 +624,19 @@ function grammar_dg.Number.method:_parse(cur, input, ctx)
 	end
 end
 
-function grammar_dg.Number.method:_init(cur, input, ctx, init)
-	self:_parse(cur, input, ctx)
+function grammar_dg.Number.method:_init(res, input, ctx, init)
+	self:_parse(res, input, ctx)
 
 	if self.name and ctx.init then
 		if init then
 			local initval = init[self.name]
 			if initval then
-				cur[self.name] = initval
+				res[self.name] = initval
 			elseif self.validate then
-				cur._validate[self.validate] = cur
+				res._validate[self.validate] = res
 			end
 		else
-			cur[self.name] = nil
+			res[self.name] = nil
 		end
 	end
 end
@@ -648,8 +648,8 @@ function grammar_dg.Bits.method:__init(rule, id, size)
 	self.size = size
 end
 
-function grammar_dg.Bits.method:_parse(cur, input, ctx)
-	local size = self.size(cur, ctx)
+function grammar_dg.Bits.method:_parse(res, input, ctx)
+	local size = self.size(res, ctx)
 	local bitoffset = ctx._bitoffset + size
 	local size, bit = math.ceil(bitoffset / 8), bitoffset % 8
 	if bit ~= 0 then
@@ -661,7 +661,7 @@ function grammar_dg.Bits.method:_parse(cur, input, ctx)
 	ctx._bitoffset = bit
 end
 
-function grammar_dg.Bits.method:_init(cur, input, ctx, init)
+function grammar_dg.Bits.method:_init(res, input, ctx, init)
 end
 
 grammar_dg.Bytes = class('DGBytes', grammar_dg.Primitive)
@@ -674,13 +674,13 @@ function grammar_dg.Bytes.method:__init(rule, id, size, name, chunked)
 	self.chunked = chunked
 end
 
-function grammar_dg.Bytes.method:_parse(cur, iter, ctx)
+function grammar_dg.Bytes.method:_parse(res, iter, ctx)
 	if ctx._bitoffset ~= 0 then
 		return ctx:error(nil, self, "byte primitive requires aligned bits")
 	end
 
 	local sub
-	local size = self.size(cur, ctx)
+	local size = self.size(res, ctx)
 	if size then
 		if size < 0 then
 			return ctx:error(nil, self, "byte count must not be negative, got %d", size)
@@ -706,25 +706,25 @@ function grammar_dg.Bytes.method:_parse(cur, iter, ctx)
 			end
 
 			if not sub then break end
-			self.chunked(cur, sub, size == 0 or iter.iseof, ctx)
+			self.chunked(res, sub, size == 0 or iter.iseof, ctx)
 		end
 	else
 		sub = iter:sub(size)
 
 		if self.name then
 			if self.converter then
-				cur:addproperty(self.name,
+				res:addproperty(self.name,
 					function (this) return self.converter.get(sub) end,
 					function (this, newvalue) sub = self.converter.set(newvalue) end
 				)
 			else
-				cur[self.name] = sub
+				res[self.name] = sub
 			end
 		end
 	end
 end
 
-function grammar_dg.Bytes.method:_init(cur, input, ctx, init)
+function grammar_dg.Bytes.method:_init(res, input, ctx, init)
 	if self.name and init then
 		local initval = init[self.name]
 		if initval then
@@ -742,7 +742,7 @@ function grammar_dg.Token.method:__init(rule, id, pattern, re, name)
 	self.name = name
 end
 
-function grammar_dg.Token.method:_parse(cur, iter, ctx)
+function grammar_dg.Token.method:_parse(res, iter, ctx)
 	if not ctx.sink then
 		ctx.sink = self.re:create_sink()
 	end
@@ -773,7 +773,7 @@ function grammar_dg.Token.method:_parse(cur, iter, ctx)
 			end
 
 			if self.name then
-				cur[self.name] = string
+				res[self.name] = string
 			end
 			ctx.sink = nil
 			return
@@ -787,11 +787,8 @@ function grammar_dg.Token.method:_parse(cur, iter, ctx)
 
 end
 
-function grammar_dg.Token.method:_init(cur, input, ctx, init)
+function grammar_dg.Token.method:_init(res, input, ctx, init)
 end
-
-
-local grammar = {}
 
 
 --
@@ -999,7 +996,7 @@ end
 function grammar.Array.method:compile(rule, id)
 	local entity = self.entity:compile(self.rule or rule, id)
 	local start = grammar_dg.ArrayStart:new(self.named, self.rule, entity, self.create)
-	local finish = grammar_dg.ContextPop:new()
+	local finish = grammar.ResultPop:new()
 
 	local pop = grammar_dg.ArrayPop:new()
 	local inner = grammar_dg.ArrayPush:new()
