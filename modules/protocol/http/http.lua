@@ -366,23 +366,6 @@ end
 
 local convert = {}
 
-local function dump(t, indent)
-	if not indent then indent = "" end
-
-	for n, v in sorted_pairs(t) do
-		if n ~= '__property' and n ~= '_validate' then
-			if type(v) == "table" then
-				print(indent, n)
-				dump(v, indent .. "  ")
-			elseif type(v) ~= "thread" and
-				type(v) ~= "userdata" and
-				type(v) ~= "function" then
-				print(indent, n, "=", v)
-			end
-		end
-	end
-end
-
 function convert.request(request)
 	request.headers, request._headers_order = convert_headers(request.headers)
 	request.dump = dump
