@@ -179,6 +179,7 @@ end)
 
 -- http separator tokens
 http_dissector.grammar.WS = haka.grammar.token('[[:blank:]]+')
+http_dissector.grammar.optional_WS = haka.grammar.token('[[:blank:]]*')
 http_dissector.grammar.CRLF = haka.grammar.token('[%r]?%n')
 
 -- http request/response version
@@ -253,6 +254,7 @@ http_dissector.grammar.chunk = haka.grammar.record{
 		:convert(haka.grammar.converter.tonumber("%x", 16))),
 	haka.grammar.execute(function (self, ctx) ctx.chunk_size = self.chunk_size end),
 	haka.grammar.release,
+	http_dissector.grammar.optional_WS,
 	http_dissector.grammar.CRLF,
 	haka.grammar.bytes():options{
 		count = function (self, ctx) return ctx.chunk_size end,
