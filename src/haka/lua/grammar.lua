@@ -39,7 +39,7 @@ end
 
 grammar.Result = class('Result')
 
-grammar.ArrayResult = class('DGArrayContext', grammar.Result)
+grammar.ArrayResult = class('ArrayResult', grammar.Result)
 
 function grammar.ArrayResult.method:_init(iter, entity, create)
 	rawset(self, '_begin', iter)
