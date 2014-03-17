@@ -14,63 +14,6 @@ table.merge(module, utils)
 -- HTTP dissector
 --
 
-local HeaderResult = class("HeaderResult", haka.grammar.ArrayResult)
-
-function HeaderResult.method:__init()
-	rawset(self, '_cache', {})
-end
-
-function HeaderResult.method:__index(key)
-	local key = key:lower()
-
-	if self._cache[key] then
-		return self._cache[key].value
-	end
-
-	for i, header in ipairs(self) do
-		-- TODO avoid getting last empty header
-		if header.name and header.name:lower() == key then
-			self._cache[key] = header
-			return header.value
-		end
-	end
-end
-
-function HeaderResult:__pairs()
-	local i = 0
-	local function headernext(headerresult, index)
-		i = i + 1
-		if rawget(headerresult, i) then
-			return rawget(headerresult, i).name, rawget(headerresult, i).value
-		else
-			return nil
-		end
-	end
-	return headernext, self, nil
-end
-
-function HeaderResult.method:__newindex(key, value)
-	local lowerkey = key:lower()
-
-	-- Try to update existing header
-	for i, header in ipairs(self) do
-		if header.name and header.name:lower() == lowerkey then
-			if value then
-				header.value = value
-			else
-				self:remove(i)
-			end
-
-			return
-		end
-	end
-
-	-- Finally insert new header
-	if value then
-		self:append({ name = key, value = value })
-	end
-end
-
 local http_dissector = haka.dissector.new{
 	type = haka.dissector.FlowDissector,
 	name = 'http'
@@ -164,6 +107,97 @@ http_dissector.connections = haka.events.StaticEventConnections:new()
 http_dissector.connections:register(haka.event('tcp-connection', 'receive_data'),
 	haka.events.method(haka.events.self, http_dissector.method.receive),
 	{streamed=true})
+
+
+--
+-- HTTP parse results
+--
+
+local HeaderResult = class("HeaderResult", haka.grammar.ArrayResult)
+
+function HeaderResult.method:__init()
+	rawset(self, '_cache', {})
+end
+
+function HeaderResult.method:__index(key)
+	local key = key:lower()
+
+	if self._cache[key] then
+		return self._cache[key].value
+	end
+
+	for i, header in ipairs(self) do
+		-- TODO avoid getting last empty header
+		if header.name and header.name:lower() == key then
+			self._cache[key] = header
+			return header.value
+		end
+	end
+end
+
+function HeaderResult:__pairs()
+	local i = 0
+	local function headernext(headerresult, index)
+		i = i + 1
+		if rawget(headerresult, i) then
+			return rawget(headerresult, i).name, rawget(headerresult, i).value
+		else
+			return nil
+		end
+	end
+	return headernext, self, nil
+end
+
+function HeaderResult.method:__newindex(key, value)
+	local lowerkey = key:lower()
+
+	-- Try to update existing header
+	for i, header in ipairs(self) do
+		if header.name and header.name:lower() == lowerkey then
+			if value then
+				header.value = value
+			else
+				self:remove(i)
+			end
+
+			return
+		end
+	end
+
+	-- Finally insert new header
+	if value then
+		self:append({ name = key, value = value })
+	end
+end
+
+
+local HttpRequestResult = class("HttpRequestResult", haka.grammar.Result)
+
+HttpRequestResult.property.split_uri = {
+	get = function (self)
+		local split_uri = utils.uri.split(self.uri)
+		self.split_uri = split_uri
+		return split_uri
+	end
+}
+
+HttpRequestResult.property.split_cookies = {
+	get = function (self)
+		local split_cookies = utils.cookies.split(self.headers['Cookie'])
+		self.split_cookies = split_cookies
+		return split_cookies
+	end
+}
+
+local HttpResponseResult = class("HttpResponseResult", haka.grammar.Result)
+
+HttpResponseResult.property.split_cookies = {
+	get = function (self)
+		local split_cookies = utils.cookies.split(self.headers['Set-Cookie'])
+		self.split_cookies = split_cookies
+		return split_cookies
+	end
+}
 
 
 --
@@ -316,39 +350,6 @@ http_dissector.grammar.response = haka.grammar.record{
 
 local request = http_dissector.grammar.request:compile()
 local response = http_dissector.grammar.response:compile()
-
-
---
--- HTTP parse results
---
-
-local HttpRequestResult = class("HttpRequestResult", haka.grammar.Result)
-
-HttpRequestResult.property.split_uri = {
-	get = function (self)
-		local split_uri = utils.uri.split(self.uri)
-		self.split_uri = split_uri
-		return split_uri
-	end
-}
-
-HttpRequestResult.property.split_cookies = {
-	get = function (self)
-		local split_cookies = utils.cookies.split(self.headers['Cookie'])
-		self.split_cookies = split_cookies
-		return split_cookies
-	end
-}
-
-local HttpResponseResult = class("HttpResponseResult", haka.grammar.Result)
-
-HttpResponseResult.property.split_cookies = {
-	get = function (self)
-		local split_cookies = utils.cookies.split(self.headers['Set-Cookie'])
-		self.split_cookies = split_cookies
-		return split_cookies
-	end
-}
 
 
 --
