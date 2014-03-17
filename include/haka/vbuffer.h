@@ -96,7 +96,7 @@ size_t        vbuffer_iterator_available(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_check_available(struct vbuffer_iterator *position, size_t minsize, size_t *size);
 bool          vbuffer_iterator_register(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_unregister(struct vbuffer_iterator *position);
-bool          vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *buffer);
+bool          vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *buffer, struct vbuffer_sub *sub);
 size_t        vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len);
 bool          vbuffer_iterator_isend(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_iseof(struct vbuffer_iterator *position);

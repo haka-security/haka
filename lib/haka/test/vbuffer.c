@@ -105,7 +105,7 @@ static void vbuffer_test_build2(struct vbuffer *buffer1)
 	ck_assert_int_eq(vbuffer_iterator_available(&iter), size-insert_offset);
 	ck_check_error;
 
-	vbuffer_iterator_insert(&iter, &buffer2);
+	vbuffer_iterator_insert(&iter, &buffer2, NULL);
 	ck_check_error;
 
 	vbuffer_release(&buffer2);

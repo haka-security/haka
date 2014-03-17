@@ -33,6 +33,7 @@ struct vbuffer_iterator_blocking {
 
 %newobject vbuffer_iterator_lua::sub;
 %newobject vbuffer_iterator_lua::copy;
+%newobject vbuffer_iterator_lua::insert;
 
 %rename(vbuffer_iterator) vbuffer_iterator_lua;
 struct vbuffer_iterator_lua {
@@ -62,8 +63,10 @@ struct vbuffer_iterator_lua {
 			return len;
 		}
 
-		void insert(struct vbuffer *data)
+		struct vbuffer_sub *insert(struct vbuffer *data)
 		{
+			struct vbuffer_sub *sub;
+
 			if (!data) {
 				error(L"missing data parameter");
 				return;
@@ -74,7 +77,19 @@ struct vbuffer_iterator_lua {
 				return;
 			}
 
-			vbuffer_iterator_insert(&$self->super, data);
+			sub = malloc(sizeof(struct vbuffer_sub));
+			if (!sub) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_iterator_insert(&$self->super, data, sub)) {
+				free(sub);
+				return NULL;
+			}
+
+			vbuffer_sub_register(sub);
+			return sub;
 		}
 
 		void restore(struct vbuffer *data)

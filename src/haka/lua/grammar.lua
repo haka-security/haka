@@ -75,8 +75,8 @@ function grammar.ArrayResult.method:append(init)
 	end
 	local vbuf = self._create(result, self._entity, init)
 	if #self > 0 then
-		rawget(self, #self)._sub:pos('end'):insert(vbuf)
-		rawset(result, '_sub', vbuf:sub())
+		local sub = rawget(self, #self)._sub
+		rawset(result, '_sub', sub:pos('end'):insert(vbuf))
 		table.insert(self, result)
 	else
 		rawget(self, '_begin'):insert(vbuf)

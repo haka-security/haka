@@ -138,7 +138,7 @@ static bool tcp_add_header(struct vbuffer *payload)
 	}
 
 	vbuffer_begin(payload, &begin);
-	ret = vbuffer_iterator_insert(&begin, &header_buffer);
+	ret = vbuffer_iterator_insert(&begin, &header_buffer, NULL);
 	vbuffer_release(&header_buffer);
 
 	return ret;
@@ -223,7 +223,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 			if (!vbuffer_iterator_isvalid(&tcp->select)) {
 				struct vbuffer_iterator insert;
 				vbuffer_position(&tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
-				vbuffer_iterator_insert(&insert, &tcp->payload);
+				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
 			}
 			else {
 				vbuffer_restore(&tcp->select, &tcp->payload);
@@ -273,7 +273,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 			if (!vbuffer_iterator_isvalid(&tcp->select)) {
 				struct vbuffer_iterator insert;
 				vbuffer_position(&tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
-				vbuffer_iterator_insert(&insert, &tcp->payload);
+				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
 			}
 			else {
 				vbuffer_restore(&tcp->select, &tcp->payload);

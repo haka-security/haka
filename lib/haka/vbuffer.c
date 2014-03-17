@@ -413,11 +413,16 @@ static bool _vbuffer_iterator_check(const struct vbuffer_iterator *position)
 
 	if (position->registered) {
 		if ((!position->chunk->data && !position->chunk->flags.end) ||
-		    position->offset > position->chunk->size) {
+		    position->offset > position->chunk->size ||
+		    !position->chunk->list.next ||
+		    !position->chunk->list.prev) {
 			error(L"invalid buffer iterator");
 			return false;
 		}
 	}
+
+	assert(!position->chunk || (position->chunk->list.next &&
+		position->chunk->list.prev));
 
 	return true;
 }
@@ -633,7 +638,8 @@ static struct vbuffer_chunk *_vbuffer_iterator_split(struct vbuffer_iterator *po
 	return newchunk;
 }
 
-bool vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *buffer)
+bool vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *buffer,
+		struct vbuffer_sub *sub)
 {
 	struct list2 *list;
 	struct vbuffer_chunk *insert;
@@ -651,6 +657,23 @@ bool vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *
 	list2_insert_list(&insert->list, list2_begin(list), list2_end(list));
 
 	vbuffer_iterator_update(position, insert, 0);
+
+	if (sub) {
+		struct vbuffer_iterator begin;
+		vbuffer_begin(buffer, &begin);
+
+		sub->use_size = false;
+
+		sub->end = vbuffer_iterator_init;
+		sub->end.chunk = insert;
+
+		if (begin.chunk->flags.end) {
+			vbuffer_iterator_copy(&sub->end, &sub->begin);
+		}
+		else {
+			vbuffer_iterator_copy(&begin, &sub->begin);
+		}
+	}
 
 	assert(list2_empty(list));
 	return true;
