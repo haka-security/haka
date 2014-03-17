@@ -419,12 +419,16 @@ http_dissector.states.response = http_dissector.states:state{
 			return haka.abort()
 		end
 
-		return context.states.request
+		if self.request.method:lower() == 'connect' then
+			return context.states.connect
+		else
+			return context.states.request
+		end
 	end,
 }
 
 http_dissector.states.connect = http_dissector.states:state{
-	update = function (context, iter)
+	update = function (context, direction, iter)
 		iter:advance('all')
 	end
 }
