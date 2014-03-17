@@ -37,16 +37,16 @@ function HeaderResult.method:__index(key)
 end
 
 function HeaderResult:__pairs()
-        local i = 0
-        local function headernext(headerresult, index)
-                i = i + 1
-                if rawget(headerresult, i) then
-                        return rawget(headerresult, i).name, rawget(headerresult, i).value
-                else
-                        return nil
-                end
-        end
-        return headernext, self, nil
+	local i = 0
+	local function headernext(headerresult, index)
+		i = i + 1
+		if rawget(headerresult, i) then
+			return rawget(headerresult, i).name, rawget(headerresult, i).value
+		else
+			return nil
+		end
+	end
+	return headernext, self, nil
 end
 
 function HeaderResult.method:__newindex(key, value)
