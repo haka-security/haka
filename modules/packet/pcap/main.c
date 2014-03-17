@@ -221,7 +221,7 @@ static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 		}
 	}
 	else {
-		messagef(HAKA_LOG_INFO, L"pcap", L"openning file '%s'", input);
+		messagef(HAKA_LOG_INFO, L"pcap", L"opening file '%s'", input);
 
 		pd->pd = pcap_open_offline(input, errbuf);
 
