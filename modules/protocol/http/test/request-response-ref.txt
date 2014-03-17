@@ -1,7 +1,7 @@
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 10.2.96.127:57794 -> 10.2.104.129:80
 HTTP REQUEST
-class http_ctx {
+class HttpRequestResult {
   headers : table {
     Accept : "*/*"
     Connection : "Keep-Alive"
@@ -11,9 +11,14 @@ class http_ctx {
   method : "GET"
   uri : "/"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
+  split_uri : class HttpUriSplit {
+    path : "/"
+  }
 }
 HTTP RESPONSE
-class http_ctx {
+class HttpResponseResult {
   headers : table {
     Connection : "Keep-Alive"
     Content-Type : "text/html"
@@ -26,5 +31,7 @@ class http_ctx {
   reason : "OK"
   status : "200"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
 }
 debug tcp-connection: closing connection 10.2.96.127:57794 -> 10.2.104.129:80

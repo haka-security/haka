@@ -8,7 +8,7 @@ require('httpdecode')
 
 local sql_comments = { '%-%-', '#', '%z', '/%*.-%*/' }
 
--- Common pattern used in intial attack stage to ckeck for SQLi vulnerabilites
+-- Common pattern used in initial attack stage to check for SQLi vulnerabilities
 local probing = { "^[\"'`´’‘;]", "[\"'`´’‘;]$" }
 
 local sql_keywords = {
@@ -36,11 +36,11 @@ sqli = haka.rule_group{
 		-- Another way to split cookie header value and query's arguments
 		http.sqli = {
 			cookies = {
-				value = request:split_cookies(),
+				value = request.split_cookies,
 				score = 0
 			},
 			args = {
-				value = request:split_uri().args,
+				value = request.split_uri.args,
 				score = 0
 			}
 		}

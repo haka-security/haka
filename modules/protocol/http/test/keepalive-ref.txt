@@ -1,7 +1,7 @@
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 10.2.96.127:57838 -> 10.2.104.129:80
 HTTP REQUEST
-class http_ctx {
+class HttpRequestResult {
   headers : table {
     Accept : "*/*"
     Connection : "Keep-Alive"
@@ -11,9 +11,14 @@ class http_ctx {
   method : "GET"
   uri : "/twiki/bin/view/"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
+  split_uri : class HttpUriSplit {
+    path : "/twiki/bin/view/"
+  }
 }
 HTTP RESPONSE
-class http_ctx {
+class HttpResponseResult {
   headers : table {
     Connection : "Keep-Alive"
     Content-Type : "text/html; charset=ISO-8859-1"
@@ -25,9 +30,11 @@ class http_ctx {
   reason : "OK"
   status : "200"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
 }
 HTTP REQUEST
-class http_ctx {
+class HttpRequestResult {
   headers : table {
     Accept : "*/*"
     Connection : "Keep-Alive"
@@ -37,9 +44,14 @@ class http_ctx {
   method : "GET"
   uri : "/robots.txt"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
+  split_uri : class HttpUriSplit {
+    path : "/robots.txt"
+  }
 }
 HTTP RESPONSE
-class http_ctx {
+class HttpResponseResult {
   headers : table {
     Connection : "Keep-Alive"
     Content-Length : "291"
@@ -51,9 +63,11 @@ class http_ctx {
   reason : "Not Found"
   status : "404"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
 }
 HTTP REQUEST
-class http_ctx {
+class HttpRequestResult {
   headers : table {
     Accept : "*/*"
     Connection : "Keep-Alive"
@@ -64,9 +78,14 @@ class http_ctx {
   method : "GET"
   uri : "/twiki/pub/TWiki/TWikiLogos/twikiRobot46x50.gif"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
+  split_uri : class HttpUriSplit {
+    path : "/twiki/pub/TWiki/TWikiLogos/twikiRobot46x50.gif"
+  }
 }
 HTTP RESPONSE
-class http_ctx {
+class HttpResponseResult {
   headers : table {
     Accept-Ranges : "bytes"
     Connection : "Keep-Alive"
@@ -81,9 +100,11 @@ class http_ctx {
   reason : "OK"
   status : "200"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
 }
 HTTP REQUEST
-class http_ctx {
+class HttpRequestResult {
   headers : table {
     Accept : "*/*"
     Connection : "Keep-Alive"
@@ -94,9 +115,14 @@ class http_ctx {
   method : "GET"
   uri : "/twiki/pub/TWiki/TWikiLogos/twikiRobot131x64.gif"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
+  split_uri : class HttpUriSplit {
+    path : "/twiki/pub/TWiki/TWikiLogos/twikiRobot131x64.gif"
+  }
 }
 HTTP RESPONSE
-class http_ctx {
+class HttpResponseResult {
   headers : table {
     Accept-Ranges : "bytes"
     Connection : "Keep-Alive"
@@ -111,5 +137,7 @@ class http_ctx {
   reason : "OK"
   status : "200"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
 }
 debug tcp-connection: closing connection 10.2.96.127:57838 -> 10.2.104.129:80

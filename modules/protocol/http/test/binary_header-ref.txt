@@ -1,16 +1,21 @@
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 127.0.0.1:42073 -> 127.0.0.1:80
 HTTP REQUEST
-class http_ctx {
+class HttpRequestResult {
   headers : table {
     Host : "Ž™ÿ
   }
   method : "GET"
   uri : "/"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
+  split_uri : class HttpUriSplit {
+    path : "/"
+  }
 }
 HTTP RESPONSE
-class http_ctx {
+class HttpResponseResult {
   headers : table {
     Accept-Ranges : "bytes"
     Content-Length : "18"
@@ -25,5 +30,7 @@ class http_ctx {
   reason : "OK"
   status : "200"
   version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
 }
 debug tcp-connection: closing connection 127.0.0.1:42073 -> 127.0.0.1:80

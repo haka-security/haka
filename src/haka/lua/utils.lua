@@ -37,3 +37,21 @@ function safe_string(str)
 	
 	return table.concat(sstr)
 end
+
+function table.merge(dst, src)
+	for k,v in pairs(src) do
+		dst[k] = v
+	end
+end
+
+function table.dict(table)
+	local ret = {}
+	for _, v in pairs(table) do
+		ret[v] = true
+	end
+	return ret
+end
+
+function table.contains(table, elem)
+	return table[elem] ~= nil
+end

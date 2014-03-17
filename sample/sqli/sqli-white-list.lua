@@ -43,11 +43,11 @@ sqli = haka.rule_group{
 		-- Another way to split cookie header value and query's arguments
 		http.sqli = {
 			cookies = {
-				value = request:split_cookies(),
+				value = request.split_cookies,
 				score = 0
 			},
 			args = {
-				value = request:split_uri().args,
+				value = request.split_uri.args,
 				score = 0
 			}
 		}
@@ -70,7 +70,7 @@ sqli = haka.rule_group{
 sqli:rule(
 	function (http, request)
 		-- Split uri into subparts and normalize it
-		local splitted_uri = request:split_uri():normalize()
+		local splitted_uri = request.split_uri:normalize()
 		for	_, res in ipairs(safe_resources) do
 			-- Skip evaluation if the normalized path (without dot-segments)
 			-- is in the list of safe resources

@@ -347,8 +347,9 @@ function grammar_dg.Entity.method:genproperty(obj, name, get, set)
 	obj:addproperty(name, fget, fset)
 end
 
-function grammar_dg.Entity.method:parse(input, ctx)
-	local ctx = grammar_dg.ParseContext:new(input, ctx)
+function grammar_dg.Entity.method:parse(input, result, context)
+	local ctx = grammar_dg.ParseContext:new(input, result)
+	ctx.user = context
 	return ctx:parse(self)
 end
 
