@@ -2,7 +2,7 @@ debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 10.2.96.127:57838 -> 10.2.104.129:80
 HTTP REQUEST
 class HttpRequestResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept : "*/*"
     Connection : "Keep-Alive"
     Host : "10.2.104.129"
@@ -19,7 +19,7 @@ class HttpRequestResult {
 }
 HTTP RESPONSE
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Connection : "Keep-Alive"
     Content-Type : "text/html; charset=ISO-8859-1"
     Date : "Mon, 17 Jun 2013 15:08:03 GMT"
@@ -35,7 +35,7 @@ class HttpResponseResult {
 }
 HTTP REQUEST
 class HttpRequestResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept : "*/*"
     Connection : "Keep-Alive"
     Host : "10.2.104.129"
@@ -52,7 +52,7 @@ class HttpRequestResult {
 }
 HTTP RESPONSE
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Connection : "Keep-Alive"
     Content-Length : "291"
     Content-Type : "text/html; charset=iso-8859-1"
@@ -68,7 +68,7 @@ class HttpResponseResult {
 }
 HTTP REQUEST
 class HttpRequestResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept : "*/*"
     Connection : "Keep-Alive"
     Host : "10.2.104.129"
@@ -86,7 +86,7 @@ class HttpRequestResult {
 }
 HTTP RESPONSE
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept-Ranges : "bytes"
     Connection : "Keep-Alive"
     Content-Length : "2877"
@@ -105,7 +105,7 @@ class HttpResponseResult {
 }
 HTTP REQUEST
 class HttpRequestResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept : "*/*"
     Connection : "Keep-Alive"
     Host : "10.2.104.129"
@@ -123,7 +123,7 @@ class HttpRequestResult {
 }
 HTTP RESPONSE
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept-Ranges : "bytes"
     Connection : "Keep-Alive"
     Content-Length : "7218"

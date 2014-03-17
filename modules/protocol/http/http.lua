@@ -14,6 +14,63 @@ table.merge(module, utils)
 -- HTTP dissector
 --
 
+local HeaderResult = class("HeaderResult", haka.grammar.ArrayResult)
+
+function HeaderResult.method:__init()
+	rawset(self, '_cache', {})
+end
+
+function HeaderResult.method:__index(key)
+	local key = key:lower()
+
+	if self._cache[key] then
+		return self._cache[key].value
+	end
+
+	for i, header in ipairs(self) do
+		-- TODO avoid getting last empty header
+		if header.name and header.name:lower() == key then
+			self._cache[key] = header
+			return header.value
+		end
+	end
+end
+
+function HeaderResult:__pairs()
+        local i = 0
+        local function headernext(headerresult, index)
+                i = i + 1
+                if rawget(headerresult, i) then
+                        return rawget(headerresult, i).name, rawget(headerresult, i).value
+                else
+                        return nil
+                end
+        end
+        return headernext, self, nil
+end
+
+function HeaderResult.method:__newindex(key, value)
+	local lowerkey = key:lower()
+
+	-- Try to update existing header
+	for i, header in ipairs(self) do
+		if header.name and header.name:lower() == lowerkey then
+			if value then
+				header.value = value
+			else
+				self:remove(i)
+			end
+
+			return
+		end
+	end
+
+	-- Finally insert new header
+	if value then
+		self:append({ name = key, value = value })
+	end
+end
+
 local http_dissector = haka.dissector.new{
 	type = haka.dissector.FlowDissector,
 	name = 'http'
@@ -74,98 +131,13 @@ function http_dissector.method:push_data(current, data, last, signal)
 	current.data:pop()
 end
 
-local function convert_headers(hdrs)
-	local headers = {}
-	local headers_order = {}
-	for _, header in ipairs(hdrs) do
-		if header.name then
-			headers[header.name] = header.value
-			table.insert(headers_order, header.name)
-		end
-	end
-	return headers, headers_order
-end
-
-local convert = {}
-
-function convert.request(request)
-	request.headers, request._headers_order = convert_headers(request.headers)
-	return request
-end
-
-function convert.response(response)
-	response.headers, response._headers_order = convert_headers(response.headers)
-	return response
-end
-
-local function build_headers(result, headers, headers_order)
-	for _, name in pairs(headers_order) do
-		local value = headers[name]
-		if value then
-			table.insert(result, name)
-			table.insert(result, ": ")
-			table.insert(result, value)
-			table.insert(result, "\r\n")
-		end
-	end
-	local headers_copy = table.dict(headers_order)
-	for name, value in sorted_pairs(headers) do
-		if value and not table.contains(headers_copy, name) then
-			table.insert(result, name)
-			table.insert(result, ": ")
-			table.insert(result, value)
-			table.insert(result, "\r\n")
-		end
-	end
-end
-
-function http_dissector.method:send(iter, mark)
-	local len = iter.meter - mark.meter
-
-	if self.states.state.name == 'request' then
-		if haka.packet.mode() == haka.packet.PASSTHROUGH then
-			return
-		end
-
-		local request = {}
-		table.insert(request, self.request.method)
-		table.insert(request, " ")
-		table.insert(request, self.request.uri)
-		table.insert(request, " HTTP/")
-		table.insert(request, self.request.version)
-		table.insert(request, "\r\n")
-		build_headers(request, self.request.headers, self.request._headers_order)
-		table.insert(request, "\r\n")
-
-		iter:move_to(mark)
-		iter:sub(len, true):replace(haka.vbuffer(table.concat(request)))
-	else
-		if haka.packet.mode() == haka.packet.PASSTHROUGH then
-			return
-		end
-
-		local response = {}
-		table.insert(response, "HTTP/")
-		table.insert(response, self.response.version)
-		table.insert(response, " ")
-		table.insert(response, self.response.status)
-		table.insert(response, " ")
-		table.insert(response, self.response.reason)
-		table.insert(response, "\r\n")
-		build_headers(response, self.response.headers, self.response._headers_order)
-		table.insert(response, "\r\n")
-
-		iter:move_to(mark)
-		iter:sub(len, true):replace(haka.vbuffer(table.concat(response)))
-	end
-end
-
-function http_dissector.method:trigger_event(ctx, iter, mark)
+function http_dissector.method:trigger_event(res, iter, mark)
 	local state = self.states.state.name
-	local converted = convert[state](ctx)
+	res.http = nil
 
-	self:trigger(state, converted)
-	self:send(iter, mark)
+	self:trigger(state, res)
+
+	res.http = self
 end
 
 function http_dissector.method:receive(flow, iter, direction)
@@ -261,20 +233,18 @@ http_dissector.grammar.header = haka.grammar.record{
 	end
 }
 
-http_dissector.grammar.header_or_crlf = haka.grammar.branch(
-	{
-		header = http_dissector.grammar.header,
-		crlf = http_dissector.grammar.CRLF
-	},
-	function (self, ctx)
+http_dissector.grammar.headers = haka.grammar.array(http_dissector.grammar.header):options{
+	untilcond = function (elem, ctx)
 		local la = ctx:lookahead()
-		if la == 0xa or la == 0xd then return 'crlf'
-		else return 'header' end
+		return la == 0xa or la == 0xd
+	end,
+	result = HeaderResult,
+	create = function (ctx, entity, init)
+		local vbuf = haka.vbuffer(init.name..': '..init.value..'\r\n')
+		entity:create(vbuf:pos('begin'), ctx, init)
+		return vbuf
 	end
-)
-
-http_dissector.grammar.headers = haka.grammar.array(http_dissector.grammar.header_or_crlf):
-	options{ untilcond = function (elem, ctx) return elem and not elem.name end }
+}
 
 -- http chunk
 http_dissector.grammar.chunk = haka.grammar.record{
@@ -300,6 +270,7 @@ http_dissector.grammar.chunks = haka.grammar.record{
 	},
 	haka.grammar.retain(),
 	haka.grammar.field('headers', http_dissector.grammar.headers),
+	http_dissector.grammar.CRLF,
 	haka.grammar.release
 }
 
@@ -313,12 +284,13 @@ http_dissector.grammar.body = haka.grammar.branch(
 		},
 		chunked = http_dissector.grammar.chunks,
 		default = true
-	}, 
+	},
 	function (self, ctx) return ctx.mode end
 )
 
 http_dissector.grammar.message = haka.grammar.record{
 	haka.grammar.field('headers', http_dissector.grammar.headers),
+	http_dissector.grammar.CRLF,
 	haka.grammar.execute(function (self, ctx)
 		ctx.user:trigger_event(ctx.top, ctx.iter, ctx.retain_mark)
 	end),

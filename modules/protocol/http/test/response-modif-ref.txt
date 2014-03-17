@@ -2,7 +2,7 @@ debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.10:56353 -> 192.168.20.1:80
 HTTP REQUEST
 class HttpRequestResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept : "*/*"
     Connection : "Keep-Alive"
     Host : "server"
@@ -19,7 +19,7 @@ class HttpRequestResult {
 }
 HTTP RESPONSE
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Connection : "Keep-Alive"
     Content-Type : "text/html; charset=ISO-8859-1"
     Date : "Fri, 25 Oct 2013 14:18:57 GMT"
@@ -35,7 +35,7 @@ class HttpResponseResult {
 }
 HTTP MODIFIED RESPONSE
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Connection : "Keep-Alive"
     Content-Type : "text/html; charset=ISO-8859-1"
     Date : "Sat, 34 Jun 2048 15:14:20 GMT"
@@ -43,9 +43,9 @@ class HttpResponseResult {
     Keep-Alive : "timeout=15, max=100"
     Transfer-Encoding : "chunked"
   }
-  reason : "OK"
   split_cookies : class HttpCookiesSplit {
   }
+  reason : "OK"
   status : "200"
   version : "2.0"
 }

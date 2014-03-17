@@ -2,7 +2,7 @@ debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 127.0.0.1:42073 -> 127.0.0.1:80
 HTTP REQUEST
 class HttpRequestResult {
-  headers : table {
+  headers : class HeaderResult {
     Host : "Ž™ÿ
   }
   method : "GET"
@@ -16,7 +16,7 @@ class HttpRequestResult {
 }
 HTTP RESPONSE
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept-Ranges : "bytes"
     Content-Length : "18"
     Content-Type : "text/html"

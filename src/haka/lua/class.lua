@@ -108,6 +108,7 @@ function class(name, super)
 			return string.format("<class instance: %s>", classof(self).name)
 		end
 	end
+
 	cls.method = {}
 	cls.property = {}
 	cls.__index = function (self, key)

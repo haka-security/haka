@@ -41,9 +41,10 @@ grammar.Result = class('Result')
 
 grammar.ArrayResult = class('DGArrayContext', grammar.Result)
 
-function grammar.ArrayResult.method:__init(entity, create)
-	self._entity = entity
-	self._create = create
+function grammar.ArrayResult.method:_init(iter, entity, create)
+	rawset(self, '_begin', iter)
+	rawset(self, '_entity', entity)
+	rawset(self, '_create', create)
 end
 
 function grammar.ArrayResult.method:remove(el)
@@ -51,7 +52,7 @@ function grammar.ArrayResult.method:remove(el)
 	if type(el) == 'number' then
 		index = el
 	else
-		for i, value in pairs(self) do
+		for i, value in ipairs(self) do
 			if value == el then
 				index = i
 				break
@@ -69,9 +70,17 @@ end
 
 function grammar.ArrayResult.method:append(init)
 	local result = grammar.Result:new()
+	if not self._create then
+		error("Missing create function in array options")
+	end
 	local vbuf = self._create(result, self._entity, init)
-	self[#self]._sub:pos('end'):insert(vbuf)
-	table.insert(self, result)
+	if #self > 0 then
+		rawget(self, #self)._sub:pos('end'):insert(vbuf)
+		rawset(result, '_sub', vbuf:sub())
+		table.insert(self, result)
+	else
+		rawget(self, '_begin'):insert(vbuf)
+	end
 end
 
 --
@@ -184,7 +193,7 @@ end
 
 function grammar_dg.ParseContext.method:push(result)
 	local new = result or grammar.Result:new()
-	new._validate = self._validate
+	rawset(new, '_validate', self._validate)
 	self._results[#self._results+1] = new
 	if self._initresults then
 		local curinit = self._initresults[#self._initresults]
@@ -256,6 +265,7 @@ function grammar_dg.Entity.method:next(ctx)
 end
 
 function grammar_dg.Entity.method:init(ctx)
+	return self:_apply(ctx)
 end
 
 function grammar_dg.Entity.method:_apply(ctx)
@@ -467,18 +477,21 @@ end
 
 grammar_dg.ArrayStart = class('DGArrayStart', grammar_dg.Control)
 
-function grammar_dg.ArrayStart.method:__init(name, rule, entity, create)
+function grammar_dg.ArrayStart.method:__init(name, rule, entity, create, resultclass)
 	super(grammar_dg.ArrayStart).__init(self)
 	self.name = name
 	self.rule = rule
 	self.entity = entity
 	self.create = create
+	self.resultclass = resultclass or grammar.ArrayResult
 end
 
 function grammar_dg.ArrayStart.method:_apply(ctx)
 	local res = ctx.result
 	if self.name then
-		local array = ctx:push(grammar.ArrayResult:new(self.entity, self.create), self.name)
+		local result = self.resultclass:new()
+		result:_init(ctx.iter:copy(), self.entity, self.create)
+		local array = ctx:push(result, self.name)
 		res[self.name] = array
 	else
 		ctx:push(nil, nil)
@@ -504,7 +517,7 @@ end
 function grammar_dg.ArrayPush.method:_apply(ctx)
 	local res = ctx.result
 	if isa(res, grammar.ArrayResult) then
-		res._entitybegin = ctx.iter:copy()
+		rawset(res, '_entitybegin', ctx.iter:copy())
 	end
 	local new = ctx:push(nil, #res+1)
 	table.insert(res, new)
@@ -521,7 +534,8 @@ function grammar_dg.ArrayPop.method:_apply(ctx)
 	ctx:pop()
 	local arrayresult = ctx.result
 	if isa(arrayresult, grammar.ArrayResult) then
-		entityresult._sub = haka.vbuffer_sub(arrayresult._entitybegin, ctx.iter)
+		rawset(entityresult, '_sub', haka.vbuffer_sub(arrayresult._entitybegin, ctx.iter))
+		rawset(arrayresult, '_entitybegin', nil)
 		ctx.iter:split()
 	end
 end
@@ -833,6 +847,8 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 end
 
 function grammar_dg.Token.method:_init(res, input, ctx, init)
+	-- Should have been initialized
+	return self:_parse(res, input, ctx)
 end
 
 
@@ -1040,7 +1056,7 @@ end
 
 function grammar.Array.method:compile(rule, id)
 	local entity = self.entity:compile(self.rule or rule, id)
-	local start = grammar_dg.ArrayStart:new(self.named, self.rule, entity, self.create)
+	local start = grammar_dg.ArrayStart:new(self.named, self.rule, entity, self.create, self.resultclass)
 	local finish = grammar.ResultPop:new()
 
 	local pop = grammar_dg.ArrayPop:new()
@@ -1081,6 +1097,10 @@ end
 
 function grammar.Array._options.create(self, f)
 	self.create = f
+end
+
+function grammar.Array._options.result(self, resultclass)
+	self.resultclass = resultclass
 end
 
 grammar.Regex = class('Regex', grammar.Entity)

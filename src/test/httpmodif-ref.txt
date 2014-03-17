@@ -6,7 +6,7 @@ info alert: id = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Connection : "Close"
     Content-Length : "0"
     Content-Type : "text/html"
@@ -36,7 +36,7 @@ info alert: id = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Connection : "Close"
     Content-Length : "0"
     Content-Type : "text/html"
@@ -62,7 +62,7 @@ info alert: id = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Connection : "Close"
     Content-Length : "0"
     Content-Type : "text/html"
@@ -101,7 +101,7 @@ info alert: id = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Connection : "Close"
     Content-Length : "0"
     Content-Type : "text/html; charset=iso-8859-1"

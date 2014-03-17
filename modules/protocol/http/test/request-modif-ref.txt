@@ -2,7 +2,7 @@ debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 10.2.96.127:57845 -> 10.2.104.129:80
 HTTP REQUEST
 class HttpRequestResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept : "*/*"
     Connection : "Keep-Alive"
     Host : "10.2.104.129"
@@ -19,24 +19,24 @@ class HttpRequestResult {
 }
 HTTP MODIFIED REQUEST
 class HttpRequestResult {
-  headers : table {
+  headers : class HeaderResult {
     Accept : "*/*"
     Connection : "Keep-Alive"
     Haka : "Done"
     Host : "haka.powered.tld"
   }
-  method : "GET"
   split_cookies : class HttpCookiesSplit {
   }
   split_uri : class HttpUriSplit {
     path : "/twiki/bin/view/"
   }
+  method : "GET"
   uri : "/twiki/bin/view/"
   version : "2.0"
 }
 HTTP RESPONSE
 class HttpResponseResult {
-  headers : table {
+  headers : class HeaderResult {
     Connection : "Keep-Alive"
     Content-Type : "text/html; charset=ISO-8859-1"
     Date : "Mon, 17 Jun 2013 15:14:20 GMT"
