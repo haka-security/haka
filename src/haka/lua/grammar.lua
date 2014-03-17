@@ -16,7 +16,7 @@ local ParseError = class("ParseError")
 function ParseError.method:__init(iterator, rule, description, ...)
 	self.iterator = iterator
 	self.rule = rule
-	self.description = string.format(description, ...)
+	self.description = description
 end
 
 function ParseError.method:__tostring()
@@ -242,8 +242,13 @@ function grammar_dg.ParseContext.method:error(position, field, description, ...)
 	local context = {}
 	description = string.format(description, ...)
 
+	position = position or self.iter
+	local iter = position:copy()
+
 	haka.log.debug("grammar", "parse error at byte %d for field %s in %s: %s",
-		(position or self.iter).meter, field.id or "<unknown>", field.rule or "<unknown>", description)
+		(position or self.iter).meter, field.id or "<unknown>", field.rule or "<unknown>",
+		description)
+	haka.log.debug("grammar", "parse error context: %s...", safe_string(iter:sub(100):asstring()))
 
 	return ParseError:new(position or self.iter, field.rule, description)
 end
@@ -842,7 +847,7 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 	end
 
 	-- No match found return an error
-	return ctx:error(begin:copy(), self, "token /"..self.pattern.."/ doesn't match")
+	return ctx:error(begin:copy(), self, "token /%s/ doesn't match", self.pattern)
 
 end
 
