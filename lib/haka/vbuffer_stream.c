@@ -233,8 +233,8 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, v
 #ifdef HAKA_DEBUG
 				/* A push ctl node must be from another stream */
 				assert(ctl_data->stream != stream);
-			}
 #endif
+			}
 
 			if (iter->data->ops == &vbuffer_data_ctl_select_ops) {
 				return false;
