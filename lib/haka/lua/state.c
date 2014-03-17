@@ -487,3 +487,40 @@ bool lua_state_runinterrupt(struct lua_state *_state)
 
 	return true;
 }
+
+/*
+ * Debugging utility functions
+ */
+static void dump_frame(lua_State *L, lua_Debug *ar)
+{
+	lua_getinfo(L, "Snl", ar);
+
+	if (!strcmp(ar->what, "C")) {
+		printf("[C]: in function '%s'\n", ar->name);
+	}
+	else if (!strcmp(ar->what, "main")) {
+		printf("%s:%d: in the main chunk\n",
+				ar->short_src, ar->currentline);
+	}
+	else if (!strcmp(ar->what, "Lua")) {
+		printf("%s:%d: in function '%s'\n",
+				ar->short_src, ar->currentline, ar->name);
+	}
+	else if (!strcmp(ar->what, "tail")) {
+		printf("in tail call\n");
+	}
+	else {
+		printf("%s\n", ar->what);
+	}
+}
+
+void lua_state_dumpbacktrace(lua_State *L)
+{
+	int i;
+	lua_Debug ar;
+
+	for (i = 0; lua_getstack(L, i, &ar); ++i) {
+		printf("  #%i\t", i);
+		dump_frame(L, &ar);
+	}
+}
