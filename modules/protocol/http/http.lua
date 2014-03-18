@@ -124,6 +124,7 @@ function http_dissector.method:receive(flow, iter, direction)
 
 	while iter:wait() do
 		self.states:update(direction, iter)
+		self:continue()
 	end
 end
 
@@ -441,7 +442,7 @@ http_dissector.states.request = http_dissector.states:state{
 				severity = 'low'
 			}
 			self:drop()
-			return haka.abort()
+			return
 		end
 
 		return context.states.response
@@ -477,7 +478,7 @@ http_dissector.states.response = http_dissector.states:state{
 				severity = 'low'
 			}
 			self:drop()
-			return haka.abort()
+			return
 		end
 
 		if self.request.method:lower() == 'connect' then
