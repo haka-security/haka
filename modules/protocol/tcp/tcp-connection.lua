@@ -344,8 +344,10 @@ end
 
 function tcp_connection_dissector.method:_close()
 	self.stream = nil
-	self.connection:close()
-	self.connection = nil
+	if self.connection then
+		self.connection:close()
+		self.connection = nil
+	end
 	self.states = nil
 end
 
