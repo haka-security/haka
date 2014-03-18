@@ -425,8 +425,6 @@ http_dissector.states:default{
 	end
 }
 
-local ctx_object = class('http_ctx')
-
 http_dissector.states.request = http_dissector.states:state{
 	up = function (context, iter)
 		local self = context.http
