@@ -39,6 +39,11 @@ function http_dissector.method:__init(flow)
 	end
 	self.states = http_dissector.states:instanciate()
 	self.states.http = self
+	self._want_data_modification = false
+end
+
+function http_dissector.method:enable_data_modification()
+	self._want_data_modification = true
 end
 
 function http_dissector.method:continue()
@@ -57,30 +62,61 @@ function http_dissector.method:reset()
 	self.flow = nil
 end
 
-function http_dissector.method:push_data(current, data, last, signal)
+function http_dissector.method:push_data(current, data, iter, last, signal, chunk)
 	if not current.data then
 		current.data = haka.vbuffer_sub_stream()
 	end
 
-	current.data:push(data)
-	if last then current.data:finish() end
-
-	if not haka.pcall(haka.context.signal, haka.context, self,
-			signal, current.data) then
-		self:drop()
-		return true
+	if data then
+		current.data:push(data)
 	end
 
-	current.data:pop()
+	if last then current.data:finish() end
+
+	if data or last then
+		haka.context:signal(self, signal, current.data)
+	end
+
+	local sub
+	if data then
+		sub = current.data:pop()
+	end
+	
+	if self._enable_data_modification then
+		if sub then
+			if #sub > 0 then
+				-- create a chunk
+				sub:pos('begin'):insert(haka.vbuffer_from(string.format("%x\r\n", #sub)))
+				sub:pos('end'):insert(haka.vbuffer_from("\r\n"))
+			end
+		end
+
+		if last then
+			if chunk then
+				iter:insert(haka.vbuffer_from("0\r\n"))
+			else
+				iter:insert(haka.vbuffer_from("0\r\n\r\n"))
+			end
+		end
+	end
+
+	if last then
+		current.data = nil
+	end
 end
 
 function http_dissector.method:trigger_event(res, iter, mark)
 	local state = self.states.state.name
-	res.http = nil
 
 	self:trigger(state, res)
 
-	res.http = self
+	if self._want_data_modification then
+		res.headers['Content-Length'] = nil
+		res.headers['Transfer-Encoding'] = 'chunked'
+		self._enable_data_modification = true
+	else
+		self._enable_data_modification = false
+	end
 end
 
 function http_dissector.method:receive(flow, iter, direction)
@@ -275,28 +311,49 @@ http_dissector.grammar.headers = haka.grammar.array(http_dissector.grammar.heade
 	end,
 	result = HeaderResult,
 	create = function (ctx, entity, init)
-		local vbuf = haka.vbuffer(init.name..': '..init.value..'\r\n')
+		local vbuf = haka.vbuffer_from(init.name..': '..init.value..'\r\n')
 		entity:create(vbuf:pos('begin'), ctx, init)
 		return vbuf
 	end
 }
 
 -- http chunk
+http_dissector.grammar.chunk_end_crlf = haka.grammar.record{
+	haka.grammar.retain(),
+	http_dissector.grammar.CRLF,
+	haka.grammar.execute(function (self, ctx)
+		if ctx.user._enable_data_modification then
+			local len = ctx.iter.meter - ctx.retain_mark.meter
+			ctx.iter:move_to(ctx.retain_mark)
+			ctx.iter:sub(len, true):erase()
+		end
+	end),
+	haka.grammar.release
+}
+
 http_dissector.grammar.chunk = haka.grammar.record{
 	haka.grammar.retain(),
 	haka.grammar.field('chunk_size', haka.grammar.token('[0-9a-fA-F]+')
 		:convert(haka.grammar.converter.tonumber("%x", 16))),
 	haka.grammar.execute(function (self, ctx) ctx.chunk_size = self.chunk_size end),
-	haka.grammar.release,
 	http_dissector.grammar.optional_WS,
 	http_dissector.grammar.CRLF,
+	haka.grammar.execute(function (self, ctx)
+		if ctx.user._enable_data_modification then
+			local len = ctx.iter.meter - ctx.retain_mark.meter
+			ctx.iter:move_to(ctx.retain_mark)
+			ctx.iter:sub(len, true):erase()
+		end
+	end),
+	haka.grammar.release,
 	haka.grammar.bytes():options{
 		count = function (self, ctx) return ctx.chunk_size end,
 		chunked = function (self, sub, last, ctx)
-			ctx.user:push_data(self, sub, last, http_dissector.events[ctx.user.states.state.name .. '_data'])
+			ctx.user:push_data(ctx.top, sub, ctx.iter, ctx.chunk_size == 0,
+				http_dissector.events[ctx.user.states.state.name .. '_data'], true)
 		end
 	},
-	haka.grammar.optional(http_dissector.grammar.CRLF,
+	haka.grammar.optional(http_dissector.grammar.chunk_end_crlf,
 		function (self, context) return self.chunk_size > 0 end)
 }
 
@@ -315,7 +372,8 @@ http_dissector.grammar.body = haka.grammar.branch(
 		content = haka.grammar.bytes():options{
 			count = function (self, ctx) return ctx.content_length or 0 end,
 			chunked = function (self, sub, last, ctx)
-				ctx.user:push_data(self, sub, last, http_dissector.events[ctx.user.states.state.name .. '_data'])
+				ctx.user:push_data(ctx.top, sub, ctx.iter, last,
+					http_dissector.events[ctx.user.states.state.name .. '_data'])
 			end
 		},
 		chunked = http_dissector.grammar.chunks,
@@ -375,6 +433,7 @@ http_dissector.states.request = http_dissector.states:state{
 
 		self.request = HttpRequestResult:new()
 		self.response = nil
+		self._want_data_modification = false
 
 		local err
 		self.request, err = request:parse(iter, self.request, self)
@@ -410,6 +469,7 @@ http_dissector.states.response = http_dissector.states:state{
 		local self = context.http
 
 		self.response = HttpResponseResult:new()
+		self._want_data_modification = false
 
 		local err
 		self.response, err = response:parse(iter, self.response, self)

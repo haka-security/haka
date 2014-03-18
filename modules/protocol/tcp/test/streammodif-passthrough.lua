@@ -9,7 +9,7 @@ require("protocol/tcp-connection")
 haka.rule {
 	hook = haka.event('tcp-connection', 'receive_data'),
 	eval = function (flow, data)
-		local buf = haka.vbuffer("Haka")
+		local buf = haka.vbuffer_from("Haka")
 		data:pos('begin'):insert(buf)
 	end
 }

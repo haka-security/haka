@@ -45,7 +45,7 @@ function icmp_dissector.method:forge_payload(pkt, payload)
 end
 
 function icmp_dissector:create(pkt, init)
-	pkt.payload:pos(0):insert(haka.vbuffer(8))
+	pkt.payload:pos(0):insert(haka.vbuffer_allocate(8))
 	pkt.proto = 1
 
 	local icmp = icmp_dissector:new(pkt)

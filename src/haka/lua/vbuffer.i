@@ -214,6 +214,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator_lua);
 
 %newobject vbuffer_iterator_blocking::sub;
 %newobject vbuffer_iterator_blocking::copy;
+%newobject vbuffer_iterator_blocking::insert;
 
 struct vbuffer_iterator_blocking {
 	%extend {
@@ -239,7 +240,7 @@ struct vbuffer_iterator_blocking {
 
 		void mark(bool readonly = false) { vbuffer_iterator_lua_mark(&$self->super, readonly); }
 		void unmark() { vbuffer_iterator_lua_unmark(&$self->super); }
-		void insert(struct vbuffer *data) { vbuffer_iterator_lua_insert(&$self->super, data); }
+		struct vbuffer_sub *insert(struct vbuffer *data) { vbuffer_iterator_lua_insert(&$self->super, data); }
 		int  available() { return vbuffer_iterator_lua_available(&$self->super); }
 		struct vbuffer_iterator_lua *copy() { return vbuffer_iterator_lua_copy(&$self->super); }
 		void move_to(struct vbuffer_iterator_lua *iter) { return vbuffer_iterator_lua_move_to__SWIG_0(&$self->super, iter); }
@@ -594,29 +595,15 @@ struct vbuffer_sub {
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub);
 
 
+%newobject vbuffer::from;
+%newobject vbuffer::allocate;
 %newobject vbuffer::sub;
 %newobject vbuffer::pos;
 %newobject vbuffer::_clone;
 
 struct vbuffer {
 	%extend {
-		vbuffer(size_t size, bool zero=true)
-		{
-			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
-			if (!buf) {
-				error(L"memory error");
-				return NULL;
-			}
-
-			if (!vbuffer_create_new(buf, size, zero)) {
-				free(buf);
-				return NULL;
-			}
-
-			return buf;
-		}
-
-		vbuffer(const char *STRING, size_t SIZE)
+		static struct vbuffer *from(const char *STRING, size_t SIZE)
 		{
 			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
 			if (!buf) {
@@ -625,6 +612,22 @@ struct vbuffer {
 			}
 
 			if (!vbuffer_create_from(buf, STRING, SIZE)) {
+				free(buf);
+				return NULL;
+			}
+
+			return buf;
+		}
+
+		static struct vbuffer *allocate(size_t size, bool zero=true)
+		{
+			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
+			if (!buf) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_create_new(buf, size, zero)) {
 				free(buf);
 				return NULL;
 			}
@@ -827,6 +830,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 
 
 %newobject vbuffer_sub_stream::current;
+%newobject vbuffer_sub_stream::_pop;
 
 struct vbuffer_sub_stream {
 	%extend {
@@ -853,7 +857,25 @@ struct vbuffer_sub_stream {
 		}
 
 		void push(struct vbuffer_sub *data);
-		void pop();
+
+		%rename(pop) _pop;
+		struct vbuffer_sub *_pop()
+		{
+			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
+			if (!sub) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_sub_stream_pop($self, sub)) {
+				free(sub);
+				return NULL;
+			}
+
+			vbuffer_sub_register(sub);
+			return sub;
+
+		}
 
 		void finish()
 		{

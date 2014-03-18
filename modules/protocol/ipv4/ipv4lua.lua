@@ -123,7 +123,7 @@ end
 function ipv4_dissector:create(pkt, init)
 	if not init then init = {} end
 	if not init.hdr_len then init.hdr_len = ipv4_dissector._compute_hdr_len(init) end
-	pkt.payload:append(haka.vbuffer(init.hdr_len))
+	pkt.payload:append(haka.vbuffer_allocate(init.hdr_len))
 
 	local ip = ipv4_dissector:new(pkt)
 	ip:create(init, pkt)

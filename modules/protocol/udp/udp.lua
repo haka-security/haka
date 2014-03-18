@@ -12,7 +12,7 @@ local function compute_checksum(pkt)
 	-- of ipv4 header
 
 	-- size of the udp pseudo-header
-	local pseudo_header = haka.vbuffer(12)
+	local pseudo_header = haka.vbuffer_allocate(12)
 	-- source and destination ipv4 adresses
 	pseudo_header:sub(0,4):setnumber(pkt.ip.src.packed)
 	pseudo_header:sub(4,4):setnumber(pkt.ip.dst.packed)
@@ -73,7 +73,7 @@ end
 function udp_dissector:create(pkt, init)
 	if not init then init = {} end
 	if not init.length then init.length = 8 end
-	pkt.payload:pos(0):insert(haka.vbuffer(init.length))
+	pkt.payload:pos(0):insert(haka.vbuffer_allocate(init.length))
 	pkt.proto = 17
 
 	local udp = udp_dissector:new(pkt)

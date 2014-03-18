@@ -742,23 +742,27 @@ function grammar_dg.Bytes.method:_parse(res, iter, ctx)
 	end
 
 	if self.chunked then
-		while (size == 'all' or size > 0) and iter:wait() do
-			if size ~= 'all' then
-				local subsize = iter:available()
-				if subsize > size then
-					sub = iter:sub(size)
-					subsize = size
+		if size == 0 then
+			self.chunked(res, nil, true, ctx)
+		else
+			while (size == 'all' or size > 0) and iter:wait() do
+				if size ~= 'all' then
+					local subsize = iter:available()
+					if subsize > size then
+						sub = iter:sub(size, true)
+						subsize = size
+					else
+						sub = iter:sub('available')
+					end
+	
+					size = size - subsize
 				else
 					sub = iter:sub('available')
 				end
-
-				size = size - subsize
-			else
-				sub = iter:sub('available')
+	
+				if not sub then break end
+				self.chunked(res, sub, size == 0 or iter.iseof, ctx)
 			end
-
-			if not sub then break end
-			self.chunked(res, sub, size == 0 or iter.iseof, ctx)
 		end
 	else
 		sub = iter:sub(size)

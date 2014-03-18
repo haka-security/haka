@@ -289,6 +289,18 @@ struct vbuffer_chunk *vbuffer_chunk_next(struct vbuffer_chunk *chunk)
 	return list2_get(list2_next(&chunk->list), struct vbuffer_chunk, list);
 }
 
+struct vbuffer_chunk *vbuffer_chunk_prev(struct vbuffer_chunk *chunk)
+{
+	struct vbuffer_chunk *prev;
+
+	assert(chunk);
+	prev = list2_get(list2_prev(&chunk->list), struct vbuffer_chunk, list);
+
+	if (prev->flags.end) return NULL;
+
+	return prev;
+}
+
 void vbuffer_clear(struct vbuffer *buf)
 {
 	if (vbuffer_isvalid(buf)) {
@@ -325,6 +337,28 @@ void vbuffer_position(const struct vbuffer *buf, struct vbuffer_iterator *positi
 		position->offset = 0;
 		position->registered = false;
 		if (offset > 0) vbuffer_iterator_advance(position, offset);
+	}
+}
+
+bool vbuffer_isempty(const struct vbuffer *buf)
+{
+	assert(vbuffer_isvalid(buf));
+	return buf->chunks->list.next == &buf->chunks->list;
+}
+
+void vbuffer_last(const struct vbuffer *buf, struct vbuffer_iterator *position)
+{
+	assert(vbuffer_isvalid(buf));
+
+	if (vbuffer_isempty(buf)) {
+		position->chunk = buf->chunks;
+		position->offset = 0;
+		position->registered = false;
+	}
+	else {
+		position->chunk = vbuffer_chunk_prev(buf->chunks);
+		position->offset = position->chunk->size;
+		position->registered = false;
 	}
 }
 
@@ -736,8 +770,8 @@ size_t vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struc
 	if (split) {
 		struct vbuffer_chunk *iter = _vbuffer_iterator_split(position, false);
 		if (!iter) {
-                        assert(check_error());
-                        vbuffer_iterator_update(position, begin.chunk, begin.offset);
+			assert(check_error());
+			vbuffer_iterator_update(position, begin.chunk, begin.offset);
 			vbuffer_iterator_clear(&begin);
 			return -1;
 		}
@@ -746,7 +780,8 @@ size_t vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struc
 	}
 
 	const bool ret = vbuffer_sub_create_from_position(sub, &begin, len);
-        if (!ret) len = -1;
+	if (!ret) len = -1;
+
 	vbuffer_iterator_clear(&begin);
 
 	return len;
@@ -919,7 +954,7 @@ static bool _vbuffer_sub_check(const struct vbuffer_sub *data)
 	return true;
 }
 
-static void vbuffer_sub_init(struct vbuffer_sub *data)
+void vbuffer_sub_init(struct vbuffer_sub *data)
 {
 	assert(data);
 	data->begin = vbuffer_iterator_init;
@@ -991,7 +1026,13 @@ void vbuffer_sub_begin(struct vbuffer_sub *data, struct vbuffer_iterator *begin)
 
 void vbuffer_sub_end(struct vbuffer_sub *data, struct vbuffer_iterator *end)
 {
-	vbuffer_iterator_copy(&data->end, end);
+	if (data->use_size) {
+		vbuffer_iterator_copy(&data->begin, end);
+		vbuffer_iterator_advance(end, data->length);
+	}
+	else {
+		vbuffer_iterator_copy(&data->end, end);
+	}
 }
 
 bool vbuffer_sub_position(struct vbuffer_sub *data, struct vbuffer_iterator *iter, size_t offset)
@@ -1000,11 +1041,7 @@ bool vbuffer_sub_position(struct vbuffer_sub *data, struct vbuffer_iterator *ite
 	assert(iter);
 
 	if (offset == ALL) {
-		if (data->use_size) {
-			vbuffer_iterator_copy(&data->begin, iter);
-			vbuffer_iterator_advance(iter, data->length);
-		}
-		else vbuffer_iterator_copy(&data->end, iter);
+		vbuffer_sub_end(data, iter);
 	}
 	else {
 		vbuffer_iterator_copy(&data->begin, iter);

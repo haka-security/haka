@@ -34,6 +34,7 @@ struct list2         *vbuffer_chunk_list(const struct vbuffer *buf);
 struct vbuffer_chunk *vbuffer_chunk_begin(const struct vbuffer *buf);
 struct vbuffer_chunk *vbuffer_chunk_end(const struct vbuffer *buf);
 struct vbuffer_chunk *vbuffer_chunk_next(struct vbuffer_chunk *chunk);
+struct vbuffer_chunk *vbuffer_chunk_prev(struct vbuffer_chunk *chunk);
 struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk);
 
 #define VBUFFER_FOR_EACH(buf, var) \
@@ -41,5 +42,7 @@ struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk);
 		var = vbuffer_chunk_next(var))
 
 void                  vbuffer_iterator_update(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, size_t offset);
+
+void                  vbuffer_sub_init(struct vbuffer_sub *data);
 
 #endif /* _HAKA_VBUFFER_PRIVATE_H */

@@ -14,6 +14,6 @@ struct vbuffer_sub_stream {
 
 bool vbuffer_sub_stream_init(struct vbuffer_sub_stream *stream);
 bool vbuffer_sub_stream_push(struct vbuffer_sub_stream *stream, struct vbuffer_sub *buffer);
-void vbuffer_sub_stream_pop(struct vbuffer_sub_stream *stream);
+bool vbuffer_sub_stream_pop(struct vbuffer_sub_stream *stream, struct vbuffer_sub *sub);
 
 #endif /* _HAKA_VBUFFER_SUB_STREAM_H */

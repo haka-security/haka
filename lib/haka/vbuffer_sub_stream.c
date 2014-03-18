@@ -49,13 +49,31 @@ bool vbuffer_sub_stream_push(struct vbuffer_sub_stream *stream, struct vbuffer_s
 	return vbuffer_stream_push(&stream->stream, &extract, chunk);
 }
 
-void vbuffer_sub_stream_pop(struct vbuffer_sub_stream *stream)
+bool vbuffer_sub_stream_pop(struct vbuffer_sub_stream *stream, struct vbuffer_sub *sub)
 {
 	struct vbuffer buffer;
 	struct vbuffer_sub_stream_chunk *chunk;
+	bool ret = false;
+
+	vbuffer_sub_init(sub);
 
 	while (vbuffer_stream_pop(&stream->stream, &buffer, (void **)&chunk)) {
+		if (sub) {
+			if (!ret && !vbuffer_isempty(&buffer)) {
+				vbuffer_begin(&buffer, &sub->begin);
+				sub->use_size = false;
+			}
+			vbuffer_last(&buffer, &sub->end);
+		}
+
+		if (!vbuffer_isempty(&buffer)) {
+			ret = true;
+		}
+
 		vbuffer_restore(&chunk->select, &buffer);
+		vbuffer_release(&buffer);
 		free(chunk);
 	}
+
+	return ret;
 }

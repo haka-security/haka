@@ -16,7 +16,7 @@ haka.rule {
 		else
 			local current = data:pos('begin')
 			while current:available() > 0 do
-				local buf = haka.vbuffer(4)
+				local buf = haka.vbuffer_allocate(4)
 				buf:sub():setfixedstring("Haka")
 
 				current:insert(buf)
