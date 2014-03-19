@@ -441,8 +441,7 @@ http_dissector.states.request = http_dissector.states:state{
 				description = string.format("invalid http %s", err.rule),
 				severity = 'low'
 			}
-			self:drop()
-			return
+			return context.states.ERROR
 		end
 
 		return context.states.response
@@ -477,8 +476,7 @@ http_dissector.states.response = http_dissector.states:state{
 				description = string.format("invalid http %s", err.rule),
 				severity = 'low'
 			}
-			self:drop()
-			return
+			return context.states.ERROR
 		end
 
 		if self.request.method:lower() == 'connect' then
