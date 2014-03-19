@@ -243,11 +243,6 @@ HttpResponseResult.property.split_cookies = {
 
 http_dissector.grammar = haka.grammar:new("http")
 
-local begin_grammar = haka.grammar.execute(function (self, ctx)
-	ctx.mark = ctx.iter:copy()
-	ctx.mark:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
-end)
-
 -- http separator tokens
 http_dissector.grammar.WS = haka.grammar.token('[[:blank:]]+')
 http_dissector.grammar.optional_WS = haka.grammar.token('[[:blank:]]*')
@@ -305,30 +300,35 @@ http_dissector.grammar.header = haka.grammar.record{
 	end
 }
 
-http_dissector.grammar.headers = haka.grammar.array(http_dissector.grammar.header):options{
-	untilcond = function (elem, ctx)
-		local la = ctx:lookahead()
-		return la == 0xa or la == 0xd
-	end,
-	result = HeaderResult,
-	create = function (ctx, entity, init)
-		local vbuf = haka.vbuffer_from(init.name..': '..init.value..'\r\n')
-		entity:create(vbuf:pos('begin'), ctx, init)
-		return vbuf
-	end
+http_dissector.grammar.headers = haka.grammar.record{
+	haka.grammar.field('headers', haka.grammar.array(http_dissector.grammar.header):options{
+		untilcond = function (elem, ctx)
+			local la = ctx:lookahead()
+			return la == 0xa or la == 0xd
+		end,
+		result = HeaderResult,
+		create = function (ctx, entity, init)
+			local vbuf = haka.vbuffer_from(init.name..': '..init.value..'\r\n')
+			entity:create(vbuf:pos('begin'), ctx, init)
+			return vbuf
+		end
+	}),
+	http_dissector.grammar.CRLF
 }
 
 -- http chunk
+local function erase_since_retain(self, ctx)
+	if ctx.user._enable_data_modification then
+		local len = ctx.iter.meter - ctx.retain_mark.meter
+		ctx.iter:move_to(ctx.retain_mark)
+		ctx.iter:sub(len, true):erase()
+	end
+end
+
 http_dissector.grammar.chunk_end_crlf = haka.grammar.record{
 	haka.grammar.retain(),
 	http_dissector.grammar.CRLF,
-	haka.grammar.execute(function (self, ctx)
-		if ctx.user._enable_data_modification then
-			local len = ctx.iter.meter - ctx.retain_mark.meter
-			ctx.iter:move_to(ctx.retain_mark)
-			ctx.iter:sub(len, true):erase()
-		end
-	end),
+	haka.grammar.execute(erase_since_retain),
 	haka.grammar.release
 }
 
@@ -339,13 +339,7 @@ http_dissector.grammar.chunk = haka.grammar.record{
 	haka.grammar.execute(function (self, ctx) ctx.chunk_size = self.chunk_size end),
 	http_dissector.grammar.optional_WS,
 	http_dissector.grammar.CRLF,
-	haka.grammar.execute(function (self, ctx)
-		if ctx.user._enable_data_modification then
-			local len = ctx.iter.meter - ctx.retain_mark.meter
-			ctx.iter:move_to(ctx.retain_mark)
-			ctx.iter:sub(len, true):erase()
-		end
-	end),
+	haka.grammar.execute(erase_since_retain),
 	haka.grammar.release,
 	haka.grammar.bytes():options{
 		count = function (self, ctx) return ctx.chunk_size end,
@@ -363,8 +357,7 @@ http_dissector.grammar.chunks = haka.grammar.record{
 		untilcond = function (elem) return elem and elem.chunk_size == 0 end
 	},
 	haka.grammar.retain(),
-	haka.grammar.field('headers', http_dissector.grammar.headers),
-	http_dissector.grammar.CRLF,
+	http_dissector.grammar.headers,
 	haka.grammar.release
 }
 
@@ -384,8 +377,7 @@ http_dissector.grammar.body = haka.grammar.branch(
 )
 
 http_dissector.grammar.message = haka.grammar.record{
-	haka.grammar.field('headers', http_dissector.grammar.headers),
-	http_dissector.grammar.CRLF,
+	http_dissector.grammar.headers,
 	haka.grammar.execute(function (self, ctx)
 		ctx.user:trigger_event(ctx.top, ctx.iter, ctx.retain_mark)
 	end),
