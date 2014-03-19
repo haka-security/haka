@@ -19,6 +19,6 @@ done
 shift $((OPTIND - 1))
 
 export LD_LIBRARY_PATH="$LUAJIT_PATH/lib"
-export LUA_PATH="$LUAJIT_PATH/share/luajit-2.0.2/?.lua"
+export LUA_PATH="$LUAJIT_PATH/share/luajit-2.0.3/?.lua"
 
 $LUAJIT_PATH/bin/luajit -b $OPTIONS $1 $OUTPUT
