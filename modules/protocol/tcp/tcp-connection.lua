@@ -63,7 +63,7 @@ function tcp_connection_dissector:receive(pkt)
 
 	if not ret then
 		if err then
-			haka.log.error(dissector.name, err)
+			haka.log.error(dissector.name, "%s", err)
 			dissector:error()
 		end
 	end

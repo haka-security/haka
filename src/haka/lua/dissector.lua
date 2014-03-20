@@ -64,7 +64,7 @@ function dissector.Dissector:receive(pkt)
 	local ret, err = xpcall(function () npkt:receive() end, debug.format_error)
 	if not ret then
 		if err then
-			haka.log.error(npkt.name, err)
+			haka.log.error(npkt.name, "%s", err)
 			return npkt:error()
 		end
 	end
