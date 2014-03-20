@@ -240,13 +240,12 @@ struct vbuffer_iterator_blocking {
 
 		void mark(bool readonly = false) { vbuffer_iterator_lua_mark(&$self->super, readonly); }
 		void unmark() { vbuffer_iterator_lua_unmark(&$self->super); }
-		struct vbuffer_sub *insert(struct vbuffer *data) { vbuffer_iterator_lua_insert(&$self->super, data); }
+		struct vbuffer_sub *insert(struct vbuffer *data) { return vbuffer_iterator_lua_insert(&$self->super, data); }
 		int  available() { return vbuffer_iterator_lua_available(&$self->super); }
 		struct vbuffer_iterator_lua *copy() { return vbuffer_iterator_lua_copy(&$self->super); }
 		void move_to(struct vbuffer_iterator_lua *iter) { return vbuffer_iterator_lua_move_to__SWIG_0(&$self->super, iter); }
 		void move_to(struct vbuffer_iterator_blocking *iter) { return vbuffer_iterator_lua_move_to__SWIG_1(&$self->super, iter); }
 		void split() { vbuffer_iterator_lua_split(&$self->super); }
-
 
 		void _update_iter(struct vbuffer_iterator_lua *update_iter)
 		{
