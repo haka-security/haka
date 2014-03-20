@@ -683,7 +683,12 @@ bool vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *
 	assert(vbuffer_isvalid(buffer));
 
 	list = vbuffer_chunk_list(buffer);
-	if (list2_empty(list)) return true;
+	if (list2_empty(list)) {
+		if (sub) {
+			vbuffer_sub_create_between_position(sub, position, position);
+		}
+		return true;
+	}
 
 	insert = _vbuffer_iterator_split(position, true);
 	if (!insert) return false;
