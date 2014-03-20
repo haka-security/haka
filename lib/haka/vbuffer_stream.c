@@ -180,7 +180,7 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, v
 {
 	struct vbuffer_stream_chunk *current = list2_first(&stream->chunks, struct vbuffer_stream_chunk, list);
 	struct vbuffer_stream_chunk *read_last;
-	struct vbuffer_chunk *begin, *iter, *start_of_keep, *end;
+	struct vbuffer_chunk *begin, *iter, *start_of_keep = NULL, *end;
 	bool keep_for_read = false;
 	bool left_over_end_found = false;
 
