@@ -97,6 +97,10 @@ grammar_dg.ParseContext.property.result = {
 	get = function (self) return self._results[#self._results] end
 }
 
+grammar_dg.ParseContext.property.prev_result = {
+	get = function (self) return self._results[#self._results-1] end
+}
+
 grammar_dg.ParseContext.property.current_init = {
 	get = function (self)
 		if self._initresults then
@@ -1085,8 +1089,12 @@ end
 grammar.Array._options = {}
 
 function grammar.Array._options.count(self, size)
-	self.more = function (array)
-		return #array < size
+	if type(size) ~= 'function' then
+		size = function () return size end
+	end
+
+	self.more = function (array, ctx)
+		return #array < size(ctx.prev_result, ctx)
 	end
 end
 
