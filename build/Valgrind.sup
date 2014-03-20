@@ -14,12 +14,12 @@
 {
    <luajit_release_str_new>
    Memcheck:Cond
-   obj:*/libluajit-5.1.so.2.0.2
+   obj:*/libluajit-5.1.so.2.0.*
 }
 {
    <luajit_release_str_new>
    Memcheck:Addr4
-   obj:*/libluajit-5.1.so.2.0.2
+   obj:*/libluajit-5.1.so.2.0.*
 }
 
 # haka
