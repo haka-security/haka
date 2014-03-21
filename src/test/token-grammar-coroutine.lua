@@ -16,9 +16,7 @@ local grammar = haka.grammar.record{
 	haka.grammar.field("hello_world", haka.grammar.token("hello world")),
 	haka.grammar.token("\r\n"),
 	haka.grammar.field('headers', haka.grammar.array(header)
-		:options{
-			count = 3
-		}),
+		:options{ count = 3 }),
 }:compile()
 
 haka.rule{

@@ -1089,12 +1089,16 @@ end
 grammar.Array._options = {}
 
 function grammar.Array._options.count(self, size)
+	local sizefunc
+
 	if type(size) ~= 'function' then
-		size = function () return size end
+		sizefunc = function () return size end
+	else
+		sizefunc = size
 	end
 
 	self.more = function (array, ctx)
-		return #array < size(ctx.prev_result, ctx)
+		return #array < sizefunc(ctx.prev_result, ctx)
 	end
 end
 
