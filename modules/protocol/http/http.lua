@@ -176,8 +176,9 @@ function HeaderResult:__pairs()
 	local i = 0
 	local function headernext(headerresult, index)
 		i = i + 1
-		if rawget(headerresult, i) then
-			return rawget(headerresult, i).name, rawget(headerresult, i).value
+		local result = rawget(headerresult, i)
+		if result then
+			return result.name, result.value
 		else
 			return nil
 		end
@@ -186,7 +187,10 @@ function HeaderResult:__pairs()
 end
 
 function HeaderResult.method:__newindex(key, value)
-	local lowerkey = key:lower()
+	local lowerkey = key
+	if type(lowerkey) == 'string' then
+		lowerkey = lowerkey:lower()
+	end
 
 	-- Try to update existing header
 	for i, header in ipairs(self) do
@@ -195,6 +199,7 @@ function HeaderResult.method:__newindex(key, value)
 				header.value = value
 			else
 				self:remove(i)
+				self._cache[lowerkey] = nil
 			end
 
 			return
