@@ -376,7 +376,7 @@ http_dissector.grammar.body = haka.grammar.branch(
 			end
 		},
 		chunked = http_dissector.grammar.chunks,
-		default = true
+		default = 'continue'
 	},
 	function (self, ctx) return ctx.mode end
 )

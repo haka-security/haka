@@ -1046,10 +1046,10 @@ function grammar.Branch.method:compile(rule, id)
 		end
 	end
 
-	local default = self.default
+	local default = self.cases.default
 	if default == 'error' then
-		ret:add(grammar_dg.Error:new("invalid case"))
-	elseif default then
+		ret:add(grammar_dg.Error:new(self.rule or rule, "invalid case"))
+	elseif default ~= 'continue' then
 		ret:add(default:compile(self.rule or rule, 'default'))
 	end
 
@@ -1238,7 +1238,7 @@ end
 function grammar.optional(entity, present)
 	return grammar.Branch:new({
 		[true] = entity,
-		default = nil
+		default = 'continue'
 	}, present)
 end
 
