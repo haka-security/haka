@@ -23,7 +23,7 @@ struct tcp_pseudo_header {
 	uint16         len;
 };
 
-INLINE void alert_invalid_packet(struct ipv4 *packet, wchar_t *desc)
+static void alert_invalid_packet(struct ipv4 *packet, wchar_t *desc)
 {
 	TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
 	TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
@@ -107,6 +107,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	if (hdrlen.hdr_len << TCP_HDR_LEN < sizeof(struct tcp_header)) {
 		alert_invalid_packet(packet, L"invalid tcp packet, header length is too small");
 		ipv4_action_drop(packet);
+		free(tcp);
 		return NULL;
 	}
 
