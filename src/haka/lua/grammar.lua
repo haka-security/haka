@@ -177,11 +177,11 @@ function grammar_dg.ParseContext.method:parse(entity)
 	return self._results[1], err
 end
 
-function grammar_dg.ParseContext.method:init(entity)
+function grammar_dg.ParseContext.method:create(entity)
 	local iter = entity
 	local err
 	while iter do
-		err = iter:init(self)
+		err = iter:_create(self)
 		if err then
 			break
 		end
@@ -277,7 +277,7 @@ function grammar_dg.Entity.method:next(ctx)
 	return self._next
 end
 
-function grammar_dg.Entity.method:init(ctx)
+function grammar_dg.Entity.method:_create(ctx)
 	return self:_apply(ctx)
 end
 
@@ -378,7 +378,7 @@ end
 
 function grammar_dg.Entity.method:create(input, ctx, init)
 	local ctx = grammar_dg.ParseContext:new(input, ctx, init)
-	return ctx:init(self)
+	return ctx:create(self)
 end
 
 grammar_dg.Control = class('DGControl', grammar_dg.Entity)
@@ -634,7 +634,7 @@ function grammar_dg.Primitive.method:_apply(ctx)
 	return self:_parse(ctx.result, ctx.iter, ctx)
 end
 
-function grammar_dg.Primitive.method:init(ctx)
+function grammar_dg.Primitive.method:_create(ctx)
 	return self:_init(ctx.result, ctx.iter, ctx, ctx.current_init)
 end
 
