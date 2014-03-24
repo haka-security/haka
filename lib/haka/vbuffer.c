@@ -678,6 +678,7 @@ bool vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *
 {
 	struct list2 *list;
 	struct vbuffer_chunk *insert;
+	struct vbuffer_iterator begin;
 
 	if (!_vbuffer_iterator_check(position)) return false;
 
@@ -694,24 +695,20 @@ bool vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *
 	insert = _vbuffer_iterator_split(position, true);
 	if (!insert) return false;
 
+	if (sub) {
+		vbuffer_begin(buffer, &begin);
+	}
+
 	list2_insert_list(&insert->list, list2_begin(list), list2_end(list));
 
 	vbuffer_iterator_update(position, insert, 0);
 
 	if (sub) {
-		struct vbuffer_iterator begin;
-		vbuffer_begin(buffer, &begin);
-
-		sub->use_size = false;
-
-		sub->end = vbuffer_iterator_init;
-		sub->end.chunk = insert;
-
 		if (begin.chunk->flags.end) {
-			vbuffer_iterator_copy(&sub->end, &sub->begin);
+			vbuffer_sub_create_between_position(sub, position, position);
 		}
 		else {
-			vbuffer_iterator_copy(&begin, &sub->begin);
+			vbuffer_sub_create_between_position(sub, &begin, position);
 		}
 	}
 
