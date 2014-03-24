@@ -109,9 +109,9 @@ tcp_connection_dissector.states:default{
 
 tcp_connection_dissector.states.reset = tcp_connection_dissector.states:state{
 	enter = function (context)
+		context.flow:trigger('end_connection')
 		context.flow.stream = nil
 		context.flow.connection:drop()
-		context.flow:trigger('end_connection')
 	end,
 	timeouts = {
 		[60] = function (context)

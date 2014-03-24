@@ -268,9 +268,9 @@ struct vbuffer_iterator_blocking {
 %}
 
 %luacode {
-	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].check_available = function (self, size)
+	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].check_available = function (self, size, nonblocking)
 		local ret, avail = self._iter:check_available(size)
-		if ret then return ret, avail end
+		if ret or nonblocking then return ret, avail end
 
 		local begin
 

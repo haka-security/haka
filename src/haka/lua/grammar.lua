@@ -747,14 +747,14 @@ function grammar_dg.Bytes.method:_parse(res, iter, ctx)
 
 	if self.chunked_callback then
 		if size == 0 then
+			-- Call the callback to notify for the stream end
 			self.chunked_callback(res, nil, true, ctx)
 		else
 			while (size == 'all' or size > 0) and iter:wait() do
 				if size ~= 'all' then
-					local subsize = iter:available()
-					if subsize > size then
+					local ret, subsize = iter:check_available(size, true)
+					if ret then
 						sub = iter:sub(size, true)
-						subsize = size
 					else
 						sub = iter:sub('available')
 					end
