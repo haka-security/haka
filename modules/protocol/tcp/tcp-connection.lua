@@ -55,7 +55,7 @@ function tcp_connection_dissector:receive(pkt)
 		haka.context:scope(connection.data, function ()
 			return dissector:emit(pkt, direction)
 		end)
-	
+
 		if dissector._restart then
 			return tcp_connection_dissector:receive(pkt)
 		end
