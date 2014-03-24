@@ -18,7 +18,7 @@ function tcp_connection_dissector:receive(pkt)
 	if not connection then
 		if pkt.flags.syn and not pkt.flags.ack then
 			local data = haka.context.newscope()
-			local self = new_instance(tcp_connection_dissector)
+			local self = tcp_connection_dissector:new()
 
 			haka.context:scope(data, function ()
 				self:trigger('new_connection', pkt)
