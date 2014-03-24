@@ -505,7 +505,7 @@ function grammar_dg.ArrayStart.method:_apply(ctx)
 		local array = ctx:push(result, self.name)
 		res[self.name] = array
 	else
-		ctx:push(nil, nil)
+		ctx:push({}, nil)
 	end
 end
 
