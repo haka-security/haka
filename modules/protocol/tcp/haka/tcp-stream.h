@@ -26,7 +26,7 @@ struct tcp_stream {
 bool        tcp_stream_create(struct tcp_stream *stream);
 void        tcp_stream_clear(struct tcp_stream *stream);
 void        tcp_stream_init(struct tcp_stream *stream, uint32 seq);
-bool        tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp);
+bool        tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_iterator *current);
 struct tcp *tcp_stream_pop(struct tcp_stream *stream);
 void        tcp_stream_ack(struct tcp_stream *stream, struct tcp *tcp);
 void        tcp_stream_seq(struct tcp_stream *stream, struct tcp *tcp);

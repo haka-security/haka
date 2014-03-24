@@ -67,14 +67,15 @@ function http_dissector.method:push_data(current, data, iter, last, signal, chun
 		current.data = haka.vbuffer_sub_stream()
 	end
 
+	local currentiter = nil
 	if data then
-		current.data:push(data)
+		currentiter = current.data:push(data)
 	end
 
 	if last then current.data:finish() end
 
 	if data or last then
-		haka.context:signal(self, signal, current.data)
+		haka.context:signal(self, signal, current.data, currentiter)
 	end
 
 	local sub

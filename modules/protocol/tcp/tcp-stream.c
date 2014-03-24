@@ -104,7 +104,7 @@ static uint64 tcp_remap_seq(uint32 seq, uint64 ref)
 	return ret;
 }
 
-bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp)
+bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_iterator *current)
 {
 	struct tcp_stream_chunk *chunk;
 	uint64 ref_seq;
@@ -131,9 +131,14 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp)
 	chunk->end_seq = chunk->start_seq + tcp_get_payload_length(tcp);
 	chunk->offset_seq = 0;
 
+	if (current) {
+		// Default, set current to end of stream
+		vbuffer_end(&stream->stream.data, current);
+	}
+
 	if (stream->last_seq == chunk->start_seq) {
 		list2_insert(list2_end(&stream->current), &chunk->list);
-		vbuffer_stream_push(&stream->stream, &tcp->payload, NULL);
+		vbuffer_stream_push(&stream->stream, &tcp->payload, NULL, current);
 		stream->last_seq = chunk->end_seq;
 
 		/* Check for queued packets */
@@ -151,7 +156,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp)
 				iter = list2_erase(iter);
 
 				list2_insert(list2_end(&stream->current), &qchunk->list);
-				vbuffer_stream_push(&stream->stream, &qchunk->tcp->payload, NULL);
+				vbuffer_stream_push(&stream->stream, &qchunk->tcp->payload, NULL, NULL);
 				stream->last_seq = qchunk->end_seq;
 			}
 		}

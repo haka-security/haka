@@ -196,8 +196,7 @@ end
 
 dissector.FlowDissector = class('FlowDissector', dissector.Dissector)
 
-function dissector.FlowDissector.stream_wrapper(f, options, self, stream, ...)
-	local current = stream.current
+function dissector.FlowDissector.stream_wrapper(f, options, self, stream, current, ...)
 	if (not current or not current:check_available(1)) and
 	   not stream.isfinished then
 		return
@@ -218,9 +217,6 @@ function dissector.FlowDissector.stream_wrapper(f, options, self, stream, ...)
 		end
 	end
 end
-
-dissector.FlowDissector:register_event('receive_data', nil, dissector.FlowDissector.stream_wrapper)
-dissector.FlowDissector:register_event('send_data')
 
 function dissector.FlowDissector.method:connections()
 	local connections = classof(self).connections

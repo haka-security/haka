@@ -20,7 +20,7 @@ struct vbuffer_stream {
 
 bool            vbuffer_stream_init(struct vbuffer_stream *stream, void (*userdata_cleanup)(void *));
 void            vbuffer_stream_clear(struct vbuffer_stream *stream);
-bool            vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *buffer, void *userdata);
+bool            vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *buffer, void *userdata, struct vbuffer_iterator *current);
 void            vbuffer_stream_finish(struct vbuffer_stream *stream);
 bool            vbuffer_stream_isfinished(struct vbuffer_stream *stream);
 bool            vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, void **userdata);

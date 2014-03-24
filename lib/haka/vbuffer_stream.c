@@ -89,7 +89,7 @@ void vbuffer_stream_clear(struct vbuffer_stream *stream)
 	lua_object_release(stream, &stream->lua_object);
 }
 
-bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data, void *userdata)
+bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *buffer, void *userdata, struct vbuffer_iterator *current)
 {
 	struct vbuffer_chunk *ctl, *end;
 	struct vbuffer_stream_chunk *chunk;
@@ -137,7 +137,7 @@ bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data, vo
 
 	ctl->flags = end->flags;
 	ctl->flags.ctl = true;
-	ctl->flags.writable = vbuffer_iswritable(data);
+	ctl->flags.writable = vbuffer_iswritable(buffer);
 
 	end->flags.end = false;
 	end->flags.eof = false;
@@ -150,11 +150,20 @@ bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *data, vo
 
 	stream->data.chunks = ctl;
 
-	list2_insert_list(&ctl->list, &vbuffer_chunk_begin(data)->list, &vbuffer_chunk_end(data)->list);
+	if (current) {
+		if (vbuffer_isempty(buffer)) {
+			*current = vbuffer_iterator_init;
+			vbuffer_iterator_update(current, ctl, 0);
+		} else {
+			vbuffer_begin(buffer, current);
+		}
+	}
+
+	list2_insert_list(&ctl->list, &vbuffer_chunk_begin(buffer)->list, &vbuffer_chunk_end(buffer)->list);
 
 	list2_insert(list2_end(&stream->chunks), &chunk->list);
 
-	vbuffer_clear(data);
+	vbuffer_clear(buffer);
 
 	chunk->ctl_iter = vbuffer_iterator_init;
 	vbuffer_iterator_update(&chunk->ctl_iter, ctl, 0);

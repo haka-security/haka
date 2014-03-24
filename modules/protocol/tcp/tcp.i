@@ -48,6 +48,7 @@ LUA_OBJECT(struct tcp);
 LUA_OBJECT(struct tcp_connection);
 LUA_OBJECT(struct tcp_stream);
 
+%newobject tcp_stream::_push;
 %newobject tcp_stream::_pop;
 
 struct tcp_stream
@@ -64,9 +65,24 @@ struct tcp_stream
 		}
 
 		%rename(push) _push;
-		void _push(struct tcp *DISOWN_SUCCESS_ONLY)
+		struct vbuffer_iterator_lua *_push(struct tcp *DISOWN_SUCCESS_ONLY)
 		{
-			tcp_stream_push($self, DISOWN_SUCCESS_ONLY);
+			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
+			if (!iter) {
+				free(iter);
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!tcp_stream_push($self, DISOWN_SUCCESS_ONLY, &iter->super)) {
+				free(iter);
+				return NULL;
+			}
+
+			vbuffer_iterator_register(&iter->super);
+			iter->meter = 0;
+
+			return iter;
 		}
 
 		%rename(pop) _pop;

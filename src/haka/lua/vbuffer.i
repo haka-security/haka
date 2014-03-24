@@ -18,19 +18,6 @@
 %nodefaultctor;
 %nodefaultdtor;
 
-%{
-
-struct vbuffer_iterator_lua {
-	struct vbuffer_iterator     super;
-	size_t                      meter;
-};
-
-struct vbuffer_iterator_blocking {
-	struct vbuffer_iterator_lua super;
-};
-
-%}
-
 %newobject vbuffer_iterator_lua::sub;
 %newobject vbuffer_iterator_lua::copy;
 %newobject vbuffer_iterator_lua::insert;
@@ -757,6 +744,7 @@ struct vbuffer {
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 
 
+%newobject vbuffer_stream::_push;
 %newobject vbuffer_stream::_pop;
 %newobject vbuffer_stream::current;
 
@@ -785,9 +773,23 @@ struct vbuffer_stream {
 		}
 
 		%rename(push) _push;
-		void _push(struct vbuffer *data)
+		struct vbuffer_iterator_lua *_push(struct vbuffer *data)
 		{
-			vbuffer_stream_push($self, data, NULL);
+			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
+			if (!iter) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_stream_push($self, data, NULL, &iter->super)) {
+				free(iter);
+				return NULL;
+			}
+
+			vbuffer_iterator_register(&iter->super);
+			iter->meter = 0;
+
+			return iter;
 		}
 
 		void finish();
@@ -829,6 +831,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 
 
 %newobject vbuffer_sub_stream::current;
+%newobject vbuffer_sub_stream::_push;
 %newobject vbuffer_sub_stream::_pop;
 
 struct vbuffer_sub_stream {
@@ -855,7 +858,25 @@ struct vbuffer_sub_stream {
 			free($self);
 		}
 
-		void push(struct vbuffer_sub *data);
+		%rename(push) _push;
+		struct vbuffer_iterator_lua *_push(struct vbuffer_sub *data)
+		{
+			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
+			if (!iter) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!vbuffer_sub_stream_push($self, data, &iter->super)) {
+				free(iter);
+				return NULL;
+			}
+
+			vbuffer_iterator_register(&iter->super);
+			iter->meter = 0;
+
+			return iter;
+		}
 
 		%rename(pop) _pop;
 		struct vbuffer_sub *_pop()

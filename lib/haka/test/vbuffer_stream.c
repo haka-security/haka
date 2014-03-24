@@ -36,7 +36,7 @@ START_TEST(test_push_pop)
 	for (i=0; i<NUM; ++i) {
 		struct vbuffer buffer;
 		vbuffer_create_new(&buffer, sizes[i], true);
-		vbuffer_stream_push(&stream, &buffer, NULL);
+		vbuffer_stream_push(&stream, &buffer, NULL, NULL);
 		ck_assert_int_eq(vbuffer_size(vbuffer_stream_data(&stream)), sizes[i]);
 		ck_check_error;
 
@@ -65,7 +65,7 @@ START_TEST(test_push_pop_interleaved)
 	for (i=0; i<NUM; ++i) {
 		struct vbuffer buffer;
 		vbuffer_create_new(&buffer, sizes[i], true);
-		vbuffer_stream_push(&stream, &buffer, NULL);
+		vbuffer_stream_push(&stream, &buffer, NULL, NULL);
 		size += sizes[i];
 		ck_assert_int_eq(vbuffer_size(vbuffer_stream_data(&stream)), size);
 		ck_check_error;
@@ -101,7 +101,7 @@ START_TEST(test_mark)
 		vbuffer_position(&buffer, &marks[i], mark_offsets[i]);
 		ck_assert(vbuffer_iterator_mark(&marks[i], false));
 
-		vbuffer_stream_push(&stream, &buffer, NULL);
+		vbuffer_stream_push(&stream, &buffer, NULL, NULL);
 		size += sizes[i];
 		ck_assert_int_eq(vbuffer_size(vbuffer_stream_data(&stream)), size);
 		ck_check_error;
@@ -139,7 +139,7 @@ START_TEST(test_eof)
 	for (i=0; i<NUM; ++i) {
 		struct vbuffer buffer;
 		vbuffer_create_new(&buffer, sizes[i], true);
-		vbuffer_stream_push(&stream, &buffer, NULL);
+		vbuffer_stream_push(&stream, &buffer, NULL, NULL);
 		size += sizes[i];
 		ck_assert_int_eq(vbuffer_size(vbuffer_stream_data(&stream)), size);
 		ck_check_error;

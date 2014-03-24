@@ -32,7 +32,7 @@ bool vbuffer_sub_stream_init(struct vbuffer_sub_stream *stream)
 	return vbuffer_stream_init(&stream->stream, vbuffer_sub_stream_chunk_free);
 }
 
-bool vbuffer_sub_stream_push(struct vbuffer_sub_stream *stream, struct vbuffer_sub *buffer)
+bool vbuffer_sub_stream_push(struct vbuffer_sub_stream *stream, struct vbuffer_sub *buffer, struct vbuffer_iterator *current)
 {
 	struct vbuffer extract;
 	struct vbuffer_sub_stream_chunk *chunk = malloc(sizeof(struct vbuffer_sub_stream_chunk));
@@ -46,7 +46,7 @@ bool vbuffer_sub_stream_push(struct vbuffer_sub_stream *stream, struct vbuffer_s
 		return false;
 	}
 
-	return vbuffer_stream_push(&stream->stream, &extract, chunk);
+	return vbuffer_stream_push(&stream->stream, &extract, chunk, current);
 }
 
 bool vbuffer_sub_stream_pop(struct vbuffer_sub_stream *stream, struct vbuffer_sub *sub)

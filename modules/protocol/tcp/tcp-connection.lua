@@ -11,6 +11,7 @@ local tcp_connection_dissector = haka.dissector.new{
 }
 
 tcp_connection_dissector:register_event('new_connection')
+tcp_connection_dissector:register_event('receive_data', nil, haka.dissector.FlowDissector.stream_wrapper)
 tcp_connection_dissector:register_event('end_connection')
 
 function tcp_connection_dissector:receive(pkt)
@@ -354,10 +355,10 @@ end
 function tcp_connection_dissector.method:push(pkt, direction, finish)
 	local stream = self.stream[direction]
 
-	stream:push(pkt)
+	local current = stream:push(pkt)
 	if finish then stream.stream:finish() end
 
-	self:trigger('receive_data', stream.stream, direction)
+	self:trigger('receive_data', stream.stream, current, direction)
 	return self:_send(direction)
 end
 
@@ -366,7 +367,7 @@ function tcp_connection_dissector.method:finish(direction)
 
 	stream.stream:finish()
 
-	self:trigger('receive_data', stream.stream, direction)
+	self:trigger('receive_data', stream.stream, nil, direction)
 end
 
 function tcp_connection_dissector.method:continue()
@@ -386,12 +387,6 @@ end
 function tcp_connection_dissector.method:_send(direction)
 	local stream = self.stream[direction]
 	local other_stream = self.stream[haka.dissector.other_direction(direction)]
-
-	local sub = stream.stream.current:sub('available')
-
-	if sub then
-		self:trigger('send_data', sub, direction)
-	end
 
 	local pkt = stream:pop()
 	while pkt do
