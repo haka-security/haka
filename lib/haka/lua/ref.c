@@ -55,8 +55,7 @@ void lua_ref_push(struct lua_State *state, struct lua_ref *ref)
 {
 	if (lua_ref_isvalid(ref)) {
 #ifdef HAKA_DEBUG
-		UNUSED struct lua_state *mainthread = lua_state_get(state);
-		assert(mainthread == ref->state);
+		assert(lua_state_get(state) == ref->state);
 #endif
 
 		lua_rawgeti(state, LUA_REGISTRYINDEX, ref->ref);

@@ -357,6 +357,7 @@ void vbuffer_last(const struct vbuffer *buf, struct vbuffer_iterator *position)
 	}
 	else {
 		position->chunk = vbuffer_chunk_prev(buf->chunks);
+		assert(position->chunk);
 		position->offset = position->chunk->size;
 		position->registered = false;
 	}

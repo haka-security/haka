@@ -261,9 +261,7 @@ void lua_luadebug_debugger_break();
 	function this.pprint(obj, indent, depth, hide, out)
 		if not hide then
 			hide = {}
-		end
-
-		if type(hide) == "function" then
+		elseif type(hide) == "function" then
 			hide = { hide }
 		end
 

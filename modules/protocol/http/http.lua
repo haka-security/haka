@@ -81,7 +81,7 @@ function http_dissector.method:push_data(current, data, iter, last, signal, chun
 	if data then
 		sub = current.data:pop()
 	end
-	
+
 	if self._enable_data_modification then
 		if sub then
 			if #sub > 0 then
@@ -159,12 +159,12 @@ end
 function HeaderResult.method:__index(key)
 	local key = key:lower()
 
-	if self._cache[key] then
-		return self._cache[key].value
+	local cache = self._cache[key]
+	if cache and cache.name == key then
+		return cache.value
 	end
 
 	for i, header in ipairs(self) do
-		-- TODO avoid getting last empty header
 		if header.name and header.name:lower() == key then
 			self._cache[key] = header
 			return header.value
