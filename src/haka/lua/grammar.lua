@@ -20,16 +20,20 @@ function ParseError.method:__init(iterator, rule, description, ...)
 end
 
 function ParseError.method:__tostring()
-	local string = "parse error"
+	local string = {"parse error"}
 
-	string = string.." at byte "..self.iterator.meter
+	table.insert(string, " at byte ")
+	table.insert(string, self.iterator.meter)
 
 	if self.rule then
-		string = string.." in "..self.rule
+		table.insert(string, " in ")
+		table.insert(string, self.rule)
 	end
 
-	string = string..": "..self.description
-	return string
+	table.insert(string, ": ")
+	table.insert(string, self.description)
+
+	return table.concat(string)
 end
 
 
