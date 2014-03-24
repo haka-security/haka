@@ -60,15 +60,15 @@ bool vbuffer_sub_stream_pop(struct vbuffer_sub_stream *stream, struct vbuffer_su
 	}
 
 	while (vbuffer_stream_pop(&stream->stream, &buffer, (void **)&chunk)) {
-		if (sub) {
-			if (!ret && !vbuffer_isempty(&buffer)) {
-				vbuffer_begin(&buffer, &sub->begin);
-				sub->use_size = false;
-			}
-			vbuffer_last(&buffer, &sub->end);
-		}
-
 		if (!vbuffer_isempty(&buffer)) {
+			if (sub) {
+				if (!ret) {
+					vbuffer_begin(&buffer, &sub->begin);
+					sub->use_size = false;
+				}
+				vbuffer_last(&buffer, &sub->end);
+			}
+
 			ret = true;
 		}
 

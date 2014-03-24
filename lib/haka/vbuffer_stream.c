@@ -199,16 +199,6 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, v
 		begin = vbuffer_chunk_begin(&stream->data);
 	}
 
-	if (!begin->flags.end && begin->data &&
-	    begin->data->ops == &vbuffer_data_ctl_push_ops) {
-		struct vbuffer_data_ctl_push *ctl_data = (struct vbuffer_data_ctl_push *)begin->data;
-		if (ctl_data->stream == stream && ctl_data->chunk == NULL) {
-			/* This chunk is a left over of a pop stream chunk, remove it */
-			begin = vbuffer_chunk_remove_ctl(begin);
-			left_over_end_found = true;
-		}
-	}
-
 	iter = begin;
 
 	/* Check if the data can be pop */
@@ -225,7 +215,9 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, v
 				struct vbuffer_data_ctl_push *ctl_data = (struct vbuffer_data_ctl_push *)iter->data;
 
 				if (!left_over_end_found && ctl_data->stream == stream && ctl_data->chunk == NULL) {
-					iter = vbuffer_chunk_remove_ctl(iter);
+					struct vbuffer_chunk *next = vbuffer_chunk_remove_ctl(iter);
+					if (iter == begin) begin = next;
+					iter = next;
 					left_over_end_found = true;
 					continue;
 				}
@@ -283,7 +275,6 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, v
 			list2_insert(&end->list, &clone->list);
 
 			chunk->flags.writable = false;
-			end->flags.writable = clone->flags.writable;
 		}
 	}
 	else {

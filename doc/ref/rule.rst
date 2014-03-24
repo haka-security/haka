@@ -45,7 +45,7 @@ Rule group allows customizing the rule evaluation.
 
         This function is called whenever a group start to be evaluated.
 
-    .. lua:method:: fini(...)
+    .. lua:method:: final(...)
 
         If all the rules of the group have been evaluated, this callback is
         called at the end.
@@ -66,7 +66,7 @@ Rule group allows customizing the rule evaluation.
 .. lua:function:: rule_group(rg)
 
     Register a new rule group. `rg` should be a table that will be used to initialize the
-    rule group. It can contains `hook`, `init`, `fini` and `continue`.
+    rule group. It can contains `hook`, `init`, `final` and `continue`.
 
     :returns: The new group.
     :rtype: :lua:class:`rule_group`

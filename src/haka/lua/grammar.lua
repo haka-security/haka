@@ -71,7 +71,7 @@ end
 function grammar.ArrayResult.method:append(init)
 	local result = grammar.Result:new()
 	if not self._create then
-		error("Missing create function in array options")
+		error("missing create function in array options")
 	end
 	local vbuf = self._create(result, self._entity, init)
 	if #self > 0 then
@@ -250,11 +250,11 @@ function grammar_dg.ParseContext.method:error(position, field, description, ...)
 	local iter = position:copy()
 
 	haka.log.debug("grammar", "parse error at byte %d for field %s in %s: %s",
-		(position or self.iter).meter, field.id or "<unknown>", field.rule or "<unknown>",
+		position.meter, field.id or "<unknown>", field.rule or "<unknown>",
 		description)
 	haka.log.debug("grammar", "parse error context: %s...", safe_string(iter:sub(100):asstring()))
 
-	return ParseError:new(position or self.iter, field.rule, description)
+	return ParseError:new(position, field.rule, description)
 end
 
 
@@ -379,7 +379,7 @@ end
 
 grammar_dg.Control = class('DGControl', grammar_dg.Entity)
 
-grammar.ResultPop = class('DGContextPop', grammar_dg.Control)
+grammar.ResultPop = class('DGResultPop', grammar_dg.Control)
 
 function grammar.ResultPop.method:__init()
 	super(grammar.ResultPop).__init(self)
@@ -450,9 +450,8 @@ end
 grammar_dg.UnionStart = class('DGUnionStart', grammar_dg.Control)
 
 function grammar_dg.UnionStart.method:__init(name, rule)
-	super(grammar_dg.UnionStart).__init(self)
+	super(grammar_dg.UnionStart).__init(self, rule)
 	self.name = name
-	self.rule = rule
 end
 
 function grammar_dg.UnionStart.method:_apply(ctx)
@@ -487,9 +486,8 @@ end
 grammar_dg.ArrayStart = class('DGArrayStart', grammar_dg.Control)
 
 function grammar_dg.ArrayStart.method:__init(name, rule, entity, create, resultclass)
-	super(grammar_dg.ArrayStart).__init(self)
+	super(grammar_dg.ArrayStart).__init(self, rule)
 	self.name = name
-	self.rule = rule
 	self.entity = entity
 	self.create = create
 	self.resultclass = resultclass or grammar.ArrayResult
@@ -552,8 +550,7 @@ end
 grammar_dg.Error = class('DGError', grammar_dg.Control)
 
 function grammar_dg.Error.method:__init(id, msg)
-	super(grammar_dg.Error).__init(self)
-	self.id = id
+	super(grammar_dg.Error).__init(self, nil, id)
 	self.msg = msg
 end
 
@@ -722,12 +719,11 @@ end
 
 grammar_dg.Bytes = class('DGBytes', grammar_dg.Primitive)
 
-function grammar_dg.Bytes.method:__init(rule, id, size, name, chunked)
+function grammar_dg.Bytes.method:__init(rule, id, size, name, chunked_callback)
 	super(grammar_dg.Bytes).__init(self, rule, id)
-	self.id = id
 	self.size = size
 	self.name = name
-	self.chunked = chunked
+	self.chunked_callback = chunked_callback
 end
 
 function grammar_dg.Bytes.method:_parse(res, iter, ctx)
@@ -745,9 +741,9 @@ function grammar_dg.Bytes.method:_parse(res, iter, ctx)
 		size = 'all'
 	end
 
-	if self.chunked then
+	if self.chunked_callback then
 		if size == 0 then
-			self.chunked(res, nil, true, ctx)
+			self.chunked_callback(res, nil, true, ctx)
 		else
 			while (size == 'all' or size > 0) and iter:wait() do
 				if size ~= 'all' then
@@ -758,14 +754,14 @@ function grammar_dg.Bytes.method:_parse(res, iter, ctx)
 					else
 						sub = iter:sub('available')
 					end
-	
+
 					size = size - subsize
 				else
 					sub = iter:sub('available')
 				end
-	
+
+				self.chunked_callback(res, sub, size == 0 or iter.iseof, ctx)
 				if not sub then break end
-				self.chunked(res, sub, size == 0 or iter.iseof, ctx)
 			end
 		end
 	else

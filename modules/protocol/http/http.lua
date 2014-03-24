@@ -322,18 +322,18 @@ http_dissector.grammar.headers = haka.grammar.record{
 }
 
 -- http chunk
-local function erase_since_retain(self, ctx)
+local erase_since_retain = haka.grammar.execute(function (self, ctx)
 	if ctx.user._enable_data_modification then
-		local len = ctx.iter.meter - ctx.retain_mark.meter
-		ctx.iter:move_to(ctx.retain_mark)
-		ctx.iter:sub(len, true):erase()
+		local sub = haka.vbuffer_sub(ctx.retain_mark, ctx.iter)
+		ctx.iter:split()
+		sub:erase()
 	end
-end
+end)
 
 http_dissector.grammar.chunk_end_crlf = haka.grammar.record{
 	haka.grammar.retain(),
 	http_dissector.grammar.CRLF,
-	haka.grammar.execute(erase_since_retain),
+	erase_since_retain,
 	haka.grammar.release
 }
 
@@ -344,7 +344,7 @@ http_dissector.grammar.chunk = haka.grammar.record{
 	haka.grammar.execute(function (self, ctx) ctx.chunk_size = self.chunk_size end),
 	http_dissector.grammar.optional_WS,
 	http_dissector.grammar.CRLF,
-	haka.grammar.execute(erase_since_retain),
+	erase_since_retain,
 	haka.grammar.release,
 	haka.grammar.bytes():options{
 		count = function (self, ctx) return ctx.chunk_size end,

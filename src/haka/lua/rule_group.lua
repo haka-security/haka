@@ -8,7 +8,7 @@ function rule_group.method:__init(args, continue)
 	self.rules = {}
 	self.init = args.init or function () end
 	self.continue = args.continue or function () return true end
-	self.fini = args.fini or function () end
+	self.final = args.final or function () end
 	self.event_continue = continue
 end
 
@@ -22,6 +22,7 @@ function rule_group.method:eval(...)
 	for _, rule in ipairs(self.rules) do
 		local ret = rule(...)
 
+		-- Use the event continue function to raise an abort of needed
 		self.event_continue(...)
 
 		if not self.continue(ret, ...) then
@@ -29,7 +30,9 @@ function rule_group.method:eval(...)
 		end
 	end
 
-	self.fini(...)
+	self.final(...)
+
+	-- Use the event continue function to raise an abort of needed
 	self.event_continue(...)
 end
 

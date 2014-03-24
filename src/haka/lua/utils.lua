@@ -27,14 +27,14 @@ function safe_string(str)
 
 	for i=1,len do
 		local b = str:byte(i)
-		
+
 		if b >= 0x20 and b <= 0x7e then
 			sstr[i] = string.char(b)
 		else
 			sstr[i] = string.format('\\x%.2x', b)
 		end
 	end
-	
+
 	return table.concat(sstr)
 end
 
