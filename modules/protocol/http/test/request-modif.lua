@@ -17,8 +17,11 @@ haka.rule {
 		request.headers["Host"] = "haka.powered.tld"
 		-- We destroy one
 		request.headers["User-Agent"] = nil
-		-- and we create a new one
+		-- We create a new one
 		request.headers["Haka"] = "Done"
+		-- We create a new one and we remove it
+		request.headers["Haka2"] = "Done"
+		request.headers["Haka2"] = nil
 
 		print("HTTP MODIFIED REQUEST")
 		haka.debug.pprint(request, nil, nil, { haka.debug.hide_underscore, haka.debug.hide_function })
