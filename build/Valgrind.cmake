@@ -23,6 +23,7 @@ endmacro(RUN_VALGRIND)
 
 macro(VALGRIND name)
 	RUN_VALGRIND(${name} no ${ARGN})
+	set(DO_VALGRIND_FULL 0)
 endmacro(VALGRIND)
 
 macro(VALGRIND_FULL name)
