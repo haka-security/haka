@@ -7,12 +7,12 @@
 HTTP
 ====
 
+Utilities
+---------
+
 .. lua:module:: http.uri
 
-Types
------
-
-.. lua:class:: split
+.. lua:class:: HttpUriSplit
 
     .. lua:data:: scheme
 
@@ -28,17 +28,17 @@ Types
 
     .. lua:data:: userinfo
 
-        URI userinfo.
+        URI user information.
 
     .. lua:data:: user
 
-        URI user (from userinfo).
+        URI user (from `userinfo`).
 
     .. lua:data:: pass
 
-        URI password (from userinfo).
+        URI password (from `userinfo`).
 
-    .. note:: rfc 3986 states that the format "user:password" in the userinfo field is deprecated.
+    .. note:: rfc 3986 states that the format "user:password" in the `userinfo` field is deprecated.
 
     .. lua:data:: port
 
@@ -77,8 +77,16 @@ Types
 
         http.uri.split('http://www.example.com:8888/foo/page.php')
 
+.. lua:function:: normalize(str)
 
-.. lua:class:: cookies
+    Normalize URI according to rfc 3986.
+
+    .. seealso:: :lua:func:`split:normalize`
+
+
+.. lua:module:: http.cookies
+
+.. lua:class:: HttpCookiesSplit
 
     Store the cookies as a table of key-value pairs.
 
@@ -93,72 +101,98 @@ Types
     :returns: :lua:class:`cookies`
 
 
-
-Functions
----------
-
-.. lua:function:: normalize(str)
-
-    Normalize URI according to rfc 3986.
-
-    .. seealso:: :lua:func:`split:normalize`
-
-
-
-
 Dissector
 ---------
 
 .. lua:module:: http
 
+The HTTP dissector supports:
+
+* HTTP 1.0 and 1.1
+* Chunked transfer mode
+* Request analysis
+* Reponse analysis
+* Keep-alive connections
+
+Events
+======
+
+* `request`
+
+    Triggered when the dissector recognizes a valid HTTP request. The request can be modified
+    in this event.
+
+* `request-data`
+
+    Whenever the dissector receives some HTTP data associated with a request, this event is trigger.
+    The data are represented by a stream.
+
+* `response`
+
+    Triggered when the dissector recognizes a valid HTTP response. The response can be modified
+    in this event. It can also read the request information.
+
+* `response-data`
+
+    Whenever the dissector receives some HTTP data associated with a response, this event is trigger.
+    The data are represented by a stream.
+
+
+Functions
+=========
+
+.. lua:class:: HttpRequestResult
+
+    Hold information about the current request. It is accessible from any event.
+
+    .. lua:data:: method
+                  uri
+                  version
+
+        Request line elements.
+
+    .. lua:data:: headers
+
+        Headers table.
+
+.. lua:class:: HttpResponseResult
+
+    Hold information about the current response. It is accessible only in the event
+    associated with a response.
+
+    .. lua:data:: version
+                  status
+                  reason
+
+        Response line elements.
+
+    .. lua:data:: headers
+
+        Headers table.
+
 .. lua:class:: http
 
-    Dissector data for HTTP. In addition to the usuall `http-up` and  `http-down`, HTTP register two additional
-    hooks:
-
-    * `http-request`: called when a request is fully parsed.
-    * `http-response`: called when a response is fully parsed.
-
-    .. seealso:: :lua:class:`haka.dissector_data`.
-
     .. lua:data:: request
+                  response
 
-        Inside a `http-request` or `http-response` hook, the :lua:data:`http:request` table holds information about the
-        current request.
+        Access to parsed request and response.
 
-        .. lua:data:: method
-                      uri
-                      version
+    .. lua:method:: drop()
 
-            Request line elements.
+        Drop the current HTTP connection.
 
-        .. lua:data:: headers
+    .. lua:method:: reset()
 
-            Headers table.
+        Reset the current HTTP connection. The client and the server will be notified
+        with RST tcp packets.
 
-        .. lua:data:: data
+    .. lua:method:: enable_data_modification()
 
-            Stream of HTTP data.
+        Activate the data transformation to allow modification to be done on the HTTP data.
 
-    .. lua:data:: response
+.. lua:function:: install_tcp_rule(port)
 
-        Inside a `http-response` hook, the :lua:data:`http:response` table holds information about the current response.
-
-        .. note:: This table is not available inside the hook `http-request`.
-
-        .. lua:data:: version
-                      status
-                      reason
-
-            Response line elements.
-
-        .. lua:data:: headers
-
-            Headers table.
-
-        .. lua:data:: data
-
-            Stream of HTTP data.
+    Install a rule to enable the HTTP dissector on the given tcp `port`.
 
 Example
 -------

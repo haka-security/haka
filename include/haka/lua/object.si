@@ -9,7 +9,7 @@
 extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swig_type_info *type_info, int owner);
 %}
 
-%define LUA_OBJECT_CAST(typeptr, casttype)
+%define _LUA_OBJECT(typeptr, casttype, name)
 
 %typemap(in, checkfn="SWIG_isptrtype") typeptr* %{
 	if (!lua_isnil(L, $input)) {
@@ -56,7 +56,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 %apply typeptr* DISOWN { typeptr* DISOWN_SUCCESS_ONLY };
 
 %typemap(out) typeptr* {
-	if (!lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, $owner)) {
+	if (!lua_object_push(L, $1, &((casttype*)$1)->name, $descriptor, $owner)) {
 		SWIG_execfail;
 	}
 	else {
@@ -66,7 +66,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(freearg) typeptr* DISOWN {
 	if (SWIG_arg == -1 && $1) {
-		if (lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, 1)) {
+		if (lua_object_push(L, $1, &((casttype*)$1)->name, $descriptor, 1)) {
 			lua_pop(L, 1);
 		}
 	}
@@ -74,7 +74,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(freearg) typeptr* DISOWN_SUCCESS_ONLY {
 	if (SWIG_arg == -2 && $1) {
-		if (lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, 1)) {
+		if (lua_object_push(L, $1, &((casttype*)$1)->name, $descriptor, 1)) {
 			lua_pop(L, 1);
 		}
 	}
@@ -85,7 +85,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(argout) typeptr** OUTPUT_DISOWN {
 	if ($1) {
-		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->lua_object, $*descriptor, 0)) {
+		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->name, $*descriptor, 0)) {
 			SWIG_execfail;
 		}
 		else {
@@ -103,7 +103,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(argout) typeptr** OUTPUT {
 	if ($1) {
-		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->lua_object, $*descriptor, 1)) {
+		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->name, $*descriptor, 1)) {
 			SWIG_execfail;
 		}
 		else {
@@ -118,6 +118,15 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %enddef
 
+
+%define LUA_OBJECT_CAST(typeptr, casttype)
+	_LUA_OBJECT(typeptr, casttype, lua_object)
+%enddef
+
 %define LUA_OBJECT(typeptr)
-	LUA_OBJECT_CAST(typeptr, typeptr)
+	_LUA_OBJECT(typeptr, typeptr, lua_object)
+%enddef
+
+%define LUA_OBJECT_EX(typeptr, name)
+	_LUA_OBJECT(typeptr, typeptr, name)
 %enddef

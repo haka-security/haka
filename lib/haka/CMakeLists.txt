@@ -27,6 +27,7 @@ add_library(libhaka SHARED
 	vbuffer.c
 	vbuffer_data.c
 	vbuffer_stream.c
+	vbuffer_sub_stream.c
 	regexp_module.c
 	container/list.c
 	container/list2.c

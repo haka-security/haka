@@ -59,25 +59,25 @@ void list2_init(struct list2 *list)
 #endif
 }
 
-list2_iter list2_insert(list2_iter iter, struct list2_elem *list)
+list2_iter list2_insert(list2_iter iter, struct list2_elem *elem)
 {
 	assert(iter);
-	assert(list);
-	assert(!list->next && !list->prev);
+	assert(elem);
+	assert(!elem->next && !elem->prev);
 #ifdef HAKA_DEBUG
-	assert(!list->is_end);
+	assert(!elem->is_end);
 #endif
 
 	CHECK_LIST(iter);
 
-	list->next = iter;
-	list->prev = iter->prev;
+	elem->next = iter;
+	elem->prev = iter->prev;
 
-	iter->prev->next = list;
-	iter->prev = list;
+	iter->prev->next = elem;
+	iter->prev = elem;
 
-	CHECK_LIST(list);
-	return list;
+	CHECK_LIST(elem);
+	return elem;
 }
 
 list2_iter list2_insert_list(list2_iter iter, list2_iter begin, list2_iter end)

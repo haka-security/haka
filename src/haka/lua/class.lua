@@ -45,7 +45,7 @@ function BaseClass.view(cls)
 end
 
 
-local function new_instance(cls, ...)
+function new_instance(cls, ...)
 	local instance = {}
 	setmetatable(instance, cls)
 
@@ -100,6 +100,17 @@ function class(name, super)
 	cls.name = name
 	cls.super = super
 	cls.__view = BaseClass.view(cls)
+	cls.__tostring = function (self)
+		local convert = self.__tostring
+		if convert then
+			return convert(self)
+		else
+			return string.format("<class instance: %s>", classof(self).name)
+		end
+	end
+
+	cls.method = {}
+	cls.property = {}
 	cls.__index = function (self, key)
 		local v
 
@@ -143,12 +154,16 @@ function class(name, super)
 		for c in class_hierarchy(classof(self)) do
 			v = rawget(c, 'property')[key]
 			if v and v.set then return v.set(self, value) end
+
+			local method = rawget(c, 'method')
+			v = method['__newindex']
+			if v then
+				return v(self, key, value)
+			end
 		end
 
 		rawset(self, key, value)
 	end
-	cls.method = {}
-	cls.property = {}
 
 	setmetatable(cls, BaseClass)
 

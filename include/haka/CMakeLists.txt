@@ -5,4 +5,7 @@
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h DESTINATION ${HAKA_INSTALL_PREFIX}/include/haka)
 
+configure_file(lua/config.si.in ${CMAKE_CURRENT_BINARY_DIR}/lua/config.si)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lua/config.si DESTINATION ${HAKA_INSTALL_PREFIX}/include/haka/lua)
+
 install(DIRECTORY . DESTINATION ${HAKA_INSTALL_PREFIX}/include/haka FILES_MATCHING PATTERN "*.h" PATTERN "*.si")

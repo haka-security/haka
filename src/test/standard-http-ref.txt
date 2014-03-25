@@ -18,7 +18,7 @@ debug filter: entering packet filtering rules : 50694 --> 80
 warn filter: authorizing http traffic
 debug tcp-connection: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
 info alert: id = <>
-	description = unsupported http version 'HTTP/2.1'
+	description = unsupported http version '2.1'
 	sources = {
 		address: 192.168.10.1
 	}

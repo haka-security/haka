@@ -14,7 +14,7 @@ haka.rule {
 	eval = function (http, request)
 		local uri = request.uri
 		print('--> splitting uri')
-		splitted = request:split_uri()
+		splitted = request.split_uri
 		print(splitted)
 	end
 }
@@ -24,7 +24,7 @@ haka.rule {
 	eval = function (http, request)
 		local uri = request.uri
 		print('--> splitting uri')
-		local splitted2 = request:split_uri()
+		local splitted2 = request.split_uri
 		print(splitted2)
 		--Check that tables are the same
 		--Same in the way that this is the same memory, not only the same content 

@@ -117,15 +117,15 @@ struct ipv4_addr {
 			return $self->addr <= addr->addr;
 		}
 
-		temporary_string __tostring()
+		void __tostring(char **TEMP_OUTPUT)
 		{
-			char *buffer = malloc(IPV4_ADDR_STRING_MAXLEN + 1);
-			if (!buffer) {
+			*TEMP_OUTPUT = malloc(IPV4_ADDR_STRING_MAXLEN + 1);
+			if (!*TEMP_OUTPUT) {
 				error(L"memory error");
-				return NULL;
+				return;
 			}
-			ipv4_addr_to_string($self->addr, buffer, IPV4_ADDR_STRING_MAXLEN + 1);
-			return buffer;
+
+			ipv4_addr_to_string($self->addr, *TEMP_OUTPUT, IPV4_ADDR_STRING_MAXLEN + 1);
 		}
 
 		int packed;
@@ -213,17 +213,16 @@ struct ipv4_network {
 				free($self);
 		}
 
-		temporary_string __tostring()
+		void __tostring(char **TEMP_OUTPUT)
 		{
-			char *buffer = malloc(IPV4_NETWORK_STRING_MAXLEN + 1);
-			if (!buffer) {
+			*TEMP_OUTPUT = malloc(IPV4_NETWORK_STRING_MAXLEN + 1);
+			if (!*TEMP_OUTPUT) {
 				error(L"memory error");
-				return NULL;
+				return;
 			}
-			ipv4_network_to_string($self->net, buffer,
-					IPV4_NETWORK_STRING_MAXLEN + 1);
 
-			return buffer;
+			ipv4_network_to_string($self->net, *TEMP_OUTPUT,
+					IPV4_NETWORK_STRING_MAXLEN + 1);
 		}
 
 		%rename(contains) _contains;
@@ -293,7 +292,6 @@ struct ipv4 {
 		void compute_checksum();
 		void drop() { ipv4_action_drop($self); }
 
-		%rename(continue) _continue;
 		bool _continue()
 		{
 			assert($self);
@@ -384,14 +382,16 @@ int lua_inet_checksum(struct vbuffer *buf);
 		name = 'ipv4'
 	}
 
-	function ipv4_dissector.method:emit()
-		if not haka.pcall(haka.context.signal, haka.context, self, ipv4_dissector.events.receive_packet) then
-			return self:drop()
-		end
+	function ipv4_dissector:new(pkt)
+		return this._dissect(pkt)
+	end
 
-		if not self:continue() then
-			return
-		end
+	function ipv4_dissector:create(pkt)
+		return this._create(pkt)
+	end
+
+	function ipv4_dissector.method:receive()
+		haka.context:signal(self, ipv4_dissector.events['receive_packet'])
 
 		local next_dissector = ipv4_protocol_dissectors[self.proto]
 		if next_dissector then
@@ -401,25 +401,8 @@ int lua_inet_checksum(struct vbuffer *buf);
 		end
 	end
 
-	function ipv4_dissector:receive(pkt)
-		local new = this._dissect(pkt)
-		if new then
-			return new:emit()
-		end
-	end
-
-	function ipv4_dissector:create(pkt)
-		return this._create(pkt)
-	end
-
 	function ipv4_dissector.method:send()
-		if not haka.pcall(haka.context.signal, haka.context, self, ipv4_dissector.events.send_packet) then
-			return self:drop()
-		end
-
-		if not self:continue() then
-			return
-		end
+		haka.context:signal(self, ipv4_dissector.events['send_packet'])
 
 		local pkt = this._forge(self)
 		return pkt:send()
@@ -430,9 +413,17 @@ int lua_inet_checksum(struct vbuffer *buf);
 		return pkt:inject()
 	end
 
+	function ipv4_dissector.method:continue()
+		if not self:_continue() then
+			return haka.abort()
+		end
+	end
+
+	swig.getclassmetatable('ipv4')['.fn'].receive = ipv4_dissector.method.receive
 	swig.getclassmetatable('ipv4')['.fn'].send = ipv4_dissector.method.send
-	swig.getclassmetatable('ipv4')['.fn'].emit = ipv4_dissector.method.emit
 	swig.getclassmetatable('ipv4')['.fn'].inject = ipv4_dissector.method.inject
+	swig.getclassmetatable('ipv4')['.fn'].continue = ipv4_dissector.method.continue
+	swig.getclassmetatable('ipv4')['.fn'].error = swig.getclassmetatable('ipv4')['.fn'].drop
 
 	-- ipv4 Lua full dissector, uncomment to enable
 	--[[ipv4 = this

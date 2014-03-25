@@ -18,11 +18,14 @@ function haka.rule_summary()
 end
 
 function haka.rule(r)
-	if not r.hook then
-		error("no hook defined for rule")
-	end
+	assert(r.hook, "not hook defined for rule")
+	assert(isa(r.hook, haka.events.Event), "rule hook must be an event")
+	assert(type(r.eval) == 'function', "rule eval function expected")
 
-	haka.context.connections:register(r.hook, r.eval)
+	local options = {}
+	if r.streamed then options.streamed = true end
+
+	haka.context.connections:register(r.hook, r.eval, options)
 end
 
 -- Load interactive.lua as a different file to allow to compile it

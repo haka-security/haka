@@ -1,37 +1,36 @@
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 127.0.0.1:42073 -> 127.0.0.1:80
 HTTP REQUEST
- _headers_order
-   1 = Host
- _length = 37
- headers
-   Host = Ž™ÿ
- method = GET
- uri = /
- version = HTTP/1.1
+class HttpRequestResult {
+  headers : class HeaderResult {
+    Host : "Ž™ÿ
+  }
+  method : "GET"
+  uri : "/"
+  version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
+  split_uri : class HttpUriSplit {
+    path : "/"
+  }
+}
 HTTP RESPONSE
- _headers_order
-   1 = Date
-   2 = Server
-   3 = Last-Modified
-   4 = ETag
-   5 = Accept-Ranges
-   6 = Content-Length
-   7 = Vary
-   8 = Content-Type
-   9 = X-Pad
- _length = 283
- headers
-   Accept-Ranges = bytes
-   Content-Length = 18
-   Content-Type = text/html
-   Date = Wed, 14 Aug 2013 13:25:47 GMT
-   ETag = "1d84dc-12-4e3d3c154b000"
-   Last-Modified = Tue, 13 Aug 2013 12:55:28 GMT
-   Server = Apache/2.2.22 (Debian)
-   Vary = Accept-Encoding
-   X-Pad = avoid browser bug
- reason = OK
- status = 200
- version = HTTP/1.1
+class HttpResponseResult {
+  headers : class HeaderResult {
+    Accept-Ranges : "bytes"
+    Content-Length : "18"
+    Content-Type : "text/html"
+    Date : "Wed, 14 Aug 2013 13:25:47 GMT"
+    ETag : ""1d84dc-12-4e3d3c154b000""
+    Last-Modified : "Tue, 13 Aug 2013 12:55:28 GMT"
+    Server : "Apache/2.2.22 (Debian)"
+    Vary : "Accept-Encoding"
+    X-Pad : "avoid browser bug"
+  }
+  reason : "OK"
+  status : "200"
+  version : "1.1"
+  split_cookies : class HttpCookiesSplit {
+  }
+}
 debug tcp-connection: closing connection 127.0.0.1:42073 -> 127.0.0.1:80

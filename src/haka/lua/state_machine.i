@@ -97,8 +97,10 @@ int lua_transition_deferred(lua_State *L)
 	}
 
 	if (check_error()) {
-		lua_pushwstring(L, clear_error());
-		lua_error(L);
+		if (!lua_pushwstring(L, clear_error())) {
+			lua_pushstring(L, "unknown error");
+		}
+		return lua_error(L);
 	}
 
 	return 0;

@@ -28,7 +28,7 @@ haka.rule{
 	eval = function (http, response)
 		local conn = http.connection
 		local request = http.request
-		local split_uri = request:split_uri():normalize()
+		local split_uri = request.split_uri:normalize()
 		local entry = {}
 		entry.ip = tostring(conn.srcip)
 		entry.method = request.method

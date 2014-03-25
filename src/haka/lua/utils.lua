@@ -2,7 +2,12 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local function default_cmp(a, b)
+	return tostring(a) < tostring(b)
+end
+
 function sorted_pairs(t, f)
+	f = f or default_cmp
 	local a = {}
 	for n in pairs(t) do table.insert(a, n) end
 	table.sort(a, f)
@@ -14,4 +19,39 @@ function sorted_pairs(t, f)
 		end
 	end
 	return iter
+end
+
+function safe_string(str)
+	local len = #str
+	local sstr = {}
+
+	for i=1,len do
+		local b = str:byte(i)
+
+		if b >= 0x20 and b <= 0x7e then
+			sstr[i] = string.char(b)
+		else
+			sstr[i] = string.format('\\x%.2x', b)
+		end
+	end
+
+	return table.concat(sstr)
+end
+
+function table.merge(dst, src)
+	for k,v in pairs(src) do
+		dst[k] = v
+	end
+end
+
+function table.dict(table)
+	local ret = {}
+	for _, v in pairs(table) do
+		ret[v] = true
+	end
+	return ret
+end
+
+function table.contains(table, elem)
+	return table[elem] ~= nil
 end

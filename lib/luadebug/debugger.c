@@ -929,10 +929,6 @@ static void lua_debug_hook(lua_State *L, lua_Debug *ar)
 	session = luadebug_debugger_get(L);
 	assert(session);
 
-	if (L != session->top_L) {
-		return;
-	}
-
 	session->L = L;
 
 	switch (ar->event) {

@@ -8,15 +8,15 @@ require("protocol/tcp-connection")
 
 haka.rule {
 	hook = haka.event('tcp-connection', 'receive_data'),
-	eval = function (flow, stream)
-		local current = stream.current
-		haka.log.debug("filter", "received stream len=%d", current:available())
+	eval = function (flow, data)
+		haka.log.debug("filter", "received stream len=%d", #data)
 
-		if current:available() > 30 then
+		if #data > 30 then
 			flow:reset()
 		else
+			local current = data:pos('begin')
 			while current:available() > 0 do
-				local buf = haka.vbuffer(4)
+				local buf = haka.vbuffer_allocate(4)
 				buf:sub():setfixedstring("Haka")
 
 				current:insert(buf)

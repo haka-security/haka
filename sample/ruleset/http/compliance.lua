@@ -29,12 +29,10 @@ local http_versions = dict({ '0.9', '1.0', '1.1' })
 haka.rule {
 	hook = haka.event('http', 'request'),
 	eval = function (http, request)
-		local protocol = request.version:sub(1,4)
-		local version = request.version:sub(6)
-		if not protocol == "HTTP" or not contains(http_versions, version) then
+		if not contains(http_versions, request.version) then
 			local conn = http.connection
 			haka.alert{
-				description = string.format("unsupported http version '%s/%s'", protocol, version),
+				description = string.format("unsupported http version '%s'", request.version),
 				sources = haka.alert.address(conn.srcip),
 				targets = {
 					haka.alert.address(conn.dstip),

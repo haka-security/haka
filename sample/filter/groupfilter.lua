@@ -32,9 +32,9 @@ local my_group = haka.rule_group{
 		return not ret
 	end,
 
-	-- if we reach the fini function, all rules have returned false
+	-- if we reach the final function, all rules have returned false
 	-- Nobody has accepted the packet => we drop it.
-	fini = function (flow, pkt)
+	final = function (flow, pkt)
 		haka.alert{
 			description = "Packet dropped : drop by default",
 			targets = { haka.alert.service("tcp", pkt.dstport) }

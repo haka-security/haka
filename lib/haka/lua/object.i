@@ -126,9 +126,11 @@ void lua_object_release(void *ptr, struct lua_object *obj)
 
 bool lua_object_get(lua_State *L, struct lua_object *obj, swig_type_info *type_info)
 {
+	struct lua_state *mainthread = lua_state_get(L);
+
 	assert(obj);
 
-	if (obj->state && obj->state->L != L) {
+	if (obj->state && obj->state->L != mainthread->L) {
 		lua_pushstring(L, "invalid lua state (an object is being used by multiple lua state)");
 		return false;
 	}
@@ -156,12 +158,14 @@ bool lua_object_get(lua_State *L, struct lua_object *obj, swig_type_info *type_i
 
 void lua_object_register(lua_State *L, struct lua_object *obj, swig_type_info *type_info, int index)
 {
+	struct lua_state *mainthread = lua_state_get(L);
+
 	if (!obj->state) {
-		obj->state = lua_state_get(L);
+		obj->state = mainthread;
 	}
 	else {
 		/* A given lua object can only belong to 1 lua state */
-		assert(obj->state->L == L);
+		assert(obj->state->L == mainthread->L);
 	}
 
 	LUA_STACK_MARK(L);

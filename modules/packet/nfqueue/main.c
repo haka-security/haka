@@ -40,7 +40,6 @@ struct pcap_dump {
 struct pcap_sinks {
 	struct pcap_dump   in;
 	struct pcap_dump   out;
-	struct pcap_dump   drop;
 };
 
 struct packet_module_state {
@@ -403,7 +402,6 @@ static void cleanup()
 	if (pcap) {
 		close_pcap(&pcap->in);
 		close_pcap(&pcap->out);
-		close_pcap(&pcap->drop);
 		free(pcap);
 		pcap = NULL;
 	}
@@ -417,7 +415,6 @@ static int init(struct parameters *args)
 	int thread_count = thread_get_packet_capture_cpu_count();
 	const char *file_in = NULL;
 	const char *file_out = NULL;
-	const char *file_drop = NULL;
 	int count;
 	bool dump = false;
 
@@ -500,8 +497,7 @@ static int init(struct parameters *args)
 	if (dump) {
 		file_in = parameters_get_string(args, "dump_input", NULL);
 		file_out = parameters_get_string(args, "dump_output", NULL);
-		file_drop = parameters_get_string(args, "dump_drop", NULL);
-		if (!(file_in || file_out || file_drop)) {
+		if (!(file_in || file_out)) {
 			message(HAKA_LOG_WARNING, MODULE_NAME, L"no dump pcap files specified");
 		}
 		else {
@@ -520,10 +516,6 @@ static int init(struct parameters *args)
 			if (file_out) {
 				open_pcap(&pcap->out, file_out);
 				messagef(HAKA_LOG_INFO, MODULE_NAME, L"dumping emitted packets into '%s'", file_out);
-			}
-			if (file_drop) {
-				open_pcap(&pcap->drop, file_drop);
-				messagef(HAKA_LOG_INFO, MODULE_NAME, L"dumping dropped packets into '%s'", file_drop);
 			}
 		}
 	}
@@ -603,14 +595,16 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	struct nfqueue_packet *pkt = (struct nfqueue_packet*)orig_pkt;
 
 	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
-		const uint8 *data;
+		const uint8 *data = NULL;
 		size_t len;
 
-		data = vbuffer_flatten(&pkt->core_packet.payload, &len);
-		if (!data) {
-			assert(check_error());
-			vbuffer_clear(&pkt->core_packet.payload);
-			return;
+		if (result == FILTER_ACCEPT) {
+			data = vbuffer_flatten(&pkt->core_packet.payload, &len);
+			if (!data) {
+				assert(check_error());
+				vbuffer_clear(&pkt->core_packet.payload);
+				return;
+			}
 		}
 
 		if (pkt->id == -1) {
@@ -633,7 +627,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 				break;
 			}
 
-			if (vbuffer_ismodified(&pkt->core_packet.payload)) {
+			if (result == FILTER_ACCEPT && vbuffer_ismodified(&pkt->core_packet.payload)) {
 				ret = nfq_set_verdict(pkt->state->queue, pkt->id, verdict, len, (uint8 *)data);
 			}
 			else {
@@ -641,17 +635,8 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 			}
 		}
 
-		if (pcap) {
-			switch (result) {
-			case FILTER_ACCEPT:
-				dump_pcap(&pcap->out, pkt, data, len);
-				break;
-
-			case FILTER_DROP:
-			default:
-				dump_pcap(&pcap->drop, pkt, data, len);
-				break;
-			}
+		if (pcap && result == FILTER_ACCEPT) {
+			dump_pcap(&pcap->out, pkt, data, len);
 		}
 
 		if (ret == -1) {

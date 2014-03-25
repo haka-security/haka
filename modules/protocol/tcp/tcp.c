@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <wchar.h>
 
 #include <haka/log.h>
 #include <haka/alert.h>
@@ -21,6 +22,21 @@ struct tcp_pseudo_header {
 	uint8          proto;
 	uint16         len;
 };
+
+static void alert_invalid_packet(struct ipv4 *packet, wchar_t *desc)
+{
+	TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
+	TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
+	ALERT(invalid_packet, 1, 1)
+		description: desc,
+		severity: HAKA_ALERT_LOW,
+	ENDALERT
+
+	ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
+	ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
+
+	alert(&invalid_packet);
+}
 
 static bool tcp_flatten_header(struct vbuffer *payload, size_t hdrlen)
 {
@@ -69,18 +85,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	}
 
 	if (!vbuffer_check_size(&packet->payload, sizeof(struct tcp_header), NULL)) {
-		TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
-		TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
-		ALERT(invalid_packet, 1, 1)
-			description: L"invalid tcp packet, size is too small",
-			severity: HAKA_ALERT_LOW,
-		ENDALERT
-
-		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
-		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
-
-		alert(&invalid_packet);
-
+		alert_invalid_packet(packet, L"invalid tcp packet, size is too small");
 		ipv4_action_drop(packet);
 		return NULL;
 	}
@@ -98,6 +103,13 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	/* extract header len (at offset 12, see struct tcp_header) */
 	vbuffer_position(&packet->payload, &hdrleniter, 12);
 	*(uint8 *)&hdrlen = vbuffer_iterator_getbyte(&hdrleniter);
+
+	if (hdrlen.hdr_len << TCP_HDR_LEN < sizeof(struct tcp_header)) {
+		alert_invalid_packet(packet, L"invalid tcp packet, header length is too small");
+		ipv4_action_drop(packet);
+		free(tcp);
+		return NULL;
+	}
 
 	if (!tcp_flatten_header(&packet->payload, hdrlen.hdr_len << TCP_HDR_LEN)) {
 		assert(check_error());
@@ -127,7 +139,7 @@ static bool tcp_add_header(struct vbuffer *payload)
 	}
 
 	vbuffer_begin(payload, &begin);
-	ret = vbuffer_iterator_insert(&begin, &header_buffer);
+	ret = vbuffer_iterator_insert(&begin, &header_buffer, NULL);
 	vbuffer_release(&header_buffer);
 
 	return ret;
@@ -212,7 +224,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 			if (!vbuffer_iterator_isvalid(&tcp->select)) {
 				struct vbuffer_iterator insert;
 				vbuffer_position(&tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
-				vbuffer_iterator_insert(&insert, &tcp->payload);
+				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
 			}
 			else {
 				vbuffer_restore(&tcp->select, &tcp->payload);
@@ -262,7 +274,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 			if (!vbuffer_iterator_isvalid(&tcp->select)) {
 				struct vbuffer_iterator insert;
 				vbuffer_position(&tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
-				vbuffer_iterator_insert(&insert, &tcp->payload);
+				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
 			}
 			else {
 				vbuffer_restore(&tcp->select, &tcp->payload);

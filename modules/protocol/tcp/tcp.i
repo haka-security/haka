@@ -20,6 +20,7 @@ struct tcp_stream;
 %include "haka/lua/swig.si"
 %include "haka/lua/ref.si"
 %include "haka/lua/ipv4.si"
+%include "haka/lua/vbuffer.si"
 %include "typemaps.i"
 
 %nodefaultctor;
@@ -135,8 +136,7 @@ struct tcp {
 			tcp_action_drop($self);
 		}
 
-		%rename(continue) _continue;
-		bool continue()
+		bool _continue()
 		{
 			assert($self);
 			return $self->packet != NULL;
@@ -263,14 +263,12 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 		name = 'tcp'
 	}
 
-	function tcp_dissector.method:emit()
-		if not haka.pcall(haka.context.signal, haka.context, self, tcp_dissector.events.receive_packet) then
-			return self:drop()
-		end
+	function tcp_dissector:new(pkt)
+		return this._dissect(pkt)
+	end
 
-		if not self:continue() then
-			return
-		end
+	function tcp_dissector.method:receive()
+		haka.context:signal(self, tcp_dissector.events['receive_packet'])
 
 		local next_dissector = haka.dissector.get('tcp-connection')
 		if next_dissector then
@@ -280,25 +278,12 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 		end
 	end
 
-	function tcp_dissector:receive(pkt)
-		local self = this._dissect(pkt)
-		if self then
-			return self:emit()
-		end
-	end
-
 	function tcp_dissector:create(pkt)
 		return this._create(pkt)
 	end
 
 	function tcp_dissector.method:send()
-		if not haka.pcall(haka.context.signal, haka.context, self, tcp_dissector.events.send_packet) then
-			return self:drop()
-		end
-
-		if not self:continue() then
-			return
-		end
+		haka.context:signal(self, tcp_dissector.events['send_packet'])
 
 		local pkt = this._forge(self)
 		while pkt do
@@ -315,9 +300,17 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 		end
 	end
 
+	function tcp_dissector.method:continue()
+		if not self:_continue() then
+			return haka.abort()
+		end
+	end
+
 	swig.getclassmetatable('tcp')['.fn'].send = tcp_dissector.method.send
-	swig.getclassmetatable('tcp')['.fn'].emit = tcp_dissector.method.emit
+	swig.getclassmetatable('tcp')['.fn'].receive = tcp_dissector.method.receive
 	swig.getclassmetatable('tcp')['.fn'].inject = tcp_dissector.method.inject
+	swig.getclassmetatable('tcp')['.fn'].continue = tcp_dissector.method.continue
+	swig.getclassmetatable('tcp')['.fn'].error = swig.getclassmetatable('tcp')['.fn'].drop
 
 	local ipv4 = require("protocol/ipv4")
 	ipv4.register_protocol(6, tcp_dissector)

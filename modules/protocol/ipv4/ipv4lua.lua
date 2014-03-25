@@ -68,14 +68,14 @@ local header = haka.grammar.record{
 	haka.grammar.field('opt',         haka.grammar.array(option)
 		:options{
 			untilcond = function (elem, ctx)
-				return ctx.offset >= ctx.top.hdr_len or
+				return ctx.iter.meter >= ctx.top.hdr_len or
 					(elem and elem.type == 0)
 			end
 		}),
 	haka.grammar.padding{align = 32},
 	haka.grammar.verify(function (self, ctx)
-		if ctx.offset ~= self.hdr_len then
-			error(string.format("invalid ipv4 header size, expected %d bytes", self.hdr_len))
+		if ctx.iter.meter ~= self.hdr_len then
+			error(string.format("invalid ipv4 header size, expected %d bytes, got %d bytes", self.hdr_len, ctx.iter.meter))
 		end
 	end),
 	haka.grammar.field('payload',     haka.grammar.bytes())
@@ -83,9 +83,14 @@ local header = haka.grammar.record{
 
 ipv4_dissector.grammar = header:compile()
 
-function ipv4_dissector.method:parse_payload(pkt, payload, init)
+function ipv4_dissector.method:parse_payload(pkt, payload)
 	self.raw = pkt
-	ipv4_dissector.grammar:parseall(payload, self, init)
+	ipv4_dissector.grammar:parse(payload:pos("begin"), self)
+end
+
+function ipv4_dissector.method:create_payload(pkt, payload, init)
+	self.raw = pkt
+	ipv4_dissector.grammar:create(payload:pos("begin"), self, init)
 end
 
 function ipv4_dissector.method:verify_checksum()
@@ -118,10 +123,10 @@ end
 function ipv4_dissector:create(pkt, init)
 	if not init then init = {} end
 	if not init.hdr_len then init.hdr_len = ipv4_dissector._compute_hdr_len(init) end
-	pkt.payload:append(haka.vbuffer(init.hdr_len))
+	pkt.payload:append(haka.vbuffer_allocate(init.hdr_len))
 
 	local ip = ipv4_dissector:new(pkt)
-	ip:parse(pkt, init)
+	ip:create(init, pkt)
 
 	return ip
 end

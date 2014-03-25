@@ -45,6 +45,8 @@ struct vbuffer_iterator {
 	bool                         registered:1;
 };
 
+extern const struct vbuffer_iterator vbuffer_iterator_init;
+
 struct vbuffer_sub {
 	struct vbuffer_iterator      begin;
 	bool                         use_size:1;
@@ -67,6 +69,7 @@ extern const struct vbuffer_sub_mmap vbuffer_mmap_init;
  */
 
 bool          vbuffer_isvalid(const struct vbuffer *buf);
+bool          vbuffer_isempty(const struct vbuffer *buf);
 bool          vbuffer_create_empty(struct vbuffer *buf);
 bool          vbuffer_create_new(struct vbuffer *buf, size_t size, bool zero);
 bool          vbuffer_create_from(struct vbuffer *buf, const char *str, size_t len);
@@ -75,6 +78,7 @@ void          vbuffer_release(struct vbuffer *buf);
 void          vbuffer_position(const struct vbuffer *buf, struct vbuffer_iterator *position, size_t offset);
 INLINE void   vbuffer_begin(const struct vbuffer *buf, struct vbuffer_iterator *position);
 INLINE void   vbuffer_end(const struct vbuffer *buf, struct vbuffer_iterator *position);
+void          vbuffer_last(const struct vbuffer *buf, struct vbuffer_iterator *position);
 void          vbuffer_setwritable(struct vbuffer *buf, bool writable);
 bool          vbuffer_iswritable(struct vbuffer *buf);
 bool          vbuffer_ismodified(struct vbuffer *buf);
@@ -94,10 +98,12 @@ size_t        vbuffer_iterator_available(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_check_available(struct vbuffer_iterator *position, size_t minsize, size_t *size);
 bool          vbuffer_iterator_register(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_unregister(struct vbuffer_iterator *position);
-bool          vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *buffer);
+bool          vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *buffer, struct vbuffer_sub *sub);
 size_t        vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len);
 bool          vbuffer_iterator_isend(struct vbuffer_iterator *position);
-bool          vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct vbuffer_sub *sub, bool split);
+bool          vbuffer_iterator_iseof(struct vbuffer_iterator *position);
+bool          vbuffer_iterator_split(struct vbuffer_iterator *position);
+size_t        vbuffer_iterator_sub(struct vbuffer_iterator *position, size_t len, struct vbuffer_sub *sub, bool split);
 uint8         vbuffer_iterator_getbyte(struct vbuffer_iterator *position);
 bool          vbuffer_iterator_setbyte(struct vbuffer_iterator *position, uint8 byte);
 uint8        *vbuffer_iterator_mmap(struct vbuffer_iterator *position, size_t maxsize, size_t *size, bool write);

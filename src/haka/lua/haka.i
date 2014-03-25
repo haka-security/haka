@@ -6,6 +6,7 @@
 
 %{
 #include <stdint.h>
+#include <unistd.h>
 #include <wchar.h>
 
 #include "app.h"
@@ -15,9 +16,15 @@
 #include <haka/module.h>
 #include <haka/alert.h>
 #include <haka/config.h>
+#include <haka/colors.h>
 
 char *module_prefix = HAKA_MODULE_PREFIX;
 char *module_suffix = HAKA_MODULE_SUFFIX;
+
+static bool stdout_support_colors()
+{
+	return colors_supported(STDOUT_FILENO);
+}
 
 %}
 
@@ -35,6 +42,9 @@ const char *module_get_path();
 %immutable;
 char *module_prefix;
 char *module_suffix;
+%mutable;
+
+bool stdout_support_colors();
 
 struct time {
 	int    secs;
@@ -59,21 +69,19 @@ struct time {
 		%immutable;
 		double seconds;
 
-		temporary_string __tostring()
+		void __tostring(char **TEMP_OUTPUT)
 		{
-			char *ret = malloc(TIME_BUFSIZE);
-			if (!ret) {
+			*TEMP_OUTPUT = malloc(TIME_BUFSIZE);
+			if (!*TEMP_OUTPUT) {
 				error(L"memory error");
-				return NULL;
+				return;
 			}
 
-			if (!time_tostring($self, ret, TIME_BUFSIZE)) {
+			if (!time_tostring($self, *TEMP_OUTPUT, TIME_BUFSIZE)) {
 				assert(check_error());
-				free(ret);
-				return NULL;
+				free(*TEMP_OUTPUT);
+				*TEMP_OUTPUT = NULL;
 			}
-
-			return ret;
 		}
 	}
 };
@@ -156,6 +164,10 @@ int _getswigclassmetatable(struct lua_State *L)
 		local ret = haka._getswigclassmetatable()[name]
 		assert(ret, string.format("unknown swig class '%s'", name))
 		return ret
+	end
+
+	function haka.abort()
+		error(nil)
 	end
 
 	function haka.pcall(func, ...)

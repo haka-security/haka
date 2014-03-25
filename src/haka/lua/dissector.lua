@@ -21,7 +21,7 @@ function haka.event(dname, name)
 	if not event then
 		error(string.format("unknown event '%s' on dissector '%s'", name, dname))
 	end
-	
+
 	return event
 end
 
@@ -32,9 +32,9 @@ function dissector.Dissector.__class_init(self, cls)
 	cls.options = {}
 end
 
-function dissector.Dissector.register_event(cls, name, continue)
+function dissector.Dissector.register_event(cls, name, continue, signal, options)
 	continue = continue or function (self) return self:continue() end
-	cls.events[name] = haka.events.Event:new(string.format('%s:%s', cls.name, name), continue)
+	cls.events[name] = haka.events.Event:new(string.format('%s:%s', cls.name, name), continue, signal, options)
 end
 
 function dissector.Dissector.inherit_events(cls)
@@ -56,30 +56,43 @@ dissector.Dissector.property.name = {
 }
 
 function dissector.Dissector:receive(pkt)
+	local npkt = self:new(pkt)
+	if not npkt then
+		return
+	end
+
+	local ret, err = xpcall(function () npkt:receive() end, debug.format_error)
+	if not ret then
+		if err then
+			haka.log.error(npkt.name, "%s", err)
+			return npkt:error()
+		end
+	end
+
+	return npkt
+end
+
+function dissector.Dissector.method:trigger(signal, ...)
+	haka.context:signal(self, classof(self).events[signal], ...)
+end
+
+function dissector.Dissector.method:drop()
 	error("not implemented")
+end
+
+function dissector.Dissector.method:error()
+	self:drop()
 end
 
 
 --
--- Packet base dissector
+-- Packet based dissector
 --
 
 dissector.PacketDissector = class('PacketDissector', dissector.Dissector)
 
 dissector.PacketDissector:register_event('receive_packet')
 dissector.PacketDissector:register_event('send_packet')
-
-function dissector.PacketDissector.method:trigger(signal, ...)
-	if not haka.pcall(haka.context.signal, haka.context, self, classof(self).events[signal], ...) then
-		return self:drop()
-	end
-
-	if not self:continue() then
-		return
-	end
-
-	return true
-end
 
 function dissector.PacketDissector.method:continue()
 	error("not implemented")
@@ -93,13 +106,16 @@ function dissector.PacketDissector.method:inject()
 	error("not implemented")
 end
 
+function dissector.PacketDissector.method:drop()
+	error("not implemented")
+end
+
 
 dissector.EncapsulatedPacketDissector = class('EncapsulatedPacketDissector', dissector.PacketDissector)
 
-function dissector.EncapsulatedPacketDissector:receive(parent)
-	local new = self:new(parent)
-	new:parse(parent)
-	return new:emit()
+function dissector.EncapsulatedPacketDissector.method:receive()
+	self:parse(self._parent)
+	return self:emit()
 end
 
 function dissector.EncapsulatedPacketDissector.method:__init(parent)
@@ -107,18 +123,29 @@ function dissector.EncapsulatedPacketDissector.method:__init(parent)
 	self._parent = parent
 end
 
-function dissector.EncapsulatedPacketDissector.method:parse(pkt, init)
-	self._payload = pkt.payload
-	self:parse_payload(pkt, self._payload, init)
+function dissector.EncapsulatedPacketDissector.method:parse(pkt)
+	self._select, self._payload = pkt.payload:sub(0, 'all'):select()
+	self:parse_payload(pkt, self._payload)
 end
 
-function dissector.EncapsulatedPacketDissector.method:parse_payload(pkt, payload, init)
+function dissector.EncapsulatedPacketDissector.method:parse_payload(pkt, payload)
+	error("not implemented")
+end
+
+function dissector.EncapsulatedPacketDissector.method:create(init, pkt)
+	self._select, self._payload = pkt.payload:sub(0, 'all'):select()
+	self:create_payload(pkt, self._payload, init)
+end
+
+function dissector.EncapsulatedPacketDissector.method:create_payload(pkt, payload, init)
 	error("not implemented")
 end
 
 function dissector.EncapsulatedPacketDissector.method:forge(pkt)
 	self:forge_payload(pkt, self._payload)
+	self._select:restore(self._payload)
 	self._payload = nil
+	self._select = nil
 end
 
 function dissector.EncapsulatedPacketDissector.method:forge_payload(pkt, payload)
@@ -138,22 +165,22 @@ function dissector.EncapsulatedPacketDissector.method:next_dissector()
 end
 
 function dissector.EncapsulatedPacketDissector.method:emit()
-	if self:trigger('receive_packet') then
-		local next_dissector = self:next_dissector()
-		if next_dissector then
-			return next_dissector:receive(self)
-		else
-			return self:send()
-		end
+	self:trigger('receive_packet')
+
+	local next_dissector = self:next_dissector()
+	if next_dissector then
+		return next_dissector:receive(self)
+	else
+		return self:send()
 	end
 end
 
 function dissector.EncapsulatedPacketDissector.method:send()
-	if self:trigger('send_packet') then
-		self:forge(self._parent)
-		self._parent:send()
-		self._parent = nil
-	end
+	self:trigger('send_packet')
+
+	self:forge(self._parent)
+	self._parent:send()
+	self._parent = nil
 end
 
 function dissector.EncapsulatedPacketDissector.method:inject()
@@ -164,12 +191,35 @@ end
 
 
 --
--- Flow base dissector
+-- Flow based dissector
 --
 
 dissector.FlowDissector = class('FlowDissector', dissector.Dissector)
 
-dissector.FlowDissector:register_event('receive_data')
+function dissector.FlowDissector.stream_wrapper(f, options, self, stream, ...)
+	local current = stream.current
+	if (not current or not current:check_available(1)) and
+	   not stream.isfinished then
+		return
+	end
+
+	if options and options.streamed then
+		local comanager = self:get_comanager(stream, ...)
+		if not comanager:has(f) then
+			local args = {...}
+			comanager:start(f, function (iter) return f(self, iter, unpack(args)) end)
+		end
+
+		comanager:process(f)
+	else
+		local sub = stream.current:sub('available')
+		if sub then
+			f(self, stream.current:sub('available'), ...)
+		end
+	end
+end
+
+dissector.FlowDissector:register_event('receive_data', nil, dissector.FlowDissector.stream_wrapper)
 dissector.FlowDissector:register_event('send_data')
 
 function dissector.FlowDissector.method:connections()
@@ -181,6 +231,18 @@ end
 
 function dissector.FlowDissector.method:continue()
 	error("not implemented")
+end
+
+function dissector.FlowDissector.method:get_comanager(stream)
+	if not self._costream then
+		self._costream = {}
+	end
+
+	if not self._costream[stream] then
+		self._costream[stream] = haka.vbuffer_stream_comanager:new(stream)
+	end
+
+	return self._costream[stream]
 end
 
 

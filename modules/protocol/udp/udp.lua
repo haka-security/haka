@@ -12,7 +12,7 @@ local function compute_checksum(pkt)
 	-- of ipv4 header
 
 	-- size of the udp pseudo-header
-	local pseudo_header = haka.vbuffer(12)
+	local pseudo_header = haka.vbuffer_allocate(12)
 	-- source and destination ipv4 adresses
 	pseudo_header:sub(0,4):setnumber(pkt.ip.src.packed)
 	pseudo_header:sub(4,4):setnumber(pkt.ip.dst.packed)
@@ -33,22 +33,29 @@ local udp_dissector = haka.dissector.new{
 	name = 'udp'
 }
 
-udp_dissector.grammar = haka.grammar.record{
+udp_dissector.grammar = haka.grammar:new("udp")
+
+udp_dissector.grammar.packet = haka.grammar.record{
 	haka.grammar.field('srcport',   haka.grammar.number(16)),
 	haka.grammar.field('dstport',   haka.grammar.number(16)),
-	haka.grammar.field('length',	haka.grammar.number(16))
+	haka.grammar.field('length',    haka.grammar.number(16))
 		:validate(function (self) self.len = 8 + #self.payload end),
-	haka.grammar.field('checksum',	haka.grammar.number(16))
+	haka.grammar.field('checksum',  haka.grammar.number(16))
 		:validate(function (self)
 			self.checksum = 0
 			self.checksum = compute_checksum(self)
 		end),
-	haka.grammar.field('payload',	haka.grammar.bytes())
+	haka.grammar.field('payload',   haka.grammar.bytes())
 }:compile()
 
-function udp_dissector.method:parse_payload(pkt, payload, init)
+function udp_dissector.method:parse_payload(pkt, payload)
 	self.ip = pkt
-	udp_dissector.grammar:parseall(payload, self, init)
+	udp_dissector.grammar.packet:parse(payload:pos("begin"), self)
+end
+
+function udp_dissector.method:create_payload(pkt, payload, init)
+	self.ip = pkt
+	udp_dissector.grammar.packet:create(payload:pos("begin"), self, init)
 end
 
 function udp_dissector.method:forge_payload(pkt, payload)
@@ -66,11 +73,11 @@ end
 function udp_dissector:create(pkt, init)
 	if not init then init = {} end
 	if not init.length then init.length = 8 end
-	pkt.payload:append(haka.vbuffer(init.length))
+	pkt.payload:pos(0):insert(haka.vbuffer_allocate(init.length))
 	pkt.proto = 17
 
 	local udp = udp_dissector:new(pkt)
-	udp:parse(pkt, init)
+	udp:create(init, pkt)
 	return udp
 end
 

@@ -10,16 +10,26 @@ if(VALGRIND_COMMAND AND NOT "$ENV{QUICK}" STREQUAL "yes")
 	set(DO_VALGRIND 1)
 endif()
 
-macro(VALGRIND name)
+macro(RUN_VALGRIND name reachable)
 	if (DO_VALGRIND)
 		execute_process(COMMAND ${VALGRIND_COMMAND} --leak-check=full --gen-suppressions=all
 			--suppressions=${CTEST_MODULE_DIR}/Valgrind.sup
 			--suppressions=${CTEST_MODULE_DIR}/Valgrind-check.sup
-			--show-reachable=yes --log-file=${name}-valgrind.txt ${ARGN})
+			--show-reachable=${reachable} --log-file=${name}-valgrind.txt ${ARGN})
 	else()
 		execute_process(COMMAND ${ARGN})
 	endif()
+endmacro(RUN_VALGRIND)
+
+macro(VALGRIND name)
+	RUN_VALGRIND(${name} no ${ARGN})
+	set(DO_VALGRIND_FULL 0)
 endmacro(VALGRIND)
+
+macro(VALGRIND_FULL name)
+	RUN_VALGRIND(${name} yes ${ARGN})
+	set(DO_VALGRIND_FULL 1)
+endmacro(VALGRIND_FULL)
 
 macro(CHECK_VALGRIND name)
 	if (DO_VALGRIND)
@@ -36,9 +46,17 @@ macro(CHECK_VALGRIND name)
 			message("${VALGRIND_ERRORS}")
 		endif()
 		message("Valgrind log is at ${CMAKE_CURRENT_SOURCE_DIR}/${name}-valgrind.txt")
-		if(VALGRIND_ERROR GREATER 0 OR VALGRIND_REACHABLE GREATER 0)
-			message(FATAL_ERROR "Memory error detected: ${VALGRIND_ERROR} error found, ${VALGRIND_REACHABLE} bytes still reachable memory found")
+
+		if (DO_VALGRIND_FULL)
+			if(VALGRIND_ERROR GREATER 0 OR VALGRIND_REACHABLE GREATER 0)
+				message(FATAL_ERROR "Memory error detected: ${VALGRIND_ERROR} error found, ${VALGRIND_REACHABLE} bytes still reachable memory found")
+			endif()
+		else()
+			if(VALGRIND_ERROR GREATER 0)
+				message(FATAL_ERROR "Memory error detected: ${VALGRIND_ERROR} error found")
+			endif()
 		endif()
+
 		message("No error detected")
 	endif()
 endmacro(CHECK_VALGRIND)

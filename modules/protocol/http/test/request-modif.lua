@@ -10,13 +10,21 @@ haka.rule {
 	hook = haka.event('http', 'request'),
 	eval = function (http, request)
 		print("HTTP REQUEST")
-		request:dump()
-
-		request.headers["User-Agent"] = "Haka"
+		haka.debug.pprint(request, nil, nil, { haka.debug.hide_underscore, haka.debug.hide_function })
+		-- We change a part of the request
+		request.version = "2.0"
+		-- We change an existing header
+		request.headers["Host"] = "haka.powered.tld"
+		-- We destroy one
+		request.headers["User-Agent"] = nil
+		-- We create a new one
 		request.headers["Haka"] = "Done"
+		-- We create a new one and we remove it
+		request.headers["Haka2"] = "Done"
+		request.headers["Haka2"] = nil
 
 		print("HTTP MODIFIED REQUEST")
-		request:dump()
+		haka.debug.pprint(request, nil, nil, { haka.debug.hide_underscore, haka.debug.hide_function })
 	end
 }
 
@@ -24,6 +32,6 @@ haka.rule {
 	hook = haka.event('http', 'response'),
 	eval = function (http, response)
 		print("HTTP RESPONSE")
-		response:dump()
+		haka.debug.pprint(response, nil, nil, { haka.debug.hide_underscore, haka.debug.hide_function })
 	end
 }
