@@ -23,7 +23,8 @@ end
 
 events.EventConnections = class('EventConnections')
 
-function events.EventConnections.method:_done()
+function events.EventConnections.method:_signal(event, listener, emitter, ...)
+	event.signal(listener.f, listener.options, emitter, ...)
 end
 
 function events.EventConnections.method:signal(emitter, event, ...)
@@ -32,12 +33,11 @@ function events.EventConnections.method:signal(emitter, event, ...)
 		haka.log.debug("event", "signal '%s', %d listeners", event.name, #listeners)
 
 		for _, listener in ipairs(listeners) do
-			event.signal(listener.f, listener.options, emitter, ...)
+			self:_signal(event, listener, emitter, ...)
 			event.continue(emitter)
 		end
 	end
 
-	self:_done()
 	return true
 end
 
@@ -73,14 +73,12 @@ function events.ObjectEventConnections.method:__init(object, connections)
 	self.connections = connections
 end
 
-function events.ObjectEventConnections.method:_done()
-	events.ObjectEventConnections.current = self.prev_object
+function events.ObjectEventConnections.method:_signal(event, listener, emitter, ...)
+	events.ObjectEventConnections.current = self.object
+	event.signal(listener.f, listener.options, emitter, ...)
 end
 
 function events.ObjectEventConnections.method:_get(event)
-	self.prev_object = events.ObjectEventConnections.current
-	events.ObjectEventConnections.current = self.object
-
 	return self.connections[event]
 end
 
