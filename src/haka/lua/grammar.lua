@@ -795,10 +795,11 @@ end
 
 grammar_dg.Token = class('DGToken', grammar_dg.Primitive)
 
-function grammar_dg.Token.method:__init(rule, id, pattern, re, name)
+function grammar_dg.Token.method:__init(rule, id, pattern, re, full_re, name)
 	super(grammar_dg.Token).__init(self, rule, id)
 	self.pattern = pattern
 	self.re = re
+	self.full_re = full_re
 	self.name = name
 end
 
@@ -839,11 +840,16 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 						return string
 					end,
 					function (this, newvalue)
+						string = newvalue
 						if self.converter then
 							newvalue = self.converter.set(newvalue)
 						end
+
+						if not self.full_re:match(newvalue) then
+							error(string.format("token value '%s' does not verify /%s/", newvalue, self.pattern))
+						end
+
 						sub:setstring(newvalue)
-						string = newvalue
 					end
 				)
 			end
@@ -856,7 +862,6 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 
 	-- No match found return an error
 	return ctx:error(begin:copy(), self, "token /%s/ doesn't match", self.pattern)
-
 end
 
 function grammar_dg.Token.method:_init(res, input, ctx, init)
@@ -1194,8 +1199,9 @@ end
 function grammar.Token.method:compile(rule, id)
 	if not self.re then
 		self.re = rem.re:compile("^(?:"..self.pattern..")")
+		self.full_re = rem.re:compile("^(?:"..self.pattern..")$")
 	end
-	local ret = grammar_dg.Token:new(rule, id, self.pattern, self.re, self.named)
+	local ret = grammar_dg.Token:new(rule, id, self.pattern, self.re, self.full_re, self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end
 	return ret
 end
