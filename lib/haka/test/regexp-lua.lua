@@ -197,6 +197,20 @@ function test_feed_should_set_sink_to_partial ()
         assert(partial, "Partial matching pattern expected to set sink to partial result don't")
 end
 
+function test_match_should_not_match_different_case_without_option ()
+        -- When
+        local ret = rem.re:match("camel case", "CaMeL CaSe")
+        -- Then
+        assert(not ret, "Matching insensitive pattern expected to match but failed")
+end
+
+function test_match_should_allow_case_insensitive ()
+        -- When
+        local ret = rem.re:match("camel case", "CaMeL CaSe", "i")
+        -- Then
+        assert(ret, "Matching insensitive pattern expected to match but failed")
+end
+
 test_match_should_not_fail()
 test_match_should_be_successful()
 test_match_should_be_successful_using_new_escaping_char()
@@ -218,3 +232,5 @@ test_feed_should_match_accross_two_string()
 test_feed_should_return_results()
 test_feed_should_return_nil_results_when_pattern_do_not_match()
 test_feed_should_set_sink_to_partial()
+test_match_should_allow_case_insensitive()
+test_match_should_not_match_different_case_without_option()

@@ -58,10 +58,10 @@ struct regexp_sink_pcre {
 static int  init(struct parameters *args);
 static void cleanup();
 
-static int                   match(const char *pattern, const char *buf, int len, struct regexp_result *result);
-static int                   vbmatch(const char *pattern, struct vbuffer_sub *vbuf, struct regexp_vbresult *result);
+static int                   match(const char *pattern, int options, const char *buf, int len, struct regexp_result *result);
+static int                   vbmatch(const char *pattern, int options, struct vbuffer_sub *vbuf, struct regexp_vbresult *result);
 
-static struct regexp        *compile(const char *pattern);
+static struct regexp        *compile(const char *pattern, int options);
 static void                  release_regexp(struct regexp *re);
 static int                   exec(struct regexp *re, const char *buf, int len, struct regexp_result *result);
 static int                   vbexec(struct regexp *re, struct vbuffer_sub *vbuf, struct regexp_vbresult *result);
@@ -110,7 +110,7 @@ static void cleanup()
 {
 }
 
-static int match(const char *pattern, const char *buf, int len, struct regexp_result *result)
+static int match(const char *pattern, int options, const char *buf, int len, struct regexp_result *result)
 {
 	int ret;
 	struct regexp *re;
@@ -118,7 +118,7 @@ static int match(const char *pattern, const char *buf, int len, struct regexp_re
 	assert(pattern);
 	assert(buf);
 
-	re = compile(pattern);
+	re = compile(pattern, options);
 	if (re == NULL) return REGEXP_ERROR;
 
 	ret = exec(re, buf, len, result);
@@ -128,7 +128,7 @@ static int match(const char *pattern, const char *buf, int len, struct regexp_re
 	return ret;
 }
 
-static int vbmatch(const char *pattern, struct vbuffer_sub *vbuf, struct regexp_vbresult *result)
+static int vbmatch(const char *pattern, int options, struct vbuffer_sub *vbuf, struct regexp_vbresult *result)
 {
 	int ret;
 	struct regexp *re;
@@ -136,7 +136,7 @@ static int vbmatch(const char *pattern, struct vbuffer_sub *vbuf, struct regexp_
 	assert(pattern);
 	assert(vbuf);
 
-	re = compile(pattern);
+	re = compile(pattern, options);
 	if (re == NULL) return REGEXP_ERROR;
 
 	ret = vbexec(re, vbuf, result);
@@ -146,9 +146,9 @@ static int vbmatch(const char *pattern, struct vbuffer_sub *vbuf, struct regexp_
 	return ret;
 }
 
-static struct regexp *compile(const char *pattern)
+static struct regexp *compile(const char *pattern, int options)
 {
-	int options = DEFAULT_COMPILE_OPTIONS;
+	int pcre_options = DEFAULT_COMPILE_OPTIONS;
 	const char *errorstr;
 	int erroffset;
 	struct regexp_pcre *re;
@@ -161,9 +161,11 @@ static struct regexp *compile(const char *pattern)
 		return NULL;
 	}
 
+	/* Convert options to PCRE options */
+	if (options & REGEXP_CASE_INSENSITIVE) pcre_options |= PCRE_CASELESS;
 
 	re->super.module = &HAKA_MODULE;
-	re->pcre = pcre_compile(pattern, options, &errorstr, &erroffset, NULL);
+	re->pcre = pcre_compile(pattern, pcre_options, &errorstr, &erroffset, NULL);
 	if (re->pcre == NULL) goto error;
 	re->super.ref_count = 1;
 	re->wscount_max = WSCOUNT_DEFAULT;

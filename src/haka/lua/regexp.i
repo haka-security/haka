@@ -26,6 +26,21 @@ static char *escape_chars(const char *STRING, size_t SIZE) {
 	str[SIZE] = '\0';
 	return str;
 }
+
+static int convert_options(const char *options) {
+	int i;
+	int re_options = 0;
+
+	for (i = 0; i < strlen(options); i++) {
+		switch(options[i]) {
+			case 'i':
+				re_options |= REGEXP_CASE_INSENSITIVE;
+				break;
+		}
+	}
+
+	return re_options;
+}
 %}
 
 struct regexp_result {
@@ -143,13 +158,14 @@ struct regexp {
 struct regexp_module {
 	%extend {
 		bool match(const char *pattern, const char *STRING, size_t SIZE,
+			   const char *options = "",
 		           struct regexp_result **OUTPUT) {
 			*OUTPUT = malloc(sizeof(struct regexp_vbresult));
 			if (!*OUTPUT)
 				error(L"memory error");
 
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			int ret = $self->match(esc_regexp, STRING, SIZE, *OUTPUT);
+			int ret = $self->match(esc_regexp, convert_options(options), STRING, SIZE, *OUTPUT);
 			free(esc_regexp);
 
 			if (ret != REGEXP_MATCH) {
@@ -167,7 +183,7 @@ struct regexp_module {
 				error(L"memory error");
 
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			int ret = $self->vbmatch(esc_regexp, vbuf, *OUTPUT);
+			int ret = $self->vbmatch(esc_regexp, 0, vbuf, *OUTPUT);
 			free(esc_regexp);
 
 			if (ret <= 0) {
@@ -180,7 +196,7 @@ struct regexp_module {
 
 		struct regexp *compile(const char *pattern) {
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			struct regexp *ret = $self->compile(esc_regexp);
+			struct regexp *ret = $self->compile(esc_regexp, 0);
 			free(esc_regexp);
 			return ret;
 		}

@@ -42,13 +42,15 @@ struct regexp_vbresult {
 	size_t size;
 };
 
+#define REGEXP_CASE_INSENSITIVE 1 << 0
+
 struct regexp_module {
 	struct module module;
 
-	int                    (*match)(const char *pattern, const char *buffer, int len, struct regexp_result *result);
-	int                    (*vbmatch)(const char *pattern, struct vbuffer_sub *vbuf, struct regexp_vbresult *result);
+	int                    (*match)(const char *pattern, int options, const char *buffer, int len, struct regexp_result *result);
+	int                    (*vbmatch)(const char *pattern, int options, struct vbuffer_sub *vbuf, struct regexp_vbresult *result);
 
-	struct regexp         *(*compile)(const char *pattern);
+	struct regexp         *(*compile)(const char *pattern, int options);
 	void                   (*release_regexp)(struct regexp *regexp);
 	int                    (*exec)(struct regexp *regexp, const char *buffer, int len, struct regexp_result *result);
 	int                    (*vbexec)(struct regexp *regexp, struct vbuffer_sub *vbuf, struct regexp_vbresult *result);
