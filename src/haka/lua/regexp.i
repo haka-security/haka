@@ -110,38 +110,43 @@ struct regexp_sink {
 };
 
 %newobject regexp::create_sink;
+%newobject regexp::match;
 struct regexp {
 	%extend {
-		bool match(const char *STRING, size_t SIZE,
-		           struct regexp_result **OUTPUT) {
-			*OUTPUT = malloc(sizeof(struct regexp_result));
-			if (!*OUTPUT)
-				error(L"memory error");
+		char *match(const char *STRING, size_t SIZE) {
+			struct regexp_result re_result;
+			char *result;
 
-			int ret = $self->module->exec($self, STRING, SIZE, *OUTPUT);
+			int ret = $self->module->exec($self, STRING, SIZE, &re_result);
 
-			if (ret != REGEXP_MATCH) {
-				free(*OUTPUT);
-				*OUTPUT = NULL;
-			}
+			if (ret != REGEXP_MATCH) return NULL;
 
-			return (ret == REGEXP_MATCH);
+			result = malloc(re_result.size+1);
+			if (!result) error(L"memory error");
+
+			strncpy(result, STRING+re_result.offset, re_result.size);
+			result[re_result.size] = '\0';
+
+			return result;
 		}
 
-		bool match(struct vbuffer_sub *vbuf,
-		           struct regexp_vbresult **OUTPUT) {
-			*OUTPUT = malloc(sizeof(struct regexp_vbresult));
-			if (!*OUTPUT)
-				error(L"memory error");
+		struct vbuffer_sub *match(struct vbuffer_sub *vbuf) {
+			struct regexp_vbresult re_result;
+			struct vbuffer_sub *result;
 
-			int ret = $self->module->vbexec($self, vbuf, *OUTPUT);
+			int ret = $self->module->vbexec($self, vbuf, &re_result);
 
-			if (ret != REGEXP_MATCH) {
-				free(*OUTPUT);
-				*OUTPUT = NULL;
+			if (ret != REGEXP_MATCH) return NULL;
+
+			result = malloc(sizeof(struct vbuffer_sub));
+			if (!result) error(L"memory error");
+
+			if (!vbuffer_sub_sub(vbuf, re_result.offset, re_result.size, result)) {
+				free(result);
+				return NULL;
 			}
 
-			return (ret == REGEXP_MATCH);
+			return result;
 		}
 
 		struct regexp_sink *create_sink() {
@@ -157,41 +162,43 @@ struct regexp {
 %newobject regexp_module::compile;
 struct regexp_module {
 	%extend {
-		bool match(const char *pattern, const char *STRING, size_t SIZE,
-			   const char *options = "",
-		           struct regexp_result **OUTPUT) {
-			*OUTPUT = malloc(sizeof(struct regexp_vbresult));
-			if (!*OUTPUT)
-				error(L"memory error");
-
+		char *match(const char *pattern, const char *STRING, size_t SIZE,
+			   const char *options = "") {
+			struct regexp_result re_result;
+			char *result;
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			int ret = $self->match(esc_regexp, convert_options(options), STRING, SIZE, *OUTPUT);
+			int ret = $self->match(esc_regexp, convert_options(options), STRING, SIZE, &re_result);
 			free(esc_regexp);
 
-			if (ret != REGEXP_MATCH) {
-				free(*OUTPUT);
-				*OUTPUT = NULL;
-			}
+			if (ret != REGEXP_MATCH) return NULL;
 
-			return (ret == REGEXP_MATCH);
+			result = malloc(re_result.size+1);
+			if (!result) error(L"memory error");
+
+			strncpy(result, STRING+re_result.offset, re_result.size);
+			result[re_result.size] = '\0';
+
+			return result;
 		}
 
-		bool match(const char *pattern, struct vbuffer_sub *vbuf,
-		           struct regexp_vbresult **OUTPUT) {
-			*OUTPUT = malloc(sizeof(struct regexp_vbresult));
-			if (!*OUTPUT)
-				error(L"memory error");
-
+		struct vbuffer_sub *match(const char *pattern, struct vbuffer_sub *vbuf) {
+			struct regexp_vbresult re_result;
+			struct vbuffer_sub *result;
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			int ret = $self->vbmatch(esc_regexp, 0, vbuf, *OUTPUT);
+			int ret = $self->vbmatch(esc_regexp, 0, vbuf, &re_result);
 			free(esc_regexp);
 
-			if (ret <= 0) {
-				free(*OUTPUT);
-				*OUTPUT = NULL;
+			if (ret != REGEXP_MATCH) return NULL;
+
+			result = malloc(sizeof(struct vbuffer_sub));
+			if (!result) error(L"memory error");
+
+			if (!vbuffer_sub_sub(vbuf, re_result.offset, re_result.size, result)) {
+				free(result);
+				return NULL;
 			}
 
-			return (ret == REGEXP_MATCH);
+			return result;
 		}
 
 		struct regexp *compile(const char *pattern) {

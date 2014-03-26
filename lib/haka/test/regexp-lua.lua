@@ -32,19 +32,16 @@ end
 function test_match_should_return_results ()
         -- Given nothing
         -- When
-        local ret, result = rem.re:match("bar", "foo bar foo")
+        local result = rem.re:match("bar", "foo bar foo")
         -- Then
-        assert(ret, "Matching pattern expected to match but failed")
-        assert(result.offset == 4, "Matching pattern expected to return offset = 4 but found offset = %d", result.offset)
-        assert(result.size == 3, "Matching pattern expected to return size = 3 but found size = %d", result.size)
+        assert(result, "Matching pattern expected to return non-empty result but got nil")
 end
 
 function test_match_should_return_nil_results_when_pattern_do_not_match ()
         -- Given nothing
         -- When
-        local ret, result = rem.re:match("bar", "foo")
+        local result = rem.re:match("bar", "foo")
         -- Then
-        assert(not ret, "Matching pattern expected to match but failed")
         assert(not result, "Matching pattern expected to return nil result but got result")
 end
 
@@ -114,21 +111,18 @@ function test_exec_should_return_results ()
         -- Given
         local re = rem.re:compile("bar")
         -- When
-        local ret, result = re:match("foo bar foo")
+        local result = re:match("foo bar foo")
         -- Then
-        assert(ret, "Matching pattern expected to match but failed")
-        assert(result.offset == 4, "Matching pattern expected to return offset = 4 but found offset = %d", result.offset)
-        assert(result.size == 3, "Matching pattern expected to return size = 3 but found size = %d", result.size)
+        assert(result == "bar", string.format("Matching pattern expected to return 'bar' but return '%s'", result))
 end
 
 function test_exec_should_return_nil_results_when_pattern_do_not_match ()
         -- Given
         local re = rem.re:compile("bar")
         -- When
-        local ret, result = re:match("foo")
+        local ret = re:match("foo")
         -- Then
-        assert(not ret, "Matching pattern expected to exec but failed")
-        assert(not result, "Matching pattern expected to return nil result but got result")
+        assert(not ret, "Matching pattern expected to return nil result but got result")
 end
 
 function test_create_sink_should_be_successful ()
