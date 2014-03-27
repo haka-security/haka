@@ -320,25 +320,3 @@ struct vbuffer *vbuffer_stream_data(struct vbuffer_stream *stream)
 {
 	return &stream->data;
 }
-
-void vbuffer_stream_current(struct vbuffer_stream *stream, struct vbuffer_iterator *position)
-{
-	list2_iter iter, end = list2_end(&stream->chunks);
-	struct vbuffer_stream_chunk *current;
-
-	if (list2_empty(&stream->read_chunks)) {
-		vbuffer_begin(&stream->data, position);
-	} else {
-		current = list2_last(&stream->read_chunks, struct vbuffer_stream_chunk, list);
-		vbuffer_iterator_copy(&current->ctl_iter, position);
-	}
-
-	iter = list2_prev(end);
-	if (iter == end) return;
-
-	iter = list2_prev(iter);
-	if (iter == end) return;
-
-	current = list2_get(iter, struct vbuffer_stream_chunk, list);
-	vbuffer_iterator_copy(&current->ctl_iter, position);
-}

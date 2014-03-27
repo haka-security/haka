@@ -202,6 +202,9 @@ function dissector.FlowDissector.stream_wrapper(f, options, self, stream, curren
 		return
 	end
 
+	local cur
+	if current then cur = current:copy() end
+
 	if options and options.streamed then
 		local comanager = self:get_comanager(stream, ...)
 		if not comanager:has(f) then
@@ -209,11 +212,13 @@ function dissector.FlowDissector.stream_wrapper(f, options, self, stream, curren
 			comanager:start(f, function (iter) return f(self, iter, unpack(args)) end)
 		end
 
-		comanager:process(f)
+		comanager:process(f, cur)
 	else
-		local sub = stream.current:sub('available')
-		if sub then
-			f(self, stream.current:sub('available'), ...)
+		if cur then
+			local sub = cur:sub('available')
+			if sub then
+				f(self, sub, ...)
+			end
 		end
 	end
 end

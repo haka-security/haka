@@ -762,7 +762,6 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer);
 
 %newobject vbuffer_stream::_push;
 %newobject vbuffer_stream::_pop;
-%newobject vbuffer_stream::current;
 
 struct vbuffer_stream {
 	%extend {
@@ -828,17 +827,6 @@ struct vbuffer_stream {
 
 		%immutable;
 		struct vbuffer *data { return vbuffer_stream_data($self); }
-		struct vbuffer_iterator_lua *current {
-			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
-			if (!iter) {
-				error(L"memory error");
-				return NULL;
-			}
-			vbuffer_stream_current($self, &iter->super);
-			vbuffer_iterator_register(&iter->super);
-			iter->meter = 0;
-			return iter;
-		}
 		bool isfinished { return vbuffer_stream_isfinished($self); }
 	}
 };
@@ -846,7 +834,6 @@ struct vbuffer_stream {
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 
 
-%newobject vbuffer_sub_stream::current;
 %newobject vbuffer_sub_stream::_push;
 %newobject vbuffer_sub_stream::_pop;
 
@@ -920,17 +907,6 @@ struct vbuffer_sub_stream {
 
 		%immutable;
 		struct vbuffer *data { return vbuffer_stream_data(&$self->stream); }
-		struct vbuffer_iterator_lua *current {
-			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
-			if (!iter) {
-				error(L"memory error");
-				return NULL;
-			}
-			vbuffer_stream_current(&$self->stream, &iter->super);
-			vbuffer_iterator_register(&iter->super);
-			iter->meter = 0;
-			return iter;
-		}
 		bool isfinished { return vbuffer_stream_isfinished(&$self->stream); }
 	}
 };
@@ -964,8 +940,8 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 		return self._co[id] ~= nil
 	end
 
-	local function process_one(self, id, co)
-		coroutine.resume(co, self._stream.current)
+	local function process_one(self, id, co, current)
+		coroutine.resume(co, current or self._stream.data:pos('end'))
 		if self._error then
 			error(self._error)
 		end
@@ -975,16 +951,16 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 		end
 	end
 
-	function haka.vbuffer_stream_comanager.method:process(id)
+	function haka.vbuffer_stream_comanager.method:process(id, current)
 		assert(self._co[id] ~= nil)
 		if self._co[id] then
-			return process_one(self, id, self._co[id])
+			return process_one(self, id, self._co[id], current)
 		end
 	end
 
-	function haka.vbuffer_stream_comanager.method:process_all()
+	function haka.vbuffer_stream_comanager.method:process_all(current)
 		for id,co in pairs(self._co) do
-			process_one(self, id, co)
+			process_one(self, id, co, current)
 		end
 	end
 }

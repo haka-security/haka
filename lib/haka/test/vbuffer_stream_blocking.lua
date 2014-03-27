@@ -8,12 +8,12 @@ local function gen_stream(f)
 	manager:start(0, f)
 
 	for i=10,1,-1 do
-		stream:push(haka.vbuffer_from("Haka"))
+		local current = stream:push(haka.vbuffer_from("Haka"))
 		if i == 1 then
 			stream:finish()
 		end
 
-		manager:process_all()
+		manager:process_all(current)
 	end
 end
 
