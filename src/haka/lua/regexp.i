@@ -26,21 +26,6 @@ static char *escape_chars(const char *STRING, size_t SIZE) {
 	str[SIZE] = '\0';
 	return str;
 }
-
-static int convert_options(const char *options) {
-	int i;
-	int re_options = 0;
-
-	for (i = 0; i < strlen(options); i++) {
-		switch(options[i]) {
-			case 'i':
-				re_options |= REGEXP_CASE_INSENSITIVE;
-				break;
-		}
-	}
-
-	return re_options;
-}
 %}
 
 struct regexp_result {
@@ -161,13 +146,14 @@ struct regexp {
 
 %newobject regexp_module::compile;
 struct regexp_module {
+
 	%extend {
 		char *match(const char *pattern, const char *STRING, size_t SIZE,
-			   const char *options = "") {
+			   int options = 0) {
 			struct regexp_result re_result;
 			char *result;
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			int ret = $self->match(esc_regexp, convert_options(options), STRING, SIZE, &re_result);
+			int ret = $self->match(esc_regexp, options, STRING, SIZE, &re_result);
 			free(esc_regexp);
 
 			if (ret != REGEXP_MATCH) return NULL;
@@ -201,11 +187,14 @@ struct regexp_module {
 			return result;
 		}
 
-		struct regexp *compile(const char *pattern) {
+		struct regexp *compile(const char *pattern, int options = 0) {
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			struct regexp *ret = $self->compile(esc_regexp, 0);
+			struct regexp *ret = $self->compile(esc_regexp, options);
 			free(esc_regexp);
 			return ret;
 		}
+
+		%immutable;
+		int CASE_INSENSITIVE { return REGEXP_CASE_INSENSITIVE; }
 	}
 };

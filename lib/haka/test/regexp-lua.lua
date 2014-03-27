@@ -200,7 +200,7 @@ end
 
 function test_match_should_allow_case_insensitive ()
         -- When
-        local ret = rem.re:match("camel case", "CaMeL CaSe", "i")
+        local ret = rem.re:match("camel case", "CaMeL CaSe", rem.re.CASE_INSENSITIVE)
         -- Then
         assert(ret, "Matching insensitive pattern expected to match but failed")
 end
