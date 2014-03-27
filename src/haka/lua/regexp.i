@@ -98,7 +98,7 @@ struct regexp_sink {
 %newobject regexp::match;
 struct regexp {
 	%extend {
-		char *match(const char *STRING, size_t SIZE) {
+		char *_match(const char *STRING, size_t SIZE) {
 			struct regexp_result re_result;
 			char *result;
 
@@ -115,7 +115,7 @@ struct regexp {
 			return result;
 		}
 
-		struct vbuffer_sub *match(struct vbuffer_sub *vbuf) {
+		struct vbuffer_sub *_match(struct vbuffer_sub *vbuf) {
 			struct regexp_vbresult re_result;
 			struct vbuffer_sub *result;
 
@@ -198,3 +198,27 @@ struct regexp_module {
 		int CASE_INSENSITIVE { return REGEXP_CASE_INSENSITIVE; }
 	}
 };
+
+%luacode {
+	swig.getclassmetatable('regexp')['.fn'].match = function (self, input)
+		meta = getmetatable(input)
+		if swig.getclassmetatable('vbuffer_iterator') ~= meta and
+			swig.getclassmetatable('vbuffer_iterator_blocking') ~= meta then
+			return self:_match(input)
+		end
+
+		local sink = self:create_sink()
+		local begin = input:copy()
+		while true do
+			local sub = input:sub('available')
+			if not sub then
+				return nil
+			end
+			local match, pos = sink:feed(sub)
+			if match then
+				begin:advance(pos.offset)
+				return begin:sub(pos.size)
+			end
+		end
+	end
+}

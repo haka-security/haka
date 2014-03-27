@@ -205,6 +205,19 @@ function test_match_should_allow_case_insensitive ()
         assert(ret, "Matching insensitive pattern expected to match but failed")
 end
 
+function test_match_can_work_on_iterator ()
+	-- Given
+	local re = rem.re:compile("foo")
+	local vbuf = haka.vbuffer_from("bar fo")
+	vbuf:append(haka.vbuffer_from("o bar"))
+	local iter = vbuf:pos("begin")
+	-- When
+	local ret = re:match(iter)
+	-- Then
+	assert(ret, "Matching on iterator expected to be successful but failed")
+	assert(ret:asstring() == 'foo', string.format("Matching on iterator expected return 'foo' but got '%s'", ret:asstring()))
+end
+
 test_match_should_not_fail()
 test_match_should_be_successful()
 test_match_should_be_successful_using_new_escaping_char()
@@ -228,3 +241,4 @@ test_feed_should_return_nil_results_when_pattern_do_not_match()
 test_feed_should_set_sink_to_partial()
 test_match_should_allow_case_insensitive()
 test_match_should_not_match_different_case_without_option()
+test_match_can_work_on_iterator()
