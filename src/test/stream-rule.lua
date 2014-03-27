@@ -13,10 +13,7 @@ haka.rule {
 		local sub
 		local data = {}
 
-		while true do
-			sub = iter:sub('available')
-			if not sub then break end
-
+		for sub in iter:foreach_available() do
 			haka.log("test", "connection=%s:%d->%s:%d, dir %s, data received len=%d ",
 				flow.connection.srcip, flow.connection.srcport,
 				flow.connection.dstip, flow.connection.dstport,

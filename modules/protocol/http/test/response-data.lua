@@ -11,10 +11,7 @@ haka.rule {
 	streamed = true,
 	eval = function (http, iter)
 		print("== RESPONSE DATA ==")
-		while true do
-			local sub = iter:sub('available')
-			if not sub then break end
-
+		for sub in iter:foreach_available() do
 			print(safe_string(sub:asstring()))
 		end
 	end

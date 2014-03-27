@@ -59,10 +59,7 @@ local function test_stream_blocking_available()
 	local loop = 0
 
 	gen_stream(function (iter)
-		while true do
-			local sub = iter:sub('available')
-			if not sub then break end
-
+		for sub in iter:foreach_available() do
 			assert(sub:asstring() == "Haka")
 			loop = loop+1
 		end

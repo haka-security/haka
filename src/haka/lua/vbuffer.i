@@ -196,6 +196,16 @@ struct vbuffer_iterator_lua {
 	}
 };
 
+
+%luacode {
+	swig.getclassmetatable('vbuffer_iterator')['.fn'].foreach_available = function (self)
+		return function (iter, i)
+			if i == 0 then return iter:sub('available'), 1
+			else return nil end
+		end, self, 0
+	end
+}
+
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_iterator_lua);
 
 
@@ -255,6 +265,12 @@ struct vbuffer_iterator_blocking {
 %}
 
 %luacode {
+	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].foreach_available = function (self)
+		return function (iter, i)
+			return iter:sub('available')
+		end, self, 0
+	end
+
 	swig.getclassmetatable('vbuffer_iterator_blocking')['.fn'].check_available = function (self, size, nonblocking)
 		local ret, avail = self._iter:check_available(size)
 		if ret or nonblocking then return ret, avail end
