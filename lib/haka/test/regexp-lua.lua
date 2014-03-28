@@ -215,6 +215,31 @@ function test_match_can_work_on_iterator ()
 	local ret = re:match(iter)
 	-- Then
 	assert(ret, "Matching on iterator expected to be successful but failed")
+end
+
+function test_match_on_iterator_should_return_a_subbuffer ()
+	-- Given
+	local re = rem.re:compile("foo")
+	local vbuf = haka.vbuffer_from("bar fo")
+	vbuf:append(haka.vbuffer_from("o bar"))
+	local iter = vbuf:pos("begin")
+	-- When
+	local ret = re:match(iter, true)
+	-- Then
+	assert(ret:asstring() == 'foo', string.format("Matching on iterator expected return 'foo' but got '%s'", ret:asstring()))
+end
+
+function test_can_match_twice_with_same_iterator ()
+	-- Given
+	local re = rem.re:compile("foo")
+	local vbuf = haka.vbuffer_from("bar fo")
+	vbuf:append(haka.vbuffer_from("o foo"))
+	local iter = vbuf:pos("begin")
+	local ret = re:match(iter, true)
+	-- When
+	local ret = re:match(iter, true)
+	-- Then
+	assert(ret, "Matching on iterator expected to be successful but failed")
 	assert(ret:asstring() == 'foo', string.format("Matching on iterator expected return 'foo' but got '%s'", ret:asstring()))
 end
 
@@ -242,3 +267,5 @@ test_feed_should_set_sink_to_partial()
 test_match_should_allow_case_insensitive()
 test_match_should_not_match_different_case_without_option()
 test_match_can_work_on_iterator()
+test_match_on_iterator_should_return_a_subbuffer()
+test_can_match_twice_with_same_iterator()

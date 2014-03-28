@@ -146,7 +146,6 @@ struct regexp {
 
 %newobject regexp_module::compile;
 struct regexp_module {
-
 	%extend {
 		char *match(const char *pattern, const char *STRING, size_t SIZE,
 			   int options = 0) {
@@ -200,7 +199,7 @@ struct regexp_module {
 };
 
 %luacode {
-	swig.getclassmetatable('regexp')['.fn'].match = function (self, input)
+	swig.getclassmetatable('regexp')['.fn'].match = function (self, input, createsub)
 		meta = getmetatable(input)
 		if swig.getclassmetatable('vbuffer_iterator') ~= meta and
 			swig.getclassmetatable('vbuffer_iterator_blocking') ~= meta then
@@ -208,16 +207,33 @@ struct regexp_module {
 		end
 
 		local sink = self:create_sink()
-		local begin = input:copy()
+		local begin = nil
 		while true do
 			local sub = input:sub('available')
 			if not sub then
-				return nil
+				if createsub then
+					return nil
+				else
+					return false
+				end
 			end
+
 			local match, pos = sink:feed(sub)
+			if createsub and sink:ispartial() then
+				begin = input:copy()
+			end
+
 			if match then
-				begin:advance(pos.offset)
-				return begin:sub(pos.size)
+				if createsub then
+					if not begin then
+						begin = sub:pos('begin')
+					end
+					input:move_to(begin)
+					input:advance(pos.offset)
+					return input:sub(pos.size)
+				else
+					return true
+				end
 			end
 		end
 	end
