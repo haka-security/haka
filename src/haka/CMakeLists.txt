@@ -40,7 +40,6 @@ add_library(haka-common STATIC
 
 LUA_DEPENDS(haka-common)
 target_link_libraries(haka-common libhaka)
-target_link_libraries(haka-common libluadebug)
 
 # Build haka program
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)

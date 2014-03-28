@@ -13,7 +13,7 @@
 #include <haka/log.h>
 #include <haka/types.h>
 
-#include <luadebug/user.h>
+#include <haka/luadebug/user.h>
 
 #define MODULE    L"remote"
 

@@ -8,7 +8,7 @@
 #include <haka/colors.h>
 #include <haka/log.h>
 #include <haka/error.h>
-#include <luadebug/user.h>
+#include <haka/luadebug/user.h>
 
 #include "commands.h"
 #include "ctl_comm.h"

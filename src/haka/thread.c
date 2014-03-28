@@ -20,7 +20,7 @@
 #include <haka/timer.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
-#include <luadebug/debugger.h>
+#include <haka/luadebug/debugger.h>
 
 #include "thread.h"
 #include "app.h"

@@ -14,7 +14,7 @@
 #include <haka/thread.h>
 #include <haka/error.h>
 #include <haka/alert.h>
-#include <luadebug/debugger.h>
+#include <haka/luadebug/debugger.h>
 
 #include "app.h"
 

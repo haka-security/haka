@@ -8,7 +8,7 @@
 #include <haka/compiler.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
-#include <luadebug/user.h>
+#include <haka/luadebug/user.h>
 
 #include <lua.h>
 #include <lualib.h>

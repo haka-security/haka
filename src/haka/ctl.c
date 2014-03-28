@@ -16,9 +16,9 @@
 #include <haka/stat.h>
 #include <haka/alert.h>
 #include <haka/container/list.h>
-#include <luadebug/user.h>
-#include <luadebug/debugger.h>
-#include <luadebug/interactive.h>
+#include <haka/luadebug/user.h>
+#include <haka/luadebug/debugger.h>
+#include <haka/luadebug/interactive.h>
 
 #include "ctl.h"
 #include "app.h"

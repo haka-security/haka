@@ -19,7 +19,7 @@
 #include <haka/error.h>
 #include <haka/lua/lua.h>
 #include <haka/container/vector.h>
-#include <luadebug/debugger.h>
+#include <haka/luadebug/debugger.h>
 
 
 #define STATE_TABLE      "__haka_state"

@@ -17,8 +17,8 @@
 #include <assert.h>
 #include <string.h>
 
-#include <luadebug/user.h>
-#include <luadebug/interactive.h>
+#include <haka/luadebug/user.h>
+#include <haka/luadebug/interactive.h>
 #include "complete.h"
 #include "utils.h"
 

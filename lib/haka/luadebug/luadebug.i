@@ -5,9 +5,9 @@
 %module luadebug
 
 %{
-	#include <luadebug/debugger.h>
-	#include "debugger.h"
-	#include <luadebug/interactive.h>
+	#include <haka/luadebug/debugger.h>
+	#include <haka/luadebug/interactive.h>
+	#include "luadebug/debugger.h"
 
 	#define lua_luadebug_interactive_enter(single, multi, msg) luadebug_interactive_enter(L, single, multi, msg)
 

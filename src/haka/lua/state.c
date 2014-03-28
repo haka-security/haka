@@ -11,7 +11,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <haka/lua/object.h>
-#include <luadebug/lua.h>
+#include <haka/luadebug/lua.h>
 #include "app.h"
 #include "lua/state.h"
 

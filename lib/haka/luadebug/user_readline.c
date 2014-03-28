@@ -9,7 +9,7 @@
 
 #include <haka/error.h>
 
-#include <luadebug/user.h>
+#include <haka/luadebug/user.h>
 
 
 static bool readline_initialized = false;

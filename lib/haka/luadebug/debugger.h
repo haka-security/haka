@@ -6,7 +6,7 @@
 #define _DEBUGGER_H
 
 #include <haka/types.h>
-#include <luadebug/user.h>
+#include <haka/luadebug/user.h>
 
 #include "complete.h"
 

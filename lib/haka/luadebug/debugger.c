@@ -21,8 +21,8 @@
 #include <luajit.h>
 #endif
 
-#include <luadebug/debugger.h>
-#include <luadebug/user.h>
+#include <haka/luadebug/debugger.h>
+#include <haka/luadebug/user.h>
 #include "complete.h"
 #include "debugger.h"
 #include "utils.h"
