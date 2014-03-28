@@ -3,5 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include("iniparser.cmake")
-include("uthash.cmake")
+include("uthash/uthash.cmake")
 include("luaunit.cmake")

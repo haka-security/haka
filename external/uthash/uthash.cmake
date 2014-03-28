@@ -2,4 +2,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-set(UTHASH_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/uthash" PARENT_SCOPE)
+set(UTHASH_INCLUDE "${CMAKE_SOURCE_DIR}/external/uthash/src" PARENT_SCOPE)
