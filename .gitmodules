@@ -4,12 +4,12 @@
 [submodule "external/sphinx-lua"]
 	path = external/sphinx-lua
 	url = git://github.com/redjack/sphinx-lua
-[submodule "external/iniparser"]
-	path = external/iniparser
-	url = git://github.com/ndevilla/iniparser.git
 [submodule "external/lua"]
 	path = external/lua
 	url = git://github.com/haka-security/lua.git
 [submodule "external/luaunit"]
 	path = external/luaunit
 	url = git://github.com/bluebird75/luaunit.git
+[submodule "external/iniparser/src"]
+	path = external/iniparser/src
+	url = git://github.com/ndevilla/iniparser.git
