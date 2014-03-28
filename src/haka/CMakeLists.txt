@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include_directories(.)
-include_directories(../common)
+include_directories(../hakactl)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # SWIG lua bindings for the lib haka
@@ -49,7 +49,7 @@ add_executable(haka
 	ctl.c)
 
 target_link_libraries(haka haka-common)
-target_link_libraries(haka haka-common-ctl)
+target_link_libraries(haka libhakactl)
 target_link_libraries(haka ${CMAKE_THREAD_LIBS_INIT})
 LUA_LINK(haka)
 
