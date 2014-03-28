@@ -71,3 +71,4 @@ LUA_LINK(hakapcap)
 install(TARGETS hakapcap RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
 
 add_subdirectory(init)
+add_subdirectory(test)

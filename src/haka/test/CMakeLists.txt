@@ -4,7 +4,6 @@
 
 # Tests
 include(TestPcap)
-include(TestUnitLua)
 
 TEST_PCAP(core rule-error)
 TEST_PCAP(core onexit)
@@ -14,7 +13,6 @@ TEST_PCAP(core payload)
 TEST_PCAP(core alert)
 TEST_PCAP(core stream-rule)
 TEST_PCAP(core help OPTIONS --help)
-TEST_UNIT_LUA(MODULE core NAME doc-regexp FILES ../../doc/ref/regexp.lua)
 TEST_PCAP(core token-grammar)
 TEST_PCAP(core token-grammar-coroutine)
 TEST_PCAP(core grammar-array-setter)

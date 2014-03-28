@@ -11,4 +11,3 @@ set(HAKA_CTL_SOCKET_FILE "${CMAKE_INSTALL_PREFIX}/var/run/haka-ctl.sock")
 
 add_subdirectory(haka)
 add_subdirectory(hakactl)
-add_subdirectory(test)
