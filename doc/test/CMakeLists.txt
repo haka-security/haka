@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-install(DIRECTORY filter gettingstarted hellopacket ruleset sqli stats DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/sample)
+# Tests
+include(TestPcap)
 
-add_subdirectory(test)
+TEST_PCAP(doc doc-alert CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/../ref/alert-test.lua)

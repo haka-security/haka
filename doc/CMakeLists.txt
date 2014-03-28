@@ -14,3 +14,5 @@ if(SPHINX_FOUND)
 	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka/manual)
 
 endif(SPHINX_FOUND)
+
+add_subdirectory(test)
