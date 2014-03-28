@@ -4,6 +4,7 @@
 
 set(INSTALL_DIR ${HAKA_INSTALL_PREFIX})
 set(INSTALL_FULLDIR ${CMAKE_HAKA_INSTALL_PREFIX})
+set(LUAJIT_DIR "external/luajit/src")
 
 set(LUAJIT_CFLAGS -DLUAJIT_ENABLE_LUA52COMPAT)
 set(LUAJIT_CCDEBUG "")
@@ -30,41 +31,41 @@ else()
 	set(LUAJIT_CFLAGS ${LUAJIT_CFLAGS} -O2)
 endif()
 
-execute_process(COMMAND mkdir -p ${CMAKE_BINARY_DIR}/external/luajit)
+execute_process(COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${LUAJIT_DIR})
 execute_process(COMMAND echo CFLAGS="${LUAJIT_CFLAGS}" CCDEBUG="${LUAJIT_CCDEBUG}"
-	PREFIX=${INSTALL_FULLDIR} OUTPUT_FILE ${CMAKE_BINARY_DIR}/external/luajit/cmake.tmp)
-execute_process(COMMAND cmp ${CMAKE_BINARY_DIR}/external/luajit/cmake.tmp ${CMAKE_BINARY_DIR}/external/luajit/cmake.build
+	PREFIX=${INSTALL_FULLDIR} OUTPUT_FILE ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.tmp)
+execute_process(COMMAND cmp ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.tmp ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.build
 	RESULT_VARIABLE FILE_IS_SAME OUTPUT_QUIET ERROR_QUIET)
 if(FILE_IS_SAME)
-	execute_process(COMMAND cp ${CMAKE_BINARY_DIR}/external/luajit/cmake.tmp ${CMAKE_BINARY_DIR}/external/luajit/cmake.opt)
+	execute_process(COMMAND cp ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.tmp ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.opt)
 endif(FILE_IS_SAME)
 
 add_custom_target(luajit-sync
-	COMMAND rsync -rt ${CMAKE_SOURCE_DIR}/external/luajit ${CMAKE_BINARY_DIR}/external
+	COMMAND rsync -rt ${CMAKE_SOURCE_DIR}/${LUAJIT_DIR} ${CMAKE_BINARY_DIR}/external/luajit
 )
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/external/luajit/cmake.build
-	COMMAND make -C ${CMAKE_BINARY_DIR}/external/luajit PREFIX=${INSTALL_FULLDIR} clean
-	COMMAND cp ${CMAKE_BINARY_DIR}/external/luajit/cmake.opt ${CMAKE_BINARY_DIR}/external/luajit/cmake.build
-	MAIN_DEPENDENCY ${CMAKE_BINARY_DIR}/external/luajit/cmake.opt
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.build
+	COMMAND make -C ${CMAKE_BINARY_DIR}/${LUAJIT_DIR} PREFIX=${INSTALL_FULLDIR} clean
+	COMMAND cp ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.opt ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.build
+	MAIN_DEPENDENCY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.opt
 	DEPENDS luajit-sync
 )
 
 add_custom_target(luajit
-	COMMAND make -C ${CMAKE_BINARY_DIR}/external/luajit PREFIX=${INSTALL_FULLDIR} BUILDMODE=dynamic
+	COMMAND make -C ${CMAKE_BINARY_DIR}/${LUAJIT_DIR} PREFIX=${INSTALL_FULLDIR} BUILDMODE=dynamic
 		CFLAGS="${LUAJIT_CFLAGS}" CCDEBUG="${LUAJIT_CCDEBUG}"
-	COMMAND make -C ${CMAKE_BINARY_DIR}/external/luajit LDCONFIG='/sbin/ldconfig -n' PREFIX=${INSTALL_FULLDIR}
+	COMMAND make -C ${CMAKE_BINARY_DIR}/${LUAJIT_DIR} LDCONFIG='/sbin/ldconfig -n' PREFIX=${INSTALL_FULLDIR}
 		BUILDMODE=dynamic CFLAGS="${LUAJIT_CFLAGS}" CCDEBUG="${LUAJIT_CCDEBUG}"
-		INSTALL_X='install -m 0755 -p' INSTALL_F='install -m 0644 -p' DESTDIR=${CMAKE_BINARY_DIR}/external/luajit install
-	DEPENDS luajit-sync ${CMAKE_BINARY_DIR}/external/luajit/cmake.build
+		INSTALL_X='install -m 0755 -p' INSTALL_F='install -m 0644 -p' DESTDIR=${CMAKE_BINARY_DIR}/${LUAJIT_DIR} install
+	DEPENDS luajit-sync ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.build
 )
 
-set(LUA_DIR ${CMAKE_BINARY_DIR}/external/luajit/${INSTALL_FULLDIR})
-set(LUA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/external/luajit/${INSTALL_FULLDIR}/include/luajit-2.0)
-set(LUA_LIBRARY_DIR ${CMAKE_BINARY_DIR}/external/luajit/${INSTALL_FULLDIR}/lib/)
-set(LUA_LIBRARIES ${CMAKE_BINARY_DIR}/external/luajit/${INSTALL_FULLDIR}/lib/libluajit-5.1.so)
+set(LUA_DIR ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR})
+set(LUA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/include/luajit-2.0)
+set(LUA_LIBRARY_DIR ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/lib/)
+set(LUA_LIBRARIES ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/lib/libluajit-5.1.so)
 
-set(LUA_COMPILER ${CMAKE_SOURCE_DIR}/external/luajitc -p "${CMAKE_BINARY_DIR}/external/luajit/${INSTALL_FULLDIR}/")
+set(LUA_COMPILER ${CMAKE_SOURCE_DIR}/external/luajit/luajitc -p "${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/")
 set(LUA_FLAGS_NONE "-g")
 set(LUA_FLAGS_DEBUG "-g")
 set(LUA_FLAGS_MEMCHECK "-g")
@@ -72,8 +73,8 @@ set(LUA_FLAGS_RELEASE "-s")
 set(LUA_FLAGS_RELWITHDEBINFO "-g")
 set(LUA_FLAGS_MINSIZEREL "-s")
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/external/luajit/${INSTALL_FULLDIR}/lib DESTINATION ${INSTALL_DIR})
-install(DIRECTORY ${CMAKE_BINARY_DIR}/external/luajit/${INSTALL_FULLDIR}/share DESTINATION ${INSTALL_DIR})
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/lib DESTINATION ${INSTALL_DIR})
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/share DESTINATION ${INSTALL_DIR})
 
 set(HAKA_LUAJIT 1)
 set(HAKA_LUA51 1)

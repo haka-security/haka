@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if(LUA STREQUAL "luajit")
-	include(external/luajit.cmake)
+	include(external/luajit/luajit.cmake)
 elseif(LUA STREQUAL "lua")
 	include(external/lua/lua.cmake)
 else()
