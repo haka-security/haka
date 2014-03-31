@@ -815,7 +815,7 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 
 		if not begin then
 			begin = iter:copy()
-			begin:mark(haka.packet.mode() == haka.packet.PASSTHROUGH)
+			begin:mark(haka.packet_mode() == 'passthrough')
 		end
 
 		local sub = iter:sub('available')
@@ -1307,7 +1307,8 @@ end
 
 function grammar.retain(readonly)
 	if readonly == nil then
-		readonly = haka.packet.mode() == haka.packet.PASSTHROUGH
+		print(haka.packet_mode())
+		readonly = haka.packet_mode() == 'passthrough'
 	end
 
 	return grammar.Retain:new(readonly)

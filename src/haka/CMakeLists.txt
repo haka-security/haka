@@ -6,26 +6,9 @@ include_directories(.)
 include_directories(../hakactl)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-# SWIG lua bindings for the lib haka
-swig_process(hakalua lua
-	lua/haka.i
-	lua/log.i
-	lua/alert.i
-	lua/packet.i
-	lua/state_machine.i
-)
-
 lua_compile(NAME haka-lua FILES
 	lua/rule.lua
 	lua/rule_group.lua
-	lua/color.lua
-	lua/class.lua
-	lua/events.lua
-	lua/context.lua
-	lua/state_machine.lua
-	lua/grammar.lua
-	lua/utils.lua
-	lua/dissector.lua
 )
 lua_compile(NAME haka-lua FILES lua/interactive.lua FLAGS ${LUA_FLAGS_DEBUG})
 lua_install(TARGET haka-lua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/core)
@@ -34,7 +17,6 @@ lua_install(TARGET haka-lua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/core)
 add_library(haka-common STATIC
 	app.c
 	thread.c
-	lua/state.c
 	${SWIG_hakalua_FILES}
 )
 

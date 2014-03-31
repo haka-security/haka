@@ -20,10 +20,12 @@ typedef void (*lua_hook)(struct lua_State *L, struct lua_Debug *ar);
 
 struct lua_state *lua_state_init();
 void lua_state_close(struct lua_state *state);
+bool lua_state_require(struct lua_state *state, const char *module);
 bool lua_state_isvalid(struct lua_state *state);
 bool lua_state_interrupt(struct lua_state *state, lua_function func, void *data, void (*destroy)(void *));
 bool lua_state_runinterrupt(struct lua_state *state);
 bool lua_state_setdebugger_hook(struct lua_state *state, lua_hook hook);
+bool lua_state_run_file(struct lua_state *L, const char *filename, int argc, char *argv[]);
 
 int lua_state_error_formater(struct lua_State *L);
 void lua_state_print_error(struct lua_State *L, const wchar_t *msg);

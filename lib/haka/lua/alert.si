@@ -39,7 +39,7 @@ static void free_nodes(struct alert_node **nodes)
 
 %include "haka/lua/wchar.si"
 %include "haka/lua/swig.si"
-%include "array.si"
+%include "haka/lua/array.si"
 
 %nodefaultctor;
 %nodefaultdtor;
@@ -215,7 +215,13 @@ struct alert_id *_post(struct alert *_alert)
 %}
 
 %luacode {
-	local this = unpack({...})
+	-- Hide internals
+	local struct_alert = haka.alert
+	local struct_alert_node = haka.alert_node
+	local post_alert = haka._post
+	haka.alert = nil
+	haka.alert_node = nil
+	haka._post = nil
 
 	--
 	-- Table checks
@@ -337,25 +343,25 @@ struct alert_id *_post(struct alert *_alert)
 	}
 
 	local convert_level = {
-		low = this.HAKA_ALERT_LOW,
-		medium = this.HAKA_ALERT_MEDIUM,
-		high = this.HAKA_ALERT_HIGH,
+		low = haka.HAKA_ALERT_LOW,
+		medium = haka.HAKA_ALERT_MEDIUM,
+		high = haka.HAKA_ALERT_HIGH,
 	}
 
 	local convert_completion = {
-		failed = this.HAKA_ALERT_FAILED,
-		successful = this.HAKA_ALERT_SUCCESSFUL,
+		failed = haka.HAKA_ALERT_FAILED,
+		successful = haka.HAKA_ALERT_SUCCESSFUL,
 	}
 
 	local convert_node_type = {
-		address = this.HAKA_ALERT_NODE_ADDRESS,
-		service = this.HAKA_ALERT_NODE_SERVICE,
+		address = haka.HAKA_ALERT_NODE_ADDRESS,
+		service = haka.HAKA_ALERT_NODE_SERVICE,
 	}
 
 	local function convert_nodes(nodes)
 		local ret = {}
 		for _, node in ipairs(nodes) do
-			local cnode = this.alert_node()
+			local cnode = struct_alert_node()
 			cnode.type = convert_node_type[node.type]
 			cnode.list = node.values
 			table.insert(ret, cnode)
@@ -366,14 +372,14 @@ struct alert_id *_post(struct alert *_alert)
 	local function convert(alert)
 		check_table(nil, alert, alert_desc)
 
-		local calert = this.alert()
+		local calert = struct_alert()
 		if alert.start_time then calert:start_time(alert.start_time) end
 		if alert.end_time then calert:end_time(alert.end_time) end
 		if alert.severity then calert.severity = convert_level[alert.severity] end
 		if alert.confidence then
 			if type(alert.confidence) == 'number' then
 				calert.confidence_num = alert.confidence
-				calert.confidence = this.HAKA_ALERT_NUMERIC
+				calert.confidence = haka.HAKA_ALERT_NUMERIC
 			else
 				calert.confidence = convert_level[alert.confidence]
 			end
@@ -394,25 +400,29 @@ struct alert_id *_post(struct alert *_alert)
 		return calert
 	end
 
-	function this.update(alertid, alert)
-		alertid:_update(convert(alert))
+	swig.getclassmetatable('alert_id')['.fn'].update = function (self, alert)
+		self:_update(convert(alert))
 	end
 
-	function this.address(...)
+	haka.alert = {}
+
+	setmetatable(haka.alert, {
+		__call = function (_, alert)
+			return post_alert(convert(alert))
+		end
+	})
+
+	function haka.alert.address(...)
 		return {
 			type = 'address',
 			values = {...}
 		}
 	end
 
-	function this.service(...)
+	function haka.alert.service(...)
 		return {
 			type = 'service',
 			values = {...}
 		}
-	end
-
-	getmetatable(this).__call = function (_, alert)
-		return this._post(convert(alert))
 	end
 }

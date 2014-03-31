@@ -1,0 +1,92 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%{
+#include <haka/log.h>
+%}
+
+%include "haka/lua/wchar.si"
+%include "haka/lua/swig.si"
+
+
+%rename(LOG_FATAL) HAKA_LOG_FATAL;
+%rename(LOG_ERROR) HAKA_LOG_ERROR;
+%rename(LOG_WARNING) HAKA_LOG_WARNING;
+%rename(LOG_INFO) HAKA_LOG_INFO;
+%rename(LOG_DEBUG) HAKA_LOG_DEBUG;
+
+enum log_level { HAKA_LOG_FATAL, HAKA_LOG_ERROR, HAKA_LOG_WARNING, HAKA_LOG_INFO, HAKA_LOG_DEBUG };
+
+%rename(_message) message;
+void message(log_level level, const wchar_t *module, const wchar_t *message);
+
+%rename(_setloglevel) setlevel;
+void setlevel(log_level level, const wchar_t *module);
+
+%luacode {
+	-- Hide internals
+	local message = haka._message
+	haka._message = nil
+	local setloglevel = haka._setloglevel
+	haka._setloglevel = nil
+
+	local loglevel = {
+		fatal = haka.LOG_FATAL,
+		error = haka.LOG_ERROR,
+		warning = haka.LOG_WARNING,
+		info = haka.LOG_INFO,
+		debug = haka.LOG_DEBUG,
+	}
+
+	haka.LOG_FATAL = nil
+	haka.LOG_ERROR = nil
+	haka.LOG_WARNING = nil
+	haka.LOG_INFO = nil
+	haka.LOG_DEBUG = nil
+
+	haka.log = {}
+
+	function haka.log.setlevel(level, module)
+		local lvl = loglevel[level]
+		if not lvl then error(string.format("invalid log level: %s", level)) end
+
+		return setloglevel(lvl, module)
+	end
+
+	haka._setloglevel = nil
+
+	setmetatable(haka.log, {
+		__call = function (_, module, fmt, ...)
+			haka.log.info(module, fmt, ...)
+		end
+	})
+
+	function haka.log.message(level, module, fmt, ...)
+		local lvl = loglevel[level]
+		if not lvl then error(string.format("invalid log level: %s", level)) end
+
+		if #{...} == 0 then message(lvl, module or 'unknown', fmt)
+		else message(lvl, module or 'unknown', string.format(fmt, ...)) end
+	end
+
+	function haka.log.fatal(module, fmt, ...)
+		haka.log.message('fatal', module, fmt, ...)
+	end
+
+	function haka.log.error(module, fmt, ...)
+		haka.log.message('error', module, fmt, ...)
+	end
+
+	function haka.log.warning(module, fmt, ...)
+		haka.log.message('warning', module, fmt, ...)
+	end
+
+	function haka.log.info(module, fmt, ...)
+		haka.log.message('info', module, fmt, ...)
+	end
+
+	function haka.log.debug(module, fmt, ...)
+		haka.log.message('debug', module, fmt, ...)
+	end
+}

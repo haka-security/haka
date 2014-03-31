@@ -65,7 +65,7 @@ void lua_luadebug_debugger_break();
 	local this = unpack({...})
 	local color = require("color")
 
-	function this.hide_underscore(name, value)
+		function debug.hide_underscore(name, value)
 		if type(name) == "string" then
 			return name:sub(1, 1) == "_"
 		else
@@ -73,7 +73,7 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	function this.hide_function(name, value)
+	function debug.hide_function(name, value)
 		if type(value) == "function" then
 			return true
 		else
@@ -258,7 +258,7 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	function this.pprint(obj, indent, depth, hide, out)
+	function debug.pprint(obj, indent, depth, hide, out)
 		if not hide then
 			hide = {}
 		elseif type(hide) == "function" then
@@ -272,11 +272,11 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	this.debugger = {}
-	this.debugger.start = this.__debugger_start
-	this.debugger.stop = this.__debugger_stop
-	this.debugger.breakpoint = this.__debugger_break
+	debug.debugger = {}
+	debug.debugger.start = this.__debugger_start
+	debug.debugger.stop = this.__debugger_stop
+	debug.breakpoint = this.__debugger_break
 
-	this.interactive = {}
-	this.interactive.enter = this.__interactive_enter
+	debug.interactive = {}
+	debug.interactive.enter = this.__interactive_enter
 }

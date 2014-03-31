@@ -22,7 +22,7 @@ haka.rule {
 			targets = { haka.alert.address(ipv4.network(pkt.dst, 22)), haka.alert.address(pkt.dst) },
 		}
 
-		haka.alert.update(myalert, {
+		myalert:update{
 			severity = 'high',
 			description = string.format("filtering IP %s", pkt.src),
 			confidence = 'low',
@@ -31,6 +31,6 @@ haka.rule {
 			},
 			sources = haka.alert.address(pkt.src),
 			ref = myalert
-		})
+		}
 	end
 }

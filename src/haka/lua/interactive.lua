@@ -10,6 +10,6 @@ function haka.interactive_rule(self, input)
 		dump = table.concat({dump, ...})
 	end
 
-	haka.debug.pprint(input, "", 1, haka.debug.hide_underscore, out)
-	haka.debug.interactive.enter(self.hook .. ">  ", self.hook .. ">> ", dump)
+	debug.pprint(input, "", 1, debug.hide_underscore, out)
+	debug.interactive.enter(self.hook .. ">  ", self.hook .. ">> ", dump)
 end

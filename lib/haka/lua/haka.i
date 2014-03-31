@@ -9,8 +9,6 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#include "app.h"
-#include "lua/state.h"
 #include <haka/packet_module.h>
 #include <haka/thread.h>
 #include <haka/module.h>
@@ -29,6 +27,8 @@ static bool stdout_support_colors()
 %}
 
 %include "haka/lua/swig.si"
+
+%include "lua/object.si"
 
 %nodefaultctor;
 %nodefaultdtor;
@@ -67,7 +67,7 @@ struct time {
 		}
 
 		%immutable;
-		double seconds;
+		double seconds { return time_sec($self); }
 
 		void __tostring(char **TEMP_OUTPUT)
 		{
@@ -88,28 +88,10 @@ struct time {
 
 STRUCT_UNKNOWN_KEY_ERROR(time);
 
-%{
-
-double time_seconds_get(struct time *t) {
-	return time_sec(t);
-}
-
-%}
-
-%native(_getswigclassmetatable) int _getswigclassmetatable(struct lua_State *L);
-
-%{
-int _getswigclassmetatable(struct lua_State *L)
-{
-	SWIG_Lua_get_class_registry(L);
-	return 1;
-}
-%}
-
 %luacode {
 	haka = unpack({...})
 
-	function string.split(str, delim)
+	local function string_split(str, delim)
 		local ret = {}
 		local last_end = 1
 		local s, e = str:find(delim, 1)
@@ -131,9 +113,9 @@ int _getswigclassmetatable(struct lua_State *L)
 	end
 
 	local function addpath(dst, paths, exts)
-		local pathtable = string.split(dst, ';')
+		local pathtable = string_split(dst, ';')
 
-		for _, path in pairs(string.split(paths, ';')) do
+		for _, path in pairs(string_split(paths, ';')) do
 			for _, ext in pairs(exts) do
 				local p = string.gsub(path, '*', ext)
 				table.insert(pathtable, p)
@@ -143,57 +125,40 @@ int _getswigclassmetatable(struct lua_State *L)
 		return table.concat(pathtable, ';')
 	end
 
-	haka._on_exit = {}
+	package.cpath = addpath(package.cpath, haka.module_path(), { haka.module_prefix .. '?' .. haka.module_suffix })
+	package.path = addpath(package.path, haka.module_path(), { '?.bc', '?.lua' })
+
+	require('class')
+	require('utils')
+
+	local _on_exit = {}
 
 	function haka._exiting()
-		for k, f in pairs(haka._on_exit) do
-			haka._on_exit[k] = nil
+		for k, f in pairs(_on_exit) do
+			_on_exit[k] = nil
 			f()
 		end
 	end
 
 	function haka.on_exit(func)
-		table.insert(haka._on_exit, func)
-	end
-
-	package.cpath = addpath(package.cpath, haka.module_path(), { haka.module_prefix .. '?' .. haka.module_suffix })
-	package.path = addpath(package.path, haka.module_path(), { '?.bc', '?.lua' })
-
-	swig = {}
-	function swig.getclassmetatable(name)
-		local ret = haka._getswigclassmetatable()[name]
-		assert(ret, string.format("unknown swig class '%s'", name))
-		return ret
+		table.insert(_on_exit, func)
 	end
 
 	function haka.abort()
 		error(nil)
 	end
-
-	function haka.pcall(func, ...)
-		assert(func)
-		local args = {...}
-		local success, msg = xpcall(function () func(unpack(args)) end, debug.format_error)
-		if not success then
-			haka.log.error("core", msg)
-			return false
-		else
-			return true
-		end
-	end
-
-	require('class')
-	require('utils')
-
-	function haka.initialize()
-		require('events')
-		require('context')
-		require('rule')
-		require('rule_group')
-		require('dissector')
-		require('grammar')
-	end
 }
 
-%include "lua/vbuffer.i"
-%include "lua/regexp.i"
+%include "lua/vbuffer.si"
+%include "lua/regexp.si"
+%include "lua/packet.si"
+%include "lua/alert.si"
+%include "lua/log.si"
+%include "lua/state_machine.si"
+
+%luacode {
+	require('events')
+	require('context')
+	require('dissector')
+	require('grammar')
+}

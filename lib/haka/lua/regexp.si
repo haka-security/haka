@@ -4,6 +4,7 @@
 
 %{
 #include <haka/regexp_module.h>
+#include <haka/error.h>
 
 static char *escape_chars(const char *STRING, size_t SIZE) {
 	int iter = 0;
@@ -27,6 +28,9 @@ static char *escape_chars(const char *STRING, size_t SIZE) {
 	return str;
 }
 %}
+
+%import "haka/lua/config.si"
+%include "haka/lua/swig.si"
 
 struct regexp_result {
 	int offset;

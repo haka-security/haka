@@ -7,7 +7,6 @@
 
 #include <haka/packet_module.h>
 #include <haka/log_module.h>
-#include "lua/state.h"
 #include "thread.h"
 
 

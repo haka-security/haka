@@ -78,48 +78,32 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 	lua_getglobal(state->lua->L, "haka");
 	lua_getfield(state->lua->L, -1, "filter");
 
-	if (!lua_pushppacket(state->lua->L, pkt)) {
-		message(HAKA_LOG_ERROR, L"core", L"packet internal error");
-		packet_drop(pkt);
-		lua_pop(state->lua->L, 2);
-	}
-	else {
-		if (lua_pcall(state->lua->L, 1, 0, h)) {
-			lua_state_print_error(state->lua->L, L"filter");
+	if (!lua_isnil(state->lua->L, -1)) {
+		if (!lua_pushppacket(state->lua->L, pkt)) {
+			message(HAKA_LOG_ERROR, L"core", L"packet internal error");
 			packet_drop(pkt);
 		}
+		else {
+			if (lua_pcall(state->lua->L, 1, 0, h)) {
+				lua_state_print_error(state->lua->L, L"filter");
+				packet_drop(pkt);
+			}
+		}
 
-		lua_pop(state->lua->L, 2);
+		if (packet_mode() == MODE_PASSTHROUGH &&
+			packet_state(pkt) == STATUS_NORMAL) {
+			message(HAKA_LOG_WARNING, L"core", L"pass-through error: packet has been blocked");
+		}
+	}
+	else {
+		lua_pop(state->lua->L, 1);
+		packet_drop(pkt);
 	}
 
+	lua_pop(state->lua->L, 2);
 	LUA_STACK_CHECK(state->lua->L, 0);
 
-	if (packet_mode() == MODE_PASSTHROUGH &&
-	    packet_state(pkt) == STATUS_NORMAL) {
-		message(HAKA_LOG_WARNING, L"core", L"pass-through error: packet has been blocked");
-	}
-
 	packet_release(pkt);
-}
-
-static void lua_on_exit(lua_State *L)
-{
-	int h;
-	LUA_STACK_MARK(L);
-
-	lua_pushcfunction(L, lua_state_error_formater);
-	h = lua_gettop(L);
-
-	lua_getglobal(L, "haka");
-	lua_getfield(L, -1, "_exiting");
-
-	if (lua_pcall(L, 0, 0, h)) {
-		lua_state_print_error(L, L"exit");
-	}
-
-	lua_pop(L, 2);
-
-	LUA_STACK_CHECK(L, 0);
 }
 
 static void cleanup_thread_state_lua(struct thread_state *state)
@@ -128,7 +112,6 @@ static void cleanup_thread_state_lua(struct thread_state *state)
 	assert(state->packet_module);
 
 	if (state->lua) {
-		lua_on_exit(state->lua->L);
 		lua_state_close(state->lua);
 		state->lua = NULL;
 	}
@@ -170,12 +153,18 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 
 	messagef(HAKA_LOG_INFO, L"core", L"initializing thread %d", thread_id);
 
-	state->lua = haka_init_state();
+	state->lua = lua_state_init();
 	if (!state->lua) {
 		message(HAKA_LOG_FATAL, L"core", L"unable to create lua state");
 		cleanup_thread_state(state);
 		return NULL;
 	}
+
+	/* Load Lua sources */
+	lua_state_require(state->lua, "rule");
+	lua_state_require(state->lua, "rule_group");
+	lua_state_require(state->lua, "interactive");
+	lua_state_require(state->lua, "protocol/raw");
 
 	state->capture = packet_module->init_state(thread_id);
 	if (!state->capture) {
@@ -208,7 +197,7 @@ static bool init_thread_lua_state(struct thread_state *state)
 		return false;
 	}
 
-	if (run_file(state->lua->L, get_configuration_script(), 0, NULL)) {
+	if (!lua_state_run_file(state->lua, get_configuration_script(), 0, NULL)) {
 		lua_pop(state->lua->L, 1);
 		return false;
 	}

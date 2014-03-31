@@ -38,6 +38,8 @@ function safe_string(str)
 	return table.concat(sstr)
 end
 
+-- Table extras
+
 function table.merge(dst, src)
 	for k,v in pairs(src) do
 		dst[k] = v

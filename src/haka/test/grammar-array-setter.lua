@@ -38,10 +38,10 @@ haka.rule{
 					print("Parsing error : "..err)
 					return
 				end
-				haka.debug.pprint(ctx)
+				debug.pprint(ctx)
 				ctx.data:remove(ctx.data[2])
 				ctx.data:append({flags = 4, value = 5})
-				haka.debug.pprint(ctx)
+				debug.pprint(ctx)
 			end
 		end
 	end

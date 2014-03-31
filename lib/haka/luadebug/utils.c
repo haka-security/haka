@@ -62,8 +62,7 @@ void pprint(lua_State *L, struct luadebug_user *user, int index, bool full, cons
 	int h;
 	LUA_STACK_MARK(L);
 
-	lua_getglobal(L, "haka");
-	lua_getfield(L, -1, "debug");
+	lua_getglobal(L, "debug");
 	h = lua_gettop(L);
 
 	if (user) {

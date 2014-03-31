@@ -413,7 +413,7 @@ local response = http_dissector.grammar.response:compile()
 --  HTTP States
 --
 
-http_dissector.states = haka.state_machine.new("http")
+http_dissector.states = haka.state_machine("http")
 
 http_dissector.states:default{
 	error = function (context)

@@ -291,6 +291,18 @@ static void lua_interrupt_data_destroy(void *_data)
 	}
 }
 
+extern int luaopen_haka(lua_State *L);
+extern int luaopen_swig(lua_State *L);
+extern int luaopen_luadebug(lua_State *L);
+
+static void load_module(struct lua_State *L, lua_CFunction luaopen, const char *name)
+{
+	lua_pushcfunction(L, luaopen);
+	lua_call(L, 0, 1);
+	if (name) lua_setglobal(L, name);
+	else lua_pop(L, 1);
+}
+
 struct lua_state *lua_state_init()
 {
 	struct lua_state_ext *ret;
@@ -328,6 +340,10 @@ struct lua_state *lua_state_init()
 	lua_pushcfunction(L, lua_state_error_formater);
 	lua_setfield(L, -2, "format_error");
 
+	load_module(L, luaopen_swig, "swig");
+	load_module(L, luaopen_haka, "haka");
+	load_module(L, luaopen_luadebug, NULL);
+
 	lua_object_initialize(L);
 
 	lua_pushlightuserdata(L, ret);
@@ -339,9 +355,31 @@ struct lua_state *lua_state_init()
 	return &ret->state;
 }
 
+static void lua_on_exit(lua_State *L)
+{
+	int h;
+	LUA_STACK_MARK(L);
+
+	lua_pushcfunction(L, lua_state_error_formater);
+	h = lua_gettop(L);
+
+	lua_getglobal(L, "haka");
+	lua_getfield(L, -1, "_exiting");
+
+	if (lua_pcall(L, 0, 0, h)) {
+		lua_state_print_error(L, L"exit");
+	}
+
+	lua_pop(L, 2);
+
+	LUA_STACK_CHECK(L, 0);
+}
+
 void lua_state_close(struct lua_state *_state)
 {
 	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+
+	lua_on_exit(_state->L);
 
 	vector_destroy(&state->interrupts);
 	state->has_interrupts = false;
@@ -487,6 +525,52 @@ bool lua_state_runinterrupt(struct lua_state *_state)
 
 	return true;
 }
+
+bool lua_state_run_file(struct lua_state *state, const char *filename, int argc, char *argv[])
+{
+	int i, h;
+
+	lua_pushcfunction(state->L, lua_state_error_formater);
+	h = lua_gettop(state->L);
+
+	if (luaL_loadfile(state->L, filename)) {
+		lua_state_print_error(state->L, NULL);
+		lua_pop(state->L, 1);
+		return false;
+	}
+	for (i = 1; i <= argc; i++) {
+		lua_pushstring(state->L, argv[i-1]);
+	}
+	if (lua_pcall(state->L, argc, 0, h)) {
+		lua_state_print_error(state->L, NULL);
+		lua_pop(state->L, 1);
+		return false;
+	}
+
+	lua_pop(state->L, 1);
+	return true;
+}
+
+bool lua_state_require(struct lua_state *state, const char *module)
+{
+	int h;
+
+	lua_pushcfunction(state->L, lua_state_error_formater);
+	h = lua_gettop(state->L);
+
+	lua_getglobal(state->L, "require");
+	lua_pushstring(state->L, module);
+
+	if (lua_pcall(state->L, 1, 0, h)) {
+		lua_state_print_error(state->L, NULL);
+		lua_pop(state->L, 1);
+		return false;
+	}
+
+	lua_pop(state->L, 1);
+	return true;
+}
+
 
 /*
  * Debugging utility functions

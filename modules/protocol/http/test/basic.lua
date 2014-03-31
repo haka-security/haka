@@ -10,7 +10,7 @@ haka.rule {
 	hook = haka.event('http', 'request'),
 	eval = function (http, request)
 		print("HTTP REQUEST")
-		haka.debug.pprint(request, nil, nil, { haka.debug.hide_underscore, haka.debug.hide_function })
+		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
 	end
 }
 
@@ -18,6 +18,6 @@ haka.rule {
 	hook = haka.event('http', 'response'),
 	eval = function (http, response)
 		print("HTTP RESPONSE")
-		haka.debug.pprint(response, nil, nil, { haka.debug.hide_underscore, haka.debug.hide_function })
+		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
 	end
 }

@@ -22,7 +22,6 @@
 
 #include "app.h"
 #include "thread.h"
-#include "lua/state.h"
 
 
 static void usage(FILE *output, const char *program)

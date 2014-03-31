@@ -26,7 +26,6 @@
 #include "app.h"
 #include "thread.h"
 #include "ctl.h"
-#include "lua/state.h"
 #include "config.h"
 
 

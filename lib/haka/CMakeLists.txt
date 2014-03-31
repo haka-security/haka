@@ -8,9 +8,21 @@ include_directories(${EDITLINE_INCLUDE_DIR})
 
 # Haka library shared between runtime and modules
 
-swig_process(libhakalua lua
-	lua/object.i
+swig_process(libhakaswig lua
+	lua/haka.i
+	lua/swig.i
 	luadebug/luadebug.i)
+
+lua_compile(NAME libhakalua FILES
+	lua/lua/color.lua
+	lua/lua/class.lua
+	lua/lua/events.lua
+	lua/lua/context.lua
+	lua/lua/grammar.lua
+	lua/lua/utils.lua
+	lua/lua/dissector.lua
+)
+lua_install(TARGET libhakalua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/core)
 
 add_library(libhaka SHARED
 	packet.c
@@ -46,7 +58,7 @@ add_library(libhaka SHARED
 	luadebug/user.c
 	luadebug/user_readline.c
 	luadebug/user_remote.c
-	${SWIG_libhakalua_FILES}
+	${SWIG_libhakaswig_FILES}
 )
 
 set_target_properties(libhaka PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)

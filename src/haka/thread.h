@@ -6,7 +6,6 @@
 #define _THREAD_H
 
 #include <haka/packet_module.h>
-#include "lua/state.h"
 
 
 struct thread_pool;

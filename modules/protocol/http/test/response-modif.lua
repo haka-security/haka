@@ -10,7 +10,7 @@ haka.rule {
 	hook = haka.event('http', 'request'),
 	eval = function (http, request)
 		print("HTTP REQUEST")
-		haka.debug.pprint(http.request, nil, nil, { haka.debug.hide_underscore, haka.debug.hide_function })
+		debug.pprint(http.request, nil, nil, { debug.hide_underscore, debug.hide_function })
 	end
 }
 
@@ -18,7 +18,7 @@ haka.rule {
 	hook = haka.event('http', 'response'),
 	eval = function (http, response)
 		print("HTTP RESPONSE")
-		haka.debug.pprint(http.response, nil, nil, { haka.debug.hide_underscore, haka.debug.hide_function })
+		debug.pprint(http.response, nil, nil, { debug.hide_underscore, debug.hide_function })
 
 		-- Modify a part of the response
 		http.response.version = "2.0"
@@ -29,6 +29,6 @@ haka.rule {
 		-- Modify a header
 		http.response.headers["Date"] = "Sat, 34 Jun 2048 15:14:20 GMT"
 		print("HTTP MODIFIED RESPONSE")
-		haka.debug.pprint(http.response, nil, nil, { haka.debug.hide_underscore, haka.debug.hide_function })
+		debug.pprint(http.response, nil, nil, { debug.hide_underscore, debug.hide_function })
 	end
 }

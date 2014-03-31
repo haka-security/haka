@@ -70,7 +70,7 @@ function tcp_connection_dissector:receive(pkt)
 	end
 end
 
-tcp_connection_dissector.states = haka.state_machine.new("tcp")
+tcp_connection_dissector.states = haka.state_machine("tcp")
 
 tcp_connection_dissector.states:default{
 	error = function (context)
@@ -100,7 +100,7 @@ tcp_connection_dissector.states:default{
 		return context.states.ERROR
 	end,
 	finish = function (context)
-		haka.pcall(haka.context.signal, haka.context, context.flow, tcp_connection_dissector.events.end_connection)
+		context.flow:trigger('end_connection')
 		context.flow:_close()
 	end,
 	reset = function (context)

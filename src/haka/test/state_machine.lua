@@ -6,7 +6,7 @@
 
 require('protocol/ipv4')
 
-local machine = haka.state_machine.new("test")
+local machine = haka.state_machine("test")
 
 machine:default {
 	error = function (self)
