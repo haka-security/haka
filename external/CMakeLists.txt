@@ -4,4 +4,4 @@
 
 add_subdirectory("iniparser")
 add_subdirectory("uthash")
-include("luaunit.cmake")
+add_subdirectory("luaunit")
