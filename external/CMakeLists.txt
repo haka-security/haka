@@ -4,3 +4,4 @@
 
 include("iniparser.cmake")
 include("uthash.cmake")
+include("luaunit.cmake")

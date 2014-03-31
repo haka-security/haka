@@ -2,7 +2,11 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-local function gen_stream(f)
+require('luaunit')
+
+TestVBufferStream = {}
+
+function TestVBufferStream:gen_stream(f)
 	local stream = haka.vbuffer_stream()
 	local manager = haka.vbuffer_stream_comanager:new(stream)
 	manager:start(0, f)
@@ -17,11 +21,11 @@ local function gen_stream(f)
 	end
 end
 
-local function test_stream_blocking_advance()
+function TestVBufferStream:test_stream_blocking_advance()
 	local count = 0
 	local loop = 0
 
-	gen_stream(function (iter)
+	self:gen_stream(function (iter)
 		while not iter.iseof do
 			count = count + iter:advance(10)
 			loop = loop+1
@@ -32,11 +36,11 @@ local function test_stream_blocking_advance()
 	assert(loop == 5, string.format("invalid loop count: %i", loop))
 end
 
-local function test_stream_blocking_sub()
+function TestVBufferStream:test_stream_blocking_sub()
 	local loop = 0
 	local ref = { "HakaHakaHa", "kaHakaHaka", "HakaHakaHa", "kaHakaHaka", "" }
 
-	gen_stream(function (iter)
+	self:gen_stream(function (iter)
 		while true do
 			local sub = iter:sub(10)
 			if not sub then break end
@@ -49,16 +53,16 @@ local function test_stream_blocking_sub()
 	assert(loop == 4, string.format("invalid loop count: %i", loop))
 end
 
-local function test_stream_blocking_all()
-	gen_stream(function (iter)
+function TestVBufferStream:test_stream_blocking_all()
+	self:gen_stream(function (iter)
 		assert(iter:sub('all'):asstring() == "HakaHakaHakaHakaHakaHakaHakaHakaHakaHaka")
 	end)
 end
 
-local function test_stream_blocking_available()
+function TestVBufferStream:test_stream_blocking_available()
 	local loop = 0
 
-	gen_stream(function (iter)
+	self:gen_stream(function (iter)
 		for sub in iter:foreach_available() do
 			assert(sub:asstring() == "Haka")
 			loop = loop+1
@@ -68,7 +72,5 @@ local function test_stream_blocking_available()
 	assert(loop == 10, string.format("invalid loop count: %i", loop))
 end
 
-test_stream_blocking_advance()
-test_stream_blocking_sub()
-test_stream_blocking_all()
-test_stream_blocking_available()
+LuaUnit:setVerbosity(1)
+LuaUnit:run('TestVBufferStream')

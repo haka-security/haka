@@ -10,3 +10,6 @@
 [submodule "external/lua"]
 	path = external/lua
 	url = git://github.com/haka-security/lua.git
+[submodule "external/luaunit"]
+	path = external/luaunit
+	url = git://github.com/bluebird75/luaunit.git
