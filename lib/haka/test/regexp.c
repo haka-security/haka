@@ -93,7 +93,7 @@ START_TEST(regexp_compile_should_be_successful)
 	clear_error();
 
 	// When
-	struct regexp *re = rem->compile(".*");
+	struct regexp *re = rem->compile(".*", 0);
 
 	// Then
 	ck_check_error;
@@ -112,7 +112,7 @@ START_TEST(regexp_compile_should_should_fail_with_module_error)
 	clear_error();
 
 	// When
-	struct regexp *re = rem->compile("?");
+	struct regexp *re = rem->compile("?", 0);
 
 	// Then
 	ck_assert(re == NULL);
@@ -133,7 +133,7 @@ START_TEST(regexp_exec_should_match_when_string_match)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile(".*");
+	struct regexp *re = rem->compile(".*", 0);
 	clear_error();
 
 	// When
@@ -156,7 +156,7 @@ START_TEST(regexp_exec_should_not_match_when_string_does_not_match)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("aaa");
+	struct regexp *re = rem->compile("aaa", 0);
 	clear_error();
 
 	// When
@@ -179,7 +179,7 @@ START_TEST(regexp_exec_should_return_results_on_match)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("bar");
+	struct regexp *re = rem->compile("bar", 0);
 	clear_error();
 
 	// When
@@ -203,7 +203,7 @@ START_TEST(regexp_exec_should_not_fail_without_results)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("bar");
+	struct regexp *re = rem->compile("bar", 0);
 	clear_error();
 
 	// When
@@ -223,7 +223,7 @@ START_TEST(regexp_release_should_not_fail)
 {
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile(".*");
+	struct regexp *re = rem->compile(".*", 0);
 	clear_error();
 
 	// When
@@ -247,7 +247,7 @@ START_TEST(regexp_match_should_be_successful_when_string_match)
 	clear_error();
 
 	// When
-	ret = rem->match(".*", "toto", 4, &result);
+	ret = rem->match(".*", 0, "toto", 4, &result);
 
 	// Then
 	ck_check_error;
@@ -268,7 +268,7 @@ START_TEST(regexp_match_should_not_match_when_string_does_not_match)
 	clear_error();
 
 	// When
-	ret = rem->match("aaa", "abc", 3, &result);
+	ret = rem->match("aaa", 0, "abc", 3, &result);
 
 	// Then
 	ck_check_error;
@@ -289,7 +289,7 @@ START_TEST(regexp_match_should_return_results_on_match)
 	clear_error();
 
 	// When
-	ret = rem->match("bar", "foo bar foo", 11, &result);
+	ret = rem->match("bar", 0, "foo bar foo", 11, &result);
 
 	// Then
 	ck_check_error;
@@ -311,7 +311,7 @@ START_TEST(regexp_match_should_not_fail_without_results)
 	clear_error();
 
 	// When
-	ret = rem->match("bar", "foo bar foo", 11, NULL);
+	ret = rem->match("bar", 0, "foo bar foo", 11, NULL);
 
 	// Then
 	ck_check_error;
@@ -328,7 +328,7 @@ START_TEST(regexp_create_sink_should_return_regexp_sink)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile(".*");
+	struct regexp *re = rem->compile(".*", 0);
 	clear_error();
 
 	// When
@@ -348,7 +348,7 @@ START_TEST(regexp_feed_should_not_fail_when_feed_twice)
 {
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile(".*");
+	struct regexp *re = rem->compile(".*", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
@@ -372,7 +372,7 @@ START_TEST(regexp_feed_should_match)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile(".*");
+	struct regexp *re = rem->compile(".*", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
@@ -396,7 +396,7 @@ START_TEST(regexp_feed_should_match_accross_two_string)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("ab");
+	struct regexp *re = rem->compile("ab", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
@@ -421,7 +421,7 @@ START_TEST(regexp_feed_should_not_fail_if_no_match)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("abc");
+	struct regexp *re = rem->compile("abc", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
@@ -445,7 +445,7 @@ START_TEST(regexp_feed_should_return_results_on_match)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("bar");
+	struct regexp *re = rem->compile("bar", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
@@ -473,7 +473,7 @@ START_TEST(regexp_feed_should_return_partial_on_partial_match)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("abc");
+	struct regexp *re = rem->compile("abc", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	clear_error();
 
@@ -520,7 +520,7 @@ START_TEST(regexp_vbexec_should_match_on_vbuffer)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("abc");
+	struct regexp *re = rem->compile("abc", 0);
 	struct vbuffer vb;
         struct vbuffer_sub sb;
         some_vbuffer(&vb, &sb, "abc", NULL);
@@ -547,7 +547,7 @@ START_TEST(regexp_vbexec_should_match_on_multiple_vbuffer)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("ab");
+	struct regexp *re = rem->compile("ab", 0);
 	struct vbuffer vb;
         struct vbuffer_sub sb;
         some_vbuffer(&vb, &sb, "aaa", "bbb", NULL);
@@ -571,7 +571,7 @@ START_TEST(regexp_vbexec_should_not_change_vbuffer_flags)
 {
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("abc");
+	struct regexp *re = rem->compile("abc", 0);
 	struct vbuffer vb;
         struct vbuffer_sub sb;
         some_vbuffer(&vb, &sb, "aaa", NULL);
@@ -598,7 +598,7 @@ START_TEST(regexp_vbexec_should_return_results_on_match_on_single_vbuffer)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("bar");
+	struct regexp *re = rem->compile("bar", 0);
 	struct vbuffer vb;
         struct vbuffer_sub sb;
         some_vbuffer(&vb, &sb, "foo bar foo", NULL);
@@ -627,7 +627,7 @@ START_TEST(regexp_vbexec_should_return_results_on_match_on_multiple_vbuffer)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("bar");
+	struct regexp *re = rem->compile("bar", 0);
 	struct vbuffer vb;
         struct vbuffer_sub sb;
         some_vbuffer(&vb, &sb, "foo b", "ar foo", "fail", NULL);
@@ -655,7 +655,7 @@ START_TEST(regexp_vbexec_should_not_fail_without_results)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("bar");
+	struct regexp *re = rem->compile("bar", 0);
 	struct vbuffer vb;
         struct vbuffer_sub sb;
         some_vbuffer(&vb, &sb, "foo bar foo", NULL);
@@ -681,7 +681,7 @@ START_TEST(regexp_vbfeed_should_match_on_vbuffer)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile(".*");
+	struct regexp *re = rem->compile(".*", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	struct vbuffer vb;
         struct vbuffer_sub sb;
@@ -709,7 +709,7 @@ START_TEST(regexp_vbfeed_should_match_on_multiple_vbuffer)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("abbbcccd");
+	struct regexp *re = rem->compile("abbbcccd", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	struct vbuffer vb1;
         struct vbuffer_sub sb1;
@@ -748,7 +748,7 @@ START_TEST(regexp_vbfeed_should_return_partial_on_partial_match)
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
-	struct regexp *re = rem->compile("abc");
+	struct regexp *re = rem->compile("abc", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	struct vbuffer vb;
         struct vbuffer_sub sb;
@@ -784,7 +784,7 @@ START_TEST(regexp_vbmatch_should_match_on_vbuffer)
 	clear_error();
 
 	// When
-	ret = rem->vbmatch(".*", &sb, &result);
+	ret = rem->vbmatch(".*", 0, &sb, &result);
 
 	// Then
 	ck_check_error;
@@ -809,7 +809,7 @@ START_TEST(regexp_vbmatch_should_match_on_multiple_vbuffer)
 	clear_error();
 
 	// When
-	ret = rem->vbmatch("ab", &sb, &result);
+	ret = rem->vbmatch("ab", 0, &sb, &result);
 
 	// Then
 	ck_check_error;
@@ -831,6 +831,27 @@ START_TEST(regexp_vbmatch_should_not_fail_without_results)
 }
 END_TEST
 
+START_TEST(regexp_match_should_match_insensitively)
+{
+	int ret;
+	struct regexp_result result;
+
+	// Given
+	struct regexp_module *rem = some_regexp_module();
+	clear_error();
+
+	// When
+	ret = rem->match("camel case", REGEXP_CASE_INSENSITIVE, "CaMeL CaSe", 10, &result);
+
+	// Then
+	ck_check_error;
+	ck_assert_msg(ret == REGEXP_MATCH, "match expected to match, but found ret = %d", ret);
+
+	// Finally
+	regexp_module_release(rem);
+}
+END_TEST
+
 START_TEST(nonreg_regexp_should_not_match_after_start_of_line_if_pattern_start_with_circum)
 {
 	int ret;
@@ -844,7 +865,7 @@ START_TEST(nonreg_regexp_should_not_match_after_start_of_line_if_pattern_start_w
 	clear_error();
 
 	// When
-	ret = rem->vbmatch("^abc", &sb, &result);
+	ret = rem->vbmatch("^abc", 0, &sb, &result);
 
 	// Then
 	ck_check_error;
@@ -870,7 +891,7 @@ START_TEST(nonreg_regexp_should_match_end_of_line)
 	clear_error();
 
 	// When
-	ret = rem->vbmatch("abc$", &sb, &result);
+	ret = rem->vbmatch("abc$", 0, &sb, &result);
 
 	// Then
 	ck_check_error;
@@ -896,7 +917,7 @@ START_TEST(nonreg_regexp_should_not_match_end_of_line_before_end)
 	clear_error();
 
 	// When
-	ret = rem->vbmatch("abc$", &sb, &result);
+	ret = rem->vbmatch("abc$", 0, &sb, &result);
 
 	// Then
 	ck_check_error;
@@ -922,7 +943,7 @@ START_TEST(nonreg_regexp_should_match_even_with_empty_string)
 	clear_error();
 
 	// When
-	ret = rem->vbmatch("abc", &sb, &result);
+	ret = rem->vbmatch("abc", 0, &sb, &result);
 
 	// Then
 	ck_check_error;
@@ -948,7 +969,7 @@ START_TEST(nonreg_regexp_should_match_even_when_ending_with_empty_string)
 	clear_error();
 
 	// When
-	ret = rem->vbmatch("abc$", &sb, &result);
+	ret = rem->vbmatch("abc$", 0, &sb, &result);
 
 	// Then
 	ck_check_error;
@@ -974,7 +995,7 @@ START_TEST(nonreg_regexp_should_match_even_with_nul_byte)
         vbuffer_sub_create(&sb, &vb, 0, ALL);
 
 	// When
-	ret = rem->vbmatch("abc", &sb, &result);
+	ret = rem->vbmatch("abc", 0, &sb, &result);
 
 	// Then
 	ck_check_error;
@@ -1000,7 +1021,7 @@ START_TEST(nonreg_regexp_should_match_even_with_a_partial_failed)
 	clear_error();
 
 	// When
-	ret = rem->vbmatch("foo|bar", &sb, &result);
+	ret = rem->vbmatch("foo|bar", 0, &sb, &result);
 
 	// Then
 	ck_check_error;
@@ -1020,7 +1041,7 @@ START_TEST(nonreg_vbfeed_should_not_return_partial_after_start_of_line_if_patter
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
         struct vbuffer_sub sb;
-	struct regexp *re = rem->compile("^abc");
+	struct regexp *re = rem->compile("^abc", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
         some_vbuffer(&vb, &sb, "aaa", NULL);
 	clear_error();
@@ -1100,6 +1121,10 @@ Suite* regexp_suite(void)
 	tcase_add_test(tcase, regexp_vbfeed_should_match_on_multiple_vbuffer);
 	tcase_add_test(tcase, regexp_vbfeed_should_return_results_on_match);
 	tcase_add_test(tcase, regexp_vbfeed_should_return_partial_on_partial_match);
+	suite_add_tcase(suite, tcase);
+
+	tcase = tcase_create("regexp_options");
+	tcase_add_test(tcase, regexp_match_should_match_insensitively);
 	suite_add_tcase(suite, tcase);
 
 	tcase = tcase_create("regexp_nonreg");

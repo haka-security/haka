@@ -23,9 +23,8 @@ Types
         :param string: String against which regular expression is matched
         :paramtype string: string
 
-        :rtype: bool
-        :rtype: :lua:class:`regexp.regexp_result`
-        :return: (true, :lua:class:`regexp.regexp_result`) if pattern matched, (false, nil) otherwise
+        :rtype: string
+        :return: matching string or nil if no match
 
         :raises Error: if pattern compilation fails
         :raises Error: if internal regular expression engine fails
@@ -37,11 +36,10 @@ Types
         :param pattern: Regular expression pattern
         :paramtype pattern: string
         :param vbuffer: vbuffer against which regular expression is matched
-        :paramtype vbuffer: vbuffer
+        :paramtype vbuffer: :lua:class:`haka.vbuffer`
 
-        :rtype: bool
-        :rtype: :lua:class:`regexp.regexp_vbresult`
-        :return: (true, :lua:class:`regexp.regexp_vbresult`) if pattern matched, (false, nil) otherwise
+        :rtype: :lua:class:`haka.vbuffer_sub`
+        :return: matching subbuffer or nil if no match
 
         :raises Error: if pattern compilation fails
         :raises Error: if internal regular expression engine fails
@@ -68,9 +66,8 @@ Types
         :param string: String against which regular expression is matched
         :paramtype string: string
 
-        :rtype: bool
-        :rtype: :lua:class:`regexp.regexp_result`
-        :return: (true, :lua:class:`regexp.regexp_result`) if pattern matched, (false, nil) otherwise
+        :rtype: string
+        :return: matching string or nil if no match
 
         :raises Error: if internal regular expression engine fails
 
@@ -79,11 +76,10 @@ Types
         Match the compiled regular expression against a given vbuffer.
 
         :param vbuffer: vbuffer against which regular expression is matched
-        :paramtype vbuffer: vbuffer
+        :paramtype vbuffer: :lua:class:`haka.vbuffer`
 
-        :rtype: bool
-        :rtype: :lua:class:`regexp.regexp_vbresult`
-        :return: (true, :lua:class:`regexp.regexp_vbresult`) if pattern matched, (false, nil) otherwise
+        :rtype: :lua:class:`haka.vbuffer_sub`
+        :return: matching subbuffer or nil if no match
 
         :raises Error: if internal regular expression engine fails
 
@@ -119,7 +115,7 @@ Types
         Match the compiled regular expression across multiple vbuffer.
 
         :param vbuffer: vbuffer against which regular expression is matched
-        :paramtype vbuffer: vbuffer
+        :paramtype vbuffer: :lua:class:`haka.vbuffer`
         :param eof: is this vbuffer the last one ?
         :paramtype eof: bool
 
