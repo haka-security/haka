@@ -151,7 +151,7 @@ struct regexp {
 %newobject regexp_module::compile;
 struct regexp_module {
 	%extend {
-		void match(const char *pattern, const char *STRING, size_t SIZE,
+		void _match(const char *pattern, const char *STRING, size_t SIZE,
 			   int options = 0, char **TEMP_OUTPUT, size_t *TEMP_SIZE) {
 			struct regexp_result result;
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
@@ -170,11 +170,12 @@ struct regexp_module {
 			strncpy(*TEMP_OUTPUT, STRING+result.offset, result.size);
 		}
 
-		struct vbuffer_sub *match(const char *pattern, struct vbuffer_sub *vbuf) {
+		struct vbuffer_sub *_match(const char *pattern, struct vbuffer_sub *vbuf,
+					  int options = 0) {
 			struct regexp_vbresult re_result;
 			struct vbuffer_sub *result;
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			int ret = $self->vbmatch(esc_regexp, 0, vbuf, &re_result);
+			int ret = $self->vbmatch(esc_regexp, options, vbuf, &re_result);
 			free(esc_regexp);
 
 			if (ret != REGEXP_MATCH) return NULL;
@@ -212,16 +213,8 @@ struct regexp_module {
 
 		local sink = self:create_sink()
 		local begin = nil
-		while true do
-			local sub = input:sub('available')
-			if not sub then
-				if createsub then
-					return nil
-				else
-					return false
-				end
-			end
-
+		local sub
+		for sub in input:foreach_available() do
 			local match, pos = sink:feed(sub)
 			if createsub and sink:ispartial() then
 				begin = input:copy()
@@ -240,5 +233,22 @@ struct regexp_module {
 				end
 			end
 		end
+
+		if createsub then
+			return nil
+		else
+			return false
+		end
+	end
+
+	swig.getclassmetatable('regexp_module')['.fn'].match = function (self, pattern, input, options, createsub)
+		meta = getmetatable(input)
+		if swig.getclassmetatable('vbuffer_iterator') ~= meta and
+			swig.getclassmetatable('vbuffer_iterator_blocking') ~= meta then
+			return self:_match(pattern, input, options or 0)
+		end
+
+		local re = self:compile(pattern, options)
+		return re:match(input, createsub)
 	end
 }

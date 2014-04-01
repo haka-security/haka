@@ -14,4 +14,6 @@ static struct regexp_module *re = &HAKA_MODULE;
 
 %}
 
+%include "haka/lua/swig.si"
+
 struct regexp_module *re;
