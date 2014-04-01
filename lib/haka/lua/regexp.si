@@ -102,21 +102,21 @@ struct regexp_sink {
 %newobject regexp::match;
 struct regexp {
 	%extend {
-		char *_match(const char *STRING, size_t SIZE) {
-			struct regexp_result re_result;
-			char *result;
+		void _match(const char *STRING, size_t SIZE, char **TEMP_OUTPUT, size_t *TEMP_SIZE) {
+			struct regexp_result result;
 
-			int ret = $self->module->exec($self, STRING, SIZE, &re_result);
+			int ret = $self->module->exec($self, STRING, SIZE, &result);
 
-			if (ret != REGEXP_MATCH) return NULL;
+			if (ret != REGEXP_MATCH) return;
 
-			result = malloc(re_result.size+1);
-			if (!result) error(L"memory error");
+			*TEMP_SIZE = result.size;
+			*TEMP_OUTPUT = malloc(result.size);
+			if (!*TEMP_OUTPUT) {
+				error(L"memory error");
+				return;
+			}
 
-			strncpy(result, STRING+re_result.offset, re_result.size);
-			result[re_result.size] = '\0';
-
-			return result;
+			strncpy(*TEMP_OUTPUT, STRING+result.offset, result.size);
 		}
 
 		struct vbuffer_sub *_match(struct vbuffer_sub *vbuf) {
@@ -151,23 +151,23 @@ struct regexp {
 %newobject regexp_module::compile;
 struct regexp_module {
 	%extend {
-		char *match(const char *pattern, const char *STRING, size_t SIZE,
-			   int options = 0) {
-			struct regexp_result re_result;
-			char *result;
+		void match(const char *pattern, const char *STRING, size_t SIZE,
+			   int options = 0, char **TEMP_OUTPUT, size_t *TEMP_SIZE) {
+			struct regexp_result result;
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			int ret = $self->match(esc_regexp, options, STRING, SIZE, &re_result);
+			int ret = $self->match(esc_regexp, options, STRING, SIZE, &result);
 			free(esc_regexp);
 
-			if (ret != REGEXP_MATCH) return NULL;
+			if (ret != REGEXP_MATCH) return;
 
-			result = malloc(re_result.size+1);
-			if (!result) error(L"memory error");
+			*TEMP_SIZE = result.size;
+			*TEMP_OUTPUT = malloc(result.size);
+			if (!*TEMP_OUTPUT) {
+				error(L"memory error");
+				return;
+			}
 
-			strncpy(result, STRING+re_result.offset, re_result.size);
-			result[re_result.size] = '\0';
-
-			return result;
+			strncpy(*TEMP_OUTPUT, STRING+result.offset, result.size);
 		}
 
 		struct vbuffer_sub *match(const char *pattern, struct vbuffer_sub *vbuf) {
