@@ -65,15 +65,14 @@ local function check_sqli(patterns, score, trans)
 					end
 
 					if v.score >= 8 then
-						local conn = http.connection
 						haka.alert{
 							description = string.format("SQLi attack detected in %s with score %d", k, v.score),
 							severity = 'high',
 							confidence = 'medium',
-							sources = haka.alert.address(conn.srcip),
+							sources = haka.alert.address(http.flow.srcip),
 							targets = {
-								haka.alert.address(conn.dstip),
-								haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
+								haka.alert.address(http.flow.dstip),
+								haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
 							},
 						}
 

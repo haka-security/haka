@@ -1,5 +1,5 @@
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.10:56353 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.10:56353 -> 192.168.20.1:80
 HTTP REQUEST
 class HttpRequestResult {
   headers : class HeaderResult {
@@ -49,4 +49,4 @@ class HttpResponseResult {
   status : "200"
   version : "2.0"
 }
-debug tcp-connection: closing connection 192.168.10.10:56353 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.10:56353 -> 192.168.20.1:80

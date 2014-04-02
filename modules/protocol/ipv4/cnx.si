@@ -1,0 +1,91 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%{
+#include <haka/cnx.h>
+
+#define MAP_KEY(key) do {\
+	key.srcip = srcip->addr;\
+	key.dstip = dstip->addr;\
+	key.srcport = srcport;\
+	key.dstport = dstport;\
+} while (0)
+
+%}
+
+struct cnx_table {
+	%extend {
+		cnx_table() {
+			return cnx_table_new(NULL);
+		}
+
+		~cnx_table() {
+			cnx_table_release($self);
+		}
+
+		struct cnx *cnx(struct ipv4_addr *srcip, struct ipv4_addr *dstip, int srcport, int dstport) {
+			struct cnx_key key;
+			MAP_KEY(key);
+			return cnx_new($self, &key);
+		}
+
+		struct cnx *getcnx(struct ipv4_addr *srcip, struct ipv4_addr *dstip, int srcport, int dstport,
+			const char **OUTPUT1, bool *OUTPUT2) {
+			struct cnx *cnx;
+			struct cnx_key key;
+			bool direction;
+
+			MAP_KEY(key);
+			cnx = cnx_get($self, &key, &direction, OUTPUT2);
+			*OUTPUT1 = direction == CNX_DIR_IN ? "up" : "down";
+
+			return cnx;
+		}
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(cnx_table);
+
+struct cnx {
+	%extend {
+		struct lua_ref data;
+
+		~cnx()
+		{
+			if ($self)
+				cnx_drop($self);
+		}
+
+		%rename(close) _close;
+		void _close()
+		{
+			if ($self)
+				cnx_close($self);
+		}
+
+		%rename(drop) _drop;
+		void _drop()
+		{
+			if ($self)
+				cnx_drop($self);
+		}
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(cnx);
+
+%{
+
+struct lua_ref cnx_data_get(struct cnx *cnx)
+{
+	return cnx->lua_priv;
+}
+
+void cnx_data_set(struct cnx *cnx, struct lua_ref ref)
+{
+	lua_ref_clear(&cnx->lua_priv);
+	cnx->lua_priv = ref;
+}
+
+%}
