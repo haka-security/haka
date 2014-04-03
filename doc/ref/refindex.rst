@@ -11,8 +11,6 @@ Welcome to Haka's Reference Guide!
 
     rule.rst
     dissector.rst
-    log_alert.rst
-    misc.rst
     packet.rst
     event.rst
     vbuffer.rst
@@ -20,3 +18,5 @@ Welcome to Haka's Reference Guide!
     state_machine.rst
     extmodules.rst
     regexp.rst
+    log_alert.rst
+    misc.rst
