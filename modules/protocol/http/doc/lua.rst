@@ -115,7 +115,7 @@ The HTTP dissector supports:
 * Keep-alive connections
 
 Events
-======
+^^^^^^
 
 * `request`
 
@@ -139,7 +139,7 @@ Events
 
 
 Functions
-=========
+^^^^^^^^^
 
 .. lua:class:: HttpRequestResult
 
