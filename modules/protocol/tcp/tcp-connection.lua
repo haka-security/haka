@@ -329,13 +329,6 @@ function tcp_connection_dissector.method:init(connection)
 end
 
 function tcp_connection_dissector.method:restart()
-	self.stream = nil
-	self.connection:close()
-	self.connection = nil
-	self.states = nil
-end
-
-function tcp_connection_dissector.method:restart()
 	self._restart = true
 end
 
