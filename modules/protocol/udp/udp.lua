@@ -13,7 +13,7 @@ local function compute_checksum(pkt)
 
 	-- size of the udp pseudo-header
 	local pseudo_header = haka.vbuffer_allocate(12)
-	-- source and destination ipv4 adresses
+	-- source and destination ipv4 addresses
 	pseudo_header:sub(0,4):setnumber(pkt.ip.src.packed)
 	pseudo_header:sub(4,4):setnumber(pkt.ip.dst.packed)
 	-- padding (null byte)
