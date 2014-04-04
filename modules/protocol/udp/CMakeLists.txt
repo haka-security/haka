@@ -5,5 +5,8 @@
 lua_compile(NAME udp FILES udp.lua)
 lua_install(TARGET udp DESTINATION ${MODULE_INSTALL_PATH}/protocol)
 
+lua_compile(NAME udp-connection FILES udp-connection.lua)
+lua_install(TARGET udp-connection DESTINATION ${MODULE_INSTALL_PATH}/protocol)
+
 # Tests
 add_subdirectory(test)
