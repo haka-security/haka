@@ -81,7 +81,7 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	function this.__printwrapper(p, data)
+	function debug.__printwrapper(p, data)
 		return function (...)
 			p(data, ...)
 		end

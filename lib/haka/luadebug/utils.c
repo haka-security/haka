@@ -119,7 +119,7 @@ void pprint(lua_State *L, struct luadebug_user *user, int index, bool full, cons
 		lua_pop(L, 1);
 	}
 
-	lua_settop(L, h-2);
+	lua_settop(L, h-1);
 
 	LUA_STACK_CHECK(L, 0);
 }
