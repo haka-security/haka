@@ -42,7 +42,7 @@ struct regexp_vbresult {
 	size_t size;
 };
 
-#define REGEXP_CASE_INSENSITIVE 1 << 0
+#define REGEXP_CASE_INSENSITIVE (1 << 0)
 
 struct regexp_module {
 	struct module module;
