@@ -8,7 +8,8 @@ swig_add_module(ipv4 lua SHARED
 	ipv4.c
 	ipv4-addr.c
 	ipv4-network.c
-	cnx.c)
+	cnx.c
+)
 SWIG_FIX_ENTRYPOINT(ipv4 protocol)
 
 include_directories(.)
