@@ -275,6 +275,18 @@ function TestRegexpModule:test_can_match_on_blocking_iterator ()
 	-- Given
 	local re = self.rem.re:compile("foo")
 	self:gen_stream(function (iter)
+		-- When
+		local ret = re:match(iter, true)
+		-- Then
+		assertTrue(ret)
+		assertEquals(ret:asstring(), 'foo')
+	end)
+end
+
+function TestRegexpModule:test_can_match_on_blocking_iterator ()
+	-- Given
+	local re = self.rem.re:compile("foo")
+	self:gen_stream(function (iter)
 		local ret
 		local i = 0
 		-- When
