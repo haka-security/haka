@@ -220,7 +220,7 @@ struct regexp_module {
 		for sub in input:foreach_available() do
 			local match, pos = sink:feed(sub)
 			if createsub and sink:ispartial() then
-				begin = input:copy()
+				begin = sub:pos('begin')
 			end
 
 			if match then

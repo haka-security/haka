@@ -7,6 +7,22 @@ require('luaunit')
 
 TestRegexpModule = {}
 
+function TestRegexpModule:gen_stream(f)
+	local data = { "bar fo", "o dea", "d beef", " cof", "fee" }
+	local stream = haka.vbuffer_stream()
+	local manager = haka.vbuffer_stream_comanager:new(stream)
+	manager:start(0, f)
+
+	for i, d in ipairs(data) do
+		local current = stream:push(haka.vbuffer_from(d))
+		if i == #data then
+			stream:finish()
+		end
+
+		manager:process_all(current)
+	end
+end
+
 function TestRegexpModule:setUp()
 	local module = os.getenv("HAKA_MODULE")
 	assert(module, "/!\\ TEST REQUIRES ENV VAR : HAKA_MODULE")
@@ -246,6 +262,18 @@ function TestRegexpModule:test_can_match_twice_with_same_iterator ()
 	local ret = re:match(iter, true)
 	-- Then
 	assertEquals(ret:asstring(), 'foo')
+end
+
+function TestRegexpModule:test_can_match_on_blocking_iterator ()
+	-- Given
+	local re = self.rem.re:compile("foo")
+	self:gen_stream(function (iter)
+		-- When
+		local ret = re:match(iter, true)
+		-- Then
+		assertTrue(ret)
+		assertEquals(ret:asstring(), 'foo')
+	end)
 end
 
 LuaUnit:setVerbosity(1)
