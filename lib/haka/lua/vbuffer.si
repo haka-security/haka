@@ -960,7 +960,9 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 
 	function haka.vbuffer_stream_comanager.method:process_all(current)
 		for id,co in pairs(self._co) do
-			process_one(self, id, co, current)
+			if co then
+				process_one(self, id, co, current)
+			end
 		end
 	end
 }
