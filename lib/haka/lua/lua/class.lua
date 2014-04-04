@@ -105,7 +105,7 @@ function class(name, super)
 		if convert then
 			return convert(self)
 		else
-			return string.format("<class instance: %s>", classof(self).name)
+			return string.format("<class instance %s: %p>", classof(self).name, self)
 		end
 	end
 
