@@ -234,6 +234,10 @@ function dissector.FlowDissector.method:continue()
 	error("not implemented")
 end
 
+function dissector.FlowDissector.method:streamed(f, stream, current, ...)
+	return dissector.FlowDissector.stream_wrapper(f, {streamed=true}, self, stream, current, ...)
+end
+
 function dissector.FlowDissector.method:get_comanager(stream)
 	if not self._costream then
 		self._costream = {}
@@ -246,6 +250,14 @@ function dissector.FlowDissector.method:get_comanager(stream)
 	return self._costream[stream]
 end
 
+function dissector.FlowDissector.method:next_dissector()
+	return self._next_dissector
+end
+
+function dissector.FlowDissector.method:select_next_dissector(dissector)
+	haka.context:register_connections(dissector:connections())
+	self._next_dissector = dissector
+end
 
 --
 -- Utility functions

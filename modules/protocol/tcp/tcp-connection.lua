@@ -374,22 +374,31 @@ function tcp_connection_dissector.method:_close()
 	self.states = nil
 end
 
+function tcp_connection_dissector.method:_trigger_receive(direction, stream, current)
+	self:trigger('receive_data', stream.stream, current, direction)
+
+	local next_dissector = self:next_dissector()
+	if next_dissector then
+		return next_dissector:receive(self, stream.stream, current, direction)
+	else
+		return self:send(direction)
+	end
+end
+
 function tcp_connection_dissector.method:push(pkt, direction, finish)
 	local stream = self.stream[direction]
 
 	local current = stream:push(pkt)
 	if finish then stream.stream:finish() end
 
-	self:trigger('receive_data', stream.stream, current, direction)
-	return self:_send(direction)
+	self:_trigger_receive(direction, stream, current)
 end
 
 function tcp_connection_dissector.method:finish(direction)
 	local stream = self.stream[direction]
 
 	stream.stream:finish()
-
-	self:trigger('receive_data', stream.stream, nil, direction)
+	self:_trigger_receive(direction, stream, nil)
 end
 
 function tcp_connection_dissector.method:continue()
@@ -399,7 +408,7 @@ function tcp_connection_dissector.method:continue()
 end
 
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
-	self:_send(direction)
+	self:send(direction)
 
 	self.stream[direction]:seq(pkt)
 	self.stream[haka.dissector.other_direction(direction)]:ack(pkt)
@@ -407,21 +416,27 @@ function tcp_connection_dissector.method:_sendpkt(pkt, direction)
 end
 
 function tcp_connection_dissector.method:_send(direction)
-	local stream = self.stream[direction]
-	local other_stream = self.stream[haka.dissector.other_direction(direction)]
-
-	local pkt = stream:pop()
-	while pkt do
-		other_stream:ack(pkt)
-		pkt:send()
-
-		pkt = stream:pop()
+	if self.stream then
+		local stream = self.stream[direction]
+		local other_stream = self.stream[haka.dissector.other_direction(direction)]
+	
+		local pkt = stream:pop()
+		while pkt do
+			other_stream:ack(pkt)
+			pkt:send()
+	
+			pkt = stream:pop()
+		end
 	end
 end
 
-function tcp_connection_dissector.method:send()
-	self:_send('up')
-	self:_send('down')
+function tcp_connection_dissector.method:send(direction)
+	if not direction then
+		self:_send('up')
+		self:_send('down')
+	else
+		self:_send(direction)
+	end
 end
 
 function tcp_connection_dissector.method:drop()
