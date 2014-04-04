@@ -32,8 +32,8 @@ function TestVBufferStream:test_stream_blocking_advance()
 		end
 	end)
 
-	assert(count == 10*4, string.format("invalid byte count: %i", count)) -- 10 time "Haka"
-	assert(loop == 5, string.format("invalid loop count: %i", loop))
+	assertEquals(count, 10*4) -- 10 time "Haka"
+	assertEquals(loop, 5)
 end
 
 function TestVBufferStream:test_stream_blocking_sub()
@@ -45,17 +45,17 @@ function TestVBufferStream:test_stream_blocking_sub()
 			local sub = iter:sub(10)
 			if not sub then break end
 
-			assert(sub:asstring() == ref[loop+1])
+			assertEquals(sub:asstring(), ref[loop+1])
 			loop = loop+1
 		end
 	end)
 
-	assert(loop == 4, string.format("invalid loop count: %i", loop))
+	assertEquals(loop, 4)
 end
 
 function TestVBufferStream:test_stream_blocking_all()
 	self:gen_stream(function (iter)
-		assert(iter:sub('all'):asstring() == "HakaHakaHakaHakaHakaHakaHakaHakaHakaHaka")
+		assertEquals(iter:sub('all'):asstring(), "HakaHakaHakaHakaHakaHakaHakaHakaHakaHaka")
 	end)
 end
 
@@ -64,13 +64,13 @@ function TestVBufferStream:test_stream_blocking_available()
 
 	self:gen_stream(function (iter)
 		for sub in iter:foreach_available() do
-			assert(sub:asstring() == "Haka")
+			assertEquals(sub:asstring(), "Haka")
 			loop = loop+1
 		end
 	end)
 
-	assert(loop == 10, string.format("invalid loop count: %i", loop))
+	assertEquals(loop, 10)
 end
 
 LuaUnit:setVerbosity(1)
-LuaUnit:run('TestVBufferStream')
+assert(LuaUnit:run('TestVBufferStream') == 0)

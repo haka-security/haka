@@ -57,4 +57,4 @@ for k, v in pairs(_tests) do
 end
 
 LuaUnit:setVerbosity(1)
-LuaUnit:run('TestHttpNormalize')
+assert(LuaUnit:run('TestHttpNormalize') == 0)

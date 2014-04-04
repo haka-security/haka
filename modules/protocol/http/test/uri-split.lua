@@ -156,4 +156,4 @@ for k, v in pairs(_cookie) do
 end
 
 LuaUnit:setVerbosity(1)
-LuaUnit:run('TestUriSplit', 'TestCookieSplit')
+assert(LuaUnit:run('TestUriSplit', 'TestCookieSplit') == 0)

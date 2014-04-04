@@ -210,7 +210,7 @@ function TestRegexpModule:test_feed_should_set_sink_to_partial ()
 	-- When
 	local partial = sink:ispartial()
 	-- Then
-	assert(partial, "Partial matching pattern expected to set sink to partial result don't")
+	assertTrue(partial)
 end
 
 function TestRegexpModule:test_match_should_not_match_different_case_without_option ()
@@ -279,4 +279,4 @@ function TestRegexpModule:test_can_match_on_blocking_iterator ()
 end
 
 LuaUnit:setVerbosity(1)
-LuaUnit:run('TestRegexpModule')
+assert(LuaUnit:run('TestRegexpModule') == 0)

@@ -15,7 +15,7 @@ function TestVBuffer:test_invalid_iterator_erase_from_start()
 	buf:sub(0, 2):erase()
 
 	local success, msg = pcall(function () pos:advance(1) end)
-	assert(not success and msg == "invalid buffer iterator", "failed to detect invalid iterator")
+	assertEquals(not success and msg, "invalid buffer iterator")
 end
 
 function TestVBuffer:test_invalid_iterator_erase()
@@ -27,56 +27,56 @@ function TestVBuffer:test_invalid_iterator_erase()
 	buf:sub(1, 3):erase()
 
 	local success, msg = pcall(function () pos:advance(1) end)
-	assert(not success and msg == "invalid buffer iterator", "failed to detect invalid iterator")
+	assertEquals(not success and msg, "invalid buffer iterator")
 end
 
 function TestVBuffer:test_asbit_empty()
 	local buf = haka.vbuffer_allocate(0)
 	local success, msg = pcall(function () buf:sub():asbits(8, 6) end)
-	assert(not success and msg == "asbits: invalid bit offset", "failed to detect invalid asbits offset")
+	assertEquals(not success and msg, "asbits: invalid bit offset")
 end
 
 function TestVBuffer:test_setbit_empty()
 	local buf = haka.vbuffer_allocate(0)
 	local success, msg = pcall(function () buf:sub():setbits(8, 6, 0) end)
-	assert(not success and msg == "setbits: invalid bit offset", "failed to detect invalid setbits offset")
+	assertEquals(not success and msg, "setbits: invalid bit offset")
 end
 
 function TestVBuffer:test_asbit_too_small()
 	local buf = haka.vbuffer_allocate(2)
 	local success, msg = pcall(function () buf:sub():asbits(12, 24) end)
-	assert(not success and msg == "asbits: invalid bit size", "failed to detect invalid asbits size")
+	assertEquals(not success and msg, "asbits: invalid bit size")
 end
 
 function TestVBuffer:test_asnumber_too_big()
 	local buf = haka.vbuffer_allocate(10)
 	local success, msg = pcall(function () buf:sub():asnumber() end)
-	assert(not success and msg == "asnumber: unsupported size 10", "failed to detect invalid asnumber size")
+	assertEquals(not success and msg, "asnumber: unsupported size 10")
 end
 
 function TestVBuffer:test_setbit_too_big()
 	local buf = haka.vbuffer_allocate(8)
 	local success, msg = pcall(function () buf:sub():setbits(12, 2000, 2000) end)
-	assert(not success and msg == "setbits: unsupported size 2000", "failed to detect invalid setbits size too big")
+	assertEquals(not success and msg, "setbits: unsupported size 2000")
 end
 
 function TestVBuffer:test_setbit_too_small()
 	local buf = haka.vbuffer_allocate(2)
 	local success, msg = pcall(function () buf:sub():setbits(12, 24, 0) end)
-	assert(not success and msg == "setbits: invalid bit size", "failed to detect invalid setbits size too small")
+	assertEquals(not success and msg, "setbits: invalid bit size")
 end
 
 function TestVBuffer:test_insert_on_itself()
 	local buf = haka.vbuffer_allocate(10)
 	local success, msg = pcall(function () buf:pos(4):insert(buf) end)
-	assert(not success and msg == "circular buffer insertion", "failed to detect insert on itself")
+	assertEquals(not success and msg, "circular buffer insertion")
 end
 
 function TestVBuffer:test_append_on_itself()
 	local buf = haka.vbuffer_allocate(10)
 	local success, msg = pcall(function () buf:append(buf) end)
-	assert(not success and msg == "circular buffer insertion", "failed to detect insert on itself")
+	assertEquals(not success and msg, "circular buffer insertion")
 end
 
 LuaUnit:setVerbosity(1)
-LuaUnit:run('TestVBuffer')
+assert(LuaUnit:run('TestVBuffer') == 0)
