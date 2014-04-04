@@ -205,7 +205,7 @@ struct regexp_module {
 
 %luacode {
 	swig.getclassmetatable('regexp')['.fn'].match = function (self, input, createsub)
-		meta = getmetatable(input)
+		local meta = getmetatable(input)
 		if swig.getclassmetatable('vbuffer_iterator') ~= meta and
 			swig.getclassmetatable('vbuffer_iterator_blocking') ~= meta then
 			return self:_match(input)
@@ -242,7 +242,7 @@ struct regexp_module {
 	end
 
 	swig.getclassmetatable('regexp_module')['.fn'].match = function (self, pattern, input, options, createsub)
-		meta = getmetatable(input)
+		local meta = getmetatable(input)
 		if swig.getclassmetatable('vbuffer_iterator') ~= meta and
 			swig.getclassmetatable('vbuffer_iterator_blocking') ~= meta then
 			return self:_match(pattern, input, options or 0)
