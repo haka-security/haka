@@ -1315,6 +1315,11 @@ function grammar.Release.method:compile(rule, id)
 	return grammar_dg.Release:new()
 end
 
+grammar.Empty = class('Empty', grammar.Entity)
+
+function grammar.Empty.method:compile(rule, id)
+	return grammar_dg.Primitive:new()
+end
 
 function grammar.record(entities)
 	return grammar.Record:new(entities)
@@ -1398,6 +1403,9 @@ end
 
 grammar.release = grammar.Release:new()
 
+function grammar.empty()
+	return grammar.Empty:new()
+end
 
 --
 -- Grammar
