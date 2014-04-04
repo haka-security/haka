@@ -248,6 +248,7 @@ function TestRegexpModule:test_match_on_iterator_should_return_a_subbuffer ()
 	-- When
 	local ret = re:match(iter, true)
 	-- Then
+	assertTrue(ret)
 	assertEquals(ret:asstring(), 'foo')
 end
 
@@ -261,6 +262,7 @@ function TestRegexpModule:test_can_match_twice_with_same_iterator ()
 	-- When
 	local ret = re:match(iter, true)
 	-- Then
+	assertTrue(ret)
 	assertEquals(ret:asstring(), 'foo')
 end
 
