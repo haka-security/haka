@@ -215,7 +215,7 @@ struct regexp_module {
 		end
 
 		local sink = self:create_sink()
-		local begin = nil
+		local begin
 		local sub
 		for sub in input:foreach_available() do
 			local match, pos = sink:feed(sub)
