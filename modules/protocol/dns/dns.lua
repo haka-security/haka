@@ -71,7 +71,7 @@ dns_dissector.grammar.label = haka.grammar.record{
 		name = haka.grammar.field('name', haka.grammar.bytes():options{
 			count = function (self, ctx, el) return self.length end
 		}),
-		pointer = haka.grammar.number(0),
+		pointer = haka.grammar.empty(),
 	},
 	function (self, ctx)
 		if self.pointer == 3 then
