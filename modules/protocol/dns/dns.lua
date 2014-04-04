@@ -22,9 +22,25 @@ function module.install_udp_rule(port)
 	haka.rule{
 		hook = haka.event('udp', 'receive_packet'),
 		eval = function (pkt)
-			if pkt.dstport == port then
+			if pkt.dstport == port or pkt.srcport == port then
 				haka.log.debug('dns', "selecting dns dissector on packet")
-				dns_dissector:receive(pkt)
+				local pkt = dns_dissector.grammar.message:parse(pkt.payload:pos("begin"), self)
+				debug.pprint(pkt, nil, nil, { debug.hide_underscore, debug.hide_function })
+				print(pkt.question.name)
+				if pkt.header.qr then
+					print("Answer")
+					for i, rr in ipairs(pkt.answer) do
+						print(rr.name)
+					end
+					print("Authority")
+					for i, rr in ipairs(pkt.authority) do
+						print(rr.name)
+					end
+					print("Additional")
+					for i, rr in ipairs(pkt.additional) do
+						print(rr.name)
+					end
+				end
 			end
 		end
 	}
@@ -32,8 +48,6 @@ end
 
 function dns_dissector.method:parse_payload(pkt, payload)
 	local pkt = dns_dissector.grammar.message:parse(payload:pos("begin"), self)
-	debug.pprint(pkt, nil, nil, { debug.hide_underscore, debug.hide_function })
-	print(pkt.question.name)
 end
 
 function dns_dissector.method:create_payload(pkt, payload, init)
