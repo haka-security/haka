@@ -21,7 +21,7 @@ local function tcp_get_key(pkt)
 end
 
 function tcp_connection_dissector:receive(pkt)
-	local connection, direction, dropped = tcp_connection_dissector.cnx_table:getcnx(tcp_get_key(pkt))
+	local connection, direction, dropped = tcp_connection_dissector.cnx_table:get(tcp_get_key(pkt))
 	if not connection then
 		if pkt.flags.syn and not pkt.flags.ack then
 			local data = haka.context.newscope()
@@ -33,7 +33,7 @@ function tcp_connection_dissector:receive(pkt)
 
 			pkt:continue()
 
-			connection = tcp_connection_dissector.cnx_table:cnx(tcp_get_key(pkt))
+			connection = tcp_connection_dissector.cnx_table:create(tcp_get_key(pkt))
 			connection.data = data
 			self:init(connection, pkt)
 			data:createnamespace('tcp-connection', self)

@@ -21,7 +21,7 @@ local function udp_get_cnx_key(pkt)
 end
 
 function udp_connection_dissector:receive(pkt)
-	local connection, direction = udp_connection_dissector.cnx_table:getcnx(udp_get_cnx_key(pkt))
+	local connection, direction = udp_connection_dissector.cnx_table:get(udp_get_cnx_key(pkt))
 	if not connection then
 		local data = haka.context.newscope()
 		local self = udp_connection_dissector:new(pkt)
@@ -32,7 +32,7 @@ function udp_connection_dissector:receive(pkt)
 
 		pkt:continue()
 
-		connection = udp_connection_dissector.cnx_table:cnx(udp_get_cnx_key(pkt))
+		connection = udp_connection_dissector.cnx_table:create(udp_get_cnx_key(pkt))
 		connection.data = data
 		self:init(connection)
 		data:createnamespace('udp-connection', self)

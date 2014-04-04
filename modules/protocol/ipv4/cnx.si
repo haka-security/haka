@@ -24,13 +24,13 @@ struct cnx_table {
 			cnx_table_release($self);
 		}
 
-		struct cnx *cnx(struct ipv4_addr *srcip, struct ipv4_addr *dstip, int srcport, int dstport) {
+		struct cnx *create(struct ipv4_addr *srcip, struct ipv4_addr *dstip, int srcport, int dstport) {
 			struct cnx_key key;
 			MAP_KEY(key);
 			return cnx_new($self, &key);
 		}
 
-		struct cnx *getcnx(struct ipv4_addr *srcip, struct ipv4_addr *dstip, int srcport, int dstport,
+		struct cnx *get(struct ipv4_addr *srcip, struct ipv4_addr *dstip, int srcport, int dstport,
 			const char **OUTPUT1, bool *OUTPUT2) {
 			struct cnx *cnx;
 			struct cnx_key key;
