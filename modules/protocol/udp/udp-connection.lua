@@ -80,6 +80,9 @@ udp_connection_dissector.states.drop = udp_connection_dissector.states:state{
 			return context.states.FINISH
 		end
 	},
+	update = function (context, pkt, direction)
+		pkt:drop()
+	end,
 	finish = function (context)
 		context.flow.connection:close()
 	end
@@ -88,6 +91,14 @@ udp_connection_dissector.states.drop = udp_connection_dissector.states:state{
 udp_connection_dissector.states.established = udp_connection_dissector.states:state{
 	update = function (context, pkt, direction)
 		context.flow:trigger('receive_data', pkt.payload, direction)
+
+		local next_dissector = context.flow:next_dissector()
+		if next_dissector then
+			return next_dissector:receive(pkt.payload, direction, pkt)
+		else
+			pkt:send()
+		end
+
 		return context.states.established
 	end,
 	timeouts = {
@@ -115,7 +126,6 @@ end
 
 function udp_connection_dissector.method:emit(pkt, direction)
 	self.states:update(pkt, direction)
-	pkt:send()
 end
 
 function udp_connection_dissector.method:continue()
