@@ -57,26 +57,44 @@ end
 
 dns_dissector.grammar = haka.grammar:new("udp")
 
+dns_dissector.grammar.pointer = haka.grammar.record{
+	haka.grammar.field('pointer', haka.grammar.number(2)),
+	haka.grammar.field('offset', haka.grammar.number(14)),
+}
+
 dns_dissector.grammar.label = haka.grammar.record{
-	haka.grammar.field('length', haka.grammar.number(8)),
-	haka.grammar.field('name', haka.grammar.bytes():options{
-		count = function (self, ctx, el) return self.length end
-	})
+	haka.grammar.union{
+		dns_dissector.grammar.pointer,
+		haka.grammar.field('length', haka.grammar.number(8)),
+	},
+	haka.grammar.branch({
+		name = haka.grammar.field('name', haka.grammar.bytes():options{
+			count = function (self, ctx, el) return self.length end
+		}),
+		pointer = haka.grammar.number(0),
+	},
+	function (self, ctx)
+		if self.pointer == 3 then
+			return 'pointer'
+		else
+			return 'name'
+		end
+	end)
 }
 
 dns_dissector.grammar.domainname = haka.grammar.array(dns_dissector.grammar.label):options{
-		untilcond = function (label) return label and label.length == 0 end,
+		untilcond = function (label) return label and (label.length == 0 or label.pointer == 3) end,
 		result = DomainNameResult
 	}
 
 dns_dissector.grammar.header = haka.grammar.record{
 	haka.grammar.field('id', haka.grammar.number(16)),
-	haka.grammar.field('qr', haka.grammar.number(1)),
+	haka.grammar.field('qr', haka.grammar.flag),
 	haka.grammar.field('opcode', haka.grammar.number(4)),
-	haka.grammar.field('aa', haka.grammar.number(1)),
-	haka.grammar.field('tc', haka.grammar.number(1)),
-	haka.grammar.field("rd", haka.grammar.number(1)),
-	haka.grammar.field("ra", haka.grammar.number(1)),
+	haka.grammar.field('aa', haka.grammar.flag),
+	haka.grammar.field('tc', haka.grammar.flag),
+	haka.grammar.field("rd", haka.grammar.flag),
+	haka.grammar.field("ra", haka.grammar.flag),
 	haka.grammar.field("z", haka.grammar.number(3)),
 	haka.grammar.field("rcode", haka.grammar.number(4)),
 	haka.grammar.field("qdcount", haka.grammar.number(16)),
