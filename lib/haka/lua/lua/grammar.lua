@@ -562,7 +562,15 @@ function grammar_dg.ArrayStart.method:_apply(ctx)
 		local result = self.resultclass:new()
 		result:_init(ctx.iter:copy(), self.entity, self.create)
 		local array = ctx:push(result, self.name)
-		res[self.name] = array
+
+		if self.converter then
+			res:addproperty(self.name,
+			function (this) return self.converter.get(array) end,
+			function (this, newvalue) sub = self.converter.set(newvalue) end
+			)
+		else
+			res[self.name] = array
+		end
 	else
 		ctx:push({}, nil)
 	end
@@ -1158,6 +1166,7 @@ end
 function grammar.Array.method:compile(rule, id)
 	local entity = self.entity:compile(self.rule or rule, id)
 	local start = grammar_dg.ArrayStart:new(self.named, self.rule, entity, self.create, self.resultclass)
+	if self.converter then start:convert(self.converter, self.memoize) end
 	local finish = grammar.ResultPop:new()
 
 	local pop = grammar_dg.ArrayPop:new()
