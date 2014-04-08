@@ -1330,6 +1330,16 @@ function grammar.Empty.method:compile(rule, id)
 	return grammar_dg.Primitive:new()
 end
 
+grammar.Error = class('Error', grammar.Entity)
+
+function grammar.Error.method:__init(msg)
+	self.msg = msg
+end
+
+function grammar.Error.method:compile(rule, id)
+	return grammar_dg.Error:new(id, self.msg)
+end
+
 function grammar.record(entities)
 	return grammar.Record:new(entities)
 end
@@ -1414,6 +1424,10 @@ grammar.release = grammar.Release:new()
 
 function grammar.empty()
 	return grammar.Empty:new()
+end
+
+function grammar.error(msg)
+	return grammar.Error:new(msg)
 end
 
 --
