@@ -11,6 +11,7 @@ haka.rule {
 	eval = function (dns, request)
 		print("DNS REQUEST")
 		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
+		print(request.question.name)
 	end
 }
 
@@ -19,5 +20,14 @@ haka.rule {
 	eval = function (dns, response)
 		print("DNS RESPONSE")
 		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
+		for i, rr in ipairs(response.answer) do
+			print(rr.name)
+		end
+		for i, rr in ipairs(response.authority) do
+			print(rr.name)
+		end
+		for i, rr in ipairs(response.additional) do
+			print(rr.name)
+		end
 	end
 }
