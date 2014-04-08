@@ -44,7 +44,7 @@ local function pointer_resolution(self, ctx)
 		if label.compression_scheme == POINTER_COMPRESSION then
 			print(string.format("RESOLVE POINTER AT 0x%x (0x%x)", offset, offset+0x2A))
 			if not ctx._labels[label.pointer] then
-				error(string.format("Reference unknown domain name at offset: 0x%x (0x%x)", label.pointer, label.pointer+0x2A))
+				error(string.format("reference unknown domain name at offset: 0x%x (0x%x)", label.pointer, label.pointer+0x2A))
 			end
 			label.next = ctx._labels[label.pointer]
 		end
@@ -116,7 +116,7 @@ dns_dissector.grammar.label = haka.grammar.record{
 				count = function (self, ctx, el) return self.length end
 			}),
 		pointer = haka.grammar.field('_offset', haka.grammar.number(8)),
-		default = haka.grammar.error("Unsupported compression scheme"),
+		default = haka.grammar.error("unsupported compression scheme"),
 		},
 		function (self, ctx)
 			if self.compression_scheme == POINTER_COMPRESSION then
@@ -172,25 +172,25 @@ dns_dissector.grammar.resourcerecord = haka.grammar.record{
 		A =       haka.grammar.field('ip', haka.grammar.number(32)
 			:convert(ipv4_addr_convert, true)),
 		NS =      haka.grammar.field('name', dns_dissector.grammar.dn),
-		MD =      haka.grammar.error("Unsupported type. Will come soon !"),
-		MF =      haka.grammar.error("Unsupported type. Will come soon !"),
+		MD =      haka.grammar.error("unsupported type. Will come soon !"),
+		MF =      haka.grammar.error("unsupported type. Will come soon !"),
 		CNAME =   haka.grammar.field('name', dns_dissector.grammar.dn),
-		SOA =     haka.grammar.error("Unsupported type. Will come soon !"),
-		MB =      haka.grammar.error("Unsupported type. Will come soon !"),
-		MG =      haka.grammar.error("Unsupported type. Will come soon !"),
-		MR =      haka.grammar.error("Unsupported type. Will come soon !"),
+		SOA =     haka.grammar.error("unsupported type. Will come soon !"),
+		MB =      haka.grammar.error("unsupported type. Will come soon !"),
+		MG =      haka.grammar.error("unsupported type. Will come soon !"),
+		MR =      haka.grammar.error("unsupported type. Will come soon !"),
 		NULL =    haka.grammar.field('data', haka.grammar.bytes():options{
 			count = function (self, ctx) return self.length end
 		}),
-		WKS =     haka.grammar.error("Unsupported type. Will come soon !"),
-		PTR =     haka.grammar.error("Unsupported type. Will come soon !"),
-		HINFO =   haka.grammar.error("Unsupported type. Will come soon !"),
-		MINFO =   haka.grammar.error("Unsupported type. Will come soon !"),
-		MX =      haka.grammar.error("Unsupported type. Will come soon !"),
+		WKS =     haka.grammar.error("unsupported type. Will come soon !"),
+		PTR =     haka.grammar.error("unsupported type. Will come soon !"),
+		HINFO =   haka.grammar.error("unsupported type. Will come soon !"),
+		MINFO =   haka.grammar.error("unsupported type. Will come soon !"),
+		MX =      haka.grammar.error("unsupported type. Will come soon !"),
 		TXT =     haka.grammar.field('data', haka.grammar.bytes():options{
 			count = function (self, ctx) return self.length end
 		}),
-		default = haka.grammar.error("Unsupported type."),
+		default = haka.grammar.error("unsupported type."),
 	},
 	function (self, ctx)
 		return TYPE[self.type]
