@@ -71,21 +71,20 @@ end
 
 dns_dissector.grammar = haka.grammar:new("udp")
 
-dns_dissector.grammar.pointer = haka.grammar.record{
-	haka.grammar.field('pointer', haka.grammar.number(2)),
-	haka.grammar.field('offset', haka.grammar.number(14)),
-}
-
 dns_dissector.grammar.label = haka.grammar.record{
 	haka.grammar.union{
-		dns_dissector.grammar.pointer,
+		haka.grammar.field('pointer', haka.grammar.record{
+			haka.grammar.field('isa', haka.grammar.number(2)),
+			haka.grammar.field('msb', haka.grammar.number(6)),
+		}),
 		haka.grammar.field('length', haka.grammar.number(8)),
 	},
 	haka.grammar.branch({
 		name = haka.grammar.field('name', haka.grammar.bytes():options{
 			count = function (self, ctx, el) return self.length end
 		}),
-		pointer = haka.grammar.empty(),
+		pointer = haka.grammar.field('offset', haka.grammar.number(8))
+		:convert(dns_dissector.pointer_converter),
 	},
 	function (self, ctx)
 		if self.pointer == 3 then
