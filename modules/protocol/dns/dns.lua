@@ -9,22 +9,24 @@ local module = {}
 local NO_COMPRESSION      = 0
 local POINTER_COMPRESSION = 3
 
-local TYPE_A     =  1 -- a host address
-local TYPE_NS    =  2 -- an authoritative name server
-local TYPE_MD    =  3 -- a mail destination (Obsolete - use MX)
-local TYPE_MF    =  4 -- a mail forwarder (Obsolete - use MX)
-local TYPE_CNAME =  5 -- the canonical name for an alias
-local TYPE_SOA   =  6 -- marks the start of a zone of authority
-local TYPE_MB    =  7 -- a mailbox domain name (EXPERIMENTAL)
-local TYPE_MG    =  8 -- a mail group member (EXPERIMENTAL)
-local TYPE_MR    =  9 -- a mail rename domain name (EXPERIMENTAL)
-local TYPE_NULL  = 10 -- a null RR (EXPERIMENTAL)
-local TYPE_WKS   = 11 -- a well known service description
-local TYPE_PTR   = 12 -- a domain name pointer
-local TYPE_HINFO = 13 -- host information
-local TYPE_MINFO = 14 -- mailbox or mail list information
-local TYPE_MX    = 15 -- mail exchange
-local TYPE_TXT   = 16 -- text strings
+local TYPE = {
+	'A',      -- a host address
+	'NS',     -- an authoritative name server
+	'MD',     -- a mail destination (Obsolete - use MX)
+	'MF',     -- a mail forwarder (Obsolete - use MX)
+	'CNAME',  -- the canonical name for an alias
+	'SOA',    -- marks the start of a zone of authority
+	'MB',     -- a mailbox domain name (EXPERIMENTAL)
+	'MG',     -- a mail group member (EXPERIMENTAL)
+	'MR',     -- a mail rename domain name (EXPERIMENTAL)
+	'NULL',   -- a null RR (EXPERIMENTAL)
+	'WKS',    -- a well known service description
+	'PTR',    -- a domain name pointer
+	'HINFO',  -- host information
+	'MINFO',  -- mailbox or mail list information
+	'MX',     -- mail exchange
+	'TXT',    -- text strings
+}
 
 --
 -- DNS Utils
@@ -185,39 +187,7 @@ dns_dissector.grammar.resourcerecord = haka.grammar.record{
 		default = haka.grammar.error("Unsupported type."),
 	},
 	function (self, ctx)
-		if self.type == TYPE_A then
-			return 'A'
-		elseif self.type == TYPE_NS then
-			return 'NS'
-		elseif self.type == TYPE_MD then
-			return 'MD'
-		elseif self.type == TYPE_MF then
-			return 'MF'
-		elseif self.type == TYPE_CNAME then
-			return 'CNAME'
-		elseif self.type == TYPE_SOA then
-			return 'SOA'
-		elseif self.type == TYPE_MB then
-			return 'MB'
-		elseif self.type == TYPE_MG then
-			return 'MG'
-		elseif self.type == TYPE_MR then
-			return 'MR'
-		elseif self.type == TYPE_NULL then
-			return 'NULL'
-		elseif self.type == TYPE_WKS then
-			return 'WKS'
-		elseif self.type == TYPE_PTR then
-			return 'PTR'
-		elseif self.type == TYPE_HINFO then
-			return 'HINFO'
-		elseif self.type == TYPE_MINFO then
-			return 'MINFO'
-		elseif self.type == TYPE_MX then
-			return 'MX'
-		elseif self.type == TYPE_TXT then
-			return 'TXT'
-		end
+		return TYPE[self.type]
 	end
 	)),
 }
