@@ -29,6 +29,9 @@ haka.rule {
 		end
 		for i, rr in ipairs(response.additional) do
 			print(rr.name)
+			if rr.type == 'A' then
+				print(rr.ip)
+			end
 		end
 	end
 }

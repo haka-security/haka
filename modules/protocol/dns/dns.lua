@@ -140,6 +140,18 @@ dns_dissector.grammar.dn = haka.grammar.array(dns_dissector.grammar.label):optio
 		untilcond = function (label) return label and (label.length == 0 or label.pointer ~= nil) end,
 }:convert(dn_converter, true)
 
+dns_dissector.type = haka.grammar.number(16):convert({
+	get = function (type) return TYPE[type] end,
+	set = function (type)
+		for i, type in TYPE do
+			if type == type then
+				return i
+			end
+		end
+		error("unknown type: "..type)
+	end
+})
+
 dns_dissector.grammar.header = haka.grammar.record{
 	haka.grammar.field('id',      haka.grammar.number(16)),
 	haka.grammar.field('qr',      haka.grammar.flag),
@@ -158,13 +170,13 @@ dns_dissector.grammar.header = haka.grammar.record{
 
 dns_dissector.grammar.question = haka.grammar.record{
 	haka.grammar.field('name',    dns_dissector.grammar.dn),
-	haka.grammar.field('type',    haka.grammar.number(16)),
+	haka.grammar.field('type',    dns_dissector.type),
 	haka.grammar.field('class',   haka.grammar.number(16)),
 }
 
 dns_dissector.grammar.resourcerecord = haka.grammar.record{
 	haka.grammar.field('name',    dns_dissector.grammar.dn),
-	haka.grammar.field('type',    haka.grammar.number(16)),
+	haka.grammar.field('type',    dns_dissector.type),
 	haka.grammar.field('class',   haka.grammar.number(16)),
 	haka.grammar.field('ttl',     haka.grammar.number(32)),
 	haka.grammar.field('length',  haka.grammar.number(16)),
@@ -193,7 +205,7 @@ dns_dissector.grammar.resourcerecord = haka.grammar.record{
 		default = haka.grammar.error("unsupported type."),
 	},
 	function (self, ctx)
-		return TYPE[self.type]
+		return self.type
 	end
 	),
 }
