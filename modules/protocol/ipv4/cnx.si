@@ -11,8 +11,9 @@
 	key.srcport = srcport;\
 	key.dstport = dstport;\
 } while (0)
-
 %}
+
+%include "haka/lua/cnx.si"
 
 struct cnx_table {
 	%extend {
