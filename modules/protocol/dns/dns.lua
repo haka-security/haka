@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require("protocol/udp")
+require("protocol/udp-connection")
 
 local module = {}
 
@@ -11,51 +11,31 @@ local module = {}
 --
 
 local dns_dissector = haka.dissector.new{
-	type = haka.dissector.EncapsulatedPacketDissector,
+	type = haka.dissector.FlowDissector,
 	name = 'dns'
 }
 
 dns_dissector:register_event('request')
 dns_dissector:register_event('response')
 
-function module.install_udp_rule(port)
-	haka.rule{
-		hook = haka.event('udp', 'receive_packet'),
-		eval = function (pkt)
-			if pkt.dstport == port or pkt.srcport == port then
-				haka.log.debug('dns', "selecting dns dissector on packet")
-				local pkt = dns_dissector.grammar.message:parse(pkt.payload:pos("begin"), self)
-				debug.pprint(pkt, nil, nil, { debug.hide_underscore, debug.hide_function })
-				print(pkt.question.name)
-				if pkt.header.qr then
-					print("Answer")
-					for i, rr in ipairs(pkt.answer) do
-						print(rr.name)
-					end
-					print("Authority")
-					for i, rr in ipairs(pkt.authority) do
-						print(rr.name)
-					end
-					print("Additional")
-					for i, rr in ipairs(pkt.additional) do
-						print(rr.name)
-					end
-				end
-			end
-		end
-	}
+function dns_dissector.method:__init(flow)
+	self.flow = flow
 end
 
-function dns_dissector.method:parse_payload(pkt, payload)
-	local pkt = dns_dissector.grammar.message:parse(payload:pos("begin"), self)
+function dns_dissector.method:receive(payload, direction, pkt)
+	local res = dns_dissector.grammar.message:parse(payload:pos("begin"))
+	
+	if direction == 'up' then
+		self:trigger('request', res)
+	else
+		self:trigger('response', res)
+	end
+
+	pkt:send()
 end
 
-function dns_dissector.method:create_payload(pkt, payload, init)
-	dns_dissector.grammar.packet:create(payload:pos("begin"), self, init)
-end
-
-function dns_dissector.method:forge_payload(pkt, payload)
-	self:validate()
+function dns_dissector.method:continue()
+	self.flow:continue()
 end
 
 local DomainNameResult = class("DomainNameResult", haka.grammar.ArrayResult)
@@ -81,18 +61,19 @@ dns_dissector.grammar.label = haka.grammar.record{
 	},
 	haka.grammar.branch({
 		name = haka.grammar.field('name', haka.grammar.bytes():options{
-			count = function (self, ctx, el) return self.length end
-		}),
-		pointer = haka.grammar.field('offset', haka.grammar.number(8))
-		:convert(dns_dissector.pointer_converter),
-	},
-	function (self, ctx)
-		if self.pointer == 3 then
-			return 'pointer'
-		else
-			return 'name'
+				count = function (self, ctx, el) return self.length end
+			}),
+			pointer = haka.grammar.field('offset', haka.grammar.number(8))
+			:convert(dns_dissector.pointer_converter),
+		},
+		function (self, ctx)
+			if self.pointer == 3 then
+				return 'pointer'
+			else
+				return 'name'
+			end
 		end
-	end)
+	)
 }
 
 dns_dissector.grammar.domainname = haka.grammar.array(dns_dissector.grammar.label):options{
@@ -152,5 +133,17 @@ dns_dissector.grammar.message = haka.grammar.record{
 	haka.grammar.field('authority',    dns_dissector.grammar.authority),
 	haka.grammar.field('additional',    dns_dissector.grammar.additional)
 }:compile()
+
+function module.install_udp_rule(port)
+	haka.rule{
+		hook = haka.event('udp-connection', 'new_connection'),
+		eval = function (flow, pkt)
+			if pkt.dstport == port then
+				haka.log.debug('dns', "selecting dns dissector on flow")
+				flow:select_next_dissector(dns_dissector:new(flow))
+			end
+		end
+	}
+end
 
 return module
