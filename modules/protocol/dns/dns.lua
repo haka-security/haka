@@ -3,6 +3,7 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 require("protocol/udp-connection")
+local ipv4 = require('protocol/ipv4')
 
 local module = {}
 
@@ -31,6 +32,11 @@ local TYPE = {
 --
 -- DNS Utils
 --
+
+local ipv4_addr_convert = {
+	get = function (x) return ipv4.addr(x) end,
+	set = function (x) return x.packed end
+}
 
 local function pointer_resolution(self, ctx)
 	ctx = ctx.top
@@ -162,34 +168,34 @@ dns_dissector.grammar.resourcerecord = haka.grammar.record{
 	haka.grammar.field('class',   haka.grammar.number(16)),
 	haka.grammar.field('ttl',     haka.grammar.number(32)),
 	haka.grammar.field('length',  haka.grammar.number(16)),
-	haka.grammar.field('data',    haka.grammar.branch({
-		A =       haka.grammar.number(32)
-			:convert(ipv4_addr_convert, true),
-		NS =      dns_dissector.grammar.dn,
+	haka.grammar.branch({
+		A =       haka.grammar.field('ip', haka.grammar.number(32)
+			:convert(ipv4_addr_convert, true)),
+		NS =      haka.grammar.field('name', dns_dissector.grammar.dn),
 		MD =      haka.grammar.error("Unsupported type. Will come soon !"),
 		MF =      haka.grammar.error("Unsupported type. Will come soon !"),
-		CNAME =   dns_dissector.grammar.dn,
+		CNAME =   haka.grammar.field('name', dns_dissector.grammar.dn),
 		SOA =     haka.grammar.error("Unsupported type. Will come soon !"),
 		MB =      haka.grammar.error("Unsupported type. Will come soon !"),
 		MG =      haka.grammar.error("Unsupported type. Will come soon !"),
 		MR =      haka.grammar.error("Unsupported type. Will come soon !"),
-		NULL =    haka.grammar.bytes():options{
+		NULL =    haka.grammar.field('data', haka.grammar.bytes():options{
 			count = function (self, ctx) return self.length end
-		},
+		}),
 		WKS =     haka.grammar.error("Unsupported type. Will come soon !"),
 		PTR =     haka.grammar.error("Unsupported type. Will come soon !"),
 		HINFO =   haka.grammar.error("Unsupported type. Will come soon !"),
 		MINFO =   haka.grammar.error("Unsupported type. Will come soon !"),
 		MX =      haka.grammar.error("Unsupported type. Will come soon !"),
-		TXT =     haka.grammar.bytes():options{
+		TXT =     haka.grammar.field('data', haka.grammar.bytes():options{
 			count = function (self, ctx) return self.length end
-		},
+		}),
 		default = haka.grammar.error("Unsupported type."),
 	},
 	function (self, ctx)
 		return TYPE[self.type]
 	end
-	)),
+	),
 }
 
 dns_dissector.grammar.answer = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{

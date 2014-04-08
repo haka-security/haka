@@ -22,6 +22,7 @@ haka.rule {
 		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
 		for i, rr in ipairs(response.answer) do
 			print(rr.name)
+			print(rr.ip)
 		end
 		for i, rr in ipairs(response.authority) do
 			print(rr.name)
