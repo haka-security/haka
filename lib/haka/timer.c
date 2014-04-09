@@ -51,15 +51,7 @@ INIT static void _timer_init()
 
 bool timer_init_thread()
 {
-	sigset_t mask;
-
-	sigfillset(&mask);
-	sigaddset(&mask, SIGALRM);
-	if (!thread_sigmask(SIG_UNBLOCK, &mask, NULL)) {
-		return false;
-	}
-
-	return true;
+	return timer_unguard();
 }
 
 struct timer *timer_init(timer_callback callback, void *user)
@@ -136,5 +128,31 @@ bool timer_stop(struct timer *timer)
 		error(L"%s", errno_error(errno));
 		return false;
 	}
+	return true;
+}
+
+bool timer_guard()
+{
+	sigset_t mask;
+
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGALRM);
+	if (!thread_sigmask(SIG_BLOCK, &mask, NULL)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool timer_unguard()
+{
+	sigset_t mask;
+
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGALRM);
+	if (!thread_sigmask(SIG_UNBLOCK, &mask, NULL)) {
+		return false;
+	}
+
 	return true;
 }

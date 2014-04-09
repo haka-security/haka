@@ -35,6 +35,7 @@ void          vector_destroy(struct vector *v);
 void          vector_pop(struct vector *v);
 bool          vector_resize(struct vector *v, size_t count);
 bool          vector_reserve(struct vector *v, size_t count);
+void          vector_swap(struct vector *a, struct vector *b);
 
 bool _vector_create(struct vector *v, size_t elemsize, size_t reservecount, void (*destruct)(void *elem));
 void *_vector_get(struct vector *v, size_t elemsize, int index);

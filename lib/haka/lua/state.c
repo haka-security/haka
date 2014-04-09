@@ -17,6 +17,7 @@
 #include <haka/log.h>
 #include <haka/compiler.h>
 #include <haka/error.h>
+#include <haka/timer.h>
 #include <haka/lua/lua.h>
 #include <haka/container/vector.h>
 #include <haka/luadebug/debugger.h>
@@ -427,9 +428,17 @@ struct lua_state *lua_state_get(lua_State *L)
 static void lua_interrupt_call(struct lua_state_ext *state)
 {
 	int i;
+	struct vector *interrupts = malloc(sizeof(struct vector));
 
-	for (i=0; i<vector_count(&state->interrupts); ++i) {
-		struct lua_interrupt_data *func = vector_get(&state->interrupts, struct lua_interrupt_data, i);
+	vector_create_reserve(interrupts, struct lua_interrupt_data, 20, lua_interrupt_data_destroy);
+
+	timer_guard();
+	vector_swap(&state->interrupts, interrupts);
+	state->has_interrupts = false;
+	timer_unguard();
+
+	for (i=0; i<vector_count(interrupts); ++i) {
+		struct lua_interrupt_data *func = vector_get(interrupts, struct lua_interrupt_data, i);
 		assert(func);
 
 		lua_pushcfunction(state->state.L, func->function);
@@ -443,9 +452,6 @@ static void lua_interrupt_call(struct lua_state_ext *state)
 			lua_state_print_error(state->state.L, L"lua");
 		}
 	}
-
-	vector_resize(&state->interrupts, 0);
-	state->has_interrupts = false;
 }
 
 static void lua_update_hook(struct lua_state_ext *state)
