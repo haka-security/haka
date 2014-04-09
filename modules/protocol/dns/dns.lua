@@ -11,22 +11,23 @@ local NO_COMPRESSION      = 0
 local POINTER_COMPRESSION = 3
 
 local TYPE = {
-	'A',      -- a host address
-	'NS',     -- an authoritative name server
-	'MD',     -- a mail destination (Obsolete - use MX)
-	'MF',     -- a mail forwarder (Obsolete - use MX)
-	'CNAME',  -- the canonical name for an alias
-	'SOA',    -- marks the start of a zone of authority
-	'MB',     -- a mailbox domain name (EXPERIMENTAL)
-	'MG',     -- a mail group member (EXPERIMENTAL)
-	'MR',     -- a mail rename domain name (EXPERIMENTAL)
-	'NULL',   -- a null RR (EXPERIMENTAL)
-	'WKS',    -- a well known service description
-	'PTR',    -- a domain name pointer
-	'HINFO',  -- host information
-	'MINFO',  -- mailbox or mail list information
-	'MX',     -- mail exchange
-	'TXT',    -- text strings
+	 [1] = 'A',      -- a host address
+	 [2] = 'NS',     -- an authoritative name server
+	 [3] = 'MD',     -- a mail destination (Obsolete - use MX)
+	 [4] = 'MF',     -- a mail forwarder (Obsolete - use MX)
+	 [5] = 'CNAME',  -- the canonical name for an alias
+	 [6] = 'SOA',    -- marks the start of a zone of authority
+	 [7] = 'MB',     -- a mailbox domain name (EXPERIMENTAL)
+	 [8] = 'MG',     -- a mail group member (EXPERIMENTAL)
+	 [9] = 'MR',     -- a mail rename domain name (EXPERIMENTAL)
+	[10] = 'NULL',   -- a null RR (EXPERIMENTAL)
+	[11] = 'WKS',    -- a well known service description
+	[12] = 'PTR',    -- a domain name pointer
+	[13] = 'HINFO',  -- host information
+	[14] = 'MINFO',  -- mailbox or mail list information
+	[15] = 'MX',     -- mail exchange
+	[16] = 'TXT',    -- text strings
+	[28] = 'AAAA',   -- a host ipv6 address
 }
 
 --
@@ -42,7 +43,6 @@ local function pointer_resolution(self, ctx)
 	ctx = ctx.top
 	for offset, label in sorted_pairs(ctx._labels) do
 		if label.compression_scheme == POINTER_COMPRESSION then
-			print(string.format("RESOLVE POINTER AT 0x%x (0x%x)", offset, offset+0x2A))
 			if not ctx._labels[label.pointer] then
 				error(string.format("reference unknown domain name at offset: 0x%x (0x%x)", label.pointer, label.pointer+0x2A))
 			end
@@ -103,7 +103,6 @@ dns_dissector.grammar = haka.grammar:new("udp")
 
 dns_dissector.grammar.label = haka.grammar.record{
 	haka.grammar.execute(function (self, ctx)
-		print(string.format("NEW LABEL AT 0x%x (0x%x)", ctx.iter.meter, ctx.iter.meter+0x2A))
 		if #ctx.prev_result-1 > 0 then
 			ctx.prev_result[#ctx.prev_result-1].next = self
 		end
@@ -141,7 +140,7 @@ dns_dissector.grammar.dn = haka.grammar.array(dns_dissector.grammar.label):optio
 }:convert(dn_converter, true)
 
 dns_dissector.type = haka.grammar.number(16):convert({
-	get = function (type) return TYPE[type] end,
+	get = function (type) return TYPE[type] or type end,
 	set = function (type)
 		for i, type in TYPE do
 			if type == type then
@@ -174,6 +173,35 @@ dns_dissector.grammar.question = haka.grammar.record{
 	haka.grammar.field('class',   haka.grammar.number(16)),
 }
 
+dns_dissector.grammar.soa = haka.grammar.record{
+	haka.grammar.field('mname', dns_dissector.grammar.dn),
+	haka.grammar.field('rname', dns_dissector.grammar.dn),
+	haka.grammar.field('serial', haka.grammar.number(32)),
+	haka.grammar.field('refresh', haka.grammar.number(32)),
+	haka.grammar.field('retry', haka.grammar.number(32)),
+	haka.grammar.field('expire', haka.grammar.number(32)),
+	haka.grammar.field('minimum', haka.grammar.number(32)),
+}
+
+dns_dissector.grammar.wks = haka.grammar.record{
+	haka.grammar.field('ip', haka.grammar.number(32)
+	:convert(ipv4_addr_convert, true)),
+	haka.grammar.field('proto', haka.grammar.number(8)),
+	haka.grammar.field('ports', haka.grammar.bytes():options{
+		count = function (self, ctx) return self.length - 40 end -- remove wks headers
+	}),
+}
+
+dns_dissector.grammar.mx = haka.grammar.record{
+	haka.grammar.field('pref', haka.grammar.number(16)),
+	haka.grammar.field('name', dns_dissector.grammar.dn),
+}
+
+dns_dissector.grammar.minfo = haka.grammar.record{
+	haka.grammar.field('rname', dns_dissector.grammar.dn),
+	haka.grammar.field('ename', dns_dissector.grammar.dn),
+}
+
 dns_dissector.grammar.resourcerecord = haka.grammar.record{
 	haka.grammar.field('name',    dns_dissector.grammar.dn),
 	haka.grammar.field('type',    dns_dissector.type),
@@ -184,25 +212,26 @@ dns_dissector.grammar.resourcerecord = haka.grammar.record{
 		A =       haka.grammar.field('ip', haka.grammar.number(32)
 			:convert(ipv4_addr_convert, true)),
 		NS =      haka.grammar.field('name', dns_dissector.grammar.dn),
-		MD =      haka.grammar.error("unsupported type. Will come soon !"),
-		MF =      haka.grammar.error("unsupported type. Will come soon !"),
+		MD =      haka.grammar.field('name', dns_dissector.grammar.dn),
+		MF =      haka.grammar.field('name', dns_dissector.grammar.dn),
 		CNAME =   haka.grammar.field('name', dns_dissector.grammar.dn),
-		SOA =     haka.grammar.error("unsupported type. Will come soon !"),
-		MB =      haka.grammar.error("unsupported type. Will come soon !"),
-		MG =      haka.grammar.error("unsupported type. Will come soon !"),
-		MR =      haka.grammar.error("unsupported type. Will come soon !"),
+		SOA =     dns_dissector.grammar.soa,
+		MB =      haka.grammar.field('name', dns_dissector.grammar.dn),
+		MG =      haka.grammar.field('name', dns_dissector.grammar.dn),
+		MR =      haka.grammar.field('name', dns_dissector.grammar.dn),
 		NULL =    haka.grammar.field('data', haka.grammar.bytes():options{
 			count = function (self, ctx) return self.length end
 		}),
-		WKS =     haka.grammar.error("unsupported type. Will come soon !"),
-		PTR =     haka.grammar.error("unsupported type. Will come soon !"),
-		HINFO =   haka.grammar.error("unsupported type. Will come soon !"),
-		MINFO =   haka.grammar.error("unsupported type. Will come soon !"),
-		MX =      haka.grammar.error("unsupported type. Will come soon !"),
-		TXT =     haka.grammar.field('data', haka.grammar.bytes():options{
+		WKS =     dns_dissector.grammar.wks,
+		PTR =     haka.grammar.field('name', dns_dissector.grammar.dn),
+		MINFO =   dns_dissector.grammar.minfo,
+		MX =      dns_dissector.grammar.mx,
+		TXT =     haka.grammar.field('data', haka.grammar.text:options{
 			count = function (self, ctx) return self.length end
 		}),
-		default = haka.grammar.error("unsupported type."),
+		default = haka.grammar.field('unknown', haka.grammar.bytes():options{
+			count = function (self, ctx) return self.length end
+		}),
 	},
 	function (self, ctx)
 		return self.type
