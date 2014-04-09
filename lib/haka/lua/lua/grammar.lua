@@ -991,6 +991,11 @@ function grammar.converter.tonumber(format, base)
 	}
 end
 
+grammar.converter.string = {
+	get = function (x) return x:asstring() end,
+	set = function (x) return x end
+}
+
 
 --
 -- Grammar description
@@ -1429,6 +1434,8 @@ end
 function grammar.error(msg)
 	return grammar.Error:new(msg)
 end
+
+grammar.text = grammar.bytes():convert(grammar.converter.string, true)
 
 --
 -- Grammar
