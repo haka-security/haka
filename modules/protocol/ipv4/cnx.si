@@ -35,7 +35,7 @@ struct cnx_table {
 			const char **OUTPUT1, bool *OUTPUT2) {
 			struct cnx *cnx;
 			struct cnx_key key;
-			bool direction;
+			int direction;
 
 			MAP_KEY(key);
 			cnx = cnx_get($self, &key, &direction, OUTPUT2);

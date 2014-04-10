@@ -34,7 +34,7 @@ struct cnx_table *cnx_table_new(void (*cnx_release)(struct cnx *, bool));
 void              cnx_table_release(struct cnx_table *table);
 
 struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key);
-struct cnx *cnx_get(struct cnx_table *table, struct cnx_key *key, bool *direction, bool *dropped);
+struct cnx *cnx_get(struct cnx_table *table, struct cnx_key *key, int *direction, bool *dropped);
 
 void cnx_close(struct cnx *cnx);
 void cnx_drop(struct cnx *cnx);

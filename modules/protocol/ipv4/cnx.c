@@ -29,7 +29,7 @@ struct cnx_table {
 
 static const size_t hash_keysize = sizeof(struct cnx_key);
 
-static struct cnx_table_elem *cnx_find(struct cnx_table *table, struct cnx_key *key, bool *direction, bool *dropped);
+static struct cnx_table_elem *cnx_find(struct cnx_table *table, struct cnx_key *key, int *direction, bool *dropped);
 static void cnx_remove(struct cnx_table *table, struct cnx_table_elem *elem);
 static void cnx_release(struct cnx_table *table, struct cnx_table_elem *elem, bool freemem);
 
@@ -79,7 +79,7 @@ static void cnx_insert(struct cnx_table *table, struct cnx_table_elem *elem)
 #define EXCHANGE(a, b) { const typeof(a) tmp = a; a = b; b = tmp; }
 
 struct cnx_table_elem *cnx_find(struct cnx_table *table, struct cnx_key *_key,
-		bool *direction, bool *dropped)
+		int *direction, bool *dropped)
 {
 	struct cnx_key key;
 	struct cnx_table_elem *ptr;
@@ -180,7 +180,7 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 }
 
 struct cnx *cnx_get(struct cnx_table *table, struct cnx_key *key,
-		bool *direction, bool *_dropped)
+		int *direction, bool *_dropped)
 {
 	bool dropped;
 	struct cnx_table_elem *elem = cnx_find(table, key, direction, &dropped);
