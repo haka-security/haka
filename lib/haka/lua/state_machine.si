@@ -31,42 +31,59 @@ void lua_state_machine_context_destroy(struct state_machine_context *_context)
 
 struct state *lua_transition_callback(struct state_machine_instance *state_machine, struct transition_data *_data)
 {
+	int h;
 	struct lua_transition_data *data = (struct lua_transition_data *)_data;
 	struct lua_state_machine_context *context = (struct lua_state_machine_context *)state_machine_instance_context(state_machine);
 	struct state *newstate = NULL;
 	lua_State *L = data->function.state->L;
+	LUA_STACK_MARK(L);
 
 	assert(lua_ref_isvalid(&context->states));
 	assert(lua_ref_isvalid(&data->function));
 
+	lua_pushcfunction(L, lua_state_error_formater);
+	h = lua_gettop(L);
+
 	lua_ref_push(L, &data->function);
 	lua_ref_push(L, &context->states);
-	lua_call(L, 1, 1);
-
-	if (!lua_isnil(L, -1)) {
-		if (SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
+	if (lua_pcall(L, 1, 1, h)) {
+		if (lua_isnil(L, -1)) {
 			lua_pop(L, 1);
+			newstate = state_machine_finish_state;
 		}
 		else {
-			if (!lua_istable(L, -1)) {
-				message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
-			}
-			else {
-				lua_getfield(L, -1, "_state");
-				assert(!lua_isnil(L, -1));
-
-				if (!SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
-					message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
-				}
-
-				lua_pop(L, 2);
-			}
+			lua_state_print_error(L, L"state machine");
+			newstate = state_machine_error_state;
 		}
 	}
 	else {
-		lua_pop(L, 1);
+		if (!lua_isnil(L, -1)) {
+			if (SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
+				lua_pop(L, 1);
+			}
+			else {
+				if (!lua_istable(L, -1)) {
+					message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
+				}
+				else {
+					lua_getfield(L, -1, "_state");
+					assert(!lua_isnil(L, -1));
+
+					if (!SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
+						message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
+					}
+
+					lua_pop(L, 2);
+				}
+			}
+		}
+		else {
+			lua_pop(L, 1);
+		}
 	}
 
+	lua_pop(L, 1);
+	LUA_STACK_CHECK(L, 0);
 	return newstate;
 }
 
