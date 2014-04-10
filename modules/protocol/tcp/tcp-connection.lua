@@ -305,6 +305,15 @@ tcp_connection_dissector.states.timed_wait = tcp_connection_dissector.states:sta
 			context.flow:_sendpkt(pkt, context.input)
 		end
 	end,
+	output = function (context, pkt)
+		if not pkt.flags.ack then
+			haka.log.error('tcp-connection', "invalid tcp termination handshake")
+			pkt:drop()
+			return context.states.ERROR
+		else
+			context.flow:_sendpkt(pkt, context.output)
+		end
+	end,
 	timeouts = {
 		[60] = function (context)
 			return context.states.FINISH
