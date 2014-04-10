@@ -8,7 +8,7 @@ require('luaunit')
 TestRegexpModule = {}
 
 function TestRegexpModule:gen_stream(f)
-	local data = { "bar fo", "o dea", "d beef", " cof", "fee", "foo" }
+	local data = { "bar fo", "o dea", "d beef", " cof", "fee", " foo foo " }
 	local stream = haka.vbuffer_stream()
 	local manager = haka.vbuffer_stream_comanager:new(stream)
 	manager:start(0, f)
@@ -274,6 +274,24 @@ function TestRegexpModule:test_can_match_on_blocking_iterator ()
 		local i = 0
 		-- When
 		repeat
+			ret = re:match(iter)
+			-- Then
+			if ret then
+				i = i + 1
+			end
+		until not ret
+		assertEquals(i, 3)
+	end)
+end
+
+function TestRegexpModule:test_can_match_on_blocking_iterator_with_sub_creation ()
+	-- Given
+	local re = self.rem.re:compile("foo")
+	self:gen_stream(function (iter)
+		local ret
+		local i = 0
+		-- When
+		repeat
 			ret = re:match(iter, true)
 			-- Then
 			if ret then
@@ -281,7 +299,7 @@ function TestRegexpModule:test_can_match_on_blocking_iterator ()
 				i = i + 1
 			end
 		until not ret
-		assertEquals(i, 2)
+		assertEquals(i, 3)
 	end)
 end
 

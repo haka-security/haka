@@ -227,24 +227,28 @@ struct regexp_module {
 
 			local match, pos = sink:feed(sub)
 
-			if createsub then
-				if (sink:ispartial() or match) then
-					if not begin then
-						begin = sub:pos('begin')
-						begin_offset = last_meter - first_meter
-					end
-				else
+			if (sink:ispartial() or match) then
+				if not begin then
+					begin = sub:pos('begin')
+					begin:mark()
+					begin_offset = last_meter - first_meter
+				end
+			else
+				if begin then
+					begin:unmark()
 					begin = nil
 				end
 			end
 			last_meter = input.meter
 
 			if match then
+				input:move_to(begin)
+				input:advance(pos.offset-begin_offset)
+				begin:unmark()
 				if createsub then
-					input:move_to(begin)
-					input:advance(pos.offset-begin_offset)
 					return input:sub(pos.size)
 				else
+					input:advance(pos.size)
 					return true
 				end
 			end
