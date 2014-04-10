@@ -103,7 +103,7 @@ udp_connection_dissector.states.established = udp_connection_dissector.states:st
 	end,
 	timeouts = {
 		[60] = function (context)
-			return context.states.drop
+			return context.states.FINISH
 		end
 	}
 }
