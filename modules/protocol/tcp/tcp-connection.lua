@@ -349,10 +349,8 @@ end
 
 function tcp_connection_dissector.method:clearstream()
 	if self.stream then
-		for dir, stream in pairs(self.stream) do
-			stream:clear()
-		end
-
+		self.stream.up:clear()
+		self.stream.down:clear()
 		self.stream = nil
 	end
 end
