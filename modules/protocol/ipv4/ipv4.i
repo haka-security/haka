@@ -29,7 +29,7 @@
 		ret->addr = a;
 		return ret;
 	}
- 
+
 	struct inet_checksum {
 		bool    odd;
 		int32   value;

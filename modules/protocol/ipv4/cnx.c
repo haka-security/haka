@@ -195,8 +195,7 @@ struct cnx *cnx_get(struct cnx_table *table, struct cnx_key *key,
 		}
 	}
 	else {
-		if (direction) *direction = CNX_DIR_IN; /* This is the direction of this cnx
-												   if is created from this packet */
+		if (direction) *direction = CNX_DIR_IN;
 		if (_dropped) *_dropped = false;
 		return NULL;
 	}
