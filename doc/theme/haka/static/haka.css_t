@@ -264,3 +264,7 @@ input[type=text]
 .highlight-link:hover {
 	background: transparent url(cross-highlight.png) no-repeat center center !important;
 }
+
+table.field-list td, table.field-list th {
+	padding-left: 0;
+}
