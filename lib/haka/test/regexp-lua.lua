@@ -8,7 +8,7 @@ require('luaunit')
 TestRegexpModule = {}
 
 function TestRegexpModule:gen_stream(f)
-	local data = { "bar fo", "o dea", "d beef", " cof", "fee" }
+	local data = { "bar fo", "o dea", "d beef", " cof", "fee", "foo" }
 	local stream = haka.vbuffer_stream()
 	local manager = haka.vbuffer_stream_comanager:new(stream)
 	manager:start(0, f)
@@ -270,12 +270,39 @@ function TestRegexpModule:test_can_match_on_blocking_iterator ()
 	-- Given
 	local re = self.rem.re:compile("foo")
 	self:gen_stream(function (iter)
+		local ret
+		local i = 0
 		-- When
-		local ret = re:match(iter, true)
-		-- Then
-		assertTrue(ret)
-		assertEquals(ret:asstring(), 'foo')
+		repeat
+			ret = re:match(iter, true)
+			-- Then
+			if ret then
+				assertEquals(ret:asstring(), 'foo')
+				i = i + 1
+			end
+		until not ret
+		assertEquals(i, 2)
 	end)
+end
+
+function TestRegexpModule:test_complexe_regexp ()
+	-- Given
+	local re = self.rem.re:compile("</?p( [^>]*)?>")
+	local vbuf = haka.vbuffer_from("<pre><p>toto</p><p class=\"toto\">titi</p></pre>")
+	local iter = vbuf:pos("begin")
+	local ret
+	local result = { "<p>", "</p>", "<p class=\"toto\">", "</p>" }
+	local i = 0
+	repeat
+		-- When
+		ret = re:match(iter, true)
+		-- Then
+		if ret then
+			i = i + 1
+			assertEquals(ret:asstring(), result[i])
+		end
+	until not ret
+	assertEquals(i, 4)
 end
 
 LuaUnit:setVerbosity(1)
