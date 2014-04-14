@@ -223,9 +223,7 @@ struct regexp_module {
 		readonly = readonly or (haka.packet_mode() == 'passthrough')
 
 		local sink = self:create_sink()
-		local begin
-
-		-- TODO: add mark/unmark
+		local begin, mark
 
 		for sub in input:foreach_available() do
 			local match, mbegin, mend = sink:feed(sub, input.iseof)
@@ -234,13 +232,28 @@ struct regexp_module {
 				if sink:ispartial() or match then
 					if not begin then
 						begin = mbegin
+
+						if sink:ispartial() then
+							-- It is possible to mark here as we are sure that no iterator
+							-- exists after begin (we are idead at the end of the sub without
+							-- an full match
+							mark = begin:copy()
+							mark:mark()
+						end
 					end
 				else
 					begin = nil
+
+					if mark then
+						mark:unmark()
+						mark = nil
+					end
 				end
 			end
 
 			if match then
+				if mark then mark:unmark() end
+
 				input:move_to(mend)
 
 				if createsub then
@@ -251,6 +264,8 @@ struct regexp_module {
 				end
 			end
 		end
+
+		if mark then mark:unmark() end
 
 		if createsub then
 			return nil

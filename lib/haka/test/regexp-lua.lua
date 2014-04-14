@@ -20,6 +20,8 @@ function TestRegexpModule:gen_stream(f)
 		end
 
 		manager:process_all(current)
+
+		while stream:pop() do end
 	end
 end
 
