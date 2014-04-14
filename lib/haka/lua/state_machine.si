@@ -47,6 +47,8 @@ struct state *lua_transition_callback(struct state_machine_instance *state_machi
 	lua_ref_push(L, &data->function);
 	lua_ref_push(L, &context->states);
 	if (lua_pcall(L, 1, 1, h)) {
+		/* If the value on the stack is nil, we are in case of an abort,
+		 * otherwise it is an error. */
 		if (lua_isnil(L, -1)) {
 			lua_pop(L, 1);
 			newstate = state_machine_finish_state;
