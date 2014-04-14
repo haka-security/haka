@@ -76,24 +76,20 @@ local dns_dissector = haka.dissector.new{
 	name = 'dns'
 }
 
-dns_dissector:register_event('request')
-dns_dissector:register_event('response')
+dns_dissector:register_event('query')
+dns_dissector:register_event('answer')
 
 function dns_dissector.method:__init(flow)
 	self.flow = flow
+	self.states = dns_dissector.states:instanciate()
+	self.states.dns = self
 end
 
 function dns_dissector.method:receive(payload, direction, pkt)
-	local res = dns_dissector.grammar.message:parse(payload:pos("begin"))
-
-	if direction == 'up' then
-		self:trigger('request', res)
-	else
-		self:trigger('response', res)
-	end
-
+	self.states:update(direction, pkt)
 	pkt:send()
 end
+
 
 function dns_dissector.method:continue()
 	self.flow:continue()
@@ -259,7 +255,9 @@ dns_dissector.grammar.message = haka.grammar.record{
 	haka.grammar.field('authority',    dns_dissector.grammar.authority),
 	haka.grammar.field('additional',    dns_dissector.grammar.additional),
 	haka.grammar.execute(pointer_resolution),
-}:compile()
+}
+
+local dns_message = dns_dissector.grammar.message:compile()
 
 function module.install_udp_rule(port)
 	haka.rule{
@@ -272,5 +270,79 @@ function module.install_udp_rule(port)
 		end
 	}
 end
+
+--
+-- DNS States
+--
+
+dns_dissector.states = haka.state_machine("dns")
+
+dns_dissector.states:default{
+	error = function (context)
+		context.dns:drop()
+	end,
+	update = function (context, direction, pkt)
+		return context[direction](context, pkt)
+	end
+}
+
+dns_dissector.states.query = dns_dissector.states:state{
+	up = function (context, pkt)
+		local self = context.dns
+		self._want_data_modification = false
+		local res, err = dns_message:parse(pkt.payload:pos('begin'))
+		if err then
+			haka.alert{
+				description = string.format("invalid dns %s", err.rule),
+				severity = 'low'
+			}
+			return context.states.ERROR
+		end
+		self.query = {}
+		self.query.id = res.header['id']
+		self:trigger("query", res)
+		return context.states.answer
+	end,
+	down = function (context, pkt)
+		haka.alert{
+			description = "dns: unexpected data from server",
+			severity = 'low'
+		}
+		return context.states.ERROR
+	end,
+}
+
+dns_dissector.states.answer = dns_dissector.states:state{
+	up = function (context, pkt)
+		haka.alert{
+			description = "dns: unecpected data from client",
+			severity = 'low'
+		}
+		return context.states.ERROR
+	end,
+	down = function (context, pkt)
+		local self = context.dns
+		self._want_data_modification = false
+		local res, err = dns_message:parse(pkt.payload:pos('begin'))
+		if err then
+			haka.alert{
+				description = string.format("invalid dns %s", err.rule),
+				severity = 'low'
+			}
+            return context.states.ERROR
+        end
+		if self.query.id ~= res.header['id'] then
+			haka.alert{
+				description = "dns: mismatching answer",
+				severity = 'low'
+			}
+			return context.states.ERROR
+		end
+		self:trigger("answer", res)
+		return context.states.query
+	end
+}
+
+dns_dissector.states.initial = dns_dissector.states.query
 
 return module
