@@ -805,6 +805,7 @@ struct vbuffer_stream {
 			}
 
 			if (!vbuffer_stream_pop($self, buf, NULL)) {
+				free(buf);
 				return NULL;
 			}
 
