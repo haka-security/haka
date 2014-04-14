@@ -1307,7 +1307,6 @@ end
 
 function grammar.retain(readonly)
 	if readonly == nil then
-		print(haka.packet_mode())
 		readonly = haka.packet_mode() == 'passthrough'
 	end
 
