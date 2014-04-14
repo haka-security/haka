@@ -16,13 +16,12 @@ haka.rule {
 	eval = function (http, request)
 		local method = request.method:lower()
 		if method ~= 'get' and method ~= 'post' then
-			local conn = http.connection
 			haka.alert{
 				description = string.format("forbidden http method '%s'", method),
-				sources = haka.alert.address(conn.srcip),
+				sources = haka.alert.address(http.flow.srcip),
 				targets = {
-					haka.alert.address(conn.dstip),
-					haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
+					haka.alert.address(http.flow.dstip),
+					haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
 				},
 			}
 		end

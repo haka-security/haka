@@ -1,4 +1,4 @@
-debug tcp-connection: opening connection 10.2.96.127:45036 -> 10.2.104.129:4444
+debug cnx: opening connection 10.2.96.127:45036 -> 10.2.104.129:4444
 debug filter: received stream len=35
 0000000000
 0000
@@ -9,4 +9,4 @@ debug filter: received stream len=24
 debug filter: received stream len=17
 222222
 
-debug tcp-connection: closing connection 10.2.96.127:45036 -> 10.2.104.129:4444
+debug cnx: closing connection 10.2.96.127:45036 -> 10.2.104.129:4444

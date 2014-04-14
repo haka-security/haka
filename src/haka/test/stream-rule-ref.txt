@@ -1,4 +1,4 @@
-debug tcp-connection: opening connection 192.168.20.99:55040 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.20.99:55040 -> 192.168.20.1:80
 info test: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data received len=15 
 info test: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data received len=15 
 info test: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data received len=2 
@@ -45,7 +45,7 @@ info test: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data: oo / H
 Host: serveur
 
 
-debug tcp-connection: opening connection 192.168.20.99:55041 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.20.99:55041 -> 192.168.20.1:80
 info test: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=16 
 info test: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=14 
 info test: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=19 
@@ -94,5 +94,5 @@ Host:serveur
 Connection: Close
 
 
-debug tcp-connection: closing connection 192.168.20.99:55041 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.20.99:55040 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.20.99:55041 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.20.99:55040 -> 192.168.20.1:80

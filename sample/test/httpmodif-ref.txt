@@ -1,5 +1,5 @@
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53440 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53440 -> 192.168.20.1:80
 info Filter: Domain requested: server
 info Filter: UA detected: Mozilla Firefox/12.0
 info alert: id = <>
@@ -23,13 +23,13 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug tcp-connection: dropping connection 192.168.10.1:53440 -> 192.168.20.1:80
+debug cnx: dropping connection 192.168.10.1:53440 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53441 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53441 -> 192.168.20.1:80
 info Filter: Domain requested: server
 info Filter: UA detected: Mozilla Firefox/28.0
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53442 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53442 -> 192.168.20.1:80
 info Filter: Domain requested: server
 info Filter: UA detected: Mozilla Firefox/plop
 info alert: id = <>
@@ -53,9 +53,9 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug tcp-connection: dropping connection 192.168.10.1:53442 -> 192.168.20.1:80
+debug cnx: dropping connection 192.168.10.1:53442 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53443 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53443 -> 192.168.20.1:80
 info Filter: Domain requested: server
 info Filter: UA detected: Mozilla Firefox/
 info alert: id = <>
@@ -79,23 +79,23 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug tcp-connection: dropping connection 192.168.10.1:53443 -> 192.168.20.1:80
+debug cnx: dropping connection 192.168.10.1:53443 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53444 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53444 -> 192.168.20.1:80
 info Filter: Domain requested: server
 info Filter: UA detected: Mozilla Firefox
 info Filter: Unknown or missing User-Agent
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53445 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53445 -> 192.168.20.1:80
 info Filter: Domain requested: server
 info Filter: UA detected: No User-Agent header
 info Filter: Unknown or missing User-Agent
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53446 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53446 -> 192.168.20.1:80
 info Filter: UA detected: No User-Agent header
 info Filter: Unknown or missing User-Agent
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53447 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53447 -> 192.168.20.1:80
 info Filter: UA detected: Mozilla Firefox/18.0
 info alert: id = <>
 	severity = medium
@@ -117,19 +117,19 @@ class HttpResponseResult {
   }
 }
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53448 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53448 -> 192.168.20.1:80
 info Filter: UA detected: Mozilla Firefox/28.0
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:53449 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:53449 -> 192.168.20.1:80
 info Filter: Domain requested: mozilla.org
 info Filter: Update domain: go for it
-debug tcp-connection: closing connection 192.168.10.1:53449 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:53448 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:53447 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:53446 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:53445 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:53444 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:53443 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:53442 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:53441 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:53440 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53449 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53448 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53447 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53446 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53445 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53444 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53443 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53442 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53441 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:53440 -> 192.168.20.1:80

@@ -48,6 +48,10 @@ udp_dissector.grammar.packet = haka.grammar.record{
 	haka.grammar.field('payload',   haka.grammar.bytes())
 }:compile()
 
+function udp_dissector.method:next_dissector()
+	return haka.dissector.get('udp-connection')
+end
+
 function udp_dissector.method:parse_payload(pkt, payload)
 	self.ip = pkt
 	udp_dissector.grammar.packet:parse(payload:pos("begin"), self)

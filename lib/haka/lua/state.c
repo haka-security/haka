@@ -17,6 +17,7 @@
 #include <haka/log.h>
 #include <haka/compiler.h>
 #include <haka/error.h>
+#include <haka/timer.h>
 #include <haka/lua/lua.h>
 #include <haka/container/vector.h>
 #include <haka/luadebug/debugger.h>
@@ -426,26 +427,44 @@ struct lua_state *lua_state_get(lua_State *L)
 
 static void lua_interrupt_call(struct lua_state_ext *state)
 {
-	int i;
+	int i, h;
+	LUA_STACK_MARK(state->state.L);
+	struct vector interrupts;
 
-	for (i=0; i<vector_count(&state->interrupts); ++i) {
-		struct lua_interrupt_data *func = vector_get(&state->interrupts, struct lua_interrupt_data, i);
+	vector_create_reserve(&interrupts, struct lua_interrupt_data, 20, lua_interrupt_data_destroy);
+
+	timer_guard();
+	vector_swap(&state->interrupts, &interrupts);
+	state->has_interrupts = false;
+	timer_unguard();
+
+	lua_pushcfunction(state->state.L, lua_state_error_formater);
+	h = lua_gettop(state->state.L);
+
+	for (i=0; i<vector_count(&interrupts); ++i) {
+		struct lua_interrupt_data *func = vector_get(&interrupts, struct lua_interrupt_data, i);
 		assert(func);
 
 		lua_pushcfunction(state->state.L, func->function);
 
-		if (func->data)
+		if (func->data) {
 			lua_pushlightuserdata(state->state.L, func->data);
-		else
-			lua_pushnil(state->state.L);
+		}
 
-		if (lua_pcall(state->state.L, 1, 0, 0)) {
-			lua_state_print_error(state->state.L, L"lua");
+		if (lua_pcall(state->state.L, func->data ? 1 : 0, 0, h)) {
+			if (!lua_isnil(state->state.L, -1)) {
+				lua_state_print_error(state->state.L, L"lua");
+			}
+			else {
+				lua_pop(state->state.L, 1);
+			}
 		}
 	}
 
-	vector_resize(&state->interrupts, 0);
-	state->has_interrupts = false;
+	vector_destroy(&interrupts);
+
+	lua_pop(state->state.L, 1);
+	LUA_STACK_CHECK(state->state.L, 0);
 }
 
 static void lua_update_hook(struct lua_state_ext *state)

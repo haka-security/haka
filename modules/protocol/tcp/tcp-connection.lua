@@ -2,20 +2,26 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require("protocol/ipv4")
-require("protocol/tcp")
+local ipv4 = require("protocol/ipv4")
+local tcp = require("protocol/tcp")
 
 local tcp_connection_dissector = haka.dissector.new{
 	type = haka.dissector.FlowDissector,
 	name = 'tcp-connection'
 }
 
+tcp_connection_dissector.cnx_table = ipv4.cnx_table()
+
 tcp_connection_dissector:register_event('new_connection')
 tcp_connection_dissector:register_event('receive_data', nil, haka.dissector.FlowDissector.stream_wrapper)
 tcp_connection_dissector:register_event('end_connection')
 
+local function tcp_get_key(pkt)
+	return pkt.ip.src, pkt.ip.dst, pkt.srcport, pkt.dstport
+end
+
 function tcp_connection_dissector:receive(pkt)
-	local connection, direction, dropped = pkt:getconnection()
+	local connection, direction, dropped = tcp_connection_dissector.cnx_table:get(tcp_get_key(pkt))
 	if not connection then
 		if pkt.flags.syn and not pkt.flags.ack then
 			local data = haka.context.newscope()
@@ -27,9 +33,9 @@ function tcp_connection_dissector:receive(pkt)
 
 			pkt:continue()
 
-			connection = pkt:newconnection()
+			connection = tcp_connection_dissector.cnx_table:create(tcp_get_key(pkt))
 			connection.data = data
-			self:init(connection)
+			self:init(connection, pkt)
 			data:createnamespace('tcp-connection', self)
 		else
 			if not dropped then
@@ -111,7 +117,7 @@ tcp_connection_dissector.states:default{
 tcp_connection_dissector.states.reset = tcp_connection_dissector.states:state{
 	enter = function (context)
 		context.flow:trigger('end_connection')
-		context.flow.stream = nil
+		context.flow:clearstream()
 		context.flow.connection:drop()
 	end,
 	timeouts = {
@@ -329,12 +335,24 @@ function tcp_connection_dissector.method:__init()
 	self._restart = false
 end
 
-function tcp_connection_dissector.method:init(connection)
+function tcp_connection_dissector.method:init(connection, pkt)
 	self.connection = connection
-	self.stream['up'] = self.connection:stream('up')
-	self.stream['down'] = self.connection:stream('down')
+	self.stream['up'] = tcp.tcp_stream()
+	self.stream['down'] = tcp.tcp_stream()
 	self.states = tcp_connection_dissector.states:instanciate()
+	self.srcip = pkt.ip.src
+	self.dstip = pkt.ip.dst
+	self.srcport = pkt.srcport
+	self.dstport = pkt.dstport
 	self.states.flow = self
+end
+
+function tcp_connection_dissector.method:clearstream()
+	if self.stream then
+		self.stream.up:clear()
+		self.stream.down:clear()
+		self.stream = nil
+	end
 end
 
 function tcp_connection_dissector.method:restart()
@@ -346,12 +364,23 @@ function tcp_connection_dissector.method:emit(pkt, direction)
 end
 
 function tcp_connection_dissector.method:_close()
-	self.stream = nil
+	self:clearstream()
 	if self.connection then
 		self.connection:close()
 		self.connection = nil
 	end
 	self.states = nil
+end
+
+function tcp_connection_dissector.method:_trigger_receive(direction, stream, current)
+	self:trigger('receive_data', stream.stream, current, direction)
+
+	local next_dissector = self:next_dissector()
+	if next_dissector then
+		return next_dissector:receive(self, stream.stream, current, direction)
+	else
+		return self:send(direction)
+	end
 end
 
 function tcp_connection_dissector.method:push(pkt, direction, finish)
@@ -360,16 +389,14 @@ function tcp_connection_dissector.method:push(pkt, direction, finish)
 	local current = stream:push(pkt)
 	if finish then stream.stream:finish() end
 
-	self:trigger('receive_data', stream.stream, current, direction)
-	return self:_send(direction)
+	self:_trigger_receive(direction, stream, current)
 end
 
 function tcp_connection_dissector.method:finish(direction)
 	local stream = self.stream[direction]
 
 	stream.stream:finish()
-
-	self:trigger('receive_data', stream.stream, nil, direction)
+	self:_trigger_receive(direction, stream, nil)
 end
 
 function tcp_connection_dissector.method:continue()
@@ -379,7 +406,7 @@ function tcp_connection_dissector.method:continue()
 end
 
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
-	self:_send(direction)
+	self:send(direction)
 
 	self.stream[direction]:seq(pkt)
 	self.stream[haka.dissector.other_direction(direction)]:ack(pkt)
@@ -387,21 +414,27 @@ function tcp_connection_dissector.method:_sendpkt(pkt, direction)
 end
 
 function tcp_connection_dissector.method:_send(direction)
-	local stream = self.stream[direction]
-	local other_stream = self.stream[haka.dissector.other_direction(direction)]
+	if self.stream then
+		local stream = self.stream[direction]
+		local other_stream = self.stream[haka.dissector.other_direction(direction)]
 
-	local pkt = stream:pop()
-	while pkt do
-		other_stream:ack(pkt)
-		pkt:send()
+		local pkt = stream:pop()
+		while pkt do
+			other_stream:ack(pkt)
+			pkt:send()
 
-		pkt = stream:pop()
+			pkt = stream:pop()
+		end
 	end
 end
 
-function tcp_connection_dissector.method:send()
-	self:_send('up')
-	self:_send('down')
+function tcp_connection_dissector.method:send(direction)
+	if not direction then
+		self:_send('up')
+		self:_send('down')
+	else
+		self:_send(direction)
+	end
 end
 
 function tcp_connection_dissector.method:drop()
@@ -413,11 +446,11 @@ function tcp_connection_dissector.method:_forgereset(direction)
 	tcprst = haka.dissector.get('ipv4'):create(tcprst)
 
 	if direction == 'up' then
-		tcprst.src = self.connection.srcip
-		tcprst.dst = self.connection.dstip
+		tcprst.src = self.srcip
+		tcprst.dst = self.dstip
 	else
-		tcprst.src = self.connection.dstip
-		tcprst.dst = self.connection.srcip
+		tcprst.src = self.dstip
+		tcprst.dst = self.srcip
 	end
 
 	tcprst.ttl = 64
@@ -425,11 +458,11 @@ function tcp_connection_dissector.method:_forgereset(direction)
 	tcprst = haka.dissector.get('tcp'):create(tcprst)
 
 	if direction == 'up' then
-		tcprst.srcport = self.connection.srcport
-		tcprst.dstport = self.connection.dstport
+		tcprst.srcport = self.srcport
+		tcprst.dstport = self.dstport
 	else
-		tcprst.srcport = self.connection.dstport
-		tcprst.dstport = self.connection.srcport
+		tcprst.srcport = self.dstport
+		tcprst.dstport = self.srcport
 	end
 
 	tcprst.seq = self.stream[direction].lastseq

@@ -20,7 +20,7 @@ haka.rule{
 haka.rule{
 	hook = haka.event('tcp-connection', 'end_connection'),
 	eval = function (flow)
-		haka.log("test", "end tcp connection %s:%i -> %s:%i", flow.connection.srcip,
-			flow.connection.srcport, flow.connection.dstip, flow.connection.dstport)
+		haka.log("test", "end tcp connection %s:%i -> %s:%i", flow.srcip,
+			flow.srcport, flow.dstip, flow.dstport)
 	end
 }

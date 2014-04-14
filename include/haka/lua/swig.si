@@ -132,16 +132,6 @@ void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
 
 %include "typemaps.i"
 
-%define APPLY_OUTPUT(type)
-
-	%apply type *OUTPUT { type *OUTPUT1 };
-	%apply type *OUTPUT { type *OUTPUT2 };
-	%apply type *OUTPUT { type *OUTPUT3 };
-	%apply type *OUTPUT { type *OUTPUT4 };
-	%apply type *OUTPUT { type *OUTPUT5 };
-
-%enddef
-
 %typemap(in, numinputs=0) const char **OUTPUT (char *temp)
 %{ $1 = &temp; %}
 
@@ -168,10 +158,6 @@ void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
 	free(*$1);
 %}
 
-APPLY_OUTPUT(bool)
-APPLY_OUTPUT(int)
-APPLY_OUTPUT(const char *)
-
 %typemap(in,checkfn="SWIG_lua_isnilstring",fragment="SWIG_lua_isnilstring") (const char *STRING, size_t SIZE)
 %{
 	$1 = ($ltype)lua_tostring(L, $input);
@@ -188,3 +174,17 @@ APPLY_OUTPUT(const char *)
 		return -1;
 	}
 %}
+
+%define APPLY_OUTPUT(type)
+
+	%apply type *OUTPUT { type *OUTPUT1 };
+	%apply type *OUTPUT { type *OUTPUT2 };
+	%apply type *OUTPUT { type *OUTPUT3 };
+	%apply type *OUTPUT { type *OUTPUT4 };
+	%apply type *OUTPUT { type *OUTPUT5 };
+
+%enddef
+
+APPLY_OUTPUT(bool)
+APPLY_OUTPUT(int)
+APPLY_OUTPUT(const char *)

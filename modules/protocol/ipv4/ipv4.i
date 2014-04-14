@@ -29,7 +29,7 @@
 		ret->addr = a;
 		return ret;
 	}
- 
+
 	struct inet_checksum {
 		bool    odd;
 		int32   value;
@@ -51,6 +51,7 @@
 %include "haka/lua/swig.si"
 %include "haka/lua/object.si"
 %include "haka/lua/packet.si"
+%include "haka/lua/ref.si"
 %include "haka/lua/ipv4.si"
 %include "haka/lua/ipv4-addr.si"
 
@@ -430,3 +431,5 @@ int lua_inet_checksum(struct vbuffer *buf);
 	ipv4.ipv4_protocol_dissectors = ipv4_protocol_dissectors
 	require('protocol/ipv4lua')]]
 }
+
+%include "cnx.si"

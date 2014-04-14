@@ -23,6 +23,7 @@ http_dissector:register_event('request')
 http_dissector:register_event('response')
 http_dissector:register_event('request_data', nil, haka.dissector.FlowDissector.stream_wrapper)
 http_dissector:register_event('response_data', nil, haka.dissector.FlowDissector.stream_wrapper)
+http_dissector:register_event('receive_data', nil, haka.dissector.FlowDissector.stream_wrapper)
 
 http_dissector.property.connection = {
 	get = function (self)
@@ -62,7 +63,7 @@ function http_dissector.method:reset()
 	self.flow = nil
 end
 
-function http_dissector.method:push_data(current, data, iter, last, signal, chunk)
+function http_dissector.method:push_data(current, data, iter, last, state, chunk)
 	if not current.data then
 		current.data = haka.vbuffer_sub_stream()
 	end
@@ -75,7 +76,13 @@ function http_dissector.method:push_data(current, data, iter, last, signal, chun
 	if last then current.data:finish() end
 
 	if data or last then
-		haka.context:signal(self, signal, current.data, currentiter)
+		if state == 'request' then
+			self:trigger('receive_data', current.data, currentiter, 'up')
+		else
+			self:trigger('receive_data', current.data, currentiter, 'down')
+		end
+
+		self:trigger(state..'_data', current.data, currentiter)
 	end
 
 	local sub
@@ -120,7 +127,16 @@ function http_dissector.method:trigger_event(res, iter, mark)
 	end
 end
 
-function http_dissector.method:receive(flow, iter, direction)
+function http_dissector.method:receive(flow, stream, current, direction)
+	if not self._receive_callback then
+		self._receive_callback = haka.events.method(self, http_dissector.method.receive_streamed)
+	end
+
+	flow:streamed(self._receive_callback, stream, current, direction)
+	flow:send(direction)
+end
+
+function http_dissector.method:receive_streamed(flow, iter, direction)
 	assert(flow == self.flow)
 
 	while iter:wait() do
@@ -135,16 +151,11 @@ function module.install_tcp_rule(port)
 		eval = function (flow, pkt)
 			if pkt.dstport == port then
 				haka.log.debug('http', "selecting http dissector on flow")
-				haka.context:install_dissector(http_dissector:new(flow))
+				flow:select_next_dissector(http_dissector:new(flow))
 			end
 		end
 	}
 end
-
-http_dissector.connections = haka.events.StaticEventConnections:new()
-http_dissector.connections:register(haka.event('tcp-connection', 'receive_data'),
-	haka.events.method(haka.events.self, http_dissector.method.receive),
-	{streamed=true})
 
 
 --
@@ -351,7 +362,7 @@ http_dissector.grammar.chunk = haka.grammar.record{
 		count = function (self, ctx) return ctx.chunk_size end,
 		chunked = function (self, sub, last, ctx)
 			ctx.user:push_data(ctx.top, sub, ctx.iter, ctx.chunk_size == 0,
-				http_dissector.events[ctx.user.states.state.name .. '_data'], true)
+				ctx.user.states.state.name, true)
 		end
 	},
 	haka.grammar.optional(http_dissector.grammar.chunk_end_crlf,
@@ -373,7 +384,7 @@ http_dissector.grammar.body = haka.grammar.branch(
 			count = function (self, ctx) return ctx.content_length or 0 end,
 			chunked = function (self, sub, last, ctx)
 				ctx.user:push_data(ctx.top, sub, ctx.iter, last,
-					http_dissector.events[ctx.user.states.state.name .. '_data'])
+					ctx.user.states.state.name)
 			end
 		},
 		chunked = http_dissector.grammar.chunks,

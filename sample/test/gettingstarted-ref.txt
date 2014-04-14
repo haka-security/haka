@@ -1,5 +1,5 @@
 debug filter: Traffic on HTTP port from 192.168.10.1
-debug tcp-connection: opening connection 192.168.10.1:50683 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:50683 -> 192.168.20.1:80
 info alert: id = <>
 	description = Bad TCP checksum
 info alert: id = <>
@@ -26,4 +26,4 @@ info alert: id = <>
 		address: 192.168.20.1
 		service: tcp/0
 	}
-debug tcp-connection: closing connection 192.168.10.1:50683 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:50683 -> 192.168.20.1:80

@@ -26,11 +26,10 @@ http.install_tcp_rule(80)
 haka.rule{
 	hook = haka.event('http', 'response'),
 	eval = function (http, response)
-		local conn = http.connection
 		local request = http.request
 		local split_uri = request.split_uri:normalize()
 		local entry = {}
-		entry.ip = tostring(conn.srcip)
+		entry.ip = tostring(http.flow.srcip)
 		entry.method = request.method
 		entry.resource = split_uri.path or ''
 		entry.host = split_uri.host or ''

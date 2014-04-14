@@ -9,7 +9,7 @@ swig_add_module(tcp lua SHARED
 	main.c
 	tcp.c
 	tcp-stream.c
-	tcp-connection.c)
+)
 SWIG_FIX_ENTRYPOINT(tcp protocol)
 
 LUA_LINK(tcp)

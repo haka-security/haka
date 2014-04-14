@@ -10,6 +10,13 @@
 #include <stdlib.h>
 
 
+#define SWAP_VAR(t, a, b, el)  \
+	do {                       \
+		t.el = (b)->el;        \
+		(b)->el = (a)->el;     \
+		(a)->el = t.el;        \
+	} while(false);
+
 void vector_destroy(struct vector *v)
 {
 	vector_resize(v, 0);
@@ -68,6 +75,20 @@ bool vector_reserve(struct vector *v, size_t count)
 	}
 
 	return true;
+}
+
+void vector_swap(struct vector *a, struct vector *b)
+{
+	struct vector tmp;
+
+	assert(a);
+	assert(b);
+
+	SWAP_VAR(tmp, a, b, element_size);
+	SWAP_VAR(tmp, a, b, count);
+	SWAP_VAR(tmp, a, b, allocated_count);
+	SWAP_VAR(tmp, a, b, data);
+	SWAP_VAR(tmp, a, b, destruct);
 }
 
 bool _vector_create(struct vector *v, size_t elemsize, size_t reservecount, void (*destruct)(void *elem))

@@ -1,5 +1,5 @@
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 127.0.0.1:42076 -> 127.0.0.1:80
+debug cnx: opening connection 127.0.0.1:42076 -> 127.0.0.1:80
 HTTP REQUEST
 class HttpRequestResult {
   headers : class HeaderResult {
@@ -30,4 +30,4 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug tcp-connection: closing connection 127.0.0.1:42076 -> 127.0.0.1:80
+debug cnx: closing connection 127.0.0.1:42076 -> 127.0.0.1:80

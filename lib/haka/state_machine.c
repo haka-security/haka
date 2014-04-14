@@ -366,7 +366,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 	const bool was_in_transition = instance->in_transition;
 	instance->in_transition = true;
 
-	if (instance->current != state) {
+	{
 		struct state *newstate = state_machine_leave_state(instance);
 		if (newstate) {
 			state_machine_instance_update(instance, newstate);

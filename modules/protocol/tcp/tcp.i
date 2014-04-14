@@ -54,6 +54,27 @@ LUA_OBJECT(struct tcp_stream);
 struct tcp_stream
 {
 	%extend {
+		tcp_stream()
+		{
+			struct tcp_stream *stream = malloc(sizeof(struct tcp_stream));
+			if (!stream) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			tcp_stream_create(stream);
+
+			return stream;
+		}
+
+		~tcp_stream()
+		{
+			if ($self) {
+				tcp_stream_clear($self);
+				free($self);
+			}
+		}
+
 		%immutable;
 		unsigned int lastseq { return tcp_stream_lastseq($self); };
 		struct vbuffer_stream *stream { return &$self->stream; };
@@ -102,6 +123,13 @@ struct tcp_stream
 		{
 			tcp_stream_ack($self, tcp);
 		}
+
+		%rename(clear) _clear;
+		void _clear()
+		{
+			tcp_stream_clear($self);
+			free($self);
+		}
 	}
 };
 
@@ -133,20 +161,6 @@ struct tcp {
 		bool verify_checksum();
 		void compute_checksum();
 
-		struct tcp_connection *newconnection()
-		{
-			return tcp_connection_new($self);
-		}
-
-		struct tcp_connection *getconnection(const char **OUTPUT1, bool *OUTPUT2)
-		{
-			struct tcp_connection *ret;
-			bool direction;
-			ret = tcp_connection_get($self, &direction, OUTPUT2);
-			*OUTPUT1 = direction ? "up" : "down";
-			return ret;
-		}
-
 		void drop()
 		{
 			tcp_action_drop($self);
@@ -162,49 +176,6 @@ struct tcp {
 
 STRUCT_UNKNOWN_KEY_ERROR(tcp);
 
-%newobject tcp_connection::srcip;
-%newobject tcp_connection::dstip;
-
-struct tcp_connection {
-	%extend {
-		struct lua_ref data;
-
-		%immutable;
-		struct ipv4_addr *srcip;
-		struct ipv4_addr *dstip;
-		unsigned int srcport;
-		unsigned int dstport;
-
-		~tcp_connection()
-		{
-			if ($self)
-				tcp_connection_drop($self);
-		}
-
-		%rename(close) _close;
-		void _close()
-		{
-			if ($self)
-				tcp_connection_close($self);
-		}
-
-		%rename(drop) _drop;
-		void _drop()
-		{
-			if ($self)
-				tcp_connection_drop($self);
-		}
-
-		struct tcp_stream *stream(const char *direction)
-		{
-			const bool direction_in = strcmp(direction, "up") == 0;
-			return tcp_connection_get_stream($self, direction_in);
-		}
-	}
-};
-
-STRUCT_UNKNOWN_KEY_ERROR(tcp_connection);
-
 %rename(_dissect) tcp_dissect;
 %newobject tcp_dissect;
 struct tcp *tcp_dissect(struct ipv4 *DISOWN_SUCCESS_ONLY);
@@ -218,26 +189,6 @@ struct tcp *tcp_create(struct ipv4 *DISOWN_SUCCESS_ONLY);
 struct ipv4 *tcp_forge(struct tcp *pkt);
 
 %{
-
-struct ipv4_addr *tcp_connection_srcip_get(struct tcp_connection *tcp_conn) { return ipv4_addr_new(tcp_conn->srcip); }
-struct ipv4_addr *tcp_connection_dstip_get(struct tcp_connection *tcp_conn) { return ipv4_addr_new(tcp_conn->dstip); }
-
-#define TCP_CONN_INT_GET(field) \
-	unsigned int tcp_connection_##field##_get(struct tcp_connection *tcp_conn) { return tcp_connection_get_##field(tcp_conn); }
-
-TCP_CONN_INT_GET(srcport);
-TCP_CONN_INT_GET(dstport);
-
-struct lua_ref tcp_connection_data_get(struct tcp_connection *tcp_conn)
-{
-	return tcp_conn->lua_table;
-}
-
-void tcp_connection_data_set(struct tcp_connection *tcp_conn, struct lua_ref ref)
-{
-	lua_ref_clear(&tcp_conn->lua_table);
-	tcp_conn->lua_table = ref;
-}
 
 #define TCP_INT_GETSET(field) \
 	unsigned int tcp_##field##_get(struct tcp *tcp) { return tcp_get_##field(tcp); } \

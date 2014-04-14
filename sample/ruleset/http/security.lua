@@ -20,14 +20,13 @@ haka.rule {
 			local user_agent = request.headers['User-Agent']
 			for scanner, pattern in pairs(http_useragent) do
 				if user_agent:match(pattern) then
-					local conn = http.connection
 					haka.alert{
 						description = string.format("'%s' scan detected", scanner),
 						severity = 'high',
-						sources = haka.alert.address(conn.srcip),
+						sources = haka.alert.address(http.flow.srcip),
 						targets = {
-							haka.alert.address(conn.dstip),
-							haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
+							haka.alert.address(http.flow.dstip),
+							haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
 						},
 					}
 					http:drop()

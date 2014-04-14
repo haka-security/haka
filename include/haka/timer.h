@@ -19,5 +19,7 @@ void timer_destroy(struct timer *timer);
 bool timer_once(struct timer *timer, struct time *delay);
 bool timer_repeat(struct timer *timer, struct time *delay);
 bool timer_stop(struct timer *timer);
+bool timer_guard();
+bool timer_unguard();
 
 #endif /* _HAKA_TIMER_H */
