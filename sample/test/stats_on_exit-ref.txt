@@ -8,11 +8,7 @@ warn tcp-connection: retransmit packet (ignored)
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
 warn tcp-connection: retransmit packet (ignored)
-error tcp-connection: unexpected tcp packet
-debug tcp-connection: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
 warn tcp-connection: retransmit packet (ignored)
-error tcp-connection: unexpected tcp packet
-debug tcp-connection: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
 debug tcp-connection: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
