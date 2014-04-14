@@ -9,11 +9,12 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#define SWAP_VAR(t, a, b, el)     \
+
+#define SWAP_VAR(t, a, b, el)  \
 	do {                       \
-		t.el = (b)->el;    \
-		(b)->el = (a)->el; \
-		(a)->el = t.el;    \
+		t.el = (b)->el;        \
+		(b)->el = (a)->el;     \
+		(a)->el = t.el;        \
 	} while(false);
 
 void vector_destroy(struct vector *v)
