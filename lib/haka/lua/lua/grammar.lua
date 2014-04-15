@@ -381,7 +381,61 @@ function grammar_dg.Entity.method:create(input, ctx, init)
 	return ctx:create(self)
 end
 
+function grammar_dg.Entity.method:_dump_graph_descr()
+end
+
+function grammar_dg.Entity.method:_dump_graph_options()
+	return ""
+end
+
+function grammar_dg.Entity.method:_dump_graph_node(file, ref)
+	local label, extlabel
+
+	if self.name then
+		label = string.format("%s: %s", classof(self).name, self.name)
+	else
+		label = classof(self).name
+	end
+
+	extlabel = self:_dump_graph_descr()
+	if extlabel then
+		label = string.format("%s\\n%s", label, extlabel)
+	end
+
+	file:write(string.format('%s [label="%s"%s];\n', ref[self], label, self:_dump_graph_options()))
+end
+
+function grammar_dg.Entity.method:_dump_graph_edges(file, ref)
+	if self._next then
+		self._next:_dump_graph(file, ref)
+		file:write(string.format('%s -> %s;\n', ref[self], ref[self._next]))
+	end
+end
+
+function grammar_dg.Entity.method:_dump_graph(file, ref)
+	if not ref[self] then
+		ref[self] = string.format("N_%d", ref._index)
+		ref._index = ref._index+1
+		self:_dump_graph_node(file, ref)
+		return self:_dump_graph_edges(file, ref)
+	end
+end
+
+function grammar_dg.Entity.method:dump_graph(file)
+	file:write("digraph grammar {\n")
+
+	local ref = {}
+	ref._index = 1
+	self:_dump_graph(file, ref)
+
+	file:write("}\n")
+end
+
 grammar_dg.Control = class('DGControl', grammar_dg.Entity)
+
+function grammar_dg.Control.method:_dump_graph_options()
+	return ',fillcolor="#dddddd",style="filled"'
+end
 
 grammar.ResultPop = class('DGResultPop', grammar_dg.Control)
 
@@ -558,6 +612,10 @@ function grammar_dg.Error.method:__init(id, msg)
 	self.msg = msg
 end
 
+function grammar_dg.Error.method:_dump_graph_options()
+	return ',fillcolor="#ee0000",style="filled"'
+end
+
 function grammar_dg.Error.method:_apply(ctx)
 	return ctx:error(nil, self, self.msg)
 end
@@ -610,6 +668,18 @@ function grammar_dg.Branch.method:case(key, entity)
 	self.cases[key] = entity
 end
 
+function grammar_dg.Branch.method:_dump_graph_edges(file, ref)
+	for name, case in pairs(self.cases) do
+		case:_dump_graph(file, ref)
+		file:write(string.format('%s -> %s [label="%s"];\n', ref[self], ref[case], name))
+	end
+
+	if self._next then
+		self._next:_dump_graph(file, ref)
+		file:write(string.format('%s -> %s [label="default"];\n', ref[self], ref[self._next]))
+	end
+end
+
 function grammar_dg.Branch.method:next(ctx)
 	local next = self.cases[self.selector(ctx.result, ctx)]
 	if next then return next
@@ -645,6 +715,10 @@ function grammar_dg.Number.method:__init(rule, id, size, endian, name)
 	self.size = size
 	self.endian = endian
 	self.name = name
+end
+
+function grammar_dg.Number.method:_dump_graph_descr()
+	return string.format("%d bits (%s endian)", self.size, self.endian or 'big')
 end
 
 function grammar_dg.Number.method:_parse(res, input, ctx)
@@ -801,6 +875,10 @@ function grammar_dg.Token.method:__init(rule, id, pattern, re, full_re, name)
 	self.re = re
 	self.full_re = full_re
 	self.name = name
+end
+
+function grammar_dg.Token.method:_dump_graph_descr()
+	return string.format("/%s/", self.pattern)
 end
 
 function grammar_dg.Token.method:_parse(res, iter, ctx)
