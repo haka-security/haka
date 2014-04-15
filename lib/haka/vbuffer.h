@@ -44,6 +44,4 @@ struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk);
 void                  vbuffer_iterator_build(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, vbsize_t offset, vbsize_t meter);
 void                  vbuffer_iterator_update(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, size_t offset);
 
-void                  vbuffer_sub_init(struct vbuffer_sub *data);
-
 #endif /* _HAKA_VBUFFER_PRIVATE_H */

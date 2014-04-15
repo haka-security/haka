@@ -57,6 +57,8 @@ struct vbuffer_sub {
 	};
 };
 
+extern const struct vbuffer_sub vbuffer_sub_init;
+
 struct vbuffer_sub_mmap {
 	struct vbuffer_chunk        *data;
 	vbsize_t                     len;

@@ -960,20 +960,14 @@ bool vbuffer_iterator_isinsertable(struct vbuffer_iterator *position, struct vbu
  * Sub buffer
  */
 
+const struct vbuffer_sub vbuffer_sub_init = { { NULL, 0, false }, false, { { NULL, 0, false } } };
+
 static bool _vbuffer_sub_check(const struct vbuffer_sub *data)
 {
 	assert(data);
 	if (!_vbuffer_iterator_check(&data->begin)) return false;
 	if (!data->use_size && !_vbuffer_iterator_check(&data->end)) return false;
 	return true;
-}
-
-void vbuffer_sub_init(struct vbuffer_sub *data)
-{
-	assert(data);
-	data->begin = vbuffer_iterator_init;
-	data->end = vbuffer_iterator_init;
-	data->use_size = false;
 }
 
 void vbuffer_sub_clear(struct vbuffer_sub *data)
@@ -998,7 +992,7 @@ bool vbuffer_sub_unregister(struct vbuffer_sub *data)
 
 void vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t offset, size_t length)
 {
-	vbuffer_sub_init(data);
+	*data = vbuffer_sub_init;
 
 	vbuffer_begin(buffer, &data->begin);
 	vbuffer_iterator_advance(&data->begin, offset);
@@ -1015,7 +1009,7 @@ void vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t
 
 bool vbuffer_sub_create_from_position(struct vbuffer_sub *data, struct vbuffer_iterator *position, size_t length)
 {
-	vbuffer_sub_init(data);
+	*data = vbuffer_sub_init;
 
 	vbuffer_iterator_copy(position, &data->begin);
 	data->use_size = true;
@@ -1025,7 +1019,7 @@ bool vbuffer_sub_create_from_position(struct vbuffer_sub *data, struct vbuffer_i
 
 bool vbuffer_sub_create_between_position(struct vbuffer_sub *data, struct vbuffer_iterator *begin, struct vbuffer_iterator *end)
 {
-	vbuffer_sub_init(data);
+	*data = vbuffer_sub_init;
 
 	vbuffer_iterator_copy(begin, &data->begin);
 	data->use_size = false;

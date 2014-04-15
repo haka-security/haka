@@ -56,7 +56,7 @@ bool vbuffer_sub_stream_pop(struct vbuffer_sub_stream *stream, struct vbuffer_su
 	bool ret = false;
 
 	if (sub) {
-		vbuffer_sub_init(sub);
+		*sub = vbuffer_sub_init;
 	}
 
 	while (vbuffer_stream_pop(&stream->stream, &buffer, (void **)&chunk)) {
