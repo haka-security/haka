@@ -996,6 +996,7 @@ bool vbuffer_sub_unregister(struct vbuffer_sub *data)
 
 void vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t offset, size_t length)
 {
+	assert(data);
 	*data = vbuffer_sub_init;
 
 	vbuffer_begin(buffer, &data->begin);
@@ -1013,6 +1014,7 @@ void vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t
 
 bool vbuffer_sub_create_from_position(struct vbuffer_sub *data, struct vbuffer_iterator *position, size_t length)
 {
+	assert(data);
 	*data = vbuffer_sub_init;
 
 	vbuffer_iterator_copy(position, &data->begin);
@@ -1023,6 +1025,7 @@ bool vbuffer_sub_create_from_position(struct vbuffer_sub *data, struct vbuffer_i
 
 bool vbuffer_sub_create_between_position(struct vbuffer_sub *data, struct vbuffer_iterator *begin, struct vbuffer_iterator *end)
 {
+	assert(data);
 	*data = vbuffer_sub_init;
 
 	vbuffer_iterator_copy(begin, &data->begin);
