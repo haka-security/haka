@@ -512,7 +512,10 @@ static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer_sub *vb
 	assert(sink);
 
 	if (!vbuf) {
-		if (_eof) {
+		if (_eof && sink->super.match == REGEXP_PARTIAL) {
+			/* If the eof is set and we are inside a partial match, we need
+			 * to send some empty data to make sure we can detect a regexp
+			 * that use the EOL. */
 			_partial_exec(sink, "", 0, _eof, NULL);
 		}
 	}
