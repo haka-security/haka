@@ -127,13 +127,18 @@ function http_dissector.method:trigger_event(res, iter, mark)
 	end
 end
 
-function http_dissector.method:receive(flow, stream, current, direction)
-	if not self._receive_callback then
-		self._receive_callback = haka.events.method(self, http_dissector.method.receive_streamed)
-	end
-
-	flow:streamed(self._receive_callback, stream, current, direction)
-	flow:send(direction)
+function http_dissector.method:receive(stream, current, direction)
+	return haka.dissector.pcall(self, function ()
+		if not self._receive_callback then
+			self._receive_callback = haka.events.method(self, http_dissector.method.receive_streamed)
+		end
+	
+		self.flow:streamed(self._receive_callback, stream, current, direction)
+		
+		if self.flow then
+			self.flow:send(direction)
+		end
+	end)
 end
 
 function http_dissector.method:receive_streamed(flow, iter, direction)

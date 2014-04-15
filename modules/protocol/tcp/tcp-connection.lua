@@ -377,7 +377,7 @@ function tcp_connection_dissector.method:_trigger_receive(direction, stream, cur
 
 	local next_dissector = self:next_dissector()
 	if next_dissector then
-		return next_dissector:receive(self, stream.stream, current, direction)
+		return next_dissector:receive(stream.stream, current, direction)
 	else
 		return self:send(direction)
 	end

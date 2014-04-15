@@ -55,23 +55,6 @@ dissector.Dissector.property.name = {
 	get = function (self) return classof(self).name end
 }
 
-function dissector.Dissector:receive(pkt)
-	local npkt = self:new(pkt)
-	if not npkt then
-		return
-	end
-
-	local ret, err = xpcall(function () npkt:receive() end, debug.format_error)
-	if not ret then
-		if err then
-			haka.log.error(npkt.name, "%s", err)
-			return npkt:error()
-		end
-	end
-
-	return npkt
-end
-
 function dissector.Dissector.method:trigger(signal, ...)
 	haka.context:signal(self, classof(self).events[signal], ...)
 end
@@ -84,6 +67,20 @@ function dissector.Dissector.method:error()
 	self:drop()
 end
 
+function dissector.pcall(self, f)
+	local ret, err = xpcall(f, debug.format_error)
+
+	if not ret then
+		if err then
+			haka.log.error(self.name, "%s", err)
+			return self:error()
+		end
+	end
+
+	-- return the result of f
+	return err
+end
+
 
 --
 -- Packet based dissector
@@ -93,6 +90,19 @@ dissector.PacketDissector = class('PacketDissector', dissector.Dissector)
 
 dissector.PacketDissector:register_event('receive_packet')
 dissector.PacketDissector:register_event('send_packet')
+
+function dissector.PacketDissector:receive(pkt)
+	local npkt = self:new(pkt)
+	if not npkt then
+		return
+	end
+
+	return dissector.pcall(npkt, function () npkt:receive() return npkt end)
+end
+
+function dissector.PacketDissector.method:receive()
+	error("not implemented")
+end
 
 function dissector.PacketDissector.method:continue()
 	error("not implemented")
