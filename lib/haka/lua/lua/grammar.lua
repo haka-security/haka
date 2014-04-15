@@ -899,15 +899,19 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 
 		local sub = iter:sub('available')
 
-		local match, result = ctx.sink:feed(sub or "", iter.iseof)
+		local match, mbegin, mend = ctx.sink:feed(sub, sub == nil)
 		if not match and not ctx.sink:ispartial() then break end
 
 		if match then
-			iter:move_to(begin)
-			iter:unmark()
+			begin:unmark()
 
-			local sub = iter:sub(result.size, true)
-			local string = sub:asstring()
+			if mend then iter:move_to(mend)
+			else mend = iter end
+
+			iter:split()
+
+			local result = haka.vbuffer_sub(begin, mend)
+			local string = result:asstring()
 
 			if self.converter then
 				string = self.converter.get(string)
@@ -928,7 +932,7 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 							error(string.format("token value '%s' does not verify /%s/", newvalue, self.pattern))
 						end
 
-						sub:setstring(newvalue)
+						result:setstring(newvalue)
 					end
 				)
 			end

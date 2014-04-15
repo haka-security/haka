@@ -20,3 +20,5 @@ void regexp_module_release(struct regexp_module *module)
 {
 	module_release(&module->module);
 }
+
+const struct regexp_result regexp_result_init = { -1, -1 };

@@ -188,8 +188,8 @@ START_TEST(regexp_exec_should_return_results_on_match)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret == REGEXP_MATCH, "exec expected to match, but found ret = %d", ret);
-	ck_assert_msg(result.offset == 4, "exec expected to result with offset = 4, but found offset = %d", result.offset);
-	ck_assert_msg(result.size == 3, "exec expected to result with size = 3, but found size = %d", result.size);
+	ck_assert_msg(result.first == 4, "exec expected to result with start = 4, but found start = %d", result.first);
+	ck_assert_msg(result.last == 7, "exec expected to result with end = 7, but found end = %d", result.last);
 
 	// Finally
 	rem->release_regexp(re);
@@ -294,8 +294,8 @@ START_TEST(regexp_match_should_return_results_on_match)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret == REGEXP_MATCH, "match expected to match, but found ret = %d", ret);
-	ck_assert_msg(result.offset == 4, "match expected to result with offset = 4, but found offset = %d", result.offset);
-	ck_assert_msg(result.size == 3, "match expected to result with size = 3, but found size = %d", result.size);
+	ck_assert_msg(result.first == 4, "match expected to result with start = 4, but found start = %d", result.first);
+	ck_assert_msg(result.last == 7, "match expected to result with end = 7, but found end = %d", result.last);
 
 	// Finally
 	regexp_module_release(rem);
@@ -353,8 +353,8 @@ START_TEST(regexp_feed_should_not_fail_when_feed_twice)
 	clear_error();
 
 	// When
-	rem->feed(sink, "aaa", 3, false);
-	rem->feed(sink, "bbb", 3, true);
+	rem->feed(sink, "aaa", 3, false, NULL);
+	rem->feed(sink, "bbb", 3, true, NULL);
 
 	// Then
 	ck_check_error;
@@ -377,7 +377,7 @@ START_TEST(regexp_feed_should_match)
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "aaa", 3, true);
+	ret = rem->feed(sink, "aaa", 3, true, NULL);
 
 	// Then
 	ck_check_error;
@@ -401,8 +401,8 @@ START_TEST(regexp_feed_should_match_accross_two_string)
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "aaa", 3, false);
-	ret = rem->feed(sink, "bbb", 3, true);
+	ret = rem->feed(sink, "aaa", 3, false, NULL);
+	ret = rem->feed(sink, "bbb", 3, true, NULL);
 
 	// Then
 	ck_check_error;
@@ -426,7 +426,7 @@ START_TEST(regexp_feed_should_not_fail_if_no_match)
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "ddd", 3, true);
+	ret = rem->feed(sink, "ddd", 3, true, NULL);
 
 	// Then
 	ck_check_error;
@@ -447,18 +447,19 @@ START_TEST(regexp_feed_should_return_results_on_match)
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("bar", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
+	struct regexp_result result = regexp_result_init;
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "foo b", 5, false);
-	ret = rem->feed(sink, "ar foo", 6, false);
-	ret = rem->feed(sink, "fail", 4, true);
+	ret = rem->feed(sink, "foo b", 5, false, &result);
+	ret = rem->feed(sink, "ar foo", 6, false, &result);
+	ret = rem->feed(sink, "fail", 4, true, &result);
 
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret == REGEXP_MATCH, "feed expected to match, but found ret = %d", ret);
-	ck_assert_msg(sink->result.offset == 4, "feed expected result with offset = 4, but found offset = %d", sink->result.offset);
-	ck_assert_msg(sink->result.size == 3, "feed expected result with size = 3, but found size = %d", sink->result.size);
+	ck_assert_msg(result.first == 4, "feed expected result with start = 4, but found start = %d", result.first);
+	ck_assert_msg(result.last == 7, "feed expected result with end = 7, but found end = %d", result.last);
 
 	// Finally
 	rem->free_regexp_sink(sink);
@@ -478,7 +479,7 @@ START_TEST(regexp_feed_should_return_partial_on_partial_match)
 	clear_error();
 
 	// When
-	ret = rem->feed(sink, "a", 1, true);
+	ret = rem->feed(sink, "a", 1, true, NULL);
 
 	// Then
 	ck_check_error;
@@ -497,33 +498,33 @@ void some_vbuffer(struct vbuffer *vb, struct vbuffer_sub *sb, char *str, ...)
 	size_t len;
 
 	len = strlen(str);
-        vbuffer_create_from(vb, str, len);
+	vbuffer_create_from(vb, str, len);
 
 	va_start(ap, str);
 	while ((str = va_arg(ap, char *)) != NULL) {
-                struct vbuffer tvb;
+		struct vbuffer tvb;
 		len = strlen(str);
 		vbuffer_create_from(&tvb, str, len);
 		vbuffer_append(vb, &tvb);
-                vbuffer_release(&tvb);
+		vbuffer_release(&tvb);
 	}
 	va_end(ap);
 
-        vbuffer_clearmodified(vb);
-        vbuffer_sub_create(sb, vb, 0, ALL);
+	vbuffer_clearmodified(vb);
+	vbuffer_sub_create(sb, vb, 0, ALL);
 }
 
 START_TEST(regexp_vbexec_should_match_on_vbuffer)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("abc", 0);
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "abc", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "abc", NULL);
 	clear_error();
 
 	// When
@@ -543,14 +544,14 @@ END_TEST
 START_TEST(regexp_vbexec_should_match_on_multiple_vbuffer)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("ab", 0);
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "aaa", "bbb", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "aaa", "bbb", NULL);
 	clear_error();
 
 	// When
@@ -573,8 +574,8 @@ START_TEST(regexp_vbexec_should_not_change_vbuffer_flags)
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("abc", 0);
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "aaa", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "aaa", NULL);
 	clear_error();
 
 	// When
@@ -594,14 +595,14 @@ END_TEST
 START_TEST(regexp_vbexec_should_return_results_on_match_on_single_vbuffer)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("bar", 0);
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "foo bar foo", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "foo bar foo", NULL);
 	clear_error();
 
 	// When
@@ -610,8 +611,8 @@ START_TEST(regexp_vbexec_should_return_results_on_match_on_single_vbuffer)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret == REGEXP_MATCH, "vbexec expected to match on single vbuffer, but found ret = %d", ret);
-	ck_assert_msg(result.offset == 4, "vbexec expected to result with offset = 4, but found offset = %d", result.offset);
-	ck_assert_msg(result.size == 3, "vbexec expected to result with size = 3, but found size = %d", result.size);
+	ck_assert_msg(result.begin.offset == 4, "vbexec expected to result with start = 4, but found start = %d", result.begin.offset);
+	ck_assert_msg(result.end.offset == 7, "vbexec expected to result with end = 7, but found end = %d", result.end.offset);
 
 	// Finally
 	rem->release_regexp(re);
@@ -623,14 +624,14 @@ END_TEST
 START_TEST(regexp_vbexec_should_return_results_on_match_on_multiple_vbuffer)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("bar", 0);
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "foo b", "ar foo", "fail", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "foo b", "ar foo", "fail", NULL);
 	clear_error();
 
 	// When
@@ -639,8 +640,8 @@ START_TEST(regexp_vbexec_should_return_results_on_match_on_multiple_vbuffer)
 	// Then
 	ck_check_error;
 	ck_assert_msg(ret == REGEXP_MATCH, "vbexec expected to match on multiple vbuffer, but found ret = %d", ret);
-	ck_assert_msg(result.offset == 4, "vbexec expected to result with offset = 4, but found offset = %d", result.offset);
-	ck_assert_msg(result.size == 3, "vbexec expected to result with size = 3, but found size = %d", result.size);
+	ck_assert_int_eq(result.begin.offset, 4);
+	ck_assert_int_eq(vbuffer_sub_size(&result), 3);
 
 	// Finally
 	rem->release_regexp(re);
@@ -657,8 +658,8 @@ START_TEST(regexp_vbexec_should_not_fail_without_results)
 	struct regexp_module *rem = some_regexp_module();
 	struct regexp *re = rem->compile("bar", 0);
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "foo bar foo", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "foo bar foo", NULL);
 	clear_error();
 
 	// When
@@ -684,12 +685,12 @@ START_TEST(regexp_vbfeed_should_match_on_vbuffer)
 	struct regexp *re = rem->compile(".*", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "aaa", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "aaa", NULL);
 	clear_error();
 
 	// When
-	ret = rem->vbfeed(sink, &sb, true);
+	ret = rem->vbfeed(sink, &sb, true, NULL, NULL);
 
 	// Then
 	ck_check_error;
@@ -712,16 +713,16 @@ START_TEST(regexp_vbfeed_should_match_on_multiple_vbuffer)
 	struct regexp *re = rem->compile("abbbcccd", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	struct vbuffer vb1;
-        struct vbuffer_sub sb1;
+	struct vbuffer_sub sb1;
 	struct vbuffer vb2;
-        struct vbuffer_sub sb2;
-        some_vbuffer(&vb1, &sb1, "aaa", "bbb", NULL);
-        some_vbuffer(&vb2, &sb2, "ccc", "ddd", NULL);
+	struct vbuffer_sub sb2;
+	some_vbuffer(&vb1, &sb1, "aaa", "bbb", NULL);
+	some_vbuffer(&vb2, &sb2, "ccc", "ddd", NULL);
 	clear_error();
 
 	// When
-	ret = rem->vbfeed(sink, &sb1, false);
-	ret = rem->vbfeed(sink, &sb2, true);
+	ret = rem->vbfeed(sink, &sb1, false, NULL, NULL);
+	ret = rem->vbfeed(sink, &sb2, true, NULL, NULL);
 
 	// Then
 	ck_check_error;
@@ -751,12 +752,12 @@ START_TEST(regexp_vbfeed_should_return_partial_on_partial_match)
 	struct regexp *re = rem->compile("abc", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "aaa", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "aaa", NULL);
 	clear_error();
 
 	// When
-	ret = rem->vbfeed(sink, &sb, true);
+	ret = rem->vbfeed(sink, &sb, true, NULL, NULL);
 
 	// Then
 	ck_check_error;
@@ -774,13 +775,13 @@ END_TEST
 START_TEST(regexp_vbmatch_should_match_on_vbuffer)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "aaa", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "aaa", NULL);
 	clear_error();
 
 	// When
@@ -799,13 +800,13 @@ END_TEST
 START_TEST(regexp_vbmatch_should_match_on_multiple_vbuffer)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "aaa", "bbb", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "aaa", "bbb", NULL);
 	clear_error();
 
 	// When
@@ -855,13 +856,13 @@ END_TEST
 START_TEST(nonreg_regexp_should_not_match_after_start_of_line_if_pattern_start_with_circum)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "aaa", "abc", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "aaa", "abc", NULL);
 	clear_error();
 
 	// When
@@ -881,13 +882,13 @@ END_TEST
 START_TEST(nonreg_regexp_should_match_end_of_line)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "foo", "abc", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "foo", "abc", NULL);
 	clear_error();
 
 	// When
@@ -907,13 +908,13 @@ END_TEST
 START_TEST(nonreg_regexp_should_not_match_end_of_line_before_end)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "aaa", "abc", "foo", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "aaa", "abc", "foo", NULL);
 	clear_error();
 
 	// When
@@ -933,13 +934,13 @@ END_TEST
 START_TEST(nonreg_regexp_should_match_even_with_empty_string)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "a", "", "", "bc", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "a", "", "", "bc", NULL);
 	clear_error();
 
 	// When
@@ -959,13 +960,13 @@ END_TEST
 START_TEST(nonreg_regexp_should_match_even_when_ending_with_empty_string)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "abc", "", "", "", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "abc", "", "", "", NULL);
 	clear_error();
 
 	// When
@@ -984,15 +985,15 @@ END_TEST
 START_TEST(nonreg_regexp_should_match_even_with_nul_byte)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	// A vbuffer of 4 bytes with "abc\0"
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        vbuffer_create_from(&vb, "abc", 4);
-        vbuffer_sub_create(&sb, &vb, 0, ALL);
+	struct vbuffer_sub sb;
+	vbuffer_create_from(&vb, "abc", 4);
+	vbuffer_sub_create(&sb, &vb, 0, ALL);
 
 	// When
 	ret = rem->vbmatch("abc", 0, &sb, &result);
@@ -1011,13 +1012,13 @@ END_TEST
 START_TEST(nonreg_regexp_should_match_even_with_a_partial_failed)
 {
 	int ret;
-	struct regexp_vbresult result;
+	struct vbuffer_sub result = vbuffer_sub_init;
 
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
-        some_vbuffer(&vb, &sb, "fo", "bar", NULL);
+	struct vbuffer_sub sb;
+	some_vbuffer(&vb, &sb, "fo", "bar", NULL);
 	clear_error();
 
 	// When
@@ -1040,14 +1041,14 @@ START_TEST(nonreg_vbfeed_should_not_return_partial_after_start_of_line_if_patter
 	// Given
 	struct regexp_module *rem = some_regexp_module();
 	struct vbuffer vb;
-        struct vbuffer_sub sb;
+	struct vbuffer_sub sb;
 	struct regexp *re = rem->compile("^abc", 0);
 	struct regexp_sink *sink = rem->create_sink(re);
-        some_vbuffer(&vb, &sb, "aaa", NULL);
+	some_vbuffer(&vb, &sb, "aaa", NULL);
 	clear_error();
 
 	// When
-	ret = rem->vbfeed(sink, &sb, true);
+	ret = rem->vbfeed(sink, &sb, true, NULL, NULL);
 
 	// Then
 	ck_check_error;

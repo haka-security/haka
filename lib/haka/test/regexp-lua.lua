@@ -184,29 +184,32 @@ function TestRegexpModule:test_feed_should_return_results ()
 	local re = self.rem.re:compile("bar")
 	local sink = re:create_sink()
 	-- When
-	local ret, result = sink:feed("foo bar foo", true)
+	local result = haka.regexp_result()
+	local ret = sink:feed("foo bar foo", true, result)
 	-- Then
 	assertTrue(ret)
-	assertEquals(result.offset, 4)
-	assertEquals(result.size, 3)
+	assertEquals(result.first, 4)
+	assertEquals(result.last, 7)
 end
 
-function TestRegexpModule:test_feed_should_return_nil_results_when_pattern_do_not_match ()
+function TestRegexpModule:test_feed_should_return_invalid_results_when_pattern_do_not_match ()
 	-- Given
 	local re = self.rem.re:compile("bar")
 	local sink = re:create_sink()
 	-- When
-	local ret, result = sink:feed("foo", true)
+	local result = haka.regexp_result()
+	local ret = sink:feed("foo", true, result)
 	-- Then
 	assertFalse(ret)
-	assertIsNil(result)
+	assertEquals(result.first, -1)
+	assertEquals(result.last, -1)
 end
 
 function TestRegexpModule:test_feed_should_set_sink_to_partial ()
 	-- Given
 	local re = self.rem.re:compile("abc")
 	local sink = re:create_sink()
-	local ret, result = sink:feed("aaa", true)
+	local ret = sink:feed("aaa", true)
 	-- When
 	local partial = sink:ispartial()
 	-- Then
