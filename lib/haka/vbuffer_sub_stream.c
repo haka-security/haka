@@ -23,7 +23,7 @@ void vbuffer_sub_stream_chunk_free(void *_data)
 {
 	struct vbuffer_sub_stream_chunk *data = (struct vbuffer_sub_stream_chunk *)_data;
 
-	vbuffer_restore(&data->select, NULL);
+	vbuffer_restore(&data->select, NULL, false);
 	free(data);
 }
 
@@ -72,7 +72,7 @@ bool vbuffer_sub_stream_pop(struct vbuffer_sub_stream *stream, struct vbuffer_su
 			ret = true;
 		}
 
-		vbuffer_restore(&chunk->select, &buffer);
+		vbuffer_restore(&chunk->select, &buffer, false);
 		vbuffer_release(&buffer);
 		free(chunk);
 	}

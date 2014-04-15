@@ -1391,7 +1391,7 @@ bool vbuffer_select(struct vbuffer_sub *data, struct vbuffer *buffer, struct vbu
 	return true;
 }
 
-bool vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data)
+bool vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data, bool clone)
 {
 	struct vbuffer_data_ctl_select *ctl;
 
@@ -1404,6 +1404,21 @@ bool vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data)
 	}
 
 	if (data) {
+		struct vbuffer clone_buf;
+
+		if (clone) {
+			struct vbuffer_sub sub;
+			struct vbuffer_iterator begin, end;
+
+			vbuffer_begin(data, &begin);
+			vbuffer_end(data, &end);
+			vbuffer_sub_create_between_position(&sub, &begin, &end);
+
+			vbuffer_sub_clone(&sub, &clone_buf, false);
+
+			data = &clone_buf;
+		}
+
 		list2_insert_list(&position->chunk->list, &vbuffer_chunk_begin(data)->list, &vbuffer_chunk_end(data)->list);
 		vbuffer_clear(data);
 	}

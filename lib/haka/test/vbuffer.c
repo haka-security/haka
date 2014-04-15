@@ -233,7 +233,7 @@ START_TEST(test_select)
 	ck_assert_int_eq(vbuffer_size(&select), strlen(string)+insert_offset);
 
 	/* Restore it */
-	ck_assert(vbuffer_restore(&ref, &select));
+	ck_assert(vbuffer_restore(&ref, &select, false));
 	ck_check_error;
 	ck_assert_int_eq(vbuffer_size(&buffer), size+strlen(string));
 

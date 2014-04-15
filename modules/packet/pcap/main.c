@@ -540,7 +540,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 
 	if (vbuffer_isvalid(&pkt->data)) {
-		vbuffer_restore(&pkt->select, &pkt->core_packet.payload);
+		vbuffer_restore(&pkt->select, &pkt->core_packet.payload, false);
 
 		if (pkt->state->pf && result == FILTER_ACCEPT) {
 			const uint8 *data;

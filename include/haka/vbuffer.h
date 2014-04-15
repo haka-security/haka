@@ -138,7 +138,7 @@ uint8        *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, st
 bool          vbuffer_zero(struct vbuffer_sub *data);
 bool          vbuffer_extract(struct vbuffer_sub *data, struct vbuffer *buffer);
 bool          vbuffer_select(struct vbuffer_sub *data, struct vbuffer *buffer, struct vbuffer_iterator *ref);
-bool          vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data);
+bool          vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data, bool clone);
 bool          vbuffer_erase(struct vbuffer_sub *data);
 bool          vbuffer_replace(struct vbuffer_sub *data, struct vbuffer *buffer);
 
