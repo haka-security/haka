@@ -109,6 +109,9 @@ struct regexp {
 
 			int ret = $self->module->exec($self, STRING, SIZE, &result);
 
+			*OUTPUT1 = -1;
+			*OUTPUT2 = -1;
+
 			if (ret != REGEXP_MATCH) return;
 
 			*TEMP_SIZE = result.last - result.first;
@@ -163,6 +166,9 @@ struct regexp_module {
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
 			int ret = $self->match(esc_regexp, options, STRING, SIZE, &result);
 			free(esc_regexp);
+
+			*OUTPUT1 = -1;
+			*OUTPUT2 = -1;
 
 			if (ret != REGEXP_MATCH) return;
 
