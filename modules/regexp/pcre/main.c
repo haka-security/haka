@@ -503,11 +503,11 @@ static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer_sub *vb
 	int ret = 0;
 	size_t len, plen = 0;
 	size_t offset;
-	struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
+	struct vbuffer_sub_mmap mmap_iter = vbuffer_mmap_init;
 	const uint8 *pptr = NULL;
 	struct regexp_result result = regexp_result_init;
-	struct vbuffer_iterator vbiter = vbuffer_iterator_init;
-	struct vbuffer_iterator pvbiter = vbuffer_iterator_init;
+	struct vbuffer_iterator iter = vbuffer_iterator_init;
+	struct vbuffer_iterator piter = vbuffer_iterator_init;
 
 	assert(sink);
 
@@ -524,7 +524,7 @@ static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer_sub *vb
 		 * we keep previous non-empty ptr in pptr and
 		 * wait for end or next non-empty ptr to match against it */
 		do {
-			const uint8 *ptr = vbuffer_mmap(vbuf, &len, false, &iter, &vbiter);
+			const uint8 *ptr = vbuffer_mmap(vbuf, &len, false, &mmap_iter, &iter);
 			bool last = (ptr == NULL);
 			bool eof = _eof && last;
 
@@ -537,16 +537,16 @@ static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer_sub *vb
 				/* eof if last is empty */
 				result = regexp_result_init;
 
-				/* save the skin processed length to only get the indices inside the current data */
+				/* save the sink processed length to only get the indices inside the current data */
 				offset = sink->processed_length;
 
 				ret = _partial_exec(sink, (const char *)pptr, plen, eof && len == 0, &result);
 				if (begin && (result.first != (size_t)-1)) {
-					vbuffer_iterator_copy(&pvbiter, begin);
+					vbuffer_iterator_copy(&piter, begin);
 					vbuffer_iterator_advance(begin, result.first - offset);
 				}
 				if (end && (result.last != (size_t)-1)) {
-					vbuffer_iterator_copy(&pvbiter, end);
+					vbuffer_iterator_copy(&piter, end);
 					vbuffer_iterator_advance(end, result.last - offset);
 				}
 
@@ -556,7 +556,7 @@ static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer_sub *vb
 
 			pptr = ptr;
 			plen = len;
-			pvbiter = vbiter;
+			piter = iter;
 
 		} while (pptr != NULL);
 	}

@@ -1210,23 +1210,23 @@ static struct vbuffer_chunk *_vbuffer_sub_iterate(struct vbuffer_sub *data, size
 	return chunk;
 }
 
-uint8 *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *iter,
-		struct vbuffer_iterator *vbiter)
+uint8 *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *mmap_iter,
+		struct vbuffer_iterator *iter)
 {
 	size_t offset;
 	struct vbuffer_chunk *chunk;
 	struct vbuffer_sub_mmap _iter;
 
-	if (!iter) {
+	if (!mmap_iter) {
 		_iter = vbuffer_mmap_init;
-		iter = &_iter;
+		mmap_iter = &_iter;
 	}
 
-	if (!iter->data) {
-		iter->meter = data->begin.meter;
+	if (!mmap_iter->data) {
+		mmap_iter->meter = data->begin.meter;
 	}
 
-	while ((chunk = _vbuffer_sub_iterate(data, &offset, len, iter))) {
+	while ((chunk = _vbuffer_sub_iterate(data, &offset, len, mmap_iter))) {
 		uint8 *ptr;
 
 		if (chunk->flags.ctl || *len == 0) {
@@ -1241,11 +1241,11 @@ uint8 *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vb
 		assert(offset <= chunk->size);
 		ptr += offset;
 
-		if (vbiter) {
-			vbuffer_iterator_build(vbiter, chunk, offset, iter->meter);
+		if (iter) {
+			vbuffer_iterator_build(iter, chunk, offset, mmap_iter->meter);
 		}
 
-		iter->meter += *len;
+		mmap_iter->meter += *len;
 		return ptr;
 	}
 

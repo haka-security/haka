@@ -134,7 +134,7 @@ bool          vbuffer_sub_compact(struct vbuffer_sub *data);
 bool          vbuffer_sub_isflat(struct vbuffer_sub *data);
 bool          vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, bool copy);
 
-uint8        *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *iter, struct vbuffer_iterator *vbiter);
+uint8        *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *mmap_iter, struct vbuffer_iterator *iter);
 bool          vbuffer_zero(struct vbuffer_sub *data);
 bool          vbuffer_extract(struct vbuffer_sub *data, struct vbuffer *buffer);
 bool          vbuffer_select(struct vbuffer_sub *data, struct vbuffer *buffer, struct vbuffer_iterator *ref);
