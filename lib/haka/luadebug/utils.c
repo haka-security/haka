@@ -81,7 +81,7 @@ void pprint(lua_State *L, struct luadebug_user *user, int index, bool full, cons
 
 	/* obj */
 	if (index < 0) {
-		lua_pushvalue(L, h-1+index);
+		lua_pushvalue(L, h+index);
 	}
 	else {
 		lua_pushvalue(L, index);
