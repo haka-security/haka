@@ -7,3 +7,4 @@ include(TestPcap)
 include(TestUnitLua)
 
 TEST_PCAP(dns basic)
+TEST_PCAP(dns query-readonly)
