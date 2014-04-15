@@ -259,7 +259,6 @@ struct regexp_module {
 				input:move_to(mend)
 
 				if createsub then
-					input:split()
 					return haka.vbuffer_sub(begin, mend)
 				else
 					return true
