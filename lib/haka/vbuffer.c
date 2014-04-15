@@ -435,7 +435,7 @@ void vbuffer_swap(struct vbuffer *a, struct vbuffer *b)
  * Iterators
  */
 
-const struct vbuffer_iterator vbuffer_iterator_init = { NULL, 0, false };
+const struct vbuffer_iterator vbuffer_iterator_init = { NULL, 0, 0, false };
 
 static bool _vbuffer_iterator_check(const struct vbuffer_iterator *position)
 {
@@ -476,6 +476,7 @@ void vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_it
 
 	dst->chunk = src->chunk;
 	dst->offset = src->offset;
+	dst->meter = src->meter;
 }
 
 void vbuffer_iterator_clear(struct vbuffer_iterator *position)
@@ -490,6 +491,14 @@ void vbuffer_iterator_clear(struct vbuffer_iterator *position)
 
 		position->chunk = NULL;
 	}
+}
+
+void vbuffer_iterator_build(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, vbsize_t offset, vbsize_t meter)
+{
+	position->chunk = chunk;
+	position->offset = offset;
+	position->registered = false;
+	position->meter = meter;
 }
 
 void vbuffer_iterator_update(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, size_t offset)
@@ -747,6 +756,8 @@ size_t vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len)
 	}
 
 	vbuffer_iterator_update(position, iter, endoffset);
+	position->meter += (len - clen);
+
 	return (len - clen);
 }
 
@@ -1099,7 +1110,7 @@ size_t vbuffer_sub_read(struct vbuffer_sub *data, uint8 *dst, size_t size)
 
 	if (!_vbuffer_sub_check(data)) return false;
 
-	while (size > 0 && (ptr = vbuffer_mmap(data, &len, false, &mmapiter))) {
+	while (size > 0 && (ptr = vbuffer_mmap(data, &len, false, &mmapiter, NULL))) {
 		if (len > size) len = size;
 
 		memcpy(dst, ptr, len);
@@ -1119,7 +1130,7 @@ size_t vbuffer_sub_write(struct vbuffer_sub *data, const uint8 *src, size_t size
 
 	if (!_vbuffer_sub_check(data)) return false;
 
-	while (size > 0 && (ptr = vbuffer_mmap(data, &len, true, &mmapiter))) {
+	while (size > 0 && (ptr = vbuffer_mmap(data, &len, true, &mmapiter, NULL))) {
 		if (len > size) len = size;
 
 		memcpy(ptr, src, len);
@@ -1131,7 +1142,7 @@ size_t vbuffer_sub_write(struct vbuffer_sub *data, const uint8 *src, size_t size
 	return ret;
 }
 
-const struct vbuffer_sub_mmap vbuffer_mmap_init = { NULL, 0 };
+const struct vbuffer_sub_mmap vbuffer_mmap_init = { NULL, 0, 0 };
 
 static struct vbuffer_chunk *_vbuffer_sub_iterate(struct vbuffer_sub *data, size_t *start, size_t *len, struct vbuffer_sub_mmap *iter)
 {
@@ -1198,7 +1209,8 @@ static struct vbuffer_chunk *_vbuffer_sub_iterate(struct vbuffer_sub *data, size
 	return chunk;
 }
 
-uint8 *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *iter)
+uint8 *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *iter,
+		struct vbuffer_iterator *vbiter)
 {
 	size_t offset;
 	struct vbuffer_chunk *chunk;
@@ -1207,6 +1219,10 @@ uint8 *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vb
 	if (!iter) {
 		_iter = vbuffer_mmap_init;
 		iter = &_iter;
+	}
+
+	if (!iter->data) {
+		iter->meter = data->begin.meter;
 	}
 
 	while ((chunk = _vbuffer_sub_iterate(data, &offset, len, iter))) {
@@ -1224,6 +1240,11 @@ uint8 *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vb
 		assert(offset <= chunk->size);
 		ptr += offset;
 
+		if (vbiter) {
+			vbuffer_iterator_build(vbiter, chunk, offset, iter->meter);
+		}
+
+		iter->meter += *len;
 		return ptr;
 	}
 
@@ -1238,7 +1259,7 @@ bool vbuffer_zero(struct vbuffer_sub *data)
 
 	if (!_vbuffer_sub_check(data)) return false;
 
-	while ((ptr = vbuffer_mmap(data, &len, true, &mmapiter))) {
+	while ((ptr = vbuffer_mmap(data, &len, true, &mmapiter, NULL))) {
 		memset(ptr, 0, len);
 	}
 
@@ -1608,7 +1629,7 @@ int64 vbuffer_asnumber(struct vbuffer_sub *data, bool bigendian)
 	if (vbuffer_sub_isflat(data)) {
 		size_t mmaplen;
 		struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
-		ptr = vbuffer_mmap(data, &mmaplen, false, &iter);
+		ptr = vbuffer_mmap(data, &mmaplen, false, &iter, NULL);
 		if (!ptr) {
 			return 0;
 		}
@@ -1649,7 +1670,7 @@ bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 	if (vbuffer_sub_isflat(data)) {
 		size_t mmaplen;
 		struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
-		uint8 *ptr = vbuffer_mmap(data, &mmaplen, true, &iter);
+		uint8 *ptr = vbuffer_mmap(data, &mmaplen, true, &iter, NULL);
 		if (!ptr) {
 			return false;
 		}

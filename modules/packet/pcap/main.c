@@ -642,7 +642,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 	vbuffer_sub_create(&sub, &packet->data, 0, data_offset);
 
-	data = vbuffer_mmap(&sub, &len, true, NULL);
+	data = vbuffer_mmap(&sub, &len, true, NULL, NULL);
 	assert(data || len == 0);
 	assert(len == data_offset);
 

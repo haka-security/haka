@@ -197,7 +197,7 @@ START_TEST(test_mmap)
 	ck_check_error;
 
 	/* mmap the whole buffer and check the returned memory blocks */
-	while ((ptr = vbuffer_mmap(&sub, &len, false, &mmapiter))) {
+	while ((ptr = vbuffer_mmap(&sub, &len, false, &mmapiter, NULL))) {
 		++count;
 		ck_check_error;
 

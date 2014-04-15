@@ -503,7 +503,7 @@ static int _vbpartial_exec(struct regexp_sink_pcre *sink, struct vbuffer_sub *vb
 	 * we keep previous non-empty ptr in pptr and
 	 * wait for end or next non-empty ptr to match against it */
 	do {
-		const uint8 *ptr = vbuffer_mmap(vbuf, &len, false, &iter);
+		const uint8 *ptr = vbuffer_mmap(vbuf, &len, false, &iter, NULL);
 		bool last = (ptr == NULL);
 		bool eof = _eof && last;
 

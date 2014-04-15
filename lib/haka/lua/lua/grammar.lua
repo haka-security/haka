@@ -146,6 +146,8 @@ function grammar_dg.ParseContext.method:__init(iter, topresult, init)
 	end
 
 	self.result.validate = revalidate
+
+	self.iter.meter = 0
 end
 
 function grammar_dg.ParseContext.method:update(iter)

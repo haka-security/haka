@@ -42,6 +42,7 @@ extern const struct vbuffer vbuffer_init;
 struct vbuffer_iterator {
 	struct vbuffer_chunk        *chunk;
 	vbsize_t                     offset;
+	vbsize_t                     meter;
 	bool                         registered:1;
 };
 
@@ -51,14 +52,15 @@ struct vbuffer_sub {
 	struct vbuffer_iterator      begin;
 	bool                         use_size:1;
 	union {
-		vbsize_t                 length;
 		struct vbuffer_iterator  end;
+		vbsize_t                 length;
 	};
 };
 
 struct vbuffer_sub_mmap {
 	struct vbuffer_chunk        *data;
 	vbsize_t                     len;
+	vbsize_t                     meter;
 };
 
 extern const struct vbuffer_sub_mmap vbuffer_mmap_init;
@@ -130,7 +132,7 @@ bool          vbuffer_sub_compact(struct vbuffer_sub *data);
 bool          vbuffer_sub_isflat(struct vbuffer_sub *data);
 bool          vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, bool copy);
 
-uint8        *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *iter);
+uint8        *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *iter, struct vbuffer_iterator *vbiter);
 bool          vbuffer_zero(struct vbuffer_sub *data);
 bool          vbuffer_extract(struct vbuffer_sub *data, struct vbuffer *buffer);
 bool          vbuffer_select(struct vbuffer_sub *data, struct vbuffer *buffer, struct vbuffer_iterator *ref);

@@ -86,21 +86,21 @@ struct tcp_stream
 		}
 
 		%rename(push) _push;
-		struct vbuffer_iterator_lua *_push(struct tcp *DISOWN_SUCCESS_ONLY)
+		struct vbuffer_iterator *_push(struct tcp *DISOWN_SUCCESS_ONLY)
 		{
-			struct vbuffer_iterator_lua *iter = malloc(sizeof(struct vbuffer_iterator_lua));
+			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
 				free(iter);
 				error(L"memory error");
 				return NULL;
 			}
 
-			if (!tcp_stream_push($self, DISOWN_SUCCESS_ONLY, &iter->super)) {
+			if (!tcp_stream_push($self, DISOWN_SUCCESS_ONLY, iter)) {
 				free(iter);
 				return NULL;
 			}
 
-			vbuffer_iterator_register(&iter->super);
+			vbuffer_iterator_register(iter);
 			iter->meter = 0;
 
 			return iter;

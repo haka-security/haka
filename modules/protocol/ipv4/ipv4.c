@@ -372,7 +372,7 @@ void inet_checksum_vbuffer_partial(struct checksum_partial *csum, struct vbuffer
 	uint8 *data;
 	size_t len;
 
-	while ((data = vbuffer_mmap(buf, &len, false, &iter))) {
+	while ((data = vbuffer_mmap(buf, &len, false, &iter, NULL))) {
 		if (len > 0) {
 			inet_checksum_partial(csum, data, len);
 		}
