@@ -1414,7 +1414,7 @@ bool vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data, bo
 			vbuffer_end(data, &end);
 			vbuffer_sub_create_between_position(&sub, &begin, &end);
 
-			vbuffer_sub_clone(&sub, &clone_buf, false);
+			vbuffer_sub_clone(&sub, &clone_buf, CLONE_RO_ORIG);
 
 			data = &clone_buf;
 		}
@@ -1599,7 +1599,7 @@ bool vbuffer_sub_compact(struct vbuffer_sub *data)
 	return _vbuffer_compact(data, NULL, NULL);
 }
 
-bool vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, bool copy)
+bool vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, clone_mode mode)
 {
 	struct vbuffer_sub_mmap iter = vbuffer_mmap_init;
 	size_t offset, len, size;
@@ -1615,17 +1615,39 @@ bool vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, bool co
 
 	while ((chunk = _vbuffer_sub_iterate(data, &offset, &len, &iter))) {
 		if (!chunk->flags.ctl) {
-			struct vbuffer_chunk *clone = vbuffer_chunk_clone(chunk, copy);
+			struct vbuffer_chunk *clone = vbuffer_chunk_clone(chunk, mode == CLONE_COPY);
 			list2_insert(&end->list, &clone->list);
 
-			end->flags.writable = clone->flags.writable;
+			switch (mode) {
+			case CLONE_COPY:
+				clone->flags.writable = true;
+				break;
+			case CLONE_RO_CLONE:
+				clone->flags.writable = false;
+				break;
+			case CLONE_RO_ORIG:
+				chunk->flags.writable = false;
+			case CLONE_RW:
+				end->flags.writable = clone->flags.writable;
+				break;
+			}
+
 			size += clone->size;
 		}
 	}
 
-	if (copy) {
+	switch (mode) {
+	case CLONE_COPY:
+		end->flags.writable = true;
 		/* Use flatten to copy the data */
 		_vbuffer_sub_flatten(data, size);
+		break;
+	case CLONE_RO_CLONE:
+		end->flags.writable = false;
+		break;
+	case CLONE_RO_ORIG:
+	case CLONE_RW:
+		break;
 	}
 
 	return true;

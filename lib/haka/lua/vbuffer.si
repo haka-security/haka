@@ -723,15 +723,23 @@ struct vbuffer {
 		}
 
 		%rename(clone) _clone;
-		struct vbuffer *_clone(bool copy = false)
+		struct vbuffer *_clone(const char *_mode = "rw")
 		{
-			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
+			struct vbuffer *buf;
+			clone_mode mode = CLONE_RW;
+
+			if (strcmp(_mode, "rw") == 0) mode = CLONE_RW;
+			else if (strcmp(_mode, "copy") == 0) mode = CLONE_COPY;
+			else if (strcmp(_mode, "ro orig") == 0) mode = CLONE_RO_ORIG;
+			else if (strcmp(_mode, "ro clone") == 0) mode = CLONE_RO_CLONE;
+
+			buf = malloc(sizeof(struct vbuffer));
 			if (!buf) {
 				error(L"memory error");
 				return NULL;
 			}
 
-			if (!vbuffer_clone($self, buf, copy)) {
+			if (!vbuffer_clone($self, buf, mode)) {
 				free(buf);
 				return NULL;
 			}
