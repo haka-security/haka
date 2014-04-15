@@ -308,6 +308,25 @@ function TestRegexpModule:test_can_match_on_blocking_iterator_with_sub_creation 
 	end)
 end
 
+function TestRegexpModule:test_can_match_on_blocking_iterator_with_readonly_sub_creation ()
+	-- Given
+	local re = self.rem.re:compile("foo")
+	self:gen_stream(function (iter)
+		local ret
+		local i = 0
+		-- When
+		repeat
+			ret = re:match(iter, true, true)
+			-- Then
+			if ret then
+				assertEquals(ret:asstring(), 'foo')
+				i = i + 1
+			end
+		until not ret
+		assertEquals(i, 3)
+	end)
+end
+
 function TestRegexpModule:test_complexe_regexp ()
 	-- Given
 	local re = self.rem.re:compile("</?p( [^>]*)?>")
