@@ -94,6 +94,7 @@ udp_connection_dissector.states.established = udp_connection_dissector.states:st
 
 		local next_dissector = context.flow:next_dissector()
 		if next_dissector then
+			pkt._restore, pkt.payload = pkt.payload:select()
 			return next_dissector:receive(pkt.payload, direction, pkt)
 		else
 			pkt:send()
@@ -126,6 +127,11 @@ end
 
 function udp_connection_dissector.method:emit(pkt, direction)
 	self.states:update(pkt, direction)
+end
+
+function udp_connection_dissector.method:send(pkt, payload, clone)
+	pkt._restore:restore(payload, clone)
+	pkt:send()
 end
 
 function udp_connection_dissector.method:continue()
