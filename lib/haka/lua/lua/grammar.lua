@@ -285,30 +285,33 @@ function grammar_dg.Entity.method:_apply(ctx)
 	return nil
 end
 
-function grammar_dg.Entity.method:_lasts(lasts, set)
+function grammar_dg.Entity.method:_nexts(list)
+	if self._next then
+		table.insert(list, self._next)
+	end
+end
+
+function grammar_dg.Entity.method:_add(next, set)
 	if set[self] then
 		return
 	end
 
 	set[self] = true
 
+	local nexts = {}
+	self:_nexts(nexts)
+
+	for _, entity in ipairs(nexts) do
+		entity:_add(next, set)
+	end
+	
 	if not self._next then
-		table.insert(lasts, self)
-	else
-		return self._next:_lasts(lasts, set)
+		self._next = next
 	end
 end
 
 function grammar_dg.Entity.method:add(next)
-	if not self._next then
-		self._next = next
-	else
-		local lasts = {}
-		self:_lasts(lasts, {})
-		for _, last in ipairs(lasts) do
-			last:add(next)
-		end
-	end
+	self:_add(next, {})
 end
 
 function grammar_dg.Entity.method:convert(converter, memoize)
@@ -686,16 +689,12 @@ function grammar_dg.Branch.method:next(ctx)
 	else return self._next end
 end
 
-function grammar_dg.Branch.method:_lasts(lasts, set)
-	if set[self] then
-		return
+function grammar_dg.Branch.method:_nexts(list)
+	for _, value in pairs(self.cases) do
+		table.insert(list, value)
 	end
 
-	for _, entity in pairs(self.cases) do
-		entity:_lasts(lasts, set)
-	end
-
-	return super(grammar_dg.Branch)._lasts(self, lasts, set)
+	return super(grammar_dg.Branch)._nexts(self, list)
 end
 
 grammar_dg.Primitive = class('DGPrimitive', grammar_dg.Entity)
