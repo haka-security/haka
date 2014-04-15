@@ -125,17 +125,18 @@ struct regexp {
 		}
 
 		struct vbuffer_sub *_match(struct vbuffer_sub *vbuf) {
-			struct vbuffer_sub re_result;
+			/* We use a temporary result to avoid unneeded memory allocation */
+			struct vbuffer_sub tmp_result;
 			struct vbuffer_sub *result;
 
-			int ret = $self->module->vbexec($self, vbuf, &re_result);
+			int ret = $self->module->vbexec($self, vbuf, &tmp_result);
 
 			if (ret != REGEXP_MATCH) return NULL;
 
 			result = malloc(sizeof(struct vbuffer_sub));
 			if (!result) error(L"memory error");
 
-			*result = re_result;
+			*result = tmp_result;
 			vbuffer_sub_register(result);
 			return result;
 		}
@@ -180,11 +181,12 @@ struct regexp_module {
 
 		struct vbuffer_sub *_match(const char *pattern, struct vbuffer_sub *vbuf,
 					  int options = 0) {
-			struct vbuffer_sub re_result;
+			/* We use a temporary result to avoid unneeded memory allocation */
+			struct vbuffer_sub tmp_result;
 			struct vbuffer_sub *result;
 
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
-			int ret = $self->vbmatch(esc_regexp, options, vbuf, &re_result);
+			int ret = $self->vbmatch(esc_regexp, options, vbuf, &tmp_result);
 			free(esc_regexp);
 
 			if (ret != REGEXP_MATCH) return NULL;
@@ -192,7 +194,7 @@ struct regexp_module {
 			result = malloc(sizeof(struct vbuffer_sub));
 			if (!result) error(L"memory error");
 
-			*result = re_result;
+			*result = tmp_result;
 			vbuffer_sub_register(result);
 			return result;
 		}
