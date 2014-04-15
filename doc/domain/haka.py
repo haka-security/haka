@@ -192,7 +192,7 @@ class HakaObject(ObjectDescription):
         indextext = self.get_index_text(names)
         if indextext:
             self.indexnode['entries'].append(('single', indextext,
-                                              fullname, ''))
+                                              fullid, ''))
 
     def get_index_text(self, names):
         ret = []
@@ -556,7 +556,7 @@ class HakaDomain(Domain):
             return make_refnode(builder, fromdocname, docname,
                                 'module-' + name, contnode, title)
         else:
-            return make_refnode(builder, fromdocname, obj[0], name,
+            return make_refnode(builder, fromdocname, obj[0], 'haka-' + name,
                                 contnode, name)
 
     def get_objects(self):
