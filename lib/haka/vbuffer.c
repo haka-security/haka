@@ -435,7 +435,9 @@ void vbuffer_swap(struct vbuffer *a, struct vbuffer *b)
  * Iterators
  */
 
-const struct vbuffer_iterator vbuffer_iterator_init = { NULL, 0, 0, false };
+#define VBUFFER_ITERATOR_INIT_STATIC      { NULL, 0, 0, false }
+
+const struct vbuffer_iterator vbuffer_iterator_init = VBUFFER_ITERATOR_INIT_STATIC;
 
 static bool _vbuffer_iterator_check(const struct vbuffer_iterator *position)
 {
@@ -960,7 +962,9 @@ bool vbuffer_iterator_isinsertable(struct vbuffer_iterator *position, struct vbu
  * Sub buffer
  */
 
-const struct vbuffer_sub vbuffer_sub_init = { { NULL, 0, false }, false, { { NULL, 0, false } } };
+const struct vbuffer_sub vbuffer_sub_init = {
+	VBUFFER_ITERATOR_INIT_STATIC, false, { VBUFFER_ITERATOR_INIT_STATIC }
+};
 
 static bool _vbuffer_sub_check(const struct vbuffer_sub *data)
 {
