@@ -188,3 +188,4 @@ void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
 APPLY_OUTPUT(bool)
 APPLY_OUTPUT(int)
 APPLY_OUTPUT(const char *)
+APPLY_OUTPUT(SWIGTYPE *)
