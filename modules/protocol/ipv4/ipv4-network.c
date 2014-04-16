@@ -45,7 +45,7 @@ ipv4network ipv4_network_from_string(const char *string)
 		return ipv4_network_zero;
 	}
 
-	char tmp[IPV4_ADDR_STRING_MAXLEN + 1];
+	char tmp[IPV4_ADDR_STRING_MAXLEN+1];
 	strncpy(tmp, string, slash_index);
 	tmp[slash_index] = '\0';
 

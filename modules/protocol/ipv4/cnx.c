@@ -169,9 +169,8 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 	{
 		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
 
-		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN);
-		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN);
-
+		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
+		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
 		messagef(HAKA_LOG_DEBUG, L"cnx", L"opening connection %s:%u -> %s:%u",
 				srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
 	}
@@ -209,8 +208,8 @@ void cnx_close(struct cnx* cnx)
 	{
 		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
 
-		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN);
-		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN);
+		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
+		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
 
 		messagef(HAKA_LOG_DEBUG, L"cnx", L"closing connection %s:%u -> %s:%u",
 				srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
@@ -228,8 +227,8 @@ void cnx_drop(struct cnx *cnx)
 	{
 		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
 
-		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN);
-		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN);
+		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
+		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
 
 		messagef(HAKA_LOG_DEBUG, L"cnx", L"dropping connection %s:%u -> %s:%u",
 				srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
