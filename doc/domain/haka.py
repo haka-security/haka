@@ -117,6 +117,7 @@ class HakaObject(ObjectDescription):
     option_spec = {
         'noindex': directives.flag,
         'annotation': directives.unchanged,
+        'module': directives.unchanged,
     }
 
     def get_signature_prefix(self, sig):
@@ -204,6 +205,9 @@ class HakaObject(ObjectDescription):
             self.indexnode['entries'].append(('single', indextext,
                                               fullid, ''))
 
+    def get_index_name(self, names):
+        return names['fullname']
+
     def get_index_text(self, names):
         ret = []
         if names['context']: ret.append("%s" % (names['context']))
@@ -212,7 +216,7 @@ class HakaObject(ObjectDescription):
         else:
             ret.append("%s" % (self.__class__.typename))
         if self.module: ret.append("in module %s" % (self.module))
-        return "%s (%s)" % (names['fullname'], ' '.join(ret))
+        return "%s (%s)" % (self.get_index_name(names), ' '.join(ret))
 
     def get_signature_prefix(self, sig):
         return "%s " % (self.__class__.typename)
@@ -245,14 +249,20 @@ class HakaFunction(HakaObject):
         TypedField('parameter', label=l_('Parameters'),
                    names=('param', 'parameter', 'arg', 'argument'),
                    typerolename='obj', typenames=('paramtype', 'type')),
+        TypedField('returnvalues', label=l_('Returns'),
+                  names=('return', 'ret'), typerolename='obj',
+                  typenames=('rtype', 'type')),
         Field('returnvalue', label=l_('Returns'), has_arg=False,
-              names=('returns', 'return')),
+              names=('returns')),
         Field('returntype', label=l_('Return type'), has_arg=False,
-              names=('rtype',)),
+              names=('returntype',)),
     ]
 
     def needs_arglist(self):
         return True
+
+    def get_index_name(self, names):
+        return '%s()' % (names['fullname'])
 
 class HakaMethod(HakaFunction):
     typename = l_("method")
@@ -269,7 +279,7 @@ class HakaData(HakaObject):
     ]
 
 class HakaAttribute(HakaObject):
-    typename = l_("attr")
+    typename = l_("attribute")
     fulltypename = l_("attribute")
 
     doc_field_types = [
