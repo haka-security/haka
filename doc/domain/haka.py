@@ -100,6 +100,16 @@ def _pseudo_parse_arglist(signode, argstart, arglist, argend):
 
 # Haka objects
 
+class desc_module(nodes.Part, nodes.Inline, nodes.TextElement):
+    """Node for module description."""
+
+def visit_desc_module(self, node):
+    self.body.append(self.starttag(node, 'em', '', CLASS='modproperty'))
+
+def depart_desc_module(self, node):
+    self.body.append('</em>')
+
+
 class HakaObject(ObjectDescription):
     """
     Description of a general Haka object.
@@ -165,7 +175,7 @@ class HakaObject(ObjectDescription):
 
         if self.module and self.needs_module():
             modname = ' (in module %s)' % (self.module)
-            signode += addnodes.desc_annotation(modname, modname)
+            signode += desc_module(modname, modname)
 
         return {'fullname':fullname, 'context':context}
 
@@ -567,4 +577,5 @@ class HakaDomain(Domain):
 
 
 def setup(app):
+    app.add_node(desc_module, html=(visit_desc_module, depart_desc_module))
     app.add_domain(HakaDomain)

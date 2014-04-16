@@ -268,3 +268,12 @@ input[type=text]
 table.field-list td, table.field-list th {
 	padding-left: 0;
 }
+
+table.field-list {
+	border-collapse: separate;
+	border-spacing: 0 0.5em;
+}
+
+em.modproperty {
+	font-size: 75%;
+}
