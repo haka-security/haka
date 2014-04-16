@@ -25,7 +25,7 @@ uint32 ipv4_addr_from_string(const char *string)
 
 void ipv4_addr_to_string(ipv4addr addr, char *string, size_t size)
 {
-	const char *ret;
+	UNUSED const char *ret;
 	addr = SWAP_TO_BE(ipv4addr, addr);
 	ret = inet_ntop(AF_INET, &addr, string, size);
 	assert(ret);
