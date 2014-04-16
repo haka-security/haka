@@ -203,6 +203,9 @@ bool vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer *buffer, v
 
 	if (read_last) {
 		begin = vbuffer_chunk_next(read_last->ctl_iter.chunk);
+
+		keep_for_read = true;
+		start_of_keep = begin;
 	}
 	else {
 		begin = vbuffer_chunk_begin(&stream->data);
