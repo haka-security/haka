@@ -1238,15 +1238,6 @@ function grammar.Array._options.result(self, resultclass)
 	self.resultclass = resultclass
 end
 
-grammar.Regex = class('Regex', grammar.Entity)
-
-function grammar.Regex.method:__init(regex)
-	self.regex = regex
-end
-
-grammar.Regex._options = {}
-function grammar.Regex._options.maxsize(self, size) self.maxsize = size end
-
 
 grammar.Number = class('Number', grammar.Entity)
 
@@ -1378,10 +1369,6 @@ end
 
 function grammar.array(entity)
 	return grammar.Array:new(entity)
-end
-
-function grammar.re(regex)
-	return grammar.Regex:new(regex)
 end
 
 function grammar.number(bits)
