@@ -118,12 +118,15 @@ class HakaObject(ObjectDescription):
         'noindex': directives.flag,
         'annotation': directives.unchanged,
         'module': directives.unchanged,
+        'objtype': directives.unchanged,
+        'idxtype': directives.unchanged,
+        'idxctx': directives.unchanged,
     }
 
-    def get_signature_prefix(self, sig):
+    def get_signature_prefix(self, sig, objtype):
         """May return a prefix to put before the object name in the
         signature."""
-        return ''
+        return "%s " % (objtype)
 
     def needs_arglist(self):
         """May return true if an empty argument list is to be generated even if
@@ -150,7 +153,11 @@ class HakaObject(ObjectDescription):
         signode['class'] = self.context
         signode['fullname'] = fullname
 
-        sig_prefix = self.get_signature_prefix(sig)
+        objtype= self.options.get('objtype')
+        if not objtype:
+            objtype = "%s" % (self.__class__.typename)
+
+        sig_prefix = self.get_signature_prefix(sig, objtype)
         if sig_prefix:
             signode += addnodes.desc_annotation(sig_prefix, sig_prefix)
 
@@ -178,12 +185,14 @@ class HakaObject(ObjectDescription):
             modname = ' (in module %s)' % (self.module)
             signode += desc_module(modname, modname)
 
-        return {'fullname':fullname, 'context':context}
+        return {'fullname': fullname, 'context': context,
+                'objtype': objtype, 'idxctx': self.options.get('idxctx') or ""}
 
     def add_target_and_index(self, names, sig, signode):
         modname = self.module or ''
         fullname = (modname and modname + '.' or '') + names['fullname']
-        fullid = 'haka-' + fullname
+        fullid = "haka-%s-%s-%s" % (self.options.get('idxctx') or "",
+                                    self.__class__.typename, fullname)
 
         if fullid not in self.state.document.ids:
             signode['names'].append(fullname)
@@ -191,13 +200,6 @@ class HakaObject(ObjectDescription):
             signode['first'] = (not self.names)
             self.state.document.note_explicit_target(signode)
             objects = self.env.domaindata['haka']['objects']
-            if fullname in objects:
-                self.state_machine.reporter.warning(
-                    'duplicate object description of %s, ' % fullname +
-                    'other instance in ' +
-                    self.env.doc2path(objects[fullname]) +
-                    ', use :noindex: for one of them',
-                    line=self.lineno)
             objects[fullname] = (self.env.docname, self.objtype)
 
         indextext = self.get_index_text(names)
@@ -210,16 +212,11 @@ class HakaObject(ObjectDescription):
 
     def get_index_text(self, names):
         ret = []
-        if names['context']: ret.append("%s" % (names['context']))
-        if hasattr(self.__class__, 'fulltypename'):
-            ret.append("%s" % (self.__class__.fulltypename))
-        else:
-            ret.append("%s" % (self.__class__.typename))
+        if names['context']: ret.append(names['context'])
+        if names['idxctx']: ret.append(names['idxctx'])
+        ret.append("%s" % (names['objtype']))
         if self.module: ret.append("in module %s" % (self.module))
         return "%s (%s)" % (self.get_index_name(names), ' '.join(ret))
-
-    def get_signature_prefix(self, sig):
-        return "%s " % (self.__class__.typename)
 
 class HakaClass(HakaObject):
     doc_field_types = [
@@ -280,7 +277,6 @@ class HakaData(HakaObject):
 
 class HakaAttribute(HakaObject):
     typename = l_("attribute")
-    fulltypename = l_("attribute")
 
     doc_field_types = [
         Field('type', label=l_('Type'), has_arg=False,

@@ -177,12 +177,20 @@ Compounds
     **Supported options:**
 
     .. haka:data:: count
+        :module:
+        :idxctx: array
+        :objtype: option
+        :idxtype: array grammar option
 
         :type: number
 
         Number of element in the array.
 
     .. haka:function:: count(result, context) -> count
+        :module:
+        :idxctx: array
+        :objtype: option
+        :idxtype: array grammar option
 
         :param result: Current parse result.
         :param context: Full parsing context.
@@ -191,6 +199,10 @@ Compounds
         :rtype count: number
 
     .. haka:function:: untilcond(elem, context) -> should_stop
+        :module:
+        :idxctx: array
+        :objtype: option
+        :idxtype: array grammar option
 
         :param elem: Current element of the array. When called before the first element, the parameter is ``nil``.
         :param context: Full parsing context.
@@ -199,6 +211,10 @@ Compounds
         :rtype should_stop: number
 
     .. haka:function:: whilecond(elem, context) -> should_continue
+        :module:
+        :idxctx: array
+        :objtype: option
+        :idxtype: array grammar option
 
         :param elem: Current element of the array. When called before the first element, the parameter is ``nil``.
         :param context: Full parsing context.
@@ -224,7 +240,11 @@ Final elements
 
     **Supported options:**
 
-    haka:data:: endianness
+    .. haka:data:: endianness
+        :module:
+        :idxctx: number
+        :objtype: option
+        :idxtype: number grammar option
 
         Endianness of the raw data: ``little`` or ``big``. By default, the data will be treated
         as big endian.
@@ -264,12 +284,20 @@ Final elements
     **Supported options:**
 
     .. haka:data:: count
+        :module:
+        :idxctx: bytes
+        :objtype: option
+        :idxtype: bytes grammar option
 
         :type: number
 
         Number of bytes.
 
     .. haka:function:: count(result, context) -> count
+        :module:
+        :idxctx: bytes
+        :objtype: option
+        :idxtype: bytes grammar option
 
         :param result: Current parse result.
         :param context: Full parsing context.
@@ -278,6 +306,10 @@ Final elements
         :rtype count: number
 
     .. haka:function:: chunked(result, sub, islast, context)
+        :module:
+        :idxctx: bytes
+        :objtype: option
+        :idxtype: bytes grammar option
 
         :param result: Current parsing result.
         :param sub: Current data block.
