@@ -77,9 +77,10 @@ properties.
     Each named element in the array will be added as a extra field in the result.
     The other element will be executed when the record will be done with its parsing.
 
-.. haka:method:: Entity:compile()
+.. haka:method:: Entity:compile() -> compiled_entity
 
-    :rtype: :haka:class:`CompiledEntity` instance
+    :return compiled_entity: Compiled grammar.
+    :rtype compiled_entity: :haka:class:`CompiledEntity` instance
 
     Compile the grammar representation.
 
