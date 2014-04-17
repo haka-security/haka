@@ -6,18 +6,20 @@ local dns = require("protocol/dns")
 
 dns.install_udp_rule(53)
 
-haka.rule {
-	hook = haka.event('dns', 'query'),
-	eval = function (dns, request)
-		print("DNS REQUEST")
-		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
+local function alert_pdns(array)
+	for _, a in ipairs(array) do
+		if a.type == "A" then
+			haka.alert{
+				description = string.format("PDNS: %s -> %s", a.name, a.ip),
+			}
+		end
 	end
-}
+end
 
 haka.rule {
 	hook = haka.event('dns', 'response'),
 	eval = function (dns, response)
-		print("DNS RESPONSE")
-		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
+		alert_pdns(response.answer)
+		alert_pdns(response.additional)
 	end
 }

@@ -13,3 +13,4 @@ Modules
     ../../../modules/protocol/tcp/doc/lua.rst
     ../../../modules/protocol/udp/doc/lua.rst
     ../../../modules/protocol/http/doc/lua.rst
+    ../../../modules/protocol/dns/doc/lua.rst

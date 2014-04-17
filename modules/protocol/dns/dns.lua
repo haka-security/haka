@@ -77,7 +77,7 @@ local dns_dissector = haka.dissector.new{
 }
 
 dns_dissector:register_event('query')
-dns_dissector:register_event('answer')
+dns_dissector:register_event('response')
 
 function dns_dissector.method:__init(flow)
 	self.flow = flow
@@ -154,7 +154,7 @@ dns_dissector.grammar.header = haka.grammar.record{
 	haka.grammar.field('tc',      haka.grammar.flag),
 	haka.grammar.field("rd",      haka.grammar.flag),
 	haka.grammar.field("ra",      haka.grammar.flag),
-	haka.grammar.field("z",       haka.grammar.number(3)),
+	haka.grammar.number(3),
 	haka.grammar.field("rcode",   haka.grammar.number(4)),
 	haka.grammar.field("qdcount", haka.grammar.number(16)),
 	haka.grammar.field("ancount", haka.grammar.number(16)),
@@ -235,20 +235,20 @@ dns_dissector.grammar.resourcerecord = haka.grammar.record{
 }
 
 dns_dissector.grammar.answer = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{
-	count = function (self, ctx) return ctx.top.header.ancount end
+	count = function (self, ctx) return ctx.top.ancount end
 }
 
 dns_dissector.grammar.authority = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{
-	count = function (self, ctx) return ctx.top.header.nscount end
+	count = function (self, ctx) return ctx.top.nscount end
 }
 
 dns_dissector.grammar.additional = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{
-	count = function (self, ctx) return ctx.top.header.arcount end
+	count = function (self, ctx) return ctx.top.arcount end
 }
 
 dns_dissector.grammar.message = haka.grammar.record{
 	haka.grammar.execute(function (self, ctx) ctx.top._labels = {} end),
-	haka.grammar.field('header',   dns_dissector.grammar.header),
+	dns_dissector.grammar.header,
 	haka.grammar.field('question',   dns_dissector.grammar.question),
 	haka.grammar.field('answer',    dns_dissector.grammar.answer),
 	haka.grammar.field('authority',    dns_dissector.grammar.authority),
@@ -333,14 +333,14 @@ dns_dissector.states.answer = dns_dissector.states:state{
 			}
 		    return context.states.ERROR
 		end
-		if self.query.header.id ~= res.header['id'] then
+		if self.query.id ~= res.id then
 			haka.alert{
 				description = "dns: mismatching answer",
 				severity = 'low'
 			}
 			return context.states.ERROR
 		end
-		self:trigger("answer", res)
+		self:trigger("response", res)
 
 		res._data = self.flow:send(pkt, payload, true)
 

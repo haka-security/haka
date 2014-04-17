@@ -1,0 +1,62 @@
+debug dns: selecting dns dissector on flow
+debug cnx: opening connection 172.16.3.38:38360 -> 172.16.13.5:53
+info alert: id = <>
+	description = PDNS: haka-security.org. -> 66.155.11.238
+info alert: id = <>
+	description = PDNS: haka-security.org. -> 76.74.254.123
+info alert: id = <>
+	description = PDNS: haka-security.org. -> 66.155.9.238
+info alert: id = <>
+	description = PDNS: haka-security.org. -> 192.0.80.250
+info alert: id = <>
+	description = PDNS: haka-security.org. -> 76.74.254.120
+info alert: id = <>
+	description = PDNS: haka-security.org. -> 192.0.81.250
+info alert: id = <>
+	description = PDNS: a0.org.afilias-nst.info. -> 199.19.56.1
+info alert: id = <>
+	description = PDNS: a2.org.afilias-nst.info. -> 199.249.112.1
+info alert: id = <>
+	description = PDNS: b0.org.afilias-nst.org. -> 199.19.54.1
+info alert: id = <>
+	description = PDNS: b2.org.afilias-nst.org. -> 199.249.120.1
+info alert: id = <>
+	description = PDNS: c0.org.afilias-nst.info. -> 199.19.53.1
+info alert: id = <>
+	description = PDNS: d0.org.afilias-nst.org. -> 199.19.57.1
+debug dns: selecting dns dissector on flow
+debug cnx: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
+info alert: id = <>
+	description = PDNS: a0.org.afilias-nst.info. -> 199.19.56.1
+info alert: id = <>
+	description = PDNS: a2.org.afilias-nst.info. -> 199.249.112.1
+info alert: id = <>
+	description = PDNS: b0.org.afilias-nst.org. -> 199.19.54.1
+info alert: id = <>
+	description = PDNS: b2.org.afilias-nst.org. -> 199.249.120.1
+info alert: id = <>
+	description = PDNS: c0.org.afilias-nst.info. -> 199.19.53.1
+info alert: id = <>
+	description = PDNS: d0.org.afilias-nst.org. -> 199.19.57.1
+debug dns: selecting dns dissector on flow
+debug cnx: opening connection 172.16.3.38:51292 -> 172.16.13.5:53
+info alert: id = <>
+	description = PDNS: ns01.arkoon.net. -> 62.161.237.194
+info alert: id = <>
+	description = PDNS: ns04.arkoon.net. -> 91.238.220.7
+debug dns: selecting dns dissector on flow
+debug cnx: opening connection 172.16.3.38:37869 -> 172.16.13.5:53
+info alert: id = <>
+	description = PDNS: d.ext.nic.fr. -> 192.5.4.2
+info alert: id = <>
+	description = PDNS: d.nic.fr. -> 194.0.9.1
+info alert: id = <>
+	description = PDNS: e.ext.nic.fr. -> 193.176.144.22
+info alert: id = <>
+	description = PDNS: f.ext.nic.fr. -> 194.146.106.46
+info alert: id = <>
+	description = PDNS: g.ext.nic.fr. -> 194.0.36.1
+debug cnx: closing connection 172.16.3.38:37869 -> 172.16.13.5:53
+debug cnx: closing connection 172.16.3.38:51292 -> 172.16.13.5:53
+debug cnx: closing connection 172.16.3.38:50391 -> 172.16.13.5:53
+debug cnx: closing connection 172.16.3.38:38360 -> 172.16.13.5:53
