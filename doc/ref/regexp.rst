@@ -7,160 +7,201 @@
 Regular Expression
 ==================
 
-Types
------
+.. haka:module:: haka
 
-.. lua:module:: regexp
 
-.. lua:class:: re
+Regular expression format
+-------------------------
 
-    .. lua:function:: match(pattern, string, options)
+The regular expression format depends on the regular expression module that is loaded. Any ``%`` found in
+the string will be automatically converted to a ``/``.
 
-        Compile and match a regular expression against a given string.
+Examples for the pcre module::
 
-        :param pattern: Regular expression pattern
-        :paramtype pattern: string
-        :param string: String against which regular expression is matched
-        :paramtype string: string
-        :param options: Regular expression compilation options
-        :paramtype options: int
+    '[%r]?%n'
+    '[[:blank:]]+'
+    '[0-9]+%.[0-9]+'
+    '[^()<>@,;:%\\"/%[%]?={}[:blank:]]+'
 
-        :rtype: string
-        :return: matching string or nil if no match
 
-        :raises Error: if pattern compilation fails
-        :raises Error: if internal regular expression engine fails
+Module
+------
 
-    .. lua:function:: match(pattern, vbuffer, options)
+.. haka:class:: regexp_module
+    :module:
 
-        Compile and match a regular expression against a given vbuffer.
+    Regexp module implementation.
 
-        :param pattern: Regular expression pattern
-        :paramtype pattern: string
-        :param vbuffer: vbuffer against which regular expression is matched
-        :paramtype vbuffer: :lua:class:`haka.vbuffer`
-        :param options: Regular expression compilation options
-        :paramtype options: int
+.. haka:method:: regexp_module:match(pattern, string, options) -> match, begin, end
 
-        :rtype: :lua:class:`haka.vbuffer_sub`
-        :return: matching subbuffer or nil if no match
+    :param pattern: Regular expression pattern.
+    :paramtype pattern: string
+    :param string: String against which regular expression is matched.
+    :paramtype string: string
+    :param options: Regular expression compilation options.
+    :paramtype options: number
+    :return match: Result of the matching.
+    :rtype match: string
+    :return begin: Index in the string where the match begins.
+    :rtype begin: number
+    :return end: Index in the string where the match ends.
+    :rtype end: number
 
-        :raises Error: if pattern compilation fails
-        :raises Error: if internal regular expression engine fails
+    Match a regular expression against a given string.
 
-    .. lua:function:: compile(pattern, options)
+.. haka:method:: regexp_module:match(pattern, buffer, options) -> match
 
-        Compile a regular expression.
+    :param pattern: Regular expression pattern.
+    :paramtype pattern: string
+    :param buffer: Buffer against which regular expression is matched.
+    :paramtype buffer: :haka:class:`haka.vbuffer` instance
+    :param options: Regular expression compilation options.
+    :paramtype options: number
+    :return match: Matching sub-buffer or nil if no match
+    :rtype match: :haka:class:`haka.vbuffer_sub` instance
 
-        :param pattern: Regular expression pattern
-        :paramtype pattern: string
-        :param options: Regular expression compilation options
-        :paramtype options: int
+    Match a regular expression against a given buffer.
 
-        :rtype: :lua:class:`regexp.regexp`
-        :return: a regexp object
+.. haka:method:: regexp:match(pattern, buffer_iterator, options, createsub) -> match
 
-        :raises Error: if pattern compilation fails
-        :raises Error: if internal regular expression engine fails
+    :param pattern: Regular expression pattern.
+    :paramtype pattern: string
+    :param buffer_iterator: Buffer iterator against which the regular expression is matched.
+    :paramtype buffer_iterator: :lua:class:`haka.vbuffer_iterator` instance
+    :param options: Regular expression compilation options.
+    :paramtype options: number
+    :param createsub: True if the function should build a sub-buffer.
+    :paramtype createsub: boolean
+    :return match: Matching sub-buffer if `createsub` is true or ``true`` or nil if no match
+    :rtype match: :haka:class:`haka.vbuffer_sub` instance
 
-    .. lua:data:: CASE_INSENSITIVE
+    Match a regular expression against a given buffer iterator.
 
-        Compilation options setting regular expression case insensitive.
+    Usage::
 
-.. lua:class:: regexp
+        local match = pcre:match("%s+", iter, 0, true)
+        print(match:asstring())
 
-    .. lua:function:: match(string)
+.. haka:method:: regexp_module:compile(pattern, options) -> re
 
-        Match the compiled regular expression against a given string.
+    :param pattern: Regular expression pattern.
+    :paramtype pattern: string
+    :param options: Regular expression compilation options.
+    :paramtype options: number
+    :return re: A compiled regexp object.
+    :rtype re: :haka:class:`regexp` instance
 
-        :param string: String against which regular expression is matched
-        :paramtype string: string
+    Compile a regular expression.
 
-        :rtype: string
-        :return: matching string or nil if no match
+.. haka:attribute:: regexp_module.CASE_INSENSITIVE
 
-        :raises Error: if internal regular expression engine fails
+    Compilation options setting regular expression case insensitive.
 
-    .. lua:function:: match(vbuffer)
 
-        Match the compiled regular expression against a given vbuffer.
+Compiled regular expression
+---------------------------
 
-        :param vbuffer: vbuffer against which regular expression is matched
-        :paramtype vbuffer: :lua:class:`haka.vbuffer`
+.. haka:class:: regexp
+    :module:
 
-        :rtype: :lua:class:`haka.vbuffer_sub`
-        :return: matching subbuffer or nil if no match
+    Compiled regular expression object.
 
-        :raises Error: if internal regular expression engine fails
+.. haka:method:: regexp:match(string) -> match, begin, end
 
-    .. lua:function:: match(vbuffer_iterator)
+    :param string: String against which regular expression is matched.
+    :paramtype string: string
+    :return match: Result of the matching.
+    :rtype match: string
+    :return begin: Index in the string where the match begins.
+    :rtype begin: number
+    :return end: Index in the string where the match ends.
+    :rtype end: number
 
-        Match the compiled regular expression against a given vbuffer iterator.
+    Match the compiled regular expression against a given string.
 
-        :param vbuffer_iterator: vbuffer_iterator against which regular expression is matched
-        :paramtype vbuffer_iterator: :lua:class:`haka.vbuffer_iterator`
+.. haka:method:: regexp:match(buffer) -> match
 
-        :rtype: :lua:class:`haka.vbuffer_sub`
-        :return: matching subbuffer or nil if no match
+    :param buffer: Buffer against which the regular expression is matched.
+    :paramtype buffer: :lua:class:`haka.vbuffer` instance
+    :return match: Matching sub-buffer or nil if no match
+    :rtype match: :haka:class:`haka.vbuffer_sub` instance
 
-        :raises Error: if internal regular expression engine fails
+    Match the compiled regular expression against a given buffer.
 
-    .. lua:function:: get_sink()
+.. haka:method:: regexp:match(buffer_iterator) -> match
 
-        Create a regexp context that can be eventually used for matching the
-        regular expression against chunck of data
+    :param buffer_iterator: Buffer iterator against which the regular expression is matched.
+    :paramtype buffer_iterator: :lua:class:`haka.vbuffer_iterator` instance
+    :return match: Matching sub-buffer or nil if no match
+    :rtype match: :haka:class:`haka.vbuffer_sub` instance
 
-        :rtype: :lua:class:`regexp.regexp_sink`
-        :return: a regexp_sink object
+    Match the compiled regular expression against a given buffer iterator.
 
-        :raises Error: if internal regular expression engine fails
+.. haka:method:: regexp:get_sink() -> sink
 
-.. lua:class:: regexp_sink
+    :return sink: A created regexp_sink instance.
+    :rtype sink: :haka:class:`regexp_sink` instance
 
-    .. lua:function:: feed(string, eof)
+    Create a regular expression context that can be eventually used for matching the
+    regular expression against chunks of data.
 
-        Match the compiled regular expression across multiple string.
 
-        :param string: String against which regular expression is matched
-        :paramtype string: string
-        :param eof: is this string the last one ?
-        :paramtype eof: bool
+Regular expression sink
+-----------------------
 
-        :rtype: bool
-        :rtype: :lua:class:`regexp.regexp_result`
-        :return: (true, :lua:class:`regexp.regexp_result`) if pattern matched, (false, nil) otherwise
+.. haka:class:: regexp_sink
+    :module:
 
-        :raises Error: if internal regular expression engine fails
+    Sink that can be used to match a regular expression on data pieces by pieces.
 
-    .. lua:function:: feed(vbuffer, eof)
+.. haka:method:: regexp_sink:feed(string, eof[, result]) -> match
 
-        Match the compiled regular expression across multiple vbuffer.
+    :param string: String against which the regular expression is matched.
+    :paramtype string: string
+    :param eof: True if this string is the last one.
+    :paramtype eof: boolean
+    :param result: Data used to store the indices of the match.
+    :paramtype result: :haka:class:`regexp_result`
+    :return match: Result of the matching.
+    :rtype match: boolean
 
-        :param vbuffer: vbuffer against which regular expression is matched
-        :paramtype vbuffer: :lua:class:`haka.vbuffer`
-        :param eof: is this vbuffer the last one ?
-        :paramtype eof: bool
+    Match the compiled regular expression across multiple strings.
 
-        :rtype: bool
-        :rtype: :lua:class:`regexp.regexp_result`
-        :return: (true, :lua:class:`regexp.regexp_result`) if pattern matched, (false, nil) otherwise
-        :warning: This function **does not return** a :lua:class:`regexp.regexp_vbresult` since we cannot guarantee that the vbuffer that have been fed into this sink are continuous
+.. haka:method:: regexp_sink:feed(buffer, eof) -> match, begin, end
 
-        :raises Error: if internal regular expression engine fails
+    :param buffer: Buffer against which the regular expression is matched.
+    :paramtype buffer: :haka:class:`haka.vbuffer_sub` instance
+    :param eof: True if this string is the last one.
+    :paramtype eof: boolean
+    :return match: Result of the matching.
+    :rtype match: boolean
+    :return begin: Position of the beginning of the match or nil.
+    :rtype begin: :haka:class:`haka.vbuffer_iterator` instance
+    :return end: Position of the end of the match or nil.
+    :rtype end: :haka:class:`haka.vbuffer_iterator` instance
 
-.. lua:class:: regexp_result
+    Match the compiled regular expression across multiple buffer. The `begin` and `end` result allow
+    to track the position of the match.
+
+.. haka:method:: regexp_sink:ispartial() -> partial
+
+    :return match: State of this sink.
+    :rtype match: boolean
+
+    Get the the sink is in state. If something has been match but more data are needed
+    to be sure that it is a valid match then this function will returns ``true``.
+
+.. haka:class:: regexp_result
 
     A result for a string based matching.
 
-    .. lua:data:: offset (int)
-    .. lua:data:: size (int)
+    .. haka:attribute:: regexp_result.offset
 
-.. lua:class:: regexp_vbresult
+        :type: number
 
-    A result for a vbuffer based matching.
+    .. haka:attribute:: regexp_result.size
 
-    .. lua:data:: offset (int)
-    .. lua:data:: size (int)
+        :type: number
 
 Example
 -------
