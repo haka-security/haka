@@ -18,5 +18,6 @@ Welcome to Haka's Reference Guide!
     state_machine.rst
     extmodules.rst
     regexp.rst
-    log_alert.rst
+    log.rst
+    alert.rst
     misc.rst
