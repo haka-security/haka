@@ -143,7 +143,7 @@ class HakaObject(ObjectDescription):
             raise ValueError
 
         context, name, argstart, arglist, argend, retann = m.groups()
-        self.context = (context and context[:1]) or None
+        self.context = (context and context[:-1]) or None
         self.module = self.options.get('module', self.env.temp_data.get('haka:module'))
 
         add_module = True
@@ -189,10 +189,21 @@ class HakaObject(ObjectDescription):
                 'objtype': objtype, 'idxctx': self.options.get('idxctx') or ""}
 
     def add_target_and_index(self, names, sig, signode):
-        modname = self.module or ''
-        fullname = (modname and modname + '.' or '') + names['fullname']
-        fullid = "haka-%s-%s-%s" % (self.options.get('idxctx') or "",
-                                    self.__class__.typename, fullname)
+        idxctx = self.options.get('idxctx')
+
+        ids = ['haka-%s' % (self.__class__.typename)]
+        if idxctx: ids.append(idxctx)
+        if self.context: ids.append(self.context)
+        elif self.module: ids.append(self.module)
+        ids.append(names['fullname'])
+
+        fullid = '.'.join(ids)
+
+        fullname = []
+        if self.module: fullname.append(self.module)
+        if self.context: fullname.append(self.context)
+        fullname.append(names['fullname'])
+        fullname = '.'.join(fullname)
 
         if fullid not in self.state.document.ids:
             signode['names'].append(fullname)
@@ -310,10 +321,13 @@ class HakaModule(Directive):
             env.domaindata['haka']['modules'][modname] = \
                 (env.docname, self.options.get('synopsis', ''),
                  self.options.get('platform', ''), 'deprecated' in self.options)
+
+            ids = "haka-module.%s" % (modname)
+
             # make a duplicate entry in 'objects' to facilitate searching for
             # the module in LuaDomain.find_obj()
-            env.domaindata['haka']['objects'][modname] = (env.docname, 'module', 'module-' + modname)
-            targetnode = nodes.target('', '', ids=['module-' + modname],
+            env.domaindata['haka']['objects'][modname] = (env.docname, 'module', ids)
+            targetnode = nodes.target('', '', ids=[ids],
                                       ismod=True)
             self.state.document.note_explicit_target(targetnode)
             # the platform and synopsis aren't printed; in fact, they are only
@@ -321,7 +335,7 @@ class HakaModule(Directive):
             ret.append(targetnode)
             indextext = _('%s (module)') % modname
             inode = addnodes.index(entries=[('single', indextext,
-                                             'module-' + modname, '')])
+                                             ids, '')])
             ret.append(inode)
         return ret
 
@@ -558,22 +572,8 @@ class HakaDomain(Domain):
                 node)
         name, obj = matches[0]
 
-        if obj[1] == 'module':
-            # get additional info for modules
-            docname, synopsis, platform, deprecated = self.data['modules'][name]
-            assert docname == obj[0]
-            title = name
-            if synopsis:
-                title += ': ' + synopsis
-            if deprecated:
-                title += _(' (deprecated)')
-            if platform:
-                title += ' (' + platform + ')'
-            return make_refnode(builder, fromdocname, docname,
-                                'module-' + name, contnode, title)
-        else:
-            return make_refnode(builder, fromdocname, obj[0], obj[2],
-                                contnode, name)
+        return make_refnode(builder, fromdocname, obj[0], obj[2],
+                            contnode, name)
 
     def get_objects(self):
         for modname, info in self.data['modules'].items():
