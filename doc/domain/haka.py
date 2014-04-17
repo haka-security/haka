@@ -100,16 +100,6 @@ def _pseudo_parse_arglist(signode, argstart, arglist, argend):
 
 # Haka objects
 
-class desc_module(nodes.Part, nodes.Inline, nodes.TextElement):
-    """Node for module description."""
-
-def visit_desc_module(self, node):
-    self.body.append(self.starttag(node, 'em', '', CLASS='modproperty'))
-
-def depart_desc_module(self, node):
-    self.body.append('</em>')
-
-
 class HakaObject(ObjectDescription):
     """
     Description of a general Haka object.
@@ -123,11 +113,6 @@ class HakaObject(ObjectDescription):
         'idxctx': directives.unchanged,
     }
 
-    def get_signature_prefix(self, sig, objtype):
-        """May return a prefix to put before the object name in the
-        signature."""
-        return "%s " % (objtype)
-
     def needs_arglist(self):
         """May return true if an empty argument list is to be generated even if
         the document contains none."""
@@ -137,14 +122,27 @@ class HakaObject(ObjectDescription):
         """May return true if the module name should be displayed."""
         return self.context == None
 
+    def build_objtype(self):
+        return self.options.get('objtype') or "%s" % (self.__class__.typename)
+
+    def build_context(self, context):
+        if context:
+            return context[:-1], context[-1]
+        else:
+            return None, None
+
     def handle_signature(self, sig, signode):
         m = lua_signature_re.match(sig)
         if m is None:
             raise ValueError
 
         context, name, argstart, arglist, argend, retann = m.groups()
-        self.context = (context and context[:-1]) or None
+
+        self.context, self.contextsep = self.build_context(context)
         self.module = self.options.get('module', self.env.temp_data.get('haka:module'))
+        self.objtype = self.build_objtype()
+        self.idxtype = self.options.get('idxtype')
+        self.name = name
 
         add_module = True
         fullname = name
@@ -153,17 +151,16 @@ class HakaObject(ObjectDescription):
         signode['class'] = self.context
         signode['fullname'] = fullname
 
-        objtype= self.options.get('objtype')
-        if not objtype:
-            objtype = "%s" % (self.__class__.typename)
+        prefix = "%s " % (self.objtype)
+        signode += addnodes.desc_annotation(prefix, prefix)
 
-        sig_prefix = self.get_signature_prefix(sig, objtype)
-        if sig_prefix:
-            signode += addnodes.desc_annotation(sig_prefix, sig_prefix)
+        if self.module and self.needs_module():
+            modname = '%s.' % (self.module)
+            signode += addnodes.desc_addname(modname, modname)
 
-        if context:
+        if self.context:
+            context = self.context + self.contextsep
             signode += addnodes.desc_addname(context, context)
-            context = context[:-1]
 
         anno = self.options.get('annotation')
 
@@ -181,12 +178,8 @@ class HakaObject(ObjectDescription):
         if anno:
             signode += addnodes.desc_annotation(' ' + anno, ' ' + anno)
 
-        if self.module and self.needs_module():
-            modname = ' (in module %s)' % (self.module)
-            signode += desc_module(modname, modname)
-
-        return {'fullname': fullname, 'context': context,
-                'objtype': objtype, 'idxctx': self.options.get('idxctx') or ""}
+        return {'fullname': fullname, 'context': self.context,
+                'objtype': self.objtype, 'idxctx': self.options.get('idxctx') or ""}
 
     def add_target_and_index(self, names, sig, signode):
         idxctx = self.options.get('idxctx')
@@ -221,13 +214,20 @@ class HakaObject(ObjectDescription):
     def get_index_name(self, names):
         return names['fullname']
 
+    def get_index_type(self):
+        return None
+
     def get_index_text(self, names):
         ret = []
-        if names['context']: ret.append(names['context'])
-        if names['idxctx']: ret.append(names['idxctx'])
-        ret.append("%s" % (names['objtype']))
-        if self.module: ret.append("in module %s" % (self.module))
+
+        idxtype = self.idxtype or self.get_index_type()
+        if idxtype: ret.append(idxtype)
+
+        if self.context: ret.append("in %s" % (self.context))
+        if self.module and self.needs_module(): ret.append("in module %s" % (self.module))
+
         return "%s (%s)" % (self.get_index_name(names), ' '.join(ret))
+
 
 class HakaClass(HakaObject):
     doc_field_types = [
@@ -236,6 +236,9 @@ class HakaClass(HakaObject):
     ]
 
     typename = l_("object")
+
+    def get_index_type(self):
+        return "%s" % (self.__class__.typename)
 
     def before_content(self):
         HakaObject.before_content(self)
@@ -266,6 +269,9 @@ class HakaFunction(HakaObject):
               names=('returntype',)),
     ]
 
+    def build_objtype(self):
+        return self.options.get('objtype') or ""
+
     def needs_arglist(self):
         return True
 
@@ -273,10 +279,11 @@ class HakaFunction(HakaObject):
         return '%s()' % (names['fullname'])
 
 class HakaMethod(HakaFunction):
-    typename = l_("method")
-
-class HakaEvent(HakaObject):
-    typename = l_("event")
+    def build_context(self, context):
+        if context:
+            return "<%s>" % (context[:-1]), context[-1]
+        else:
+            return None, None
 
 class HakaData(HakaObject):
     typename = l_("data")
@@ -286,13 +293,15 @@ class HakaData(HakaObject):
               names=('type',)),
     ]
 
-class HakaAttribute(HakaObject):
-    typename = l_("attribute")
+    def build_objtype(self):
+        return self.options.get('objtype') or ""
 
-    doc_field_types = [
-        Field('type', label=l_('Type'), has_arg=False,
-              names=('type',)),
-    ]
+class HakaAttribute(HakaData):
+    def build_context(self, context):
+        if context:
+            return "<%s>" % (context[:-1]), context[-1]
+        else:
+            return None, None
 
 
 class HakaModule(Directive):
@@ -458,7 +467,6 @@ class HakaDomain(Domain):
     object_types = {
         'class':         ObjType(l_('class'),      'class',  'obj'),
         'dissector':     ObjType(l_('dissector'),  'class',  'obj'),
-        'event':         ObjType(l_('event'),      'event',  'obj'),
         'attribute':     ObjType(l_('attribute'),  'data',   'obj'),
         'function':      ObjType(l_('function'),   'func',   'obj'),
         'method':        ObjType(l_('method'),     'func',   'obj'),
@@ -472,7 +480,6 @@ class HakaDomain(Domain):
         'function':        HakaFunction,
         'method':          HakaMethod,
         'data':            HakaData,
-        'event':           HakaEvent,
         'attribute':       HakaAttribute,
         'module':          HakaModule,
         'currentmodule':   HakaCurrentModule,
@@ -583,5 +590,4 @@ class HakaDomain(Domain):
 
 
 def setup(app):
-    app.add_node(desc_module, html=(visit_desc_module, depart_desc_module))
     app.add_domain(HakaDomain)
