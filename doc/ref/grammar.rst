@@ -37,52 +37,44 @@ properties.
     Object representing any grammar element. This object have different functions that cas be used in the
     grammar specification
 
-.. haka:method:: Entity:options{...}
-
-    Generic option specification function. Check the documentation of the grammar element to get the list
-    of option supported.
-
-    The options are passed as ``key=value`` in the table used as the parameter of the function.
-
-.. haka:method:: Entity:extra{...}
-
-    Method only available on record which can be used to add extra element to it. The table should only
-    contains functions.
-
-    Each named element in the array will be added as a extra field in the result.
-    The other element will be executed when the record will be done with its parsing.
-
-.. haka:method:: Entity:validate(validator)
-
-    Add a validation function for the element. This function is called when a field is mark invalid by
-    setting it to ``nil``.
-
-    .. haka:function:: validator(result)
+    .. haka:method:: Entity:options{...}
     
-        :param result: Current parsing result.
-        :param context: Full parsing context.
-
-.. haka:method:: Entity:convert(converter)
-
-    :param converter: Value converter.
-    :paramtype converter: :haka:mod:`haka.grammar.converter`
-
-    Set a conversion operation to apply to the element data.
-
-.. haka:method:: Entity:extra{...}
-
-    Method only available on record which can be used to add extra element to it. The table should only
-    contains functions.
-
-    Each named element in the array will be added as a extra field in the result.
-    The other element will be executed when the record will be done with its parsing.
-
-.. haka:method:: Entity:compile() -> compiled_entity
-
-    :return compiled_entity: Compiled grammar.
-    :rtype compiled_entity: :haka:class:`CompiledEntity` instance
-
-    Compile the grammar representation.
+        Generic option specification function. Check the documentation of the grammar element to get the list
+        of option supported.
+    
+        The options are passed as ``key=value`` in the table used as the parameter of the function.
+    
+    .. haka:method:: Entity:extra{...}
+    
+        Method only available on record which can be used to add extra element to it. The table should only
+        contains functions.
+    
+        Each named element in the array will be added as a extra field in the result.
+        The other element will be executed when the record will be done with its parsing.
+    
+    .. haka:method:: Entity:validate(validator)
+    
+        Add a validation function for the element. This function is called when a field is mark invalid by
+        setting it to ``nil``.
+    
+        .. haka:function:: validator(result)
+        
+            :param result: Current parsing result.
+            :param context: Full parsing context.
+    
+    .. haka:method:: Entity:convert(converter)
+    
+        :param converter: Value converter.
+        :paramtype converter: :haka:mod:`haka.grammar.converter`
+    
+        Set a conversion operation to apply to the element data.
+    
+    .. haka:method:: Entity:compile() -> compiled_entity
+    
+        :return compiled_entity: Compiled grammar.
+        :rtype compiled_entity: :haka:class:`CompiledEntity` instance
+    
+        Compile the grammar representation.
 
 
 Compounds
@@ -411,15 +403,15 @@ Converters
 
     A converter allows to apply some processing to a parsing result value.
 
-.. haka:function:: Converter.get(val)
-
-    Compute the converted value from the raw data. This happens when the user tries
-    to get the value of a field for instance.
-
-.. haka:function:: Converter.set(val)
-
-    Compute the converted value to store in the raw data. This happens when the user
-    modify the value of on of the field.
+    .. haka:function:: Converter.get(val)
+    
+        Compute the converted value from the raw data. This happens when the user tries
+        to get the value of a field for instance.
+    
+    .. haka:function:: Converter.set(val)
+    
+        Compute the converted value to store in the raw data. This happens when the user
+        modify the value of on of the field.
 
 
 Predefined converters
@@ -463,37 +455,37 @@ Compiled grammar
 
     Compiled grammar representation.
 
-.. haka:method:: CompiledEntity:parse(iter, result=nil, user=nil) -> result, error
-
-    :param iter: Data iterator.
-    :paramtype iter: :haka:class:`haka.vbuffer_iterator` or :haka:class:`haka.vbuffer_iterator_blocking` instance
-    :param result: Object where the parsing result will be stored. If `nil`, a generic result object will be created.
-    :paramtype result: abstract table
-    :param user: User object that will be stored in the parsing context.
-    :paramtype user: table
-    :return result: The result of the parsing.
-    :return error: An error if needed.
-    :rtype result: table for the result
-    :rtype error: :haka:class:`ParseError` instance
-
-    Parse the data and store all results in the object returned by the function. In case of error, the error
-    desciption is also returned.
-
-.. haka:method:: CompiledEntity:create(iter, result=nil, init={}) -> result, error
-
-    :param iter: Data iterator.
-    :paramtype iter: :haka:class:`haka.vbuffer_iterator` instance
-    :param result: Object where the parsing result will be stored. If `nil`, a generic result object will be created.
-    :paramtype result: abstract table
-    :param init: Optional initialization table.
-    :paramtype init: table
-    :return result: The result of the parsing.
-    :return error: An error if needed.
-    :rtype result: table for the result
-    :rtype error: :haka:class:`ParseError` instance
-
-    Initialize the data from an initialization table and returned the parsing result. In case of error, the error
-    desciption is also returned.
+    .. haka:method:: CompiledEntity:parse(iter, result=nil, user=nil) -> result, error
+    
+        :param iter: Data iterator.
+        :paramtype iter: :haka:class:`haka.vbuffer_iterator` or :haka:class:`haka.vbuffer_iterator_blocking` instance
+        :param result: Object where the parsing result will be stored. If `nil`, a generic result object will be created.
+        :paramtype result: abstract table
+        :param user: User object that will be stored in the parsing context.
+        :paramtype user: table
+        :return result: The result of the parsing.
+        :return error: An error if needed.
+        :rtype result: table for the result
+        :rtype error: :haka:class:`ParseError` instance
+    
+        Parse the data and store all results in the object returned by the function. In case of error, the error
+        desciption is also returned.
+    
+    .. haka:method:: CompiledEntity:create(iter, result=nil, init={}) -> result, error
+    
+        :param iter: Data iterator.
+        :paramtype iter: :haka:class:`haka.vbuffer_iterator` instance
+        :param result: Object where the parsing result will be stored. If `nil`, a generic result object will be created.
+        :paramtype result: abstract table
+        :param init: Optional initialization table.
+        :paramtype init: table
+        :return result: The result of the parsing.
+        :return error: An error if needed.
+        :rtype result: table for the result
+        :rtype error: :haka:class:`ParseError` instance
+    
+        Initialize the data from an initialization table and returned the parsing result. In case of error, the error
+        desciption is also returned.
 
 
 Parsing error
@@ -504,23 +496,23 @@ Parsing error
 
     Parsing error description.
 
-.. haka:attribute:: ParseError.iterator
-
-    :type: :haka:class:`haka.vbuffer_iterator` instance
-
-    Iterator at the position where the parsing error occurred.
-
-.. haka:attribute:: ParseError.rule
-
-    :type: string
-
-    Name of the rule where the error occurred.
-
-.. haka:attribute:: ParseError.description
-
-    :type: string
-
-    Full description of the parsing error.
+    .. haka:attribute:: ParseError.iterator
+    
+        :type: :haka:class:`haka.vbuffer_iterator` instance
+    
+        Iterator at the position where the parsing error occurred.
+    
+    .. haka:attribute:: ParseError.rule
+    
+        :type: string
+    
+        Name of the rule where the error occurred.
+    
+    .. haka:attribute:: ParseError.description
+    
+        :type: string
+    
+        Full description of the parsing error.
 
 
 Parsing context
@@ -531,24 +523,24 @@ Parsing context
 
     Parsing context used in all parsing related functions.
 
-.. haka:attribute:: ParseContext.result
-
-    Current parsing result.
-
-.. haka:attribute:: ParseContext.top
-
-    Top level parsing result.
-
-.. haka:attribute:: ParseContext.prev_result
-
-    Previous level parsing result.
-
-.. haka:attribute:: ParseContext.user
-
-    User object.
-
-.. haka:method:: ParseContext:lookahead()
-
-    :rtype: number
-
-    Return the next byte. This function can be used to remove grammar ambiguity.
+    .. haka:attribute:: ParseContext.result
+    
+        Current parsing result.
+    
+    .. haka:attribute:: ParseContext.top
+    
+        Top level parsing result.
+    
+    .. haka:attribute:: ParseContext.prev_result
+    
+        Previous level parsing result.
+    
+    .. haka:attribute:: ParseContext.user
+    
+        User object.
+    
+    .. haka:method:: ParseContext:lookahead()
+    
+        :rtype: number
+    
+        Return the next byte. This function can be used to remove grammar ambiguity.
