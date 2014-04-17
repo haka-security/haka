@@ -1,15 +1,15 @@
 [submodule "external/iniparser/src"]
 	path = external/iniparser/src
-	url = git://github.com/haka-security/iniparser.git
+	url = https://github.com/haka-security/iniparser.git
 [submodule "external/lua/src"]
 	path = external/lua/src
-	url = git://github.com/haka-security/lua.git
+	url = https://github.com/haka-security/lua.git
 [submodule "external/luajit/src"]
 	path = external/luajit/src
-	url = git://repo.or.cz/luajit-2.0.git
+	url = http://luajit.org/git/luajit-2.0.git
 [submodule "external/luaunit/src"]
 	path = external/luaunit/src
-	url = git://github.com/haka-security/luaunit.git
+	url = https://github.com/haka-security/luaunit.git
 [submodule "external/breathe"]
 	path = external/breathe
-	url = git://github.com/haka-security/breathe.git
+	url = https://github.com/haka-security/breathe.git
