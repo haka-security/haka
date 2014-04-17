@@ -44,7 +44,7 @@ local function pointer_resolution(self, ctx)
 	for offset, label in sorted_pairs(ctx._labels) do
 		if label.compression_scheme == POINTER_COMPRESSION then
 			if not ctx._labels[label.pointer] then
-				error(string.format("reference unknown domain name at offset: 0x%x (0x%x)", label.pointer, label.pointer+0x2A))
+				error(string.format("reference unknown domain name at offset: 0x%x", label.pointer))
 			end
 			label.next = ctx._labels[label.pointer]
 		end
