@@ -429,7 +429,7 @@ Predefined converters
 
 .. haka:data:: bool
 
-    :type: :haka:class:`Converter`
+    :type: :haka:class:`Converter` |nbsp|
 
     Convert the raw value into a boolean.
 

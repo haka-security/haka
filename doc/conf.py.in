@@ -90,6 +90,12 @@ pygments_style = 'autumn'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+# rst prolog
+rst_prolog = """
+.. |nbsp| unicode:: 0xA0
+   :trim:
+"""
+
 
 # -- Options for HTML output ---------------------------------------------------
 
