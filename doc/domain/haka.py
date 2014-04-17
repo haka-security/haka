@@ -200,7 +200,7 @@ class HakaObject(ObjectDescription):
             signode['first'] = (not self.names)
             self.state.document.note_explicit_target(signode)
             objects = self.env.domaindata['haka']['objects']
-            objects[fullname] = (self.env.docname, self.objtype)
+            objects[fullname] = (self.env.docname, self.objtype, fullid)
 
         indextext = self.get_index_text(names)
         if indextext:
@@ -312,7 +312,7 @@ class HakaModule(Directive):
                  self.options.get('platform', ''), 'deprecated' in self.options)
             # make a duplicate entry in 'objects' to facilitate searching for
             # the module in LuaDomain.find_obj()
-            env.domaindata['haka']['objects'][modname] = (env.docname, 'module')
+            env.domaindata['haka']['objects'][modname] = (env.docname, 'module', 'module-' + modname)
             targetnode = nodes.target('', '', ids=['module-' + modname],
                                       ismod=True)
             self.state.document.note_explicit_target(targetnode)
@@ -479,7 +479,7 @@ class HakaDomain(Domain):
     ]
 
     def clear_doc(self, docname):
-        for fullname, (fn, _) in list(self.data['objects'].items()):
+        for fullname, (fn, _, _) in list(self.data['objects'].items()):
             if fn == docname:
                 del self.data['objects'][fullname]
         for modname, (fn, _, _, _) in list(self.data['modules'].items()):
@@ -572,13 +572,13 @@ class HakaDomain(Domain):
             return make_refnode(builder, fromdocname, docname,
                                 'module-' + name, contnode, title)
         else:
-            return make_refnode(builder, fromdocname, obj[0], 'haka-' + name,
+            return make_refnode(builder, fromdocname, obj[0], obj[2],
                                 contnode, name)
 
     def get_objects(self):
         for modname, info in self.data['modules'].items():
             yield (modname, modname, 'module', info[0], 'module-' + modname, 0)
-        for refname, (docname, type) in self.data['objects'].items():
+        for refname, (docname, type, _) in self.data['objects'].items():
             yield (refname, refname, type, docname, refname, 1)
 
 
