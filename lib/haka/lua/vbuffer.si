@@ -437,7 +437,7 @@ struct vbuffer_sub {
 			free($self);
 		}
 
-		size_t __len(void *dummy) { return vbuffer_sub_size($self); }
+		int __len(void *dummy) { return vbuffer_sub_size($self); }
 		int __getitem(int index) { return vbuffer_getbyte($self, index-1); }
 		void __setitem(int index, int value) { vbuffer_setbyte($self, index-1, value); }
 
