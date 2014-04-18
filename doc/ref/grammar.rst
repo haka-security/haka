@@ -548,14 +548,17 @@ Parsing context
     Parsing context used in all parsing related functions.
 
     .. haka:attribute:: ParseContext.result
+        :readonly:
 
         Current parsing result.
 
     .. haka:attribute:: ParseContext.top
+        :readonly:
 
         Top level parsing result.
 
     .. haka:attribute:: ParseContext.prev_result
+        :readonly:
 
         Previous level parsing result.
 
