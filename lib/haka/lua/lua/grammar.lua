@@ -565,8 +565,7 @@ function grammar_dg.ArrayStart.method:_apply(ctx)
 
 		if self.converter then
 			res:addproperty(self.name,
-			function (this) return self.converter.get(array) end,
-			function (this, newvalue) sub = self.converter.set(newvalue) end
+				function (this) return self.converter.get(array) end
 			)
 		else
 			res[self.name] = array
