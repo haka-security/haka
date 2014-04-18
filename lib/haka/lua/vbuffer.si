@@ -732,6 +732,7 @@ struct vbuffer {
 			else if (strcmp(_mode, "copy") == 0) mode = CLONE_COPY;
 			else if (strcmp(_mode, "ro orig") == 0) mode = CLONE_RO_ORIG;
 			else if (strcmp(_mode, "ro clone") == 0) mode = CLONE_RO_CLONE;
+			else error(L"invalid clone mode");
 
 			buf = malloc(sizeof(struct vbuffer));
 			if (!buf) {
