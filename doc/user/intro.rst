@@ -5,19 +5,22 @@
 What is HAKA
 ============
 
-Haka is a collection of tool that allows capturing TCP/IP packets and filtering
-them based on Lua policy files.
+Haka is an open security framework which allows to apply security
+policies on (live) captured traffic. Haka API allows to define security rules
+and to specify network protocols and their underlying state machine.
 
 Major features
 --------------
 
-* Capture/Drop packet using nfqueue
-* Read packet either from a pcap file or from interface using libpcap
-* Filter packet according to Lua policy files
-* Alter packet according to Lua policy files
-* Inject new packet from Lua policy files
-* Filter packet interactively
-* Debug security rules
+* Specify text-based and binary-based network protocols
+* Describe protocol state machine
+* Define event-based security rules to filter, alter, drop and/or inject packets
+* Filter packet interactively  
+* Log and alert suspicious network activities
+* Match malicious pattern accross mutliple packets
+* Apply Haka security policies on live traffic
+* Replay haka security policies on tarffic traces (pcap capture)
+* Debug Haka security policies
 * And more features coming soon ...
 
 Authors / Contributors
@@ -34,7 +37,15 @@ Contributors:
 * Jeremy Rosen
 * Kevin Denis
 * Mehdi Talbi
+* Nicolas Aguirre
+* Paul Fariello  
 * Pierre-Sylvain Desse
+
+Acknowledgements:
+
+* Abdlelhamid Makiou
+* Rémi Bauzac
+* Samih Soussi
 
 License
 -------
