@@ -125,7 +125,9 @@ dns_dissector.grammar.label = haka.grammar.record{
 }
 
 dns_dissector.grammar.dn = haka.grammar.array(dns_dissector.grammar.label):options{
-		untilcond = function (label) return label and (label.length == 0 or label.pointer ~= nil) end,
+		untilcond = function (label)
+			return label and (label.length == 0 or label.pointer ~= nil)
+		end,
 }:convert(dn_converter, true)
 
 dns_dissector.type = haka.grammar.number(16):convert({
@@ -174,7 +176,7 @@ dns_dissector.grammar.soa = haka.grammar.record{
 
 dns_dissector.grammar.wks = haka.grammar.record{
 	haka.grammar.field('ip', haka.grammar.number(32)
-	:convert(ipv4_addr_convert, true)),
+		:convert(ipv4_addr_convert, true)),
 	haka.grammar.field('proto', haka.grammar.number(8)),
 	haka.grammar.field('ports', haka.grammar.bytes():options{
 		count = function (self, ctx) return self.length - 40 end -- remove wks headers
@@ -198,33 +200,33 @@ dns_dissector.grammar.resourcerecord = haka.grammar.record{
 	haka.grammar.field('ttl',     haka.grammar.number(32)),
 	haka.grammar.field('length',  haka.grammar.number(16)),
 	haka.grammar.branch({
-		A =       haka.grammar.field('ip', haka.grammar.number(32)
-			:convert(ipv4_addr_convert, true)),
-		NS =      haka.grammar.field('name', dns_dissector.grammar.dn),
-		MD =      haka.grammar.field('name', dns_dissector.grammar.dn),
-		MF =      haka.grammar.field('name', dns_dissector.grammar.dn),
-		CNAME =   haka.grammar.field('name', dns_dissector.grammar.dn),
-		SOA =     dns_dissector.grammar.soa,
-		MB =      haka.grammar.field('name', dns_dissector.grammar.dn),
-		MG =      haka.grammar.field('name', dns_dissector.grammar.dn),
-		MR =      haka.grammar.field('name', dns_dissector.grammar.dn),
-		NULL =    haka.grammar.field('data', haka.grammar.bytes():options{
-			count = function (self, ctx) return self.length end
-		}),
-		WKS =     dns_dissector.grammar.wks,
-		PTR =     haka.grammar.field('name', dns_dissector.grammar.dn),
-		MINFO =   dns_dissector.grammar.minfo,
-		MX =      dns_dissector.grammar.mx,
-		TXT =     haka.grammar.field('data', haka.grammar.text:options{
-			count = function (self, ctx) return self.length end
-		}),
-		default = haka.grammar.field('unknown', haka.grammar.bytes():options{
-			count = function (self, ctx) return self.length end
-		}),
-	},
-	function (self, ctx)
-		return self.type
-	end
+			A =       haka.grammar.field('ip', haka.grammar.number(32)
+				:convert(ipv4_addr_convert, true)),
+			NS =      haka.grammar.field('name', dns_dissector.grammar.dn),
+			MD =      haka.grammar.field('name', dns_dissector.grammar.dn),
+			MF =      haka.grammar.field('name', dns_dissector.grammar.dn),
+			CNAME =   haka.grammar.field('name', dns_dissector.grammar.dn),
+			SOA =     dns_dissector.grammar.soa,
+			MB =      haka.grammar.field('name', dns_dissector.grammar.dn),
+			MG =      haka.grammar.field('name', dns_dissector.grammar.dn),
+			MR =      haka.grammar.field('name', dns_dissector.grammar.dn),
+			NULL =    haka.grammar.field('data', haka.grammar.bytes():options{
+				count = function (self, ctx) return self.length end
+			}),
+			WKS =     dns_dissector.grammar.wks,
+			PTR =     haka.grammar.field('name', dns_dissector.grammar.dn),
+			MINFO =   dns_dissector.grammar.minfo,
+			MX =      dns_dissector.grammar.mx,
+			TXT =     haka.grammar.field('data', haka.grammar.text:options{
+				count = function (self, ctx) return self.length end
+			}),
+			default = haka.grammar.field('unknown', haka.grammar.bytes():options{
+				count = function (self, ctx) return self.length end
+			}),
+		},
+		function (self, ctx)
+			return self.type
+		end
 	),
 }
 
