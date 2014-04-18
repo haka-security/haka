@@ -7,67 +7,136 @@
 Rules
 =====
 
-.. lua:module:: haka
+.. haka:module:: haka
+
+Events
+------
+
+Haka core will trigger various events emitted by dissectors for instance. This events allow
+the user to place rules to verify some property and react if needed.
+
+To get the list of supported events and for each of them their parameters, check the documentation
+of the protocol dissectors (:doc:`extmodules`).
+
+.. haka:function:: event(dissector, event) -> event
+
+    :param dissector: Name of the dissector.
+    :paramtype dissector: string
+    :param event: Name of the event.
+    :paramtype event: string
+    :return event: :haka:class:`Event`
+
+    Get a dissector event.
+    
+    .. haka:class:: Event
 
 Single Rule
 -----------
 
-.. lua:class:: rule
+.. haka:function:: rule{...}
 
-    .. lua:data:: hook
+    :param hook: Event to listen to.
+    :paramtype hook: :haka:class:`Event`
+    :param eval: Function to call when the event is triggered.
+    :paramtype eval: function
+    :param options: List of options for the rule.
+    :paramtype options: table
 
-        Event that will trigger the evaluation function.
+    Register a new rule on the given event.
 
-    .. lua:method:: eval(...)
+    **Options:**
+    
+    .. haka:data:: streamed
+        :module:
 
-        The function to call to evaluate the rule. The number of paramters depends
-        on the registered event.
+        :type: boolean
 
-.. lua:function:: rule(r)
+        Run the *eval* function in stream mode. In this mode, the function is only called
+        once in a separated state where it can block waiting for data.
 
-    Register a new rule.
+Example:
+^^^^^^^^
 
-    :param r: Rule description.
-    :paramtype r: :lua:class:`rule`
+.. literalinclude:: ../../sample/filter/ipfilter.lua
+    :language: lua
+    :tab-width: 4
 
-Example: ::
 
-   TODO
+Interactive rule
+----------------
+
+.. haka:function:: interactive_rule(...)
+
+    Utility function to create an interactive rule. Use this function as the *eval* function
+    on one of your rule.
+
+    **Usage:**
+
+    ::
+
+        haka.rule{
+            hook = haka.event('ipv4', 'receive_packet'),
+            eval = haka.interactive_rule
+        }
+
 
 Rule Group
 ----------
 
-Rule group allows customizing the rule evaluation.
+.. haka:class:: rule_group
+    :module:
 
-.. lua:class:: rule_group
+    Rule group allows customizing the rule evaluation.
 
-    .. lua:method:: init(...)
+    .. haka:function:: rule_group{...} -> group
 
-        This function is called whenever a group start to be evaluated.
+        :param hook: Event to listen to.
+        :paramtype hook: :haka:class:`Event`
+        :param init: Function that is called whenever a group start to be evaluated.
+        :paramtype init: function
+        :param continue: After each rule evaluation, the function is called to know if the evaluation
+            of the other rules should continue. If not, the other rules will be skipped.
+        :paramtype continue: function
+        :param final: If all the rules of the group have been evaluated, this callback is called
+            at the end.
+        :paramtype final: function
+        :return group: New rule group.
+        :rtype group: :haka:class:`rule_group`
+    
+        Create a new rule group on the given event.
+        
+        .. haka:function:: init(...)
+            :noindex:
+            :module:
+            
+            :param ...: Parameter from the event.
+        
+        .. haka:function:: continue(ret, ...) -> should_continue
+            :noindex:
+            :module:
+            
+            :param ...: Parameter from the event.
+            
+            :param ret: Result from the previous rule evaluation.
+            :param ...: Parameter from the event.
+            :return should_continue: ``true`` if the next rule in the group should be evaluated.
+            :rtype should_continue: boolean
+        
+        .. haka:function:: final(...)
+            :noindex:
+            :module:
 
-    .. lua:method:: final(...)
+    .. haka:method:: rule_group:rule(eval)
 
-        If all the rules of the group have been evaluated, this callback is
-        called at the end.
-
-    .. lua:method:: continue(ret, ...)
-
-        After each rule evaluation, the function is called to know if the evaluation
-        of the other rules should continue. If not, the other rules will be skipped.
-
-        :param ret: Value returned by the evaluated rule.
-
-    .. lua:method:: rule(eval)
+        :param eval: Evaluation function.
+        :paramtype eval: function
 
         Register a rule for this group.
 
-        :param eval: Evaluation function.
+Example:
+^^^^^^^^
 
-.. lua:function:: rule_group(rg)
-
-    Register a new rule group. `rg` should be a table that will be used to initialize the
-    rule group. It can contains `hook`, `init`, `final` and `continue`.
-
-    :returns: The new group.
-    :rtype: :lua:class:`rule_group`
+.. literalinclude:: ../../sample/ruleset/tcp/rules.lua
+    :language: lua
+    :tab-width: 4
 
