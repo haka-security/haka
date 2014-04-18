@@ -7,75 +7,58 @@
 Packet
 ======
 
-.. lua:module:: haka.packet
+.. haka:module:: haka
 
-.. lua:class:: packet
+.. haka:class:: packet
+    :module:
 
-    The Packet class represents a raw data packet. I.e a blob of binary data coming from the capture module.
+    Object that represents a raw data packet. I.e a blob of binary data coming from the capture module.
+    Nothing is know of its content.
 
-    Nothing is know of its content. 
+    .. haka:function:: packet(size = 0) -> pkt
 
-    Packet objects are passed to the first disector in the stack to analyze the content.
+        :param size: Size of the new packet.
+        :paramtype size: number
+        :return pkt: New packet.
+        :rtype pkt: :haka:class:`packet`
+    
+        Create a new packet of the given size.
 
-    .. lua:method:: []
-        
-        individual bytes within the packet can be obtained by indexing the packet objet
+    .. haka:attribute:: packet.payload
+        :readonly:
 
-    .. lua:method:: #
-       
-        The length of the packet object can be obtained via the normal lua operators
+        :type: :haka:class:`vbuffer` |nbsp|
 
+        Data inside the packet.
 
-    .. lua:method:: drop(self)
+    .. haka:method:: packet:drop()
 
         Drop the packet.
 
         .. note:: The packet will be unusable after calling this function.
 
-        :param self: The packet to drop
-        :paramtype self: :lua:class:`packet`
+    .. haka:method:: packet:send()
 
-    .. lua:method:: accept(self)
-
-        Accept the packet.
+        Send the packet on the network.
 
         .. note:: The packet will be unusable after calling this function.
 
-        :param self: The packet to accept
-        :paramtype self: :lua:class:`packet`
+    .. haka:method:: packet:inject()
 
-    .. lua:method:: send(self)
+        Re-inject the packet. The packet will re-enter the Haka rules and dissector
+        exactly like a new packet coming from the capture module.
 
-        Send the packet.
+    .. haka:method:: state() -> state
 
-        :param self: The packet to send
-        :paramtype self: :lua:class:`packet`
+        :return state: State of the packet: ``'forged'``, ``'normal'`` or ``'sent'``.
+        :rtype state: string
 
-    .. lua:method:: resize(self,size)
+        Get the state of the packet.
 
-        Set the packet length to ``size``.
+.. haka:function:: packet_mode() -> mode
 
-        :param self: The packet whose size will be changed
-        :paramtype self: :lua:class:`packet`
-        :param size: The new size of the packet
-        :paramtype size: `ìnteger`
+    :return mode: Current packet mode (``'normal'`` or ``'passthrough'``).
+    :rtype mode: string
 
-.. lua:function:: new(size)
-
-    Create new packet of size ``size``.
-
-    :param size: The new size of the packet
-    :paramtype size: `ìnteger`
-
-.. lua:function:: mode()
-
-        :returns: the packet mode: passthrough mode or normal mode.
-        :rtype: integer
-
-.. lua:data:: NORMAL
-
-   constant integer representing the normal mode
-
-.. lua:data:: PASSTHROUGH
-
-   constant integer representing the passthrough mode
+    Get the current packet mode for Haka. In *passthrough* mode, the packet cannot
+    be modified nor dropped.
