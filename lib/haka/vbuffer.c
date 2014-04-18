@@ -1627,6 +1627,7 @@ bool vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, clone_m
 				break;
 			case CLONE_RO_ORIG:
 				chunk->flags.writable = false;
+				/* and also set end flags */
 			case CLONE_RW:
 				end->flags.writable = clone->flags.writable;
 				break;
