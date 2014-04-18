@@ -276,20 +276,14 @@ end
 
 dns_dissector.states = haka.state_machine("dns")
 
+local dns_pending_queries = {}
+
 dns_dissector.states:default{
 	error = function (context)
 		local self = context.dns
 		self.flow:drop()
 	end,
 	update = function (context, payload, direction, pkt)
-		return context[direction](context, payload, pkt)
-	end
-}
-
-dns_dissector.states.query = dns_dissector.states:state{
-	up = function (context, payload, pkt)
-		local self = context.dns
-		self._want_data_modification = false
 		local res, err = dns_message:parse(payload:pos('begin'))
 		if err then
 			haka.alert{
@@ -298,56 +292,35 @@ dns_dissector.states.query = dns_dissector.states:state{
 			}
 			return context.states.ERROR
 		end
-		self.query = res
+		return context[direction](context, res, payload, pkt)
+	end
+}
+
+dns_dissector.states.message = dns_dissector.states:state{
+	up = function (context, res, payload, pkt)
+		local self = context.dns
 		self:trigger("query", res)
-
+		dns_pending_queries[res.header['id']] = res
 		res._data = self.flow:send(pkt, payload, true)
-
-		return context.states.answer
 	end,
-	down = function (context, payload, pkt)
-		haka.alert{
-			description = "dns: unexpected data from server",
-			severity = 'low'
-		}
-		return context.states.ERROR
-	end,
-}
-
-dns_dissector.states.answer = dns_dissector.states:state{
-	up = function (context, payload, pkt)
-		haka.alert{
-			description = "dns: unecpected data from client",
-			severity = 'low'
-		}
-		return context.states.ERROR
-	end,
-	down = function (context, payload, pkt)
+	down = function (context, res, payload, pkt)
 		local self = context.dns
-		self._want_data_modification = false
-		local res, err = dns_message:parse(payload:pos('begin'))
-		if err then
+		local id = res.header['id']
+		local query = dns_pending_queries[id]
+		if not query then
 			haka.alert{
-				description = string.format("invalid dns %s", err.rule),
-				severity = 'low'
-			}
-		    return context.states.ERROR
-		end
-		if self.query.id ~= res.id then
-			haka.alert{
-				description = "dns: mismatching answer",
+				description = "dns: mismatching response",
 				severity = 'low'
 			}
 			return context.states.ERROR
+		else
+			self:trigger("response", res, query)
+			dns_pending_queries[id] = nil
+			res._data = self.flow:send(pkt, payload, true)
 		end
-		self:trigger("response", res)
-
-		res._data = self.flow:send(pkt, payload, true)
-
-		return context.states.query
-	end
+	end,
 }
 
-dns_dissector.states.initial = dns_dissector.states.query
+dns_dissector.states.initial = dns_dissector.states.message
 
 return module
