@@ -104,12 +104,14 @@ dns_dissector.grammar.label = haka.grammar.record{
 		ctx.top._labels[ctx.iter.meter] = self
 	end),
 	haka.grammar.field('compression_scheme', haka.grammar.number(2)),
-	haka.grammar.field('length', haka.grammar.number(6)),
 	haka.grammar.branch({
-		name = haka.grammar.field('name', haka.grammar.bytes():options{
-				count = function (self, ctx, el) return self.length end
-			}),
-		pointer = haka.grammar.field('_offset', haka.grammar.number(8)),
+		name = haka.grammar.record{
+				haka.grammar.field('length', haka.grammar.number(6)),
+				haka.grammar.field('name', haka.grammar.bytes():options{
+					count = function (self, ctx, el) return self.length end
+				}),
+			},
+		pointer = haka.grammar.field('pointer', haka.grammar.number(14)),
 		default = haka.grammar.error("unsupported compression scheme"),
 		},
 		function (self, ctx)
@@ -120,14 +122,6 @@ dns_dissector.grammar.label = haka.grammar.record{
 			end
 		end
 	)
-}:extra{
-	pointer = function (self)
-		if self.compression_scheme ~= POINTER_COMPRESSION then
-			return nil
-		end
-
-		return self.length * 256 + self._offset
-	end
 }
 
 dns_dissector.grammar.dn = haka.grammar.array(dns_dissector.grammar.label):options{
