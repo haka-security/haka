@@ -37,15 +37,6 @@ from sphinx.util.docfields import Field, GroupedField, TypedField
 from sphinx.writers.html import HTMLTranslator
 
 
-# REs
-lua_signature_re = re.compile(
-    r'''^ ([\w\./\-]+[:.])?       # class name(s)
-          ([\w/\-/]+)  \s*        # thing name
-          (?: ([({])(.*)([)}]))?  # optional: arguments
-          (?:\s* -> \s* (.*))?    # optional: return annotation
-          $                       # and nothing more
-          ''', re.VERBOSE)
-
 def _desc_parameterlist(argstart, argend):
     node = addnodes.desc_parameterlist()
     node.param_start = argstart
@@ -113,6 +104,14 @@ class HakaObject(ObjectDescription):
         'idxctx': directives.unchanged,
     }
 
+    lua_signature_re = re.compile(
+        r'''^ ([\w\./\-]+[:.])?       # class name(s)
+              ([\w/\-/]+)  \s*        # thing name
+              (?: ([({])(.*)([)}]))?  # optional: arguments
+              (?:\s* -> \s* (.*))?    # optional: return annotation
+              $                       # and nothing more
+              ''', re.VERBOSE)
+
     def needs_arglist(self):
         """May return true if an empty argument list is to be generated even if
         the document contains none."""
@@ -131,18 +130,45 @@ class HakaObject(ObjectDescription):
         else:
             return None, None
 
-    def handle_signature(self, sig, signode):
-        m = lua_signature_re.match(sig)
+    def parse_signature(self, sig):
+        m = HakaObject.lua_signature_re.match(sig)
         if m is None:
             raise ValueError
 
-        context, name, argstart, arglist, argend, retann = m.groups()
+        return m.groups()
+
+    def build_parameters(self, signode):
+        if not self.arglist:
+            if self.needs_arglist():
+                # for callables, add an empty parameter list
+                listnode = _desc_parameterlist(self.argstart, self.argend)
+                signode += listnode
+        else:
+            _pseudo_parse_arglist(signode, self.argstart, self.arglist, self.argend)
+
+    def build_signode(self, signode):
+        if self.context:
+            context = self.context + self.contextsep
+            signode += addnodes.desc_addname(context, context)
+
+        signode += addnodes.desc_name(self.name, self.name)
+        self.build_parameters(signode)
+
+        if self.retann:
+            signode += addnodes.desc_returns(self.retann, self.retann)
+
+    def handle_signature(self, sig, signode):
+        context, name, argstart, arglist, argend, retann = self.parse_signature(sig)
 
         self.context, self.contextsep = self.build_context(context)
         self.module = self.options.get('module', self.env.temp_data.get('haka:module'))
         self.objtype = self.build_objtype()
         self.idxtype = self.options.get('idxtype')
         self.name = name
+        self.argstart = argstart
+        self.arglist = arglist
+        self.argend = argend
+        self.retann = retann
 
         add_module = True
         fullname = name
@@ -158,23 +184,9 @@ class HakaObject(ObjectDescription):
             modname = '%s.' % (self.module)
             signode += addnodes.desc_addname(modname, modname)
 
-        if self.context:
-            context = self.context + self.contextsep
-            signode += addnodes.desc_addname(context, context)
+        self.build_signode(signode)
 
         anno = self.options.get('annotation')
-
-        signode += addnodes.desc_name(name, name)
-        if not arglist:
-            if self.needs_arglist():
-                # for callables, add an empty parameter list
-                listnode = _desc_parameterlist(argstart, argend)
-                signode += listnode
-        else:
-            _pseudo_parse_arglist(signode, argstart, arglist, argend)
-
-        if retann:
-            signode += addnodes.desc_returns(retann, retann)
         if anno:
             signode += addnodes.desc_annotation(' ' + anno, ' ' + anno)
 
@@ -288,13 +300,21 @@ class HakaMethod(HakaFunction):
 class HakaData(HakaObject):
     typename = l_("data")
 
+    option_spec = dict(
+        readonly=directives.flag,
+        **HakaObject.option_spec
+    )
+
     doc_field_types = [
         Field('type', label=l_('Type'), has_arg=False,
               names=('type',)),
     ]
 
     def build_objtype(self):
-        return self.options.get('objtype') or ""
+        if 'readonly' in self.options:
+            return "const %s" % (self.options.get('objtype') or "")
+        else:
+            return self.options.get('objtype') or ""
 
 class HakaAttribute(HakaData):
     def build_context(self, context):
@@ -302,6 +322,121 @@ class HakaAttribute(HakaData):
             return "<%s>" % (context[:-1]), context[-1]
         else:
             return None, None
+
+class HakaOperator(HakaObject):
+    typename = l_("operator")
+
+    doc_field_types = [
+        TypedField('parameter', label=l_('Parameters'),
+                   names=('param', 'parameter', 'arg', 'argument'),
+                   typerolename='obj', typenames=('paramtype', 'type')),
+        TypedField('returnvalues', label=l_('Returns'),
+                  names=('return', 'ret'), typerolename='obj',
+                  typenames=('rtype', 'type')),
+        Field('returnvalue', label=l_('Returns'), has_arg=False,
+              names=('returns')),
+        Field('returntype', label=l_('Return type'), has_arg=False,
+              names=('returntype',)),
+    ]
+
+    lua_signature_unary_re = re.compile(
+        r'''^ ([\+\-\*/<>=\#]+) \s*   # operator
+              ([\w\./\-]+)            # class name(s)
+              (?:\s* -> \s* (.*))?    # optional: return annotation
+              $                       # and nothing more
+              ''', re.VERBOSE)
+
+    lua_signature_binary_re = re.compile(
+        r'''^ ([\w\./\-]+)            # class name(s)
+              \s* ([\+\-\*/<>=]+) \s* # operator
+              ([\w\./\-]+)?           # class name(s)
+              (?:\s* -> \s* (.*))?    # optional: return annotation
+              $                       # and nothing more
+              ''', re.VERBOSE)
+
+    lua_signature_index_re = re.compile(
+        r'''^ ([\w\./\-]+)            # class name(s)
+              (\[)(.*)(\])            # arguments
+              (?:\s* -> \s* (.*))?    # optional: return annotation
+              $                       # and nothing more
+              ''', re.VERBOSE)
+
+    lua_signature_newindex_re = re.compile(
+        r'''^ ([\w\./\-]+)            # class name(s)
+              (\[)(.*)(\])            # arguments
+              \s* = \s* (.*)          # return annotation
+              $                       # and nothing more
+              ''', re.VERBOSE)
+
+    def parse_signature(self, sig):
+        m = HakaOperator.lua_signature_unary_re.match(sig)
+        if m:
+            name, context, retann = m.groups()
+            self.type = 'unary'
+            return context, name, None, None, None, retann
+
+        m = HakaOperator.lua_signature_binary_re.match(sig)
+        if m:
+            context, name, _, retann = m.groups()
+            self.type = 'binary'
+            return context, name, None, None, None, retann
+
+        m = HakaOperator.lua_signature_index_re.match(sig)
+        if m:
+            context, argstart, arglist, argend, retann = m.groups()
+            self.type = 'index'
+            return context, '[]', argstart, arglist, argend, retann
+
+        m = HakaOperator.lua_signature_newindex_re.match(sig)
+        if m:
+            context, argstart, arglist, argend, retann = m.groups()
+            self.type = 'newindex'
+            return context, '[]', argstart, arglist, argend, retann
+
+        raise ValueError
+
+    def build_context(self, context):
+        if context:
+            return "<%s>" % (context), ''
+        else:
+            return None, None
+
+    def build_objtype(self):
+        return self.options.get('objtype') or ""
+
+    def build_signode(self, signode):
+        if self.type == 'unary':
+            signode += addnodes.desc_name(self.name, self.name)
+
+            context = self.context + self.contextsep
+            signode += addnodes.desc_addname(context, context)
+
+            if self.retann:
+                signode += addnodes.desc_returns(self.retann, self.retann)
+
+        elif self.type == 'binary':
+            context = self.context + self.contextsep
+            name = " %s " % (self.name)
+
+            signode += addnodes.desc_addname(context, context)
+            signode += addnodes.desc_name(name, name)
+            signode += addnodes.desc_addname(context, context)
+
+            if self.retann:
+                signode += addnodes.desc_returns(self.retann, self.retann)
+
+        elif self.type == 'index' or self.type == 'newindex':
+            context = self.context + self.contextsep
+            signode += addnodes.desc_addname(context, context)
+
+            self.build_parameters(signode)
+
+            if self.retann:
+                if self.type == 'newindex':
+                    retann = " = %s" % (self.retann)
+                    signode += addnodes.desc_type(retann, retann)
+                else:
+                    signode += addnodes.desc_returns(self.retann, self.retann)
 
 
 class HakaModule(Directive):
@@ -470,6 +605,7 @@ class HakaDomain(Domain):
         'attribute':     ObjType(l_('attribute'),  'data',   'obj'),
         'function':      ObjType(l_('function'),   'func',   'obj'),
         'method':        ObjType(l_('method'),     'func',   'obj'),
+        'operator':      ObjType(l_('operator'),   'func',   'obj'),
         'module':        ObjType(l_('module'),     'mod',    'obj'),
         'data':          ObjType(l_('data'),       'data',   'obj'),
     }
@@ -479,6 +615,7 @@ class HakaDomain(Domain):
         'dissector':       HakaDissector,
         'function':        HakaFunction,
         'method':          HakaMethod,
+        'operator':        HakaOperator,
         'data':            HakaData,
         'attribute':       HakaAttribute,
         'module':          HakaModule,
