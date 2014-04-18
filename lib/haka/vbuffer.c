@@ -1620,7 +1620,6 @@ bool vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, clone_m
 
 			switch (mode) {
 			case CLONE_COPY:
-				clone->flags.writable = true;
 				break;
 			case CLONE_RO_CLONE:
 				clone->flags.writable = false;
