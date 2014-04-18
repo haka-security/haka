@@ -1,6 +1,6 @@
 debug dns: selecting dns dissector on flow
 debug cnx: opening connection 172.16.3.38:38360 -> 172.16.13.5:53
-DNS REQUEST
+DNS QUERY
 class Result {
   additional : class ArrayResult {
   }
@@ -8,26 +8,23 @@ class Result {
   }
   authority : class ArrayResult {
   }
-  header : class Result {
-    aa : false
-    ancount : 0
-    arcount : 0
-    id : 23936
-    nscount : 0
-    opcode : 0
-    qdcount : 1
-    qr : false
-    ra : false
-    rcode : 0
-    rd : true
-    tc : false
-    z : 0
-  }
+  aa : false
+  ancount : 0
+  arcount : 0
+  id : 23936
+  nscount : 0
+  opcode : 0
+  qdcount : 1
+  qr : false
   question : class Result {
     class : 1
     name : "haka-security.org."
     type : "A"
   }
+  ra : false
+  rcode : 0
+  rd : true
+  tc : false
 }
 DNS RESPONSE
 class Result {
@@ -215,30 +212,27 @@ class Result {
       type : "NS"
     }
   }
-  header : class Result {
-    aa : false
-    ancount : 6
-    arcount : 11
-    id : 23936
-    nscount : 6
-    opcode : 0
-    qdcount : 1
-    qr : true
-    ra : true
-    rcode : 0
-    rd : true
-    tc : false
-    z : 0
-  }
+  aa : false
+  ancount : 6
+  arcount : 11
+  id : 23936
+  nscount : 6
+  opcode : 0
+  qdcount : 1
+  qr : true
   question : class Result {
     class : 1
     name : "haka-security.org."
     type : "A"
   }
+  ra : true
+  rcode : 0
+  rd : true
+  tc : false
 }
 debug dns: selecting dns dissector on flow
 debug cnx: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
-DNS REQUEST
+DNS QUERY
 class Result {
   additional : class ArrayResult {
   }
@@ -246,26 +240,23 @@ class Result {
   }
   authority : class ArrayResult {
   }
-  header : class Result {
-    aa : false
-    ancount : 0
-    arcount : 0
-    id : 60714
-    nscount : 0
-    opcode : 0
-    qdcount : 1
-    qr : false
-    ra : false
-    rcode : 0
-    rd : true
-    tc : false
-    z : 0
-  }
+  aa : false
+  ancount : 0
+  arcount : 0
+  id : 60714
+  nscount : 0
+  opcode : 0
+  qdcount : 1
+  qr : false
   question : class Result {
     class : 1
     name : "haka-security.org."
     type : "SOA"
   }
+  ra : false
+  rcode : 0
+  rd : true
+  tc : false
 }
 DNS RESPONSE
 class Result {
@@ -419,30 +410,27 @@ class Result {
       type : "NS"
     }
   }
-  header : class Result {
-    aa : false
-    ancount : 1
-    arcount : 11
-    id : 60714
-    nscount : 6
-    opcode : 0
-    qdcount : 1
-    qr : true
-    ra : true
-    rcode : 0
-    rd : true
-    tc : false
-    z : 0
-  }
+  aa : false
+  ancount : 1
+  arcount : 11
+  id : 60714
+  nscount : 6
+  opcode : 0
+  qdcount : 1
+  qr : true
   question : class Result {
     class : 1
     name : "haka-security.org."
     type : "SOA"
   }
+  ra : true
+  rcode : 0
+  rd : true
+  tc : false
 }
 debug dns: selecting dns dissector on flow
 debug cnx: opening connection 172.16.3.38:51292 -> 172.16.13.5:53
-DNS REQUEST
+DNS QUERY
 class Result {
   additional : class ArrayResult {
   }
@@ -450,26 +438,23 @@ class Result {
   }
   authority : class ArrayResult {
   }
-  header : class Result {
-    aa : false
-    ancount : 0
-    arcount : 0
-    id : 32893
-    nscount : 0
-    opcode : 0
-    qdcount : 1
-    qr : false
-    ra : false
-    rcode : 0
-    rd : true
-    tc : false
-    z : 0
-  }
+  aa : false
+  ancount : 0
+  arcount : 0
+  id : 32893
+  nscount : 0
+  opcode : 0
+  qdcount : 1
+  qr : false
   question : class Result {
     class : 1
     name : "arkoon.net."
     type : "MX"
   }
+  ra : false
+  rcode : 0
+  rd : true
+  tc : false
 }
 DNS RESPONSE
 class Result {
@@ -517,30 +502,27 @@ class Result {
       type : "NS"
     }
   }
-  header : class Result {
-    aa : false
-    ancount : 1
-    arcount : 2
-    id : 32893
-    nscount : 2
-    opcode : 0
-    qdcount : 1
-    qr : true
-    ra : true
-    rcode : 0
-    rd : true
-    tc : false
-    z : 0
-  }
+  aa : false
+  ancount : 1
+  arcount : 2
+  id : 32893
+  nscount : 2
+  opcode : 0
+  qdcount : 1
+  qr : true
   question : class Result {
     class : 1
     name : "arkoon.net."
     type : "MX"
   }
+  ra : true
+  rcode : 0
+  rd : true
+  tc : false
 }
 debug dns: selecting dns dissector on flow
 debug cnx: opening connection 172.16.3.38:37869 -> 172.16.13.5:53
-DNS REQUEST
+DNS QUERY
 class Result {
   additional : class ArrayResult {
   }
@@ -548,26 +530,23 @@ class Result {
   }
   authority : class ArrayResult {
   }
-  header : class Result {
-    aa : false
-    ancount : 0
-    arcount : 0
-    id : 47997
-    nscount : 0
-    opcode : 0
-    qdcount : 1
-    qr : false
-    ra : false
-    rcode : 0
-    rd : true
-    tc : false
-    z : 0
-  }
+  aa : false
+  ancount : 0
+  arcount : 0
+  id : 47997
+  nscount : 0
+  opcode : 0
+  qdcount : 1
+  qr : false
   question : class Result {
     class : 1
     name : "paulfariello.fr."
     type : "TXT"
   }
+  ra : false
+  rcode : 0
+  rd : true
+  tc : false
 }
 DNS RESPONSE
 class Result {
@@ -660,26 +639,23 @@ class Result {
       type : "NS"
     }
   }
-  header : class Result {
-    aa : false
-    ancount : 1
-    arcount : 5
-    id : 47997
-    nscount : 5
-    opcode : 0
-    qdcount : 1
-    qr : true
-    ra : true
-    rcode : 0
-    rd : true
-    tc : false
-    z : 0
-  }
+  aa : false
+  ancount : 1
+  arcount : 5
+  id : 47997
+  nscount : 5
+  opcode : 0
+  qdcount : 1
+  qr : true
   question : class Result {
     class : 1
     name : "paulfariello.fr."
     type : "TXT"
   }
+  ra : true
+  rcode : 0
+  rd : true
+  tc : false
 }
 debug cnx: closing connection 172.16.3.38:37869 -> 172.16.13.5:53
 debug cnx: closing connection 172.16.3.38:51292 -> 172.16.13.5:53

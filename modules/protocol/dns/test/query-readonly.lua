@@ -8,7 +8,7 @@ dns.install_udp_rule(53)
 
 haka.rule {
 	hook = haka.event('dns', 'response'),
-	eval = function (dns, response, request)
-		request.header.id = 0x2811
+	eval = function (dns, response, query)
+		query.id = 0x2811
 	end
 }

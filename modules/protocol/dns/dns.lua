@@ -294,12 +294,12 @@ dns_dissector.states.message = dns_dissector.states:state{
 	up = function (context, res, payload, pkt)
 		local self = context.dns
 		self:trigger("query", res)
-		dns_pending_queries[res.header['id']] = res
+		dns_pending_queries[res.id] = res
 		res._data = self.flow:send(pkt, payload, true)
 	end,
 	down = function (context, res, payload, pkt)
 		local self = context.dns
-		local id = res.header['id']
+		local id = res.id
 		local query = dns_pending_queries[id]
 		if not query then
 			haka.alert{

@@ -8,9 +8,9 @@ dns.install_udp_rule(53)
 
 haka.rule {
 	hook = haka.event('dns', 'query'),
-	eval = function (dns, request)
-		print("DNS REQUEST")
-		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
+	eval = function (dns, query)
+		print("DNS QUERY")
+		debug.pprint(query, nil, nil, { debug.hide_underscore, debug.hide_function })
 	end
 }
 
