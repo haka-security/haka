@@ -16,7 +16,7 @@ Haka core will trigger various events emitted by dissectors for instance. This e
 the user to place rules to verify some property and react if needed.
 
 To get the list of supported events and for each of them their parameters, check the documentation
-of the protocol dissectors (:doc:`extmodules`).
+of the protocol dissectors (:doc:`hakadissector`).
 
 .. haka:function:: event(dissector, event) -> event
 
