@@ -262,9 +262,6 @@ class HakaClass(HakaObject):
         if self.names:
             self.env.temp_data['haka:class'] = None
 
-class HakaDissector(HakaClass):
-    typename = l_("dissector")
-
 class HakaFunction(HakaObject):
     typename = l_("function")
 
@@ -601,7 +598,6 @@ class HakaDomain(Domain):
     label = 'Haka'
     object_types = {
         'class':         ObjType(l_('class'),      'class',  'obj'),
-        'dissector':     ObjType(l_('dissector'),  'class',  'obj'),
         'attribute':     ObjType(l_('attribute'),  'data',   'obj'),
         'function':      ObjType(l_('function'),   'func',   'obj'),
         'method':        ObjType(l_('method'),     'func',   'obj'),
@@ -612,7 +608,6 @@ class HakaDomain(Domain):
 
     directives = {
         'class':           HakaClass,
-        'dissector':       HakaDissector,
         'function':        HakaFunction,
         'method':          HakaMethod,
         'operator':        HakaOperator,
