@@ -19,4 +19,5 @@ Welcome to Haka's Reference Guide!
     rule.rst
     grammar.rst
     state_machine.rst
+    class.rst
     dissector.rst
