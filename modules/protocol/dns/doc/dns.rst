@@ -101,7 +101,7 @@ Events
     
     Event triggered whenever a new HTTP request is received.
 
-.. haka:function:: dns.events.response(dns, response)
+.. haka:function:: dns.events.response(dns, response, query)
     :module:
     :objtype: event
     
@@ -109,6 +109,8 @@ Events
     :paramtype dns: :haka:class:`DnsDissector`
     :param response: Dns response message.
     :paramtype response: :haka:class:`DnsResult`
+    :param query: Dns query message associated with the response.
+    :paramtype query: :haka:class:`DnsResult`
     
     Event triggered whenever a new HTTP response is received.
 
