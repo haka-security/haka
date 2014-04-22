@@ -389,6 +389,13 @@ class HakaOperator(HakaObject):
               $                       # and nothing more
               ''', re.VERBOSE)
 
+    lua_signature_convert_re = re.compile(
+        r'''^ ([\w/\-/]+) \s*         # thing name
+              \( ([\w\./\-]+) \)      # class name(s)
+              (?:\s* -> \s* (.*))?    # optional: return annotation
+              $                       # and nothing more
+              ''', re.VERBOSE)
+
     def parse_signature(self, sig):
         m = HakaOperator.lua_signature_unary_re.match(sig)
         if m:
@@ -413,6 +420,12 @@ class HakaOperator(HakaObject):
             context, argstart, arglist, argend, retann = m.groups()
             self.type = 'newindex'
             return context, '[]', argstart, arglist, argend, retann
+
+        m = HakaOperator.lua_signature_convert_re.match(sig)
+        if m:
+            name, context, retann = m.groups()
+            self.type = 'convert'
+            return context, name, None, None, None, retann
 
         raise ValueError
 
@@ -458,6 +471,19 @@ class HakaOperator(HakaObject):
                     signode += addnodes.desc_type(retann, retann)
                 else:
                     signode += addnodes.desc_returns(self.retann, self.retann)
+
+        elif self.type == 'convert':
+            context = self.context + self.contextsep
+
+            signode += addnodes.desc_name(self.name, self.name)
+
+            paramlist = _desc_parameterlist('(', ')')
+            paramlist.append(addnodes.desc_addname(context, context))
+            signode.append(paramlist)
+
+            if self.retann:
+                signode += addnodes.desc_returns(self.retann, self.retann)
+
 
 
 class HakaModule(Directive):
