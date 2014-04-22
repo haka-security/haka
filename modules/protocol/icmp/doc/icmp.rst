@@ -18,14 +18,14 @@ ICMP
 
     Dissector data for an ICMP packet.
 
-    .. haka:function:: create(ip[, init]) -> tcmp
+    .. haka:function:: create(ip[, init]) -> icmp
 
         :param ip: IPv4 packet.
         :paramtype ip: :haka:class:`Ipv4Dissector`
         :param init: Optional initialization data.
         :paramtype init: table
-        :return tcp: Created packet.
-        :rtype tcp: :haka:class:`IcmpDissector`
+        :return icmp: Created packet.
+        :rtype icmp: :haka:class:`IcmpDissector`
     
         Create a new ICMP packet on top of the given IP packet.
 
@@ -37,7 +37,7 @@ ICMP
         
         ICMP fields.
 
-    .. haka:attribute:: payload
+    .. haka:attribute:: IcmpDissector:payload
 
         :type: :haka:class:`vbuffer` |nbsp|
         

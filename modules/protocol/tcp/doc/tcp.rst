@@ -74,7 +74,10 @@ TCP
 
         IPv4 packet.
 
-    .. haka:method:: TcpDissector:verify_checksum()
+    .. haka:method:: TcpDissector:verify_checksum() -> correct
+
+        :return correct: ``true`` if the checksum is correct.
+        :rtype correct: boolean
 
         Verify if the checksum is correct.
 
