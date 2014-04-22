@@ -312,7 +312,8 @@ dns_dissector.states.message = dns_dissector.states:state{
 		local self = context.dns
 		self:trigger("query", res)
 		dns_pending_queries[res.id] = res
-		res._data = self.flow:send(pkt, payload, true)
+		self.flow:send(pkt, payload, true)
+		res._data = payload
 	end,
 	down = function (context, res, payload, pkt)
 		local self = context.dns
@@ -327,7 +328,7 @@ dns_dissector.states.message = dns_dissector.states:state{
 		else
 			self:trigger("response", res, query)
 			dns_pending_queries[id] = nil
-			res._data = self.flow:send(pkt, payload, true)
+			self.flow:send(pkt, payload)
 		end
 	end,
 }

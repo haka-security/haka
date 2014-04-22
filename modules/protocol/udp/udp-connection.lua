@@ -131,7 +131,7 @@ function udp_connection_dissector.method:emit(pkt, direction)
 end
 
 function udp_connection_dissector.method:send(pkt, payload, clone)
-	pkt._restore:restore(payload, clone)
+	pkt._restore:restore(payload, clone or false)
 	pkt:send()
 end
 
