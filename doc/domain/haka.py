@@ -105,7 +105,7 @@ class HakaObject(ObjectDescription):
     }
 
     lua_signature_re = re.compile(
-        r'''^ ([\w\./\-]+[:.])?       # class name(s)
+        r'''^ ([\w\.\:/\-]+[:.])?     # class name(s)
               ([\w/\-/]+)  \s*        # thing name
               (?: ([({])(.*)([)}]))?  # optional: arguments
               (?:\s* -> \s* (.*))?    # optional: return annotation
@@ -131,7 +131,7 @@ class HakaObject(ObjectDescription):
             return None, None
 
     def parse_signature(self, sig):
-        m = HakaObject.lua_signature_re.match(sig)
+        m = self.__class__.lua_signature_re.match(sig)
         if m is None:
             raise ValueError
 
@@ -326,9 +326,21 @@ class HakaData(HakaObject):
             return self.options.get('objtype') or ""
 
 class HakaAttribute(HakaData):
+    lua_class_re = re.compile(
+        r'''([\w\./\-]+):([\w\./\-]+)?
+        ''', re.VERBOSE)
+
     def build_context(self, context):
         if context:
-            return "<%s>" % (context[:-1]), context[-1]
+            m = HakaAttribute.lua_class_re.match(context[:-1])
+            if m:
+                classname, subcontext = m.groups()
+                if subcontext:
+                    return "<%s>.%s" % (classname, subcontext), '.'
+                else:
+                    return "<%s>" % (classname), '.'
+            else:
+                return "<%s>" % (context[:-1]), '.'
         else:
             return None, None
 
