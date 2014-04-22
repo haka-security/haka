@@ -19,6 +19,13 @@
 typedef uint32 vbsize_t;
 struct vbuffer_data;
 
+typedef enum {
+	CLONE_COPY,
+	CLONE_RW,
+	CLONE_RO_ORIG,
+	CLONE_RO_CLONE,
+} clone_mode;
+
 struct vbuffer_data_ops {
 	void   (*free)(struct vbuffer_data *data);
 	void   (*addref)(struct vbuffer_data *data);
@@ -132,13 +139,13 @@ size_t        vbuffer_sub_write(struct vbuffer_sub *data, const uint8 *ptr, size
 const uint8  *vbuffer_sub_flatten(struct vbuffer_sub *data, size_t *size);
 bool          vbuffer_sub_compact(struct vbuffer_sub *data);
 bool          vbuffer_sub_isflat(struct vbuffer_sub *data);
-bool          vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, bool copy);
+bool          vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, clone_mode mode);
 
 uint8        *vbuffer_mmap(struct vbuffer_sub *data, size_t *len, bool write, struct vbuffer_sub_mmap *mmap_iter, struct vbuffer_iterator *iter);
 bool          vbuffer_zero(struct vbuffer_sub *data);
 bool          vbuffer_extract(struct vbuffer_sub *data, struct vbuffer *buffer);
 bool          vbuffer_select(struct vbuffer_sub *data, struct vbuffer *buffer, struct vbuffer_iterator *ref);
-bool          vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data);
+bool          vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data, bool clone);
 bool          vbuffer_erase(struct vbuffer_sub *data);
 bool          vbuffer_replace(struct vbuffer_sub *data, struct vbuffer *buffer);
 

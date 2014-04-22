@@ -34,7 +34,7 @@ function events.EventConnections.method:signal(emitter, event, ...)
 
 		for _, listener in ipairs(listeners) do
 			self:_signal(event, listener, emitter, ...)
-			event.continue(emitter)
+			event.continue(emitter, ...)
 		end
 	end
 

@@ -562,7 +562,14 @@ function grammar_dg.ArrayStart.method:_apply(ctx)
 		local result = self.resultclass:new()
 		result:_init(ctx.iter:copy(), self.entity, self.create)
 		local array = ctx:push(result, self.name)
-		res[self.name] = array
+
+		if self.converter then
+			res:addproperty(self.name,
+				function (this) return self.converter.get(array) end
+			)
+		else
+			res[self.name] = array
+		end
 	else
 		ctx:push({}, nil)
 	end
@@ -983,6 +990,11 @@ function grammar.converter.tonumber(format, base)
 	}
 end
 
+grammar.converter.string = {
+	get = function (x) return x:asstring() end,
+	set = function (x) return x end
+}
+
 
 --
 -- Grammar description
@@ -1078,13 +1090,14 @@ function grammar.Record.method:compile(rule, id)
 
 	for i, entity in ipairs(self.entities) do
 		local next = entity:compile(self.rule or rule, i)
-
-		if iter then
-			iter:add(next)
-			iter = next
-		else
-			ret = next
-			iter = ret
+		if next then
+			if iter then
+				iter:add(next)
+				iter = next
+			else
+				ret = next
+				iter = ret
+			end
 		end
 	end
 
@@ -1111,8 +1124,11 @@ function grammar.Union.method:compile(rule, id)
 	local ret = grammar_dg.UnionStart:new(self.named, self.rule)
 
 	for i, value in ipairs(self.entities) do
-		ret:add(value:compile(self.rule or rule, i))
-		ret:add(grammar_dg.UnionRestart:new())
+		local next = value:compile(self.rule or rule, i)
+		if next then
+			ret:add(next)
+			ret:add(grammar_dg.UnionRestart:new())
+		end
 	end
 
 	ret:add(grammar_dg.UnionFinish:new(self.named))
@@ -1134,7 +1150,10 @@ function grammar.Branch.method:compile(rule, id)
 	local ret = grammar_dg.Branch:new(self.selector)
 	for key, value in pairs(self.cases) do
 		if key ~= 'default' then
-			ret:case(key, value:compile(self.rule or rule, key))
+			local next = value:compile(self.rule or rule, key)
+			if next then
+				ret:case(key, next)
+			end
 		end
 	end
 
@@ -1142,7 +1161,10 @@ function grammar.Branch.method:compile(rule, id)
 	if default == 'error' then
 		ret._next = grammar_dg.Error:new(self.rule or rule, "invalid case")
 	elseif default ~= 'continue' then
-		ret._next = default:compile(self.rule or rule, 'default')
+		local next = default:compile(self.rule or rule, 'default')
+		if next then
+			ret._next = next
+		end
 	end
 
 	return ret
@@ -1157,7 +1179,11 @@ end
 
 function grammar.Array.method:compile(rule, id)
 	local entity = self.entity:compile(self.rule or rule, id)
+	if not entity then
+		error("cannot create an array of empty element")
+	end
 	local start = grammar_dg.ArrayStart:new(self.named, self.rule, entity, self.create, self.resultclass)
+	if self.converter then start:convert(self.converter, self.memoize) end
 	local finish = grammar.ResultPop:new()
 
 	local pop = grammar_dg.ArrayPop:new()
@@ -1315,6 +1341,21 @@ function grammar.Release.method:compile(rule, id)
 	return grammar_dg.Release:new()
 end
 
+grammar.Empty = class('Empty', grammar.Entity)
+
+function grammar.Empty.method:compile(rule, id)
+	return nil
+end
+
+grammar.Error = class('Error', grammar.Entity)
+
+function grammar.Error.method:__init(msg)
+	self.msg = msg
+end
+
+function grammar.Error.method:compile(rule, id)
+	return grammar_dg.Error:new(id, self.msg)
+end
 
 function grammar.record(entities)
 	return grammar.Record:new(entities)
@@ -1398,6 +1439,15 @@ end
 
 grammar.release = grammar.Release:new()
 
+function grammar.empty()
+	return grammar.Empty:new()
+end
+
+function grammar.error(msg)
+	return grammar.Error:new(msg)
+end
+
+grammar.text = grammar.bytes():convert(grammar.converter.string, true)
 
 --
 -- Grammar

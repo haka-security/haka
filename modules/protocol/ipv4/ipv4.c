@@ -199,7 +199,7 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 		if (ip->invalid_checksum)
 			ipv4_compute_checksum(ip);
 
-		vbuffer_restore(&ip->select, &ip->payload);
+		vbuffer_restore(&ip->select, &ip->payload, false);
 
 		ip->packet = NULL;
 		return packet;

@@ -227,7 +227,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
 			}
 			else {
-				vbuffer_restore(&tcp->select, &tcp->payload);
+				vbuffer_restore(&tcp->select, &tcp->payload, false);
 			}
 
 			/* 'packet' is ready to be sent, prepare the next tcp packet
@@ -277,7 +277,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
 			}
 			else {
-				vbuffer_restore(&tcp->select, &tcp->payload);
+				vbuffer_restore(&tcp->select, &tcp->payload, false);
 			}
 
 			tcp->packet = NULL;

@@ -59,6 +59,10 @@ function dissector.Dissector.method:trigger(signal, ...)
 	haka.context:signal(self, classof(self).events[signal], ...)
 end
 
+function dissector.Dissector.method:send()
+	error("not implemented")
+end
+
 function dissector.Dissector.method:drop()
 	error("not implemented")
 end
@@ -238,6 +242,10 @@ function dissector.FlowDissector.method:connections()
 	if connections then
 		return haka.events.ObjectEventConnections:new(self, connections)
 	end
+end
+
+function dissector.FlowDissector.method:send(pkt)
+	pkt:send()
 end
 
 function dissector.FlowDissector.method:continue()
