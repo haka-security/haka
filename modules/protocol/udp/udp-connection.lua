@@ -90,12 +90,13 @@ udp_connection_dissector.states.drop = udp_connection_dissector.states:state{
 
 udp_connection_dissector.states.established = udp_connection_dissector.states:state{
 	update = function (context, pkt, direction)
-		context.flow:trigger('receive_data', pkt.payload, direction)
+		context.flow:trigger('receive_data', pkt, direction)
 
 		local next_dissector = context.flow:next_dissector()
 		if next_dissector then
-			pkt._restore, pkt.payload = pkt.payload:select()
-			return next_dissector:receive(pkt.payload, direction, pkt)
+			local payload
+			pkt._restore, payload = pkt.payload:select()
+			return next_dissector:receive(pkt, payload, direction)
 		else
 			pkt:send()
 		end
@@ -134,12 +135,16 @@ function udp_connection_dissector.method:send(pkt, payload, clone)
 	pkt:send()
 end
 
+function udp_connection_dissector.method:drop(pkt)
+	if pkt then
+		return pkt:drop()
+	else
+		return self.states:drop()
+	end
+end
+
 function udp_connection_dissector.method:continue()
 	if self.dropped then
 		haka.abort()
 	end
-end
-
-function udp_connection_dissector.method:drop()
-	self.states:drop()
 end

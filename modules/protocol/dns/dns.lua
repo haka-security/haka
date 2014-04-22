@@ -85,7 +85,7 @@ function dns_dissector.method:__init(flow)
 	self.states.dns = self
 end
 
-function dns_dissector.method:receive(payload, direction, pkt)
+function dns_dissector.method:receive(pkt, payload, direction)
 	self.states:update(payload, direction, pkt)
 end
 
@@ -285,9 +285,10 @@ dns_dissector.states:default{
 				description = string.format("invalid dns %s", err.rule),
 				severity = 'low'
 			}
-			return context.states.ERROR
+			context.dns.flow:drop(pkt)
+		else
+			return context[direction](context, res, payload, pkt)
 		end
-		return context[direction](context, res, payload, pkt)
 	end
 }
 
@@ -307,7 +308,7 @@ dns_dissector.states.message = dns_dissector.states:state{
 				description = "dns: mismatching response",
 				severity = 'low'
 			}
-			pkt:drop()
+			self.flow:drop(pkt)
 		else
 			self:trigger("response", res, query)
 			dns_pending_queries[id] = nil
