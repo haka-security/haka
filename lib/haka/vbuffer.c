@@ -1083,7 +1083,7 @@ bool vbuffer_sub_sub(struct vbuffer_sub *data, size_t offset, size_t length, str
 
 size_t vbuffer_sub_size(struct vbuffer_sub *data)
 {
-	size_t size;
+	size_t size = (size_t)-1;
 	vbuffer_sub_check_size(data, (size_t)-1, &size);
 	return size;
 }
@@ -1659,6 +1659,10 @@ int64 vbuffer_asnumber(struct vbuffer_sub *data, bool bigendian)
 	const uint8 *ptr;
 	const size_t length = vbuffer_sub_size(data);
 
+	if (length == (size_t)-1) {
+		return 0;
+	}
+
 	if (length > 8) {
 		error(L"asnumber: unsupported size %zu", length);
 		return 0;
@@ -1689,10 +1693,14 @@ int64 vbuffer_asnumber(struct vbuffer_sub *data, bool bigendian)
 		return 0;
 	}
 }
-
+#include <stdio.h>
 bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 {
 	const size_t length = vbuffer_sub_size(data);
+
+	if (length == (size_t)-1) {
+		return 0;
+	}
 
 	if (length > 8) {
 		error(L"setnumber: unsupported size %zu", length);
@@ -1784,6 +1792,10 @@ int64 vbuffer_asbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool 
 	offset &= ((1 << 3)-1);
 	assert(offset < 8);
 
+	if (length == (size_t)-1) {
+		return 0;
+	}
+
 	if (begin >= length) {
 		error(L"asbits: invalid bit offset");
 		return -1;
@@ -1840,6 +1852,10 @@ bool vbuffer_setbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool 
 		const size_t end = (offset + bits + 7) >> 3;
 		offset &= ((1 << 3)-1);
 		assert(offset < 8);
+
+		if (length == (size_t)-1) {
+			return 0;
+		}
 
 		if (begin >= length) {
 			error(L"setbits: invalid bit offset");
