@@ -281,4 +281,10 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 
 	local ipv4 = require("protocol/ipv4")
 	ipv4.register_protocol(6, tcp_dissector)
+
+	this.events = tcp_dissector.events
+
+	function this.create(ip)
+		return tcp_dissector:create(ip)
+	end
 }
