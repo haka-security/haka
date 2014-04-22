@@ -28,6 +28,16 @@ Raw
         print(#pkt.payload)
         pkt:send()
 
+    .. haka:function:: create(size = 0) -> raw
+    
+        :param size: Size of the new packet.
+        :paramtype size: number
+        :return raw: Raw dissector.
+        :rtype raw: :haka:class:`RawDissector`
+    
+        Create a new raw packet.
+    
+    
 Options
 -------
 
@@ -59,16 +69,3 @@ Events
     :paramtype pkt: :haka:class:`RawDissector`
     
     Event that is triggered just before sending a raw packet on the network.
-
-Utilities
----------
-
-.. haka:function:: create(size = 0) -> raw
-
-    :param size: Size of the new packet.
-    :paramtype size: number
-    :return raw: Raw dissector.
-    :rtype raw: :haka:class:`RawDissector`
-
-    Create a new raw packet.
-    
