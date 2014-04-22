@@ -501,3 +501,48 @@ Streams
         :type: :haka:class:`vbuffer`
 
         All data in the stream.
+
+
+Stream coroutine manager
+------------------------
+
+.. haka:class:`vbuffer_stream_comanager`
+    :module:
+
+    This class allow to execute function inside a coroutine and to be able to block transparently
+    if needed when the stream does not have enough data available.
+    
+    .. haka:method:: vbuffer_stream_comanager:start(id, f)
+
+        :param id: Identifier for the registered function.
+        :paramtype id: any
+        :param f: Function to be started.
+        :paramtype f: function
+        
+        Register and start a new function on the stream.
+    
+    .. haka:method:: vbuffer_stream_comanager:has(id) -> found
+
+        :param id: Identifier for the registered function.
+        :paramtype id: any
+        :return found: ``true`` if the id is fould inside the registered functions.
+        :rtype found: boolean
+        
+        Check if the given *id* match a registered function.
+    
+    .. haka:method:: vbuffer_stream_comanager:process(id, current)
+
+        :param id: Identifier for the registered function.
+        :paramtype id: any
+        :param current: Current position in the stream.
+        :paramtype current: :haka:class:`vbuffer_iterator`
+        
+        Resume execution for the registered *id*. This function needs to be called whenever some new
+        data are available on this stream. 
+    
+    .. haka:method:: vbuffer_stream_comanager:process_all(current)
+    
+        :param current: Current position in the stream.
+        :paramtype current: :haka:class:`vbuffer_iterator`
+        
+        Resume execution for all registered functions.
