@@ -9,7 +9,7 @@ IPv4
 
 .. haka:module:: ipv4
 
-.. haka:class:: IPv4Dissector
+.. haka:class:: Ipv4Dissector
     :module:
     :objtype: dissector
 
@@ -18,67 +18,85 @@ IPv4
     
     IP version 4 packet dissector.
 
-    .. haka:attribute:: IPv4Dissector:hdr_len
-                        IPv4Dissector:version
-                        IPv4Dissector:tos
-                        IPv4Dissector:len
-                        IPv4Dissector:id
-                        IPv4Dissector:frag_offset
-                        IPv4Dissector:ttl
-                        IPv4Dissector:proto
-                        IPv4Dissector:checksum
+    .. haka:function:: register_proto(proto, dissector)
+    
+        :param proto: IP protocol number.
+        :paramtype proto: number
+        :param dissector: Dissector to use.
+        :paramtype dissector: :haka:class:`Dissector`
+    
+        Register the dissector to associate with the given protocol IP protocol number.
+    
+    .. haka:function:: create(pkt) -> ip
+    
+        :param pkt: Lower level packet.
+        :paramtype pkt: :haka:prop
+        :return ip: Created packet.
+        :rtype ip: :haka:class:`Ipv4Dissector`
+    
+        Create a new IPv4 packet on top of a lower level packet (raw for instance).
+
+    .. haka:attribute:: Ipv4Dissector:hdr_len
+                        Ipv4Dissector:version
+                        Ipv4Dissector:tos
+                        Ipv4Dissector:len
+                        Ipv4Dissector:id
+                        Ipv4Dissector:frag_offset
+                        Ipv4Dissector:ttl
+                        Ipv4Dissector:proto
+                        Ipv4Dissector:checksum
                         
         :type: number
 
         IPv4 fields.
 
-    .. haka:attribute:: IPv4Dissector:src
-                        IPv4Dissector:dst
+    .. haka:attribute:: Ipv4Dissector:src
+                        Ipv4Dissector:dst
 
         :type: :haka:class:`addr` |nbsp|
         
         Source and destination.
 
-    .. haka:attribute:: IPv4Dissector:flags.rb
-                        IPv4Dissector:flags.df
-                        IPv4Dissector:flags.mf
+    .. haka:attribute:: Ipv4Dissector:flags.rb
+                        Ipv4Dissector:flags.df
+                        Ipv4Dissector:flags.mf
     
         :type: boolean
         
         Individual IPv4 flags.
     
-    .. haka:attribute:: IPv4Dissector.flags.all
+    .. haka:attribute:: Ipv4Dissector.flags.all
     
         :type: number
         
         All flags raw value.
 
-    .. haka:attribute:: IPv4Dissector.payload
+    .. haka:attribute:: Ipv4Dissector.payload
 
         :type: :haka:class:`vbuffer` |nbsp|
 
         Payload of the packet.
 
-    .. haka:method:: IPv4Dissector:verify_checksum() -> correct
+    .. haka:method:: Ipv4Dissector:verify_checksum() -> correct
 
         :return correct: ``true`` if the checksum is correct.
         :rtype correct: boolean
 
         Verify if the checksum is correct.
 
-    .. haka:method:: IPv4Dissector:compute_checksum()
+    .. haka:method:: Ipv4Dissector:compute_checksum()
 
         Recompute the checksum and set the resulting value in the packet.
 
-    .. haka:method:: IPv4Dissector:drop()
+    .. haka:method:: Ipv4Dissector:drop()
 
         Drop the packet.
      
-    .. haka:method:: IPv4Dissector:send()
+    .. haka:method:: Ipv4Dissector:send()
 
         Send the packet.
         
-    .. haka:method:: IPv4Dissector:inject()
+    .. haka:method:: Ipv4Dissector:inject()
 
         Inject the packet.
 
@@ -90,7 +108,7 @@ Events
     :objtype: event
     
     :param pkt: IPv4 packet.
-    :paramtype pkt: :haka:class:`IPv4Dissector`
+    :paramtype pkt: :haka:class:`Ipv4Dissector`
     
     Event that is triggered whenever a new packet is received.
 
@@ -99,31 +117,13 @@ Events
     :objtype: event
     
     :param pkt: IPv4 packet.
-    :paramtype pkt: :haka:class:`IPv4Dissector`
+    :paramtype pkt: :haka:class:`Ipv4Dissector`
     
     Event that is triggered just before sending a packet on the network.
 
 
 Utilities
 ---------
-
-.. haka:function:: register_proto(proto, dissector)
-
-    :param proto: IP protocol number.
-    :paramtype proto: number
-    :param dissector: Dissector to use.
-    :paramtype dissector: :haka:class:`Dissector`
-
-    Register the dissector to associate with the given protocol IP protocol number.
-
-.. haka:function:: create(pkt) -> ip
-
-    :param pkt: Lower level packet.
-    :paramtype pkt: :haka:prop
-    :return ip: Created packet.
-    :rtype ip: :haka:class:`IPv4Dissector`
-
-    Create a new IPv4 packet on top of a lower level packet (raw for instance).
 
 .. haka:class:: addr
     :module:
