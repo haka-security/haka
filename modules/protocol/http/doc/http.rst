@@ -14,7 +14,7 @@ Http
     :objtype: dissector
 
     :Name: ``'http'``
-    :Extend: :haka:class:`FlowDissector` |nbsp|
+    :Extend: :haka:class:`haka.dissector.FlowDissector` |nbsp|
     
     HTTP protocol dissector supporting the following features:
     
@@ -321,7 +321,7 @@ Utilities
 
     Normalize URI according to rfc 3986.
 
-    .. seealso:: :haka:func:`HttpUriSplit:normalize`
+    .. seealso:: :haka:func:`<HttpUriSplit>.normalize()`
 
 
 .. haka:module:: http.cookies

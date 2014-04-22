@@ -28,7 +28,7 @@ Class
     .. haka:method:: Class:new(...) -> instance
     
         :return instance: New instance of the class.
-        :rtype instance: :haka:class:̀`Class` instance
+        :rtype instance: :haka:class:`Class` instance
         
         Create a new instance of the class.
 

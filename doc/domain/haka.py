@@ -199,13 +199,13 @@ class HakaObject(ObjectDescription):
         ids = ['haka-%s' % (self.__class__.typename)]
         if idxctx: ids.append(idxctx)
         if self.context: ids.append(self.context)
-        elif self.module: ids.append(self.module)
+        elif self.module and self.needs_module(): ids.append(self.module)
         ids.append(names['fullname'])
 
         fullid = '.'.join(ids)
 
         fullname = []
-        if self.module: fullname.append(self.module)
+        if self.module and self.needs_module(): fullname.append(self.module)
         if self.context: fullname.append(self.context)
         fullname.append(names['fullname'])
         fullname = '.'.join(fullname)
@@ -747,12 +747,17 @@ class HakaDomain(Domain):
 
     def resolve_xref(self, env, fromdocname, builder,
                      type, target, node, contnode):
+
         modname = node.get('haka:module')
         clsname = node.get('haka:class')
         searchmode = node.hasattr('refspecific') and 1 or 0
         matches = self.find_obj(env, modname, clsname, target,
                                 type, searchmode)
+
         if not matches:
+            #env.warn_node(
+            #    'no target found for cross-reference '
+            #    '%r' % (target), node)
             return None
         elif len(matches) > 1:
             env.warn_node(

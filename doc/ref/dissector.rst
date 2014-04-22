@@ -17,7 +17,7 @@ Dissector
     :paramtype type: :haka:class:`Dissector`
     :return dissector: Created dissector. This object is a class that can be extended to implements the needed
         functions and properties.
-    :rtype dissector: :haka:class:`class.Class`
+    :rtype dissector: :haka:class:`Class`
 
     Create a new dissector.
 
@@ -71,8 +71,8 @@ Dissector
         
     .. haka:method:: Dissector:trigger(event, ...)
     
-        :param event: Event to trigger.
-        :paramtype event: :haka:class:`Event`
+        :param event: Event name to trigger.
+        :paramtype event: string
         :param ...: Parameters to pass to the event.
         
         Trigger an event.
@@ -87,7 +87,7 @@ Dissector
         :abstract:
         
         Called whenever an error is raised when inside the context of this dissector. The default
-        implementation will do a :haka:func:`drop()`.
+        implementation will do a :haka:func:`<Dissector>.drop()`.
 
     .. haka:method:: Dissector:next_dissector()
         :abstract:
@@ -260,8 +260,8 @@ Flow
 
         :param stream: Stream used as the key.
         :paramtype stream: :haka:class:`vbuffer_stream`
-        :return manager:
-        :rtype manager:
+        :return manager: Coroutine manager.
+        :rtype manager: :haka:class:`vbuffer_stream_comanager`
         
         Retreived the stream coroutine manager for a given stream.
 

@@ -14,7 +14,7 @@ Ipv4
     :objtype: dissector
 
     :Name: ``'ipv4'``
-    :Extend: :haka:class:`PacketDissector` |nbsp|
+    :Extend: :haka:class:`haka.dissector.PacketDissector` |nbsp|
     
     IP version 4 packet dissector.
 
@@ -30,7 +30,7 @@ Ipv4
     .. haka:function:: create(pkt) -> ip
     
         :param pkt: Lower level packet.
-        :paramtype pkt: :haka:prop
+        :paramtype pkt: dissector
         :return ip: Created packet.
         :rtype ip: :haka:class:`Ipv4Dissector`
     
@@ -138,7 +138,7 @@ Utilities
         :paramtype str: string
         :param addr: IP address as a number representation (ie. ``0x0100007f``)
         :paramtype addr: number
-        :param a, b, c, d: IP address as a byte representation
+        :param a,b,c,d: IP address as a byte representation
         :paramtype addr: number
         :return addr: Created address.
         :rtype addr: :haka:class:`addr`
@@ -301,7 +301,7 @@ Utilities
     .. haka:method:: cnx:drop()
     
         Mark the connection as dropped. The connection remains in the table until
-        :haka:func:`close()` is called.
+        :haka:func:`<cnx>.close()` is called.
 
 
 Example

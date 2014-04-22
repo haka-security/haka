@@ -14,7 +14,7 @@ Raw
     :objtype: dissector
 
     :Name: ``'raw'``
-    :Extend: :haka:class:`haka.PacketDissector` and :haka:class:`packet`
+    :Extend: :haka:class:`haka.dissector.PacketDissector` and :haka:class:`packet`
     
     Raw packet dissector that is used as the first dissector for any received packet.
     

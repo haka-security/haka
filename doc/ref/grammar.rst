@@ -271,7 +271,7 @@ Final elements
 .. haka:function:: token(pattern) -> entity
 
     :param pattern: Regular expression pattern for the token.
-    :paramtype pattern: size
+    :paramtype pattern: string
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
 
@@ -482,7 +482,7 @@ Compiled grammar
     .. haka:method:: CompiledGrammarEntity:parse(iter, result=nil, user=nil) -> result, error
 
         :param iter: Data iterator.
-        :paramtype iter: :haka:class:`haka.vbuffer_iterator` or :haka:class:`haka.vbuffer_iterator_blocking` instance
+        :paramtype iter: :haka:class:`vbuffer_iterator`
         :param result: Object where the parsing result will be stored. If `nil`, a generic result object will be created.
         :paramtype result: abstract table
         :param user: User object that will be stored in the parsing context.
@@ -498,7 +498,7 @@ Compiled grammar
     .. haka:method:: CompiledGrammarEntity:create(iter, result=nil, init={}) -> result, error
 
         :param iter: Data iterator.
-        :paramtype iter: :haka:class:`haka.vbuffer_iterator`
+        :paramtype iter: :haka:class:`vbuffer_iterator`
         :param result: Object where the parsing result will be stored. If `nil`, a generic result object will be created.
         :paramtype result: abstract table
         :param init: Optional initialization table.
@@ -522,7 +522,7 @@ Parsing error
 
     .. haka:attribute:: ParseError.iterator
 
-        :type: :haka:class:`haka.vbuffer_iterator`
+        :type: :haka:class:`vbuffer_iterator`
 
         Iterator at the position where the parsing error occurred.
 

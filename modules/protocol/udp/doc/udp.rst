@@ -14,7 +14,7 @@ Udp
     :objtype: dissector
 
     :Name: ``'udp'``
-    :Extend: :haka:class:`PacketDissector` |nbsp|
+    :Extend: :haka:class:`haka.dissector.PacketDissector` |nbsp|
 
     Dissector data for a UDP packet.
 

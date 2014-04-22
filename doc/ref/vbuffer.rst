@@ -211,7 +211,7 @@ Sub buffer
         :rtype buffer: :haka:class:`vbuffer`
 
         Select this sub buffer. The content is extracted from the buffer.
-        To reinsert the data, you can use :haka:func:`vbuffer_iterator:restore()`
+        To reinsert the data, you can use :haka:func:`<vbuffer_iterator>.restore()`
         with the reference iterator that is returned as the first value.
 
     .. haka:method:: vbuffer_sub:asnumber(endian = 'big') -> num
@@ -342,13 +342,13 @@ Iterator
         :paramtype data: :haka:class:`vbuffer`
 
         Restore data at the iterator position. This iterator must point to
-        the reference returned by the function :haka:func:`vbuffer_sub:select()`.
+        the reference returned by the function :haka:func:`<vbuffer_sub>.select()`.
 
     .. haka:method:: vbuffer_iterator:sub(size, split = false) -> sub
 
         :param size: Size of the requested sub buffer, ``'available'`` or ``'all'``.
         :paramtype size: number or string
-        :param split: If ``true``, a split will be inserted at the end of the sub-buffer (see :haka:func:`vbuffer_iterator:split()`).
+        :param split: If ``true``, a split will be inserted at the end of the sub-buffer (see :haka:func:`<vbuffer_iterator>.split()`).
         :paramtype split: boolean
         :return sub: Created sub buffer.
         :rtype sub: :haka:class:`vbuffer_sub`
@@ -430,7 +430,7 @@ Streams
 
     .. haka:method:: vbuffer_stream:finish()
 
-        Mark the end of the stream. Any call to :haka:func:`vbuffer_stream:push()`
+        Mark the end of the stream. Any call to :haka:func:`<vbuffer_stream>.push()`
         will result to an error.
 
     .. haka:method:: vbuffer_stream:pop() -> buffer
@@ -474,11 +474,11 @@ Streams
         :return iter: Iterator pointing to the beginning of the new added data in the stream.
         :rtype iter: :haka:class:`vbuffer_iterator`
 
-        Push some data into the stream. The sub-buffer will be extracted with a :haka:func:`vbuffer_sub:select()`.
+        Push some data into the stream. The sub-buffer will be extracted with a :haka:func:`<vbuffer_sub>.select()`.
 
     .. haka:method:: vbuffer_sub_stream:finish()
 
-        Mark the end of the stream. Any call to :haka:func:`vbuffer_sub_stream:push()`
+        Mark the end of the stream. Any call to :haka:func:`<vbuffer_sub_stream>.push()`
         will result to an error.
 
     .. haka:method:: vbuffer_sub_stream:pop() -> sub
@@ -486,7 +486,7 @@ Streams
         :return sub: Extracted data from the stream.
         :rtype sub: :haka:class:`vbuffer_sub`
 
-        Pop available data from the stream and automatically do a :haka:func:`vbuffer_iterator:restore()`.
+        Pop available data from the stream and automatically do a :haka:func:`<vbuffer_iterator>.restore()`.
 
     .. haka:attribute:: vbuffer_sub_stream.isfinished
         :readonly:
@@ -506,7 +506,7 @@ Streams
 Stream coroutine manager
 ------------------------
 
-.. haka:class:`vbuffer_stream_comanager`
+.. haka:class:: vbuffer_stream_comanager
     :module:
 
     This class allow to execute function inside a coroutine and to be able to block transparently

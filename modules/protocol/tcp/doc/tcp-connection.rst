@@ -14,7 +14,7 @@ Tcp Connection
     :objtype: dissector
 
     :Name: ``'tcp-connection'``
-    :Extend: :haka:class:`FlowDissector` |nbsp|
+    :Extend: :haka:class:`haka.dissector.FlowDissector` |nbsp|
 
     State-full dissector for TCP. It will associate each TCP packet with its matching connection
     and will build a stream from all received TCP packets.
