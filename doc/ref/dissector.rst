@@ -137,7 +137,7 @@ Packet
     
     Basic packet dissector.
     
-    .. haka:method:: PacketDissector.receive_packet(pkt)
+    .. haka:function:: PacketDissector.receive_packet(pkt)
         :module:
         :objtype: event
         
@@ -146,7 +146,7 @@ Packet
         
         Event that is triggered whenever a new packet is received.
     
-    .. haka:method:: PacketDissector.send_packet(pkt)
+    .. haka:function:: PacketDissector.send_packet(pkt)
         :module:
         :objtype: event
         

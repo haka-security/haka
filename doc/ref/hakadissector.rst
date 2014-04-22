@@ -9,7 +9,7 @@ Haka dissectors
 
 .. toctree::
 
-    ../../../modules/protocol/ipv4/doc/lua.rst
+    ../../../modules/protocol/ipv4/doc/ipv4.rst
     ../../../modules/protocol/tcp/doc/lua.rst
     ../../../modules/protocol/udp/doc/lua.rst
     ../../../modules/protocol/http/doc/lua.rst
