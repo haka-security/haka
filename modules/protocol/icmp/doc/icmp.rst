@@ -4,7 +4,7 @@
 
 .. highlightlang:: lua
 
-ICMP
+Icmp
 ====
 
 .. haka:module:: icmp

@@ -4,7 +4,7 @@
 
 .. highlightlang:: lua
 
-UDP Connection
+Udp Connection
 ==============
 
 .. haka:module:: udp-connection

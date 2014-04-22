@@ -4,7 +4,7 @@
 
 .. highlightlang:: lua
 
-TCP Connection
+Tcp Connection
 ==============
 
 .. haka:module:: tcp-connection

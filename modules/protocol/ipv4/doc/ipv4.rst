@@ -4,7 +4,7 @@
 
 .. highlightlang:: lua
 
-IPv4
+Ipv4
 ====
 
 .. haka:module:: ipv4

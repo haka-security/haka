@@ -4,7 +4,7 @@
 
 .. highlightlang:: lua
 
-HTTP
+Http
 ====
 
 .. haka:module:: http

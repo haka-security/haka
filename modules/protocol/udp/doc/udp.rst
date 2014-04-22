@@ -4,7 +4,7 @@
 
 .. highlightlang:: lua
 
-UDP
+Udp
 ===
 
 .. haka:module:: udp

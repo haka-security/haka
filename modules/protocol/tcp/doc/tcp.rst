@@ -4,7 +4,7 @@
 
 .. highlightlang:: lua
 
-TCP
+Tcp
 ===
 
 .. haka:module:: tcp
