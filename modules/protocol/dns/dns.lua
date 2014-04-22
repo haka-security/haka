@@ -335,4 +335,6 @@ dns_dissector.states.message = dns_dissector.states:state{
 
 dns_dissector.states.initial = dns_dissector.states.message
 
+module.events = dns_dissector.events
+
 return module
