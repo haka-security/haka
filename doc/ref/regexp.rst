@@ -55,11 +55,11 @@ Module
         :param pattern: Regular expression pattern.
         :paramtype pattern: string
         :param buffer: Buffer against which regular expression is matched.
-        :paramtype buffer: :haka:class:`haka.vbuffer` instance
+        :paramtype buffer: :haka:class:`vbuffer`
         :param options: Regular expression compilation options.
         :paramtype options: number
         :return match: Matching sub-buffer or nil if no match
-        :rtype match: :haka:class:`haka.vbuffer_sub` instance
+        :rtype match: :haka:class:`vbuffer_sub`
 
         Match a regular expression against a given buffer.
 
@@ -69,13 +69,13 @@ Module
         :param pattern: Regular expression pattern.
         :paramtype pattern: string
         :param buffer_iterator: Buffer iterator against which the regular expression is matched.
-        :paramtype buffer_iterator: :lua:class:`haka.vbuffer_iterator` instance
+        :paramtype buffer_iterator: :haka:class:`vbuffer_iterator`
         :param options: Regular expression compilation options.
         :paramtype options: number
         :param createsub: True if the function should build a sub-buffer.
         :paramtype createsub: boolean
         :return match: Matching sub-buffer if `createsub` is true or ``true`` or nil if no match
-        :rtype match: :haka:class:`haka.vbuffer_sub` instance
+        :rtype match: :haka:class:`vbuffer_sub`
 
         Match a regular expression against a given buffer iterator.
 
@@ -91,7 +91,7 @@ Module
         :param options: Regular expression compilation options.
         :paramtype options: number
         :return re: A compiled regexp object.
-        :rtype re: :haka:class:`regexp` instance
+        :rtype re: :haka:class:`regexp`
 
         Compile a regular expression.
 
@@ -125,9 +125,9 @@ Compiled regular expression
         :noindex:
 
         :param buffer: Buffer against which the regular expression is matched.
-        :paramtype buffer: :lua:class:`haka.vbuffer` instance
+        :paramtype buffer: :haka:class:`vbuffer`
         :return match: Matching sub-buffer or nil if no match
-        :rtype match: :haka:class:`haka.vbuffer_sub` instance
+        :rtype match: :haka:class:`vbuffer_sub`
 
         Match the compiled regular expression against a given buffer.
 
@@ -135,16 +135,16 @@ Compiled regular expression
         :noindex:
 
         :param buffer_iterator: Buffer iterator against which the regular expression is matched.
-        :paramtype buffer_iterator: :lua:class:`haka.vbuffer_iterator` instance
+        :paramtype buffer_iterator: :haka:class:`vbuffer_iterator`
         :return match: Matching sub-buffer or nil if no match
-        :rtype match: :haka:class:`haka.vbuffer_sub` instance
+        :rtype match: :haka:class:`vbuffer_sub`
 
         Match the compiled regular expression against a given buffer iterator.
 
     .. haka:method:: regexp:get_sink() -> sink
 
-        :return sink: A created regexp_sink instance.
-        :rtype sink: :haka:class:`regexp_sink` instance
+        :return sink: A created regexp_sink.
+        :rtype sink: :haka:class:`regexp_sink`
 
         Create a regular expression context that can be eventually used for matching the
         regular expression against chunks of data.
@@ -174,15 +174,15 @@ Regular expression sink
     .. haka:method:: regexp_sink:feed(buffer, eof) -> match, begin, end
 
         :param buffer: Buffer against which the regular expression is matched.
-        :paramtype buffer: :haka:class:`haka.vbuffer_sub` instance
+        :paramtype buffer: :haka:class:`vbuffer_sub`
         :param eof: True if this string is the last one.
         :paramtype eof: boolean
         :return match: Result of the matching.
         :rtype match: boolean
         :return begin: Position of the beginning of the match or nil.
-        :rtype begin: :haka:class:`haka.vbuffer_iterator` instance
+        :rtype begin: :haka:class:`vbuffer_iterator`
         :return end: Position of the end of the match or nil.
-        :rtype end: :haka:class:`haka.vbuffer_iterator` instance
+        :rtype end: :haka:class:`vbuffer_iterator`
 
         Match the compiled regular expression across multiple buffer. The `begin` and `end` result allow
         to track the position of the match.
