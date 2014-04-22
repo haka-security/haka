@@ -163,7 +163,7 @@ class HakaObject(ObjectDescription):
         self.context, self.contextsep = self.build_context(context)
         self.module = self.options.get('module', self.env.temp_data.get('haka:module'))
         self.objtype = self.build_objtype()
-        self.idxtype = self.options.get('idxtype')
+        self.idxtype = self.options.get('idxtype') or self.options.get('objtype')
         self.name = name
         self.argstart = argstart
         self.arglist = arglist
