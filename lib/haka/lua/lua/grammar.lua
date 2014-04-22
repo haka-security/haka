@@ -1140,9 +1140,9 @@ function grammar.Branch.method:compile(rule, id)
 
 	local default = self.cases.default
 	if default == 'error' then
-		ret:add(grammar_dg.Error:new(self.rule or rule, "invalid case"))
+		ret._next = grammar_dg.Error:new(self.rule or rule, "invalid case")
 	elseif default ~= 'continue' then
-		ret:add(default:compile(self.rule or rule, 'default'))
+		ret._next = default:compile(self.rule or rule, 'default')
 	end
 
 	return ret
