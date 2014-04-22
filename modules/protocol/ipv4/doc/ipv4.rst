@@ -240,6 +240,70 @@ Utilities
         Compute the final inet checksum value. This function must be called at the end
         after one or multiple calls to :haka:func:`process`.
 
+
+.. haka:class:: cnx_table
+    :module:
+    
+    Object used to create a table of connections. The connection table uses source and
+    destination IP along with some source and destination ports. Those ports can be extracted
+    from TCP or UDP for instance.
+    
+    .. haka:function:: cnx_table() -> table
+        
+        :return table: New connection table
+        :rtype table: :haka:class:`cnx_table`
+        
+        Create a new connection table.
+        
+    .. haka:method:: cnx_table:create(srcip, dstip, srcport, dstport) -> cnx
+    
+        :param srcip: Source IP.
+        :paramtype srcip: :haka:class:`addr`
+        :param dstip: Destination IP.
+        :paramtype dstip: :haka:class:`addr`
+        :param srcport: Source port.
+        :paramtype srcport: number
+        :param dstport: Destination port.
+        :paramtype dstport: number
+        :return cnx: New connection
+        :rtype cnx: :haka:class:`cnx`
+        
+        Create a new entry in the connection table.
+        
+    .. haka:method:: cnx_table:get(srcip, dstip, srcport, dstport) -> cnx
+    
+        :param srcip: Source IP.
+        :paramtype srcip: :haka:class:`addr`
+        :param dstip: Destination IP.
+        :paramtype dstip: :haka:class:`addr`
+        :param srcport: Source port.
+        :paramtype srcport: number
+        :param dstport: Destination port.
+        :paramtype dstport: number
+        :return cnx: New connection
+        :rtype cnx: :haka:class:`cnx`
+        
+        Get an entry in the connection table.
+
+.. haka:class:: cnx
+    :module:
+    
+    Object that represent a connection.
+    
+    .. haka:attribute:: cnx:data
+    
+        Data that can be used to associate any Lua object with the connection.
+        
+    .. haka:method:: cnx:close()
+    
+        Close the connection. It will be removed from the associated table.
+    
+    .. haka:method:: cnx:drop()
+    
+        Mark the connection as dropped. The connection remains in the table until
+        :haka:func:`close()` is called.
+
+
 Example
 -------
 
