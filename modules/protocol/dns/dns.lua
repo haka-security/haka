@@ -76,8 +76,12 @@ local dns_dissector = haka.dissector.new{
 	name = 'dns'
 }
 
-dns_dissector:register_event('query')
-dns_dissector:register_event('response')
+local function continue(self, res)
+	return self:continue() or res._pkt:continue()
+end
+
+dns_dissector:register_event('query', continue)
+dns_dissector:register_event('response', continue)
 
 function dns_dissector.method:__init(flow)
 	self.flow = flow
@@ -273,13 +277,24 @@ dns_dissector.states = haka.state_machine("dns")
 
 local dns_pending_queries = {}
 
+local DnsResult = class('DnsResult')
+
+function DnsResult.method:__init(dissector, pkt)
+	self._dissector = dissector
+	self._pkt = pkt
+end
+
+function DnsResult.method:drop()
+	self._dissector.flow:drop(self._pkt)
+end
+
 dns_dissector.states:default{
 	error = function (context)
 		local self = context.dns
 		self.flow:drop()
 	end,
 	update = function (context, payload, direction, pkt)
-		local res, err = dns_message:parse(payload:pos('begin'))
+		local res, err = dns_message:parse(payload:pos('begin'), DnsResult:new(context.dns, pkt))
 		if err then
 			haka.alert{
 				description = string.format("invalid dns %s", err.rule),

@@ -1,7 +1,7 @@
 debug dns: selecting dns dissector on flow
 debug cnx: opening connection 172.16.3.38:38360 -> 172.16.13.5:53
 DNS QUERY
-class Result {
+class DnsResult {
   additional : class ArrayResult {
   }
   answer : class ArrayResult {
@@ -27,7 +27,7 @@ class Result {
   tc : false
 }
 DNS RESPONSE
-class Result {
+class DnsResult {
   additional : class ArrayResult {
     1 : class Result {
       class : 1
@@ -233,7 +233,7 @@ class Result {
 debug dns: selecting dns dissector on flow
 debug cnx: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
 DNS QUERY
-class Result {
+class DnsResult {
   additional : class ArrayResult {
   }
   answer : class ArrayResult {
@@ -259,7 +259,7 @@ class Result {
   tc : false
 }
 DNS RESPONSE
-class Result {
+class DnsResult {
   additional : class ArrayResult {
     1 : class Result {
       class : 1
@@ -431,7 +431,7 @@ class Result {
 debug dns: selecting dns dissector on flow
 debug cnx: opening connection 172.16.3.38:51292 -> 172.16.13.5:53
 DNS QUERY
-class Result {
+class DnsResult {
   additional : class ArrayResult {
   }
   answer : class ArrayResult {
@@ -457,7 +457,7 @@ class Result {
   tc : false
 }
 DNS RESPONSE
-class Result {
+class DnsResult {
   additional : class ArrayResult {
     1 : class Result {
       class : 1
@@ -523,7 +523,7 @@ class Result {
 debug dns: selecting dns dissector on flow
 debug cnx: opening connection 172.16.3.38:37869 -> 172.16.13.5:53
 DNS QUERY
-class Result {
+class DnsResult {
   additional : class ArrayResult {
   }
   answer : class ArrayResult {
@@ -549,7 +549,7 @@ class Result {
   tc : false
 }
 DNS RESPONSE
-class Result {
+class DnsResult {
   additional : class ArrayResult {
     1 : class Result {
       class : 1
