@@ -79,4 +79,11 @@ const char *packet_dissector(struct packet *pkt);
 	function haka.filter(pkt)
 		raw_dissector:receive(pkt)
 	end
+
+	function this.create(size)
+		return raw_dissector:create(size)
+	end
+
+	this.events = raw_dissector.events
+	this.options = raw_dissector.options
 }
