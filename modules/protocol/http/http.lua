@@ -509,4 +509,6 @@ http_dissector.states.connect = http_dissector.states:state{
 
 http_dissector.states.initial = http_dissector.states.request
 
+module.events = http_dissector.events
+
 return module
