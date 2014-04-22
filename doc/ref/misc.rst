@@ -36,3 +36,41 @@ Exit
     :paramtype exit_func: function
 
     Registers a callback that will be called when Haka exits.
+
+Other
+-----
+
+.. haka:class:: time
+    :module:
+
+    Time object.
+    
+    .. haka:function:: time(secs) -> t
+    
+        :param secs: Number of seconds.
+        :paramtype secs: number
+        :return t: New time representation.
+        :rtype t: :haka:class:`time`
+        
+        Build a new time object.
+        
+    .. haka:attribute:: time:secs
+                        time:nsecs
+                        
+        :type: number
+        
+        Seconds and nano-seconds as integer value.
+        
+    .. haka:attribute:: time:seconds
+        :readonly:
+    
+        :type: number
+        
+        Seconds as floating point value.
+        
+    .. haka:operator:: tostring(time) -> str
+    
+        :return str: Human readable representation of the time.
+        :rtype str: string
+        
+        Convert the time to human readable form.

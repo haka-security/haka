@@ -14,9 +14,9 @@ This section introduces the Haka alerting API.
 .. haka:function:: haka.alert{param1=value1, param2=value2[, ...]} -> alert
 
     :param start_time: Start time of this alert.
-    :paramtype start_time: time
+    :paramtype start_time: :haka:class:`haka.time`
     :param end_time: End time of this alert.
-    :paramtype end_time: time
+    :paramtype end_time: :haka:class:`haka.time`
     :param description: Description.
     :paramtype description: string
     :param severity: One of ``'low'``, ``'medium'`` or ``'high'``.
