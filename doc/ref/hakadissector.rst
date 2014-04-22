@@ -14,6 +14,7 @@ Haka dissectors
     ../../../modules/protocol/icmp/doc/icmp.rst
     ../../../modules/protocol/tcp/doc/tcp.rst
     ../../../modules/protocol/tcp/doc/tcp-connection.rst
-    ../../../modules/protocol/udp/doc/lua.rst
+    ../../../modules/protocol/udp/doc/udp.rst
+    ../../../modules/protocol/udp/doc/udp-connection.rst
     ../../../modules/protocol/http/doc/http.rst
     ../../../modules/protocol/dns/doc/lua.rst
