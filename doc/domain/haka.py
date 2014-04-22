@@ -288,6 +288,18 @@ class HakaFunction(HakaObject):
         return '%s()' % (names['fullname'])
 
 class HakaMethod(HakaFunction):
+    option_spec = dict(
+        abstract=directives.flag,
+        **HakaObject.option_spec
+    )
+
+    def build_objtype(self):
+        if 'abstract' in self.options:
+            return "abstract %s" % (self.options.get('objtype') or "")
+        else:
+            return self.options.get('objtype') or ""
+
+
     def build_context(self, context):
         if context:
             return "<%s>" % (context[:-1]), context[-1]
