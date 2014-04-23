@@ -3,6 +3,7 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 -- Basic test that will create a new packet from scratch
+local raw = require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 local icmp = require("protocol/icmp")
 
@@ -18,12 +19,12 @@ haka.rule {
 			end
 			counter = counter-1
 
-			local npkt = haka.dissector.get('raw'):create()
-			npkt = haka.dissector.get('ipv4'):create(npkt)
+			local npkt = raw.create()
+			npkt = ipv4.create(npkt)
 			npkt.src = ipv4.addr(192, 168, 0, 1)
 			npkt.dst = ipv4.addr("192.168.0.2")
 
-			npkt = haka.dissector.get('icmp'):create(npkt,
+			npkt = icmp.create(npkt,
 				{ type = 6, code = 1 })
 
 			npkt:inject()

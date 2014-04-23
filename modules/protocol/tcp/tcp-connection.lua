@@ -2,6 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local raw = require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 local tcp = require("protocol/tcp")
 
@@ -442,8 +443,8 @@ function tcp_connection_dissector.method:drop()
 end
 
 function tcp_connection_dissector.method:_forgereset(direction)
-	local tcprst = haka.dissector.get('raw'):create()
-	tcprst = haka.dissector.get('ipv4'):create(tcprst)
+	local tcprst = raw.create()
+	tcprst = ipv4.create(tcprst)
 
 	if direction == 'up' then
 		tcprst.src = self.srcip
@@ -455,7 +456,7 @@ function tcp_connection_dissector.method:_forgereset(direction)
 
 	tcprst.ttl = 64
 
-	tcprst = haka.dissector.get('tcp'):create(tcprst)
+	tcprst = tcp.create(tcprst)
 
 	if direction == 'up' then
 		tcprst.srcport = self.srcport
