@@ -5,7 +5,7 @@
 local http_methods = dict({ 'get', 'post', 'head', 'put', 'trace', 'delete', 'options' })
 
 haka.rule {
-	hook = haka.event('http', 'request'),
+	hook = http.events.request,
 	eval = function (http, request)
 		local method = request.method:lower()
 		if not contains(http_methods, method) then
@@ -26,7 +26,7 @@ haka.rule {
 local http_versions = dict({ '0.9', '1.0', '1.1' })
 
 haka.rule {
-	hook = haka.event('http', 'request'),
+	hook = http.events.request,
 	eval = function (http, request)
 		if not contains(http_versions, request.version) then
 			haka.alert{
@@ -44,7 +44,7 @@ haka.rule {
 
 -- check content length value
 haka.rule {
-	hook = haka.event('http', 'request'),
+	hook = http.events.request,
 	eval = function (http, request)
 		local content_length = request.headers["Content-Length"]
 		if content_length then

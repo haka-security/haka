@@ -3,7 +3,7 @@
 ------------------------------------
 require('protocol/ipv4')
 require('protocol/tcp')
-require('protocol/tcp-connection')
+local tcp_connection = require('protocol/tcp-connection')
 
 ------------------------------------
 -- Security group
@@ -19,7 +19,7 @@ require('protocol/tcp-connection')
 -- The 'my_group' lua variable will be used to add rules to the group
 local my_group = haka.rule_group{
 	name = "my_group",
-	hook = haka.event('tcp-connection', 'new_connection'),
+	hook = tcp_connection.events.new_connection,
 	init = function (flow, pkt)
 		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d",
 			pkt.srcport, pkt.dstport)

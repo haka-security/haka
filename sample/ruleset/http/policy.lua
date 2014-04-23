@@ -4,7 +4,7 @@
 
 -- add custom user-agent
 haka.rule {
-	hook = haka.event('http', 'request'),
+	hook = http.events.request,
 	eval = function (http, request)
 		request.headers["User-Agent"] = "Haka User-Agent"
 	end
@@ -12,7 +12,7 @@ haka.rule {
 
 -- report and alert if method is different than get and post
 haka.rule {
-	hook = haka.event('http', 'request'),
+	hook = http.events.request,
 	eval = function (http, request)
 		local method = request.method:lower()
 		if method ~= 'get' and method ~= 'post' then

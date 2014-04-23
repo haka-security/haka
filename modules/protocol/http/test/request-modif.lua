@@ -7,7 +7,7 @@ local http = require("protocol/http")
 http.install_tcp_rule(80)
 
 haka.rule {
-	hook = haka.event('http', 'request'),
+	hook = http.events.request,
 	eval = function (http, request)
 		print("HTTP REQUEST")
 		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
@@ -29,7 +29,7 @@ haka.rule {
 }
 
 haka.rule {
-	hook = haka.event('http', 'response'),
+	hook = http.events.response,
 	eval = function (http, response)
 		print("HTTP RESPONSE")
 		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })

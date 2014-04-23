@@ -3,12 +3,12 @@
 local ipv4 = require("protocol/ipv4")
 
 -- load the tcp disector, this is needed to be able to track connections
-require("protocol/tcp")
-require("protocol/tcp-connection")
+local tcp = require("protocol/tcp")
+local tcp_connection = require("protocol/tcp-connection")
 
 -- rule to check packet for bad TCP checksums and reject them
 haka.rule{
-	hook = haka.event('tcp', 'receive_packet'), -- hook on tcp packets, before any sub-protocol is parsed.
+	hook = tcp.events.receive_packet, -- hook on tcp packets, before any sub-protocol is parsed.
 	eval = function (pkt)
 		-- check for bad IP checksum
 		if not pkt:verify_checksum() then
@@ -28,7 +28,7 @@ haka.rule{
 
 -- rule to add a log entry on HTTP connections to a web server
 haka.rule{
-	hook = haka.event('tcp-connection', 'new_connection'), --hook on new TCP connections.
+	hook = tcp_connection.events.new_connection, --hook on new TCP connections.
 	eval = function (flow, tcp)
 		if tcp.ip.dst == ipv4.addr("192.168.20.1") and tcp.dstport == 80 then
 			haka.log.debug("filter","Traffic on HTTP port from %s", tcp.ip.src)

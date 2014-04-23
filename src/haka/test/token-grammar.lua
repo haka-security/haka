@@ -3,7 +3,7 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 require('protocol/ipv4')
-require('protocol/tcp-connection')
+local tcp_connection = require('protocol/tcp-connection')
 
 local grammar = haka.grammar.record{
 	haka.grammar.field("word1", haka.grammar.token("[^ \r\n]+")),
@@ -14,7 +14,7 @@ local grammar = haka.grammar.record{
 
 haka.rule{
 	-- Intercept tcp packets
-	hook = haka.event('tcp-connection', 'receive_data'),
+	hook = tcp_connection.events.receive_data,
 	eval = function (flow, input, direction)
 		if direction == 'up' then
 			local ctx = class('ctx'):new()

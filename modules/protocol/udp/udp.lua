@@ -86,3 +86,10 @@ function udp_dissector:create(pkt, init)
 end
 
 ipv4.register_protocol(17, udp_dissector)
+
+return {
+	events = udp_dissector.events,
+	create = function (pkt, init)
+		return udp_dissector:create(pkt, init)
+	end
+}

@@ -7,14 +7,14 @@ local http = require("protocol/http")
 http.install_tcp_rule(80)
 
 haka.rule {
-	hook = haka.event('http', 'response'),
+	hook = http.events.response,
 	eval = function (http, response)
 		http:enable_data_modification()
 	end
 }
 
 haka.rule {
-	hook = haka.event('http', 'response_data'),
+	hook = http.events.response_data,
 	streamed = true,
 	eval = function (http, iter)
 		print("== RESPONSE DATA ==", http.request.uri)

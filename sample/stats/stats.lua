@@ -24,7 +24,7 @@ http.install_tcp_rule(80)
 --------------------------
 
 haka.rule{
-	hook = haka.event('http', 'response'),
+	hook = http.events.response,
 	eval = function (http, response)
 		local request = http.request
 		local split_uri = request.split_uri:normalize()

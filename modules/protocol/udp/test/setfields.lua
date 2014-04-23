@@ -4,10 +4,10 @@
 
 -- Basic test that will set all fields on the received packets.
 
-require("protocol/udp")
+local udp = require("protocol/udp")
 
 haka.rule {
-	hook = haka.event('udp', 'receive_packet'),
+	hook = udp.events.receive_packet,
 	eval = function (pkt)
 		pkt.srcport = 5555
 		pkt.dstport = 53

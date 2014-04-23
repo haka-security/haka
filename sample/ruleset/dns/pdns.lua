@@ -17,7 +17,7 @@ local function alert_pdns(array)
 end
 
 haka.rule {
-	hook = haka.event('dns', 'response'),
+	hook = dns.events.response,
 	eval = function (dns, response)
 		alert_pdns(response.answer)
 		alert_pdns(response.additional)

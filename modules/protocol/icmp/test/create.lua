@@ -4,13 +4,13 @@
 
 -- Basic test that will create a new packet from scratch
 local ipv4 = require("protocol/ipv4")
-require("protocol/icmp")
+local icmp = require("protocol/icmp")
 
 -- just to be safe, to avoid the test to run in an infinite loop
 local counter = 10
 
 haka.rule {
-	hook = haka.event('icmp', 'receive_packet'),
+	hook = icmp.events.receive_packet,
 	eval = function (pkt)
 		if pkt.type ~= 6 then
 			if counter == 0 then

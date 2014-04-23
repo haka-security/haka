@@ -5,14 +5,14 @@
 -- Test that will duplicate a tcp connection
 
 require("protocol/ipv4")
-require("protocol/tcp")
+local tcp = require("protocol/tcp")
 require("protocol/tcp-connection")
 
 -- just to be safe, to avoid the test to run in an infinite loop
 local counter = 10
 
 haka.rule {
-	hook = haka.event('tcp', 'receive_packet'),
+	hook = tcp.events.receive_packet,
 	eval = function (pkt)
 		if pkt.dstport == 4444 or pkt.srcport == 4444 then
 			if counter == 0 then

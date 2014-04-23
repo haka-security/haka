@@ -34,7 +34,7 @@ local safe_resources = {
 ------------------------------------
 
 sqli = haka.rule_group{
-	hook = haka.event('http', 'request'),
+	hook = httplib.events.request,
 	name = 'sqli',
 	-- Initialisation
 	init = function (http, request)

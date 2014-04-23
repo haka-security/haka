@@ -24,10 +24,10 @@ function checks(proto)
 end
 
 require("protocol/ipv4")
-require("protocol/tcp")
+local tcp = require("protocol/tcp")
 
 haka.rule {
-	hook = haka.event('tcp', 'receive_packet'),
+	hook = tcp.events.receive_packet,
 	eval = function (pkt)
 		pkt.srcport = 3
 		pkt.dstport = 65535

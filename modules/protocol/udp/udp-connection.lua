@@ -148,3 +148,7 @@ function udp_connection_dissector.method:continue()
 		haka.abort()
 	end
 end
+
+return {
+	events = udp_connection_dissector.events
+}

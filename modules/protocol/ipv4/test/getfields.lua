@@ -52,10 +52,10 @@ function frags(df, mf)
 	return dont, more
 end
 
-require("protocol/ipv4")
+local ipv4 = require("protocol/ipv4")
 
 haka.rule {
-	hook = haka.event('ipv4', 'receive_packet'),
+	hook = ipv4.events.receive_packet,
 	eval = function (pkt)
 		local good, bad, msg = checks(pkt)
 		local dont, more = frags(bool(pkt.flags.df), bool(pkt.flags.mf))

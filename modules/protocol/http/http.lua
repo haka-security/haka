@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require("protocol/tcp-connection")
+local tcp_connection = require("protocol/tcp-connection")
 
 local module = {}
 
@@ -152,7 +152,7 @@ end
 
 function module.install_tcp_rule(port)
 	haka.rule{
-		hook = haka.event('tcp-connection', 'new_connection'),
+		hook = tcp_connection.events.new_connection,
 		eval = function (flow, pkt)
 			if pkt.dstport == port then
 				haka.log.debug('http', "selecting http dissector on flow")

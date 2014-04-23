@@ -11,7 +11,7 @@ local keywords = {
 
 -- Still naive rule
 haka.rule{
-	hook = haka.event('http', 'request'),
+	hook = httplib.events.request,
 	eval = function (http, request)
 		dump_request(request)
 

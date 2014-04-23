@@ -4,13 +4,13 @@
 
 -- Basic test that will create a new packet from scratch
 local ipv4 = require("protocol/ipv4")
-require("protocol/udp")
+local udp = require("protocol/udp")
 
 -- just to be safe, to avoid the test to run in an infinite loop
 local counter = 10
 
 haka.rule {
-	hook = haka.event('udp', 'receive_packet'),
+	hook = udp.events.receive_packet,
 	eval = function (pkt)
 		if pkt.srcport ~= 3333 then
 			if counter == 0 then

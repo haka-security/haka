@@ -6,7 +6,7 @@ local client_network = ipv4.network("192.168.10.0/25");
 local server_network = ipv4.network("192.168.20.0/25");
 
 local group = haka.rule_group {
-	hook = haka.event('tcp-connection', 'new_connection'),
+	hook = tcp_connection.events.new_connection,
 	init = function (flow, pkt)
 		haka.log.debug("filter", "entering packet filtering rules : %d --> %d",
 			pkt.srcport, pkt.dstport)

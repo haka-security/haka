@@ -2,7 +2,7 @@
 -- Loading dissectors
 ------------------------------------
 require('protocol/ipv4')
-require('protocol/tcp')
+local tcp = require('protocol/tcp')
 
 ------------------------------------
 -- Only allow packets to/from port 80
@@ -11,7 +11,7 @@ require('protocol/tcp')
 haka.rule{
 	-- The hooks tells where this rule is applied. Only TCP packets will be
 	-- intecepted by this rule. Other protocol will flow.
-	hook = haka.event('tcp', 'receive_packet'),
+	hook = tcp.events.receive_packet,
 	eval = function (pkt)
 		-- The next line will generate a lua error:
 		-- there is no 'destport' field. replace 'destport' by 'dstport'

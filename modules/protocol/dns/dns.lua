@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require("protocol/udp-connection")
+local udp_connection = require("protocol/udp-connection")
 local ipv4 = require('protocol/ipv4')
 
 local module = {}
@@ -259,7 +259,7 @@ local dns_message = dns_dissector.grammar.message:compile()
 
 function module.install_udp_rule(port)
 	haka.rule{
-		hook = haka.event('udp-connection', 'new_connection'),
+		hook = udp_connection.events.new_connection,
 		eval = function (flow, pkt)
 			if pkt.dstport == port then
 				haka.log.debug('dns', "selecting dns dissector on flow")

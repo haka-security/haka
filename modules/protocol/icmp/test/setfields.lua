@@ -4,10 +4,10 @@
 
 -- Basic test that will set all fields on the received packets.
 
-require("protocol/icmp")
+local icmp = require("protocol/icmp")
 
 haka.rule {
-	hook = haka.event('icmp', 'receive_packet'),
+	hook = icmp.events.receive_packet,
 	eval = function (pkt)
 		pkt.type = 50
 		pkt.code = 12

@@ -3,7 +3,7 @@
 ------------------------------------
 
 haka.rule {
-	hook = haka.event('ipv4', 'receive_packet'),
+	hook = ipv4.events.receive_packet,
 	eval = function (pkt)
 		if pkt.src == pkt.dst and pkt.src ~= ipv4.addr("127.0.0.1") then
 			haka.alert{

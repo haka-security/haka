@@ -11,20 +11,6 @@ local dissector = {}
 
 dissector.Dissector = class('Dissector')
 
-function haka.event(dname, name)
-	local dissec = dissector.get(dname)
-	if not dissec then
-		error(string.format("unknown dissector '%s'", dname))
-	end
-
-	local event = dissec.events[name]
-	if not event then
-		error(string.format("unknown event '%s' on dissector '%s'", name, dname))
-	end
-
-	return event
-end
-
 function dissector.Dissector.__class_init(self, cls)
 	self.super:__class_init(cls)
 	cls.events = {}

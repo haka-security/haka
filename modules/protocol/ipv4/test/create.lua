@@ -10,7 +10,7 @@ local ipv4 = require("protocol/ipv4")
 local counter = 10
 
 haka.rule {
-	hook = haka.event('ipv4', 'receive_packet'),
+	hook = ipv4.events.receive_packet,
 	eval = function (pkt)
 		if pkt.proto ~= 20 then
 			if counter == 0 then

@@ -27,7 +27,7 @@ http.install_tcp_rule(80)
 -- Rule group implementing a logical 'or'
 -------------------------------------
 safe_update = haka.rule_group{
-	hook = haka.event('http', 'response'),
+	hook = http.events.response,
 
 	-- Initialization
 	init = function (http, response)
