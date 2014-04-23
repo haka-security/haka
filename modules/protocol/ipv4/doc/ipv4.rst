@@ -9,6 +9,10 @@ Ipv4
 
 .. haka:module:: ipv4
 
+Ipv4 dissector module. ::
+
+    local ipv4 = require('protocol/ipv4')
+
 .. haka:class:: Ipv4Dissector
     :module:
     :objtype: dissector

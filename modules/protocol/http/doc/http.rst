@@ -9,6 +9,10 @@ Http
 
 .. haka:module:: http
 
+Http dissector module. ::
+
+    local http = require('protocol/http')
+
 .. haka:class:: HttpDissector
     :module:
     :objtype: dissector

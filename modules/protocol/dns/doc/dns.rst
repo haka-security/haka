@@ -9,6 +9,10 @@ Dns
 
 .. haka:module:: dns
 
+Dns dissector module. ::
+
+    local dns = require('protocol/dns')
+
 .. haka:class:: DnsDissector
     :module:
     :objtype: dissector

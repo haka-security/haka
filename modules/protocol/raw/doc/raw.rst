@@ -9,6 +9,10 @@ Raw
 
 .. haka:module:: raw
 
+Raw dissector module. ::
+
+    local raw = require('protocol/raw')
+
 .. haka:class:: RawDissector
     :module:
     :objtype: dissector

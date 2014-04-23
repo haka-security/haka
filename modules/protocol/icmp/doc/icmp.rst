@@ -9,6 +9,10 @@ Icmp
 
 .. haka:module:: icmp
 
+Icmp dissector module. ::
+
+    local icmp = require('protocol/icmp')
+
 .. haka:class:: IcmpDissector
     :module:
     :objtype: dissector

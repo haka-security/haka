@@ -9,6 +9,10 @@ Udp
 
 .. haka:module:: udp
 
+Udp state-less dissector module. ::
+
+    local udp = require('protocol/udp')
+
 .. haka:class:: UdpDissector
     :module:
     :objtype: dissector

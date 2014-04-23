@@ -9,6 +9,10 @@ Tcp Connection
 
 .. haka:module:: tcp_connection
 
+Tcp state-full dissector module. ::
+
+    local tcp_connection = require('protocol/tcp_connection')
+
 .. haka:class:: TcpConnectionDissector
     :module:
     :objtype: dissector

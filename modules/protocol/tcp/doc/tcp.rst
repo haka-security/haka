@@ -9,6 +9,10 @@ Tcp
 
 .. haka:module:: tcp
 
+Tcp state-less dissector module. ::
+
+    local tcp = require('protocol/tcp')
+
 .. haka:class:: TcpDissector
     :module:
     :objtype: dissector
