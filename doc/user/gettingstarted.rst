@@ -47,7 +47,7 @@ The content of the file ``gettingstarted.lua`` is detailed below :
     :language: lua
     :tab-width: 4
 
-This script starts by loading the required protocol dissectors - namely the ipv4 and tcp modules - then specifies two security rules. The first rule is evaluated whenever a new tcp packet is captured (hook on ``tcp-up``). It allows to drop packets with invalid checksums. The second rule is triggered each time a new tcp connection is established (hook on ``tcp-connection-new``). Its only purpose is to add a log entry if the packet is addressed to a specific ip address and port.
+This script starts by loading the required protocol dissectors - namely the ipv4 and tcp modules - then specifies two security rules. The first rule is evaluated whenever a new tcp packet is captured (hook on ``tcp-up``). It allows to drop packets with invalid checksums. The second rule is triggered each time a new tcp connection is established (hook on ``tcp_connection-new``). Its only purpose is to add a log entry if the packet is addressed to a specific ip address and port.
 
 
 Going further

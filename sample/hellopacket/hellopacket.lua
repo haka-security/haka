@@ -15,7 +15,7 @@
 -- We need tcp to intercept new connectiosn
 local ipv4 = require('protocol/ipv4')
 require('protocol/tcp')
-local tcp_connection = require('protocol/tcp-connection')
+local tcp_connection = require('protocol/tcp_connection')
 
 ------------------------------------
 -- Log all incoming packets, reporting the source and destination IP address

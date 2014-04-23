@@ -7,7 +7,7 @@
 
 require("protocol/ipv4")
 local tcp = require("protocol/tcp")
-require("protocol/tcp-connection")
+require("protocol/tcp_connection")
 
 haka.rule {
 	hook = tcp.events.receive_packet,

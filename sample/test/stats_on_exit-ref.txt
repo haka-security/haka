@@ -2,20 +2,20 @@ debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
-warn tcp-connection: retransmit packet (ignored)
-warn tcp-connection: retransmit packet (ignored)
-warn tcp-connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
 debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
-warn tcp-connection: retransmit packet (ignored)
-warn tcp-connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
 debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
-warn tcp-connection: retransmit packet (ignored)
-warn tcp-connection: retransmit packet (ignored)
-warn tcp-connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
 top 10 (by default) of useragent header
 Wget/1.13.4 (linux-gnu) : 1
  : 1

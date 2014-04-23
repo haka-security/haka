@@ -7,7 +7,7 @@
 local raw = require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 local tcp = require("protocol/tcp")
-require("protocol/tcp-connection")
+require("protocol/tcp_connection")
 
 -- just to be safe, to avoid the test to run in an infinite loop
 local counter = 10

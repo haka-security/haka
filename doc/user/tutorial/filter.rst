@@ -125,7 +125,7 @@ To see the content of the packet, type ``print pkt``:
               ...
             \x1b[34;1mchecksum\x1b[0m : 417
             \x1b[34;1mres\x1b[0m : 0
-            \x1b[34;1mnext_dissector\x1b[0m : \x1b[35;1m"tcp-connection"\x1b[0m
+            \x1b[34;1mnext_dissector\x1b[0m : \x1b[35;1m"tcp_connection"\x1b[0m
             \x1b[34;1msrcport\x1b[0m : 37542
             \x1b[34;1mpayload\x1b[0m : \x1b[35;1muserdata\x1b[0m tcp_payload
             \x1b[34;1mip\x1b[0m : \x1b[36;1muserdata\x1b[0m ipv4 {

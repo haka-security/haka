@@ -7,13 +7,13 @@
 Tcp Connection
 ==============
 
-.. haka:module:: tcp-connection
+.. haka:module:: tcp_connection
 
 .. haka:class:: TcpConnectionDissector
     :module:
     :objtype: dissector
 
-    :Name: ``'tcp-connection'``
+    :Name: ``'tcp_connection'``
     :Extend: :haka:class:`haka.dissector.FlowDissector` |nbsp|
 
     State-full dissector for TCP. It will associate each TCP packet with its matching connection
@@ -59,7 +59,7 @@ Tcp Connection
 Events
 ------
 
-.. haka:function:: tcp-connection.events.new_connection(flow, tcp)
+.. haka:function:: tcp_connection.events.new_connection(flow, tcp)
     :module:
     :objtype: event
     
@@ -70,7 +70,7 @@ Events
     
     Event triggered whenever a new TCP connection is about to be created.
 
-.. haka:function:: tcp-connection.events.end_connection(flow)
+.. haka:function:: tcp_connection.events.end_connection(flow)
     :module:
     :objtype: event
     
@@ -79,7 +79,7 @@ Events
     
     Event triggered whenever a new TCP connection is being closed.
 
-.. haka:function:: tcp-connection.events.receive_data(flow, stream, current, direction)
+.. haka:function:: tcp_connection.events.receive_data(flow, stream, current, direction)
     :module:
     :objtype: event
     

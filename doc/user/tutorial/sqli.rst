@@ -24,7 +24,7 @@ All the samples are self-documented.
 
 Writing http rules
 ------------------
-To write http rules, we need first to load the ipv4, tcp and http dissectors and set the next dissector to `http` when the tcp port is equal to 80 (this is done on connection establishment thanks to the `tcp-connection-new` hook). This is the purpose of the ``httpconfig.lua`` which is required by all the samples given in this tutorial.
+To write http rules, we need first to load the ipv4, tcp and http dissectors and set the next dissector to `http` when the tcp port is equal to 80 (this is done on connection establishment thanks to the `tcp_connection-new` hook). This is the purpose of the ``httpconfig.lua`` which is required by all the samples given in this tutorial.
 
 .. highlightlang:: lua
 

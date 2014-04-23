@@ -3,7 +3,7 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 require('protocol/ipv4')
-local tcp_connection = require('protocol/tcp-connection')
+local tcp_connection = require('protocol/tcp_connection')
 
 local grammar = haka.grammar.record{
 	haka.grammar.field("word1", haka.grammar.token("[^ \r\n]+")),

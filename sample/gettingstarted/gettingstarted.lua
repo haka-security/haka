@@ -4,7 +4,7 @@ local ipv4 = require("protocol/ipv4")
 
 -- load the tcp disector, this is needed to be able to track connections
 local tcp = require("protocol/tcp")
-local tcp_connection = require("protocol/tcp-connection")
+local tcp_connection = require("protocol/tcp_connection")
 
 -- rule to check packet for bad TCP checksums and reject them
 haka.rule{
