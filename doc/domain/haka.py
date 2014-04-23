@@ -268,7 +268,7 @@ class HakaFunction(HakaObject):
     doc_field_types = [
         TypedField('parameter', label=l_('Parameters'),
                    names=('param', 'parameter', 'arg', 'argument'),
-                   typerolename='obj', typenames=('paramtype', 'type')),
+                   typerolename='obj', typenames=('paramtype', 'type', 'ptype')),
         TypedField('returnvalues', label=l_('Returns'),
                   names=('return', 'ret'), typerolename='obj',
                   typenames=('rtype', 'type')),
@@ -350,7 +350,7 @@ class HakaOperator(HakaObject):
     doc_field_types = [
         TypedField('parameter', label=l_('Parameters'),
                    names=('param', 'parameter', 'arg', 'argument'),
-                   typerolename='obj', typenames=('paramtype', 'type')),
+                   typerolename='obj', typenames=('paramtype', 'type', 'ptype')),
         TypedField('returnvalues', label=l_('Returns'),
                   names=('return', 'ret'), typerolename='obj',
                   typenames=('rtype', 'type')),
