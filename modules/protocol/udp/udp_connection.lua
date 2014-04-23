@@ -7,7 +7,7 @@ require("protocol/udp")
 
 local udp_connection_dissector = haka.dissector.new{
 	type = haka.dissector.FlowDissector,
-	name = 'udp-connection'
+	name = 'udp_connection'
 }
 
 udp_connection_dissector.cnx_table = ipv4.cnx_table()
@@ -35,10 +35,10 @@ function udp_connection_dissector:receive(pkt)
 		connection = udp_connection_dissector.cnx_table:create(udp_get_cnx_key(pkt))
 		connection.data = data
 		self:init(connection)
-		data:createnamespace('udp-connection', self)
+		data:createnamespace('udp_connection', self)
 	end
 
-	local dissector = connection.data:namespace('udp-connection')
+	local dissector = connection.data:namespace('udp_connection')
 
 	local ret, err = xpcall(function ()
 		haka.context:scope(connection.data, function ()

@@ -49,7 +49,7 @@ udp_dissector.grammar.packet = haka.grammar.record{
 }:compile()
 
 function udp_dissector.method:next_dissector()
-	return haka.dissector.get('udp-connection')
+	return haka.dissector.get('udp_connection')
 end
 
 function udp_dissector.method:parse_payload(pkt, payload)

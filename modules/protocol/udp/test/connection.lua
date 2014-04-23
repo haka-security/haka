@@ -2,11 +2,11 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
--- Basic test to check for the udp-connection dissector
+-- Basic test to check for the udp_connection dissector
 
 require("protocol/ipv4")
 require("protocol/udp")
-local udp_connection = require("protocol/udp-connection")
+local udp_connection = require("protocol/udp_connection")
 
 haka.rule{
 	hook = udp_connection.events.new_connection,

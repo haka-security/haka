@@ -7,13 +7,13 @@
 Udp Connection
 ==============
 
-.. haka:module:: udp-connection
+.. haka:module:: udp_connection
 
 .. haka:class:: UdpConnectionDissector
     :module:
     :objtype: dissector
 
-    :Name: ``'udp-connection'``
+    :Name: ``'udp_connection'``
     :Extend: :haka:class:`haka.dissector.FlowDissector` |nbsp|
 
     State-full dissector for UDP. It will associate each UDP packet with its matching connection.
@@ -41,7 +41,7 @@ Udp Connection
 Events
 ------
 
-.. haka:function:: udp-connection.events.new_connection(flow, udp)
+.. haka:function:: udp_connection.events.new_connection(flow, udp)
     :module:
     :objtype: event
     
@@ -52,7 +52,7 @@ Events
     
     Event triggered whenever a new UDP connection is about to be created.
 
-.. haka:function:: udp-connection.events.end_connection(flow)
+.. haka:function:: udp_connection.events.end_connection(flow)
     :module:
     :objtype: event
     
@@ -61,7 +61,7 @@ Events
     
     Event triggered whenever a new UDP connection is being closed.
 
-.. haka:function:: udp-connection.events.receive_data(flow, payload, direction)
+.. haka:function:: udp_connection.events.receive_data(flow, payload, direction)
     :module:
     :objtype: event
     
