@@ -42,7 +42,7 @@ Protocol elements
                         DnsDissector:ancount
                         DnsDissector:nscount
                         DnsDissector:arcount
-                        
+
         :type: number
 
         DNS fields as defined by RFC 1035.
@@ -60,9 +60,9 @@ Protocol elements
         :type: :haka:class:`DnsResourceRecord` array
 
        DNS answer, authority and additional informations.
-       
+
     .. haka:method:: DnsDissector:drop()
-    
+
         Drop the Dns message.
 
 
@@ -97,25 +97,25 @@ Events
 .. haka:function:: dns.events.query(dns, query)
     :module:
     :objtype: event
-    
+
     :param dns: DNS dissector.
     :paramtype dns: :haka:class:`DnsDissector`
     :param query: Dns query message.
     :paramtype query: :haka:class:`DnsResult`
-    
+
     Event triggered whenever a new HTTP request is received.
 
 .. haka:function:: dns.events.response(dns, response, query)
     :module:
     :objtype: event
-    
+
     :param dns: DNS dissector.
     :paramtype dns: :haka:class:`DnsDissector`
     :param response: Dns response message.
     :paramtype response: :haka:class:`DnsResult`
     :param query: Dns query message associated with the response.
     :paramtype query: :haka:class:`DnsResult`
-    
+
     Event triggered whenever a new HTTP response is received.
 
 

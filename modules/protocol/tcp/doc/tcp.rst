@@ -29,7 +29,7 @@ Tcp state-less dissector module. ::
         :paramtype ip: :haka:class:`Ipv4Dissector`
         :return tcp: Created packet.
         :rtype tcp: :haka:class:`TcpDissector`
-    
+
         Create a new TCP packet on top of the given IP packet.
 
     .. haka:attribute:: TcpDissector:srcport
@@ -43,7 +43,7 @@ Tcp state-less dissector module. ::
                         TcpDissector:urgent_pointer
 
         :type: number
-        
+
         TCP fields.
 
     .. haka:attribute:: TcpDissector:flags.fin
@@ -56,24 +56,24 @@ Tcp state-less dissector module. ::
                         TcpDissector:flags.cwr
 
         :type: boolean
-        
+
         Individual TCP flags.
 
     .. haka:attribute:: TcpDissector:flags.all
 
         :type: number
-        
+
         Raw flags value.
 
     .. haka:attribute:: payload
 
         :type: :haka:class:`vbuffer` |nbsp|
-        
+
         Payload of the packet.
 
     .. haka:attribute:: TcpDissector:ip
         :readonly:
-        
+
         :type: :haka:class:`Ipv4Dissector` |nbsp|
 
         IPv4 packet.
@@ -92,11 +92,11 @@ Tcp state-less dissector module. ::
     .. haka:method:: TcpDissector:drop()
 
         Drop the TCP packet.
-     
+
     .. haka:method:: TcpDissector:send()
 
         Send the packet.
-        
+
     .. haka:method:: TcpDissector:inject()
 
         Inject the packet.
@@ -107,19 +107,19 @@ Events
 .. haka:function:: tcp.events.receive_packet(pkt)
     :module:
     :objtype: event
-    
+
     :param pkt: TCP packet.
     :paramtype pkt: :haka:class:`TcpDissector`
-    
+
     Event that is triggered whenever a new packet is received.
 
 .. haka:function:: tcp.events.send_packet(pkt)
     :module:
     :objtype: event
-    
+
     :param pkt: TCP packet.
     :paramtype pkt: :haka:class:`TcpDissector`
-    
+
     Event that is triggered just before sending a packet on the network.
 
 
@@ -128,46 +128,46 @@ Utilities
 
 .. haka:class:: tcp_stream
     :module:
-    
+
     TCP stream helper object.
 
     .. haka:function:: tcp_stream() -> stream
-    
+
         :return stream: New TCP stream.
         :rtype stream: :haka:class:`tcp_stream`
-    
+
         Create a new TCP stream.
 
     .. haka:method:: tcp_stream:init(seq)
-    
+
         :param seq: Initial sequence number for this stream.
         :paramtype seq: number
 
         Initialize the initial sequence number of the stream.
 
     .. haka:method:: tcp_stream:push(tcp)
-    
+
         :param tcp: TCP packet.
         :paramtype tcp: :haka:class:`TcpDissector`
 
         Push a tcp packet into the stream.
 
     .. haka:method:: tcp_stream:pop() -> tcp
-    
+
         :return tcp: TCP packet.
         :rtype tcp: :haka:class:`TcpDissector`
 
         Pop a tcp packet out of the stream.
 
     .. haka:method:: tcp_stream:seq(tcp)
-    
+
         :param tcp: TCP packet.
         :paramtype tcp: :haka:class:`TcpDissector`
 
         Update the sequence number of a tcp packet.
 
     .. haka:method:: tcp_stream:ack(tcp)
-    
+
         :param tcp: TCP packet.
         :paramtype tcp: :haka:class:`TcpDissector`
 
@@ -176,16 +176,16 @@ Utilities
     .. haka:method:: tcp_stream:clear()
 
         Clear the stream and drop all remaining packet.
-        
+
     .. haka:attribute:: tcp_stream:stream
-    
+
         :type: :haka:class:`vbuffer_stream`
-        
+
         Associated raw stream.
-        
+
     .. haka:attribute:: tcp_stream:lastseq
         :readonly:
-        
+
         :type: number
-        
+
         Last received sequence number.

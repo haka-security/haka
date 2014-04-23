@@ -30,7 +30,7 @@ Icmp dissector module. ::
         :paramtype init: table
         :return icmp: Created packet.
         :rtype icmp: :haka:class:`IcmpDissector`
-    
+
         Create a new ICMP packet on top of the given IP packet.
 
     .. haka:attribute:: IcmpDissector:type
@@ -38,13 +38,13 @@ Icmp dissector module. ::
                         IcmpDissector:checksum
 
         :type: number
-        
+
         ICMP fields.
 
     .. haka:attribute:: IcmpDissector:payload
 
         :type: :haka:class:`vbuffer` |nbsp|
-        
+
         Payload of the packet.
 
 
@@ -54,17 +54,17 @@ Events
 .. haka:function:: tcp.events.receive_packet(pkt)
     :module:
     :objtype: event
-    
+
     :param pkt: ICMP packet.
     :paramtype pkt: :haka:class:`IcmpDissector`
-    
+
     Event that is triggered whenever a new packet is received.
 
 .. haka:function:: tcp.events.send_packet(pkt)
     :module:
     :objtype: event
-    
+
     :param pkt: ICMP packet.
     :paramtype pkt: :haka:class:`IcmpDissector`
-    
+
     Event that is triggered just before sending a packet on the network.

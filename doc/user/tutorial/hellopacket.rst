@@ -40,9 +40,9 @@ and destination, connection establishment, etc.):
     \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m1 rule(s) on hook 'ipv4-up'
     \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m1 rule(s) on hook 'tcp_connection-new'
     \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m2 rule(s) registered
-    
+
     \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mstarting single threaded processing
-    
+
     \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.1 to 192.168.10.99
     \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mTCP connection from 192.168.10.1:47161 to 192.168.10.99:3000
     \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mHello:\x1b[0m \x1b[0mpacket from 192.168.10.99 to 192.168.10.1

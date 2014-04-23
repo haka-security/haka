@@ -21,7 +21,7 @@ Packet
         :paramtype size: number
         :return pkt: New packet.
         :rtype pkt: :haka:class:`packet`
-    
+
         Create a new packet of the given size.
 
     .. haka:attribute:: packet.payload

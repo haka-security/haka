@@ -26,14 +26,14 @@ Udp state-full dissector module. ::
                         UdpConnectionDissector:dstip
 
         :type: :haka:class:`ipv4.addr` |nbsp|
-        
+
         Connection IP informations.
 
     .. haka:attribute:: UdpConnectionDissector:srcport
                         UdpConnectionDissector:dstport
 
         :type: number
-        
+
         Connection port informations.
 
     .. haka:method:: UdpConnectionDissector:drop()
@@ -48,32 +48,32 @@ Events
 .. haka:function:: udp_connection.events.new_connection(flow, udp)
     :module:
     :objtype: event
-    
+
     :param flow: UDP flow.
     :paramtype flow: :haka:class:`UdpConnectionDissector`
     :param udp: UDP packet.
     :paramtype udp: :haka:class:`UdpDissector`
-    
+
     Event triggered whenever a new UDP connection is about to be created.
 
 .. haka:function:: udp_connection.events.end_connection(flow)
     :module:
     :objtype: event
-    
+
     :param flow: UDP flow.
     :paramtype flow: :haka:class:`UdpConnectionDissector`
-    
+
     Event triggered whenever a new UDP connection is being closed.
 
 .. haka:function:: udp_connection.events.receive_data(flow, payload, direction)
     :module:
     :objtype: event
-    
+
     :param flow: UDP flow.
     :paramtype flow: :haka:class:`UdpConnectionDissector`
     :param payload: Payload data.
     :paramtype payload: :haka:class:`vbuffer`
     :param direction: Data direction (``'up'`` or ``'down'``).
     :paramtype direction: string
-    
+
     Event triggered when some data are available on a UDP connection.

@@ -95,7 +95,7 @@ Buffer
     .. haka:attribute:: vbuffer.modified
         :readonly:
 
-        :type: boolean 
+        :type: boolean
 
         ``true`` if the buffer has been modified, ``false`` otherwise.
 
@@ -118,7 +118,7 @@ Sub buffer
         :rtype sub: :haka:class:`vbuffer_sub`
 
         Create a sub buffer for two iterator.
-        
+
         .. note:: The two iterators must be built from the same buffer.
 
     .. haka:operator:: vbuffer_sub[index] -> byte
@@ -170,7 +170,7 @@ Sub buffer
         :paramtype data: :haka:class:`vbuffer`
 
         Replace the sub buffer by some new data.
-        
+
         .. note:: Data will be removed from the given parameter making *data* empty after this call.
 
     .. haka:method::  vbuffer_sub:isflat() -> isflat
@@ -511,38 +511,38 @@ Stream coroutine manager
 
     This class allow to execute function inside a coroutine and to be able to block transparently
     if needed when the stream does not have enough data available.
-    
+
     .. haka:method:: vbuffer_stream_comanager:start(id, f)
 
         :param id: Identifier for the registered function.
         :paramtype id: any
         :param f: Function to be started.
         :paramtype f: function
-        
+
         Register and start a new function on the stream.
-    
+
     .. haka:method:: vbuffer_stream_comanager:has(id) -> found
 
         :param id: Identifier for the registered function.
         :paramtype id: any
         :return found: ``true`` if the id is fould inside the registered functions.
         :rtype found: boolean
-        
+
         Check if the given *id* match a registered function.
-    
+
     .. haka:method:: vbuffer_stream_comanager:process(id, current)
 
         :param id: Identifier for the registered function.
         :paramtype id: any
         :param current: Current position in the stream.
         :paramtype current: :haka:class:`vbuffer_iterator`
-        
+
         Resume execution for the registered *id*. This function needs to be called whenever some new
-        data are available on this stream. 
-    
+        data are available on this stream.
+
     .. haka:method:: vbuffer_stream_comanager:process_all(current)
-    
+
         :param current: Current position in the stream.
         :paramtype current: :haka:class:`vbuffer_iterator`
-        
+
         Resume execution for all registered functions.

@@ -27,7 +27,7 @@ of the protocol dissectors (:doc:`hakadissector`).
     :return event: :haka:class:`Event`
 
     Get a dissector event.
-    
+
     .. haka:class:: Event
 
 Single Rule
@@ -45,7 +45,7 @@ Single Rule
     Register a new rule on the given event.
 
     **Options:**
-    
+
     .. haka:data:: streamed
         :module:
 
@@ -102,26 +102,26 @@ Rule Group
         :paramtype final: function
         :return group: New rule group.
         :rtype group: :haka:class:`rule_group`
-    
+
         Create a new rule group on the given event.
-        
+
         .. haka:function:: init(...)
             :noindex:
             :module:
-            
+
             :param ...: Parameter from the event.
-        
+
         .. haka:function:: continue(ret, ...) -> should_continue
             :noindex:
             :module:
-            
+
             :param ...: Parameter from the event.
-            
+
             :param ret: Result from the previous rule evaluation.
             :param ...: Parameter from the event.
             :return should_continue: ``true`` if the next rule in the group should be evaluated.
             :rtype should_continue: boolean
-        
+
         .. haka:function:: final(...)
             :noindex:
             :module:

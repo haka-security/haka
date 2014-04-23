@@ -76,7 +76,7 @@ TCP stream
 
     :returns: A tcp packet if available. This function will pop all packets that
         have data before the current position in the stream.
- 
+
 .. c:function:: void tcp_stream_init(struct stream *stream, uint32 seq)
 
     Initialize the stream sequence number. This function must be called before starting pushing packet

@@ -30,7 +30,7 @@ Udp state-less dissector module. ::
         :paramtype init: table
         :return udp: Created packet.
         :rtype udp: :haka:class:`UdpDissector`
-    
+
         Create a new UDP packet on top of the given IP packet.
 
     .. haka:attribute:: UdpDissector:srcport
@@ -39,15 +39,15 @@ Udp state-less dissector module. ::
                         UdpDissector:checksum
 
         :type: number
-        
+
         UDP fields.
 
     .. haka:attribute:: UdpDissector:payload
 
         :type: :haka:class:`vbuffer` |nbsp|
-        
+
         Payload of the packet.
-        
+
     .. haka:method:: UdpDissector:verify_checksum() -> correct
 
         :return correct: ``true`` if the checksum is correct.
@@ -62,17 +62,17 @@ Events
 .. haka:function:: udp.events.receive_packet(pkt)
     :module:
     :objtype: event
-    
+
     :param pkt: UDP packet.
     :paramtype pkt: :haka:class:`UdpDissector`
-    
+
     Event that is triggered whenever a new packet is received.
 
 .. haka:function:: udp.events.send_packet(pkt)
     :module:
     :objtype: event
-    
+
     :param pkt: UDP packet.
     :paramtype pkt: :haka:class:`UdpDissector`
-    
+
     Event that is triggered just before sending a packet on the network.

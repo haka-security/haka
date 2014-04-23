@@ -71,14 +71,14 @@ stats operations on the created table.
         Print column names of stats table.
 
     .. haka:method:: stats:dump([nb])
-    
+
         :param nb: Number of entries to display.
         :ptype nb: number
 
         Print *nb* entries of stats table.
 
     .. haka:method:: stats:top(column_name[, nb])
-    
+
         :param column_name: Column to query.
         :ptype column_name: string
         :param nb: Number of entries to display.
@@ -87,7 +87,7 @@ stats operations on the created table.
         Dump the top 10 of given field name. Limits output to *nb* if it is provided.
 
     .. haka:method:: stats:select_table(column_tab[, where])
-    
+
         :param column_name: Column to query.
         :ptype column_name: string
         :param where: Filter function called for each table line.

@@ -31,7 +31,7 @@ The configuration will define a list of dissector. Each dissector is described b
 
 .. seealso:: :haka:mod:`haka.dissector`.
 
-The dissector will give access to any fields in read/write mode. For 
+The dissector will give access to any fields in read/write mode. For
 example, once an IP packet is dissected, all fields are accessible
 by their name : IP.dst, IP.df flags, and so on.
 

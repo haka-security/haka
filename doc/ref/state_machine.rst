@@ -19,18 +19,18 @@ Description
     to do it.
 
     A state machine is a collection of states and a collections of transitions.
-    
+
     Haka automatically defines some special states:
-    
+
     * *ERROR*: error state.
     * *FINISH*: final state which will terminate the state machine instance.
-    
+
     A state is represented by an object:
-    
+
         .. haka:class:: State
 
     Haka also defines some special transitions:
-    
+
     * *init*: transition activated at machine state initialization.
     * *finish*: transition activated when quitting the state machine.
     * *enter*: transition activated when entering a new state.
@@ -39,9 +39,9 @@ Description
     * *timeout*: temporal transition.
         Those transitions are described by a table where the key is the timeout value
         in seconds.
-        
+
         Example::
-        
+
             states:default{
                 timeout = {
                     [10] = function (context)
@@ -49,13 +49,13 @@ Description
                     end
                 }
             }
-    
+
     A transition is basically a function:
-        
+
         .. haka:function:: transition(context, ...) -> new_state
             :module:
             :noindex:
-            
+
             :param context: Context of the state machine instance.
             :paramtype context: :haka:class:`state_machine_instance`
             :return new_state: Next state or nil if we should stay in the current state.
@@ -67,7 +67,7 @@ Description
         :paramtype name: string
         :return state_machine: New state machine.
         :rtype state_machine: :haka:class:`state_machine`
- 
+
         Create a new state machine.
 
     .. haka:method:: state_machine:default{...}
@@ -82,9 +82,9 @@ Description
         :rtype state: :haka:class:`State`
 
         Defines a new state and its transitions.
-        
+
     .. haka:attribute:: state_machine.initial
-    
+
         Initial state for this machine. This need to be set by the user.
 
     .. haka:method:: state_machine:instanciate() -> instance
@@ -100,37 +100,37 @@ Instance
 .. haka:class:: state_machine_instance
 
     Instance of a state machine.
-    
+
     .. haka:method:: state_machine_instance:finish()
-    
+
         Terminate the state machine.
-        
+
     .. haka:attribute:: state
         :readonly:
-        
+
         Current state.
 
     .. haka:method:: state_machine_instance:transition(...)
 
     Call a transition on the current state. The name *transition* need to be
     replaced by the name of the transition to call.
-    
+
     **Example:**
-    
+
     ::
-    
+
         local states = haka.state_machine("test")
-        
+
         states.a = states:state{
             update = function (context)
                 print("update")
             end
         }
-        
+
         states.initial = states.a
-        
+
         local instance = states:instanciate()
-        
+
         instance:update() -- call the transition 'update' on the state 'a'
 
 Example

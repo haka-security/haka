@@ -9,7 +9,7 @@ Introduction
 ------------
 This tutorial shows how tu use Haka in order to detect SQL injection attacks (SQLi). SQLi are common web attacks that consit in injecting SQL commands through http requests leading to sensitive data disclosure or authentication scheme bypass.
 
-Note that our goal is not to block 100% of SQLi attacks (with 0% false-positive rate) but to show how to build iteratively an sqli filtering policy thanks to haka capabilities. 
+Note that our goal is not to block 100% of SQLi attacks (with 0% false-positive rate) but to show how to build iteratively an sqli filtering policy thanks to haka capabilities.
 
 How-to
 ------

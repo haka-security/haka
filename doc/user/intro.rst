@@ -15,7 +15,7 @@ Major features
 * Specify text-based and binary-based network protocols
 * Describe protocol state machine
 * Define event-based security rules to filter, alter, drop and/or inject packets
-* Filter packet interactively  
+* Filter packet interactively
 * Log and alert suspicious network activities
 * Match malicious pattern accross mutliple packets
 * Apply Haka security policies on live traffic
@@ -38,7 +38,7 @@ Contributors:
 * Kevin Denis
 * Mehdi Talbi
 * Nicolas Aguirre
-* Paul Fariello  
+* Paul Fariello
 * Pierre-Sylvain Desse
 
 Acknowledgements:

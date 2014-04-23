@@ -10,7 +10,7 @@ haka
 ``haka`` is the main program of the collection. It allows to capture packets using either pcap
 or nfqueue and to filter/alter them according to the specified lua policy file.
 
-``haka`` is usually launched as a daemon to monitor packets in the background, but it can 
+``haka`` is usually launched as a daemon to monitor packets in the background, but it can
 also be launched from the command line to debug lua scripts.
 
 Options

@@ -19,25 +19,25 @@ Ipv4 dissector module. ::
 
     :Name: ``'ipv4'``
     :Extend: :haka:class:`haka.dissector.PacketDissector` |nbsp|
-    
+
     IP version 4 packet dissector.
 
     .. haka:function:: register_proto(proto, dissector)
-    
+
         :param proto: IP protocol number.
         :paramtype proto: number
         :param dissector: Dissector to use.
         :paramtype dissector: :haka:class:`Dissector`
-    
+
         Register the dissector to associate with the given protocol IP protocol number.
-    
+
     .. haka:function:: create(pkt) -> ip
-    
+
         :param pkt: Lower level packet.
         :paramtype pkt: dissector
         :return ip: Created packet.
         :rtype ip: :haka:class:`Ipv4Dissector`
-    
+
         Create a new IPv4 packet on top of a lower level packet (raw for instance).
 
     .. haka:attribute:: Ipv4Dissector:hdr_len
@@ -49,7 +49,7 @@ Ipv4 dissector module. ::
                         Ipv4Dissector:ttl
                         Ipv4Dissector:proto
                         Ipv4Dissector:checksum
-                        
+
         :type: number
 
         IPv4 fields.
@@ -58,21 +58,21 @@ Ipv4 dissector module. ::
                         Ipv4Dissector:dst
 
         :type: :haka:class:`addr` |nbsp|
-        
+
         Source and destination.
 
     .. haka:attribute:: Ipv4Dissector:flags.rb
                         Ipv4Dissector:flags.df
                         Ipv4Dissector:flags.mf
-    
+
         :type: boolean
-        
+
         Individual IPv4 flags.
-    
+
     .. haka:attribute:: Ipv4Dissector.flags.all
-    
+
         :type: number
-        
+
         All flags raw value.
 
     .. haka:attribute:: Ipv4Dissector.payload
@@ -95,11 +95,11 @@ Ipv4 dissector module. ::
     .. haka:method:: Ipv4Dissector:drop()
 
         Drop the packet.
-     
+
     .. haka:method:: Ipv4Dissector:send()
 
         Send the packet.
-        
+
     .. haka:method:: Ipv4Dissector:inject()
 
         Inject the packet.
@@ -110,19 +110,19 @@ Events
 .. haka:function:: ipv4.events.receive_packet(pkt)
     :module:
     :objtype: event
-    
+
     :param pkt: IPv4 packet.
     :paramtype pkt: :haka:class:`Ipv4Dissector`
-    
+
     Event that is triggered whenever a new packet is received.
 
 .. haka:function:: ipv4.events.send_packet(pkt)
     :module:
     :objtype: event
-    
+
     :param pkt: IPv4 packet.
     :paramtype pkt: :haka:class:`Ipv4Dissector`
-    
+
     Event that is triggered just before sending a packet on the network.
 
 
@@ -131,13 +131,13 @@ Utilities
 
 .. haka:class:: addr
     :module:
-    
+
     Represent an ipv4 address.
-    
+
     .. haka:function:: addr(str) -> addr
                        addr(addr) -> addr
                        addr(a, b, c, d) -> addr
-                       
+
         :param str: IP address as a string representation (ie. ``'127.0.0.1'``)
         :paramtype str: string
         :param addr: IP address as a number representation (ie. ``0x0100007f``)
@@ -154,18 +154,18 @@ Utilities
             ipv4.addr("127.0.0.1")
             ipv4.addr(0x0100007f)
             ipv4.addr(127, 0, 0, 1)
-            
+
     .. haka:attribute:: addr.packed
-    
+
         :type: number
-        
+
         Packed representation of the IP address.
-        
+
     .. haka:operator:: tostring(addr) -> str
-    
+
         :return str: String representation of the address.
         :rtype str: string
-        
+
         Convert an address to its string representation.
 
 .. haka:class:: network
@@ -201,66 +201,66 @@ Utilities
 
     .. haka:attribute:: network.mask
         :readonly:
-        
+
         :type: number
 
         Network mask.
-        
+
     .. haka:operator:: tostring(network) -> str
-    
+
         :return str: String representation of the network.
         :rtype str: string
-        
+
         Convert a network to its string representation.
 
 .. haka:class:: inet_checksum
     :module:
 
     Helper to compute inet checksum on buffers pieces by pieces.
-    
+
     .. haka:function:: checksum_partial() -> new
-    
+
         :return new: New inet checksum helper.
         :rtype new: :haka:class:`inet_checksum`
-        
+
         Create a new inet checksum helper.
-        
+
     .. haka:method:: process(buffer)
                      process(sub)
-    
+
         :param buffer: Buffer to process.
         :paramtype buffer: :haka:class:`vbuffer` |nbsp|
         :param sub: Sub-buffer to process.
         :paramtype sub: :haka:class:`vbuffer_sub` |nbsp|
-        
+
         Process the buffer to compute its checksum value. This function can be called
         multiple times to compute it on data represented by multiple buffers.
-        
+
     .. haka:method:: reduce() -> checksum
-    
+
         :return checksum: Final checksum value.
         :rtype checksum: number
-        
+
         Compute the final inet checksum value. This function must be called at the end
         after one or multiple calls to :haka:func:`process`.
 
 
 .. haka:class:: cnx_table
     :module:
-    
+
     Object used to create a table of connections. The connection table uses source and
     destination IP along with some source and destination ports. Those ports can be extracted
     from TCP or UDP for instance.
-    
+
     .. haka:function:: cnx_table() -> table
-        
+
         :return table: New connection table
         :rtype table: :haka:class:`cnx_table`
-        
+
         Create a new connection table.
-        
+
     .. haka:method:: cnx_table:create(srcip, dstip, srcport, dstport) -> cnx
-    
+
         :param srcip: Source IP.
         :paramtype srcip: :haka:class:`addr`
         :param dstip: Destination IP.
@@ -271,11 +271,11 @@ Utilities
         :paramtype dstport: number
         :return cnx: New connection
         :rtype cnx: :haka:class:`cnx`
-        
+
         Create a new entry in the connection table.
-        
+
     .. haka:method:: cnx_table:get(srcip, dstip, srcport, dstport) -> cnx
-    
+
         :param srcip: Source IP.
         :paramtype srcip: :haka:class:`addr`
         :param dstip: Destination IP.
@@ -286,24 +286,24 @@ Utilities
         :paramtype dstport: number
         :return cnx: New connection
         :rtype cnx: :haka:class:`cnx`
-        
+
         Get an entry in the connection table.
 
 .. haka:class:: cnx
     :module:
-    
+
     Object that represent a connection.
-    
+
     .. haka:attribute:: cnx:data
-    
+
         Data that can be used to associate any Lua object with the connection.
-        
+
     .. haka:method:: cnx:close()
-    
+
         Close the connection. It will be removed from the associated table.
-    
+
     .. haka:method:: cnx:drop()
-    
+
         Mark the connection as dropped. The connection remains in the table until
         :haka:func:`<cnx>.close()` is called.
 

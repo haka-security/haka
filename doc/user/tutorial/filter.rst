@@ -113,7 +113,7 @@ To set the debugger to focus on that particular frame, type ``frame 3``. We can 
 
 We now see that lua is complaining about an unknonw field ``destport`` on the line testing the destination port of the packet.
 
-Packets, like all structures provided by haka, can be printed easily using the debugger. 
+Packets, like all structures provided by haka, can be printed easily using the debugger.
 
 To see the content of the packet, type ``print pkt``:
 
@@ -185,7 +185,7 @@ The configuration file for the daemon is given below:
    :language: ini
    :tab-width: 4
 
-In order to be able to capture packets, the `haka` daemon needs to be run as root. The ``--no-daemon`` option will prevent `haka` from detaching from the command line and will force `haka` to send its outputs to stdout instead of syslog. 
+In order to be able to capture packets, the `haka` daemon needs to be run as root. The ``--no-daemon`` option will prevent `haka` from detaching from the command line and will force `haka` to send its outputs to stdout instead of syslog.
 
 .. code-block:: console
 

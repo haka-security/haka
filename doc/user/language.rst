@@ -12,7 +12,7 @@ Security rules
 --------------
 Haka allows users to define security rules in order to filter unwanted packets,
 alter their contents, drop them or craft new ones and inject them. A security
-rule consists of a hook and an evaluation function where the user has full 
+rule consists of a hook and an evaluation function where the user has full
 access (read and write) to all packets fields (headers and data) and a set of
 utility functions.
 
