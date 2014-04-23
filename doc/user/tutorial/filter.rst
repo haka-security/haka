@@ -155,7 +155,7 @@ Rule groups have three functions:
 
 * The `continue` function is called between each rule of the group and can decide to stop processing the group at any point.
 
-* The `fini` function is called after all rules have been run. It is not called if `continue` has forced a cancelation mid-group.
+* The `final` function is called after all rules have been run. It is not called if `continue` has forced a cancelation mid-group.
 
 The following example uses the concept of group to implement a simple filter that only accepts connections on port 80 or port 22.
 
@@ -185,7 +185,7 @@ The configuration file for the daemon is given below:
    :language: ini
    :tab-width: 4
 
-In order to be able to capture packets, the `haka` daemon needs to be run as root. The `--no-daemon`` option will prevent `haka` from detaching from the command line and will force `haka` to send its outputs to stdout instead of syslog. 
+In order to be able to capture packets, the `haka` daemon needs to be run as root. The ``--no-daemon`` option will prevent `haka` from detaching from the command line and will force `haka` to send its outputs to stdout instead of syslog. 
 
 .. code-block:: console
 

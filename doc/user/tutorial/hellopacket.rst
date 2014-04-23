@@ -73,6 +73,6 @@ All fields can be accessed, read and modified. The fields
 are  named similarly to wireshark. For example, you can get the IP `version`, `ttl`
 or `proto` simply by using ``pkt.version``, ``pkt.ttl`` or ``pkt.proto``.
 
-.. seealso:: :lua:mod:`ipv4` for a list of all ipv4 accessors.
-.. seealso:: :lua:mod:`tcp` for a list of all tcp accessors.
+.. seealso:: :haka:mod:`ipv4` for a list of all ipv4 accessors.
+.. seealso:: :haka:mod:`tcp` for a list of all tcp accessors.
 

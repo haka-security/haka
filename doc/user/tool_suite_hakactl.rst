@@ -47,7 +47,7 @@ Commands
 
     Set the logging level (fatal, error, warn, info, debug).
 
-    .. seealso:: See :lua:mod:`haka.log` for more information about logging levels.
+    .. seealso:: See :haka:mod:`haka.log` for more information about logging levels.
 
 .. option:: debug
 

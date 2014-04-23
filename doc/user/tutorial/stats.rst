@@ -55,29 +55,45 @@ This section introduces the stats utilities developed for this tutorial. More
 precisely, it shows how to create the global `stats` table and how to run basic
 stats operations on the created table.
 
-.. lua:module:: stats_utils
+.. haka:module:: stats_utils
 
-.. lua:function:: new()
+.. haka:function:: new() -> table
+
+    :return table: New stats table.
+    :rtype table: :haka:class:`stats`
 
     Create the stats table.
 
-.. lua:class:: stats
+.. haka:class:: stats
 
-    .. lua:method:: list(self)
+    .. haka:method:: stats:list()
 
-        Print column names of `stats` table.
+        Print column names of stats table.
 
-    .. lua:method:: dump(self [, nb])
+    .. haka:method:: stats:dump([nb])
+    
+        :param nb: Number of entries to display.
+        :ptype nb: number
 
-        Print `nb` entries of `stats` table.
+        Print *nb* entries of stats table.
 
-    .. lua:method:: top(self, column_name [, nb])
+    .. haka:method:: stats:top(column_name[, nb])
+    
+        :param column_name: Column to query.
+        :ptype column_name: string
+        :param nb: Number of entries to display.
+        :ptype nb: number
 
-        Dump the top 10 of given field name. Limits output to `nb` if `nb` is provided.
+        Dump the top 10 of given field name. Limits output to *nb* if it is provided.
 
-    .. lua:method:: select_table(self, column_tab [, where])
+    .. haka:method:: stats:select_table(column_tab[, where])
+    
+        :param column_name: Column to query.
+        :ptype column_name: string
+        :param where: Filter function called for each table line.
+        :ptype where: function
 
-        Select specific columns from `stats` table. Optionally, filter entry-lines based on `where` function.
+        Select specific columns from table. Optionally, filter entry-lines based on *where* function.
 
 Dumping stats
 -------------

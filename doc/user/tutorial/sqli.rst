@@ -47,7 +47,7 @@ It is trivial to bypass the above rule with slight modifications on uri. For ins
 
 Fine-grained analysis
 ---------------------
-All the above rules check the malicious patterns against the whole uri. The purpose of this scenario (``sqli-fine-grained.lua``) is to leverage the :lua:mod:`http` api in order to check the patterns against only subparts of the http request (query's argument, list of cookies).
+All the above rules check the malicious patterns against the whole uri. The purpose of this scenario (``sqli-fine-grained.lua``) is to leverage the :haka:mod:`http` api in order to check the patterns against only subparts of the http request (query's argument, list of cookies).
 
 .. literalinclude:: ../../../sample/sqli/sqli-fine-grained.lua
     :tab-width: 4
