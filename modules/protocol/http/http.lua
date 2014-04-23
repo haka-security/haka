@@ -511,4 +511,8 @@ http_dissector.states.initial = http_dissector.states.request
 
 module.events = http_dissector.events
 
+function module.dissect(flow)
+	flow:select_next_dissector(http_dissector:new(flow))
+end
+
 return module

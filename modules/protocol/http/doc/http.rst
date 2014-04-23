@@ -31,6 +31,13 @@ Http
         
         Install a rule on TCP to enable HTTP dissection on the given port number.
     
+    .. haka:function:: dissect(flow)
+    
+        :param flow: Upper flow dissector.
+        :paramtype flow: :haka:class:`haka.dissector.FlowDissector`
+        
+        Activate HTTP dissection on the given flow.
+    
     .. haka:attribute:: HttpDissector.flow
     
         Flow from which HTTP is built.

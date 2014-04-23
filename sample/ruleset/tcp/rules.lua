@@ -31,7 +31,7 @@ group:rule(
 		    server_network:contains(tcp.ip.dst) and
 		    tcp.dstport == 80 then
 			haka.log.warning("filter", "authorizing http traffic")
-			flow:select_next_dissector(haka.dissector.get('http'):new(flow))
+			http.dissect(flow)
 			return true
 		end
 	end

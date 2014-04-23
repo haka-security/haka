@@ -264,6 +264,13 @@ Flow
         :rtype manager: :haka:class:`vbuffer_stream_comanager`
         
         Retreived the stream coroutine manager for a given stream.
+        
+    .. haka:method:: FlowDissector:select_next_dissector(dissector)
+
+        :param dissector: Dissector to install.
+        :paramtype dissector: :haka:class:`FlowDissector`
+        
+        Enable a dissector on the current flow.
 
 Examples
 ^^^^^^^^

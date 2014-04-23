@@ -14,7 +14,7 @@ haka.rule{
 	hook = tcp_connection.events.new_connection,
 	eval = function (flow, pkt)
 		if pkt.dstport == 80 then
-			flow:select_next_dissector(haka.dissector.get('http'):new(flow))
+			http.dissect(flow)
 		else
 			haka.log("Filter", "Dropping TCP connection: tcp dstpport=%d",
 				pkt.dstport)
