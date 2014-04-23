@@ -1,6 +1,3 @@
-[submodule "external/sphinx-lua"]
-	path = external/sphinx-lua
-	url = git://github.com/haka-security/sphinx-lua.git
 [submodule "external/iniparser/src"]
 	path = external/iniparser/src
 	url = git://github.com/haka-security/iniparser.git
