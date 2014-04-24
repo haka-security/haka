@@ -65,18 +65,26 @@ Example:
 Interactive rule
 ----------------
 
-.. haka:function:: interactive_rule(...)
+.. haka:function:: interactive_rule(name) -> func
 
-    Utility function to create an interactive rule. Use this function as the *eval* function
-    on one of your rule.
+    :param name: Rule name displayed in prompt.
+    :ptype name: string
+    :return func: Rule function.
+    :rtype func: function
+
+    Utility function to create an interactive rule. Use this function to build an *eval* function
+    of one of your rule.
+
+    When the rule is evaluated, a prompt will enable the user to enter some commands. The parameters
+    given to the rule are available through the table named *inputs*.
 
     **Usage:**
 
     ::
 
         haka.rule{
-            hook = haka.event('ipv4', 'receive_packet'),
-            eval = haka.interactive_rule
+            hook = ipv4.events.receive_packet,
+            eval = haka.interactive_rule("interactive")
         }
 
 
