@@ -23,7 +23,7 @@ haka.rule{
 		local ck = request.headers['Cookie']
 
 		-- Initialize the score for query's argument and cookies list
-		-- Could be extend to check patterns in other http fields
+		-- Could be extended to check patterns in other http fields
 		local where = {
 			args = {
 				-- Split query into list of (param-name, param-value) pairs

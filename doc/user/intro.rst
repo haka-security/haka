@@ -19,7 +19,7 @@ Major features
 * Log and alert suspicious network activities
 * Match malicious pattern accross mutliple packets
 * Apply Haka security policies on live traffic
-* Replay haka security policies on tarffic traces (pcap capture)
+* Replay Haka security policies on tarffic traces (pcap capture)
 * Debug Haka security policies
 * And more features coming soon ...
 

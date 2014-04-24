@@ -11,7 +11,7 @@ This tutorial shows how tu collect traffic and make statistics on collected data
 
 How-to
 ------
-This tutorial introduces two lua script files: ``stats_on_exit`` and ``stats_interactive`` which could be run using the ``hakapcap`` tool as follows:
+This tutorial introduces two Haka script files: ``stats_on_exit`` and ``stats_interactive`` which could be ran using the ``hakapcap`` tool as follows:
 
 .. code-block:: console
 
@@ -40,9 +40,8 @@ Before making statisctics, we need first to collect data. This is the purpose of
 
 .. note::
 
-    While the security rule 'hooks' on `http-response` we still get access to
-    http request fields (via `request` accessor) and ip header fields (through
-    `connection` accessor)
+    While the security rule is evaluated whenever a http response is received,
+    we still get access to http request fields and ip header fields.
 
 .. literalinclude:: ../../../sample/stats/stats.lua
     :tab-width: 4
@@ -97,13 +96,13 @@ stats operations on the created table.
 
 Dumping stats
 -------------
-The first lua script (``stats_on_exit``) gives an usage of the above api.
+The first Haka script (``stats_on_exit``) gives an usage of the above api.
 
 .. literalinclude:: ../../../sample/stats/stats_on_exit.lua
     :tab-width: 4
     :language: lua
 
-The script will output some statistics on collected http trafic after parsing all packets in the provided pcap file (i.e. at haka exit). Below, a snippet output generated while running the lua script file on the DARPA pcap file:
+The script will output some statistics on collected http trafic after parsing all packets in the provided pcap file (i.e. at Haka exit). Below, a snippet output generated while running the Haka script file on the DARPA pcap file:
 
 .. code-block:: console
 
@@ -126,7 +125,7 @@ The second script (``stats_interactive``) fills the `stats` table with http info
     :tab-width: 4
     :language: lua
 
-Hereafter, hakapcap output when entering the interactive mode:
+Hereafter, ``hakapcap`` output when entering the interactive mode:
 
 .. code-block:: console
 

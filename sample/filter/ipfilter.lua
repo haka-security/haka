@@ -1,23 +1,18 @@
 ------------------------------------
 -- Loading dissectors
 ------------------------------------
-
--- Load the ipv4 dissector to filter on IPV4 fields
 local ipv4 = require('protocol/ipv4')
 
-------------------------------------
--- Detects packets originating from 192.168.10.10
---     * Log an alert
---     * Drop the packet
-------------------------------------
+-- drop all packets originating from
+-- blacklisted address 192.168.10.10
 haka.rule{
-	-- This rule is applied on each IP incoming packet
+	-- This rule is applied on each ip incoming packet
 	hook = ipv4.events.receive_packet,
 	eval = function (pkt)
 		-- Parse the IP address and assign it to a variable
 		local bad_ip = ipv4.addr('192.168.10.10')
 		if pkt.src == bad_ip then
-			-- Log an alert
+			-- Raise an alert
 			haka.alert{
 				description = string.format("Filtering IP %s", bad_ip),
 				severity = 'low'

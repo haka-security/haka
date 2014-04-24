@@ -8,7 +8,7 @@ require('httpdecode')
 
 local sql_comments = { '%-%-', '#', '%z', '/%*.-%*/' }
 
--- Common pattern used in initial attack stage to check for SQLi vulnerabilities
+-- Common patterns used in initial attack stage to check for SQLi vulnerabilities
 local probing = { "^[\"'`´’‘;]", "[\"'`´’‘;]$" }
 
 local sql_keywords = {

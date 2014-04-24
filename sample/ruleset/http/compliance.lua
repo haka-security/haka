@@ -1,6 +1,7 @@
 ------------------------------------
 -- HTTP compliance
 ------------------------------------
+
 -- check http method value
 local http_methods = dict({ 'get', 'post', 'head', 'put', 'trace', 'delete', 'options' })
 

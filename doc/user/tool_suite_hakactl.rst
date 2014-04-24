@@ -7,7 +7,7 @@ hakactl
 
 .. program:: hakactl
 
-``hakactl`` allows to control a running `haka` daemon.
+``hakactl`` allows to control a running ``haka`` daemon.
 
 .. code-block:: console
 
