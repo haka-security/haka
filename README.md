@@ -23,6 +23,7 @@ Dependencies
 * libpcap
 * gawk
 * libedit
+* libpcre
 
 ### Optional
 

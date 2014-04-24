@@ -21,6 +21,7 @@ Required
 * libpcap
 * gawk
 * libedit
+* libpcre
 
 Optional
 ^^^^^^^^
@@ -40,7 +41,7 @@ Debian (and compatible)
 .. code-block:: console
 
     $ sudo apt-get install build-essential cmake swig python-sphinx tshark check
-    $ sudo apt-get install rsync libpcap-dev gawk libedit-dev
+    $ sudo apt-get install rsync libpcap-dev gawk libedit-dev libpcre3-dev
     $ sudo apt-get install cppcheck libnetfilter-queue-dev valgrind
 
 Fedora
@@ -49,7 +50,7 @@ Fedora
 .. code-block:: console
 
     $ sudo yum install gcc gcc-c++ make cmake python-sphinx wireshark check
-    $ sudo yum install check-devel rsync libpcap-devel gawk libedit-devel
+    $ sudo yum install check-devel rsync libpcap-devel gawk libedit-devel pcre-devel
     $ sudo yum install git cppcheck libnetfilter_queue-devel rpm-build valgrind valgrind-devel
 
 The *swig* package in Fedora is broken and will not be usable to compile Haka.
@@ -186,6 +187,7 @@ file ``env.sh``:
 
 .. code-block:: console
 
+    $ cd out/
     $ . env.sh
 
 Documentation
@@ -213,9 +215,3 @@ Packaging
 ^^^^^^^^^
 
 Run ``make package`` to build an installable package.
-
-.. note::
-
-    If you have some issue with the folder permission in the generated package, check your
-    umask property. If you hit this problem, for instance, rpm will complains about conflicting
-    directory.
