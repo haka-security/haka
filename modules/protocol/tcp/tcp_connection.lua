@@ -494,6 +494,8 @@ function tcp_connection_dissector.method:halfreset()
 	self:drop()
 end
 
+tcp.select_next_dissector(tcp_connection_dissector)
+
 return {
 	events = tcp_connection_dissector.events
 }

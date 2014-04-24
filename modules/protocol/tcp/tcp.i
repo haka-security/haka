@@ -237,7 +237,7 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 	function tcp_dissector.method:receive()
 		haka.context:signal(self, tcp_dissector.events['receive_packet'])
 
-		local next_dissector = haka.dissector.get('tcp_connection')
+		local next_dissector = tcp_dissector.next_dissector
 		if next_dissector then
 			return next_dissector:receive(self)
 		else
@@ -286,5 +286,9 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 
 	function this.create(ip)
 		return tcp_dissector:create(ip)
+	end
+
+	function this.select_next_dissector(dissector)
+		tcp_dissector.next_dissector = dissector
 	end
 }

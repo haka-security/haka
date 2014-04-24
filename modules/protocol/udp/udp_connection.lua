@@ -3,7 +3,7 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 local ipv4 = require("protocol/ipv4")
-require("protocol/udp")
+local udp = require("protocol/udp")
 
 local udp_connection_dissector = haka.dissector.new{
 	type = haka.dissector.FlowDissector,
@@ -148,6 +148,8 @@ function udp_connection_dissector.method:continue()
 		haka.abort()
 	end
 end
+
+udp.select_next_dissector(udp_connection_dissector)
 
 return {
 	events = udp_connection_dissector.events
