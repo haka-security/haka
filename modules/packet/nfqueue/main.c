@@ -220,7 +220,8 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 
 	memset(state->current_packet, 0, sizeof(struct nfqueue_packet));
 
-	if (!vbuffer_create_from(&state->current_packet->core_packet.payload, packet_data, packet_len)) {
+	if (!vbuffer_create_from(&state->current_packet->core_packet.payload,
+	    (char *)packet_data, packet_len)) {
 		free(state->current_packet);
 		state->error = ENOMEM;
 		return 0;
