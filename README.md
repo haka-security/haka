@@ -17,6 +17,7 @@ Dependencies
 * cmake (>= 2.8)
 * swig
 * sphinx (>= 2)
+* Doxygen
 * tshark
 * check
 * rsync

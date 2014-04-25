@@ -1,0 +1,7 @@
+
+.breatheenumvalues li tt + p {
+    display: inline;
+}
+.breatheparameterlist li tt + p {
+    display: inline;
+}

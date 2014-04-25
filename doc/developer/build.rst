@@ -15,6 +15,7 @@ Required
 * cmake (>= 2.8)
 * swig
 * sphinx (>= 2)
+* Doxygen
 * tshark
 * check
 * rsync
@@ -41,7 +42,7 @@ Debian (and compatible)
 .. code-block:: console
 
     $ sudo apt-get install build-essential cmake swig python-sphinx tshark check
-    $ sudo apt-get install rsync libpcap-dev gawk libedit-dev libpcre3-dev
+    $ sudo apt-get install doxygen rsync libpcap-dev gawk libedit-dev libpcre3-dev
     $ sudo apt-get install cppcheck libnetfilter-queue-dev valgrind
 
 Fedora
@@ -49,7 +50,7 @@ Fedora
 
 .. code-block:: console
 
-    $ sudo yum install gcc gcc-c++ make cmake python-sphinx wireshark check
+    $ sudo yum install gcc gcc-c++ make cmake python-sphinx wireshark check doxygen
     $ sudo yum install check-devel rsync libpcap-devel gawk libedit-devel pcre-devel
     $ sudo yum install git cppcheck libnetfilter_queue-devel rpm-build valgrind valgrind-devel
 
