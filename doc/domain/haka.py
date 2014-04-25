@@ -37,6 +37,39 @@ from sphinx.util.docfields import Field, GroupedField, TypedField
 from sphinx.writers.html import HTMLTranslator
 
 
+# Fix parameter display when using something different than '()'
+
+def new_visit_desc_parameterlist(self, node):
+    if hasattr(node, 'param_class'):
+        param_class = ' class="param_start_%s"' % node.param_class
+    else:
+        param_class = ''
+
+    if hasattr(node, 'param_start'):
+        value = node.param_start
+    else:
+        value = '('
+
+    self.body.append('<big%s>%s</big>' % (param_class, value))
+    self.first_param = 1
+    self.param_separator = node.child_text_separator
+
+def new_depart_desc_parameterlist(self, node):
+    if hasattr(node, 'param_class'):
+        param_class = ' class="param_end_%s"' % node.param_class
+    else:
+        param_class = ''
+
+    if hasattr(node, 'param_end'):
+        value = node.param_end
+    else:
+        value = ')'
+
+    self.body.append('<big%s>%s</big>' % (param_class, value))
+
+HTMLTranslator.visit_desc_parameterlist = new_visit_desc_parameterlist
+HTMLTranslator.depart_desc_parameterlist = new_depart_desc_parameterlist
+
 def _desc_parameterlist(argstart, argend):
     node = addnodes.desc_parameterlist()
     node.param_start = argstart
