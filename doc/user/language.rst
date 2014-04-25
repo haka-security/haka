@@ -2,7 +2,7 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-HAKA language
+Haka language
 =============
 Haka is a Lua-based language designed to provide a quick way to analyze
 networking protocols. Lua is a simple scripted language. If you are not familiar
