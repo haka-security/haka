@@ -10,3 +10,6 @@
 [submodule "external/luaunit/src"]
 	path = external/luaunit/src
 	url = git://github.com/haka-security/luaunit.git
+[submodule "external/breathe"]
+	path = external/breathe
+	url = git://github.com/haka-security/breathe.git
