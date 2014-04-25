@@ -93,7 +93,7 @@ You must first clone the Git repository. Our project is hosted on GitHub:
 
 .. code-block:: console
 
-    $ git clone git@github.com:haka-security/haka.git
+    $ git clone https://github.com/haka-security/haka.git
 
 Our development uses the branching model Git flow which describes how to
 use and name Git branches. For instance, you will find the following branches:
