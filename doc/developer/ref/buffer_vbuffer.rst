@@ -4,18 +4,7 @@
 
 .. highlightlang:: c
 
-Modules
-=======
+Buffer
+======
 
-.. doxygenfile:: include/haka/module.h
-
-Module types
-============
-
-.. toctree::
-    :numbered:
-
-    packet_module
-    log_module
-    alert_module
-    regexp_module
+.. doxygenfile:: include/haka/vbuffer.h

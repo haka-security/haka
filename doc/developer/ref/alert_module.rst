@@ -4,18 +4,7 @@
 
 .. highlightlang:: c
 
-Modules
-=======
-
-.. doxygenfile:: include/haka/module.h
-
-Module types
+Alert module
 ============
 
-.. toctree::
-    :numbered:
-
-    packet_module
-    log_module
-    alert_module
-    regexp_module
+.. doxygenfile:: include/haka/alert_module.h

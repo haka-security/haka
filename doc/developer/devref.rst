@@ -20,4 +20,7 @@ This document describes the modules of the API.
     ref/log
     ref/alert
     ref/packet
+    ref/parameters
     ref/module
+    ref/time
+    ref/buffer

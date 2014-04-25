@@ -31,7 +31,7 @@ struct packet_module_state; /**< Opaque state structure. */
  * an interface to access the packet fields.
  */
 struct packet_module {
-	struct module    module; /**< \private */
+	struct module    module; /**< Module structure. */
 
 	/**
 	 * Get if the module support multi-threading.

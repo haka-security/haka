@@ -4,18 +4,13 @@
 
 .. highlightlang:: c
 
-Modules
-=======
+Buffer stream
+=============
 
-.. doxygenfile:: include/haka/module.h
+.. doxygenfile:: include/haka/vbuffer_stream.h
 
-Module types
-============
 
-.. toctree::
-    :numbered:
+Sub buffer stream
+=================
 
-    packet_module
-    log_module
-    alert_module
-    regexp_module
+.. doxygenfile:: include/haka/vbuffer_sub_stream.h

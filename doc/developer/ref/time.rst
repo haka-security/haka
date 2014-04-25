@@ -4,18 +4,13 @@
 
 .. highlightlang:: c
 
-Modules
-=======
+Time
+====
 
-.. doxygenfile:: include/haka/module.h
+.. doxygenfile:: include/haka/time.h
 
-Module types
-============
 
-.. toctree::
-    :numbered:
+Timer
+=====
 
-    packet_module
-    log_module
-    alert_module
-    regexp_module
+.. doxygenfile:: include/haka/timer.h
