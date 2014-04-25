@@ -2,15 +2,17 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Welcome to Haka's Developer Guide!
-==================================
+.. highlightlang:: c
+
+Modules
+=======
+
+.. doxygenfile:: include/haka/module.h
+
+Module types
+============
 
 .. toctree::
-    :maxdepth: 2
-    :numbered: 3
+    :numbered:
 
-    build.rst
-    arch.rst
-    devref.rst
-    tutorials.rst
-    contribute.rst
+    packet_module

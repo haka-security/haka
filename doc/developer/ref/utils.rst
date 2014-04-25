@@ -4,19 +4,13 @@
 
 .. highlightlang:: c
 
-C API
+Types
 =====
 
-This document describes the modules of the API.
+.. doxygenfile:: include/haka/types.h
 
 
-.. toctree::
-    :glob:
-    :maxdepth: 1
+Errors handling
+===============
 
-    c/utils
-    c/thread
-    c/log_alert
-    c/packet
-    c/module
-    ../../modules/*/*/doc/c*
+.. doxygenfile:: include/haka/error.h

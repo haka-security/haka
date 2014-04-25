@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * \file
+ * Security alerts.
+ */
+
 #ifndef _HAKA_ALERT_H
 #define _HAKA_ALERT_H
 
@@ -11,52 +16,74 @@
 #include <haka/container/list.h>
 
 
+/**
+ * Alert level.
+ */
 typedef enum {
-	HAKA_ALERT_LEVEL_NONE,
-	HAKA_ALERT_LOW,
-	HAKA_ALERT_MEDIUM,
-	HAKA_ALERT_HIGH,
-	HAKA_ALERT_NUMERIC,
+	HAKA_ALERT_LEVEL_NONE, /**< Unset value. */
+	HAKA_ALERT_LOW,        /**< Low level. */
+	HAKA_ALERT_MEDIUM,     /**< Medium level. */
+	HAKA_ALERT_HIGH,       /**< High level. */
+	HAKA_ALERT_NUMERIC,    /**< Numeric level stored in the alert structure. */
 
-	HAKA_ALERT_LEVEL_LAST
+	HAKA_ALERT_LEVEL_LAST  /**< Last alert level. */
 } alert_level;
 
+/**
+ * Alert completion.
+ */
 typedef enum {
-	HAKA_ALERT_COMPLETION_NONE,
-	HAKA_ALERT_FAILED,
-	HAKA_ALERT_SUCCESSFUL,
+	HAKA_ALERT_COMPLETION_NONE, /**< Unset value. */
+	HAKA_ALERT_FAILED,          /**< The attack failed. */
+	HAKA_ALERT_SUCCESSFUL,      /**< The attach was successful. */
 
-	HAKA_ALERT_COMPLETION_LAST
+	HAKA_ALERT_COMPLETION_LAST  /**< Last alert completion value. */
 } alert_completion;
 
+/**
+ * Alert node type.
+ */
 typedef enum {
-	HAKA_ALERT_NODE_ADDRESS,
-	HAKA_ALERT_NODE_SERVICE,
+	HAKA_ALERT_NODE_ADDRESS,    /**< Address node. */
+	HAKA_ALERT_NODE_SERVICE,    /**< Service node. */
 
-	HAKA_ALERT_NODE_LAST
+	HAKA_ALERT_NODE_LAST        /**< Last alert node type. */
 } alert_node_type;
 
+/**
+ * Alert node.
+ */
 struct alert_node {
-	alert_node_type     type;
-	wchar_t           **list;
+	alert_node_type     type; /**< Alert node type. */
+	wchar_t           **list; /**< NULL terminated array of strings. */
 };
 
+/**
+ * Alert.
+ */
 struct alert {
-	struct time         start_time;
-	struct time         end_time;
-	wchar_t            *description;
-	alert_level         severity;
-	alert_level         confidence;
-	double              confidence_num;
-	alert_completion    completion;
-	wchar_t            *method_description;
-	wchar_t           **method_ref;
-	struct alert_node **sources;
-	struct alert_node **targets;
-	size_t              alert_ref_count;
-	uint64             *alert_ref;
+	struct time         start_time;          /**< Alert time. */
+	struct time         end_time;            /**< Alert time. */
+	wchar_t            *description;         /**< Alert description. */
+	alert_level         severity;            /**< Alert severity (HAKA_ALERT_NUMERIC is not a valid value here). */
+	alert_level         confidence;          /**< Alert confidence. */
+	double              confidence_num;      /**< Alert confidence numeric value if confidence == HAKA_ALERT_NUMERIC. */
+	alert_completion    completion;          /**< Alert completion. */
+	wchar_t            *method_description;  /**< Alert method description. */
+	wchar_t           **method_ref;          /**< Alert method references (NULL terminated array). */
+	struct alert_node **sources;             /**< Alert sources (NULL terminated array of nodes). */
+	struct alert_node **targets;             /**< Alert targets (NULL terminated array of nodes). */
+	size_t              alert_ref_count;     /**< Reference count. */
+	uint64             *alert_ref;           /**< Array of references. */
 };
 
+/**
+ * Utility macro to create a new alert.
+ *
+ * \param name Name of the variable that will be created.
+ * \param nsrc Number of sources.
+ * \param ntgt Number of targets.
+ */
 #define ALERT(name, nsrc, ntgt) \
 	struct alert_node *_sources[nsrc+1] = {0}; \
 	struct alert_node *_targets[ntgt+1] = {0}; \
@@ -64,38 +91,94 @@ struct alert {
 		sources: nsrc==0 ? NULL : _sources, \
 		targets: ntgt==0 ? NULL : _targets,
 
+/**
+ * Finish the alert creation.
+ */
 #define ENDALERT };
 
-#define ALERT_NODE(a, name, index, type, ...) \
+/**
+ * Create an alert node.
+ *
+ * \param alert Alert name.
+ * \param name ``sources`` or ``target``.
+ * \param index Index of the node.
+ * \param type Type of node (see :c:type:`alert_node_type`).
+ * \param ... List of strings (wchar_t *).
+ */
+#define ALERT_NODE(alert, name, index, type, ...) \
 	struct alert_node _node##name##index = { type }; \
-	a.name[index] = &_node##name##index; \
+	alert.name[index] = &_node##name##index; \
 	wchar_t *_node##name##index_list[] = { __VA_ARGS__, NULL }; \
 	_node##name##index.list = _node##name##index_list
 
-#define ALERT_REF(a, count, ...) \
+/**
+ * Add alert references.
+ *
+ * \param alert Alert name.
+ * \param count Number of references.
+ * \param ... List of alert ids.
+ */
+#define ALERT_REF(alert, count, ...) \
 	uint64 _alert_ref[count] = { __VA_ARGS__ }; \
-	a.alert_ref_count = count; \
-	a.alert_ref = _alert_ref
+	alert.alert_ref_count = count; \
+	alert.alert_ref = _alert_ref
 
-#define ALERT_METHOD_REF(a, ...) \
+/**
+ * Add method references.
+ *
+ * \param alert Alert name.
+ * \param ... List of strings (wchar_t *).
+ */
+#define ALERT_METHOD_REF(alert, ...) \
 	wchar_t *_method_ref[] = { __VA_ARGS__, NULL }; \
-	a.method_ref = _method_ref
+	alert.method_ref = _method_ref
 
+/**
+ * Raise a new alert.
+ *
+ * \returns The alert unique id.
+ */
 uint64          alert(const struct alert *alert);
+
+/**
+ * Update an existing alert.
+ */
 bool            alert_update(uint64 id, const struct alert *alert);
+
+/**
+ * Convert an alert to a string.
+ */
 const wchar_t  *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent);
+
+/**
+ * Enable display of alerts on stdout.
+ */
 void            enable_stdout_alert(bool enable);
 
+/**
+ * Alert listener object.
+ */
 struct alerter {
 	struct list   list;
 	void        (*destroy)(struct alerter *state);
 	bool        (*alert)(struct alerter *state, uint64 id, const struct time *time, const struct alert *alert);
 	bool        (*update)(struct alerter *state, uint64 id, const struct time *time, const struct alert *alert);
-	bool          mark_for_remove;
+	bool          mark_for_remove; /**< \private */
 };
 
+/**
+ * Add an alert listener.
+ */
 bool add_alerter(struct alerter *alerter);
+
+/**
+ * Remove an alert listener.
+ */
 bool remove_alerter(struct alerter *alerter);
+
+/**
+ * Remove all alert listener.
+ */
 void remove_all_alerter();
 
 #endif /* _HAKA_ALERT_H */
