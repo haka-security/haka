@@ -74,18 +74,27 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DI
 generate_images(TARGET doc-images TOOL Inkscape FILES developer/flow.svg)
 
 # Real doc target
-add_custom_target(doxygen
+add_custom_target(doc-doxygen
 	COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Generating Doxygen documentation" VERBATIM
 	DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 )
 
+# Build the sphinx documentation without regenerating the Doxygen doc
+# This target is meant for development use
+add_custom_target(doc-sphinx
+	COMMAND ${SPHINX_EXECUTABLE} -b html -c ${CMAKE_CURRENT_BINARY_DIR}/ ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/doc
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	COMMENT "Generating Sphinx documentation" VERBATIM
+	DEPENDS doc-images
+)
+
 add_custom_target(doc
 	COMMAND ${SPHINX_EXECUTABLE} -b html -c ${CMAKE_CURRENT_BINARY_DIR}/ ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/doc
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Generating Sphinx documentation" VERBATIM
-	DEPENDS doxygen doc-images
+	DEPENDS doc-doxygen doc-images
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka/manual OPTIONAL)
