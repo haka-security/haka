@@ -206,6 +206,10 @@ struct regexp_module {
 		}
 
 		struct regexp *compile(const char *pattern, int options = 0) {
+			if (!pattern) {
+				error(L"nil argument");
+				return NULL;
+			}
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));
 			struct regexp *ret = $self->compile(esc_regexp, options);
 			free(esc_regexp);
