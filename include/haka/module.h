@@ -79,7 +79,7 @@ void           module_release(struct module *module);
 
 /**
  * Set the path used to load haka modules. This path must be in the form:
- * `path/to/modules/*;another/path/*`
+ * `path/to/modules/\star;another/path/\star`
  */
 void           module_set_path(const char *path);
 
