@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
+
 function haka.rule_summary()
 	local total = 0
 
@@ -19,7 +21,7 @@ end
 
 function haka.rule(r)
 	assert(r.hook, "not hook defined for rule")
-	assert(isa(r.hook, haka.events.Event), "rule hook must be an event")
+	assert(class.isa(r.hook, haka.events.Event), "rule hook must be an event")
 	assert(type(r.eval) == 'function', "rule eval function expected")
 
 	local options = {}

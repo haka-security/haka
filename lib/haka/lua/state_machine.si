@@ -355,10 +355,11 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 	haka.state = nil
 	haka.state_machine_instance = nil
 
+	local class = require('class')
 
 	local states = {}
 
-	states.State = class('State')
+	states.State = class.class('State')
 
 	function states.State.method:__init(transitions)
 		for n, f in pairs(transitions) do
@@ -375,7 +376,7 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 	end
 
 
-	states.CompiledState = class('CompiledState')
+	states.CompiledState = class.class('CompiledState')
 
 	function states.CompiledState.method:__init(state_machine, state, name)
 		self._state = state_machine:create_state(name)
@@ -406,7 +407,7 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 					self['_internal_' .. n] = function (self, ...)
 						local newstate = f(self, ...)
 						if newstate then
-							if isa(newstate, states.CompiledState) then
+							if class.isa(newstate, states.CompiledState) then
 								return self._instance:update(newstate._state)
 							else
 								return self._instance:update(newstate)
@@ -419,7 +420,7 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 	end
 
 
-	states.StateMachine = class('StateMachine')
+	states.StateMachine = class.class('StateMachine')
 
 	function states.StateMachine.method:__init(name)
 		self._states = {}
@@ -428,12 +429,12 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 	end
 
 	function states.StateMachine.method:state(transitions)
-		assert(isa(self, states.StateMachine))
+		assert(class.isa(self, states.StateMachine))
 		return states.State:new(transitions)
 	end
 
 	function states.StateMachine.method:default(transitions)
-		assert(isa(self, states.StateMachine))
+		assert(class.isa(self, states.StateMachine))
 		self._default = transitions
 	end
 
@@ -444,7 +445,7 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 			local initial
 
 			for name, state in pairs(self) do
-				if name ~= 'initial' and isa(state, states.State) then
+				if name ~= 'initial' and class.isa(state, states.State) then
 					state:merge(self._default)
 					local new_state = states.CompiledState:new(state_machine, state, name)
 					state_table[name] = new_state
@@ -456,7 +457,7 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 			end
 
 			if not initial then
-				if isa(self.initial, states.State) then
+				if class.isa(self.initial, states.State) then
 					self.initial:merge(self._default)
 					initial = states.CompiledState:new(state_machine, self.initial, 'initial')
 					state_table['initial'] = initial
@@ -484,7 +485,7 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 	end
 
 
-	states.StateMachineInstance = class('StateMachineInstance')
+	states.StateMachineInstance = class.class('StateMachineInstance')
 
 	states.StateMachineInstance.property.state = {
 		get = function (self)

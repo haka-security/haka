@@ -2,7 +2,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-local LocalContext = class()
+local class = require('class')
+
+local LocalContext = class.class()
 
 function LocalContext.method:__init()
 	self._connections = {}
@@ -17,7 +19,7 @@ function LocalContext.method:namespace(ref)
 end
 
 
-local Context = class()
+local Context = class.class()
 
 function Context.method:__init()
 	self.connections = haka.events.StaticEventConnections:new()

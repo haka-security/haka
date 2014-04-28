@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
+
 local udp_connection = require("protocol/udp_connection")
 local ipv4 = require('protocol/ipv4')
 
@@ -277,7 +279,7 @@ dns_dissector.states = haka.state_machine("dns")
 
 local dns_pending_queries = {}
 
-local DnsResult = class('DnsResult')
+local DnsResult = class.class('DnsResult')
 
 function DnsResult.method:__init(dissector, pkt)
 	self._dissector = dissector

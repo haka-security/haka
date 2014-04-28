@@ -910,7 +910,9 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 
 
 %luacode {
-	haka.vbuffer_stream_comanager = class('VbufferStreamCoManager')
+	local class = require('class')
+
+	haka.vbuffer_stream_comanager = class.class('VbufferStreamCoManager')
 
 	function haka.vbuffer_stream_comanager.method:__init(stream)
 		self._co = {}

@@ -64,8 +64,9 @@ void lua_luadebug_debugger_break();
 %luacode {
 	local this = unpack({...})
 	local color = require("color")
+	local class = require('class')
 
-		function debug.hide_underscore(name, value)
+	function debug.hide_underscore(name, value)
 		if type(name) == "string" then
 			return name:sub(1, 1) == "_"
 		else
@@ -229,7 +230,7 @@ void lua_luadebug_debugger_break();
 
 		if type == "table" then
 			local meta = getmetatable(obj)
-			if meta and isclass(meta) then
+			if meta and class.isclass(meta) then
 				__print_class(obj, indent, name, visited, hidden, depth, out, title, meta)
 			else
 				__print_table(obj, indent, name, visited, hidden, depth, out, title)

@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
+
 local tcp_connection = require("protocol/tcp_connection")
 
 local module = {}
@@ -33,7 +35,7 @@ http_dissector.property.connection = {
 }
 
 function http_dissector.method:__init(flow)
-	super(http_dissector).__init(self)
+	class.super(http_dissector).__init(self)
 	self.flow = flow
 	if flow then
 		self.connection = flow.connection
@@ -167,7 +169,7 @@ end
 -- HTTP parse results
 --
 
-local HeaderResult = class("HeaderResult", haka.grammar.ArrayResult)
+local HeaderResult = class.class("HeaderResult", haka.grammar.ArrayResult)
 
 function HeaderResult.method:__init()
 	rawset(self, '_cache', {})
@@ -230,7 +232,7 @@ function HeaderResult.method:__newindex(key, value)
 end
 
 
-local HttpRequestResult = class("HttpRequestResult", haka.grammar.Result)
+local HttpRequestResult = class.class("HttpRequestResult", haka.grammar.Result)
 
 HttpRequestResult.property.split_uri = {
 	get = function (self)
@@ -248,7 +250,7 @@ HttpRequestResult.property.split_cookies = {
 	end
 }
 
-local HttpResponseResult = class("HttpResponseResult", haka.grammar.Result)
+local HttpResponseResult = class.class("HttpResponseResult", haka.grammar.Result)
 
 HttpResponseResult.property.split_cookies = {
 	get = function (self)

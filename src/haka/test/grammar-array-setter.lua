@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
+
 require('protocol/ipv4')
 local tcp_connection = require('protocol/tcp_connection')
 
@@ -31,7 +33,7 @@ haka.rule{
 	streamed = true,
 	eval = function (flow, iter, direction)
 		if direction == 'up' then
-			local ctx = class('ctx'):new()
+			local ctx = class.class('ctx'):new()
 			if iter:available() > 0 then
 				local ctx, err = grammar:parse(iter, ctx)
 				if err then

@@ -2,6 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
 local rem = require("regexp/pcre")
 
 local grammar_dg = {}
@@ -11,7 +12,7 @@ local grammar = {}
 -- Parsing Error
 --
 
-local ParseError = class("ParseError")
+local ParseError = class.class("ParseError")
 
 function ParseError.method:__init(iterator, rule, description, ...)
 	self.iterator = iterator
@@ -41,9 +42,9 @@ end
 -- Grammar result
 --
 
-grammar.Result = class('Result')
+grammar.Result = class.class('Result')
 
-grammar.ArrayResult = class('ArrayResult', grammar.Result)
+grammar.ArrayResult = class.class('ArrayResult', grammar.Result)
 
 function grammar.ArrayResult.method:_init(iter, entity, create)
 	rawset(self, '_begin', iter)
@@ -91,7 +92,7 @@ end
 -- Parse Context
 --
 
-grammar_dg.ParseContext = class('DGParseContext')
+grammar_dg.ParseContext = class.class('DGParseContext')
 
 grammar_dg.ParseContext.property.top = {
 	get = function (self) return self._results[1] end
@@ -268,7 +269,7 @@ end
 -- Grammar graph
 --
 
-grammar_dg.Entity = class('DGEntity')
+grammar_dg.Entity = class.class('DGEntity')
 
 function grammar_dg.Entity.method:__init(rule, id)
 	self.rule = rule
@@ -397,9 +398,9 @@ function grammar_dg.Entity.method:_dump_graph_node(file, ref)
 	local label, extlabel
 
 	if self.name then
-		label = string.format("%s: %s", classof(self).name, self.name)
+		label = string.format("%s: %s", class.classof(self).name, self.name)
 	else
-		label = classof(self).name
+		label = class.classof(self).name
 	end
 
 	extlabel = self:_dump_graph_descr()
@@ -436,26 +437,26 @@ function grammar_dg.Entity.method:dump_graph(file)
 	file:write("}\n")
 end
 
-grammar_dg.Control = class('DGControl', grammar_dg.Entity)
+grammar_dg.Control = class.class('DGControl', grammar_dg.Entity)
 
 function grammar_dg.Control.method:_dump_graph_options()
 	return ',fillcolor="#dddddd",style="filled"'
 end
 
-grammar.ResultPop = class('DGResultPop', grammar_dg.Control)
+grammar.ResultPop = class.class('DGResultPop', grammar_dg.Control)
 
 function grammar.ResultPop.method:__init()
-	super(grammar.ResultPop).__init(self)
+	class.super(grammar.ResultPop).__init(self)
 end
 
 function grammar.ResultPop.method:_apply(ctx)
 	ctx:pop()
 end
 
-grammar_dg.RecordStart = class('DGRecordStart', grammar_dg.Control)
+grammar_dg.RecordStart = class.class('DGRecordStart', grammar_dg.Control)
 
 function grammar_dg.RecordStart.method:__init(name)
-	super(grammar_dg.RecordStart).__init(self)
+	class.super(grammar_dg.RecordStart).__init(self)
 	self.name = name
 end
 
@@ -477,10 +478,10 @@ function grammar_dg.RecordStart.method:_apply(ctx)
 	end
 end
 
-grammar_dg.RecordFinish = class('DGRecordFinish', grammar_dg.Control)
+grammar_dg.RecordFinish = class.class('DGRecordFinish', grammar_dg.Control)
 
 function grammar_dg.RecordFinish.method:__init(pop)
-	super(grammar_dg.RecordFinish).__init(self)
+	class.super(grammar_dg.RecordFinish).__init(self)
 	self._onfinish = {}
 	self._extra = {}
 	self._pop = pop
@@ -510,10 +511,10 @@ function grammar_dg.RecordFinish.method:_apply(ctx)
 	end
 end
 
-grammar_dg.UnionStart = class('DGUnionStart', grammar_dg.Control)
+grammar_dg.UnionStart = class.class('DGUnionStart', grammar_dg.Control)
 
 function grammar_dg.UnionStart.method:__init(name, rule)
-	super(grammar_dg.UnionStart).__init(self, rule)
+	class.super(grammar_dg.UnionStart).__init(self, rule)
 	self.name = name
 end
 
@@ -526,16 +527,16 @@ function grammar_dg.UnionStart.method:_apply(ctx)
 	ctx:pushmark()
 end
 
-grammar_dg.UnionRestart = class('DGUnionRestart', grammar_dg.Control)
+grammar_dg.UnionRestart = class.class('DGUnionRestart', grammar_dg.Control)
 
 function grammar_dg.UnionRestart.method:_apply(ctx)
 	ctx:seekmark()
 end
 
-grammar_dg.UnionFinish = class('DGUnionFinish', grammar_dg.Control)
+grammar_dg.UnionFinish = class.class('DGUnionFinish', grammar_dg.Control)
 
 function grammar_dg.UnionFinish.method:__init(pop)
-	super(grammar_dg.UnionFinish).__init(self)
+	class.super(grammar_dg.UnionFinish).__init(self)
 	self._pop = pop
 end
 
@@ -546,10 +547,10 @@ function grammar_dg.UnionFinish.method:_apply(ctx)
 	ctx:popmark()
 end
 
-grammar_dg.ArrayStart = class('DGArrayStart', grammar_dg.Control)
+grammar_dg.ArrayStart = class.class('DGArrayStart', grammar_dg.Control)
 
 function grammar_dg.ArrayStart.method:__init(name, rule, entity, create, resultclass)
-	super(grammar_dg.ArrayStart).__init(self, rule)
+	class.super(grammar_dg.ArrayStart).__init(self, rule)
 	self.name = name
 	self.entity = entity
 	self.create = create
@@ -575,52 +576,52 @@ function grammar_dg.ArrayStart.method:_apply(ctx)
 	end
 end
 
-grammar_dg.ArrayFinish = class('DGArrayFinish', grammar_dg.Control)
+grammar_dg.ArrayFinish = class.class('DGArrayFinish', grammar_dg.Control)
 
 function grammar_dg.ArrayFinish.method:__init()
-	super(grammar_dg.ArrayFinish).__init(self)
+	class.super(grammar_dg.ArrayFinish).__init(self)
 end
 
 function grammar_dg.ArrayFinish.method:apply(ctx)
 	ctx:pop()
 end
 
-grammar_dg.ArrayPush = class('DGArrayPush', grammar_dg.Control)
+grammar_dg.ArrayPush = class.class('DGArrayPush', grammar_dg.Control)
 
 function grammar_dg.ArrayPush.method:__init()
-	super(grammar_dg.ArrayPush).__init(self)
+	class.super(grammar_dg.ArrayPush).__init(self)
 end
 
 function grammar_dg.ArrayPush.method:_apply(ctx)
 	local res = ctx.result
-	if isa(res, grammar.ArrayResult) then
+	if class.isa(res, grammar.ArrayResult) then
 		rawset(res, '_entitybegin', ctx.iter:copy())
 	end
 	local new = ctx:push(nil, #res+1)
 	table.insert(res, new)
 end
 
-grammar_dg.ArrayPop = class('DGArrayPop', grammar_dg.Control)
+grammar_dg.ArrayPop = class.class('DGArrayPop', grammar_dg.Control)
 
 function grammar_dg.ArrayPop.method:__init()
-	super(grammar_dg.ArrayPop).__init(self)
+	class.super(grammar_dg.ArrayPop).__init(self)
 end
 
 function grammar_dg.ArrayPop.method:_apply(ctx)
 	local entityresult = ctx.result
 	ctx:pop()
 	local arrayresult = ctx.result
-	if isa(arrayresult, grammar.ArrayResult) then
+	if class.isa(arrayresult, grammar.ArrayResult) then
 		rawset(entityresult, '_sub', haka.vbuffer_sub(arrayresult._entitybegin, ctx.iter))
 		rawset(arrayresult, '_entitybegin', nil)
 		ctx.iter:split()
 	end
 end
 
-grammar_dg.Error = class('DGError', grammar_dg.Control)
+grammar_dg.Error = class.class('DGError', grammar_dg.Control)
 
 function grammar_dg.Error.method:__init(id, msg)
-	super(grammar_dg.Error).__init(self, nil, id)
+	class.super(grammar_dg.Error).__init(self, nil, id)
 	self.msg = msg
 end
 
@@ -632,10 +633,10 @@ function grammar_dg.Error.method:_apply(ctx)
 	return ctx:error(nil, self, self.msg)
 end
 
-grammar_dg.Execute = class('DGExecute', grammar_dg.Control)
+grammar_dg.Execute = class.class('DGExecute', grammar_dg.Control)
 
 function grammar_dg.Execute.method:__init(rule, id, callback)
-	super(grammar_dg.Error).__init(self, rule, id)
+	class.super(grammar_dg.Error).__init(self, rule, id)
 	self.callback = callback
 end
 
@@ -643,10 +644,10 @@ function grammar_dg.Execute.method:_apply(ctx)
 	self.callback(ctx.result, ctx)
 end
 
-grammar_dg.Retain = class('DGRetain', grammar_dg.Control)
+grammar_dg.Retain = class.class('DGRetain', grammar_dg.Control)
 
 function grammar_dg.Retain.method:__init(readonly)
-	super(grammar_dg.Error).__init(self)
+	class.super(grammar_dg.Error).__init(self)
 	self.readonly = readonly
 end
 
@@ -660,7 +661,7 @@ function grammar_dg.Retain.method:_apply(ctx)
 	table.insert(ctx._retain_mark, mark)
 end
 
-grammar_dg.Release = class('DGRelease', grammar_dg.Control)
+grammar_dg.Release = class.class('DGRelease', grammar_dg.Control)
 
 function grammar_dg.Release.method:_apply(ctx)
 	local mark = ctx._retain_mark[#ctx._retain_mark]
@@ -668,10 +669,10 @@ function grammar_dg.Release.method:_apply(ctx)
 	mark:unmark()
 end
 
-grammar_dg.Branch = class('DGBranch', grammar_dg.Control)
+grammar_dg.Branch = class.class('DGBranch', grammar_dg.Control)
 
 function grammar_dg.Branch.method:__init(selector)
-	super(grammar_dg.Branch).__init(self)
+	class.super(grammar_dg.Branch).__init(self)
 	self.selector = selector
 	self.cases = {}
 end
@@ -703,10 +704,10 @@ function grammar_dg.Branch.method:_nexts(list)
 		table.insert(list, value)
 	end
 
-	return super(grammar_dg.Branch)._nexts(self, list)
+	return class.super(grammar_dg.Branch)._nexts(self, list)
 end
 
-grammar_dg.Primitive = class('DGPrimitive', grammar_dg.Entity)
+grammar_dg.Primitive = class.class('DGPrimitive', grammar_dg.Entity)
 
 function grammar_dg.Primitive.method:_apply(ctx)
 	return self:_parse(ctx.result, ctx.iter, ctx)
@@ -716,10 +717,10 @@ function grammar_dg.Primitive.method:_create(ctx)
 	return self:_init(ctx.result, ctx.iter, ctx, ctx.current_init)
 end
 
-grammar_dg.Number = class('DGNumber', grammar_dg.Primitive)
+grammar_dg.Number = class.class('DGNumber', grammar_dg.Primitive)
 
 function grammar_dg.Number.method:__init(rule, id, size, endian, name)
-	super(grammar_dg.Number).__init(self, rule, id)
+	class.super(grammar_dg.Number).__init(self, rule, id)
 	self.size = size
 	self.endian = endian
 	self.name = name
@@ -780,10 +781,10 @@ function grammar_dg.Number.method:_init(res, input, ctx, init)
 	end
 end
 
-grammar_dg.Bits = class('DGBits', grammar_dg.Primitive)
+grammar_dg.Bits = class.class('DGBits', grammar_dg.Primitive)
 
 function grammar_dg.Bits.method:__init(rule, id, size)
-	super(grammar_dg.Bits).__init(self, rule, id)
+	class.super(grammar_dg.Bits).__init(self, rule, id)
 	self.size = size
 end
 
@@ -803,10 +804,10 @@ end
 function grammar_dg.Bits.method:_init(res, input, ctx, init)
 end
 
-grammar_dg.Bytes = class('DGBytes', grammar_dg.Primitive)
+grammar_dg.Bytes = class.class('DGBytes', grammar_dg.Primitive)
 
 function grammar_dg.Bytes.method:__init(rule, id, size, name, chunked_callback)
-	super(grammar_dg.Bytes).__init(self, rule, id)
+	class.super(grammar_dg.Bytes).__init(self, rule, id)
 	self.size = size
 	self.name = name
 	self.chunked_callback = chunked_callback
@@ -875,10 +876,10 @@ function grammar_dg.Bytes.method:_init(res, input, ctx, init)
 	end
 end
 
-grammar_dg.Token = class('DGToken', grammar_dg.Primitive)
+grammar_dg.Token = class.class('DGToken', grammar_dg.Primitive)
 
 function grammar_dg.Token.method:__init(rule, id, pattern, re, full_re, name)
-	super(grammar_dg.Token).__init(self, rule, id)
+	class.super(grammar_dg.Token).__init(self, rule, id)
 	self.pattern = pattern
 	self.re = re
 	self.full_re = full_re
@@ -1000,7 +1001,7 @@ grammar.converter.string = {
 -- Grammar description
 --
 
-grammar.Entity = class('Entity')
+grammar.Entity = class.class('Entity')
 
 function grammar.Entity.method:_as(name)
 	local clone = self:clone()
@@ -1044,11 +1045,11 @@ function grammar.Entity.method:options(options)
 	local clone = self:clone()
 	for k, v in pairs(options) do
 		if type(k) == 'string' then
-			local opt = grammar.Entity.getoption(classof(self), k)
+			local opt = grammar.Entity.getoption(class.classof(self), k)
 			assert(opt, string.format("invalid option '%s'", k))
 			opt(clone, v)
 		elseif type(v) == 'string' then
-			local opt = grammar.Entity.getoption(classof(self), v)
+			local opt = grammar.Entity.getoption(class.classof(self), v)
 			assert(opt, string.format("invalid option '%s'", v))
 			opt(clone)
 		else
@@ -1064,7 +1065,7 @@ function grammar.Entity._options.memoize(self)
 	self.memoize = true
 end
 
-grammar.Record = class('Record', grammar.Entity)
+grammar.Record = class.class('Record', grammar.Entity)
 
 function grammar.Record.method:__init(entities)
 	self.entities = entities
@@ -1114,7 +1115,7 @@ function grammar.Record.method:compile(rule, id)
 end
 
 
-grammar.Union = class('Union', grammar.Entity)
+grammar.Union = class.class('Union', grammar.Entity)
 
 function grammar.Union.method:__init(entities)
 	self.entities = entities
@@ -1136,7 +1137,7 @@ function grammar.Union.method:compile(rule, id)
 end
 
 
-grammar.Branch = class('Branch', grammar.Entity)
+grammar.Branch = class.class('Branch', grammar.Entity)
 
 function grammar.Branch.method:__init(cases, select)
 	self.selector = select
@@ -1171,7 +1172,7 @@ function grammar.Branch.method:compile(rule, id)
 end
 
 
-grammar.Array = class('Array', grammar.Entity)
+grammar.Array = class.class('Array', grammar.Entity)
 
 function grammar.Array.method:__init(entity)
 	self.entity = entity
@@ -1239,7 +1240,7 @@ function grammar.Array._options.result(self, resultclass)
 end
 
 
-grammar.Number = class('Number', grammar.Entity)
+grammar.Number = class.class('Number', grammar.Entity)
 
 function grammar.Number.method:__init(bits)
 	self.bits = bits
@@ -1256,7 +1257,7 @@ grammar.Number._options = {}
 function grammar.Number._options.endianness(self, endian) self.endian = endian end
 
 
-grammar.Bytes = class('Bytes', grammar.Entity)
+grammar.Bytes = class.class('Bytes', grammar.Entity)
 
 function grammar.Bytes.method:compile(rule, id)
 	if type(self.count) ~= 'function' then
@@ -1275,7 +1276,7 @@ function grammar.Bytes._options.chunked(self, callback) self.chunked = callback 
 function grammar.Bytes._options.count(self, count) self.count = count end
 
 
-grammar.Bits = class('Bits', grammar.Entity)
+grammar.Bits = class.class('Bits', grammar.Entity)
 
 function grammar.Bits.method:__init(bits)
 	self.bits = bits
@@ -1290,7 +1291,7 @@ function grammar.Bits.method:compile(rule, id)
 	return grammar_dg.Bits:new(rule, id, self.bits)
 end
 
-grammar.Token = class('Token', grammar.Entity)
+grammar.Token = class.class('Token', grammar.Entity)
 
 function grammar.Token.method:__init(pattern)
 	self.pattern = pattern
@@ -1306,7 +1307,7 @@ function grammar.Token.method:compile(rule, id)
 	return ret
 end
 
-grammar.Execute = class('Execute', grammar.Entity)
+grammar.Execute = class.class('Execute', grammar.Entity)
 
 function grammar.Execute.method:__init(func)
 	self.func = func
@@ -1316,7 +1317,7 @@ function grammar.Execute.method:compile(rule, id)
 	return grammar_dg.Execute:new(rule, id, self.func)
 end
 
-grammar.Retain = class('Retain', grammar.Entity)
+grammar.Retain = class.class('Retain', grammar.Entity)
 
 function grammar.Retain.method:__init(readonly)
 	self.readonly = readonly
@@ -1326,19 +1327,19 @@ function grammar.Retain.method:compile(rule, id)
 	return grammar_dg.Retain:new(self.readonly)
 end
 
-grammar.Release = class('Release', grammar.Entity)
+grammar.Release = class.class('Release', grammar.Entity)
 
 function grammar.Release.method:compile(rule, id)
 	return grammar_dg.Release:new()
 end
 
-grammar.Empty = class('Empty', grammar.Entity)
+grammar.Empty = class.class('Empty', grammar.Entity)
 
 function grammar.Empty.method:compile(rule, id)
 	return nil
 end
 
-grammar.Error = class('Error', grammar.Entity)
+grammar.Error = class.class('Error', grammar.Entity)
 
 function grammar.Error.method:__init(msg)
 	self.msg = msg
@@ -1440,7 +1441,7 @@ grammar.text = grammar.bytes():convert(grammar.converter.string, true)
 -- Grammar
 --
 
-local grammar_class = class("Grammar")
+local grammar_class = class.class("Grammar")
 
 function grammar_class.method:__init(name)
 	self._name = name
@@ -1452,7 +1453,7 @@ function grammar_class.method:__index(name)
 end
 
 function grammar_class.method:__newindex(key, value)
-	if isa(value, grammar.Entity) then
+	if class.isa(value, grammar.Entity) then
 		value.rule = key
 		self._rules[key] = value
 	else
