@@ -70,6 +70,9 @@ endmacro(generate_images)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
 
+# Images
+generate_images(TARGET doc-images TOOL Inkscape FILES developer/flow.svg)
+
 # Real doc target
 add_custom_target(doxygen
 	COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
@@ -82,7 +85,7 @@ add_custom_target(doc
 	COMMAND ${SPHINX_EXECUTABLE} -b html -c ${CMAKE_CURRENT_BINARY_DIR}/ ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/doc
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Generating Sphinx documentation" VERBATIM
-	DEPENDS doxygen
+	DEPENDS doxygen doc-images
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka/manual OPTIONAL)
