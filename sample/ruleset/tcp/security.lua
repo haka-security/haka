@@ -1,3 +1,5 @@
+local rem = require("regexp/pcre")
+
 ------------------------------------
 -- TCP attacks
 ------------------------------------
@@ -17,33 +19,27 @@ haka.rule {
 	end
 }
 
-local function string_convert(t)
-	for i=1,#t do
-		if type(t[i]) == "number" then t[i] = string.char(t[i]) end
-	end
-	return table.concat(t)
-end
+local shellcode = "%xeb %x1f %x5e %x89 %x76 %x08 %x31 %xc0" ..
+	"%x88 %x46 %x07 %x89 %x46 %x0c %xb0 %x0b" ..
+	"%x89 %xf3 %x8d %x4e %x08 %x8d %x56 %x0c" .. 
+	"%xcd %x80 %x31 %xdb %x89 %xd8 %x40 %xcd" ..
+	"%x80 %xe8 %xdc %xff %xff %xff /bin/sh"
 
-local bindshell = string_convert({0xeb, 0x1f, 0x5e, 0x89, 0x76, 0x08, 0x31, 0xc0,
-	0x88, 0x46, 0x07, 0x89, 0x46, 0x0c, 0xb0, 0x0b, 0x89, 0xf3, 0x8d, 0x4e, 0x08,
-	0x8d, 0x56, 0x0c, 0xcd, 0x80, 0x31, 0xdb, 0x89, 0xd8, 0x40, 0xcd, 0x80, 0xe8,
-	0xdc, 0xff, 0xff, 0xff, "/bin/sh"})
+local re = rem.re:compile(shellcode, rem.re.EXTENDED)
 
 haka.rule {
-	hook = tcp.events.receive_packet,
-	eval = function (pkt)
-		if #pkt.payload > 0 then
-			-- reconstruct payload
-			local payload = getpayload(pkt.payload)
-			-- test if shellcode is present in data
-			if string.find(payload, bindshell) then
-				haka.alert{
-					description = "/bin/sh shellcode detected",
-					sources = haka.alert.address(pkt.ip.src),
-					targets = haka.alert.address(pkt.ip.dst)
-				}
-				pkt:drop()
-			end
+	hook = tcp_connection.events.receive_data,
+	streamed = true,
+	eval = function (flow, iter)
+		-- match malicious pattern across multiple packets
+		local ret = re:match(iter)
+		if ret then
+			haka.alert{
+				description = "/bin/sh shellcode detected",
+				sources = haka.alert.address(flow.srcip),
+				targets = haka.alert.address(flow.dstip)
+			}
+			flow:drop()
 		end
 	end
 }

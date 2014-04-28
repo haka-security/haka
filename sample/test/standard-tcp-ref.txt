@@ -152,38 +152,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
-	description = /bin/sh shellcode detected
-	sources = {
-		address: 192.168.10.1
-	}
-	targets = {
-		address: 192.168.20.1
-	}
-info alert: id = <>
-	description = /bin/sh shellcode detected
-	sources = {
-		address: 192.168.10.1
-	}
-	targets = {
-		address: 192.168.20.1
-	}
-info alert: id = <>
-	description = /bin/sh shellcode detected
-	sources = {
-		address: 192.168.10.1
-	}
-	targets = {
-		address: 192.168.20.1
-	}
-info alert: id = <>
-	description = /bin/sh shellcode detected
-	sources = {
-		address: 192.168.10.1
-	}
-	targets = {
-		address: 192.168.20.1
-	}
+debug cnx: dropping connection 192.168.10.1:50710 -> 192.168.20.1:80
 debug cnx: closing connection 192.168.10.1:50710 -> 192.168.20.1:80
 debug cnx: closing connection 192.168.10.1:37017 -> 192.168.20.1:22
 debug cnx: closing connection 192.168.10.1:50706 -> 192.168.20.1:80
