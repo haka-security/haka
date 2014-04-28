@@ -165,6 +165,8 @@ static struct regexp *compile(const char *pattern, int options)
 
 	/* Convert options to PCRE options */
 	if (options & REGEXP_CASE_INSENSITIVE) pcre_options |= PCRE_CASELESS;
+	if (options & REGEXP_EXTENDED) pcre_options |= PCRE_EXTENDED;
+
 
 	re->super.module = &HAKA_MODULE;
 	re->pcre = pcre_compile(pattern, pcre_options, &errorstr, &erroffset, NULL);

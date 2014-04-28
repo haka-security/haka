@@ -30,6 +30,7 @@ struct regexp_result {
 extern const struct regexp_result regexp_result_init;
 
 #define REGEXP_CASE_INSENSITIVE (1 << 0)
+#define REGEXP_EXTENDED (1 << 1)
 
 struct regexp_module {
 	struct module module;

@@ -214,6 +214,7 @@ struct regexp_module {
 
 		%immutable;
 		int CASE_INSENSITIVE { return REGEXP_CASE_INSENSITIVE; }
+		int EXTENDED { return REGEXP_EXTENDED; }
 	}
 };
 
