@@ -13,4 +13,3 @@ fi
 if [ -z "$HAKA_LUA" ]; then
 	export HAKA_LUA="lua,luajit"
 fi
-

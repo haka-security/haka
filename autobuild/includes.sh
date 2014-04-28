@@ -24,4 +24,3 @@ _runeachoptions() {
 		$* $lua
 	done
 }
-
