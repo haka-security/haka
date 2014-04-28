@@ -11,6 +11,7 @@ Flow
 The flows that go on the network and through Haka can be named using the following conventions:
 
 .. image:: flow.png
+    :align: center
 
 * *Up*/*Down*: Direction of the flow from the client to the server.
 * *Input*/*Output*: Direction of the flow regarding the Haka router.
