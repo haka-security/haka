@@ -2,6 +2,8 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+.. highlightlang:: c
+
 Contribute
 ==========
 
@@ -36,7 +38,7 @@ same line to avoid errors.
 
 ::
 
-    void function (void)
+    void function(void)
     {
         if (cond) {
             action;
@@ -83,7 +85,7 @@ Use good modular design and good error detection.
 Comments
 ^^^^^^^^
 
-Use C comments `/* .. */`.
+Use C comments ``/* ... */``.
 
 
 Git branches
@@ -92,7 +94,18 @@ Git branches
 Haka uses the Git flow model to manage its branches. Here is a quick definition of the
 various branches.
 
-* *master*: Main branch that contains the current release of Haka.
-* *develop*: Current developments.
-* *release/vX.Y*: Release branch that will only exists until the release is done where it is merged to *master*.
-* *feature/x*: Feature branches that will be merged to *develop* when completed.
+* *master*
+
+    Main branch that contains the current release of Haka.
+
+* *develop*
+
+    Current developments.
+
+* *release/vX.Y*
+
+    Release branch that will only exists until the release is done where it is merged to *master*.
+
+* *feature/x*
+
+    Feature branches that will be merged to *develop* when completed.
