@@ -9,6 +9,7 @@ Welcome to Haka's Reference Guide!
     :maxdepth: 2
     :numbered: 3
 
+    intro.rst
     packet.rst
     vbuffer.rst
     regexp.rst
