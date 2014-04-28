@@ -46,14 +46,9 @@ Parameters
 
     Save packets that were accepted to to a pcap file.
 
-.. describe:: dump_drop=`file`
-
-    Save packets that were dropped to to a pcap file.
-
     Example :
 
     .. code-block:: ini
 
         dump = true
         dump_input = "/tmp/input.pcap"
-        dump_drop = "/tmp/drop.pcap"
