@@ -1,4 +1,15 @@
 ------------------------------------
+---- Loading regex engine
+--------------------------------------
+
+local rem = require("regexp/pcre")
+
+
+--local http_methods = '^get$|^post$|^head$|^put$|^trace$|^delete$|^options$'
+--local re = rem.re:compile(http_methods, rem.re.CASE_INSENSITIVE)
+--
+
+------------------------------------
 -- HTTP Policy
 ------------------------------------
 
@@ -14,8 +25,8 @@ haka.rule {
 haka.rule {
 	hook = http.events.request,
 	eval = function (http, request)
-		local method = request.method:lower()
-		if method ~= 'get' and method ~= 'post' then
+		local method = request.method
+		if not rem.re:match('^get$|^post$', method, rem.re.CASE_INSENSITIVE) then
 			haka.alert{
 				description = string.format("forbidden http method '%s'", method),
 				sources = haka.alert.address(http.flow.srcip),

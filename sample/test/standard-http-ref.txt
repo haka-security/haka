@@ -5,7 +5,7 @@ debug filter: entering packet filtering rules : 50693 --> 80
 warn filter: authorizing http traffic
 debug cnx: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
 info alert: id = <>
-	description = non authorized http method 'wrong'
+	description = non authorized http method 'WRONG'
 	sources = {
 		address: 192.168.10.1
 	}
@@ -31,7 +31,7 @@ debug filter: entering packet filtering rules : 50695 --> 80
 warn filter: authorizing http traffic
 debug cnx: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
 info alert: id = <>
-	description = forbidden http method 'trace'
+	description = forbidden http method 'TRACE'
 	sources = {
 		address: 192.168.10.1
 	}
