@@ -139,7 +139,7 @@ class HakaObject(ObjectDescription):
 
     lua_signature_re = re.compile(
         r'''^ ([\w\.\:/\-]+[:.])?     # class name(s)
-              ([\w/\-/]+)  \s*        # thing name
+              ([<>\w/\-/]+)  \s*        # thing name
               (?: ([({])(.*)([)}]))?  # optional: arguments
               (?:\s* -> \s* (.*))?    # optional: return annotation
               $                       # and nothing more
