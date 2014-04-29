@@ -281,3 +281,17 @@ em.modproperty {
 .field-list .field-body p {
 	display: inline;
 }
+
+dl.class dt:target, dl.function dt:target, dl.operator dt:target, dl.method
+dt:target, dl.data dt:target, .highlighted {
+	background-color: #FFCC33;
+	border-color: #515151;
+}
+
+dl.class dt, dl.function dt, dl.operator dt, dl.method dt, dl.data dt {
+	background-color: #FAFAFA;
+	border-color: #99CC66;
+	border-style: solid;
+	border-width: 3px 1px 1px;
+	padding: 0.5em;
+}
