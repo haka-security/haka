@@ -63,6 +63,8 @@ properties.
 
     .. haka:method:: GrammarEntity:validate(validator) -> entity
 
+        :param validator: Validator function.
+        :paramtype validator: function
         :return entity: Modified grammar entity.
         :rtype entity: :haka:class:`GrammarEntity`
 
@@ -93,6 +95,190 @@ properties.
         Compile the grammar representation.
 
 
+Final elements
+^^^^^^^^^^^^^^
+
+.. haka:function:: number(bits) -> entity
+
+    :param bits: Size of the number in bits.
+    :paramtype bits: number
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    **Supported options:**
+
+    .. haka:data:: endianness
+        :module:
+        :idxctx: number
+        :objtype: option
+        :idxtype: number grammar option
+
+        Endianness of the raw data: ``little`` or ``big``. By default, the data will be treated
+        as big endian.
+
+    **Usage:**
+
+    ::
+
+        haka.grammar.number(8)
+
+    Parse a binary number.
+
+.. haka:function:: token(pattern) -> entity
+
+    :param pattern: Regular expression pattern for the token.
+    :paramtype pattern: string
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Match a regular expression on the data.
+
+    .. note:: The regular expression will surrounded by non-capturing group : ``"^(?:"...")"``.
+
+    **Usage:**
+
+    ::
+
+        haka.grammar.token('%s+')
+
+.. haka:data:: flag
+
+    :type: :haka:class:`GrammarEntity`
+
+    Parse a flag of 1 bit and returns it as a ``boolean``.
+
+.. haka:function:: bytes() -> entity
+
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Parse a block of data.
+
+    **Supported options:**
+
+    .. haka:data:: count
+        :module:
+        :idxctx: bytes
+        :objtype: option
+        :idxtype: bytes grammar option
+
+        :type: number
+
+        Number of bytes.
+
+    .. haka:function:: count(result, context) -> count
+        :module:
+        :idxctx: bytes
+        :objtype: option
+        :idxtype: bytes grammar option
+
+        :param result: Current parse result.
+        :param context: Full parsing context.
+        :paramtype context: :haka:class:`ParseContext`
+        :return count: Number of bytes.
+        :rtype count: number
+
+    .. haka:function:: chunked(result, sub, islast, context)
+        :module:
+        :idxctx: bytes
+        :objtype: option
+        :idxtype: bytes grammar option
+
+        :param result: Current parsing result.
+        :param sub: Current data block.
+        :param islast: True if this data block is the last one.
+        :param context: Full parsing context.
+        :paramtype context: :haka:class:`ParseContext`
+
+        This option allows to get each data as soon as they are received in a callback function.
+
+.. haka:function:: padding{align=align_bit} -> entity
+                   padding{size=size_bit} -> entity
+
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Parse some padding. The padding can be given by size or by alignment.
+
+.. haka:function:: field(name, entity) -> entity
+
+    :param name: Name of the field in the result.
+    :paramtype name: string
+    :param entity: Entity to named.
+    :paramtype entity: grammar entity
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Create a named entity. This is used to give access to an entity of the grammar. It
+    will then be possible to access to data in the result in a security rule for instance.
+
+    **Usage:**
+
+    ::
+
+        haka.grammar.field("WS", haka.grammar.token('%s+'))
+
+.. haka:function:: verify(verif, msg) -> entity
+
+    :param verif: Verification function.
+    :paramtype verif: function
+    :param msg: Error message to report.
+    :paramtype msg: string
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Verify some property during the parsing. If ``func`` returns ``false``, then an error is
+    reported with ``msg``.
+
+    .. haka:function:: verif(result, context) -> is_valid
+        :noindex:
+        :module:
+
+        :param result: Current parsing result.
+        :param context: Full parsing context.
+        :paramtype context: :haka:class:`ParseContext`
+        :return is_valid: False if the verification fails.
+        :rtype is_valid: boolean
+
+.. haka:function:: execute(exec) -> entity
+
+    :param exec: Generic function.
+    :paramtype exec: function
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Execute a generic function during the parsing. This allows to deeply customize the parsing using
+    regular Lua functions.
+
+    .. haka:function:: exec(result, context)
+        :noindex:
+        :module:
+
+        :param result: Current parsing result.
+        :param context: Full parsing context.
+        :paramtype context: :haka:class:`ParseContext`
+
+.. haka:function:: retain(readonly = false) -> entity
+
+    :param readonly: True if the retain should only be read-only.
+    :paramtype readonly: boolean
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    When working on a stream, it is needed to specify which part of the stream to keep before being able
+    to send it on the network. This element allows to control it.
+
+    .. seealso:: :haka:func:`release`
+
+.. haka:data:: release
+
+    :type: :haka:class:`GrammarEntity`
+
+    When working on a stream, this element will tell Haka to send some retained data.
+
+    .. seealso:: :haka:func:`retain`
+
+
 Compounds
 ^^^^^^^^^
 
@@ -106,11 +292,13 @@ Compounds
     Create a record for a list of sub entities. Each entity is expected to appear
     one by one in order.
 
-    Usage::
+    **Usage:**
+
+    ::
 
         haka.grammar.record{
-        	haka.grammar.number(8),
-        	haka.grammar.bytes()
+            haka.grammar.number(8),
+            haka.grammar.bytes()
         }
 
 .. haka:function:: union(entities) -> entity
@@ -147,14 +335,16 @@ Compounds
     case is set to the string ``'continue'`` the parsing will continue in the case where no valid
     case is found. If it is not set by the user, a parsing error will be raised.
 
-    Usage::
+    **Usage:**
+
+    ::
 
         haka.grammar.branch({
-        		num8  = haka.grammar.number(8),
-        		num16 = haka.grammar.number(16),
-        	}, function (result, context)
-        		return result.type
-        	end
+                num8  = haka.grammar.number(8),
+                num16 = haka.grammar.number(16),
+            }, function (result, context)
+                return result.type
+            end
         )
 
 .. haka:function:: optional(entity, present) -> entity
@@ -235,186 +425,12 @@ Compounds
         :return should_continue: Number ``false`` when the end of the array is reached.
         :rtype should_continue: number
 
-    Usage::
+    **Usage:**
+
+    ::
 
         haka.grammar.array(haka.grammar.number(8))
-        	:options{count = 10}
-
-
-Final elements
-^^^^^^^^^^^^^^
-
-.. haka:function:: number(bits) -> entity
-
-    :param bits: Size of the number in bits.
-    :paramtype bits: number
-    :return entity: Created entity.
-    :rtype entity: :haka:class:`GrammarEntity`
-
-    **Supported options:**
-
-    .. haka:data:: endianness
-        :module:
-        :idxctx: number
-        :objtype: option
-        :idxtype: number grammar option
-
-        Endianness of the raw data: ``little`` or ``big``. By default, the data will be treated
-        as big endian.
-
-    Usage::
-
-        haka.grammar.number(8)
-
-    Parse a binary number.
-
-.. haka:function:: token(pattern) -> entity
-
-    :param pattern: Regular expression pattern for the token.
-    :paramtype pattern: string
-    :return entity: Created entity.
-    :rtype entity: :haka:class:`GrammarEntity`
-
-    Match a regular expression on the data.
-
-    Usage::
-
-        haka.grammar.token('%s+')
-
-.. haka:data:: flag
-
-    :type: :haka:class:`GrammarEntity`
-
-    Parse a flag of 1 bit and returns it as a ``boolean``.
-
-.. haka:function:: bytes() -> entity
-
-    :return entity: Created entity.
-    :rtype entity: :haka:class:`GrammarEntity`
-
-    Parse a block of data.
-
-    **Supported options:**
-
-    .. haka:data:: count
-        :module:
-        :idxctx: bytes
-        :objtype: option
-        :idxtype: bytes grammar option
-
-        :type: number
-
-        Number of bytes.
-
-    .. haka:function:: count(result, context) -> count
-        :module:
-        :idxctx: bytes
-        :objtype: option
-        :idxtype: bytes grammar option
-
-        :param result: Current parse result.
-        :param context: Full parsing context.
-        :paramtype context: :haka:class:`ParseContext`
-        :return count: Number of bytes.
-        :rtype count: number
-
-    .. haka:function:: chunked(result, sub, islast, context)
-        :module:
-        :idxctx: bytes
-        :objtype: option
-        :idxtype: bytes grammar option
-
-        :param result: Current parsing result.
-        :param sub: Current data block.
-        :param islast: True if this data block is the last one.
-        :param context: Full parsing context.
-        :paramtype context: :haka:class:`ParseContext`
-
-        This option allows to get each data as soon as they are received in a callback function.
-
-.. haka:function:: padding{align=align_bit} -> entity
-                   padding{size=size_bit} -> entity
-
-    :return entity: Created entity.
-    :rtype entity: :haka:class:`GrammarEntity`
-
-    Parse some padding. The padding can be given by size or by alignment.
-
-.. haka:function:: field(name, entity) -> entity
-
-    :param name: Name of the field in the result.
-    :paramtype name: string
-    :param entity: Entity to named.
-    :paramtype entity: grammar entity
-    :return entity: Created entity.
-    :rtype entity: :haka:class:`GrammarEntity`
-
-    Create a named entity. This is used to give access to an entity of the grammar. It
-    will then be possible to access to data in the result in a security rule for instance.
-
-    Usage::
-
-        haka.grammar.field("WS", haka.grammar.token('%s+'))
-
-.. haka:function:: verify(verif, msg) -> entity
-
-    :param verif: Verification function.
-    :paramtype verif: function
-    :param msg: Error message to report.
-    :paramtype msg: string
-    :return entity: Created entity.
-    :rtype entity: :haka:class:`GrammarEntity`
-
-    Verify some property during the parsing. If ``func`` returns ``false``, then an error is
-    reported with ``msg``.
-
-    .. haka:function:: verif(result, context) -> is_valid
-        :noindex:
-        :module:
-
-        :param result: Current parsing result.
-        :param context: Full parsing context.
-        :paramtype context: :haka:class:`ParseContext`
-        :return is_valid: False if the verification fails.
-        :rtype is_valid: boolean
-
-.. haka:function:: execute(exec) -> entity
-
-    :param exec: Generic function.
-    :paramtype exec: function
-    :return entity: Created entity.
-    :rtype entity: :haka:class:`GrammarEntity`
-
-    Execute a generic function during the parsing. This allows to deeply customize the parsing using
-    regular Lua functions.
-
-    .. haka:function:: exec(result, context)
-        :noindex:
-        :module:
-
-        :param result: Current parsing result.
-        :param context: Full parsing context.
-        :paramtype context: :haka:class:`ParseContext`
-
-.. haka:function:: retain(readonly = false) -> entity
-
-    :param readonly: True if the retain should only be read-only.
-    :paramtype readonly: boolean
-    :return entity: Created entity.
-    :rtype entity: :haka:class:`GrammarEntity`
-
-    When working on a stream, it is needed to specify which part of the stream to keep before being able
-    to send it on the network. This element allows to control it.
-
-    .. seealso:: :haka:data:`release`
-
-.. haka:data:: release
-
-    :type: :haka:class:`GrammarEntity`
-
-    When working on a stream, this element will tell Haka to send some retained data.
-
-    .. seealso:: :haka:func:`retain`
+            :options{count = 10}
 
 
 Converters
@@ -436,6 +452,19 @@ Converters
 
         Compute the converted value to store in the raw data. This happens when the user
         modify the value of on of the field.
+
+        .. note:: If setter is nil then field will be read-only.
+
+    **Usage:**
+
+    ::
+
+        local my_converter = {
+            get = function (val)
+                return val:gsub("/", ".")
+            end,
+            set = nil
+        }
 
 
 Predefined converters

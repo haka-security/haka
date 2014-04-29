@@ -9,9 +9,16 @@ Ipv4
 
 .. haka:module:: ipv4
 
-Ipv4 dissector module. ::
+Ipv4 dissector module.
+
+**Usage:**
+
+::
 
     local ipv4 = require('protocol/ipv4')
+
+Dissector
+---------
 
 .. haka:class:: Ipv4Dissector
     :module:
@@ -29,7 +36,7 @@ Ipv4 dissector module. ::
         :param dissector: Dissector to use.
         :paramtype dissector: :haka:class:`Dissector`
 
-        Register the dissector to associate with the given protocol IP protocol number.
+        Register the dissector to associate with the given IP protocol number.
 
     .. haka:function:: create(pkt) -> ip
 
@@ -67,7 +74,7 @@ Ipv4 dissector module. ::
 
         :type: boolean
 
-        Individual IPv4 flags.
+        IPv4 flags.
 
     .. haka:attribute:: Ipv4Dissector.flags.all
 
@@ -177,7 +184,7 @@ Utilities
                        network(ipaddr, mask) -> net
 
         :param str: String representation of the IP network (ie. ``'127.0.0.1/8'``).
-        :paramrtype str: string
+        :paramtype str: string
         :param ipaddr: IP network address.
         :paramtype ipaddr: :haka:class:`addr`
         :param mask: IP network mask.
@@ -284,7 +291,7 @@ Utilities
         :paramtype srcport: number
         :param dstport: Destination port.
         :paramtype dstport: number
-        :return cnx: New connection
+        :return cnx: Corresponding connection
         :rtype cnx: :haka:class:`cnx`
 
         Get an entry in the connection table.

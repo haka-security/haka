@@ -13,7 +13,7 @@ Packet
     :module:
 
     Object that represents a raw data packet. I.e a blob of binary data coming from the capture module.
-    Nothing is know of its content.
+    Nothing is known about its content.
 
     .. haka:function:: packet(size = 0) -> pkt
 

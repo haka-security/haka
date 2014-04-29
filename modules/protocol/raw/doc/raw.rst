@@ -9,9 +9,16 @@ Raw
 
 .. haka:module:: raw
 
-Raw dissector module. ::
+Raw dissector module.
+
+**Usage:**
+
+::
 
     local raw = require('protocol/raw')
+
+Dissector
+---------
 
 .. haka:class:: RawDissector
     :module:
@@ -22,16 +29,6 @@ Raw dissector module. ::
 
     Raw packet dissector that is used as the first dissector for any received packet.
 
-    **Example:**
-
-    ::
-
-        local raw = require('protocol/raw')
-
-        local pkt = raw.create(150)
-        print(#pkt.payload)
-        pkt:send()
-
     .. haka:function:: create(size = 0) -> raw
 
         :param size: Size of the new packet.
@@ -40,7 +37,6 @@ Raw dissector module. ::
         :rtype raw: :haka:class:`RawDissector`
 
         Create a new raw packet.
-
 
 Options
 -------
@@ -73,3 +69,14 @@ Events
     :paramtype pkt: :haka:class:`RawDissector`
 
     Event that is triggered just before sending a raw packet on the network.
+
+Example
+-------
+
+::
+
+    local raw = require('protocol/raw')
+
+    local pkt = raw.create(150)
+    print(#pkt.payload)
+    pkt:send()

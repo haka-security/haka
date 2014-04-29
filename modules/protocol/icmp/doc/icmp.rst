@@ -9,9 +9,16 @@ Icmp
 
 .. haka:module:: icmp
 
-Icmp dissector module. ::
+Icmp dissector module.
+
+**Usage:**
+
+::
 
     local icmp = require('protocol/icmp')
+
+Dissector
+---------
 
 .. haka:class:: IcmpDissector
     :module:
@@ -20,7 +27,7 @@ Icmp dissector module. ::
     :Name: ``'icmp'``
     :Extend: :haka:class:`haka.dissector.PacketDissector` |nbsp|
 
-    Dissector data for an ICMP packet.
+    ICMP packet dissector.
 
     .. haka:function:: create(ip[, init]) -> icmp
 

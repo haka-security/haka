@@ -9,9 +9,16 @@ Udp Connection
 
 .. haka:module:: udp_connection
 
-Udp state-full dissector module. ::
+Udp state-full dissector module.
+
+**Usage:**
+
+::
 
     local udp_connection = require('protocol/udp_connection')
+
+Dissector
+---------
 
 .. haka:class:: UdpConnectionDissector
     :module:

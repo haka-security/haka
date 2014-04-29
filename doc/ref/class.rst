@@ -7,7 +7,7 @@
 Class
 =====
 
-.. note:: This section contains advanced feature of Haka.
+.. warning:: This section contains advanced feature of Haka.
 
 .. haka:module:: class
 

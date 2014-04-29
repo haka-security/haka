@@ -9,9 +9,16 @@ Dns
 
 .. haka:module:: dns
 
-Dns dissector module. ::
+Dns dissector module.
+
+**Usage:**
+
+::
 
     local dns = require('protocol/dns')
+
+Dissector
+---------
 
 .. haka:class:: DnsDissector
     :module:
@@ -90,6 +97,22 @@ Protocol elements
                         DnsResourceRecord:length
 
         DNS resource record fields as defined by RFC 1035.
+
+    .. note:: The following fields may be present depending on :haka:data:`<DnsResourceRecord>.type`.
+
+    .. haka:attribute:: DnsResourceRecord:ip
+
+        :type: :haka:class:`addr` |nbsp|
+
+        IPv4 object.
+
+    .. haka:attribute:: DnsResourceRecord:name
+
+        :type: string
+
+        Domain name as a string.
+
+
 
 Events
 ------

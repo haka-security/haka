@@ -12,31 +12,33 @@ information about a running Haka.
 
 .. haka:module:: haka.log
 
-.. haka:function:: fatal(module, fmt, ...)
-                   error(module, fmt, ...)
-                   warning(module, fmt, ...)
-                   info(module, fmt, ...)
-                   debug(module, fmt, ...)
+.. haka:function:: fatal(module, fmt[, ...])
+                   error(module, fmt[, ...])
+                   warning(module, fmt[, ...])
+                   info(module, fmt[, ...])
+                   debug(module, fmt[, ...])
 
     :param module: Name of the module issuing the log.
     :paramtype module: string
-    :param fmt: String formating options.
+    :param fmt: Format string.
     :paramtype fmt: string
+    :param ...: Format arguments.
 
-    Log a message in various levels.
+    Log a message in corresponding level.
 
-.. haka:function:: haka.log(module, fmt, ...)
+.. haka:function:: haka.log(module, fmt[, ...])
 
     Alias to :haka:func:`haka.log.info`.
 
-.. haka:function:: message(level, module, fmt, ...)
+.. haka:function:: message(level, module, fmt[, ...])
 
     :param level: Level for the log (``'debug'``, ``'info'``, ``'warning'``, ``'error'`` or ``'fatal'``).
     :paramtype level: string
     :param module: Name of the module issuing the log.
     :paramtype module: string
-    :param fmt: String formating options.
+    :param fmt: Format string.
     :paramtype fmt: string
+    :param ...: Format arguments.
 
     Log a message.
 

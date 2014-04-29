@@ -81,7 +81,7 @@ Dissector
         :abstract:
 
         Drop the dissector instance. It can be a packet or an flow depending on the
-        dssector type.
+        dissector type.
 
     .. haka:method:: Dissector:error()
         :abstract:
@@ -107,7 +107,7 @@ Utilities
 
 .. haka:function:: pcall(dissector, f)
 
-    :param dissector: Dissector to preotect.
+    :param dissector: Dissector to protect.
     :paramtype dissector: :haka:class:`Dissector`
     :param f: Function to call.
     :paramtype f: function
@@ -248,9 +248,23 @@ Flow
         execute it in a thread like environement. It allows the function to block waiting
         for available data on the stream.
 
-        This function is manly used as the signal function for event based on stream.
+        This function is mainly used as the signal function for event based on stream.
 
-        **Example:**
+    .. haka:function:: FlowDissector.stream_wrapper(f, options, self, stream, current, ...)
+
+        :param f: Listener function.
+        :paramtype f: function
+        :param options: List of options from the event.
+        :paramtype options: table
+        :param self: Current dissector
+        :paramtype self: :haka:class:`FlowDissector`
+        :param stream: Stream.
+        :paramtype stream: :haka:class:`vbuffer_stream`
+        :param current: Current position in the stream.
+        :paramtype current: :haka:class:`vbuffer_iterator`
+        :param ...: Parameters that are given to *f*.
+
+        **Usage:**
 
         ::
 

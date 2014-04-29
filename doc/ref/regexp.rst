@@ -14,7 +14,7 @@ Regular expression format
 -------------------------
 
 The regular expression format depends on the regular expression module that is loaded. Any ``%`` found in
-the string will be automatically converted to a ``/``.
+the string will be automatically converted to a ``\``.
 
 Examples for the pcre module::
 
@@ -58,7 +58,7 @@ Module
         :paramtype buffer: :haka:class:`vbuffer`
         :param options: Regular expression compilation options.
         :paramtype options: number
-        :return match: Matching sub-buffer or nil if no match
+        :return match: Matching sub-buffer or ``nil`` if no match
         :rtype match: :haka:class:`vbuffer_sub`
 
         Match a regular expression against a given buffer.
@@ -72,14 +72,15 @@ Module
         :paramtype buffer_iterator: :haka:class:`vbuffer_iterator`
         :param options: Regular expression compilation options.
         :paramtype options: number
-        :param createsub: True if the function should build a sub-buffer.
+        :param createsub: ``true`` if the function should build a sub-buffer.
         :paramtype createsub: boolean
-        :return match: Matching sub-buffer if `createsub` is true or ``true`` or nil if no match
-        :rtype match: :haka:class:`vbuffer_sub`
+        :return match: If `createsub` is ``true`` return matching sub-buffer or ``nil``, otherwise return a boolean
+        :rtype match: :haka:class:`vbuffer_sub` or boolean
 
         Match a regular expression against a given buffer iterator.
 
-        Usage::
+        **Usage:**
+        ::
 
             local match = pcre:match("%s+", iter, 0, true)
             print(match:asstring())
@@ -130,7 +131,7 @@ Compiled regular expression
 
         :param buffer: Buffer against which the regular expression is matched.
         :paramtype buffer: :haka:class:`vbuffer`
-        :return match: Matching sub-buffer or nil if no match
+        :return match: Matching sub-buffer or ``nil`` if no match
         :rtype match: :haka:class:`vbuffer_sub`
 
         Match the compiled regular expression against a given buffer.
@@ -140,7 +141,7 @@ Compiled regular expression
 
         :param buffer_iterator: Buffer iterator against which the regular expression is matched.
         :paramtype buffer_iterator: :haka:class:`vbuffer_iterator`
-        :return match: Matching sub-buffer or nil if no match
+        :return match: Matching sub-buffer or ``nil`` if no match
         :rtype match: :haka:class:`vbuffer_sub`
 
         Match the compiled regular expression against a given buffer iterator.
@@ -150,7 +151,7 @@ Compiled regular expression
         :return sink: A created regexp_sink.
         :rtype sink: :haka:class:`regexp_sink`
 
-        Create a regular expression context that can be eventually used for matching the
+        Create a regular expression context that can be used for matching the
         regular expression against chunks of data.
 
 
@@ -166,7 +167,7 @@ Regular expression sink
 
         :param string: String against which the regular expression is matched.
         :paramtype string: string
-        :param eof: True if this string is the last one.
+        :param eof: ``true`` if this string is the last one.
         :paramtype eof: boolean
         :param result: Data used to store the indices of the match.
         :paramtype result: :haka:class:`regexp_result`
@@ -179,13 +180,13 @@ Regular expression sink
 
         :param buffer: Buffer against which the regular expression is matched.
         :paramtype buffer: :haka:class:`vbuffer_sub`
-        :param eof: True if this string is the last one.
+        :param eof: ``true`` if this string is the last one.
         :paramtype eof: boolean
         :return match: Result of the matching.
         :rtype match: boolean
-        :return begin: Position of the beginning of the match or nil.
+        :return begin: Position of the beginning of the match or ``nil``.
         :rtype begin: :haka:class:`vbuffer_iterator`
-        :return end: Position of the end of the match or nil.
+        :return end: Position of the end of the match or ``nil``.
         :rtype end: :haka:class:`vbuffer_iterator`
 
         Match the compiled regular expression across multiple buffer. The `begin` and `end` result allow
@@ -196,7 +197,7 @@ Regular expression sink
         :return match: State of this sink.
         :rtype match: boolean
 
-        Get the the sink is in state. If something has been match but more data are needed
+        Get the sink state. If something has start matching but more data are needed
         to be sure that it is a valid match then this function will returns ``true``.
 
 .. haka:class:: regexp_result

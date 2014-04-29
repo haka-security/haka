@@ -9,9 +9,16 @@ Udp
 
 .. haka:module:: udp
 
-Udp state-less dissector module. ::
+Udp state-less dissector module.
+
+**Usage:**
+
+::
 
     local udp = require('protocol/udp')
+
+Dissector
+---------
 
 .. haka:class:: UdpDissector
     :module:
@@ -20,13 +27,13 @@ Udp state-less dissector module. ::
     :Name: ``'udp'``
     :Extend: :haka:class:`haka.dissector.PacketDissector` |nbsp|
 
-    Dissector data for a UDP packet.
+    UDP packet dissector.
 
     .. haka:function:: create(ip[, init]) -> udp
 
         :param ip: IPv4 packet.
         :paramtype ip: :haka:class:`Ipv4Dissector`
-        :param init: Optional initialization data.
+        :param init: Initialization data.
         :paramtype init: table
         :return udp: Created packet.
         :rtype udp: :haka:class:`UdpDissector`

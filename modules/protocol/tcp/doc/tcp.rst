@@ -9,9 +9,16 @@ Tcp
 
 .. haka:module:: tcp
 
-Tcp state-less dissector module. ::
+Tcp state-less dissector module.
+
+**Usage:**
+
+::
 
     local tcp = require('protocol/tcp')
+
+Dissector
+---------
 
 .. haka:class:: TcpDissector
     :module:
@@ -57,15 +64,15 @@ Tcp state-less dissector module. ::
 
         :type: boolean
 
-        Individual TCP flags.
+        TCP flags.
 
     .. haka:attribute:: TcpDissector:flags.all
 
         :type: number
 
-        Raw flags value.
+        All flags raw value.
 
-    .. haka:attribute:: payload
+    .. haka:attribute:: TcpDissector:payload
 
         :type: :haka:class:`vbuffer` |nbsp|
 
@@ -125,6 +132,8 @@ Events
 
 Utilities
 ---------
+
+.. warning:: This section contains advanced feature of Haka.
 
 .. haka:class:: tcp_stream
     :module:

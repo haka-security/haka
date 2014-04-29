@@ -12,13 +12,13 @@ Welcome to Haka's Reference Guide!
     intro.rst
     packet.rst
     vbuffer.rst
-    regexp.rst
     log.rst
     alert.rst
-    misc.rst
+    regexp.rst
     hakadissector.rst
     rule.rst
     grammar.rst
     state_machine.rst
     class.rst
     dissector.rst
+    misc.rst

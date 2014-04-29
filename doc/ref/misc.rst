@@ -37,8 +37,8 @@ Exit
 
     Registers a callback that will be called when Haka exits.
 
-Other
------
+Time
+----
 
 .. haka:class:: time
     :module:
@@ -47,7 +47,7 @@ Other
 
     .. haka:function:: time(secs) -> t
 
-        :param secs: Number of seconds.
+        :param secs: Number of seconds since the epoch (1970-01-01T00:00:00Z ISO 8601).
         :paramtype secs: number
         :return t: New time representation.
         :rtype t: :haka:class:`time`

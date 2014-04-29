@@ -31,16 +31,42 @@ Description
 
     Haka also defines some special transitions:
 
-    * *init*: transition activated at machine state initialization.
-    * *finish*: transition activated when quitting the state machine.
-    * *enter*: transition activated when entering a new state.
-    * *leave*: transition activated when leaving a state.
-    * *error*: transition triggered on error.
-    * *timeout*: temporal transition.
-        Those transitions are described by a table where the key is the timeout value
+    .. haka:data:: init
+        :module:
+        :objtype: transition
+
+        Transition activated at machine state initialization.
+
+    .. haka:data:: finish
+        :module:
+        :objtype: transition
+
+        Transition activated when quitting the state machine.
+    .. haka:data:: enter
+        :module:
+        :objtype: transition
+
+        Transition activated when entering a new state.
+    .. haka:data:: leave
+        :module:
+        :objtype: transition
+
+        Transition activated when leaving a state.
+    .. haka:data:: error
+        :module:
+        :objtype: transition
+
+        Transition triggered on error.
+    .. haka:data:: timeout
+        :module:
+        :objtype: transition
+
+        Temporal transition. The timeout transitions are described by a table where the key is the timeout value
         in seconds.
 
-        Example::
+        **Usage:**
+
+        ::
 
             states:default{
                 timeout = {
@@ -110,10 +136,10 @@ Instance
 
         Current state.
 
-    .. haka:method:: state_machine_instance:transition(...)
+    .. haka:method:: state_machine_instance:<transition>(...)
 
-    Call a transition on the current state. The name *transition* need to be
-    replaced by the name of the transition to call.
+        Call a transition on the current state. The name *transition* need to be
+        replaced by the name of the transition to call.
 
     **Example:**
 
@@ -132,8 +158,3 @@ Instance
         local instance = states:instanciate()
 
         instance:update() -- call the transition 'update' on the state 'a'
-
-Example
--------
-
-TODO

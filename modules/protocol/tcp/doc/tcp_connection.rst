@@ -9,9 +9,16 @@ Tcp Connection
 
 .. haka:module:: tcp_connection
 
-Tcp state-full dissector module. ::
+Tcp state-full dissector module.
+
+**Usage:**
+
+::
 
     local tcp_connection = require('protocol/tcp_connection')
+
+Dissector
+---------
 
 .. haka:class:: TcpConnectionDissector
     :module:
@@ -87,6 +94,16 @@ Events
     :module:
     :objtype: event
 
+    **Event options:**
+
+        .. haka:data:: streamed
+            :noindex:
+            :module:
+
+            :type: boolean
+
+            Run the event listener as a streamed function.
+
     :param flow: TCP flow.
     :paramtype flow: :haka:class:`TcpConnectionDissector`
     :param stream: TCP data stream.
@@ -97,16 +114,6 @@ Events
     :paramtype direction: string
 
     Event triggered when some data are available on a TCP stream.
-
-    **Event options:**
-
-        .. haka:data:: streamed
-            :noindex:
-            :module:
-
-            :type: boolean
-
-            Run the event listener as a streamed function.
 
 
 Example

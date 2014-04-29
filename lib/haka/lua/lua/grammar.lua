@@ -1300,7 +1300,7 @@ end
 function grammar.Token.method:compile(rule, id)
 	if not self.re then
 		self.re = rem.re:compile("^(?:"..self.pattern..")")
-		self.full_re = rem.re:compile("^(?:"..self.pattern..")$")
+		self.full_re = rem.re:compile("^(?:"..self.pattern..")")
 	end
 	local ret = grammar_dg.Token:new(rule, id, self.pattern, self.re, self.full_re, self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end

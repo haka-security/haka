@@ -9,9 +9,16 @@ Http
 
 .. haka:module:: http
 
-Http dissector module. ::
+Http dissector module.
+
+**Usage:**
+
+::
 
     local http = require('protocol/http')
+
+Dissector
+---------
 
 .. haka:class:: HttpDissector
     :module:
@@ -154,6 +161,16 @@ Events
     :module:
     :objtype: event
 
+    **Event options:**
+
+        .. haka:data:: streamed
+            :noindex:
+            :module:
+
+            :type: boolean
+
+            Run the event listener as a streamed function.
+
     :param http: HTTP dissector.
     :paramtype http: :haka:class:`HttpDissector`
     :param stream: TCP data stream.
@@ -165,6 +182,10 @@ Events
 
     Event triggered when some data are available on either a request or a response.
 
+.. haka:function:: http.events.request_data(http, stream, current)
+    :module:
+    :objtype: event
+
     **Event options:**
 
         .. haka:data:: streamed
@@ -174,10 +195,6 @@ Events
             :type: boolean
 
             Run the event listener as a streamed function.
-
-.. haka:function:: http.events.request_data(http, stream, current)
-    :module:
-    :objtype: event
 
     :param http: HTTP dissector.
     :paramtype http: :haka:class:`HttpDissector`
@@ -188,6 +205,10 @@ Events
 
     Event triggered when some data are available on a request.
 
+.. haka:function:: http.events.response(http, stream, current)
+    :module:
+    :objtype: event
+
     **Event options:**
 
         .. haka:data:: streamed
@@ -197,10 +218,6 @@ Events
             :type: boolean
 
             Run the event listener as a streamed function.
-
-.. haka:function:: http.events.response(http, stream, current)
-    :module:
-    :objtype: event
 
     :param http: HTTP dissector.
     :paramtype http: :haka:class:`HttpDissector`
@@ -210,16 +227,6 @@ Events
     :paramtype current: :haka:class:`vbuffer_iterator`
 
     Event triggered when some data are available on a response.
-
-    **Event options:**
-
-        .. haka:data:: streamed
-            :noindex:
-            :module:
-
-            :type: boolean
-
-            Run the event listener as a streamed function.
 
 
 Utilities

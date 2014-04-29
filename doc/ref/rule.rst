@@ -18,18 +18,6 @@ the user to place rules to verify some property and react if needed.
 To get the list of supported events and for each of them their parameters, check the documentation
 of the protocol dissectors (:doc:`hakadissector`).
 
-.. haka:function:: event(dissector, event) -> event
-
-    :param dissector: Name of the dissector.
-    :paramtype dissector: string
-    :param event: Name of the event.
-    :paramtype event: string
-    :return event: :haka:class:`Event`
-
-    Get a dissector event.
-
-    .. haka:class:: Event
-
 Single Rule
 -----------
 
@@ -44,15 +32,7 @@ Single Rule
 
     Register a new rule on the given event.
 
-    **Options:**
-
-    .. haka:data:: streamed
-        :module:
-
-        :type: boolean
-
-        Run the *eval* function in stream mode. In this mode, the function is only called
-        once in a separated state where it can block waiting for data.
+    .. note:: Options are specifics to the events you are hooking to. See :doc:`hakadissector` for more information.
 
 Example:
 ^^^^^^^^
@@ -100,7 +80,7 @@ Rule Group
 
         :param hook: Event to listen to.
         :paramtype hook: :haka:class:`Event`
-        :param init: Function that is called whenever a group start to be evaluated.
+        :param init: Function that is called whenever the event is triggered and before any rule evaluation.
         :paramtype init: function
         :param continue: After each rule evaluation, the function is called to know if the evaluation
             of the other rules should continue. If not, the other rules will be skipped.
@@ -122,8 +102,6 @@ Rule Group
         .. haka:function:: continue(ret, ...) -> should_continue
             :noindex:
             :module:
-
-            :param ...: Parameter from the event.
 
             :param ret: Result from the previous rule evaluation.
             :param ...: Parameter from the event.

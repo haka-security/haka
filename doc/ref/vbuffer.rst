@@ -38,8 +38,9 @@ Buffer
         :return vbuffer: Created buffer.
         :rtype vbuffer: :haka:class:`vbuffer`
 
-        Allocate a new buffer from a Lua ``string``. The string will be copied
-        into the allocated buffer.
+        Allocate a new buffer from a Lua ``string``.
+
+        .. warning:: The string will be copied into the allocated buffer.
 
     .. haka:operator:: vbuffer[index] -> byte
                        vbuffer[index] = byte
@@ -69,7 +70,7 @@ Buffer
 
         :param offset: Position offset.
         :paramtype offset: number
-        :param size: Size of the requested sub buffer or ``'all'``.
+        :param size: Size of the requested sub-buffer or ``'all'``.
         :paramtype size: number or string
         :return sub: Create sub-buffer.
         :rtype sub: :haka:class:`vbuffer_sub`
@@ -83,9 +84,11 @@ Buffer
 
         Insert some data at the end of the current buffer.
 
+        .. note:: Data will be transfered from the vbuffer you passed making *data* empty after this call.
+
     .. haka:method:: vbuffer:clone(copy=false) -> clone
 
-        :param copy: If ``true`` copy the memory otheerwise it is shared.
+        :param copy: If ``true`` copy the memory otherwise it is shared.
         :paramtype copy: boolean
         :return clone: Cloned buffer.
         :rtype clone: :haka:class:`vbuffer`
@@ -100,7 +103,7 @@ Buffer
         ``true`` if the buffer has been modified, ``false`` otherwise.
 
 
-Sub buffer
+Sub-buffer
 ----------
 
 .. haka:class:: vbuffer_sub
@@ -114,10 +117,10 @@ Sub buffer
         :paramtype begin: :haka:class:`vbuffer_iterator`
         :param end: Ending position.
         :paramtype end: :haka:class:`vbuffer_iterator`
-        :return sub: Created sub buffer.
+        :return sub: Created sub-buffer.
         :rtype sub: :haka:class:`vbuffer_sub`
 
-        Create a sub buffer for two iterator.
+        Create a sub-buffer for two iterator.
 
         .. note:: The two iterators must be built from the same buffer.
 
@@ -149,7 +152,7 @@ Sub buffer
 
         :param offset: Position offset.
         :paramtype offset: number
-        :param size: Size of the requested sub buffer or ``'all'``.
+        :param size: Size of the requested sub-buffer or ``'all'``.
         :paramtype size: number or string
         :return sub: Create sub-buffer.
         :rtype sub: :haka:class:`vbuffer_sub`
@@ -158,18 +161,18 @@ Sub buffer
 
     .. haka:method:: vbuffer_sub:zero()
 
-        Zero the sub buffer memory data.
+        Zero the sub-buffer memory data.
 
     .. haka:method:: vbuffer_sub:erase()
 
-        Erase the sub buffer.
+        Erase the sub-buffer.
 
     .. haka:method:: vbuffer_sub:replace(data)
 
         :param data: Buffer.
         :paramtype data: :haka:class:`vbuffer`
 
-        Replace the sub buffer by some new data.
+        Replace the sub-buffer by some new data.
 
         .. note:: Data will be removed from the given parameter making *data* empty after this call.
 
@@ -178,19 +181,20 @@ Sub buffer
         :return isflat: ``true`` if the buffer is flat.
         :rtype isflat: boolean
 
-        Check if the buffer is flat (ie. it is made of one one memory chunk).
+        Check if the buffer is flat (ie. it is made of only one memory chunk).
 
     .. haka:method:: vbuffer_sub:flatten()
 
-        Replace the sub buffer by a flat buffer containing only one memory chunk. The memory
-        will be copied if needed.
+        Replace the sub-buffer by a flat buffer containing only one memory chunk.
+
+        .. warning:: The memory will be copied if needed.
 
     .. haka:method:: vbuffer_sub:size() -> size
 
         :return size: Size of the sub-buffer.
         :rtype size: number
 
-        Compute the size of the sub buffer.
+        Compute the size of the sub-buffer.
 
     .. haka:method:: vbuffer_sub:check_size(size) -> enough, size
 
@@ -210,9 +214,12 @@ Sub buffer
         :return buffer: Extracted buffer.
         :rtype buffer: :haka:class:`vbuffer`
 
-        Select this sub buffer. The content is extracted from the buffer.
+        Select this sub-buffer. The content is extracted from the buffer.
         To reinsert the data, you can use :haka:func:`<vbuffer_iterator>.restore()`
         with the reference iterator that is returned as the first value.
+
+        .. warning:: Be sure to keep the *reference iterator* or you won't be
+            able to restore this sub-buffer.
 
     .. haka:method:: vbuffer_sub:asnumber(endian = 'big') -> num
 
@@ -221,7 +228,7 @@ Sub buffer
         :return num: Computed value.
         :rtype num: number
 
-        Read the sub buffer and convert it to a number.
+        Read the sub-buffer and convert it to a number.
 
     .. haka:method:: vbuffer_sub:setnumber(value, endian = 'big')
 
@@ -231,6 +238,9 @@ Sub buffer
         :paramtype endian: string
 
         Write a number to the buffer.
+
+        .. note:: This call throw an error if the number can't fit in the
+            sub-buffer.
 
     .. haka:method:: vbuffer_sub:asbits(offset, length, endian = 'big')
 
@@ -261,22 +271,24 @@ Sub buffer
         :return str: Computed value.
         :rtype str: string
 
-        Read the sub buffer and convert it to a string.
+        Read the sub-buffer and convert it to a string.
 
     .. haka:method:: vbuffer_sub:setstring(value)
 
         :param value: New value.
         :paramtype value: string
 
-        Replace the sub buffer by the given string. If the string is larger or smaller than the current value,
-        the buffer will be extended or shrinked to hold the new value.
+        Replace the sub-buffer by the given string.
+
+        .. note:: If the string is larger or smaller than the current value,
+            the buffer will be extended or shrinked to hold the new value.
 
     .. haka:method:: vbuffer_sub:setfixedstring(value)
 
         :param value: New value.
         :paramtype value: string
 
-        Replace, in-place, the sub buffer by the given string. The size of the buffer will not change.
+        Replace, in-place, the sub-buffer by the given string. The size of the buffer will not change.
 
 
 Iterator
@@ -293,12 +305,14 @@ Iterator
         :param readonly: State of the mark.
         :paramtype readonly: boolean
 
-        Create a mark in the buffer at the iterator position.
+        Create a mark on the buffer at the iterator position.
 
     .. haka:method:: vbuffer_iterator:unmark()
 
-        Remove a mark in the buffer. The iterator must point to a previously
-        created mark otherwise an error will be raised.
+        Remove a mark on the buffer.
+
+        .. note:: The iterator must point to a previously
+            created mark otherwise an error will be raised.
 
     .. haka:method:: vbuffer_iterator:advance(size) -> relsize
 
@@ -336,24 +350,26 @@ Iterator
 
         Insert some data at the iterator position.
 
+        .. note:: Data will be removed from the given parameter making *data* empty after this call.
+
     .. haka:method:: vbuffer_iterator:restore(data)
 
         :param data: Buffer to restore.
         :paramtype data: :haka:class:`vbuffer`
 
-        Restore data at the iterator position. This iterator must point to
-        the reference returned by the function :haka:func:`<vbuffer_sub>.select()`.
+        Restore data at the iterator position. This iterator must be the
+        `reference iterator` returned by :haka:func:`<vbuffer_sub>.select()`.
 
     .. haka:method:: vbuffer_iterator:sub(size, split = false) -> sub
 
-        :param size: Size of the requested sub buffer, ``'available'`` or ``'all'``.
+        :param size: Size of the requested sub-buffer, ``'available'`` or ``'all'``.
         :paramtype size: number or string
-        :param split: If ``true``, a split will be inserted at the end of the sub-buffer (see :haka:func:`<vbuffer_iterator>.split()`).
+        :param split: If ``true``, a split will be done at the end of the sub-buffer (see :haka:func:`<vbuffer_iterator>.split()`).
         :paramtype split: boolean
-        :return sub: Created sub buffer.
+        :return sub: Created sub-buffer.
         :rtype sub: :haka:class:`vbuffer_sub`
 
-        Create a sub buffer from the iterator position.
+        Create a sub-buffer from the iterator position.
 
     .. haka:method:: vbuffer_iterator:split()
 
@@ -392,6 +408,8 @@ Iterator
 
         Index that can be used to track the offset of the iterator. This index is automatically updated
         when the iterator advance.
+
+        .. note:: Some function, like :haka:func:`<vbuffer_iterator>.move_to()` does not advance meter correctly.
 
     .. haka:attribute:: vbuffer_iterator.iseof
         :readonly:
@@ -450,7 +468,7 @@ Streams
     .. haka:attribute:: vbuffer_stream.data
         :readonly:
 
-        :type: :haka:class:`vbuffer`
+        :type: :haka:class:`vbuffer` |nbsp|
 
         All data in the stream.
 
@@ -460,10 +478,10 @@ Streams
 
     A sub stream is an object that will build a stream view from a list a sub-buffer.
 
-    .. haka:function:: vbuffer_sub_stream() -> stream
+    .. haka:function:: vbuffer_sub_stream() -> sub_stream
 
-        :return stream: New stream.
-        :rtype stream: :haka:class:`vbuffer_sub_stream`
+        :return sub_stream: New stream.
+        :rtype sub_stream: :haka:class:`vbuffer_sub_stream`
 
         Create a new sub-buffer stream.
 
@@ -506,6 +524,8 @@ Streams
 Stream coroutine manager
 ------------------------
 
+.. warning:: This section contains advanced feature of Haka.
+
 .. haka:class:: vbuffer_stream_comanager
     :module:
 
@@ -525,7 +545,7 @@ Stream coroutine manager
 
         :param id: Identifier for the registered function.
         :paramtype id: any
-        :return found: ``true`` if the id is fould inside the registered functions.
+        :return found: ``true`` if the id is found inside the registered functions.
         :rtype found: boolean
 
         Check if the given *id* match a registered function.

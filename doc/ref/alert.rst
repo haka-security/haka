@@ -27,7 +27,7 @@ This section introduces the Haka alerting API.
     :paramtype completion: string
     :param method: Attach method.
     :paramtype method: table
-    :param method.description: Description of th method of the attack.
+    :param method.description: Description of the method of the attack.
     :paramtype method.description: string
     :param method.ref: List of external reference for this method.
     :paramtype method.ref: table of strings
@@ -70,7 +70,7 @@ Example:
 
     Alert object.
 
-    .. haka:method:: Alert:update{param1=value1, param2=value2, [...]}
+    .. haka:method:: alert:update{param1=value1, param2=value2, [...]}
 
         :param param1,param2,...: Same names/values of alert (see :haka:func:`haka.alert`)
 
