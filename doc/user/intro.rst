@@ -17,9 +17,9 @@ Major features
 * Define event-based security rules to filter, alter, drop and/or inject packets
 * Filter packet interactively
 * Log and alert suspicious network activities
-* Match malicious pattern accross mutliple packets
+* Match malicious pattern across multiple packets
 * Apply Haka security policies on live traffic
-* Replay Haka security policies on tarffic traces (pcap capture)
+* Replay Haka security policies on traffic traces (pcap capture)
 * Debug Haka security policies
 * And more features coming soon ...
 

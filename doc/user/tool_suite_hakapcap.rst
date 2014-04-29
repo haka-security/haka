@@ -7,7 +7,8 @@ hakapcap
 
 .. program:: hakapcap
 
-``hakapcap`` is a tool to quickly apply a Haka policy file to a pcap file and see the resulting decisions.
+``hakapcap`` is a tool to quickly apply a Haka policy file to a pcap file and
+see the resulting decisions.
 
 .. code-block:: console
 
@@ -29,8 +30,10 @@ Options
     Display debug output.
 
 .. option:: --pass-through
+            --no-pass-through
 
-    Run in pass-through mode (probe mode).
+    Select if it should run in pass-through mode (probe mode). By default
+    ``hakapcap`` is in pass-through mode.
 
 .. option:: -o <output>
 

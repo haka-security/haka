@@ -29,7 +29,9 @@ The content of the file ``gettingstarted.conf`` is detailed below :
     :language: ini
     :tab-width: 4
 
-This configuration file instructs ``haka`` to capture packets from interface eth0 using nfqueue and to filter them based on the Lua policy script ``gettingstarted.lua``
+This configuration file instructs ``haka`` to capture packets from interface
+*eth0* using nfqueue and to filter them based on the Lua policy script
+``gettingstarted.lua``
 
 First Haka policy file
 ----------------------
@@ -40,10 +42,16 @@ The content of the file ``gettingstarted.lua`` is detailed below :
     :language: lua
     :tab-width: 4
 
-This script starts by loading the required protocol dissectors - namely the ipv4 and tcp modules - then specifies two security rules. The first rule is evaluated whenever a new tcp packet is received. It allows to drop packets with invalid checksums. The second rule is triggered each time a new tcp connection is established. Its only purpose is to add a log entry if the packet is addressed to a specific ip address and port.
+This script starts by loading the required protocol dissectors - namely the
+ipv4 and tcp modules - then specifies two security rules. The first rule is
+evaluated whenever a new tcp packet is received. It allows to drop packets with
+invalid checksums. The second rule is triggered each time a new tcp connection
+is established. Its only purpose is to add a log entry if the packet is
+addressed to a specific ip address and port.
 
 Going further
 -------------
 
-Other documented examples are available to illustrate all features of Haka. Those samples are installed in
-``<haka_install_path>/share/haka/sample`` and the corresponding documentation can be found at :doc:`tutorial`.
+Other documented examples are available to illustrate all features of Haka.
+Those samples are installed in ``<haka_install_path>/share/haka/sample`` and
+the corresponding documentation can be found at :doc:`tutorial`.
