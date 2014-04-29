@@ -99,7 +99,7 @@ Module
 
         Compilation option setting regular expression case insensitive.
 
-    .. haka:attribute:: regexp_module.CASE_EXTENDED
+    .. haka:attribute:: regexp_module.EXTENDED
 
         Compilation option allowing to ignore white space chars
 
