@@ -24,3 +24,4 @@ This document describes the modules of the API.
     ref/module
     ref/time
     ref/buffer
+    ref/protocol

@@ -10,6 +10,9 @@
 #include <haka/vbuffer_stream.h>
 #include <haka/tcp.h>
 
+/**
+ * TCP stream structure.
+ */
 struct tcp_stream {
 	struct lua_object         lua_object;
 	uint32                    start_seq;
@@ -23,13 +26,47 @@ struct tcp_stream {
 	struct vbuffer_stream     stream;
 };
 
+/**
+ * Create a new tcp stream.
+ */
 bool        tcp_stream_create(struct tcp_stream *stream);
 void        tcp_stream_clear(struct tcp_stream *stream);
+
+/**
+ * Initialize the stream sequence number. This function must be called before
+ * starting pushing packet into the stream.
+ */
 void        tcp_stream_init(struct tcp_stream *stream, uint32 seq);
+
+/**
+ * Push data into a tcp stream.
+ *
+ * \return `true` if successful, `false` otherwise (see clear_error()
+ * to get more details about the error).
+ */
 bool        tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_iterator *current);
+
+/**
+ * Pop data from a tcp stream.
+ *
+ * \return A tcp packet if available. This function will pop all packets that
+ * have data before the current position in the stream.
+ */
 struct tcp *tcp_stream_pop(struct tcp_stream *stream);
+
+/**
+ * Offset the ack number of the packet.
+ */
 void        tcp_stream_ack(struct tcp_stream *stream, struct tcp *tcp);
+
+/**
+ * Offset the seq number of the packet.
+ */
 void        tcp_stream_seq(struct tcp_stream *stream, struct tcp *tcp);
+
+/**
+ * Get last sequence number for this tcp stream.
+ */
 uint32      tcp_stream_lastseq(struct tcp_stream *stream);
 
 #endif /* _HAKA_PROTO_TCP_STREAM_H */

@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * \file
+ * IPv4 protocol API.
+ */
+
 #ifndef _HAKA_PROTO_IPV4_IPV4_H
 #define _HAKA_PROTO_IPV4_IPV4_H
 
@@ -14,6 +19,7 @@
 #include "haka/ipv4-addr.h"
 #include "haka/ipv4-network.h"
 
+/** \cond */
 #define SWAP_TO_IPV4(type, x)            SWAP_TO_BE(type, x)
 #define SWAP_FROM_IPV4(type, x)          SWAP_FROM_BE(type, x)
 #define IPV4_GET_BIT(type, v, i)         GET_BIT(SWAP_FROM_BE(type, v), i)
@@ -50,8 +56,11 @@ struct ipv4_header {
 	ipv4addr src;
 	ipv4addr dst;
 };
+/** \endcond */
 
-/* IPv4 opaque structure */
+/**
+ * IPv4 opaque structure
+ */
 struct ipv4 {
 	struct packet          *packet;
 	struct lua_object       lua_object;
@@ -60,6 +69,7 @@ struct ipv4 {
 	bool                    invalid_checksum:1;
 };
 
+/** \cond */
 struct ipv4 *ipv4_dissect(struct packet *packet);
 struct ipv4 *ipv4_create(struct packet *packet);
 struct packet *ipv4_forge(struct ipv4 *ip);
@@ -166,5 +176,6 @@ INLINE void ipv4_set_flags(struct ipv4 *ip, uint16 v)
 IPV4_GETSET_FLAG(df, IPV4_FLAG_DF);
 IPV4_GETSET_FLAG(mf, IPV4_FLAG_MF);
 IPV4_GETSET_FLAG(rb, IPV4_FLAG_RB);
+/** \endcond */
 
 #endif /* _HAKA_PROTO_IPV4_IPV4_H */
