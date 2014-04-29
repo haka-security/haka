@@ -6,7 +6,6 @@
 
 %{
 #include <haka/tcp.h>
-#include <haka/tcp-connection.h>
 #include <haka/tcp-stream.h>
 #include <haka/log.h>
 
@@ -45,7 +44,6 @@ struct tcp_flags {
 STRUCT_UNKNOWN_KEY_ERROR(tcp_flags);
 
 LUA_OBJECT(struct tcp);
-LUA_OBJECT(struct tcp_connection);
 LUA_OBJECT(struct tcp_stream);
 
 %newobject tcp_stream::_push;
