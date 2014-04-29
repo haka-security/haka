@@ -40,6 +40,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <li class="{% if pagename == 'doc/developer/devindex' %}current{% endif %} {% for parent in parents %}{% if parent.link == pathto("doc/developer/devindex") %}current{% endif %}{% endfor %}">
           <a href="{{ pathto("doc/developer/devindex") }}" class="">Developers</a>
         </li>
+        <li class="{% if pagename == 'doc/faq' %}current{% endif %} {% for parent in parents %}{% if parent.link == pathto("doc/developer/faq") %}current{% endif %}{% endfor %}">
+          <a href="{{ pathto("doc/faq") }}" class="">Faq</a>
+        </li>
         <li>{%- include "searchbox.html" %}</li>
         {%- if parents[-1] %}
           <li class="right"><a href="{{ parents[-1].link|e }}" title="{{ parents[-1].title }}">Up</a></li>

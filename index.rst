@@ -31,3 +31,6 @@ Developers
     :maxdepth: 2
 
     doc/developer/devindex.rst
+
+:doc:`doc/faq`
+^^^^^^^^^^^^^^
