@@ -72,7 +72,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in ${CMAKE_CURRENT_BINARY_DIR
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
 
 # Images
-generate_images(TARGET doc-images TOOL Inkscape FILES developer/flow.svg)
+generate_images(TARGET doc-images TOOL Inkscape FILES
+	developer/flow.svg
+	developer/arch.svg
+)
+
 generate_images(TARGET doc-images TOOL Seqdiag FILES
 	developer/capture.diag
 	developer/dissector.diag

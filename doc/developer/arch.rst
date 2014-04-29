@@ -5,10 +5,20 @@
 Haka architecture
 =================
 
+General architecture
+--------------------
+
+This graphic present a high level view of the Haka architecture.
+
+.. image:: arch.png
+    :align: center
+
+
 Flow
 ----
 
-The flows that go on the network and through Haka can be named using the following conventions:
+The flows that go on the network and through Haka can be named using the
+following conventions:
 
 .. image:: flow.png
     :align: center
