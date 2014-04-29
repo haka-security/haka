@@ -73,13 +73,25 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DI
 
 # Images
 generate_images(TARGET doc-images TOOL Inkscape FILES developer/flow.svg)
+generate_images(TARGET doc-images TOOL Seqdiag FILES
+	developer/capture.diag
+	developer/dissector.diag
+	developer/flowdiss.diag
+)
+generate_images(TARGET doc-images TOOL Blockdiag FILES
+	developer/ref/vbuffer.diag
+	developer/ref/vbuffer_iterator.diag
+	developer/ref/vbuffer_sub.diag
+	developer/ref/vbuffer_split.diag
+	developer/ref/vbuffer_mark.diag
+)
 
 # Real doc target
 add_custom_target(doc-doxygen
 	COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Generating Doxygen documentation" VERBATIM
-	DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+	DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile doc-images
 )
 
 # Build the sphinx documentation without regenerating the Doxygen doc

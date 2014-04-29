@@ -58,6 +58,8 @@ struct vbuffer_chunk;
  * It abstracts the memory representation using a scatter list
  * of memory block and allows easy and efficient modifications
  * to the memory.
+ *
+ * \image html "developer/ref/vbuffer.png"
  */
 struct vbuffer {
 	struct lua_object            lua_object;
@@ -68,6 +70,9 @@ extern const struct vbuffer vbuffer_init; /**< Initializer for vbuffer. */
 
 /**
  * Iterator on a virtual buffer.
+ *
+ * \image html "developer/ref/vbuffer_iterator.png"
+ *
  */
 struct vbuffer_iterator {
 	struct vbuffer_chunk        *chunk;        /**< \private */
@@ -80,6 +85,8 @@ extern const struct vbuffer_iterator vbuffer_iterator_init; /**< Initializer for
 
 /**
  * Sub part of a virtual buffer.
+ *
+ * \image html "developer/ref/vbuffer_sub.png"
  */
 struct vbuffer_sub {
 	struct vbuffer_iterator      begin;       /**< \private */
@@ -286,6 +293,14 @@ bool          vbuffer_iterator_iseof(struct vbuffer_iterator *position);
 
 /**
  * Split the current memory block at the iterator position.
+ *
+ * Starting from an iterator on the buffer:
+ *
+ * \image html "developer/ref/vbuffer_iterator.png"
+ *
+ * The chunk pointed by the iterator will be split into two parts like this:
+ *
+ * \image html "developer/ref/vbuffer_split.png"
  */
 bool          vbuffer_iterator_split(struct vbuffer_iterator *position);
 
@@ -313,6 +328,10 @@ uint8        *vbuffer_iterator_mmap(struct vbuffer_iterator *position, size_t ma
 
 /**
  * Insert a mark at the iterator position.
+ *
+ * The resulting buffer will look like this:
+ *
+ * \image html "developer/ref/vbuffer_mark.png"
  */
 bool          vbuffer_iterator_mark(struct vbuffer_iterator *position, bool readonly);
 

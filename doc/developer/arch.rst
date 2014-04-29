@@ -17,54 +17,41 @@ The flows that go on the network and through Haka can be named using the followi
 * *Input*/*Output*: Direction of the flow regarding the Haka router.
 
 
-Dissectors
-----------
+Packet capture and filtering
+----------------------------
 
-.. deprecated:: 1.0
-    The section will need to be updated
+Haka will call the capture module and wait for an incoming packet. Once a
+packet is received, it is filtered by calling the dissectors and the rules
+setup by the user in the configuration file. At some point, on dissector
+will accept (or drop) the packet to make it continue (or stop) its
+journey on the network.
 
-The configuration will define a list of dissector. Each dissector is described by:
+.. image:: capture.png
+    :align: center
 
-* Name: unique dissector name
-* Dissect function: dissector main function
+
+Packet dissectors
+-----------------
+
+Haka threads will wait for the capture module to receive a packet. When one
+is available, the module will pass it to the correct dissector.
+
+The next image shows the work-flow of a received packet.
 
 .. image:: dissector.png
+    :align: center
 
-.. seealso:: :haka:mod:`haka.dissector`.
+The same process is also true for the comunication between one dissector and
+the next dissector. By calling the *receive* function, the ownership is given
+to the called dissector. This means that the packet will never be send on the
+network unless this dissector accept the packet.
 
-The dissector will give access to any fields in read/write mode. For
-example, once an IP packet is dissected, all fields are accessible
-by their name : IP.dst, IP.df flags, and so on.
+Flow and context
+----------------
 
-Rules
------
+When a flow need to be created (for TCP or UDP for instance), a context need
+to be created by the dissector that do the transition from state-less to
+state-full.
 
-Along with the dissector, the configuration can define rules to apply. Those rules are
-assigned to some `hooks`. A rule need the following fields:
-
-* A *hook* member that contains a array of hook string name.
-  It will be used to install the rule on them.
-* An *eval* function that is called to evaluate the rule.
-* All fields defined from the dissector can be used from the rule.
-
-.. seealso:: :haka:func:`haka.rule()`.
-
-Rule hooks
-----------
-
-.. deprecated:: 1.0
-    The section will need to be updated
-
-The hooks are the points where the user can install rules. When the system will reach a hook
-point, all the rules installed on it will be called. The order of the rule execution matches
-the declaration order.
-
-A given dissector automatically defines two hooks:
-
-* `dissector_name`-up: For instance, for the dissector `ipv4`, this hook is named `ipv4-up`.
-* `dissector_name`-down.
-
-.. image:: dissector-hook.png
-
-It is also possible for a dissector to define custom hooks that matches some specific conditions. It
-is then responsible for calling the rules when needed.
+.. image:: flowdiss.png
+    :align: center

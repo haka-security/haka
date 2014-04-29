@@ -1,0 +1,32 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+blockdiag {
+	group {
+		orientation = landscape;
+		label = "vbuffer";
+		color = none;
+
+		A [label = "First Chunk"];
+		B1 [label = "Chunk", width = "64", color = "#cccccc"];
+		B2 [label = "Chunk", width = "64", color = "#cccccc"];
+		C [label = "...", stacked, width = "64"];
+		D [label = "End", shape = circle];
+
+		A -> B1 -> B2 -> C -> D;
+		D -> A [style = "dashed"];
+
+		group {
+			orientation = portrait;
+			color = none;
+
+			I [label = "Iterator", width = "64"];
+			B2 <- I;
+			
+			group {
+				I;
+			}
+		}
+	}
+}

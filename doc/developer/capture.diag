@@ -1,0 +1,21 @@
+seqdiag {
+	edge_length = 160;
+	span_height = 20;
+
+	haka;
+	filter;
+	packet;
+	capture;
+
+	haka -> capture[label = "packet_receive"];
+	        capture -> capture [label = "wait"];
+	        capture => packet [label = "create"];
+	haka <-- capture
+	haka => filter [label = "filter"] {
+	        filter -> filter [label = "call dissectors
+and rules"];
+	        filter => packet [label = "send"] {
+	                  packet => capture [label = "packet_send"];
+	        }
+	}
+}
