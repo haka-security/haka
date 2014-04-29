@@ -60,7 +60,8 @@ macro(LUA_COMPILE)
 
 	if(TARGET ${LUA_COMPILE_NAME})
 		get_target_property(ID ${LUA_COMPILE_NAME} LUA_ID)
-		set_target_properties(${LUA_COMPILE_NAME} PROPERTIES LUA_ID ${LUA_ID}+1)
+		MATH(EXPR ID "${ID}+1")
+		set_target_properties(${LUA_COMPILE_NAME} PROPERTIES LUA_ID ${ID})
 
 		add_custom_target(${LUA_COMPILE_NAME}-${ID} ALL DEPENDS ${LUA_COMPILE_COMPILED_FILES} ${LUA_DEPENDS})
 
