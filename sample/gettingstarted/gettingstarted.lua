@@ -2,7 +2,7 @@
 -- load the ipv4 dissector to be able to read the fields of ipv4 packets
 local ipv4 = require("protocol/ipv4")
 
--- load the tcp dissectors (staefull and stateless)
+-- load the tcp dissectors (statefull and stateless)
 -- this is needed to be able to track tcp connections
 -- and to get access to tcp packet fields
 local tcp = require("protocol/tcp")

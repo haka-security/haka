@@ -8,7 +8,7 @@ Netfilter queue `packet/nfqueue`
 Description
 ^^^^^^^^^^^
 
-This module uses the library netfilter queue to capture packets from a given network interface.
+This module uses the `netfilter queue` library to capture packets from a given network interface.
 
 This module will install iptable rules in the `raw` table during its initialization
 .
@@ -21,7 +21,7 @@ Parameters
 
 .. describe:: interfaces
 
-    Comma-separated list of interfaces or the `any` keyword.
+    Comma-separated list of interfaces or the ``any`` keyword.
 
     Example :
 

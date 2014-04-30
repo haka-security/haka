@@ -29,11 +29,9 @@ Options
 
     Display debug output.
 
-.. option:: --pass-through
-            --no-pass-through
+.. option:: --no-pass-through
 
-    Select if it should run in pass-through mode (probe mode). By default
-    ``hakapcap`` is in pass-through mode.
+    Disable pass-through mode (probe mode).
 
 .. option:: -o <output>
 

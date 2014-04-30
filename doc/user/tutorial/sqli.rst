@@ -7,9 +7,9 @@ SQLi attack detection
 
 Introduction
 ------------
-This tutorial shows how tu use Haka in order to detect SQL injection attacks (SQLi). SQLi are common web attacks that consit in injecting SQL commands through http requests leading to sensitive data disclosure or authentication scheme bypass.
+This tutorial shows how tu use Haka in order to detect SQL injection attacks (SQLi). SQLi are common web attacks that consist in injecting SQL commands through http requests leading to sensitive data disclosure or authentication scheme bypass.
 
-Note that our goal is not to block 100% of SQLi attacks (with 0% false-positive rate) but to show how to build iteratively an sqli filtering policy thanks to Haka capabilities. 
+Note that our goal is not to block 100% of SQLi attacks (with 0% false-positive rate) but to show how to build iteratively an sqli filtering policy thanks to Haka capabilities.
 
 How-to
 ------
@@ -43,7 +43,7 @@ The first example presents a naive rule which checks some malicious patterns aga
 
 Anti-evasion
 ------------
-It is trivial to bypass the above rule with slight modifications on uri. For instance hiding a `select` keyword using comments (e.g. `sel/*something*/ect`) or simply using uppercase letters will bypass our naive rule. The script file ``sqli-decode.lua`` improves detection by applying first decoding functions on uri. This functions are defined in ``httpdecode.lua`` file.
+It is trivial to bypass the above rule with slight modifications on uri. For instance hiding a `select` keyword using comments (e.g. `sel/*something*/ect`) or simply using uppercase letters will bypass our naive rule. The script file ``sqli-decode.lua`` improves detection by applying decoding functions on uri. This functions are defined in ``httpdecode.lua`` file.
 
 .. literalinclude:: ../../../sample/sqli/sqli-decode.lua
     :tab-width: 4
@@ -57,7 +57,7 @@ All the above rules check the malicious patterns against the whole uri. The purp
 
 Mutliple rules
 --------------
-The script file introduces additional malicious patterns and use the `rule_group` feature to define multiple anti-sqli security rules. Each rule focus on the detection of a particular pattern (sql keywords, sql comments, etc.)
+This script file (``sqli-groups.lua``) introduces additional malicious patterns and use the `rule_group` feature to define multiple anti-sqli security rules. Each rule focus on the detection of a particular pattern (sql keywords, sql comments, etc.)
 
 .. literalinclude:: ../../../sample/sqli/sqli-groups.lua
     :tab-width: 4
@@ -78,6 +78,6 @@ of using rules group feature.
 
 Going further
 -------------
-As mentioned in the top of this tutorial, our aim is not to block all SQLi attacks. To improve detection rate, one could extend the malicious patterns given throughout these examples.
+As mentioned at the top of this tutorial, our aim is not to block all SQLi attacks. To improve detection rate, one could extend the malicious patterns given throughout these examples.
 
 

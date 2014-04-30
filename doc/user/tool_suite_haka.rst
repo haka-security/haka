@@ -40,7 +40,7 @@ Options
 
 .. option:: --luadebug
 
-    Start haka and immediately attach the Haka debugger.
+    Start haka with debugger capability.
 
 Configuration file
 ------------------
@@ -104,42 +104,6 @@ Example
 
 .. literalinclude:: ../../sample/gettingstarted/gettingstarted.conf
     :tab-width: 4
-
-Modules
--------
-
-.. _packet_module_section:
-
-Packet capture modules
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. toctree::
-    :maxdepth: 1
-    :glob:
-
-    ../../modules/packet/*/doc/module*
-
-.. _alert_module_section:
-
-Alert modules
-^^^^^^^^^^^^^
-
-.. toctree::
-    :maxdepth: 1
-    :glob:
-
-    ../../modules/alert/*/doc/module*
-
-.. _log_module_section:
-
-Logging modules
-^^^^^^^^^^^^^^^
-
-.. toctree::
-    :maxdepth: 1
-    :glob:
-
-    ../../modules/log/*/doc/module*
 
 Service
 -------

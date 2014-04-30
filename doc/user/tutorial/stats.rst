@@ -7,7 +7,7 @@ Statistics
 
 Introduction
 ------------
-This tutorial shows how tu collect traffic and make statistics on collected data.
+This tutorial shows how to collect traffic and make statistics on collected data.
 
 How-to
 ------

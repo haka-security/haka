@@ -47,7 +47,7 @@ Interactive rule debugging
 
 Haka allows to interactively debug Haka script file. A script containing a lua error is provided as ``tcpfilter.lua``.
 
-This script will filter will authorize only packets from/to port 80.
+This script will authorize only packets from/to port 80.
 
 .. literalinclude:: ../../../sample/filter/tcpfilter.lua
    :language: lua
@@ -114,11 +114,7 @@ To set the debugger to focus on that particular frame, type ``frame 3``. We can 
 
 We now see that Lua is complaining about an unknown field ``destport`` on the line testing the destination port of the packet.
 
-<<<<<<< Updated upstream
-Packets, like all structures provided by haka, can be printed easily using the debugger.
-=======
-Packets, like all structures provided by Haka, can be printed easily using the debugger. 
->>>>>>> Stashed changes
+Packets, like all structures provided by Haka, can be printed easily using the debugger.
 
 To see the content of the packet, type ``print pkt``:
 

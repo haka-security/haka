@@ -6,7 +6,7 @@ What is Haka
 ============
 
 Haka is an open security framework which allows to apply security
-policies on (live) captured traffic. Haka API allows to define security rules
+policies on live captured traffic. Haka API allows to define security rules
 and to specify network protocols and their underlying state machine.
 
 Major features
@@ -14,7 +14,7 @@ Major features
 
 * Specify text-based and binary-based network protocols
 * Describe protocol state machine
-* Define event-based security rules to filter, alter, drop and/or inject packets
+* Define event-based security rules to filter, alter, drop or inject packets
 * Filter packet interactively
 * Log and alert suspicious network activities
 * Match malicious pattern across multiple packets

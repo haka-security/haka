@@ -21,9 +21,9 @@ For instance:
     }
 
 As a result, every time this rule will be evaluated, a prompt will allow to enter commands. The
-current dissector data are available in a table named ``inputs``. Following the above example, typing `inputs[1]` on the prompt will dump ip packet content along with available functions. 
+current dissector data are available in a table named ``inputs``. Following the above example, typing `inputs[1]` on the prompt will dump ip packet content along with available functions.
 
-Note that You can use the `TAB` key to get completion. This can be very useful to discover the available functions and fields.
+Note that you can use the `TAB` key to get completion. This can be very useful to discover the available functions and fields.
 
 When you are done, you can let Haka continue its execution by hitting CTRL-D.
 
@@ -38,7 +38,13 @@ Debugger
 If you need to inspect an existing configuration, you can use the debugger. You need to activate
 the debugger first. This can be done by starting Haka with the option ``--luadebug``.
 
-This line will start the debugger and break immediately. A prompt will allow you to inspect variables,
-up-values, expressions... You can also set breakpoints and execute your code line by line. To get the
-list of all available commands, simply type ``help``.
+If an error occurs haka will stop and a prompt will allow you to inspect variables,
+up-values, expressions... To get the list of all available commands, simply type ``help``.
+
+You can also set breakpoints and execute your code line by line by using the
+following code:
+
+.. code-block:: lua
+
+    debug.breakpoint()
 

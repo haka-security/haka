@@ -11,7 +11,7 @@ Running Haka
 .. program:: haka
 
 ``haka`` is primarily intended to be used as a daemon. This daemon will usually use a configuration file
-given on the command line using the `-c` command line option.
+given on the command line using the `-c` option.
 
 The following command will launch ``haka`` from the command line using an example configuration file:
 
