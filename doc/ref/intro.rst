@@ -50,25 +50,19 @@ Variables
 Objects
 -------
 
-An object in Lua is a basically a table containing functions and properties. Every object is documented as follow:
+An object in Lua is basically a table containing functions and properties. Every object is documented as follow:
 
 .. haka:class:: Obj
     :noindex:
     :module:
 
-    .. haka:function:: build(param1) -> ret1
+    .. haka:method:: Obj:func(param1) -> ret1
         :noindex:
-        :module: test
 
         :param param1: This is how a parameter is described.
         :ptype param1: parameter type if needed
         :return ret1: This is how returned value are described.
         :rtype ret1: return type if needed
-
-        A function available on a module. This function usually is related to the object.
-
-    .. haka:method:: Obj:func()
-        :noindex:
 
         This function is a method that need to be called on an instance of the
         type *Obj* in this example.
@@ -89,3 +83,10 @@ An object in Lua is a basically a table containing functions and properties. Eve
 
             local obj = test.build(12)
             print(obj.attr)
+
+    .. haka:function:: build()
+        :noindex:
+        :module: test
+
+        A function available on a module. This function usually is related to the object.
+
