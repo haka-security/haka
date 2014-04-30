@@ -75,8 +75,6 @@ Example
 
 ::
 
-    local raw = require('protocol/raw')
-
     local pkt = raw.create(150)
     print(#pkt.payload)
     pkt:send()

@@ -35,7 +35,7 @@ Protocol elements
 
 .. haka:class:: DnsResult
 
-    Dns message.
+    DNS message.
 
     .. haka:attribute:: DnsDissector:id
                         DnsDissector:qr
@@ -70,7 +70,7 @@ Protocol elements
 
     .. haka:method:: DnsDissector:drop()
 
-        Drop the Dns message.
+        Drop the DNS message.
 
 
 .. haka:class:: DnsQuestionRecord

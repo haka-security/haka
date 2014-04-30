@@ -94,6 +94,7 @@ Events
     :module:
     :objtype: event
 
+
     **Event options:**
 
         .. haka:data:: streamed

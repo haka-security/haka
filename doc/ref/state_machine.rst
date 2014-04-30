@@ -145,16 +145,16 @@ Instance
 
     ::
 
-        local states = haka.state_machine("test")
+        local my_state_machine = haka.state_machine("test")
 
-        states.a = states:state{
+        my_state_machine.a = m_state_machine:state{
             update = function (context)
                 print("update")
             end
         }
 
-        states.initial = states.a
+        my_state_machine.initial = my_state_machine.a
 
-        local instance = states:instanciate()
+        local instance = my_state_machine:instanciate()
 
         instance:update() -- call the transition 'update' on the state 'a'

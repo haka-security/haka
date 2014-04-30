@@ -32,7 +32,7 @@ Single Rule
 
     Register a new rule on the given event.
 
-    .. note:: Options are specifics to the events you are hooking to. See :doc:`hakadissector` for more information.
+    .. note:: Options are specific to the events you are hooking to. See :doc:`hakadissector` for more information.
 
 Example:
 ^^^^^^^^

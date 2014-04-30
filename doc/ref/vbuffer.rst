@@ -418,7 +418,7 @@ Iterator
         Index that can be used to track the offset of the iterator. This index is automatically updated
         when the iterator advance.
 
-        .. note:: Some function, like :haka:func:`<vbuffer_iterator>.move_to()` does not advance meter correctly.
+        .. note:: Some functions, like :haka:func:`<vbuffer_iterator>.move_to()` does not advance meter correctly.
 
     .. haka:attribute:: vbuffer_iterator.iseof
         :readonly:
@@ -435,7 +435,7 @@ Streams
 .. haka:class:: vbuffer_stream
     :module:
 
-    A buffer stream is an object that can convert different separated buffer into
+    A buffer stream is an object that can convert different separated buffers into
     a view where only one buffer is visible. This is for instance used by TCP to
     recreate a stream of data from each received packets.
 
@@ -536,13 +536,22 @@ Streams
 Stream coroutine manager
 ------------------------
 
-.. warning:: This section contains advanced feature of Haka.
+.. warning:: This section introduces advanced feature of Haka.
 
-.. haka:class:: vbuffer_stream_comanager
+.. haka:class:: vbuffer_stream_comanage_
     :module:
 
     This class allow to execute function inside a coroutine and to be able to block transparently
     if needed when the stream does not have enough data available.
+
+    .. haka:method:: vbuffer_stream_comanager:new(stream) -> manager
+
+        :param stream: buffer stream 
+        :paramtype: :haka:class:`vbuffer_stream`
+        :return manager: instanciated stream coroutine manager object
+        :rtype manager: :haka:class:`vbuffer_stream_comanager`
+
+        
 
     .. haka:method:: vbuffer_stream_comanager:start(id, f)
 

@@ -7,15 +7,15 @@
 Introduction
 ============
 
-.. note::
-
-    If you want to contribute to the core of Haka, check the section for
-    developers: :doc:`../developer/devindex`.
-
 This section contains the reference guide for user that wants to write Haka
 scripts.
 
 The format of this documentation is presented here.
+
+.. note::
+
+    If you want to contribute to the core of Haka, check the section for
+    developers: :doc:`../developer/devindex`.
 
 Functions
 ---------
@@ -50,7 +50,7 @@ Variables
 Objects
 -------
 
-An object in Lua is basically a table containing functions and properties. Every object is documented as follow:
+An object in Lua is basically a table containing functions and properties. Every object is documented as follows:
 
 .. haka:class:: Obj
     :noindex:

@@ -37,7 +37,7 @@ properties.
 .. haka:class:: GrammarEntity
     :module:
 
-    Object representing any grammar element. This object have different functions that cas be used in the
+    Object representing any grammar element. This object have different functions that cnn be used in the
     grammar specification
 
     .. haka:method:: GrammarEntity:options{...} -> entity
@@ -56,7 +56,7 @@ properties.
         :rtype entity: :haka:class:`GrammarEntity`
 
         Method only available on record which can be used to add extra element to it. The table should only
-        contains functions.
+        contain functions.
 
         Each named element in the array will be added as a extra field in the result.
         The other element will be executed when the record will be done with its parsing.
@@ -600,4 +600,4 @@ Parsing context
         :return byte: Next byte.
         :rtype byte: number
 
-        Return the next byte. This function can be used to remove grammar ambiguity.
+        Return the next byte. This function can be used to resolve grammar ambiguity.

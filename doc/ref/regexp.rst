@@ -83,7 +83,7 @@ Module
         ::
 
             local match = pcre:match("%s+", iter, 0, true)
-            print(match:asstring())
+            if math then print(match:asstring()) end
 
     .. haka:method:: regexp_module:compile(pattern, options) -> re
 
@@ -189,7 +189,7 @@ Regular expression sink
         :return end: Position of the end of the match or ``nil``.
         :rtype end: :haka:class:`vbuffer_iterator`
 
-        Match the compiled regular expression across multiple buffer. The `begin` and `end` result allow
+        Match the compiled regular expression across multiple buffers. The `begin` and `end` values allow
         to track the position of the match.
 
     .. haka:method:: regexp_sink:ispartial() -> partial
@@ -198,7 +198,7 @@ Regular expression sink
         :rtype match: boolean
 
         Get the sink state. If something has start matching but more data are needed
-        to be sure that it is a valid match then this function will returns ``true``.
+        to be sure that it is a valid match then this function will return ``true``.
 
 .. haka:class:: regexp_result
 

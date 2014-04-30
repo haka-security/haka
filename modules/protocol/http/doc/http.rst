@@ -157,7 +157,7 @@ Events
 
     Event triggered whenever a new HTTP response is received.
 
-.. haka:function:: http.events.receive_data(http, stream, current)
+.. haka:function:: http.events.receive_data(http, stream, current, direction)
     :module:
     :objtype: event
 
@@ -327,7 +327,7 @@ Utilities
 
     .. haka:method:: HttpUriSplit:normalize()
 
-        Normalize URI according to rfc 3986: remove dot-segments in path, capitalize letters in esape sequences,
+        Normalize URI according to rfc 3986: remove dot-segments in path, capitalize letters in escape sequences,
         decode percent-encoded octets (safe decoding), remove default port, etc.
 
 .. haka:function:: normalize(uri) -> norm_uri

@@ -133,7 +133,7 @@ Events
 Utilities
 ---------
 
-.. warning:: This section contains advanced feature of Haka.
+.. warning:: This section introduces advanced feature of Haka.
 
 .. haka:class:: tcp_stream
     :module:
@@ -184,7 +184,7 @@ Utilities
 
     .. haka:method:: tcp_stream:clear()
 
-        Clear the stream and drop all remaining packet.
+        Clear the stream and drop all remaining packets.
 
     .. haka:attribute:: tcp_stream:stream
 
