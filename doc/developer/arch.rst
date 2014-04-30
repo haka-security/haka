@@ -10,7 +10,7 @@ General architecture
 
 This graphic present a high level view of the Haka architecture.
 
-.. image:: arch.png
+.. image:: /doc/genimages/developer/arch.png
     :align: center
 
 
@@ -19,7 +19,7 @@ Flow
 
 The flows that go on the network and through Haka are named using the following conventions:
 
-.. image:: flow.png
+.. image:: /doc/genimages/developer/flow.png
     :align: center
 
 * *Up*/*Down*: Direction of the flow from the client to the server.
@@ -35,7 +35,7 @@ setup by the user in the configuration file. At some point, one dissector
 will `accept/drop` the packet to make it `continue/stop` its
 journey on the network.
 
-.. image:: capture.png
+.. image:: /doc/genimages/developer/capture.png
     :align: center
 
 
@@ -47,7 +47,7 @@ is available, the module will pass it to the correct dissector.
 
 The next image shows the work-flow of a received packet.
 
-.. image:: dissector.png
+.. image:: /doc/genimages/developer/dissector.png
     :align: center
 
 The same process is also true for the comunication between one dissector and
@@ -62,5 +62,5 @@ When a flow need to be created (for TCP or UDP for instance), a context need
 to be created by the dissector that do the transition from state-less to
 state-full.
 
-.. image:: flowdiss.png
+.. image:: /doc/genimages/developer/flowdiss.png
     :align: center

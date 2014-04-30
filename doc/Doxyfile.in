@@ -687,7 +687,7 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = @PROJECT_SOURCE_DIR@/external
+EXCLUDE                = @PROJECT_SOURCE_DIR@/external @PROJECT_SOURCE_DIR@/doc
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -735,7 +735,7 @@ EXAMPLE_RECURSIVE      = NO
 # directories that contain image that are included in the documentation (see
 # the \image command).
 
-IMAGE_PATH             = @PROJECT_SOURCE_DIR@/doc
+IMAGE_PATH             = @PROJECT_SOURCE_DIR@/doc @PROJECT_SOURCE_DIR@/doc/genimages
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program

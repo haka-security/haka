@@ -16,8 +16,6 @@ Dependencies
 * Toolchain (GCC, Make, ...)
 * cmake (>= 2.8)
 * swig
-* sphinx (>= 2)
-* Doxygen
 * tshark
 * check
 * rsync
@@ -32,6 +30,11 @@ Dependencies
 * Cppcheck
 * Netfilter Queue
 * Valgrind
+* Sphinx (>= 2)
+* Doxygen
+* Inkscape
+* python-blockdiag
+* python-seqdiag
 
 Submodules
 ----------
@@ -65,7 +68,8 @@ clean (`make clean`).
 ### Documentation
 
 Run `make doc` to generate documentation in `html`. The documentation is then available
-in `doc` inside your build folder.
+in `doc` inside your build folder. In order to build it, you need to have Sphinx and
+Doxygen installed.
 
 The documentation contains more information about building and using Haka.
 

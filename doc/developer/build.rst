@@ -14,8 +14,6 @@ Required
 * Classic build tools (GCC, Make, ...)
 * CMake (>= 2.8)
 * Swig
-* Sphinx (>= 2)
-* Doxygen
 * Tshark
 * Check
 * rsync
@@ -32,6 +30,12 @@ Optional
 * Netfilter Queue
 * Valgrind
 * rpm-build
+* Sphinx (>= 2)
+* Doxygen
+* Inkscape
+* python-blockdiag
+* python-seqdiag
+
 
 Examples
 ^^^^^^^^
@@ -41,9 +45,10 @@ Debian (and compatible)
 
 .. code-block:: console
 
-    $ sudo apt-get install build-essential cmake swig python-sphinx tshark check
-    $ sudo apt-get install doxygen rsync libpcap-dev gawk libedit-dev libpcre3-dev
+    $ sudo apt-get install build-essential cmake swig tshark check
+    $ sudo apt-get install rsync libpcap-dev gawk libedit-dev libpcre3-dev
     $ sudo apt-get install cppcheck libnetfilter-queue-dev valgrind
+    $ sudo apt-get install python-sphinx doxygen python-blockdiag python-seqdiag
 
 Fedora
 """"""
@@ -182,6 +187,11 @@ Documentation
 
 Run ``make doc`` to generate documentation in `html`. The documentation is then available
 in `doc` inside your build folder.
+
+In order to build it, you need to have, at least, Sphinx and Doxygen installed. To
+get all images, you also need the tools Inkscape, blockdiag and seqdiag. You might need to
+install the fonts used for those images in your system. The files are located in
+`doc/theme/haka/fonts`.
 
 Tests
 ^^^^^
