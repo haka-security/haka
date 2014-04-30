@@ -25,12 +25,12 @@
 void error(const wchar_t *error, ...);
 
 /**
- * Convert the `errno` value to a human readable error message.
+ * Convert the `err` value to a human readable error message.
  *
  * The returned string will be erased by the next call to this function. This function
  * is thread-safe.
  */
-const char *errno_error(int errno);
+const char *errno_error(int err);
 
 /**
  * Check if an error has occurred. This function does not clear error flag.
