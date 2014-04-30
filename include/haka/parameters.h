@@ -20,7 +20,7 @@ struct parameters; /**< Opaque structures. */
 
 /**
  * Load the parameters from a file. The file must follow
- * the ini fiel format.
+ * the ini file format.
  */
 struct parameters *parameters_open(const char *file);
 
@@ -60,17 +60,17 @@ bool               parameters_get_boolean(struct parameters *params, const char 
 int                parameters_get_integer(struct parameters *params, const char *key, int def);
 
 /**
- * Set or add a parameter value to a string.
+ * Set or add a string parameter.
  */
 bool               parameters_set_string(struct parameters *params, const char *key, const char *value);
 
 /**
- * Set or add a parameter value to a boolean.
+ * Set or add a boolean parameter.
  */
 bool               parameters_set_boolean(struct parameters *params, const char *key, bool value);
 
 /**
- * Set or add a parameter value to a integer.
+ * Set or add a integer parameter.
  */
 bool               parameters_set_integer(struct parameters *params, const char *key, int value);
 

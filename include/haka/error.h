@@ -16,19 +16,21 @@
 
 
 /**
- * Set an error message to be reported to the callers. The function follows the printf API
+ * Set `error` to be reported to the callers. The function follows the printf API
  * and can be used in multi-threaded application. The error can then be retrieved using
  * clear_error() and check_error().
+ *
+ * If lua is at the origin of this call, the error will be converted to a lua error.
  */
 void error(const wchar_t *error, ...);
 
 /**
- * Convert the errno value to a human readable error message.
+ * Convert the `errno` value to a human readable error message.
  *
- * The returned string will be erased by the next call to this function. The function
- * thread-safe and can be used in multi-threaded application.
+ * The returned string will be erased by the next call to this function. This function
+ * is thread-safe.
  */
-const char *errno_error(int err);
+const char *errno_error(int errno);
 
 /**
  * Check if an error has occurred. This function does not clear error flag.

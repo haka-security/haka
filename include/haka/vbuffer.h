@@ -211,7 +211,7 @@ INLINE size_t vbuffer_size(struct vbuffer *buf);
 INLINE bool   vbuffer_check_size(struct vbuffer *buf, size_t minsize, size_t *size);
 
 /**
- * Check if the buffer is only made of only contiguous memory block.
+ * Check if the buffer is only made of contiguous memory block.
  */
 INLINE bool   vbuffer_isflat(struct vbuffer *buf);
 
@@ -281,12 +281,12 @@ bool          vbuffer_iterator_insert(struct vbuffer_iterator *position, struct 
 size_t        vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len);
 
 /**
- * Check if the iterator it at the end of the buffer.
+ * Check if the iterator is at the end of the buffer.
  */
 bool          vbuffer_iterator_isend(struct vbuffer_iterator *position);
 
 /**
- * Check if the iterator it at the end of the buffer and that this end is marked as
+ * Check if the iterator is at the end of the buffer and that this end is marked as
  * `eof`. This is used by vbuffer_stream.
  */
 bool          vbuffer_iterator_iseof(struct vbuffer_iterator *position);
@@ -490,13 +490,13 @@ int64         vbuffer_asnumber(struct vbuffer_sub *data, bool bigendian);
 bool          vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num);
 
 /**
- * Convert a bit select of the content of the buffer to a number.
+ * Convert bits of the content of the buffer to a number.
  * \note The function will raise an error if the buffer size is not supported.
  */
 int64         vbuffer_asbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool bigendian);
 
 /**
- * Set a bit select of the content of the buffer from a number.
+ * Set bits of the content of the buffer from a number.
  * \note The function will raise an error if the buffer size is not supported.
  */
 bool          vbuffer_setbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool bigendian, int64 num);

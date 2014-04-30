@@ -118,41 +118,10 @@ typedef pthread_mutex_t mutex_t; /**< Opaque mutex type. */
 
 #define MUTEX_INIT PTHREAD_MUTEX_INITIALIZER /**< Mutex static initializer. */
 
-/**
- * Initialize a mutex `mutex`. With `recursive`, the mutex can be created
- * recursive (ie. can be re-entered by the same thread).
- *
- * \returns True on success. Use clear_error() to get details about the error.
- */
 bool mutex_init(mutex_t *mutex, bool recursive);
-
-/**
- * Destroy a mutex.
- *
- * \returns True on success. Use clear_error() to get details about the error.
- */
 bool mutex_destroy(mutex_t *mutex);
-
-/**
- * Lock a mutex.
- *
- * \returns True on success. Use clear_error() to get details about the error.
- */
 bool mutex_lock(mutex_t *mutex);
-
-/**
- * Try to lock a mutex.
- *
- * \returns True if successful, False if the lock could not be taken. Use check_error()
- * and clear_error() to get details about the error.
- */
 bool mutex_trylock(mutex_t *mutex);
-
-/**
- * Unlock a mutex.
- *
- * \returns True on success. Use clear_error() to get details about the error.
- */
 bool mutex_unlock(mutex_t *mutex);
 
 /**@}*/
@@ -179,7 +148,7 @@ bool spinlock_unlock(spinlock_t *lock);
 
 typedef pthread_rwlock_t rwlock_t; /**< Opaque read-write lock type. */
 
-#define RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER
+#define RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER /**< Read-write lock static initializer. */
 
 bool rwlock_init(rwlock_t *rwlock);
 bool rwlock_destroy(rwlock_t *rwlock);
@@ -198,32 +167,9 @@ bool rwlock_unlock(rwlock_t *rwlock);
 
 typedef sem_t semaphore_t; /**< Opaque semaphore type. */
 
-/**
- * Initialize a new semaphore with initial value of `initial`.
- *
- * \returns True on success. Use clear_error() to get details about the error.
- */
 bool semaphore_init(semaphore_t *semaphore, uint32 initial);
-
-/**
- * Destroy a semaphore.
- *
- * \returns True on success. Use clear_error() to get details about the error.
- */
 bool semaphore_destroy(semaphore_t *semaphore);
-
-/**
- * Wait on a semaphore.
- *
- * \returns True on success. Use clear_error() to get details about the error.
- */
 bool semaphore_wait(semaphore_t *semaphore);
-
-/**
- * Post on a semaphore.
- *
- * \returns True on success. Use clear_error() to get details about the error.
- */
 bool semaphore_post(semaphore_t *semaphore);
 
 /**@}*/

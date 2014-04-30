@@ -5,7 +5,7 @@ seqdiag {
 	haka;
 	filter;
 	packet;
-	capture;
+	CAPTURE;
 
 	haka -> capture[label = "packet_receive"];
 	        capture -> capture [label = "wait"];

@@ -17,14 +17,13 @@ This graphic present a high level view of the Haka architecture.
 Flow
 ----
 
-The flows that go on the network and through Haka can be named using the
-following conventions:
+The flows that go on the network and through Haka are named using the following conventions:
 
 .. image:: flow.png
     :align: center
 
 * *Up*/*Down*: Direction of the flow from the client to the server.
-* *Input*/*Output*: Direction of the flow regarding the Haka router.
+* *In*/*Out*: Direction of the flow regarding the Haka router.
 
 
 Packet capture and filtering
@@ -32,8 +31,8 @@ Packet capture and filtering
 
 Haka will call the capture module and wait for an incoming packet. Once a
 packet is received, it is filtered by calling the dissectors and the rules
-setup by the user in the configuration file. At some point, on dissector
-will accept (or drop) the packet to make it continue (or stop) its
+setup by the user in the configuration file. At some point, one dissector
+will `accept/drop` the packet to make it `continue/stop` its
 journey on the network.
 
 .. image:: capture.png

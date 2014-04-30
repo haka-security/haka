@@ -1,4 +1,5 @@
 /make
+/workspace
 /buildtag.cmake
 *.swp
 .project

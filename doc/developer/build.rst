@@ -11,16 +11,16 @@ Dependencies
 Required
 ^^^^^^^^
 
-* Toolchain (GCC, Make, ...)
-* cmake (>= 2.8)
-* swig
-* sphinx (>= 2)
+* Classic build tools (GCC, Make, ...)
+* CMake (>= 2.8)
+* Swig
+* Sphinx (>= 2)
 * Doxygen
-* tshark
-* check
+* Tshark
+* Check
 * rsync
 * libpcap
-* gawk
+* Gawk
 * libedit
 * libpcre
 
@@ -95,19 +95,6 @@ You must first clone the Git repository. Our project is hosted on GitHub:
 
     $ git clone https://github.com/haka-security/haka.git
 
-Our development uses the branching model Git flow which describes how to
-use and name Git branches. For instance, you will find the following branches:
-
-* ``master`` branch contains the last release of Haka. This branch might be empty
-  if we do not have an official version.
-* ``develop`` branch contains the current Haka unstable development.
-
-You should then switch to the branch you want to build. For example:
-
-.. code-block:: console
-
-    $ git checkout develop
-
 Submodules
 """"""""""
 
@@ -129,8 +116,8 @@ all the files generated during the build using cmake.
 
 .. code-block:: console
 
-    $ mkdir make
-    $ cd make
+    $ mkdir workspace
+    $ cd workspace
     $ cmake .. <options>
 
 Options
@@ -158,7 +145,6 @@ Use make like usual to compile:
 
 .. code-block:: console
 
-    $ make clean
     $ make
 
 Install

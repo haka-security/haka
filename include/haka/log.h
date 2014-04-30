@@ -25,7 +25,7 @@ typedef enum {
 	HAKA_LOG_INFO, /**< Informations. */
 	HAKA_LOG_DEBUG, /**< Debugging informations. */
 
-	HAKA_LOG_LEVEL_LAST /**< Last log level. */
+	HAKA_LOG_LEVEL_LAST /**< Last log level. For internal use only. */
 } log_level;
 
 /**
