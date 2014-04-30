@@ -34,3 +34,8 @@ Developers
 
 :doc:`doc/faq`
 ^^^^^^^^^^^^^^
+
+.. toctree::
+    :hidden:
+
+    doc/faq
