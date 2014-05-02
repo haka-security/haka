@@ -107,6 +107,27 @@ void     thread_testcancel();
  */
 void     thread_protect(void (*run)(void *), void *runarg, void (*finish)(void *), void *finisharg);
 
+/**
+ * Get the main thread handle.
+ */
+thread_t  thread_main();
+
+/**
+ * Get the current thread.
+ */
+thread_t  thread_self();
+
+/**
+ * Check if two threads are the same.
+ */
+bool      thread_equal(thread_t a, thread_t b);
+
+/**
+ * Raise a signal on the given thread.
+ */
+bool      thread_kill(thread_t thread, int sig);
+
+
 /**@}*/
 
 /**

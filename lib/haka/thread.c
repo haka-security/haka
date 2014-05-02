@@ -35,11 +35,15 @@ int thread_get_cpu_count()
 }
 
 static local_storage_t thread_id_key;
+static thread_t main_thread;
 
 INIT static void thread_id_init()
 {
 	UNUSED const bool ret = local_storage_init(&thread_id_key, NULL);
 	assert(ret);
+
+	main_thread = pthread_self();
+	assert(main_thread);
 }
 
 int thread_getid()
@@ -132,6 +136,30 @@ void thread_protect(void (*run)(void *), void *runarg, void (*finish)(void *), v
 	pthread_cleanup_pop(true);
 }
 
+thread_t thread_main()
+{
+	return main_thread;
+}
+
+thread_t thread_self()
+{
+	return pthread_self();
+}
+
+bool thread_equal(thread_t a, thread_t b)
+{
+	return pthread_equal(a, b) != 0;
+}
+
+bool thread_kill(thread_t thread, int sig)
+{
+	const int err = pthread_kill(thread, sig);
+	if (err) {
+		error(L"thread error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
 
 
 /*
