@@ -22,6 +22,7 @@
 #include <haka/luadebug/debugger.h>
 #include <haka/luadebug/interactive.h>
 #include <haka/luadebug/user.h>
+#include <haka/container/vector.h>
 
 #include "app.h"
 #include "thread.h"
@@ -42,18 +43,51 @@ static void help(const char *program)
 	usage(stdout, program);
 
 	fprintf(stdout, "Options:\n");
-	fprintf(stdout, "\t-h,--help:          Display this information\n");
-	fprintf(stdout, "\t--version:          Display version information\n");
-	fprintf(stdout, "\t-c,--config <conf>: Load a specific configuration file\n"
-					"\t                      (default: %s/etc/haka/haka.conf)\n", haka_path());
-	fprintf(stdout, "\t-d,--debug:         Display debug output\n");
-	fprintf(stdout, "\t--luadebug:         Attach lua debugger (and keep haka in foreground)\n");
-	fprintf(stdout, "\t--no-daemon:        Do no run in the background\n");
+	fprintf(stdout, "\t-h,--help:             Display this information\n");
+	fprintf(stdout, "\t--version:             Display version information\n");
+	fprintf(stdout, "\t-c,--config <conf>:    Load a specific configuration file\n"
+					"\t                         (default: %s/etc/haka/haka.conf)\n", haka_path());
+	fprintf(stdout, "\t-r,--rule <rule>:      Override the rule configuration file\n");
+	fprintf(stdout, "\t-d,--debug:            Display debug output\n");
+	fprintf(stdout, "\t--luadebug:            Attach lua debugger (and keep haka in foreground)\n");
+	fprintf(stdout, "\t--no-daemon:           Do no run in the background\n");
+	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
+	fprintf(stdout, "\t                       Override configuration parameter\n");
 }
 
 static bool daemonize = true;
 static char *config = NULL;
 static bool lua_debugger = false;
+
+struct config_override {
+	char *key;
+	char *value;
+};
+
+void free_config_override(void *_elem) {
+	struct config_override *elem = (struct config_override *)_elem;
+	if (elem->key) free(elem->key);
+	if (elem->value) free(elem->value);
+}
+
+static struct vector config_overrides = VECTOR_INIT(struct config_override, free_config_override);
+
+static void add_override(const char *key, const char *value)
+{
+	struct config_override *override = vector_push(&config_overrides, struct config_override);
+	if (!override) {
+		message(HAKA_LOG_FATAL, L"core", L"memory error");
+		exit(2);
+	}
+
+	override->key = strdup(key);
+	override->value = strdup(value);
+	if (!override->key || !override->value) {
+		message(HAKA_LOG_FATAL, L"core", L"memory error");
+		clean_exit();
+		exit(2);
+	}
+}
 
 static int parse_cmdline(int *argc, char ***argv)
 {
@@ -67,10 +101,12 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "debug",        no_argument,       0, 'd' },
 		{ "luadebug",     no_argument,       0, 'L' },
 		{ "no-daemon",    no_argument,       0, 'D' },
+		{ "opt",          required_argument, 0, 'o' },
+		{ "rule",         required_argument, 0, 'r' },
 		{ 0,              0,                 0, 0 }
 	};
 
-	while ((c = getopt_long(*argc, *argv, "dhc:", long_options, &index)) != -1) {
+	while ((c = getopt_long(*argc, *argv, "dhc:r:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
 			setlevel(HAKA_LOG_DEBUG, NULL);
@@ -91,11 +127,30 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'c':
 			config = strdup(optarg);
+			if (!config) {
+				message(HAKA_LOG_FATAL, L"core", L"memory error");
+				exit(2);
+			}
+			break;
+
+		case 'r':
+			add_override("general:configuration", optarg);
 			break;
 
 		case 'L':
 			lua_debugger = true;
 			daemonize = false;
+			break;
+
+		case 'o':
+			{
+				char *value = strchr(optarg, '=');
+				if (value) {
+					*value = '\0';
+					++value;
+				}
+				add_override(optarg, value);
+			}
 			break;
 
 		default:
@@ -129,6 +184,23 @@ int read_configuration(const char *file)
 	if (check_error()) {
 		message(HAKA_LOG_FATAL, L"core", clear_error());
 		return 2;
+	}
+
+	/* Apply configuration overrides */
+	{
+		int i;
+		const int size = vector_count(&config_overrides);
+		for (i=0; i<size; ++i) {
+			struct config_override *override = vector_get(&config_overrides, struct config_override, i);
+			if (override->value) {
+				parameters_set_string(config, override->key, override->value);
+			}
+			else {
+				parameters_set_boolean(config, override->key, true);
+			}
+		}
+
+		vector_destroy(&config_overrides);
 	}
 
 	/* Thread count */
