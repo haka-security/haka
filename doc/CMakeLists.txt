@@ -96,6 +96,7 @@ if(SPHINX_FOUND AND DOXYGEN_FOUND)
 		developer/arch.svg
 		ref/buffer.svg
 		ref/subbuffer.svg
+		ref/bufferstream.svg
 	)
 
 	generate_images(TARGET doc-images TOOL Seqdiag FILES

@@ -439,6 +439,9 @@ Streams
     a view where only one buffer is visible. This is for instance used by TCP to
     recreate a stream of data from each received packets.
 
+    .. image:: /doc/genimages/ref/bufferstream.png
+        :align: center
+
     .. haka:function:: vbuffer_stream() -> stream
 
         :return stream: New stream.
