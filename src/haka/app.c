@@ -237,3 +237,54 @@ void dump_stat(FILE *file)
 {
 	thread_pool_dump_stat(thread_states, file);
 }
+
+void setup_loglevel(char *level)
+{
+	while (true) {
+		char *value;
+		wchar_t *module=NULL;
+		log_level loglevel;
+
+		char *next_level = strchr(level, ',');
+		if (next_level) {
+			*next_level = '\0';
+			++next_level;
+		}
+
+		value = strchr(level, '=');
+		if (value) {
+			*value = '\0';
+			++value;
+
+			module = malloc(sizeof(wchar_t)*(strlen(level)+1));
+			if (!module) {
+				message(HAKA_LOG_FATAL, L"core", L"memory error");
+				clean_exit();
+				exit(1);
+			}
+
+			if (mbstowcs(module, level, strlen(level)+1) == -1) {
+				message(HAKA_LOG_FATAL, L"core", L"invalid module string");
+				clean_exit();
+				exit(1);
+			}
+		}
+		else {
+			value = level;
+		}
+
+		loglevel = str_to_level(value);
+		if (check_error()) {
+			message(HAKA_LOG_FATAL, L"core", clear_error());
+			clean_exit();
+			exit(1);
+		}
+
+		setlevel(loglevel, module);
+
+		if (module) free(module);
+
+		if (next_level) level = next_level;
+		else break;
+	}
+}

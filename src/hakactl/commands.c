@@ -136,36 +136,16 @@ struct command command_logs = {
 
 static int run_loglevel(int fd, int argc, char *argv[])
 {
-	log_level level;
-
 	printf("[....] changing log level");
 	fflush(stdout);
 
-	level = str_to_level(argv[0]);
-	if (level != HAKA_LOG_LEVEL_LAST) {
-		if ((!ctl_send_chars(fd,"LOGLEVEL")) || (!ctl_send_int(fd, level))) {
-			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
-			return COMMAND_FAILED;
-		}
-		if (ctl_expect_chars(fd, "OK")) {
-			printf(": log level set to %s", argv[0]);
-			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
-		}
-	}
-	else {
-		int index;
-
-		printf(": invalid log level '%s'", argv[0]);
+	if ((!ctl_send_chars(fd,"LOGLEVEL")) || (!ctl_send_chars(fd, argv[0]))) {
 		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
-
-		printf("       possible log levels are ");
-		for (index = 0; index < HAKA_LOG_LEVEL_LAST; index++) {
-			if (index != 0) printf(", ");
-			printf("%s", level_to_str(index));
-		}
-		printf("\n");
-
 		return COMMAND_FAILED;
+	}
+	if (ctl_expect_chars(fd, "OK")) {
+		printf(": log level set to %s", argv[0]);
+		printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 	}
 
 	return COMMAND_SUCCESS;

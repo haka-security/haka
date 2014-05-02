@@ -1,5 +1,4 @@
 [general]
-
 # Select the haka configuration file to use.
 configuration = "@CMAKE_HAKA_INSTALL_PREFIX@/share/haka/sample/empty.lua"
 
@@ -28,3 +27,6 @@ module = "log/syslog"
 [alert]
 # Select the alert module
 module = "alert/syslog"
+
+# Set the default logging level
+level = "info,packet=debug"

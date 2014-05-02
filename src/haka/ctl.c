@@ -444,13 +444,13 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 		state->fd = -1;
 	}
 	else if (strcmp(command, "LOGLEVEL") == 0) {
-		log_level level = ctl_recv_int(state->fd);
+		char *level = ctl_recv_chars(state->fd);
 		if (check_error()) {
 			message(HAKA_LOG_ERROR, MODULE, clear_error());
 		}
 		else {
-			messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", level_to_str(level));
-			setlevel(level, NULL);
+			messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", level);
+			setup_loglevel(level);
 			ctl_send_chars(state->fd, "OK");
 		}
 	}

@@ -35,5 +35,7 @@ const char *get_app_directory();
 
 void dump_stat(FILE *file);
 
+void setup_loglevel(char *level);
+
 #endif /* _APP_H */
 

@@ -49,7 +49,9 @@ static void help(const char *program)
 					"\t                         (default: %s/etc/haka/haka.conf)\n", haka_path());
 	fprintf(stdout, "\t-r,--rule <rule>:      Override the rule configuration file\n");
 	fprintf(stdout, "\t-d,--debug:            Display debug output\n");
-	fprintf(stdout, "\t--luadebug:            Attach lua debugger (and keep haka in foreground)\n");
+	fprintf(stdout, "\t-l,--loglevel <level>: Set the log level\n");
+	fprintf(stdout, "\t                         (debug, info, warning, error or fatal)\n");
+	fprintf(stdout, "\t--luadebug:            Activate lua debugging (and keep haka in foreground)\n");
 	fprintf(stdout, "\t--no-daemon:           Do no run in the background\n");
 	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
 	fprintf(stdout, "\t                       Override configuration parameter\n");
@@ -99,6 +101,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "help",         no_argument,       0, 'h' },
 		{ "config",       required_argument, 0, 'c' },
 		{ "debug",        no_argument,       0, 'd' },
+		{ "loglevel",     required_argument, 0, 'l' },
 		{ "luadebug",     no_argument,       0, 'L' },
 		{ "no-daemon",    no_argument,       0, 'D' },
 		{ "opt",          required_argument, 0, 'o' },
@@ -109,7 +112,11 @@ static int parse_cmdline(int *argc, char ***argv)
 	while ((c = getopt_long(*argc, *argv, "dhc:r:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
-			setlevel(HAKA_LOG_DEBUG, NULL);
+			add_override("log:level", "debug");
+			break;
+
+		case 'l':
+			add_override("log:level", optarg);
 			break;
 
 		case 'h':
@@ -209,6 +216,24 @@ int read_configuration(const char *file)
 		if (thread_count > 0) {
 			thread_set_packet_capture_cpu_count(thread_count);
 		}
+	}
+
+	/* Log level */
+	{
+		const char *_level = parameters_get_string(config, "log:level", "info");
+		if (_level) {
+			char *level = strdup(_level);
+			if (!level) {
+				message(HAKA_LOG_FATAL, L"core", L"memory error");
+				clean_exit();
+				exit(1);
+			}
+
+			setup_loglevel(level);
+
+			free(level);
+		}
+
 	}
 
 	/* Logging module */

@@ -15,8 +15,9 @@
 %rename(LOG_WARNING) HAKA_LOG_WARNING;
 %rename(LOG_INFO) HAKA_LOG_INFO;
 %rename(LOG_DEBUG) HAKA_LOG_DEBUG;
+%rename(LOG_DEFAULT) HAKA_LOG_DEFAULT;
 
-enum log_level { HAKA_LOG_FATAL, HAKA_LOG_ERROR, HAKA_LOG_WARNING, HAKA_LOG_INFO, HAKA_LOG_DEBUG };
+enum log_level { HAKA_LOG_FATAL, HAKA_LOG_ERROR, HAKA_LOG_WARNING, HAKA_LOG_INFO, HAKA_LOG_DEBUG, HAKA_LOG_DEFAULT };
 
 %rename(_message) message;
 void message(log_level level, const wchar_t *module, const wchar_t *message);
@@ -37,6 +38,7 @@ void setlevel(log_level level, const wchar_t *module);
 		warning = haka.LOG_WARNING,
 		info = haka.LOG_INFO,
 		debug = haka.LOG_DEBUG,
+		default = haka.LOG_DEFAULT,
 	}
 
 	haka.LOG_FATAL = nil
@@ -44,6 +46,7 @@ void setlevel(log_level level, const wchar_t *module);
 	haka.LOG_WARNING = nil
 	haka.LOG_INFO = nil
 	haka.LOG_DEBUG = nil
+	haka.LOG_DEFAULT = nil
 
 	haka.log = {}
 

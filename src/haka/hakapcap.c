@@ -34,13 +34,15 @@ static void help(const char *program)
 	usage(stdout, program);
 
 	fprintf(stdout, "Options:\n");
-	fprintf(stdout, "\t-h,--help:         Display this information\n");
-	fprintf(stdout, "\t--version:         Display version information\n");
-	fprintf(stdout, "\t-d,--debug:        Display debug output\n");
-	fprintf(stdout, "\t--luadebug:        Attach lua debugger\n");
+	fprintf(stdout, "\t-h,--help:             Display this information\n");
+	fprintf(stdout, "\t--version:             Display version information\n");
+	fprintf(stdout, "\t-d,--debug:            Display debug output\n");
+	fprintf(stdout, "\t-l,--loglevel <level>: Set the log level\n");
+	fprintf(stdout, "\t                         (debug, info, warning, error or fatal)\n");
+	fprintf(stdout, "\t--luadebug:            Activate lua debugging\n");
 	fprintf(stdout, "\t--no-pass-through, --pass-through:\n");
-	fprintf(stdout, "\t                   Select pass-through mode (default: true)\n");
-	fprintf(stdout, "\t-o <output>:       Save result in a pcap file\n");
+	fprintf(stdout, "\t                       Select pass-through mode (default: true)\n");
+	fprintf(stdout, "\t-o <output>:           Save result in a pcap file\n");
 }
 
 static char *output = NULL;
@@ -56,6 +58,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "version",         no_argument,       0, 'v' },
 		{ "help",            no_argument,       0, 'h' },
 		{ "debug",           no_argument,       0, 'd' },
+		{ "loglevel",        required_argument, 0, 'l' },
 		{ "luadebug",        no_argument,       0, 'L' },
 		{ "no-pass-through", no_argument,       0, 'p' },
 		{ "pass-through",    no_argument,       0, 'P' },
@@ -66,6 +69,10 @@ static int parse_cmdline(int *argc, char ***argv)
 		switch (c) {
 		case 'd':
 			setlevel(HAKA_LOG_DEBUG, NULL);
+			break;
+
+		case 'l':
+			setup_loglevel(optarg);
 			break;
 
 		case 'h':
