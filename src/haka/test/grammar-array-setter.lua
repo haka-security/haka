@@ -30,7 +30,9 @@ local grammar = haka.grammar.record{
 haka.rule{
 	-- Intercept tcp packets
 	hook = tcp_connection.events.receive_data,
-	streamed = true,
+	options = {
+		streamed = true,
+	},
 	eval = function (flow, iter, direction)
 		if direction == 'up' then
 			local ctx = class.class('ctx'):new()

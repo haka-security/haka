@@ -23,11 +23,9 @@ function haka.rule(r)
 	assert(r.hook, "not hook defined for rule")
 	assert(class.isa(r.hook, haka.events.Event), "rule hook must be an event")
 	assert(type(r.eval) == 'function', "rule eval function expected")
+	assert(not r.options or type(r.options) == 'table', "rule options should be table")
 
-	local options = {}
-	if r.streamed then options.streamed = true end
-
-	haka.context.connections:register(r.hook, r.eval, options)
+	haka.context.connections:register(r.hook, r.eval, r.options or {})
 end
 
 -- Load interactive.lua as a different file to allow to compile it

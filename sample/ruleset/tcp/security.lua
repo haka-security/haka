@@ -29,7 +29,9 @@ local re = rem.re:compile(shellcode, rem.re.EXTENDED)
 
 haka.rule {
 	hook = tcp_connection.events.receive_data,
-	streamed = true,
+	options = {
+		streamed = true,
+	},
 	eval = function (flow, iter)
 		-- match malicious pattern across multiple packets
 		local ret = re:match(iter)

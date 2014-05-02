@@ -15,7 +15,9 @@ haka.rule {
 
 haka.rule {
 	hook = http.events.response_data,
-	streamed = true,
+	options = {
+		streamed = true,
+	},
 	eval = function (http, iter)
 		print("== RESPONSE DATA ==", http.request.uri)
 		iter:advance(20)

@@ -8,7 +8,9 @@ http.install_tcp_rule(80)
 
 haka.rule {
 	hook = http.events.response_data,
-	streamed = true,
+	options = {
+		streamed = true,
+	},
 	eval = function (http, iter)
 		print("== RESPONSE DATA ==")
 		for sub in iter:foreach_available() do

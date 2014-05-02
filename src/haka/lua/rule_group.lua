@@ -7,11 +7,19 @@ local class = require('class')
 local rule_group = class.class('RuleGroup')
 
 function rule_group.method:__init(args, continue)
+	assert(args.hook, "not hook defined for rule group")
+	assert(class.isa(args.hook, haka.events.Event), "rule hook must be an event")
+	assert(not args.init or type(args.init) == 'function', "rule group init function expected")
+	assert(not args.continue or type(args.continue) == 'function', "rule group continue function expected")
+	assert(not args.final or type(args.final) == 'function', "rule group final function expected")
+	assert(not args.options or type(args.options) == 'table', "rule group options should be table")
+
 	self.rules = {}
 	self.init = args.init or function () end
 	self.continue = args.continue or function () return true end
 	self.final = args.final or function () end
 	self.event_continue = continue
+	self.options = args.options or {}
 end
 
 function rule_group.method:rule(eval)
@@ -40,11 +48,9 @@ end
 
 
 function haka.rule_group(args)
-	if not args.hook then
-		error("no hook defined for rule group")
-	end
-
 	local group = rule_group:new(args, args.hook.continue)
-	haka.context.connections:register(args.hook, function (...) group:eval(...) end)
+	haka.context.connections:register(args.hook,
+		function (...) group:eval(...) end,
+		args.options)
 	return group
 end

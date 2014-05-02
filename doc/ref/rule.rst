@@ -88,6 +88,8 @@ Rule Group
         :param final: If all the rules of the group have been evaluated, this callback is called
             at the end.
         :paramtype final: function
+        :param options: List of options for the rule.
+        :paramtype options: table
         :return group: New rule group.
         :rtype group: :haka:class:`rule_group`
 
