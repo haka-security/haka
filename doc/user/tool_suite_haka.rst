@@ -34,13 +34,21 @@ Options
 
     Do not run haka as daemon, do not detach from the command line.
 
-.. option:: -c, --config
+.. option:: -c, --config <config>
 
     Read setup configuration from given file.
+
+.. option:: -r, --rule <rules>
+
+    Override the configuration rule file.
 
 .. option:: --luadebug
 
     Start haka with debugger capability.
+
+.. option:: --opt <section>:<key>=<value>
+
+    Override a parameter value of the configuration.
 
 Configuration file
 ------------------
