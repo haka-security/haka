@@ -20,6 +20,9 @@ Buffer
 
     The main buffer object.
 
+    .. image:: /doc/genimages/ref/buffer.png
+        :align: center
+
     .. haka:function:: vbuffer_allocate(size, zero = true) -> vbuffer
 
         :param size: Requested memory size.
@@ -110,6 +113,9 @@ Sub-buffer
     :module:
 
     Object used to represent part of a buffer.
+
+    .. image:: /doc/genimages/ref/subbuffer.png
+        :align: center
 
     .. haka:function:: vbuffer_sub(begin, end) -> sub
 
@@ -299,6 +305,9 @@ Iterator
 
     Iterator on a buffer. An iterator can be *blocking* when working on a stream. In this case, some functions
     can block waiting for more data to be available.
+
+    .. image:: /doc/genimages/ref/buffer.png
+        :align: center
 
     .. haka:method:: vbuffer_iterator:mark(readonly = false)
 

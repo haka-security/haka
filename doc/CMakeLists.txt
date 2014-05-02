@@ -94,6 +94,8 @@ if(SPHINX_FOUND AND DOXYGEN_FOUND)
 	generate_images(TARGET doc-images TOOL Inkscape FILES
 		developer/flow.svg
 		developer/arch.svg
+		ref/buffer.svg
+		ref/subbuffer.svg
 	)
 
 	generate_images(TARGET doc-images TOOL Seqdiag FILES
