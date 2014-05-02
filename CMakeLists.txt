@@ -143,7 +143,7 @@ endif()
 
 add_custom_target(localinstall
 	COMMAND $(MAKE) install DESTDIR=${CMAKE_BINARY_DIR}/out
-	COMMAND echo "export LD_LIBRARY_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/lib\"; export HAKA_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka\"; export PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/bin\":\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/sbin\":$PATH" > ${CMAKE_CURRENT_BINARY_DIR}/out/env.sh
+	COMMAND echo "export LD_LIBRARY_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/lib:${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/share/haka/modules/protocol\"; export HAKA_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka\"; export PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/bin\":\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/sbin\":$PATH" > ${CMAKE_CURRENT_BINARY_DIR}/out/env.sh
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Install locally..." VERBATIM
 	VERBATIM
