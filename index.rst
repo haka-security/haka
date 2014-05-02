@@ -5,61 +5,33 @@
 Welcome to Haka's Documentation!
 ================================
 
-.. toctree::
-    :hidden:
-
-    doc/user/userindex.rst
-    doc/ref/refindex.rst
-    doc/developer/devindex.rst
-
+.. The style of the toctree is customized to avoid showing the top level entry.
+.. Check theme/haka/static/haka.css_t.
 
 :doc:`Users <doc/user/userindex>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
-    doc/user/intro.rst
-    doc/user/install.rst
-    doc/user/gettingstarted.rst
-    doc/user/tool_suite.rst
-    doc/user/language.rst
-    doc/user/tutorial.rst
-    doc/user/debug.rst
-
+    doc/user/userindex.rst
 
 :doc:`References <doc/ref/refindex>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
-    doc/ref/intro.rst
-    doc/ref/packet.rst
-    doc/ref/vbuffer.rst
-    doc/ref/log.rst
-    doc/ref/alert.rst
-    doc/ref/regexp.rst
-    doc/ref/hakadissector.rst
-    doc/ref/rule.rst
-    doc/ref/grammar.rst
-    doc/ref/state_machine.rst
-    doc/ref/class.rst
-    doc/ref/dissector.rst
-    doc/ref/misc.rst
+    doc/ref/refindex.rst
 
 
 :doc:`Developers <doc/developer/devindex>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
-    doc/developer/build.rst
-    doc/developer/arch.rst
-    doc/developer/devref.rst
-    doc/developer/tutorials.rst
-    doc/developer/contribute.rst
+    doc/developer/devindex.rst
 
 
 :doc:`doc/faq`
