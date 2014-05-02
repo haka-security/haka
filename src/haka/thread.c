@@ -226,6 +226,10 @@ static void *thread_main_loop(void *_state)
 	if (!state->pool->single) {
 		/* Block all signal to let the main thread handle them */
 		sigfillset(&set);
+		sigdelset(&set, SIGSEGV);
+		sigdelset(&set, SIGILL);
+		sigdelset(&set, SIGFPE);
+
 		if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
 			message(HAKA_LOG_FATAL, L"core", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);

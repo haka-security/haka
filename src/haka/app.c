@@ -38,7 +38,7 @@ void basic_clean_exit()
 	remove_all_logger();
 }
 
-static void fatal_error_signal(int sig)
+static void term_error_signal(int sig)
 {
 	static volatile sig_atomic_t fatal_error_in_progress = 0;
 
@@ -98,9 +98,9 @@ void initialize()
 	setlocale(LC_ALL, "");
 
 	/* Install signal handler */
-	signal(SIGTERM, fatal_error_signal);
-	signal(SIGINT, fatal_error_signal);
-	signal(SIGQUIT, fatal_error_signal);
+	signal(SIGTERM, term_error_signal);
+	signal(SIGINT, term_error_signal);
+	signal(SIGQUIT, term_error_signal);
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGHUP, handle_sighup);
 

@@ -45,6 +45,7 @@ add_library(libhaka SHARED
 	vbuffer_stream.c
 	vbuffer_sub_stream.c
 	regexp_module.c
+	system.c
 	container/list.c
 	container/list2.c
 	container/vector.c
