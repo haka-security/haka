@@ -18,7 +18,7 @@ struct vector {
 	void         (*destruct)(void *elem);
 };
 
-#define VECTOR_INIT(type, destruct)       {0, sizeof(type), 0, NULL, destruct}
+#define VECTOR_INIT(type, destruct)       {sizeof(type), 0, 0, NULL, destruct}
 
 #define vector_create(v, type, destruct)                  _vector_create((v), sizeof(type), 0, (destruct))
 #define vector_create_reserve(v, type, count, destruct)   _vector_create((v), sizeof(type), (count), (destruct))
