@@ -4,17 +4,17 @@
 
 local class = require('class')
 
-local LocalContext = class.class()
+local Scope = class.class()
 
-function LocalContext.method:__init()
+function Scope.method:__init()
 	self._connections = {}
 end
 
-function LocalContext.method:createnamespace(ref, data)
+function Scope.method:createnamespace(ref, data)
 	self[ref] = data
 end
 
-function LocalContext.method:namespace(ref)
+function Scope.method:namespace(ref)
 	return self[ref]
 end
 
@@ -30,8 +30,8 @@ function Context.method:signal(emitter, event, ...)
 		return false
 	end
 
-	if self.context then
-		for _, connections in ipairs(self.context._connections) do
+	if self.scope then
+		for _, connections in ipairs(self.scope._connections) do
 			if not connections:signal(emitter, event, ...) then
 				return false
 			end
@@ -42,23 +42,23 @@ function Context.method:signal(emitter, event, ...)
 end
 
 function Context.method:newscope()
-	return LocalContext:new()
+	return Scope:new()
 end
 
-function Context.method:scope(context, func)
-	local old = self.context
-	self.context = context
+function Context.method:exec(scope, func)
+	local old = self.scope
+	self.scope = scope
 	local success, msg = xpcall(func, debug.format_error)
-	self.context = old
+	self.scope = old
 	if not success then error(msg, 0) end
 end
 
 function Context.method:register_connections(connections)
 	if connections then
-		if self.context then
-			table.insert(self.context._connections, connections)
+		if self.scope then
+			table.insert(self.scope._connections, connections)
 		else
-			error("invalid context")
+			error("invalid scope")
 		end
 	end
 end

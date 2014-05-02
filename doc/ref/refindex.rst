@@ -20,5 +20,6 @@ Welcome to Haka's Reference Guide!
     grammar.rst
     state_machine.rst
     class.rst
+    context.rst
     dissector.rst
     misc.rst

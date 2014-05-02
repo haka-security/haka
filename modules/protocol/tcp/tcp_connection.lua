@@ -28,7 +28,7 @@ function tcp_connection_dissector:receive(pkt)
 			local data = haka.context.newscope()
 			local self = tcp_connection_dissector:new()
 
-			haka.context:scope(data, function ()
+			haka.context:exec(data, function ()
 				self:trigger('new_connection', pkt)
 			end)
 
@@ -60,7 +60,7 @@ function tcp_connection_dissector:receive(pkt)
 	local dissector = connection.data:namespace('tcp_connection')
 
 	local ret, err = xpcall(function ()
-		haka.context:scope(connection.data, function ()
+		haka.context:exec(connection.data, function ()
 			return dissector:emit(pkt, direction)
 		end)
 

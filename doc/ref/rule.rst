@@ -24,7 +24,7 @@ Single Rule
 .. haka:function:: rule{...}
 
     :param hook: Event to listen to.
-    :paramtype hook: :haka:class:`Event`
+    :paramtype hook: Event
     :param eval: Function to call when the event is triggered.
     :paramtype eval: function
     :param options: List of options for the rule.
