@@ -176,7 +176,7 @@ div.nav-menu > ul {
 	font-style: italic;
 }
 
-.nav-menu li a {
+.nav-menu li a, .nav-menu li span {
 	color: #ffffff;
 	display: block;
 	font-size: 15px;
@@ -184,6 +184,10 @@ div.nav-menu > ul {
 	padding: 15px 20px;
 	text-decoration: none;
 	font-weight: bold;
+}
+
+.nav-menu li span.disabled {
+	color: #888888;
 }
 
 .nav-menu li:hover > a,

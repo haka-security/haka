@@ -44,17 +44,27 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           <a href="{{ pathto("doc/faq") }}" class="">Faq</a>
         </li>
         <li>{%- include "searchbox.html" %}</li>
-        {%- if parents[-1] %}
-          <li class="right"><a href="{{ parents[-1].link|e }}" title="{{ parents[-1].title }}">Up</a></li>
-        {%- elif pagename != master_doc %}
-          <li class="right"><a href="{{ pathto(master_doc) }}" title="{{ shorttitle|e }}">Up</a></li>
-        {%- endif %}
-        {%- if prev %}
-          <li class="right"><a href="{{ prev.link|e }}" title="{{ prev.title }}">Prev</a></li>
-        {%- endif %}
+
         {%- if next %}
-          <li class="right"><a href="{{ next.link|e }}" title="{{ next.title }}">Next</a></li>
+          <li class="right"><a href="{{ next.link|e }}" title="{{ next.title }}">Next &rarr;</a></li>
+        {%- else %}
+          <li class="right"><span class="disabled">Next &rarr;</span></li>
         {%- endif %}
+
+        {%- if prev %}
+          <li class="right"><a href="{{ prev.link|e }}" title="{{ prev.title }}">&larr; Prev</a></li>
+        {%- else %}
+          <li class="right"><span class="disabled">&larr; Prev</span></li>
+        {%- endif %}
+
+        {%- if parents[-1] %}
+          <li class="right"><a href="{{ parents[-1].link|e }}" title="{{ parents[-1].title }}">Up &uarr;</a></li>
+        {%- elif pagename != master_doc %}
+          <li class="right"><a href="{{ pathto(master_doc) }}" title="{{ shorttitle|e }}">Up &uarr;</a></li>
+        {%- else %}
+          <li class="right"><span class="disabled">Up &uarr;</span></li>
+        {%- endif %}
+
          <li class="{% if pagename == 'genindex' %}current{% endif %} right"><a href="{{ pathto("genindex.html", 1) }}">Index</a></li>
          <li class="{% if pagename == 'haka-modindex' %}current{% endif %} right"><a href="{{ pathto("haka-modindex.html", 1) }}">Modules</a></li>
       </ul>
