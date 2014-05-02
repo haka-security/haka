@@ -5,6 +5,7 @@
 #include <haka/packet_module.h>
 #include <haka/log.h>
 #include <haka/error.h>
+#include <haka/system.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -391,12 +392,19 @@ static void close_pcap(struct pcap_dump *pcap)
 	mutex_destroy(&pcap->mutex);
 }
 
-static void cleanup()
+static void restore_iptables()
 {
 	if (iptables_saved) {
 		if (apply_iptables(iptables_saved) != 0) {
 			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot restore iptables rules");
 		}
+	}
+}
+
+static void cleanup()
+{
+	if (iptables_saved) {
+		restore_iptables();
 		free(iptables_saved);
 	}
 
@@ -425,6 +433,8 @@ static int init(struct parameters *args)
 		cleanup();
 		return 1;
 	}
+
+	system_register_fatal_cleanup(&restore_iptables);
 
 	{
 		const char *iter;
