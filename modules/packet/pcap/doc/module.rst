@@ -8,7 +8,7 @@ Pcap  `packet/pcap`
 Description
 ^^^^^^^^^^^
 
-The module uses the pcap library to read packets from a pcap file or from a network interface.
+The module uses the `pcap` library to read packets from a pcap file or from a network interface.
 
 .. note:
     To be able to capture packets on a real interface, the process need to be launched with
@@ -19,7 +19,7 @@ Parameters
 
 .. describe:: interfaces
 
-    Comma-separated list of interfaces or the `any` keyword.
+    Comma-separated list of interfaces or the ``any`` keyword.
 
     Example of possible values:
 

@@ -2,8 +2,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
 require('protocol/ipv4')
-require('protocol/tcp-connection')
+local tcp_connection = require('protocol/tcp_connection')
 
 local header = haka.grammar.record{
 	haka.grammar.field("name", haka.grammar.token("[^:\r\n]+")),
@@ -21,11 +22,13 @@ local grammar = haka.grammar.record{
 
 haka.rule{
 	-- Intercept tcp packets
-	hook = haka.event('tcp-connection', 'receive_data'),
-	streamed = true,
+	hook = tcp_connection.events.receive_data,
+	options = {
+		streamed = true,
+	},
 	eval = function (flow, iter, direction)
 		if direction == 'up' then
-			local ctx = class('ctx'):new()
+			local ctx = class.class('ctx'):new()
 			local mark = iter:copy()
 			mark:mark()
 			grammar:parse(iter, ctx)

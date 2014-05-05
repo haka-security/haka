@@ -9,14 +9,17 @@ Welcome to Haka's Reference Guide!
     :maxdepth: 2
     :numbered: 3
 
-    rule.rst
-    dissector.rst
+    intro.rst
     packet.rst
-    event.rst
     vbuffer.rst
+    log.rst
+    alert.rst
+    regexp.rst
+    hakadissector.rst
+    rule.rst
     grammar.rst
     state_machine.rst
-    extmodules.rst
-    regexp.rst
-    log_alert.rst
+    class.rst
+    context.rst
+    dissector.rst
     misc.rst

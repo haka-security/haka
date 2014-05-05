@@ -8,10 +8,10 @@ haka
 .. program:: haka
 
 ``haka`` is the main program of the collection. It allows to capture packets using either pcap
-or nfqueue and to filter/alter them according to the specified lua policy file.
+or nfqueue and to filter/alter them according to the specified Haka policy file.
 
 ``haka`` is usually launched as a daemon to monitor packets in the background, but it can 
-also be launched from the command line to debug lua scripts.
+also be launched from the command line to debug Haka scripts.
 
 Options
 -------
@@ -32,15 +32,15 @@ Options
 
 .. option:: --no-daemon
 
-    Do not run `haka` as daemon, do not detach from the command line.
+    Do not run haka as daemon, do not detach from the command line.
 
 .. option:: -c, --config
 
     Read setup configuration from given file.
 
-.. option:: --lua-debug
+.. option:: --luadebug
 
-    Start `haka` and immediately attach the Lua debugger.
+    Start haka with debugger capability.
 
 Configuration file
 ------------------
@@ -52,16 +52,16 @@ General directives
 
 .. describe:: configuration
 
-    Set the Lua policy file.
+    Set the Haka policy file.
 
 .. describe:: thread
 
-    Set the number of threads to use. By default, haka will use as many threads as cpu-cores.
+    Set the number of threads to use. By default, Haka will use as many threads as cpu-cores.
 
 .. describe:: pass-through=[yes|no]
 
-    Activate pass-through mode. `haka` will only monitor traffic and will not allow blocking
-    or modification of packets. The overall performence of `haka` will be greatly improved.
+    Activate pass-through mode. Haka will only monitor traffic and will not allow blocking
+    or modification of packets. The overall performence of Haka will be greatly improved.
 
 Packet directives
 ^^^^^^^^^^^^^^^^^
@@ -105,42 +105,6 @@ Example
 .. literalinclude:: ../../sample/gettingstarted/gettingstarted.conf
     :tab-width: 4
 
-Modules
--------
-
-.. _packet_module_section:
-
-Packet capture modules
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. toctree::
-    :maxdepth: 1
-    :glob:
-
-    ../../modules/packet/*/doc/module*
-
-.. _alert_module_section:
-
-Alert modules
-^^^^^^^^^^^^^
-
-.. toctree::
-    :maxdepth: 1
-    :glob:
-
-    ../../modules/alert/*/doc/module*
-
-.. _log_module_section:
-
-Logging modules
-^^^^^^^^^^^^^^^
-
-.. toctree::
-    :maxdepth: 1
-    :glob:
-
-    ../../modules/log/*/doc/module*
-
 Service
 -------
 
@@ -148,27 +112,27 @@ On debian, ``haka`` is installed as a system service by the .deb package.
 Unless otherwise specified using the `-c` command line option, ``haka`` will
 load the default configuration file ``<haka_install_path>/etc/haka/haka.conf``.
 
-* Starting haka service
+* Starting Haka service
 
     .. code-block:: console
 
         $ sudo service haka start
 
-* Stopping haka service
+* Stopping Haka service
 
     .. code-block:: console
 
         $ sudo service haka stop
 
 
-* Restarting haka service
+* Restarting Haka service
 
     .. code-block:: console
 
         $ sudo service haka restart
 
 
-* Getting status of haka service
+* Getting status of Haka service
 
     .. code-block:: console
 

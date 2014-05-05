@@ -3,23 +3,18 @@
 ------------------------------------
 require('protocol/ipv4')
 require('protocol/tcp')
-require('protocol/tcp-connection')
+local tcp_connection = require('protocol/tcp_connection')
 
 ------------------------------------
--- Security group
+-- Security rule group
 ------------------------------------
--- This group implements an logical 'or' between rules
--- Each rule returns a boolean,
---
--- if any rule return 'true' we leave the rule group
--- if all rules return 'false' the packet is droped
 
-
--- create a new group with no rules in it
--- The 'my_group' lua variable will be used to add rules to the group
+-- Create a new group with no rules in it
+-- The 'my_group' lua variable will be used
+-- to add rules to the group
 local my_group = haka.rule_group{
 	name = "my_group",
-	hook = haka.event('tcp-connection', 'new_connection'),
+	hook = tcp_connection.events.new_connection,
 	init = function (flow, pkt)
 		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d",
 			pkt.srcport, pkt.dstport)
@@ -27,7 +22,7 @@ local my_group = haka.rule_group{
 
 	-- rules will return a boolean
 	-- if the boolean is false, we continue
-	-- if the boolean is true, we finish the group immediately
+	-- if the boolean is true, we leave the group immediately
 	continue = function (ret, flow, pkt)
 		return not ret
 	end,

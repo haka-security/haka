@@ -1,25 +1,25 @@
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
+debug tcp_connection: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
-warn tcp-connection: retransmit packet (ignored)
-warn tcp-connection: retransmit packet (ignored)
-warn tcp-connection: retransmit packet (ignored)
+debug tcp_connection: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
-warn tcp-connection: retransmit packet (ignored)
-error tcp-connection: unexpected tcp packet
-debug tcp-connection: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
-warn tcp-connection: retransmit packet (ignored)
-error tcp-connection: unexpected tcp packet
-debug tcp-connection: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
+debug tcp_connection: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
+warn tcp_connection: retransmit packet (ignored)
+error tcp_connection: unexpected tcp packet
+debug tcp_connection: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
+warn tcp_connection: retransmit packet (ignored)
+error tcp_connection: unexpected tcp packet
+debug tcp_connection: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
+debug tcp_connection: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
-debug tcp-connection: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
-warn tcp-connection: retransmit packet (ignored)
-warn tcp-connection: retransmit packet (ignored)
-warn tcp-connection: retransmit packet (ignored)
+debug tcp_connection: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
 top 10 (by default) of useragent header
  : 1
 Wget/1.13.4 (linux-gnu) : 1
@@ -33,8 +33,8 @@ list of source ip using 'Mozilla/2.0' as user-gent'
 
 top ten of http resources that generated the most 404 status error
 
-debug tcp-connection: closing connection 192.168.10.1:50696 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:50695 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:50694 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:50693 -> 192.168.20.1:80
-debug tcp-connection: closing connection 192.168.10.1:50692 -> 192.168.20.1:80
+debug tcp_connection: closing connection 192.168.10.1:50696 -> 192.168.20.1:80
+debug tcp_connection: closing connection 192.168.10.1:50695 -> 192.168.20.1:80
+debug tcp_connection: closing connection 192.168.10.1:50694 -> 192.168.20.1:80
+debug tcp_connection: closing connection 192.168.10.1:50693 -> 192.168.20.1:80
+debug tcp_connection: closing connection 192.168.10.1:50692 -> 192.168.20.1:80

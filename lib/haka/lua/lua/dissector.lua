@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
+
 local dissector = {}
 
 
@@ -9,21 +11,7 @@ local dissector = {}
 -- Dissector base class
 --
 
-dissector.Dissector = class('Dissector')
-
-function haka.event(dname, name)
-	local dissec = dissector.get(dname)
-	if not dissec then
-		error(string.format("unknown dissector '%s'", dname))
-	end
-
-	local event = dissec.events[name]
-	if not event then
-		error(string.format("unknown event '%s' on dissector '%s'", name, dname))
-	end
-
-	return event
-end
+dissector.Dissector = class.class('Dissector')
 
 function dissector.Dissector.__class_init(self, cls)
 	self.super:__class_init(cls)
@@ -52,11 +40,11 @@ function dissector.Dissector.method:__init()
 end
 
 dissector.Dissector.property.name = {
-	get = function (self) return classof(self).name end
+	get = function (self) return class.classof(self).name end
 }
 
 function dissector.Dissector.method:trigger(signal, ...)
-	haka.context:signal(self, classof(self).events[signal], ...)
+	haka.context:signal(self, class.classof(self).events[signal], ...)
 end
 
 function dissector.Dissector.method:send()
@@ -90,7 +78,7 @@ end
 -- Packet based dissector
 --
 
-dissector.PacketDissector = class('PacketDissector', dissector.Dissector)
+dissector.PacketDissector = class.class('PacketDissector', dissector.Dissector)
 
 dissector.PacketDissector:register_event('receive_packet')
 dissector.PacketDissector:register_event('send_packet')
@@ -125,7 +113,7 @@ function dissector.PacketDissector.method:drop()
 end
 
 
-dissector.EncapsulatedPacketDissector = class('EncapsulatedPacketDissector', dissector.PacketDissector)
+dissector.EncapsulatedPacketDissector = class.class('EncapsulatedPacketDissector', dissector.PacketDissector)
 
 function dissector.EncapsulatedPacketDissector.method:receive()
 	self:parse(self._parent)
@@ -133,7 +121,7 @@ function dissector.EncapsulatedPacketDissector.method:receive()
 end
 
 function dissector.EncapsulatedPacketDissector.method:__init(parent)
-	super(dissector.EncapsulatedPacketDissector).__init(self)
+	class.super(dissector.EncapsulatedPacketDissector).__init(self)
 	self._parent = parent
 end
 
@@ -208,7 +196,7 @@ end
 -- Flow based dissector
 --
 
-dissector.FlowDissector = class('FlowDissector', dissector.Dissector)
+dissector.FlowDissector = class.class('FlowDissector', dissector.Dissector)
 
 function dissector.FlowDissector.stream_wrapper(f, options, self, stream, current, ...)
 	if (not current or not current:check_available(1)) and
@@ -238,7 +226,7 @@ function dissector.FlowDissector.stream_wrapper(f, options, self, stream, curren
 end
 
 function dissector.FlowDissector.method:connections()
-	local connections = classof(self).connections
+	local connections = class.classof(self).connections
 	if connections then
 		return haka.events.ObjectEventConnections:new(self, connections)
 	end
@@ -284,7 +272,7 @@ local dissectors = {}
 
 function dissector.new(args)
 	haka.log.info("dissector", "register new dissector '%s'", args.name)
-	local d = class(args.name, args.type or dissector.Dissector)
+	local d = class.class(args.name, args.type or dissector.Dissector)
 	dissectors[args.name] = d
 	return d
 end

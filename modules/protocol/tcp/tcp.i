@@ -6,7 +6,6 @@
 
 %{
 #include <haka/tcp.h>
-#include <haka/tcp-connection.h>
 #include <haka/tcp-stream.h>
 #include <haka/log.h>
 
@@ -45,7 +44,6 @@ struct tcp_flags {
 STRUCT_UNKNOWN_KEY_ERROR(tcp_flags);
 
 LUA_OBJECT(struct tcp);
-LUA_OBJECT(struct tcp_connection);
 LUA_OBJECT(struct tcp_stream);
 
 %newobject tcp_stream::_push;
@@ -237,7 +235,7 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 	function tcp_dissector.method:receive()
 		haka.context:signal(self, tcp_dissector.events['receive_packet'])
 
-		local next_dissector = haka.dissector.get('tcp-connection')
+		local next_dissector = tcp_dissector.next_dissector
 		if next_dissector then
 			return next_dissector:receive(self)
 		else
@@ -281,4 +279,14 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 
 	local ipv4 = require("protocol/ipv4")
 	ipv4.register_protocol(6, tcp_dissector)
+
+	this.events = tcp_dissector.events
+
+	function this.create(ip)
+		return tcp_dissector:create(ip)
+	end
+
+	function this.select_next_dissector(dissector)
+		tcp_dissector.next_dissector = dissector
+	end
 }

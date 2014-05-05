@@ -11,16 +11,16 @@ Dependencies
 Required
 ^^^^^^^^
 
-* Toolchain (GCC, Make, ...)
-* cmake (>= 2.8)
-* swig
-* sphinx (>= 2)
-* tshark
-* check
+* Classic build tools (GCC, Make, ...)
+* CMake (>= 2.8)
+* Swig
+* Tshark
+* Check
 * rsync
 * libpcap
-* gawk
+* Gawk
 * libedit
+* libpcre
 
 Optional
 ^^^^^^^^
@@ -30,6 +30,12 @@ Optional
 * Netfilter Queue
 * Valgrind
 * rpm-build
+* Sphinx (>= 2)
+* Doxygen
+* Inkscape
+* python-blockdiag
+* python-seqdiag
+
 
 Examples
 ^^^^^^^^
@@ -39,17 +45,18 @@ Debian (and compatible)
 
 .. code-block:: console
 
-    $ sudo apt-get install build-essential cmake swig python-sphinx tshark check
-    $ sudo apt-get install rsync libpcap-dev gawk libedit-dev
+    $ sudo apt-get install build-essential cmake swig tshark check
+    $ sudo apt-get install rsync libpcap-dev gawk libedit-dev libpcre3-dev
     $ sudo apt-get install cppcheck libnetfilter-queue-dev valgrind
+    $ sudo apt-get install python-sphinx doxygen python-blockdiag python-seqdiag
 
 Fedora
 """"""
 
 .. code-block:: console
 
-    $ sudo yum install gcc gcc-c++ make cmake python-sphinx wireshark check
-    $ sudo yum install check-devel rsync libpcap-devel gawk libedit-devel
+    $ sudo yum install gcc gcc-c++ make cmake python-sphinx wireshark check doxygen
+    $ sudo yum install check-devel rsync libpcap-devel gawk libedit-devel pcre-devel
     $ sudo yum install git cppcheck libnetfilter_queue-devel rpm-build valgrind valgrind-devel
 
 The *swig* package in Fedora is broken and will not be usable to compile Haka.
@@ -91,20 +98,7 @@ You must first clone the Git repository. Our project is hosted on GitHub:
 
 .. code-block:: console
 
-    $ git clone git@github.com:haka-security/haka.git
-
-Our development uses the branching model Git flow which describes how to
-use and name Git branches. For instance, you will find the following branches:
-
-* ``master`` branch contains the last release of Haka. This branch might be empty
-  if we do not have an official version.
-* ``develop`` branch contains the current Haka unstable development.
-
-You should then switch to the branch you want to build. For example:
-
-.. code-block:: console
-
-    $ git checkout develop
+    $ git clone https://github.com/haka-security/haka.git
 
 Submodules
 """"""""""
@@ -127,8 +121,8 @@ all the files generated during the build using cmake.
 
 .. code-block:: console
 
-    $ mkdir make
-    $ cd make
+    $ mkdir workspace
+    $ cd workspace
     $ cmake .. <options>
 
 Options
@@ -156,7 +150,6 @@ Use make like usual to compile:
 
 .. code-block:: console
 
-    $ make clean
     $ make
 
 Install
@@ -186,6 +179,7 @@ file ``env.sh``:
 
 .. code-block:: console
 
+    $ cd out/
     $ . env.sh
 
 Documentation
@@ -193,6 +187,11 @@ Documentation
 
 Run ``make doc`` to generate documentation in `html`. The documentation is then available
 in `doc` inside your build folder.
+
+In order to build it, you need to have, at least, Sphinx and Doxygen installed. To
+get all images, you also need the tools Inkscape, blockdiag and seqdiag. You might need to
+install the fonts used for those images in your system. The files are located in
+`doc/theme/haka/fonts`.
 
 Tests
 ^^^^^
@@ -213,9 +212,3 @@ Packaging
 ^^^^^^^^^
 
 Run ``make package`` to build an installable package.
-
-.. note::
-
-    If you have some issue with the folder permission in the generated package, check your
-    umask property. If you hit this problem, for instance, rpm will complains about conflicting
-    directory.

@@ -13,7 +13,7 @@ the *Download* section.
 
 .. seealso::
 
-    If you need a package for another distribution, we will need to build it from the sources.
+    If you need a package for another distribution, you will need to build it from the sources.
     See the section :doc:`\../developer/build` for more details about this.
 
 Install

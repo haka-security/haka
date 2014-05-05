@@ -8,9 +8,9 @@ local http = require('protocol/http')
 
 local tbl = require('stats_utils')
 
--- Each entry of stats table will store
--- info about http request/response (method,
--- host, resource, status, etc.)
+-- Each entry of stats table will store info
+-- about http request/response (method, host,
+-- resource, status, etc.)
 local stats = tbl.new()
 
 --------------------------
@@ -24,7 +24,7 @@ http.install_tcp_rule(80)
 --------------------------
 
 haka.rule{
-	hook = haka.event('http', 'response'),
+	hook = http.events.response,
 	eval = function (http, response)
 		local request = http.request
 		local split_uri = request.split_uri:normalize()

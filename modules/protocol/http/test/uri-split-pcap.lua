@@ -10,7 +10,7 @@ http.install_tcp_rule(80)
 
 
 haka.rule {
-	hook = haka.event('http', 'request'),
+	hook = http.events.request,
 	eval = function (http, request)
 		local uri = request.uri
 		print('--> splitting uri')
@@ -20,7 +20,7 @@ haka.rule {
 }
 
 haka.rule {
-	hook = haka.event('http', 'request'),
+	hook = http.events.request,
 	eval = function (http, request)
 		local uri = request.uri
 		print('--> splitting uri')

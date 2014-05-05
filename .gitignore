@@ -1,5 +1,7 @@
 /make
+/workspace
 /buildtag.cmake
+/doc/genimages
 *.swp
 .project
 .externalToolBuilders

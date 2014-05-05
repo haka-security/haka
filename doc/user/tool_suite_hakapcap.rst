@@ -7,11 +7,12 @@ hakapcap
 
 .. program:: hakapcap
 
-``hakapcap`` is a tool to quickly apply a lua policy file to a pcap file and see the resulting decisions.
+``hakapcap`` is a tool to quickly apply a Haka policy file to a pcap file and
+see the resulting decisions.
 
 .. code-block:: console
 
-     $ hakatool [options] <pcapfile> <luafile>
+     $ hakapcap [options] <pcapfile> <hakafile>
 
 Options
 -------
@@ -28,9 +29,9 @@ Options
 
     Display debug output.
 
-.. option:: --pass-through
+.. option:: --no-pass-through
 
-    Run in pass-through mode (probe mode).
+    Disable pass-through mode (probe mode).
 
 .. option:: -o <output>
 
@@ -38,12 +39,12 @@ Options
 
 .. option:: --luadebug
 
-    Start `hakapcap` and automatically attach the Lua debugger.
+    Start hakapcap and automatically attach the Haka debugger.
 
 .. option:: pcapfile
 
     A pcap file containing the packets to filter.
 
-.. option:: luafile
+.. option:: hakafile
 
-    A lua script containing the filtering rules to apply to the pcap file.
+    A Haka policy file.

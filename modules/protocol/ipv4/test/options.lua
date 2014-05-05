@@ -7,7 +7,7 @@
 require("protocol/ipv4")
 
 haka.rule {
-	hook = haka.event('ipv4', 'receive_packet'),
+	hook = ipv4.events.receive_packet,
 	eval = function (pkt)
 		local opt = pkt.opt
 		if opt then

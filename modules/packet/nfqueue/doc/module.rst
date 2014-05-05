@@ -8,7 +8,7 @@ Netfilter queue `packet/nfqueue`
 Description
 ^^^^^^^^^^^
 
-This module uses the library netfilter queue to capture packets from a given network interface.
+This module uses the `netfilter queue` library to capture packets from a given network interface.
 
 This module will install iptable rules in the `raw` table during its initialization
 .
@@ -21,7 +21,7 @@ Parameters
 
 .. describe:: interfaces
 
-    Comma-separated list of interfaces or the `any` keyword.
+    Comma-separated list of interfaces or the ``any`` keyword.
 
     Example :
 
@@ -43,12 +43,8 @@ Parameters
     Save all received packets to a  pcap file.
 
 .. describe:: dump_output=`file`
-    
-    Save packets that were accepted to to a pcap file.
 
-.. describe:: dump_drop=`file`
-    
-    Save packets that were dropped to to a pcap file.
+    Save packets that were accepted to to a pcap file.
 
     Example :
 
@@ -56,4 +52,3 @@ Parameters
 
         dump = true
         dump_input = "/tmp/input.pcap"
-        dump_drop = "/tmp/drop.pcap"

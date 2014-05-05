@@ -4,11 +4,13 @@
 
 require("protocol/ipv4")
 require("protocol/tcp")
-require("protocol/tcp-connection")
+local tcp_connection = require("protocol/tcp_connection")
 
 haka.rule {
-	hook = haka.event('tcp-connection', 'receive_data'),
-	streamed = true,
+	hook = tcp_connection.events.receive_data,
+	options = {
+		streamed = true,
+	},
 	eval = function (flow, iter, direction)
 		local sub
 		local data = {}

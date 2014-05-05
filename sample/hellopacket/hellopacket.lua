@@ -1,50 +1,35 @@
 ------------------------------------
--- This is an example lua file for the hellopacket tutorial
---
--- Use this file with hakapcap tool:
---
--- hakapcap hellopacket.pcap hellopacket.lua
---
-------------------------------------
-
-------------------------------------
 -- Loading dissectors
 ------------------------------------
+
 -- Each dissector provides hooks to intercept and modify packets.
 -- We need ipv4 to intercept incoming packets
--- We need tcp to intercept new connectiosn
-require('protocol/ipv4')
-require('protocol/tcp')
-require('protocol/tcp-connection')
+-- We need tcp to intercept new connections
+local ipv4 = require('protocol/ipv4')
+local tcp_connection = require('protocol/tcp_connection')
 
-------------------------------------
--- Log all incoming packets, reporting the source and destination IP address
-------------------------------------
+-- Log info about incoming ipv4 packets
 haka.rule{
-	-- Intercept all ipv4 packet before they are passed to tcp
-	hook = haka.event('ipv4', 'receive_packet'),
-
-	-- Function to call on all packets.
-	--     self : the dissector object that handles the packet (here, ipv4 dissector)
-	--     pkt : the packet that we are intercepting
+	-- Rule evaluated whenever a new ipv4 packet is received
+	hook = ipv4.events.receive_packet,
+	-- Evauation function taking ipv4 packet structure
+	-- as argument
 	eval = function (pkt)
-		-- All fields are accessible through accessors
+		-- All fields are accessible through pkt variable.
 		-- See the Haka documentation for a complete list.
 		haka.log("Hello", "packet from %s to %s", pkt.src, pkt.dst)
 	end
 }
 
-------------------------------------
--- Log all new connection, logging address and port of source and destination
-------------------------------------
+-- Log info about connection establsihments
 haka.rule{
-	-- Intercept connection establishement, detected by the TCP dissector
-	hook = haka.event('tcp-connection', 'new_connection'),
+	-- Rule evaluated at connection establishment attempt
+	hook = tcp_connection.events.new_connection,
+	-- Rule evaluated at connection establishment attempt
 	eval = function (flow, tcp)
 		-- Fields from previous layer are accessible too
 		haka.log("Hello", "TCP connection from %s:%d to %s:%d", tcp.ip.src,
 			tcp.srcport, tcp.ip.dst, tcp.dstport)
-
 		-- Raise a simple alert for testing purpose
 		haka.alert{
 			description = "A simple alert",

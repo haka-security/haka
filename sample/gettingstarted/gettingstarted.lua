@@ -1,16 +1,18 @@
 
--- load the IPV4 disector to be able to read the fields of ipv4 packets
+-- load the ipv4 dissector to be able to read the fields of ipv4 packets
 local ipv4 = require("protocol/ipv4")
 
--- load the tcp disector, this is needed to be able to track connections
-require("protocol/tcp")
-require("protocol/tcp-connection")
+-- load the tcp dissectors (statefull and stateless)
+-- this is needed to be able to track tcp connections
+-- and to get access to tcp packet fields
+local tcp = require("protocol/tcp")
+local tcp_connection = require("protocol/tcp_connection")
 
--- rule to check packet for bad TCP checksums and reject them
+-- security rule to discard packets with bad tcp checksums
 haka.rule{
-	hook = haka.event('tcp', 'receive_packet'), -- hook on tcp packets, before any sub-protocol is parsed.
+	hook = tcp.events.receive_packet, -- hook on new tcp packets capture
 	eval = function (pkt)
-		-- check for bad IP checksum
+		-- check for bad ip checksum
 		if not pkt:verify_checksum() then
 			-- raise an alert
 			haka.alert{
@@ -26,11 +28,12 @@ haka.rule{
 	end
 }
 
--- rule to add a log entry on HTTP connections to a web server
+-- securty rule to add a log entry on http connections to a web server
 haka.rule{
-	hook = haka.event('tcp-connection', 'new_connection'), --hook on new TCP connections.
+	hook = tcp_connection.events.new_connection, --hook on new tcp connections.
 	eval = function (flow, tcp)
-		if tcp.ip.dst == ipv4.addr("192.168.20.1") and tcp.dstport == 80 then
+		local web_server = ipv4.addr("192.168.20.1")
+		if tcp.ip.dst == web_server and tcp.dstport == 80 then
 			haka.log.debug("filter","Traffic on HTTP port from %s", tcp.ip.src)
 		end
 	end

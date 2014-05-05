@@ -7,8 +7,10 @@ local http = require("protocol/http")
 http.install_tcp_rule(80)
 
 haka.rule {
-	hook = haka.event('http', 'response_data'),
-	streamed = true,
+	hook = http.events.response_data,
+	options = {
+		streamed = true,
+	},
 	eval = function (http, iter)
 		print("== RESPONSE DATA ==")
 		for sub in iter:foreach_available() do

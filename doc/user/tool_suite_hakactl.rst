@@ -7,7 +7,7 @@ hakactl
 
 .. program:: hakactl
 
-``hakactl`` allows to control a running `haka` daemon.
+``hakactl`` allows to control a running ``haka`` daemon.
 
 .. code-block:: console
 
@@ -47,7 +47,7 @@ Commands
 
     Set the logging level (fatal, error, warn, info, debug).
 
-    .. seealso:: See :lua:mod:`haka.log` for more information about logging levels.
+    .. seealso:: See :haka:mod:`haka.log` for more information about logging levels.
 
 .. option:: debug
 

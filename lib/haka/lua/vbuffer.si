@@ -437,7 +437,7 @@ struct vbuffer_sub {
 			free($self);
 		}
 
-		size_t __len(void *dummy) { return vbuffer_sub_size($self); }
+		int __len(void *dummy) { return vbuffer_sub_size($self); }
 		int __getitem(int index) { return vbuffer_getbyte($self, index-1); }
 		void __setitem(int index, int value) { vbuffer_setbyte($self, index-1, value); }
 
@@ -910,7 +910,9 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 
 
 %luacode {
-	haka.vbuffer_stream_comanager = class('VbufferStreamCoManager')
+	local class = require('class')
+
+	haka.vbuffer_stream_comanager = class.class('VbufferStreamCoManager')
 
 	function haka.vbuffer_stream_comanager.method:__init(stream)
 		self._co = {}

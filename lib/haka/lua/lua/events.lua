@@ -2,13 +2,15 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
+
 local events = {}
 
 --
 -- Event
 --
 
-events.Event = class('Event')
+events.Event = class.class('Event')
 
 function events.Event.method:__init(name, continue, signal)
 	self.name = name
@@ -21,7 +23,7 @@ end
 -- Connections
 --
 
-events.EventConnections = class('EventConnections')
+events.EventConnections = class.class('EventConnections')
 
 function events.EventConnections.method:_signal(event, listener, emitter, ...)
 	event.signal(listener.f, listener.options, emitter, ...)
@@ -42,10 +44,10 @@ function events.EventConnections.method:signal(emitter, event, ...)
 end
 
 
-events.StaticEventConnections = class('StaticEventConnections', events.EventConnections)
+events.StaticEventConnections = class.class('StaticEventConnections', events.EventConnections)
 
 function events.StaticEventConnections.method:register(event, func, options)
-	assert(isa(event, events.Event), "event expected")
+	assert(class.isa(event, events.Event), "event expected")
 	assert(type(func) == 'function', "function expected")
 
 	local listeners = self[event]
@@ -62,7 +64,7 @@ function events.StaticEventConnections.method:_get(event)
 end
 
 
-events.ObjectEventConnections = class('ObjectEventConnections', events.EventConnections)
+events.ObjectEventConnections = class.class('ObjectEventConnections', events.EventConnections)
 
 events.self = {}
 

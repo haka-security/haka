@@ -7,277 +7,583 @@
 Buffers
 =======
 
-Virtual buffer allows to access memory data using scatter lists. This enable
+Virtual buffer allows to access memory data. Using scatter lists, it enables
 easy and efficient modifications on memory data.
 
 Buffer
 ------
 
-.. lua:currentmodule:: haka
+.. haka:module:: haka
 
-.. lua:class:: vbuffer
+.. haka:class:: vbuffer
+    :module:
 
-    The main buffer object holds a list of memory chunks.
+    The main buffer object.
 
-    .. lua:function:: vbuffer(size, zero=true)
+    .. image:: /doc/genimages/ref/buffer.png
+        :align: center
 
-        :param size: Requested memory size
-        :param zero: Zero the memory
+    .. haka:function:: vbuffer_allocate(size, zero = true) -> vbuffer
 
-        Allocate a new buffer.
+        :param size: Requested memory size.
+        :paramtype size: number
+        :param zero: Zero the memory.
+        :paramtype zero: boolean
+        :return vbuffer: Created buffer.
+        :rtype vbuffer: :haka:class:`vbuffer`
 
-    .. lua:function:: vbuffer(string)
+        Allocate a new buffer with a specific size.
 
-        :param string: Source data
+    .. haka:function:: vbuffer_from(string) -> vbuffer
 
-        Allocate a new buffer from a ``string``. The string will be copied
-        into the allocated buffer.
+        :param string: Source data.
+        :paramtype string: string
+        :return vbuffer: Created buffer.
+        :rtype vbuffer: :haka:class:`vbuffer`
 
-    .. lua:method:: pos(offset)
+        Allocate a new buffer from a Lua ``string``.
 
-        :param offset: Position offset, if nil the end position will be returned
-        :returns: Return an iterator inside this buffer
-        :rtype: :lua:class:`vbuffer_iterator`
+        .. warning:: The string will be copied into the allocated buffer.
+
+    .. haka:operator:: vbuffer[index] -> byte
+                       vbuffer[index] = byte
+
+        :param index: Byte index in the data.
+        :paramtype index: number
+
+        Get or set a byte in the data.
+
+    .. haka:operator:: #vbuffer -> count
+
+        :return count: Number of bytes in the buffer.
+        :rtype count: number
+
+        Get the size of the buffer.
+
+    .. haka:method:: vbuffer:pos(offset = 'begin') -> iter
+
+        :param offset: Position offset as number, ``'begin'`` or ``'end'``.
+        :paramtype offset: number or string
+        :return iter: Iterator at the required position.
+        :rtype iter: :haka:class:`vbuffer_iterator`
 
         Return an iterator at the given offset in the buffer.
 
-    .. lua:method:: sub(offset=0, size=nil)
+    .. haka:method:: vbuffer:sub(offset = 0, size = 'all') -> sub
 
-        :param offset: Position offset
-        :param size: Size of the requested sub buffer, if nil all available data will be returned
-        :returns: Return a part of the buffer
-        :rtype: :lua:class:`vbuffer_sub`
+        :param offset: Position offset.
+        :paramtype offset: number
+        :param size: Size of the requested sub-buffer or ``'all'``.
+        :paramtype size: number or string
+        :return sub: Create sub-buffer.
+        :rtype sub: :haka:class:`vbuffer_sub`
 
-        Return a sub part of the buffer.
+        Return a sub-part of the buffer.
 
-    .. lua:method:: append(data)
+    .. haka:method:: vbuffer:append(data)
 
-        :param data: Data to append
-        :paramtype data: :lua:class:`vbuffer`
+        :param data: Data to append to the buffer.
+        :paramtype data: :haka:class:`vbuffer`
 
-        Inserts a buffer ``data`` at the end of the current buffer.
+        Insert some data at the end of the current buffer.
 
-    .. lua:method:: clone(copy=false)
+        .. note:: Data will be transfered from the vbuffer you passed making *data* empty after this call.
 
-        :param copy: Copy or share the memory data.
-        :returns: Return the cloned buffer
-        :rtype: :lua:class:`vbuffer`
+    .. haka:method:: vbuffer:clone(copy=false) -> clone
 
-        Clone the buffer and optionally copy or share the memory data.
+        :param copy: If ``true`` copy the memory otherwise it is shared.
+        :paramtype copy: boolean
+        :return clone: Cloned buffer.
+        :rtype clone: :haka:class:`vbuffer`
 
-    .. lua:data:: modified
+        Clone the buffer and optionally copy its memory data.
 
-        Hold the state of the buffer. It is ``true`` if the buffer has been modified.
+    .. haka:attribute:: vbuffer.modified
+        :readonly:
+
+        :type: boolean
+
+        ``true`` if the buffer has been modified, ``false`` otherwise.
 
 
-Sub buffer
+Sub-buffer
 ----------
 
-.. lua:class:: vbuffer_sub
+.. haka:class:: vbuffer_sub
+    :module:
 
-    Object used to represent a sub part of a buffer.
+    Object used to represent part of a buffer.
 
-    .. lua:method:: pos(offset)
+    .. image:: /doc/genimages/ref/subbuffer.png
+        :align: center
 
-        :param offset: Position offset, if nil the end position will be returned
-        :returns: Return an iterator inside this sub buffer
-        :rtype: :lua:class:`vbuffer_iterator`
+    .. haka:function:: vbuffer_sub(begin, end) -> sub
 
-        Return an iterator at the given offset in the sub buffer.
+        :param begin: Beginning position.
+        :paramtype begin: :haka:class:`vbuffer_iterator`
+        :param end: Ending position.
+        :paramtype end: :haka:class:`vbuffer_iterator`
+        :return sub: Created sub-buffer.
+        :rtype sub: :haka:class:`vbuffer_sub`
 
-    .. lua:method:: sub(offset=0, size=nil)
+        Create a sub-buffer for two iterator.
 
-        :param offset: Position offset
-        :param size: Size of the requested sub buffer, if nil all available data will be returned
-        :returns: Return a part of the sub buffer
-        :rtype: :lua:class:`vbuffer_sub`
+        .. note:: The two iterators must be built from the same buffer.
 
-        Return a sub part of the sub buffer.
+    .. haka:operator:: vbuffer_sub[index] -> byte
+                       vbuffer_sub[index] = byte
 
-    .. lua:method:: zero()
+        :param index: Byte index in the data.
+        :paramtype index: number
 
-        Zero the sub buffer memory data.
+        Get or set a byte in the data.
 
-    .. lua:method:: erase()
+    .. haka:operator:: #vbuffer_sub -> count
 
-        Erase the sub buffer.
+        :return count: Number of bytes in the buffer.
+        :rtype count: number
 
-    .. lua:method:: replace(data)
+        Get the size of the sub-buffer.
 
-        :param data: Buffer
-        :paramtype data: :lua:class:`vbuffer`
+    .. haka:method:: vbuffer_sub:pos(offset = 'begin') -> iter
 
-        Replace the sub buffer data by the ``data``.
+        :param offset: Position offset as number, ``'begin'`` or ``'end'``.
+        :paramtype offset: number or string
+        :return iter: Iterator at the required position.
+        :rtype iter: :haka:class:`vbuffer_iterator`
 
-    .. lua:method:: isflat()
+        Return an iterator at the given offset in the buffer.
 
-        Return ``true`` if the buffer is flat (ie. it is made of one one memory chunk).
+    .. haka:method:: vbuffer_sub:sub(offset = 0, size = 'all') -> sub
 
-    .. lua:method:: flatten()
+        :param offset: Position offset.
+        :paramtype offset: number
+        :param size: Size of the requested sub-buffer or ``'all'``.
+        :paramtype size: number or string
+        :return sub: Create sub-buffer.
+        :rtype sub: :haka:class:`vbuffer_sub`
 
-        Replace the sub buffer by a flat buffer contaning only one memory chunk. The memory
-        will be copied if needed.
+        Return a sub-part of the buffer.
 
-    .. lua:method:: size()
+    .. haka:method:: vbuffer_sub:zero()
 
-        Compute the size of the sub buffer.
+        Zero the sub-buffer memory data.
 
-    .. lua:method:: check_size(size)
+    .. haka:method:: vbuffer_sub:erase()
 
-        :param size: Minimum buffer size to check for
+        Erase the sub-buffer.
 
-        Check if the buffer size is at least ``size``.
+    .. haka:method:: vbuffer_sub:replace(data)
 
-    .. lua:method:: select()
+        :param data: Buffer.
+        :paramtype data: :haka:class:`vbuffer`
 
-        :returns: Return a reference iterator and the extracted buffer.
-        :rtype: :lua:class:`vbuffer_iterator` and :lua:class:`vbuffer`
+        Replace the sub-buffer by some new data.
 
-        Select the sub buffer. The content of it will be extracted from the
-        buffer. To reinsert the data, you can use :lua:func:`vbuffer_iterator::restore()`
+        .. note:: Data will be removed from the given parameter making *data* empty after this call.
+
+    .. haka:method::  vbuffer_sub:isflat() -> isflat
+
+        :return isflat: ``true`` if the buffer is flat.
+        :rtype isflat: boolean
+
+        Check if the buffer is flat (ie. it is made of only one memory chunk).
+
+    .. haka:method:: vbuffer_sub:flatten()
+
+        Replace the sub-buffer by a flat buffer containing only one memory chunk.
+
+        .. warning:: The memory will be copied if needed.
+
+    .. haka:method:: vbuffer_sub:size() -> size
+
+        :return size: Size of the sub-buffer.
+        :rtype size: number
+
+        Compute the size of the sub-buffer.
+
+    .. haka:method:: vbuffer_sub:check_size(size) -> enough, size
+
+        :param size: Minimum buffer size to check for.
+        :paramtype size: number
+        :return enough: ``true`` if the sub-buffer is larger or equal to *size*.
+        :rtype enough: boolean
+        :return size: If *enough* is ``false``, size of the sub-buffer.
+        :rtype size: number
+
+        Check if the buffer size is larger or equal to a given value.
+
+    .. haka:method:: vbuffer_sub:select() -> iter, buffer
+
+        :return iter: Reference iterator.
+        :rtype iter: :haka:class:`vbuffer_iterator`
+        :return buffer: Extracted buffer.
+        :rtype buffer: :haka:class:`vbuffer`
+
+        Select this sub-buffer. The content is extracted from the buffer.
+        To reinsert the data, you can use :haka:func:`<vbuffer_iterator>.restore()`
         with the reference iterator that is returned as the first value.
 
-    .. lua:method:: asnumber(endian = 'big')
+        .. warning:: Be sure to keep the *reference iterator* or you won't be
+            able to restore this sub-buffer.
+
+    .. haka:method:: vbuffer_sub:asnumber(endian = 'big') -> num
 
         :param endian: Endianness of data (``'big'`` or ``'little'``)
+        :paramtype endian: string
+        :return num: Computed value.
+        :rtype num: number
 
-        Read the sub buffer and convert it as a number.
+        Read the sub-buffer and convert it to a number.
 
-    .. lua:method:: setnumber(value, endian = 'big')
+    .. haka:method:: vbuffer_sub:setnumber(value, endian = 'big')
 
-        :param value: Value to set
+        :param value: New value.
+        :paramtype value: number
         :param endian: Endianness of data (``'big'`` or ``'little'``)
+        :paramtype endian: string
 
         Write a number to the buffer.
 
-    .. lua:method:: asbits(offset, length, endian = 'big')
+        .. note:: This call throw an error if the number can't fit in the
+            sub-buffer.
 
-        :param offset: Bit positon offset
-        :param length: Size in bits
+    .. haka:method:: vbuffer_sub:asbits(offset, length, endian = 'big')
+
+        :param offset: Bit positon offset.
+        :paramtype offset: number
+        :param length: Size in bits.
+        :paramtype length: number
         :param endian: Endianness of data (``'big'`` or ``'little'``)
+        :paramtype endian: string
 
         Read some bits the buffer and convert it to a number.
 
-    .. lua:method:: setbits(offset, length, value, endian = 'big')
+    .. haka:method:: vbuffer_sub:setbits(offset, length, value, endian = 'big')
 
-        :param offset: Bit positon offset
-        :param length: Size in bits
-        :param value: Value to set
+        :param offset: Bit positon offset.
+        :paramtype offset: number
+        :param length: Size in bits.
+        :paramtype length: number
+        :param value: New value.
+        :paramtype value: number
         :param endian: Endianness of data (``'big'`` or ``'little'``)
+        :paramtype endian: string
 
         Write a number to some bits of the buffer.
 
-    .. lua:method:: asstring()
+    .. haka:method:: vbuffer_sub:asstring() -> str
 
-        Read the sub buffer and convert it to a string.
+        :return str: Computed value.
+        :rtype str: string
 
-    .. lua:method:: setstring(value)
+        Read the sub-buffer and convert it to a string.
 
-        :param value: Value to set
+    .. haka:method:: vbuffer_sub:setstring(value)
 
-        Replace the sub buffer by the given string.
+        :param value: New value.
+        :paramtype value: string
 
-    .. lua:method:: setfixedstring(value)
+        Replace the sub-buffer by the given string.
 
-        :param value: Value to set
+        .. note:: If the string is larger or smaller than the current value,
+            the buffer will be extended or shrinked to hold the new value.
 
-        Replace, in-place, the sub buffer by the given string.
+    .. haka:method:: vbuffer_sub:setfixedstring(value)
+
+        :param value: New value.
+        :paramtype value: string
+
+        Replace, in-place, the sub-buffer by the given string. The size of the buffer will not change.
 
 
 Iterator
 --------
 
-.. lua:class:: vbuffer_iterator
+.. haka:class:: vbuffer_iterator
+    :module:
 
-    Iterator on a buffer.
+    Iterator on a buffer. An iterator can be *blocking* when working on a stream. In this case, some functions
+    can block waiting for more data to be available.
 
-    .. lua:method:: mark(readonly=false)
+    .. image:: /doc/genimages/ref/buffer.png
+        :align: center
 
-        :param readonly: State of the mark
+    .. haka:method:: vbuffer_iterator:mark(readonly = false)
 
-        Create a mark in the buffer at the iterator position.
+        :param readonly: State of the mark.
+        :paramtype readonly: boolean
 
-    .. lua:method:: unmark()
+        Create a mark on the buffer at the iterator position.
 
-        Remove a mark in the buffer. The iterator must point to a previously
-        created mark.
+    .. haka:method:: vbuffer_iterator:unmark()
 
-    .. lua:method:: advance(size)
+        Remove a mark on the buffer.
+
+        .. note:: The iterator must point to a previously
+            created mark otherwise an error will be raised.
+
+    .. haka:method:: vbuffer_iterator:advance(size) -> relsize
 
         :param size: Amount of bytes to skip
-        :returns: The real amount of bytes skipped. This value can be smaller than size if not enough data are available.
+        :paramtype size: number
+        :return relsize: The real amount of bytes skipped. This value can be smaller than size if not enough data are available.
+        :rtype relsize: number
 
-        Advance the iterator of the given ``size`` bytes.
+        Advance the iterator of the given *size* bytes.
 
-    .. lua:method:: available()
+    .. haka:method:: vbuffer_iterator:available() -> size
 
-        Return the amount of bytes available after the iterator position.
+        :return size: Available bytes.
+        :rtype size: number
 
-    .. lua:method:: check_available(size)
+        Get the amount of bytes available after the iterator position.
 
-        :param size: Minimum available bytes to check for
+    .. haka:method:: vbuffer_iterator:check_available(size) -> enough, size
 
-        Check if the iterator has at least ``size`` bytes available.
+        :param size: Minimum buffer size to check for.
+        :paramtype size: number
+        :return enough: ``true`` if the available data are larger or equal to *size*.
+        :rtype enough: boolean
+        :return size: If *enough* is ``false``, size of the available data.
+        :rtype size: number
 
-    .. lua:method:: insert(data)
+        Check if the available bytes are larger or equal to a given value.
 
-        :param data: Buffer to insert
+    .. haka:method:: vbuffer_iterator:insert(data) -> sub
+
+        :param data: Buffer to insert.
+        :paramtype data: :haka:class:`vbuffer`
+        :return sub: Sub-buffer matching the inserted data in the new buffer.
+        :rtype sub: :haka:class:`vbuffer_sub`
 
         Insert some data at the iterator position.
 
-    .. lua:method:: restore(data)
+        .. note:: Data will be removed from the given parameter making *data* empty after this call.
 
-        :param data: Buffer to restore
+    .. haka:method:: vbuffer_iterator:restore(data)
 
-        Restore data at the iterator position. This iterator must point to
-        the reference returned by the function :lua:func:`vbuffer_sub::select()`.
+        :param data: Buffer to restore.
+        :paramtype data: :haka:class:`vbuffer`
 
-    .. lua:method:: sub(size)
+        Restore data at the iterator position. This iterator must be the
+        `reference iterator` returned by :haka:func:`<vbuffer_sub>.select()`.
 
-        :param size: Size of the requested sub buffer, if nil all available data will be returned
-        :returns: Return a part of the sub buffer
-        :rtype: :lua:class:`vbuffer_sub`
+    .. haka:method:: vbuffer_iterator:sub(size, split = false) -> sub
 
-        Create a sub buffer from the iterator position.
+        :param size: Size of the requested sub-buffer, ``'available'`` or ``'all'``.
+        :paramtype size: number or string
+        :param split: If ``true``, a split will be done at the end of the sub-buffer (see :haka:func:`<vbuffer_iterator>.split()`).
+        :paramtype split: boolean
+        :return sub: Created sub-buffer.
+        :rtype sub: :haka:class:`vbuffer_sub`
 
-    .. data:: iseof
+        Create a sub-buffer from the iterator position.
+
+    .. haka:method:: vbuffer_iterator:split()
+
+        Split the buffer at the iterator position.
+
+    .. haka:method:: vbuffer_iterator:move_to(iter)
+
+        :param iter: Destination iterator.
+        :paramtype iter: :haka:class:`vbuffer_iterator`
+
+        Move the iterator to a new position.
+
+    .. haka:method:: vbuffer_iterator:wait() -> eof
+
+        :return eof: ``true`` if the iterator is at the end of the buffer.
+        :rtype eof: boolean
+
+        Wait for some data to be available.
+
+    .. haka:method:: vbuffer_iterator:foreach_available() -> loop
+
+        Return a Lua iterator to build a loop getting each available sub-buffer
+        one by one.
+
+        **Usage:**
+
+        ::
+
+            for sub in iter:foreach_available() do
+                print(#sub)
+            end
+
+    .. haka:attribute:: vbuffer_iterator.meter
+
+        :type: number
+
+        Index that can be used to track the offset of the iterator. This index is automatically updated
+        when the iterator advance.
+
+        .. note:: Some functions, like :haka:func:`<vbuffer_iterator>.move_to()` does not advance meter correctly.
+
+    .. haka:attribute:: vbuffer_iterator.iseof
+        :readonly:
+
+        :type: boolean
 
         ``true`` if the iterator is at the end of buffer and no more data can
         be available even later in case of a stream.
 
 
-Stream
-------
+Streams
+-------
 
-.. lua:class:: vbuffer_stream
+.. haka:class:: vbuffer_stream
+    :module:
 
-    .. lua:function:: vbuffer_stream()
+    A buffer stream is an object that can convert different separated buffers into
+    a view where only one buffer is visible. This is for instance used by TCP to
+    recreate a stream of data from each received packets.
+
+    .. image:: /doc/genimages/ref/bufferstream.png
+        :align: center
+
+    .. haka:function:: vbuffer_stream() -> stream
+
+        :return stream: New stream.
+        :rtype stream: :haka:class:`vbuffer_stream`
 
         Create a new buffer stream.
 
-    .. lua:method:: push(data)
+    .. haka:method:: vbuffer_stream:push(data) -> iter
 
-        :param data: Buffer data
-        :paramtype data: :lua:class:`vbuffer`
+        :param data: Buffer data.
+        :paramtype data: :haka:class:`vbuffer`
+        :return iter: Iterator pointing to the beginning of the new added data in the stream.
+        :rtype iter: :haka:class:`vbuffer_iterator`
 
-        Push some data to the stream.
+        Push some data into the stream.
 
-    .. lua:method:: finish()
+    .. haka:method:: vbuffer_stream:finish()
 
-        Mark the end of the stream. Any call to :lua:func:`vbuffer_stream:push()`
+        Mark the end of the stream. Any call to :haka:func:`<vbuffer_stream>.push()`
         will result to an error.
 
-    .. lua:method:: pop()
+    .. haka:method:: vbuffer_stream:pop() -> buffer
 
-        :returns: Extracted data from the stream
-        :rtype: :lua:class:`vbuffer`
+        :return buffer: Extracted data from the stream.
+        :rtype buffer: :haka:class:`vbuffer`
 
         Pop available data from the stream.
 
-    .. lua:data:: data
+    .. haka:attribute:: vbuffer_stream.isfinished
+        :readonly:
 
-        All available data in the stream (as :lua:class:`vbuffer`).
+        :type: boolean
 
-    .. lua:data:: current
+        Get the stream finished state.
 
-        Current stream position (as :lua:class:`vbuffer_iterator`).
+    .. haka:attribute:: vbuffer_stream.data
+        :readonly:
+
+        :type: :haka:class:`vbuffer` |nbsp|
+
+        All data in the stream.
+
+
+.. haka:class:: vbuffer_sub_stream
+    :module:
+
+    A sub stream is an object that will build a stream view from a list a sub-buffer.
+
+    .. haka:function:: vbuffer_sub_stream() -> sub_stream
+
+        :return sub_stream: New stream.
+        :rtype sub_stream: :haka:class:`vbuffer_sub_stream`
+
+        Create a new sub-buffer stream.
+
+    .. haka:method:: vbuffer_sub_stream:push(data) -> iter
+
+        :param data: Sub-buffer data.
+        :paramtype data: :haka:class:`vbuffer_sub`
+        :return iter: Iterator pointing to the beginning of the new added data in the stream.
+        :rtype iter: :haka:class:`vbuffer_iterator`
+
+        Push some data into the stream. The sub-buffer will be extracted with a :haka:func:`<vbuffer_sub>.select()`.
+
+    .. haka:method:: vbuffer_sub_stream:finish()
+
+        Mark the end of the stream. Any call to :haka:func:`<vbuffer_sub_stream>.push()`
+        will result to an error.
+
+    .. haka:method:: vbuffer_sub_stream:pop() -> sub
+
+        :return sub: Extracted data from the stream.
+        :rtype sub: :haka:class:`vbuffer_sub`
+
+        Pop available data from the stream and automatically do a :haka:func:`<vbuffer_iterator>.restore()`.
+
+    .. haka:attribute:: vbuffer_sub_stream.isfinished
+        :readonly:
+
+        :type: boolean
+
+        Get the stream finished state.
+
+    .. haka:attribute:: vbuffer_sub_stream.data
+        :readonly:
+
+        :type: :haka:class:`vbuffer`
+
+        All data in the stream.
+
+
+Stream coroutine manager
+------------------------
+
+.. warning:: This section introduces advanced feature of Haka.
+
+.. haka:class:: vbuffer_stream_comanage_
+    :module:
+
+    This class allow to execute function inside a coroutine and to be able to block transparently
+    if needed when the stream does not have enough data available.
+
+    .. haka:method:: vbuffer_stream_comanager:new(stream) -> manager
+
+        :param stream: buffer stream 
+        :paramtype: :haka:class:`vbuffer_stream`
+        :return manager: instanciated stream coroutine manager object
+        :rtype manager: :haka:class:`vbuffer_stream_comanager`
+
+        
+
+    .. haka:method:: vbuffer_stream_comanager:start(id, f)
+
+        :param id: Identifier for the registered function.
+        :paramtype id: any
+        :param f: Function to be started.
+        :paramtype f: function
+
+        Register and start a new function on the stream.
+
+    .. haka:method:: vbuffer_stream_comanager:has(id) -> found
+
+        :param id: Identifier for the registered function.
+        :paramtype id: any
+        :return found: ``true`` if the id is found inside the registered functions.
+        :rtype found: boolean
+
+        Check if the given *id* match a registered function.
+
+    .. haka:method:: vbuffer_stream_comanager:process(id, current)
+
+        :param id: Identifier for the registered function.
+        :paramtype id: any
+        :param current: Current position in the stream.
+        :paramtype current: :haka:class:`vbuffer_iterator`
+
+        Resume execution for the registered *id*. This function needs to be called whenever some new
+        data are available on this stream.
+
+    .. haka:method:: vbuffer_stream_comanager:process_all(current)
+
+        :param current: Current position in the stream.
+        :paramtype current: :haka:class:`vbuffer_iterator`
+
+        Resume execution for all registered functions.

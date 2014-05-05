@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * \file
+ * Regular expression module
+ */
+
 #ifndef _HAKA_REGEXP_MODULE_H
 #define _HAKA_REGEXP_MODULE_H
 
@@ -25,6 +30,7 @@ struct regexp_result {
 extern const struct regexp_result regexp_result_init;
 
 #define REGEXP_CASE_INSENSITIVE (1 << 0)
+#define REGEXP_EXTENDED (1 << 1)
 
 struct regexp_module {
 	struct module module;

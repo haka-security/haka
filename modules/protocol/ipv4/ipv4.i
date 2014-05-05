@@ -426,6 +426,12 @@ int lua_inet_checksum(struct vbuffer *buf);
 	swig.getclassmetatable('ipv4')['.fn'].continue = ipv4_dissector.method.continue
 	swig.getclassmetatable('ipv4')['.fn'].error = swig.getclassmetatable('ipv4')['.fn'].drop
 
+	this.events = ipv4_dissector.events
+
+	function this.create(pkt)
+		return ipv4_dissector:create(pkt)
+	end
+
 	-- ipv4 Lua full dissector, uncomment to enable
 	--[[ipv4 = this
 	ipv4.ipv4_protocol_dissectors = ipv4_protocol_dissectors

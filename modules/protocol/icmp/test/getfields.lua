@@ -15,10 +15,10 @@ local function bool(b)
 	else return "[incorrect]" end
 end
 
-require("protocol/icmp")
+local icmp = require("protocol/icmp")
 
 haka.rule {
-	hook = haka.event('icmp', 'receive_packet'),
+	hook = icmp.events.receive_packet,
 	eval = function (pkt)
 		print(string.format("Internet Control Message Protocol"))
 		print(string.format("    Type: %d (%s)", pkt.type, type[pkt.type]))

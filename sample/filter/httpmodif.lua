@@ -8,26 +8,22 @@ local http = require('protocol/http')
 local last_firefox_version = 24.0
 local firefox_web_site = 'http://www.mozilla.org'
 
--------------------------------------
--- Domain whitelist,
--- all traffic to these domains will be unmodified
--------------------------------------
+-- Domain whitelist.
+-- All traffic to these domains will be unmodified
 local update_domains = {
 	'mozilla.org',
 	'mozilla.net',
 	-- You can extend this list with other domains
 }
 
--------------------------------------
 -- Forward all traffic on port 80 to the HTTP dissector
--------------------------------------
 http.install_tcp_rule(80)
 
 -------------------------------------
--- Rule group implementing a logical 'or'
+-- Rule group definition
 -------------------------------------
 safe_update = haka.rule_group{
-	hook = haka.event('http', 'response'),
+	hook = http.events.response,
 
 	-- Initialization
 	init = function (http, response)
@@ -37,14 +33,13 @@ safe_update = haka.rule_group{
 		end
 	end,
 
-	-- Continue is called after evaluation of each security rule the ret
-	-- parameter decide whether to read next rule or skip the evaluation of
-	-- the other rules in the group
+	-- Continue is called after evaluation of each security rule.
+	-- The ret parameter decide whether to read next rule or skip 
+	-- the evaluation of the other rules in the group
 	continue = function (ret)
 		return not ret
 	end
 }
-
 
 -- Traffic to all websites in the whitelist is unconditionnally allowed
 safe_update:rule(
@@ -59,8 +54,8 @@ safe_update:rule(
 	end
 )
 
--- If the User-Agent contains firefox and the version is outdated
--- the redirect the traffic to firefox_web_site
+-- If the User-Agent contains firefox and the version is outdated,
+-- then redirect the traffic to firefox_web_site
 safe_update:rule(
 	function (http, response)
 		-- Uncomment the following line to see the the content of the request

@@ -54,3 +54,10 @@ function icmp_dissector:create(pkt, init)
 end
 
 ipv4.register_protocol(1, icmp_dissector)
+
+return {
+	events = icmp_dissector.events,
+	create = function (ip, init)
+		return icmp_dissector:create(ip, init)
+	end
+}

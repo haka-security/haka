@@ -7,11 +7,11 @@ Statistics
 
 Introduction
 ------------
-This tutorial shows how tu collect traffic and make statistics on collected data.
+This tutorial shows how to collect traffic and make statistics on collected data.
 
 How-to
 ------
-This tutorial introduces two lua script files: ``stats_on_exit`` and ``stats_interactive`` which could be run using the ``hakapcap`` tool as follows:
+This tutorial introduces two Haka script files: ``stats_on_exit`` and ``stats_interactive`` which could be ran using the ``hakapcap`` tool as follows:
 
 .. code-block:: console
 
@@ -40,9 +40,8 @@ Before making statisctics, we need first to collect data. This is the purpose of
 
 .. note::
 
-    While the security rule 'hooks' on `http-response` we still get access to
-    http request fields (via `request` accessor) and ip header fields (through
-    `connection` accessor)
+    While the security rule is evaluated whenever a http response is received,
+    we still get access to http request fields and ip header fields.
 
 .. literalinclude:: ../../../sample/stats/stats.lua
     :tab-width: 4
@@ -55,39 +54,55 @@ This section introduces the stats utilities developed for this tutorial. More
 precisely, it shows how to create the global `stats` table and how to run basic
 stats operations on the created table.
 
-.. lua:module:: stats_utils
+.. haka:module:: stats_utils
 
-.. lua:function:: new()
+.. haka:function:: new() -> table
+
+    :return table: New stats table.
+    :rtype table: :haka:class:`stats`
 
     Create the stats table.
 
-.. lua:class:: stats
+.. haka:class:: stats
 
-    .. lua:method:: list(self)
+    .. haka:method:: stats:list()
 
-        Print column names of `stats` table.
+        Print column names of stats table.
 
-    .. lua:method:: dump(self [, nb])
+    .. haka:method:: stats:dump([nb])
 
-        Print `nb` entries of `stats` table.
+        :param nb: Number of entries to display.
+        :ptype nb: number
 
-    .. lua:method:: top(self, column_name [, nb])
+        Print *nb* entries of stats table.
 
-        Dump the top 10 of given field name. Limits output to `nb` if `nb` is provided.
+    .. haka:method:: stats:top(column_name[, nb])
 
-    .. lua:method:: select_table(self, column_tab [, where])
+        :param column_name: Column to query.
+        :ptype column_name: string
+        :param nb: Number of entries to display.
+        :ptype nb: number
 
-        Select specific columns from `stats` table. Optionally, filter entry-lines based on `where` function.
+        Dump the top 10 of given field name. Limits output to *nb* if it is provided.
+
+    .. haka:method:: stats:select_table(column_tab[, where])
+
+        :param column_name: Column to query.
+        :ptype column_name: string
+        :param where: Filter function called for each table line.
+        :ptype where: function
+
+        Select specific columns from table. Optionally, filter entry-lines based on *where* function.
 
 Dumping stats
 -------------
-The first lua script (``stats_on_exit``) gives an usage of the above api.
+The first Haka script (``stats_on_exit``) gives an usage of the above api.
 
 .. literalinclude:: ../../../sample/stats/stats_on_exit.lua
     :tab-width: 4
     :language: lua
 
-The script will output some statistics on collected http trafic after parsing all packets in the provided pcap file (i.e. at haka exit). Below, a snippet output generated while running the lua script file on the DARPA pcap file:
+The script will output some statistics on collected http trafic after parsing all packets in the provided pcap file (i.e. at Haka exit). Below, a snippet output generated while running the Haka script file on the DARPA pcap file:
 
 .. code-block:: console
 
@@ -110,7 +125,7 @@ The second script (``stats_interactive``) fills the `stats` table with http info
     :tab-width: 4
     :language: lua
 
-Hereafter, hakapcap output when entering the interactive mode:
+Hereafter, ``hakapcap`` output when entering the interactive mode:
 
 .. code-block:: console
 

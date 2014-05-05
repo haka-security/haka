@@ -8,7 +8,7 @@ require('httpdecode')
 
 local sql_comments = { '%-%-', '#', '%z', '/%*.-%*/' }
 
--- Common pattern used in initial attack stage to check for SQLi vulnerabilities
+-- Common patterns used in initial attack stage to check for SQLi vulnerabilities
 local probing = { "^[\"'`´’‘;]", "[\"'`´’‘;]$" }
 
 local sql_keywords = {
@@ -27,7 +27,7 @@ local sql_functions = {
 
 -- Define a security rule group related to SQLi attacks
 sqli = haka.rule_group{
-	hook = haka.event('http', 'request'),
+	hook = httplib.events.request,
 	name = 'sqli',
 	-- Initialize some values before evaluating any security rule
 	init = function (http, request)

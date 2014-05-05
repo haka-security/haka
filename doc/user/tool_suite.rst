@@ -15,3 +15,4 @@ The Haka project provides three binaries: ``haka``, ``hakactl`` and ``hakapcap``
    tool_suite_haka.rst
    tool_suite_hakactl.rst
    tool_suite_hakapcap.rst
+   tool_suite_modules.rst

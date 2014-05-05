@@ -176,7 +176,7 @@ div.nav-menu > ul {
 	font-style: italic;
 }
 
-.nav-menu li a {
+.nav-menu li a, .nav-menu li span {
 	color: #ffffff;
 	display: block;
 	font-size: 15px;
@@ -184,6 +184,10 @@ div.nav-menu > ul {
 	padding: 15px 20px;
 	text-decoration: none;
 	font-weight: bold;
+}
+
+.nav-menu li span.disabled {
+	color: #888888;
 }
 
 .nav-menu li:hover > a,
@@ -263,4 +267,55 @@ input[type=text]
 
 .highlight-link:hover {
 	background: transparent url(cross-highlight.png) no-repeat center center !important;
+}
+
+table.field-list td, table.field-list th {
+	padding-left: 0;
+}
+
+table.field-list {
+	border-collapse: separate;
+	border-spacing: 0 0.5em;
+}
+
+em.modproperty {
+	font-size: 75%;
+}
+
+.field-list .field-body p {
+	display: inline;
+}
+
+dl.class dt:target, dl.function dt:target, dl.operator dt:target, dl.method
+dt:target, dl.data dt:target, .highlighted {
+	background-color: #FFCC33;
+	border-color: #515151;
+}
+
+dl.class dt, dl.function dt, dl.operator dt, dl.method dt, dl.data dt {
+	background-color: #FAFAFA;
+	border-color: #99CC66;
+	border-style: solid;
+	border-width: 3px 1px 1px;
+	padding: 0.5em;
+}
+
+/* Special toctree formating for the top-level page: we want to hide the
+ * first level of the toctree in this page
+ */
+
+#welcome-to-haka-s-documentation li.toctree-l1 {
+	list-style: none;
+}
+
+#welcome-to-haka-s-documentation li.toctree-l1 > a {
+	display: none;
+}
+
+#welcome-to-haka-s-documentation li.toctree-l1 > ul {
+	padding-left: 0;
+}
+
+#welcome-to-haka-s-documentation li.toctree-l2 {
+	list-style: disc;
 }

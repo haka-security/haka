@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local module = {}
+
 local function iter_class_hierarchy(topcls, cls)
 	if cls then return rawget(cls, 'super')
 	else return topcls end
@@ -45,7 +47,7 @@ function BaseClass.view(cls)
 end
 
 
-function new_instance(cls, ...)
+function module.new_instance(cls, ...)
 	local instance = {}
 	setmetatable(instance, cls)
 
@@ -56,7 +58,7 @@ end
 local BaseObject = {
 	super = nil,
 	name = 'BaseObject',
-	new = new_instance,
+	new = module.new_instance,
 	__class_init = function (self, cls) end,
 	method = {
 		__init = function (self) end,
@@ -84,16 +86,16 @@ BaseObject.__index = BaseObject
 BaseObject.__view = BaseClass.view(BaseObject)
 setmetatable(BaseObject, BaseClass)
 
-function classof(instance)
+function module.classof(instance)
 	return getmetatable(instance)
 end
 
-function super(cls)
+function module.super(cls)
 	return rawget(cls.super, '__view')
 end
 
 
-function class(name, super)
+function module.class(name, super)
 	super = super or BaseObject
 
 	local cls = {}
@@ -105,7 +107,7 @@ function class(name, super)
 		if convert then
 			return convert(self)
 		else
-			return string.format("<class instance %s: %p>", classof(self).name, self)
+			return string.format("<class instance %s: %p>", module.classof(self).name, self)
 		end
 	end
 
@@ -123,7 +125,7 @@ function class(name, super)
 			end
 		end
 
-		for c in class_hierarchy(classof(self)) do
+		for c in class_hierarchy(module.classof(self)) do
 			local method = rawget(c, 'method')
 
 			v = method[key]
@@ -151,7 +153,7 @@ function class(name, super)
 			end
 		end
 
-		for c in class_hierarchy(classof(self)) do
+		for c in class_hierarchy(module.classof(self)) do
 			v = rawget(c, 'property')[key]
 			if v and v.set then return v.set(self, value) end
 
@@ -172,8 +174,8 @@ function class(name, super)
 end
 
 
-function isa(instance, cls)
-	local c = classof(instance)
+function module.isa(instance, cls)
+	local c = module.classof(instance)
 	while c do
 		if c == cls then return true end
 		c = c.super
@@ -181,6 +183,8 @@ function isa(instance, cls)
 	return false
 end
 
-function isclass(cls)
+function module.isclass(cls)
 	return getmetatable(cls) == BaseClass
 end
+
+return module

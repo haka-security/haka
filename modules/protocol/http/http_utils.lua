@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
+
 local module = {}
 
 module.uri = {}
@@ -73,7 +75,7 @@ end
 
 -- Uri splitter object
 
-local HttpUriSplit = class('HttpUriSplit')
+local HttpUriSplit = class.class('HttpUriSplit')
 
 function HttpUriSplit.method:__init(uri)
 	assert(uri, "uri parameter required")
@@ -250,7 +252,7 @@ end
 
 -- Cookie slitter object
 
-local HttpCookiesSplit = class('HttpCookiesSplit')
+local HttpCookiesSplit = class.class('HttpCookiesSplit')
 
 function HttpCookiesSplit.method:__init(cookie_line)
 	if cookie_line then

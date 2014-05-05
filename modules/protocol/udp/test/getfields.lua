@@ -6,10 +6,10 @@
 -- received packets.
 
 require("protocol/ipv4")
-require("protocol/udp")
+local udp = require("protocol/udp")
 
 haka.rule {
-	hook = haka.event('udp', 'receive_packet'),
+	hook = udp.events.receive_packet,
 	eval = function (pkt)
 		print(string.format( "----------UDP HEADER ---------"))
 		print(string.format( "UDP Source Port: %d", pkt.srcport))

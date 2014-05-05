@@ -1,2 +1,2 @@
 tcp = require('protocol/tcp')
-require('protocol/tcp-connection')
+tcp_connection = require('protocol/tcp_connection')

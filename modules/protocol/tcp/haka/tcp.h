@@ -9,6 +9,7 @@
 #include <haka/ipv4.h>
 #include <haka/lua/object.h>
 
+/** \cond */
 #define SWAP_TO_TCP(type, x)            SWAP_TO_BE(type, x)
 #define SWAP_FROM_TCP(type, x)          SWAP_FROM_BE(type, x)
 #define TCP_GET_BIT(type, v, i)         GET_BIT(SWAP_FROM_BE(type, v), i)
@@ -56,9 +57,11 @@ struct tcp_header {
 	uint16    checksum;
 	uint16    urgent_pointer;
 };
+/** \endcond */
 
-
-/* TCP opaque structure */
+/**
+ * Opaque TCP dissector data.
+ */
 struct tcp {
 	struct ipv4            *packet;
 	struct lua_object       lua_object;
@@ -68,6 +71,7 @@ struct tcp {
 	bool                    invalid_checksum:1;
 };
 
+/** \cond */
 struct tcp *tcp_dissect(struct ipv4 *packet);
 struct tcp *tcp_create(struct ipv4 *packet);
 struct ipv4 *tcp_forge(struct tcp *packet);
@@ -139,5 +143,6 @@ TCP_GETSET_FLAG(ack);
 TCP_GETSET_FLAG(urg);
 TCP_GETSET_FLAG(ecn);
 TCP_GETSET_FLAG(cwr);
+/** \endcond */
 
 #endif /* _HAKA_PROTO_TCP_H */

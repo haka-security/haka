@@ -7,7 +7,7 @@ local dns = require("protocol/dns")
 dns.install_udp_rule(53)
 
 haka.rule {
-	hook = haka.event('dns', 'response'),
+	hook = dns.events.response,
 	eval = function (dns, response, query)
 		query.id = 0x2811
 	end

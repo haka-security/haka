@@ -1,5 +1,5 @@
 debug cnx: opening connection 10.2.96.127:45034 -> 10.2.104.129:4444
 debug filter: received stream len=58
-error tcp-connection: read only buffer
+error tcp_connection: read only buffer
 debug cnx: dropping connection 10.2.96.127:45034 -> 10.2.104.129:4444
 debug cnx: closing connection 10.2.96.127:45034 -> 10.2.104.129:4444

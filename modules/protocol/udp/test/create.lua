@@ -3,14 +3,15 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 -- Basic test that will create a new packet from scratch
+local raw = require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
-require("protocol/udp")
+local udp = require("protocol/udp")
 
 -- just to be safe, to avoid the test to run in an infinite loop
 local counter = 10
 
 haka.rule {
-	hook = haka.event('udp', 'receive_packet'),
+	hook = udp.events.receive_packet,
 	eval = function (pkt)
 		if pkt.srcport ~= 3333 then
 			if counter == 0 then
@@ -18,12 +19,12 @@ haka.rule {
 			end
 			counter = counter-1
 
-			local npkt = haka.dissector.get('raw'):create()
-			npkt = haka.dissector.get('ipv4'):create(npkt)
+			local npkt = raw.create()
+			npkt = ipv4.create(npkt)
 			npkt.src = ipv4.addr(192, 168, 0, 1)
 			npkt.dst = ipv4.addr("192.168.0.2")
 
-			npkt = haka.dissector.get('udp'):create(npkt,
+			npkt = udp.create(npkt,
 				{ srcport = 3333, dstport = 4444 })
 
 			npkt:inject()

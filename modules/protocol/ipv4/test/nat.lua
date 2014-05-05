@@ -5,7 +5,7 @@
 local ipv4 = require('protocol/ipv4')
 
 haka.rule {
-	hook = haka.event('ipv4', 'receive_packet'),
+	hook = ipv4.events.receive_packet,
 	eval = function (pkt)
 		if pkt.dst == ipv4.addr("192.168.10.1") then
 			pkt.dst = ipv4.addr("192.168.110.1")

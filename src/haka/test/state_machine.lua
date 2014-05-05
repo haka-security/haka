@@ -4,7 +4,7 @@
 
 -- This test check the state machine transitions.
 
-require('protocol/ipv4')
+local ipv4 = require('protocol/ipv4')
 
 local machine = haka.state_machine("test")
 
@@ -85,7 +85,7 @@ machine.initial = machine.state1
 local context = {}
 
 haka.rule {
-	hook = haka.event('ipv4', 'receive_packet'),
+	hook = ipv4.events.receive_packet,
 	eval = function (self, pkt)
 		if not context.instance then
 			context.instance = machine:instanciate()
