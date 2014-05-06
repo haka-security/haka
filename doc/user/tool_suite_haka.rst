@@ -89,6 +89,10 @@ Packet directives
 
 Alert directives
 ^^^^^^^^^^^^^^^^
+.. describe:: alert_on_stdout=[yes|no]
+
+    Enable output of alert on stdout when haka is not run as a daemon. Default
+    to true.
 
 .. describe:: module
 

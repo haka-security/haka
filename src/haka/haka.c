@@ -307,6 +307,27 @@ int read_configuration(const char *file)
 
 			module_release(alerter_module);
 		}
+
+		if (!daemonize && parameters_get_boolean(config, "alert_on_stdout", true)) {
+			/* Also print alert to stdout */
+			/* Load file alerter */
+			struct module *module = NULL;
+			struct alerter *alerter = NULL;
+			struct parameters *args = parameters_create();
+
+			parameters_set_string(args, "format", "pretty");
+
+			module = module_load("alert/file", NULL);
+			if (!module) {
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot load alert module: %ls", clear_error());
+				clean_exit();
+				return 1;
+			}
+
+			alerter = alert_module_alerter(module, args);
+			add_alerter(alerter);
+			module_release(module);
+		}
 	}
 
 	/* Packet module */

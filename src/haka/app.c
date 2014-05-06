@@ -83,7 +83,6 @@ static void term_error_signal(int sig)
 static void handle_sighup()
 {
 	enable_stdout_logging(false);
-	enable_stdout_alert(false);
 }
 
 const char *haka_path()

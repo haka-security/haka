@@ -148,7 +148,7 @@ bool            alert_update(uint64 id, const struct alert *alert);
 /**
  * Convert an alert to a string.
  */
-const wchar_t  *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent);
+const wchar_t  *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent, bool color);
 
 /**
  * Enable display of alerts on stdout.

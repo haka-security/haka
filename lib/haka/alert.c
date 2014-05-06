@@ -14,13 +14,13 @@
 #include <haka/log.h>
 #include <haka/alert_module.h>
 #include <haka/container/list.h>
+#include <haka/colors.h>
 
 
 static struct alerter *alerters = NULL;
 static local_storage_t alert_string_key;
 static atomic64_t alert_id;
 static rwlock_t alert_module_lock = RWLOCK_INIT;
-static bool alert_to_stdout = true;
 
 #define BUFFER_SIZE    2048
 
@@ -148,10 +148,6 @@ uint64 alert(const struct alert *alert)
 
 	time_gettimestamp(&time);
 
-	if (alert_to_stdout) {
-		stdout_message(HAKA_LOG_INFO, L"alert", alert_tostring(id, &time, alert, "", "\n\t"));
-	}
-
 	rwlock_readlock(&alert_module_lock);
 	for (iter=alerters; iter; iter = list_next(iter)) {
 		iter->alert(iter, id, &time, alert);
@@ -171,10 +167,6 @@ bool alert_update(uint64 id, const struct alert *alert)
 	struct time time;
 
 	time_gettimestamp(&time);
-
-	if (alert_to_stdout) {
-		stdout_message(HAKA_LOG_INFO, L"alert", alert_tostring(id, &time, alert, "update ", "\n\t"));
-	}
 
 	rwlock_readlock(&alert_module_lock);
 	for (iter=alerters; iter; iter = list_next(iter)) {
@@ -267,77 +259,83 @@ static void alert_array_append(wchar_t **buffer, size_t *len, wchar_t **array)
 	alert_string_append(buffer, len, L" }");
 }
 
-static void alert_nodes_append(wchar_t **buffer, size_t *len, struct alert_node **array, const char *indent)
+static void alert_nodes_append(wchar_t **buffer, size_t *len, struct alert_node **array, const char *indent, char *color, char *clear)
 {
 	struct alert_node **iter;
 	alert_string_append(buffer, len, L"{");
 	for (iter = array; *iter; ++iter) {
-		alert_string_append(buffer, len, L"%s\t%s:", indent, alert_node_to_str((*iter)->type));
+		alert_string_append(buffer, len, L"%s\t%s%s%s:", indent, color, alert_node_to_str((*iter)->type), clear);
 		alert_stringlist_append(buffer, len, (*iter)->list);
 	}
 	alert_string_append(buffer, len, L"%s}", indent);
 }
 
-const wchar_t *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent)
+const wchar_t *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent, bool colored)
 {
 	wchar_t *buffer = alert_string_context();
 	wchar_t *iter = buffer;
 	size_t len = BUFFER_SIZE;
+	char *color = "", *clear = "";
 
-	alert_string_append(&iter, &len, L"%sid = %llu", header, id);
+	if (colored) {
+		color = BOLD;
+		clear = CLEAR;
+	}
+
+	alert_string_append(&iter, &len, L"%s%sid%s = %llu", header, color, clear, id);
 
 	{
 		char timestr[TIME_BUFSIZE];
 		time_tostring(time, timestr, TIME_BUFSIZE);
-		alert_string_append(&iter, &len, L"%stime = %s", indent, timestr);
+		alert_string_append(&iter, &len, L"%s%stime%s = %s", indent, color, clear, timestr);
 	}
 
 	if (time_isvalid(&alert->start_time)) {
 		char timestr[TIME_BUFSIZE];
 		time_tostring(&alert->start_time, timestr, TIME_BUFSIZE);
-		alert_string_append(&iter, &len, L"%sstart time = %s", indent, timestr);
+		alert_string_append(&iter, &len, L"%s%sstart time%s = %s", indent, color, clear, timestr);
 	}
 
 	if (time_isvalid(&alert->end_time)) {
 		char timestr[TIME_BUFSIZE];
 		time_tostring(&alert->end_time, timestr, TIME_BUFSIZE);
-		alert_string_append(&iter, &len, L"%send time = %s", indent, timestr);
+		alert_string_append(&iter, &len, L"%s%send time%s = %s", indent, color, clear, timestr);
 	}
 
 	if (alert->severity > HAKA_ALERT_LEVEL_NONE && alert->severity < HAKA_ALERT_NUMERIC) {
-		alert_string_append(&iter, &len, L"%sseverity = %s", indent,
+		alert_string_append(&iter, &len, L"%s%sseverity%s = %s", indent, color, clear,
 				alert_level_to_str(alert->severity));
 	}
 
 	if (alert->confidence > HAKA_ALERT_LEVEL_NONE) {
 		if (alert->confidence == HAKA_ALERT_NUMERIC) {
-			alert_string_append(&iter, &len, L"%sconfidence = %g", indent,
+			alert_string_append(&iter, &len, L"%s%sconfidence%s = %g", indent, color, clear,
 					alert->confidence_num);
 		}
 		else {
-			alert_string_append(&iter, &len, L"%sconfidence = %s", indent,
+			alert_string_append(&iter, &len, L"%s%sconfidence%s = %s", indent, color, clear,
 					alert_level_to_str(alert->confidence));
 		}
 	}
 
 	if (alert->completion > HAKA_ALERT_COMPLETION_NONE) {
-		alert_string_append(&iter, &len, L"%scompletion = %s", indent,
+		alert_string_append(&iter, &len, L"%s%scompletion%s = %s", indent, color, clear,
 				alert_completion_to_str(alert->completion));
 	}
 
 	if (alert->description)
-		alert_string_append(&iter, &len, L"%sdescription = %ls", indent, alert->description);
+		alert_string_append(&iter, &len, L"%s%sdescription%s = %ls", indent, color, clear, alert->description);
 
 	if (alert->method_description || alert->method_ref) {
-		alert_string_append(&iter, &len, L"%smethod = {", indent);
+		alert_string_append(&iter, &len, L"%s%smethod%s = {", indent, color, clear);
 
 		if (alert->method_description) {
-			alert_string_append(&iter, &len, L"%s\tdescription = %ls", indent,
+			alert_string_append(&iter, &len, L"%s%s\tdescription%s = %ls", indent, color, clear,
 					alert->method_description);
 		}
 
 		if (alert->method_ref) {
-			alert_string_append(&iter, &len, L"%s\tref = ", indent);
+			alert_string_append(&iter, &len, L"%s%s\tref%s = ", indent, color, clear);
 			alert_array_append(&iter, &len, alert->method_ref);
 		}
 
@@ -345,18 +343,18 @@ const wchar_t *alert_tostring(uint64 id, const struct time *time, const struct a
 	}
 
 	if (alert->sources) {
-		alert_string_append(&iter, &len, L"%ssources = ", indent);
-		alert_nodes_append(&iter, &len, alert->sources, indent);
+		alert_string_append(&iter, &len, L"%s%ssources%s = ", indent, color, clear);
+		alert_nodes_append(&iter, &len, alert->sources, indent, color, clear);
 	}
 
 	if (alert->targets) {
-		alert_string_append(&iter, &len, L"%stargets = ", indent);
-		alert_nodes_append(&iter, &len, alert->targets, indent);
+		alert_string_append(&iter, &len, L"%s%stargets%s = ", indent, color, clear);
+		alert_nodes_append(&iter, &len, alert->targets, indent, color, clear);
 	}
 
 	if (alert->alert_ref_count && alert->alert_ref) {
 		int i;
-		alert_string_append(&iter, &len, L"%srefs = {", indent);
+		alert_string_append(&iter, &len, L"%s%srefs%s = {", indent, color, clear);
 		for (i=0; i<alert->alert_ref_count; ++i) {
 			if (i != 0)
 				alert_string_append(&iter, &len, L",");
@@ -367,9 +365,4 @@ const wchar_t *alert_tostring(uint64 id, const struct time *time, const struct a
 
 
 	return buffer;
-}
-
-void enable_stdout_alert(bool enable)
-{
-	alert_to_stdout = enable;
 }

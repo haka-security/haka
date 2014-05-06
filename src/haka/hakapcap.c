@@ -12,6 +12,8 @@
 
 #include <haka/packet_module.h>
 #include <haka/thread.h>
+#include <haka/alert.h>
+#include <haka/alert_module.h>
 #include <haka/error.h>
 #include <haka/version.h>
 #include <haka/parameters.h>
@@ -39,13 +41,14 @@ static void help(const char *program)
 	fprintf(stdout, "\t-d,--debug:            Display debug output\n");
 	fprintf(stdout, "\t-l,--loglevel <level>: Set the log level\n");
 	fprintf(stdout, "\t                         (debug, info, warning, error or fatal)\n");
+	fprintf(stdout, "\t-a,--alert-to <file>:  Redirect alerts to given file\n");
 	fprintf(stdout, "\t--luadebug:            Activate lua debugging\n");
 	fprintf(stdout, "\t--no-pass-through, --pass-through:\n");
 	fprintf(stdout, "\t                       Select pass-through mode (default: true)\n");
 	fprintf(stdout, "\t-o <output>:           Save result in a pcap file\n");
 }
 
-static char *output = NULL;
+static char *output = NULL, *alert_to = NULL;
 static bool pass_through = true;
 static bool lua_debugger = false;
 
@@ -59,6 +62,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "help",            no_argument,       0, 'h' },
 		{ "debug",           no_argument,       0, 'd' },
 		{ "loglevel",        required_argument, 0, 'l' },
+		{ "alert-to",        required_argument, 0, 'a' },
 		{ "luadebug",        no_argument,       0, 'L' },
 		{ "no-pass-through", no_argument,       0, 'p' },
 		{ "pass-through",    no_argument,       0, 'P' },
@@ -73,6 +77,10 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'l':
 			setup_loglevel(optarg);
+			break;
+
+		case 'a':
+			alert_to = strdup(optarg);
 			break;
 
 		case 'h':
@@ -164,6 +172,29 @@ int main(int argc, char *argv[])
 		set_packet_module(pcap);
 		module_release(pcap);
 		free(output);
+	}
+
+	/* Start alert module */
+	{
+		/* Also print alert to stdout */
+		/* Load file alerter */
+		struct module *module = NULL;
+		struct alerter *alerter = NULL;
+		struct parameters *args = parameters_create();
+
+		parameters_set_string(args, "file", alert_to);
+		parameters_set_string(args, "format", "pretty");
+
+		module = module_load("alert/file", NULL);
+		if (!module) {
+			messagef(HAKA_LOG_FATAL, L"core", L"cannot load alert module: %ls", clear_error());
+			clean_exit();
+			return 1;
+		}
+
+		alerter = alert_module_alerter(module, args);
+		add_alerter(alerter);
+		module_release(module);
 	}
 
 	/* Select configuration */
