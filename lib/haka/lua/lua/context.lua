@@ -22,7 +22,7 @@ end
 local Context = class.class()
 
 function Context.method:__init()
-	self.connections = haka.events.StaticEventConnections:new()
+	self.connections = haka.event.StaticEventConnections:new()
 end
 
 function Context.method:signal(emitter, event, ...)

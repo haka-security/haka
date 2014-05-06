@@ -132,7 +132,7 @@ end
 function http_dissector.method:receive(stream, current, direction)
 	return haka.dissector.pcall(self, function ()
 		if not self._receive_callback then
-			self._receive_callback = haka.events.method(self, http_dissector.method.receive_streamed)
+			self._receive_callback = haka.event.method(self, http_dissector.method.receive_streamed)
 		end
 	
 		self.flow:streamed(self._receive_callback, stream, current, direction)

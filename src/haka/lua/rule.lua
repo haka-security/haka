@@ -21,7 +21,7 @@ end
 
 function haka.rule(r)
 	assert(r.hook, "not hook defined for rule")
-	assert(class.isa(r.hook, haka.events.Event), "rule hook must be an event")
+	assert(class.isa(r.hook, haka.event.Event), "rule hook must be an event")
 	assert(type(r.eval) == 'function', "rule eval function expected")
 	assert(not r.options or type(r.options) == 'table', "rule options should be table")
 

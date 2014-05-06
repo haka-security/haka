@@ -22,7 +22,7 @@ end
 
 function dissector.Dissector.register_event(cls, name, continue, signal, options)
 	continue = continue or function (self) return self:continue() end
-	cls.events[name] = haka.events.Event:new(string.format('%s:%s', cls.name, name), continue, signal, options)
+	cls.events[name] = haka.event.Event:new(string.format('%s:%s', cls.name, name), continue, signal, options)
 end
 
 function dissector.Dissector.inherit_events(cls)
@@ -228,7 +228,7 @@ end
 function dissector.FlowDissector.method:connections()
 	local connections = class.classof(self).connections
 	if connections then
-		return haka.events.ObjectEventConnections:new(self, connections)
+		return haka.event.ObjectEventConnections:new(self, connections)
 	end
 end
 
