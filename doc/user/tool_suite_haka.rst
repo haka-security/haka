@@ -97,6 +97,9 @@ Alert directives
 
 Log directives
 ^^^^^^^^^^^^^^
+.. option:: level [<module>=]<level>[,<module>=<level>[,...]]
+
+    Set the logging level globally and per module.
 
 .. describe:: module
 

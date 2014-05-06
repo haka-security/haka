@@ -26,6 +26,10 @@ Load a specific configuration file (default:
 \fB\-d\fP, \fB\-\-debug\fP
 Display debug output.
 .TP
+\fB\-l\fP, \fB\-\-loglevel [<module>=]<level>[,<module>=<level>[,...]]\fP
+Change haka logging level. <level> is a comma separated list of
+<module>=<level>. If no module is given level will be applied globally.
+.TP
 \fB\-\-luadebug\fP
 Attach lua debugger (and keep haka in foreground).
 .TP

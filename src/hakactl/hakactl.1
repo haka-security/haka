@@ -29,8 +29,9 @@ Stop haka
 \fBlogs\fP
 Display haka logs in real time
 .TP
-\fBloglevel <level>\fP
-Change haka logging level
+\fBloglevel [<module>=]<level>[,<module>=<level>[,...]]\fP
+Change haka logging level. <level> is a comma separated list of
+<module>=<level>. If no module is given level will be applied globally.
 .TP
 \fBdebug\fP
 Attach a remote lua debugger to haka
