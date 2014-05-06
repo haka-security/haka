@@ -10,7 +10,7 @@ haka
 ``haka`` is the main program of the collection. It allows to capture packets using either pcap
 or nfqueue and to filter/alter them according to the specified Haka policy file.
 
-``haka`` is usually launched as a daemon to monitor packets in the background, but it can 
+``haka`` is usually launched as a daemon to monitor packets in the background, but it can
 also be launched from the command line to debug Haka scripts.
 
 Options
@@ -29,6 +29,10 @@ Options
 .. option:: -d, --debug
 
     Display debug output.
+
+.. option:: -l, --loglevel [<module>=]<level>[,<module>=<level>[,...]]
+
+    Set the logging level globally and per module.
 
 .. option:: --no-daemon
 
@@ -97,7 +101,7 @@ Alert directives
 
 Log directives
 ^^^^^^^^^^^^^^
-.. option:: level [<module>=]<level>[,<module>=<level>[,...]]
+.. describe:: level=[<module>=]<level>[,<module>=<level>[,...]]
 
     Set the logging level globally and per module.
 
