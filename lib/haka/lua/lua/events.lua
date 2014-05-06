@@ -14,7 +14,7 @@ module.Event = class.class('Event')
 
 function module.Event.method:__init(name, continue, signal)
 	self.name = name
-	self.continue = continue
+	self.continue = continue or function () end
 	self.signal = signal or function (f, options, ...) return f(...) end
 end
 

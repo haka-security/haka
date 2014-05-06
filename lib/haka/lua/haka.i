@@ -130,19 +130,12 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 
 	require('class')
 	require('utils')
+	require('events')
 
-	local _on_exit = {}
+	haka.events = {}
 
-	function haka._exiting()
-		for k, f in pairs(_on_exit) do
-			_on_exit[k] = nil
-			f()
-		end
-	end
-
-	function haka.on_exit(func)
-		table.insert(_on_exit, func)
-	end
+	haka.events.exiting = haka.event.Event:new("exiting")
+	haka.events.started = haka.event.Event:new("started")
 
 	function haka.abort()
 		error(nil)
@@ -157,7 +150,6 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 %include "lua/state_machine.si"
 
 %luacode {
-	require('events')
 	require('context')
 	require('dissector')
 	require('grammar')

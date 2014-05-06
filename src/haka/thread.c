@@ -278,6 +278,8 @@ static void *thread_main_loop(void *_state)
 		}
 	}
 
+	lua_state_trigger_haka_event(state->lua, "started");
+
 	while (packet_receive(&pkt) == 0) {
 		/* The packet can be NULL in case of failure in packet receive */
 		if (pkt) {
