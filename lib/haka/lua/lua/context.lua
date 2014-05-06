@@ -26,6 +26,8 @@ function Context.method:__init()
 end
 
 function Context.method:signal(emitter, event, ...)
+	assert(class.classof(event, haka.event.Event), "event expected")
+
 	if not self.connections:signal(emitter, event, ...) then
 		return false
 	end
