@@ -15,7 +15,6 @@ $(function()
 				'position': 'fixed',
 				'top': 0,
 				'left': navbar.offset().left,
-				'width': navbar.width(),
 			});
 			sibling.css({
 				'margin-top': parseInt(sibling.css('margin-top'), 10) + navbar.height(),
