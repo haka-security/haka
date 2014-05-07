@@ -94,8 +94,10 @@ a.headerlink:hover {
 	padding: 10px 20px;
 }
 
-#navwrapper {
+#navbar {
 	background-color: #515151;
+	position: static;
+	width: 100%;
 }
 
 #site-navigation {
