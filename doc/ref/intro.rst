@@ -17,8 +17,20 @@ The format of this documentation is presented here.
     If you want to contribute to the core of Haka, check the section for
     developers: :doc:`../developer/devindex`.
 
-Functions
----------
+Module
+------
+
+.. haka:module:: test
+    :noindex:
+
+A module :haka:mod:`test` is used in this example to show how various elements
+of a module can be used.
+
+Every functions and variables will be prefixed by the module name, in our case:
+``test.``.
+
+Function
+--------
 
 Each function is described using the following format:
 
@@ -35,8 +47,12 @@ Each function is described using the following format:
 
     A function that is available in a module.
 
-Variables
----------
+    Then the code will follow this declaration::
+
+        local a, b = test.func("string", 42)
+
+Variable
+--------
 
 .. haka:data:: data
     :noindex:
@@ -47,8 +63,8 @@ Variables
     A data available on a module.
 
 
-Objects
--------
+Object
+------
 
 An object in Lua is basically a table containing functions and properties. Every object is documented as follows:
 
@@ -67,6 +83,9 @@ An object in Lua is basically a table containing functions and properties. Every
         This function is a method that need to be called on an instance of the
         type *Obj* in this example.
 
+        The ``:`` here is used to call method. See the Lua programming language
+        documentation for more detail about it.
+
         ::
 
             local obj = test.build(12)
@@ -84,9 +103,31 @@ An object in Lua is basically a table containing functions and properties. Every
             local obj = test.build(12)
             print(obj.attr)
 
-    .. haka:function:: build()
+    .. haka:function:: build(param) -> obj
         :noindex:
         :module: test
 
-        A function available on a module. This function usually is related to the object.
+        This function is available on a module. However, it is described in this
+        object because it is related to it. For instance, the function could
+        create an instance of :haka:class:`Obj`.
 
+Event
+-----
+
+Haka uses events that allow security rules to be hooked to dissectors for instance.
+An event is triggered by an emitter and received by a listener. It is described as
+follow:
+
+.. haka:function:: test.events.myevent(param1, param2, ...)
+    :module:
+    :noindex:
+    :objtype: event
+
+    :param param1: This is how a parameter is described.
+    :ptype param1: parameter type if needed
+
+    This description defines two properties:
+
+    * The name of the event (*myevent*) and how to reference it in order to listen to it or
+      to trigger it.
+    * The parameters that a listener will receive.
