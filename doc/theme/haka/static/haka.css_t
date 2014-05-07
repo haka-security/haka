@@ -318,6 +318,15 @@ dl.class dt, dl.function dt, dl.operator dt, dl.method dt, dl.data dt {
 	padding-left: 0;
 }
 
-#welcome-to-haka-s-documentation li.toctree-l2 {
-	list-style: disc;
+/* Toctree already are numbered so we can remove ticks */
+li.toctree-l1 {
+	list-style: none;
+}
+
+li.toctree-l2 {
+	list-style: none;
+}
+
+.toctree-wrapper > ul {
+	padding-left: 20px;
 }
