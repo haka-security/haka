@@ -243,13 +243,20 @@ class HakaObject(ObjectDescription):
         fullname.append(names['fullname'])
         fullname = '.'.join(fullname)
 
+        # We need to escape the '<>' to avoid display issue in HTML
+        fullname = fullname.replace("<", "&lt;")
+        fullname = fullname.replace(">", "&gt;")
+
         if fullid not in self.state.document.ids:
+            objtype = self.objtype
+            if objtype == "": objtype = "%s" % (self.__class__.typename)
+
             signode['names'].append(fullname)
             signode['ids'].append(fullid)
             signode['first'] = (not self.names)
             self.state.document.note_explicit_target(signode)
             objects = self.env.domaindata['haka']['objects']
-            objects[fullname] = (self.env.docname, self.objtype, fullid)
+            objects[fullname] = (self.env.docname, objtype, fullid)
 
         indextext = self.get_index_text(names)
         if indextext:
@@ -359,6 +366,8 @@ class HakaData(HakaObject):
             return self.options.get('objtype') or ""
 
 class HakaAttribute(HakaData):
+    typename = l_("attribute")
+
     lua_class_re = re.compile(
         r'''([\w\./\-]+):([\w\./\-]+)?
         ''', re.VERBOSE)
@@ -805,8 +814,8 @@ class HakaDomain(Domain):
     def get_objects(self):
         for modname, info in self.data['modules'].items():
             yield (modname, modname, 'module', info[0], 'module-' + modname, 0)
-        for refname, (docname, type, _) in self.data['objects'].items():
-            yield (refname, refname, type, docname, refname, 1)
+        for refname, (docname, type, id) in self.data['objects'].items():
+            yield (refname, refname, type, docname, id, 1)
 
 
 def setup(app):
