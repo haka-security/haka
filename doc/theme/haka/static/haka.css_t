@@ -330,3 +330,10 @@ li.toctree-l2 {
 .toctree-wrapper > ul {
 	padding-left: 20px;
 }
+
+/* Breadcrumb */
+#breadcrumb {
+	max-width: 1080px;
+	margin: auto;
+	padding: 20px 20px 0px;
+}

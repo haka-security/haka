@@ -71,6 +71,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </nav>
   </div>
   <div id="content" class="body">
+    <div id="breadcrumb" class="breadcrumb">
+      {% for parent in parents %}
+        &raquo; <a href="{{ parent.link }}">{{ parent.title|safe }}</a>
+      {% endfor %}
+    </div>
     <div id="contentwrapper">
       {% block body %}{% endblock %}
     </div>
