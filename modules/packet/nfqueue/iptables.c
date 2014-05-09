@@ -102,6 +102,13 @@ static bool check_haka_target(const char *str, const char *name)
 	return false;
 }
 
+static const char iptables_empty_haka_targets[] =
+	"*raw\n"
+	":" HAKA_TARGET_PRE " - [0:0]\n"
+	":" HAKA_TARGET_OUT " - [0:0]\n"
+	"COMMIT\n"
+;
+
 int save_iptables(const char *table, char **conf, bool all_targets)
 {
 	int pipefd[2];
@@ -146,6 +153,7 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 		ssize_t line_size;
 		FILE *input = fdopen(pipefd[0], "r");
 		bool filtering = false;
+		bool found = false;
 
 		if (!input) {
 			return errno;
@@ -180,6 +188,7 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 						if (check_haka_target(pattern, HAKA_TARGET_PRE) ||
 							check_haka_target(pattern, HAKA_TARGET_OUT)) {
 							skip = false;
+							found = true;
 							break;
 						}
 
@@ -216,6 +225,19 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 			free(*conf);
 			*conf = NULL;
 			return error;
+		}
+
+		if (!found) {
+			/*
+			 * The target HAKA_TARGET_PRE or HAKA_TARGET_OUT do not
+			 * exist.
+			 * In this case, iptables-restore will be unable to remove them.
+			 * As a workaround, we just install new empty targets to cleanup
+			 * Haka rules. This case only appears when the user sets the option
+			 * enable_iptables=no which is not the default.
+			 */
+			*conf = realloc(*conf, strlen(iptables_empty_haka_targets) + 1);
+			strcpy(*conf, iptables_empty_haka_targets);
 		}
 
 		/* wait for the child to finish */
