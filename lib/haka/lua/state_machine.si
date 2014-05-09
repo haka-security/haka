@@ -89,59 +89,6 @@ struct state *lua_transition_callback(struct state_machine_instance *state_machi
 	return newstate;
 }
 
-struct lua_transtion_deferred_data {
-	struct state_machine_instance *state_machine;
-	struct lua_transition_data    *data;
-};
-
-static void lua_transtion_deferred_data_destroy(void *data)
-{
-	free(data);
-}
-
-int lua_transition_deferred(lua_State *L)
-{
-	struct state *newstate;
-	const struct lua_transtion_deferred_data *data;
-
-	assert(lua_islightuserdata(L, -1));
-	data = (const struct lua_transtion_deferred_data *)lua_topointer(L, -1);
-	assert(data);
-
-	newstate = lua_transition_callback(data->state_machine, &data->data->data);
-	if (newstate) {
-		state_machine_instance_update(data->state_machine, newstate);
-	}
-
-	if (check_error()) {
-		if (!lua_pushwstring(L, clear_error())) {
-			lua_pushstring(L, "unknown error");
-		}
-		return lua_error(L);
-	}
-
-	return 0;
-}
-
-struct state *lua_transition_timeout_callback(struct state_machine_instance *state_machine, struct transition_data *_data)
-{
-	struct lua_transtion_deferred_data *deferred_data;
-	struct lua_transition_data *data = (struct lua_transition_data *)_data;
-	struct lua_state *state = data->function.state;
-
-	deferred_data = malloc(sizeof(struct lua_transtion_deferred_data));
-	if (!deferred_data) {
-		error(L"memory error");
-		return NULL;
-	}
-
-	deferred_data->state_machine = state_machine;
-	deferred_data->data = data;
-
-	lua_state_interrupt(state, lua_transition_deferred, deferred_data, lua_transtion_deferred_data_destroy);
-	return NULL;
-}
-
 static void lua_transition_data_destroy(struct transition_data *_data)
 {
 	struct lua_transition_data *data = (struct lua_transition_data *)_data;
@@ -149,12 +96,7 @@ static void lua_transition_data_destroy(struct transition_data *_data)
 	free(_data);
 }
 
-enum lua_transition_type {
-	TIMEOUT_TRANSITION,
-	OTHER_TRANSITION,
-};
-
-static struct transition_data *lua_transition_data_new(struct lua_ref *func, enum lua_transition_type type)
+static struct transition_data *lua_transition_data_new(struct lua_ref *func)
 {
 	struct lua_transition_data *ret = malloc(sizeof(struct lua_transition_data));
 	if (!ret) {
@@ -163,13 +105,7 @@ static struct transition_data *lua_transition_data_new(struct lua_ref *func, enu
 	}
 
 	memset(ret, 0, sizeof(struct lua_transition_data));
-
-	switch (type) {
-	case TIMEOUT_TRANSITION: ret->data.callback = lua_transition_timeout_callback; break;
-	case OTHER_TRANSITION:   ret->data.callback = lua_transition_callback; break;
-	default:                 assert(0); break;
-	}
-
+	ret->data.callback = lua_transition_callback;
 	ret->data.destroy = lua_transition_data_destroy;
 	ret->function = *func;
 
@@ -191,7 +127,7 @@ struct state {
 		void transition_timeout(double secs, struct lua_ref func)
 		{
 			struct time timeout;
-			struct transition_data *trans = lua_transition_data_new(&func, TIMEOUT_TRANSITION);
+			struct transition_data *trans = lua_transition_data_new(&func);
 			if (!trans) return;
 
 			time_build(&timeout, secs);
@@ -200,7 +136,7 @@ struct state {
 
 		void transition_error(struct lua_ref func)
 		{
-			struct transition_data *trans = lua_transition_data_new(&func, OTHER_TRANSITION);
+			struct transition_data *trans = lua_transition_data_new(&func);
 			if (!trans) return;
 
 			state_set_error_transition($self, trans);
@@ -208,7 +144,7 @@ struct state {
 
 		void transition_leave(struct lua_ref func)
 		{
-			struct transition_data *trans = lua_transition_data_new(&func, OTHER_TRANSITION);
+			struct transition_data *trans = lua_transition_data_new(&func);
 			if (!trans) return;
 
 			state_set_leave_transition($self, trans);
@@ -216,7 +152,7 @@ struct state {
 
 		void transition_enter(struct lua_ref func)
 		{
-			struct transition_data *trans = lua_transition_data_new(&func, OTHER_TRANSITION);
+			struct transition_data *trans = lua_transition_data_new(&func);
 			if (!trans) return;
 
 			state_set_enter_transition($self, trans);
@@ -224,7 +160,7 @@ struct state {
 
 		void transition_init(struct lua_ref func)
 		{
-			struct transition_data *trans = lua_transition_data_new(&func, OTHER_TRANSITION);
+			struct transition_data *trans = lua_transition_data_new(&func);
 			if (!trans) return;
 
 			state_set_init_transition($self, trans);
@@ -232,7 +168,7 @@ struct state {
 
 		void transition_finish(struct lua_ref func)
 		{
-			struct transition_data *trans = lua_transition_data_new(&func, OTHER_TRANSITION);
+			struct transition_data *trans = lua_transition_data_new(&func);
 			if (!trans) return;
 
 			state_set_finish_transition($self, trans);
