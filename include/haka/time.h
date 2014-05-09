@@ -26,6 +26,8 @@ struct time {
 #define TIME_BUFSIZE    27         /**< String buffer minimum size. */
 #define INVALID_TIME    { 0, 0 }   /**< Static initializer for the struct time. */
 
+extern const struct time  invalid_time;
+
 /**
  * Build a new time structure from a number of seconds.
  */
@@ -39,12 +41,23 @@ bool       time_gettimestamp(struct time *t);
 /**
  * Add two time object.
  */
-void       time_add(struct time *t1, const struct time *t2);
+void       time_add(struct time *res, const struct time *t1, const struct time *t2);
 
 /**
  * Compute the difference between two time object.
+ * It returns the result of time_cmp(t1, t2).
  */
-double     time_diff(const struct time *t1, const struct time *t2);
+int        time_diff(struct time *res, const struct time *t1, const struct time *t2);
+
+/**
+ * Divide two time value.
+ */
+uint64     time_divide(const struct time *t1, const struct time *t2);
+
+/**
+ * Multiply a time value.
+ */
+void       time_mult(struct time *res, const struct time *t1, const int mult);
 
 /**
  * Compare two time object.

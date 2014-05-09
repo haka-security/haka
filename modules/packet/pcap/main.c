@@ -26,6 +26,8 @@
  */
 #define SNAPLEN 65535
 
+#define PROGRESS_DELAY      5 /* 5 seconds */
+
 struct pcap_packet;
 
 struct pcap_capture {
@@ -508,11 +510,17 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				if (pd->file) {
 					const size_t cur = ftell(pd->file);
 					const float percent = ((cur * 10000) / pd->file_size) / 100.f;
-					struct time time;
+					struct time time, difftime;
 					time_gettimestamp(&time);
 
-					if (!time_isvalid(&pd->last_progress) ||
-					    time_diff(&time, &pd->last_progress) > 5.) /* 5 seconds */
+					if (time_isvalid(&pd->last_progress)) {
+						time_diff(&difftime, &time, &pd->last_progress);
+					}
+					else {
+						difftime.secs = PROGRESS_DELAY;
+					}
+
+					if (difftime.secs >= PROGRESS_DELAY) /* 5 seconds */
 					{
 						pd->last_progress = time;
 						if (percent > 0) {
