@@ -12,9 +12,27 @@
 
 #include <haka/types.h>
 #include <haka/time.h>
+#include <haka/thread.h>
 
 
-struct timer;
+/**
+ * Timer mode.
+ */
+enum time_realm_mode {
+	TIME_REALM_REALTIME, /* Real-time timer. */
+	TIME_REALM_STATIC    /* Static time. The time must be updated manually. */
+};
+
+/** Opaque timer environment structure. */
+struct time_realm {
+	enum time_realm_mode   mode;
+	struct time            time;
+	bool                   check_timer;
+	local_storage_t        states; /* struct timer_group_state */;
+};
+
+struct timer;        /**< Opaque timer structure. */
+
 
 /**
  * Timer callback called whenever a timer triggers.
@@ -22,14 +40,39 @@ struct timer;
 typedef void (*timer_callback)(int count, void *data);
 
 /**
- * Initialize the current thread for timer support.
+ * Create a new time realm.
  */
-bool timer_init_thread();
+bool time_realm_initialize(struct time_realm *realm, enum time_realm_mode mode);
+
+/**
+ * Destroy a time realm.
+ */
+bool time_realm_destroy(struct time_realm *realm);
+
+/**
+ * Update the time of a time realm that is in TIMER_GROUP_STATIC mode.
+ */
+void time_realm_update(struct time_realm *realm, const struct time *value);
+
+/**
+ * Get the current local time of the time realm.
+ */
+const struct time *time_realm_current_time(struct time_realm *realm);
 
 /**
  * Create a new timer.
  */
-struct timer *timer_init(timer_callback callback, void *user);
+struct timer *time_realm_timer(struct time_realm *realm, timer_callback callback, void *user);
+
+/**
+ * Check and execute timer callbacks.
+ */
+bool time_realm_check(struct time_realm *realm);
+
+/**
+ * Initialize the current thread for timer support.
+ */
+bool timer_init_thread();
 
 /**
  * Destroy a timer.
@@ -50,16 +93,5 @@ bool timer_repeat(struct timer *timer, struct time *delay);
  * Stop a timer.
  */
 bool timer_stop(struct timer *timer);
-
-/**
- * Protect a block of code from timer interrupt.
- * \see timer_unguard()
- */
-bool timer_guard();
-
-/**
- * Leave a protected block.
- */
-bool timer_unguard();
 
 #endif /* _HAKA_TIMER_H */

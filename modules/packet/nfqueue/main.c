@@ -751,6 +751,11 @@ static const struct time *get_timestamp(struct packet *orig_pkt)
 	return &pkt->timestamp;
 }
 
+static bool is_realtime()
+{
+	return true;
+}
+
 
 struct packet_module HAKA_MODULE = {
 	module: {
@@ -763,6 +768,7 @@ struct packet_module HAKA_MODULE = {
 	},
 	multi_threaded:  multi_threaded,
 	pass_through:    pass_through,
+	is_realtime:     is_realtime,
 	init_state:      init_state,
 	cleanup_state:   cleanup_state,
 	receive:         packet_do_receive,

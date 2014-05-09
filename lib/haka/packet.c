@@ -11,12 +11,15 @@
 #include <haka/vbuffer.h>
 #include <haka/error.h>
 #include <haka/log.h>
+#include <haka/timer.h>
 #include <haka/packet_module.h>
 
 
 static struct packet_module *packet_module = NULL;
 static enum packet_mode global_packet_mode = MODE_NORMAL;
 static local_storage_t capture_state;
+struct time_realm network_time;
+static bool network_time_inited = false;
 
 INIT static void __init()
 {
@@ -26,8 +29,13 @@ INIT static void __init()
 
 FINI static void __fini()
 {
-	UNUSED const bool ret = local_storage_destroy(&capture_state);
+	UNUSED bool ret = local_storage_destroy(&capture_state);
 	assert(ret);
+
+	if (network_time_inited) {
+		ret = time_realm_destroy(&network_time);
+		assert(ret);
+	}
 }
 
 int set_packet_module(struct module *module)
@@ -49,6 +57,17 @@ int set_packet_module(struct module *module)
 
 	if (prev_packet_module) {
 		module_release(&prev_packet_module->module);
+	}
+
+	if (network_time_inited) {
+		time_realm_destroy(&network_time);
+		network_time_inited = false;
+	}
+
+	if (packet_module) {
+		time_realm_initialize(&network_time,
+				packet_module->is_realtime() ? TIME_REALM_REALTIME : TIME_REALM_STATIC);
+		network_time_inited = true;
 	}
 
 	return 0;
@@ -96,13 +115,21 @@ int packet_receive(struct packet **pkt)
 	assert(packet_module);
 
 	ret = packet_module->receive(get_capture_state(), pkt);
+
 	if (!ret && *pkt) {
 		(*pkt)->lua_object = lua_object_init;
 		atomic_set(&(*pkt)->ref, 1);
 		assert(vbuffer_isvalid(&(*pkt)->payload));
 		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%lli",
 				packet_module->get_id(*pkt));
+
+		if (!packet_module->is_realtime()) {
+			time_realm_update(&network_time,
+					packet_module->get_timestamp(*pkt));
+		}
 	}
+
+	time_realm_check(&network_time);
 
 	return ret;
 }

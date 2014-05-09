@@ -44,6 +44,10 @@ $0 ~ /^debug event: signal/ {
 	next;
 }
 
+$0 ~ /^debug timer: / {
+	next;
+}
+
 $0 ~ /^info pcap: progress/ {
 	next;
 }

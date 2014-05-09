@@ -98,12 +98,6 @@ haka.rule {
 		elseif not context.output then
 			context.instance:update('output', string.format("hello from state '%s'", context.instance.state.name))
 			context.output = true
-		else
-			local count = 0
-			while context.instance.state do
-				-- busy wait
-				count = count+1
-			end
 		end
 	end
 }

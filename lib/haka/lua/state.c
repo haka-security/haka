@@ -445,10 +445,8 @@ static void lua_interrupt_call(struct lua_state_ext *state)
 
 	vector_create_reserve(&interrupts, struct lua_interrupt_data, 20, lua_interrupt_data_destroy);
 
-	timer_guard();
 	vector_swap(&state->interrupts, &interrupts);
 	state->has_interrupts = false;
-	timer_unguard();
 
 	lua_pushcfunction(state->state.L, lua_state_error_formater);
 	h = lua_gettop(state->state.L);
