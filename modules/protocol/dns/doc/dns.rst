@@ -58,7 +58,7 @@ Protocol elements
 
         :type: :haka:class:`DnsQuestionRecord` array
 
-       DNS Question.
+        DNS Question.
 
     .. haka:attribute:: DnsDissector:answer
                         DnsDissector:authority
@@ -66,7 +66,7 @@ Protocol elements
 
         :type: :haka:class:`DnsResourceRecord` array
 
-       DNS answer, authority and additional informations.
+        DNS answer, authority and additional informations.
 
     .. haka:method:: DnsDissector:drop()
 
