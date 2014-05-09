@@ -147,7 +147,7 @@ Instance
 
         local my_state_machine = haka.state_machine("test")
 
-        my_state_machine.a = m_state_machine:state{
+        my_state_machine.a = my_state_machine:state{
             update = function (context)
                 print("update")
             end
