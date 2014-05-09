@@ -268,8 +268,8 @@ static void cleanup_state(struct packet_module_state *state)
 	state->queue = NULL;
 	state->handle = NULL;
 
-	close(state->send_fd);
-	close(state->send_mark_fd);
+	if (state->send_fd >= 0) close(state->send_fd);
+	if (state->send_mark_fd >= 0) close(state->send_mark_fd);
 
 	free(state);
 }
@@ -286,6 +286,7 @@ static int open_send_socket(bool mark)
 	}
 
 	if (setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
+		close(fd);
 		messagef(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup send socket: %s", errno_error(errno));
 		return -1;
 	}
@@ -293,6 +294,7 @@ static int open_send_socket(bool mark)
 	if (mark) {
 		one = 0xffff;
 		if (setsockopt(fd, SOL_SOCKET, SO_MARK, &one, sizeof(one)) < 0) {
+			close(fd);
 			messagef(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup send socket: %s", errno_error(errno));
 			return -1;
 		}
@@ -326,6 +328,11 @@ static struct packet_module_state *init_state(int thread_id)
 	if (!state) {
 		return NULL;
 	}
+
+	state->handle = NULL;
+	state->queue = NULL;
+	state->send_fd = -1;
+	state->send_mark_fd = -1;
 
 	/* Setup nfqueue connection */
 	state->handle = nfq_open();
