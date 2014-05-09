@@ -72,23 +72,23 @@ Customize iptables rules
 By default, Haka will create iptables rules to process all traffic. However it
 is possible for the user to customize the rules by using the option
 ``enable_iptables=no``. In this mode, Haka will only create rules in the
-targets ``haka-pre`` and ``haka-out``. It will not change any other rules in
+targets ``HAKA-PRE`` and ``HAKA-OUT``. It will not change any other rules in
 the table `raw` and will rely on the user rules to get some packets.
 
 Haka targets
 ^^^^^^^^^^^^
 
-You first need to create two custom targets named ``haka-pre`` and ``haka-out``.
+You first need to create two custom targets named ``HAKA-PRE`` and ``HAKA-OUT``.
 These targets will be overridden by Haka when it will be started. Any packet
 sent to this target will be processed by Haka.
 
 .. code-block:: console
 
-    # iptables -t raw -N haka-pre
-    # iptables -t raw -N haka-out
+    # iptables -t raw -N HAKA-PRE
+    # iptables -t raw -N HAKA-OUT
 
-The target ``haka-pre`` should be used to create rules in PREROUTING,
-``haka-out`` should be used in OUTPUT.
+The target ``HAKA-PRE`` should be used to create rules in PREROUTING,
+``HAKA-OUT`` should be used in OUTPUT.
 
 Custom rules
 ^^^^^^^^^^^^
@@ -98,8 +98,8 @@ instance, the following rule will send all packets:
 
 .. code-block:: console
 
-    # iptables -t raw -A PREROUTING -j haka-pre
-    # iptables -t raw -A OUTPUT -j haka-out
+    # iptables -t raw -A PREROUTING -j HAKA-PRE
+    # iptables -t raw -A OUTPUT -j HAKA-OUT
 
 .. note::
 
@@ -110,8 +110,8 @@ Now to only send udp packets to Haka, you can create the following rules:
 
 .. code-block:: console
 
-    # iptables -t raw -A PREROUTING -p udp -j haka-pre
-    # iptables -t raw -A OUTPUT -p udp -j haka-out
+    # iptables -t raw -A PREROUTING -p udp -j HAKA-PRE
+    # iptables -t raw -A OUTPUT -p udp -j HAKA-OUT
 
 You can imagine more complex rules using iptables features to select
 precisely which packets should by processed and which should not. It
