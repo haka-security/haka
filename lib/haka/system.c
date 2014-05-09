@@ -13,10 +13,11 @@
 
 static struct vector fatal_cleanup = VECTOR_INIT(void *, NULL);
 
+/*
+ * Signal handler for fatal signals
+ */
 static void fatal_error_signal(int sig)
 {
-	messagef(HAKA_LOG_FATAL, L"core", L"fatal signal received (sig=%d)", sig);
-
 	int i;
 	const int size = vector_count(&fatal_cleanup);
 	for (i=0; i<size; ++i) {
