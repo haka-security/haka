@@ -5,8 +5,6 @@ source autobuild/includes.sh
 
 _doc() {
 	cd "$MAKEDIR/$1-$2"
-
-	### Build package
 	_run make doc
 }
 
