@@ -57,13 +57,13 @@ $0 ~ /^stack traceback:$/ {
 	next;
 }
 
-$0 ~ /^info alert: update id = / {
+$0 ~ /^alert: update id = / {
 	alert = 1;
 	print($1 " " $2 " " $3 " " $4 " = <>");
 	next;
 }
 
-$0 ~ /^info alert:/ {
+$0 ~ /^alert:/ {
 	alert = 1;
 	print($1 " " $2 " " $3 " = <>");
 	next;

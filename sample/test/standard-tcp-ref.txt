@@ -1,5 +1,5 @@
 debug filter: entering packet filtering rules : 52110 --> 443
-info alert: id = <>
+alert: id = = <>
 	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 52110
@@ -7,7 +7,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1, 443
 	}
-info alert: id = <>
+alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -18,7 +18,7 @@ info alert: id = <>
 		address: 192.168.20.1
 		service: tcp/80
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -26,7 +26,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -34,7 +34,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -42,7 +42,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -50,7 +50,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -58,7 +58,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -66,7 +66,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -74,7 +74,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -82,7 +82,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -90,7 +90,7 @@ info alert: id = <>
 	targets = {
 		address: 192.168.20.1
 	}
-info alert: id = <>
+alert: id = = <>
 	description = Xmas attack detected
 	sources = {
 		address: 192.168.10.1
@@ -102,7 +102,7 @@ debug filter: entering packet filtering rules : 50706 --> 80
 warn filter: authorizing http traffic
 debug cnx: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 51584 --> 80
-info alert: id = <>
+alert: id = = <>
 	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 51584
@@ -111,7 +111,7 @@ info alert: id = <>
 		address: 192.168.20.255, 80
 	}
 debug filter: entering packet filtering rules : 51584 --> 80
-info alert: id = <>
+alert: id = = <>
 	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 51584
@@ -124,7 +124,7 @@ warn filter: authorizing ssh traffic
 warn filter: no available dissector for ssh
 debug cnx: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
 debug filter: entering packet filtering rules : 34191 --> 22
-info alert: id = <>
+alert: id = = <>
 	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 34191
@@ -133,7 +133,7 @@ info alert: id = <>
 		address: 192.168.20.255, 22
 	}
 debug filter: entering packet filtering rules : 34191 --> 22
-info alert: id = <>
+alert: id = = <>
 	description = Packet dropped : drop by default
 	sources = {
 		address: 192.168.10.1, 34191
@@ -144,7 +144,7 @@ info alert: id = <>
 debug filter: entering packet filtering rules : 50710 --> 80
 warn filter: authorizing http traffic
 debug cnx: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
-info alert: id = <>
+alert: id = = <>
 	description = /bin/sh shellcode detected
 	sources = {
 		address: 192.168.10.1

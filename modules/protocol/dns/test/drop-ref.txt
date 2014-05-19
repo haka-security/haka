@@ -28,7 +28,7 @@ class DnsResult {
 }
 debug dns: selecting dns dissector on flow
 debug cnx: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
-info alert: id = <>
+alert: id = = <>
 	severity = low
 	description = dns: mismatching response
 debug dns: selecting dns dissector on flow

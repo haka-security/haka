@@ -1,4 +1,4 @@
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:43 2014
 	severity = medium
 	confidence = high
@@ -15,10 +15,10 @@ info alert: id = <>
 		address: 192.168.20.1
 		service: tcp/22, ssh
 	}
-info alert: id = <>
+alert: id = = <>
 	severity = low
 	sources = {
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	completion = failed
