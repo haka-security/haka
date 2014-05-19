@@ -49,12 +49,12 @@ static void help(const char *program)
 					"\t                         (default: %s/etc/haka/haka.conf)\n", haka_path());
 	fprintf(stdout, "\t-r,--rule <rule>:      Override the rule configuration file\n");
 	fprintf(stdout, "\t-d,--debug:            Display debug output\n");
+	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
+	fprintf(stdout, "\t                       Override configuration parameter\n");
 	fprintf(stdout, "\t-l,--loglevel <level>: Set the log level\n");
 	fprintf(stdout, "\t                         (debug, info, warning, error or fatal)\n");
 	fprintf(stdout, "\t--luadebug:            Activate lua debugging (and keep haka in foreground)\n");
 	fprintf(stdout, "\t--no-daemon:           Do no run in the background\n");
-	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
-	fprintf(stdout, "\t                       Override configuration parameter\n");
 }
 
 static bool daemonize = true;
@@ -68,8 +68,8 @@ struct config_override {
 
 void free_config_override(void *_elem) {
 	struct config_override *elem = (struct config_override *)_elem;
-	if (elem->key) free(elem->key);
-	if (elem->value) free(elem->value);
+	free(elem->key);
+	free(elem->value);
 }
 
 static struct vector config_overrides = VECTOR_INIT(struct config_override, free_config_override);
@@ -136,6 +136,7 @@ static int parse_cmdline(int *argc, char ***argv)
 			config = strdup(optarg);
 			if (!config) {
 				message(HAKA_LOG_FATAL, L"core", L"memory error");
+				clean_exit();
 				exit(2);
 			}
 			break;
@@ -361,6 +362,8 @@ void clean_exit()
 	if (haka_started) {
 		unlink(HAKA_PID_FILE);
 	}
+
+	vector_destroy(&config_overrides);
 
 	basic_clean_exit();
 }
