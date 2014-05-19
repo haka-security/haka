@@ -32,7 +32,12 @@ Options
 
 .. option:: -l, --loglevel [<module>=]<level>[,<module>=<level>[,...]]
 
-    Set the logging level globally and per module.
+    Set the logging level globally and per module. Available levels are :
+       * debug
+       * info
+       * warning
+       * error
+       * fatal
 
 .. option:: --no-daemon
 
