@@ -15,7 +15,8 @@ Parameters
 
 .. describe:: file
 
-    Absolute file path where alert will end up.
+    Absolute file path where alert will end up. You can use "-" for standard
+    output.
 
 .. describe:: format
 

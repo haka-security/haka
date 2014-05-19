@@ -120,7 +120,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 	}
 
 	const char *filename = parameters_get_string(args, "file", NULL);
-	if (filename) {
+	if (filename && strcmp(filename, "-") != 0) {
 		message(HAKA_LOG_INFO, L"file", L"openning alert file");
 		file_alerter->output = fopen(filename, "a");
 		if (!file_alerter->output) {
