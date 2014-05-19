@@ -194,6 +194,8 @@ int main(int argc, char *argv[])
 
 		alerter = alert_module_alerter(module, args);
 		add_alerter(alerter);
+
+		parameters_free(args);
 		module_release(module);
 	}
 

@@ -144,6 +144,8 @@ void cleanup_alerter(struct alerter_module *module)
 	if (!alerter->stdio) {
 		fclose(alerter->output);
 	}
+
+	free(alerter);
 }
 
 struct alert_module HAKA_MODULE = {
