@@ -15,14 +15,14 @@
 
 enum format {
 	PRETTY,
-	ONELINER,
+	ONELINE,
 
 	FORMAT_LAST,
 };
 
 static const char *format_string[] = {
 	"pretty",
-	"oneliner",
+	"oneline",
 };
 
 struct file_alerter {
@@ -51,7 +51,7 @@ static bool write(struct file_alerter *alerter, uint64 id, const struct time *ti
 	case PRETTY:
 		indent = "\n\t";
 		break;
-	case ONELINER: /* Default */
+	case ONELINE: /* Default */
 	default:
 		indent = " ";
 	}
@@ -77,7 +77,8 @@ static bool write(struct file_alerter *alerter, uint64 id, const struct time *ti
 	}
 
 	flockfile(alerter->output);
-	fprintf(alerter->output, "%salert%s: %s%ls\n", color, clear, update ? "update " : "", alert_tostring(id, time, alert, "", indent, alerter->color));
+	fprintf(alerter->output, "%salert%s: %s%ls\n", color, clear,
+            update ? "update " : "", alert_tostring(id, time, alert, "", indent, alerter->color));
 	funlockfile(alerter->output);
 
 	return true;

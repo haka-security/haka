@@ -3,7 +3,7 @@
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 File alert `alert/file`
-===========================
+=======================
 
 Description
 ^^^^^^^^^^^
@@ -33,4 +33,4 @@ Example :
 
     # Ignore alerts
     file = "/dev/null"
-    format = "oneliner"
+    format = "oneline"
