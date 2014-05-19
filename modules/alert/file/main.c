@@ -42,7 +42,7 @@ static void cleanup()
 {
 }
 
-static bool write(struct file_alerter *alerter, uint64 id, const struct time *time, const struct alert *alert, bool update)
+static bool write_to_file(struct file_alerter *alerter, uint64 id, const struct time *time, const struct alert *alert, bool update)
 {
 	char *indent;
 	char *color = "", *clear = "";
@@ -86,12 +86,12 @@ static bool write(struct file_alerter *alerter, uint64 id, const struct time *ti
 
 static bool do_alert(struct alerter *state, uint64 id, const struct time *time, const struct alert *alert)
 {
-	return write((struct file_alerter *)state, id, time, alert, false);
+	return write_to_file((struct file_alerter *)state, id, time, alert, false);
 }
 
 static bool do_alert_update(struct alerter *state, uint64 id, const struct time *time, const struct alert *alert)
 {
-	return write((struct file_alerter *)state, id, time, alert, true);
+	return write_to_file((struct file_alerter *)state, id, time, alert, true);
 }
 
 struct alerter_module *init_alerter(struct parameters *args)
