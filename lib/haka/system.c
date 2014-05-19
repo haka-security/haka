@@ -34,6 +34,7 @@ INIT static void system_init()
 	signal(SIGSEGV, fatal_error_signal);
 	signal(SIGILL, fatal_error_signal);
 	signal(SIGFPE, fatal_error_signal);
+	signal(SIGABRT, fatal_error_signal);
 }
 
 FINI static void system_final()
