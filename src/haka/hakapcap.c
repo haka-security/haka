@@ -69,7 +69,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ 0,                 0,                 0, 0 }
 	};
 
-	while ((c = getopt_long(*argc, *argv, "dho:", long_options, &index)) != -1) {
+	while ((c = getopt_long(*argc, *argv, "dl:a:ho:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
 			setlevel(HAKA_LOG_DEBUG, NULL);

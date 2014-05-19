@@ -109,7 +109,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ 0,              0,                 0, 0 }
 	};
 
-	while ((c = getopt_long(*argc, *argv, "dhc:r:", long_options, &index)) != -1) {
+	while ((c = getopt_long(*argc, *argv, "dl:hc:r:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
 			add_override("log:level", "debug");
