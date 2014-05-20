@@ -193,6 +193,12 @@ int main(int argc, char *argv[])
 		}
 
 		alerter = alert_module_alerter(module, args);
+		if (!alerter) {
+			messagef(HAKA_LOG_FATAL, L"core", L"cannot load alert module: %ls", clear_error());
+			clean_exit();
+			return 1;
+		}
+
 		add_alerter(alerter);
 
 		parameters_free(args);

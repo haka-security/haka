@@ -98,7 +98,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 {
 	struct file_alerter *file_alerter = malloc(sizeof(struct file_alerter));
 	if (!file_alerter) {
-		message(HAKA_LOG_ERROR, L"file", L"memory error");
+		error(L"memory error");
 		return NULL;
 	}
 
@@ -115,16 +115,15 @@ struct alerter_module *init_alerter(struct parameters *args)
 	}
 
 	if (file_alerter->format == FORMAT_LAST) {
-		message(HAKA_LOG_ERROR, L"file", L"memory error");
+		error(L"memory error");
 		return NULL;
 	}
 
 	const char *filename = parameters_get_string(args, "file", NULL);
 	if (filename && strcmp(filename, "-") != 0) {
-		message(HAKA_LOG_INFO, L"file", L"openning alert file");
 		file_alerter->output = fopen(filename, "a");
 		if (!file_alerter->output) {
-			message(HAKA_LOG_ERROR, L"file", L"cannot open file for alert");
+			error(L"cannot open file '%s' for alert", filename);
 			return NULL;
 		}
 	} else {
