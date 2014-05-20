@@ -12,10 +12,15 @@
 #include <haka/error.h>
 
 
+#define SEC_TO_NSEC      1000000000
+#define SEC_TO_NSEC_F    1000000000.
+
+const struct time invalid_time = INVALID_TIME;
+
 void time_build(struct time *t, double secs)
 {
 	t->secs = secs;
-	t->nsecs = (secs - floor(secs)) * 1000000000.;
+	t->nsecs = (secs - floor(secs)) * SEC_TO_NSEC_F;
 }
 
 bool time_gettimestamp(struct time *t)
@@ -31,44 +36,74 @@ bool time_gettimestamp(struct time *t)
 	return true;
 }
 
-void time_add(struct time *t1, const struct time *t2)
+void time_add(struct time *res, const struct time *t1, const struct time *t2)
 {
-	t1->nsecs += t2->nsecs;
-	t1->secs += t2->secs + t1->nsecs / 1000000000;
-	t1->nsecs %= 1000000000;
+	res->nsecs = t1->nsecs + t2->nsecs;
+	res->secs = t1->secs + t2->secs + res->nsecs / SEC_TO_NSEC;
+	res->nsecs %= SEC_TO_NSEC;
 }
 
-double time_diff(const struct time *t1, const struct time *t2)
+static void _time_diff(struct time *res, const struct time *t1, const struct time *t2)
 {
-	if (time_cmp(t1, t2) <= 0) {
-		double sec = (t1->secs - t2->secs);
-		sec += ((int32)t1->nsecs - t2->nsecs) / 1000000000.;
-		return sec;
+	assert(t1->secs >= t2->secs);
+	res->secs = t1->secs - t2->secs;
+
+	if (t1->nsecs >= t2->nsecs) {
+		res->nsecs = t1->nsecs - t2->nsecs;
 	}
 	else {
-		return -time_diff(t2, t1);
+		res->nsecs = t1->nsecs + SEC_TO_NSEC - t2->nsecs;
+		assert(res->secs > 0);
+		res->secs -= 1;
 	}
+}
+
+int time_diff(struct time *res, const struct time *t1, const struct time *t2)
+{
+	const int cmp = time_cmp(t1, t2);
+	if (cmp <= 0) {
+		_time_diff(res, t1, t2);
+	}
+	else {
+		_time_diff(res, t2, t1);
+	}
+	return cmp;
+}
+
+uint64 time_divide(const struct time *t1, const struct time *t2)
+{
+	const uint64 a = t1->secs * SEC_TO_NSEC + t1->nsecs;
+	const uint64 b = t2->secs * SEC_TO_NSEC + t2->nsecs;
+	return a / b;
+}
+
+void time_mult(struct time *res, const struct time *t1, const int mult)
+{
+	res->secs = t1->secs * mult;
+	res->nsecs = t1->nsecs * mult;
+	res->secs += res->nsecs / SEC_TO_NSEC;
+	res->nsecs %= SEC_TO_NSEC;
 }
 
 double time_sec(const struct time *t)
 {
-	return ((double)t->secs) + t->nsecs / 1000000000.;
+	return ((double)t->secs) + t->nsecs / SEC_TO_NSEC_F;
 }
 
 int time_cmp(const struct time *t1, const struct time *t2)
 {
 	if (t1->secs < t2->secs) {
-		return 1;
+		return -1;
 	}
 	else if (t1->secs > t2->secs) {
-		return -1;
+		return 1;
 	}
 	else {
 		if (t1->nsecs < t2->nsecs) {
-			return 1;
+			return -1;
 		}
 		else if (t1->nsecs > t2->nsecs) {
-			return -1;
+			return 1;
 		}
 		else {
 			return 0;

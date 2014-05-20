@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <haka/types.h>
 #include <haka/time.h>
+#include <haka/time.h>
 #include <haka/thread.h>
 #include <haka/vbuffer.h>
 #include <haka/lua/object.h>
@@ -116,5 +117,7 @@ enum packet_mode {
  * Current packet capture mode.
  */
 enum packet_mode   packet_mode();
+
+extern struct time_realm network_time;
 
 #endif /* _HAKA_PACKET_H */

@@ -26,6 +26,8 @@
  */
 #define SNAPLEN 65535
 
+#define PROGRESS_DELAY      5 /* 5 seconds */
+
 struct pcap_packet;
 
 struct pcap_capture {
@@ -508,16 +510,22 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				if (pd->file) {
 					const size_t cur = ftell(pd->file);
 					const float percent = ((cur * 10000) / pd->file_size) / 100.f;
-					struct time time;
+					struct time time, difftime;
 					time_gettimestamp(&time);
 
-					if (!time_isvalid(&pd->last_progress) ||
-					    time_diff(&time, &pd->last_progress) > 5.) /* 5 seconds */
-					{
-						pd->last_progress = time;
-						if (percent > 0) {
-							messagef(HAKA_LOG_INFO, L"pcap", L"progress %.2f %%", percent);
+					if (time_isvalid(&pd->last_progress)) {
+						time_diff(&difftime, &time, &pd->last_progress);
+
+						if (difftime.secs >= PROGRESS_DELAY) /* 5 seconds */
+						{
+							pd->last_progress = time;
+							if (percent > 0) {
+								messagef(HAKA_LOG_INFO, L"pcap", L"progress %.2f %%", percent);
+							}
 						}
+					}
+					else {
+						pd->last_progress = time;
 					}
 				}
 
@@ -716,6 +724,11 @@ static const struct time *get_timestamp(struct packet *orig_pkt)
 	return &pkt->timestamp;
 }
 
+static bool is_realtime()
+{
+	return input_is_iface;
+}
+
 
 struct packet_module HAKA_MODULE = {
 	module: {
@@ -728,6 +741,7 @@ struct packet_module HAKA_MODULE = {
 	},
 	multi_threaded:  multi_threaded,
 	pass_through:    pass_through,
+	is_realtime:     is_realtime,
 	init_state:      init_state,
 	cleanup_state:   cleanup_state,
 	receive:         packet_do_receive,

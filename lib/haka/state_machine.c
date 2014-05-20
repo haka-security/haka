@@ -9,6 +9,7 @@
 #include <haka/log.h>
 #include <haka/error.h>
 #include <haka/timer.h>
+#include <haka/packet.h>
 #include <haka/state_machine.h>
 #include <haka/container/vector.h>
 
@@ -411,7 +412,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 					timer->instance = instance;
 					timer->timer_index = i;
 
-					timer->timer = timer_init(transition_timeout, timer);
+					timer->timer = time_realm_timer(&network_time, transition_timeout, timer);
 					if (!timer->timer) {
 						vector_pop(&instance->timers);
 						assert(check_error());

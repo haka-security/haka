@@ -44,6 +44,11 @@ struct packet_module {
 	bool           (*pass_through)();
 
 	/**
+	 * Check if the module is realtime or not.
+	 */
+	bool           (*is_realtime)();
+
+	/**
 	 * Initialize the packet module state. This function will be called to create
 	 * multiple states if the module supports multi-threading.
 	 */
