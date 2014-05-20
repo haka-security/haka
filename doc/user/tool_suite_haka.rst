@@ -32,7 +32,12 @@ Options
 
 .. option:: -l, --loglevel [<module>=]<level>[,<module>=<level>[,...]]
 
-    Set the logging level globally and per module.
+    Set the logging level globally and per module. Available levels are :
+       * debug
+       * info
+       * warning
+       * error
+       * fatal
 
 .. option:: --no-daemon
 
@@ -89,6 +94,10 @@ Packet directives
 
 Alert directives
 ^^^^^^^^^^^^^^^^
+.. describe:: alert_on_stdout=[yes|no]
+
+    Enable output of alert on stdout when haka is not run as a daemon. Default
+    to yes.
 
 .. describe:: module
 

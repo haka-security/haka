@@ -6,7 +6,7 @@ debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:32839 -> 192.168.20.1:80
 info sqli: receiving http request
 info sqli: uri: /index.php?id=-1%20union%20all%20select%201,2,3
-info alert: id = <>
+alert: id = = <>
 	severity = high
 	confidence = medium
 	description = SQLi attack detected in args with score 8
@@ -22,7 +22,7 @@ debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:32840 -> 192.168.20.1:80
 info sqli: receiving http request
 info sqli: uri: /index.php?id=-1%20uni/*somehting*/on%20all%20select%201,2,3
-info alert: id = <>
+alert: id = = <>
 	severity = high
 	confidence = medium
 	description = SQLi attack detected in args with score 8
@@ -39,7 +39,7 @@ debug cnx: opening connection 192.168.10.1:32841 -> 192.168.20.1:80
 info sqli: receiving http request
 info sqli: uri: http://192.168.20.1/index.php
 info sqli: cookies: session=active;id=-1%20union%20all%20select%201,2
-info alert: id = <>
+alert: id = = <>
 	severity = high
 	confidence = medium
 	description = SQLi attack detected in cookies with score 8
@@ -59,7 +59,7 @@ debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:32843 -> 192.168.20.1:80
 info sqli: receiving http request
 info sqli: uri: /action.php?group=o'brian%25union&action=select
-info alert: id = <>
+alert: id = = <>
 	severity = high
 	confidence = medium
 	description = SQLi attack detected in args with score 8

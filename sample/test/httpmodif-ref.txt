@@ -2,7 +2,7 @@ debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:53440 -> 192.168.20.1:80
 info Filter: Domain requested: server
 info Filter: UA detected: Mozilla Firefox/12.0
-info alert: id = <>
+alert: id = = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
 class HttpResponseResult {
@@ -32,7 +32,7 @@ debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:53442 -> 192.168.20.1:80
 info Filter: Domain requested: server
 info Filter: UA detected: Mozilla Firefox/plop
-info alert: id = <>
+alert: id = = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
 class HttpResponseResult {
@@ -58,7 +58,7 @@ debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:53443 -> 192.168.20.1:80
 info Filter: Domain requested: server
 info Filter: UA detected: Mozilla Firefox/
-info alert: id = <>
+alert: id = = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
 class HttpResponseResult {
@@ -97,7 +97,7 @@ info Filter: Unknown or missing User-Agent
 debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:53447 -> 192.168.20.1:80
 info Filter: UA detected: Mozilla Firefox/18.0
-info alert: id = <>
+alert: id = = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
 class HttpResponseResult {

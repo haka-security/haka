@@ -368,7 +368,7 @@ struct redirect_alerter {
 bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
-	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "", "\n\t"))) {
+	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "", "\n\t", false))) {
 		alerter->alerter.mark_for_remove = true;
 	}
 	return true;
@@ -377,7 +377,7 @@ bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, const struct ti
 bool redirect_alerter_update(struct alerter *_alerter, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
-	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "update ", "\n\t"))) {
+	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "update ", "\n\t", false))) {
 		alerter->alerter.mark_for_remove = true;
 	}
 	return true;

@@ -4,7 +4,7 @@ debug cnx: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 50693 --> 80
 warn filter: authorizing http traffic
 debug cnx: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
-info alert: id = <>
+alert: id = = <>
 	description = non authorized http method 'WRONG'
 	sources = {
 		address: 192.168.10.1
@@ -17,7 +17,7 @@ debug cnx: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 50694 --> 80
 warn filter: authorizing http traffic
 debug cnx: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
-info alert: id = <>
+alert: id = = <>
 	description = unsupported http version '2.1'
 	sources = {
 		address: 192.168.10.1
@@ -30,7 +30,7 @@ debug cnx: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 50695 --> 80
 warn filter: authorizing http traffic
 debug cnx: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
-info alert: id = <>
+alert: id = = <>
 	description = forbidden http method 'TRACE'
 	sources = {
 		address: 192.168.10.1
@@ -42,7 +42,7 @@ info alert: id = <>
 debug filter: entering packet filtering rules : 50696 --> 80
 warn filter: authorizing http traffic
 debug cnx: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
-info alert: id = <>
+alert: id = = <>
 	severity = high
 	description = 'sqlmap' scan detected
 	sources = {

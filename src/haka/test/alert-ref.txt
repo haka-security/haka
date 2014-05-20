@@ -1,4 +1,4 @@
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:43 2014
 	end time = Mon Jan 20 17:44:43 2014
 	severity = medium
@@ -17,7 +17,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -28,7 +28,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 1 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:43 2014
 	end time = Mon Jan 20 17:44:43 2014
 	severity = medium
@@ -47,7 +47,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -58,7 +58,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 2 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:43 2014
 	end time = Mon Jan 20 17:44:43 2014
 	severity = medium
@@ -77,7 +77,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -88,7 +88,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 3 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:47 2014
 	end time = Mon Jan 20 17:44:47 2014
 	severity = medium
@@ -107,7 +107,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -118,7 +118,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 4 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:47 2014
 	end time = Mon Jan 20 17:44:47 2014
 	severity = medium
@@ -137,7 +137,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -148,7 +148,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 5 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:47 2014
 	end time = Mon Jan 20 17:44:47 2014
 	severity = medium
@@ -167,7 +167,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -178,7 +178,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 6 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:47 2014
 	end time = Mon Jan 20 17:44:47 2014
 	severity = medium
@@ -197,7 +197,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -208,7 +208,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 7 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:50 2014
 	end time = Mon Jan 20 17:44:50 2014
 	severity = medium
@@ -227,7 +227,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -238,7 +238,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 8 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:50 2014
 	end time = Mon Jan 20 17:44:50 2014
 	severity = medium
@@ -257,7 +257,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -268,7 +268,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 9 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:50 2014
 	end time = Mon Jan 20 17:44:50 2014
 	severity = medium
@@ -287,7 +287,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -298,7 +298,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 10 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:50 2014
 	end time = Mon Jan 20 17:44:50 2014
 	severity = medium
@@ -317,7 +317,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -328,7 +328,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 11 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
 	severity = medium
@@ -347,7 +347,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -358,7 +358,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 12 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
 	severity = medium
@@ -377,7 +377,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -388,7 +388,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 13 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
 	severity = medium
@@ -407,7 +407,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -418,7 +418,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 14 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
 	severity = medium
@@ -437,7 +437,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -448,7 +448,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 15 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
 	severity = medium
@@ -467,7 +467,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -478,7 +478,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 16 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:53 2014
 	end time = Mon Jan 20 17:44:53 2014
 	severity = medium
@@ -497,7 +497,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -508,7 +508,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 17 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:53 2014
 	end time = Mon Jan 20 17:44:53 2014
 	severity = medium
@@ -527,7 +527,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -538,7 +538,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 18 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:53 2014
 	end time = Mon Jan 20 17:44:53 2014
 	severity = medium
@@ -557,7 +557,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -568,7 +568,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 19 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
 	severity = medium
@@ -587,7 +587,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -598,7 +598,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 20 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
 	severity = medium
@@ -617,7 +617,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -628,7 +628,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 21 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
 	severity = medium
@@ -647,7 +647,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -658,7 +658,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 22 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
 	severity = medium
@@ -677,7 +677,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -688,7 +688,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 23 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
 	severity = medium
@@ -707,7 +707,7 @@ info alert: id = <>
 		address: 224.0.0.1/22
 		address: 224.0.0.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 0.0.0.0
@@ -718,7 +718,7 @@ info alert: update id = <>
 		address: 0.0.0.0
 	}
 	refs = { 24 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:00 2014
 	end time = Mon Jan 20 17:45:00 2014
 	severity = medium
@@ -737,7 +737,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -748,7 +748,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 25 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:00 2014
 	end time = Mon Jan 20 17:45:00 2014
 	severity = medium
@@ -767,7 +767,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -778,7 +778,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 26 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
 	severity = medium
@@ -797,7 +797,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -808,7 +808,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 27 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
 	severity = medium
@@ -827,7 +827,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -838,7 +838,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 28 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
 	severity = medium
@@ -857,7 +857,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -868,7 +868,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 29 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
 	severity = medium
@@ -887,7 +887,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -898,7 +898,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 30 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
 	severity = medium
@@ -917,7 +917,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -928,7 +928,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 31 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
 	severity = medium
@@ -947,7 +947,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -958,7 +958,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 32 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
 	severity = medium
@@ -977,7 +977,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1
@@ -988,7 +988,7 @@ info alert: update id = <>
 		address: 192.168.20.1
 	}
 	refs = { 33 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
 	severity = medium
@@ -1007,7 +1007,7 @@ info alert: id = <>
 		address: 192.168.20.1/22
 		address: 192.168.20.1
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.99
@@ -1018,7 +1018,7 @@ info alert: update id = <>
 		address: 192.168.20.99
 	}
 	refs = { 34 }
-info alert: id = <>
+alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
 	severity = medium
@@ -1037,7 +1037,7 @@ info alert: id = <>
 		address: 192.168.20.99/22
 		address: 192.168.20.99
 	}
-info alert: update id = <>
+alert: update id = = <>
 	severity = high
 	confidence = low
 	description = filtering IP 192.168.20.1

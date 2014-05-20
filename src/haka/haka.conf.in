@@ -24,9 +24,16 @@ interfaces = "eth0"
 # Select the log module
 module = "log/syslog"
 
+# Set the default logging level
+#level = "info,packet=debug"
+
 [alert]
 # Select the alert module
 module = "alert/syslog"
+#module = "alert/file"
 
-# Set the default logging level
-level = "info,packet=debug"
+# Disable alert on standard output
+#alert_on_stdout = no
+
+# alert/file module option
+#file = "/dev/null"

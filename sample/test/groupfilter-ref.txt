@@ -1,11 +1,11 @@
 debug filter: Entering packet filtering rules : 43557 --> 8000
-info alert: id = <>
+alert: id = = <>
 	description = Packet dropped : drop by default
 	targets = {
 		service: tcp, 8000
 	}
 debug filter: Entering packet filtering rules : 43557 --> 8000
-info alert: id = <>
+alert: id = = <>
 	description = Packet dropped : drop by default
 	targets = {
 		service: tcp, 8000
@@ -14,13 +14,13 @@ debug filter: Entering packet filtering rules : 53459 --> 80
 info Filter: Authorizing traffic on port 80
 debug cnx: opening connection 192.168.10.1:53459 -> 192.168.20.1:80
 debug filter: Entering packet filtering rules : 51666 --> 31337
-info alert: id = <>
+alert: id = = <>
 	description = Packet dropped : drop by default
 	targets = {
 		service: tcp, 31337
 	}
 debug filter: Entering packet filtering rules : 51666 --> 31337
-info alert: id = <>
+alert: id = = <>
 	description = Packet dropped : drop by default
 	targets = {
 		service: tcp, 31337
