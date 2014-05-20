@@ -46,14 +46,16 @@ void time_add(struct time *res, const struct time *t1, const struct time *t2)
 static void _time_diff(struct time *res, const struct time *t1, const struct time *t2)
 {
 	assert(t1->secs >= t2->secs);
+	assert(time_cmp(t1, t2) >= 0);
+
 	res->secs = t1->secs - t2->secs;
 
 	if (t1->nsecs >= t2->nsecs) {
 		res->nsecs = t1->nsecs - t2->nsecs;
 	}
 	else {
+		assert(t1->nsecs + SEC_TO_NSEC >= t2->nsecs);
 		res->nsecs = t1->nsecs + SEC_TO_NSEC - t2->nsecs;
-		assert(res->secs > 0);
 		res->secs -= 1;
 	}
 }
@@ -61,7 +63,7 @@ static void _time_diff(struct time *res, const struct time *t1, const struct tim
 int time_diff(struct time *res, const struct time *t1, const struct time *t2)
 {
 	const int cmp = time_cmp(t1, t2);
-	if (cmp <= 0) {
+	if (cmp >= 0) {
 		_time_diff(res, t1, t2);
 	}
 	else {
