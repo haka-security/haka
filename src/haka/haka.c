@@ -319,7 +319,7 @@ int read_configuration(const char *file)
 
 			module = module_load("alert/file", NULL);
 			if (!module) {
-				messagef(HAKA_LOG_FATAL, L"core", L"cannot load alert module: %ls", clear_error());
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot load alert/file module: %ls", clear_error());
 				clean_exit();
 				return 1;
 			}
