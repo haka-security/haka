@@ -515,17 +515,17 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 					if (time_isvalid(&pd->last_progress)) {
 						time_diff(&difftime, &time, &pd->last_progress);
+
+						if (difftime.secs >= PROGRESS_DELAY) /* 5 seconds */
+						{
+							pd->last_progress = time;
+							if (percent > 0) {
+								messagef(HAKA_LOG_INFO, L"pcap", L"progress %.2f %%", percent);
+							}
+						}
 					}
 					else {
-						difftime.secs = PROGRESS_DELAY;
-					}
-
-					if (difftime.secs >= PROGRESS_DELAY) /* 5 seconds */
-					{
 						pd->last_progress = time;
-						if (percent > 0) {
-							messagef(HAKA_LOG_INFO, L"pcap", L"progress %.2f %%", percent);
-						}
 					}
 				}
 
