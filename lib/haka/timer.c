@@ -128,7 +128,7 @@ bool time_realm_initialize(struct time_realm *realm, enum time_realm_mode mode)
 
 bool time_realm_destroy(struct time_realm *realm)
 {
-	/* It is need to cleanup the main thread state local data as it is not
+	/* It is needed to cleanup the main thread state local data as it is not
 	 * done by destroy.
 	 */
 	free_time_realm_state(local_storage_get(&realm->states));

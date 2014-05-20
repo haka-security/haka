@@ -44,7 +44,7 @@ struct packet_module {
 	bool           (*pass_through)();
 
 	/**
-	 * Check of the module is realtime or not.
+	 * Check if the module is realtime or not.
 	 */
 	bool           (*is_realtime)();
 

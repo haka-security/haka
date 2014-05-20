@@ -50,7 +50,7 @@ bool time_realm_initialize(struct time_realm *realm, enum time_realm_mode mode);
 bool time_realm_destroy(struct time_realm *realm);
 
 /**
- * Update the time of a time realm that is in TIMER_GROUP_STATIC mode.
+ * Update the time of a time realm that is in TIMER_REALM_STATIC mode.
  */
 void time_realm_update(struct time_realm *realm, const struct time *value);
 
