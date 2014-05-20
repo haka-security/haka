@@ -140,6 +140,7 @@ int main(int argc, char *argv[])
 	ret = parse_cmdline(&argc, &argv);
 	if (ret >= 0) {
 		clean_exit();
+		free(alert_to);
 		free(output);
 		return ret;
 	}
@@ -184,6 +185,9 @@ int main(int argc, char *argv[])
 
 		parameters_set_string(args, "file", alert_to);
 		parameters_set_string(args, "format", "pretty");
+
+		free(alert_to);
+		alert_to = NULL;
 
 		module = module_load("alert/file", NULL);
 		if (!module) {
