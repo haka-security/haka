@@ -22,10 +22,12 @@ end
 local Context = class.class()
 
 function Context.method:__init()
-	self.connections = haka.events.StaticEventConnections:new()
+	self.connections = haka.event.StaticEventConnections:new()
 end
 
 function Context.method:signal(emitter, event, ...)
+	assert(class.classof(event, haka.event.Event), "event expected")
+
 	if not self.connections:signal(emitter, event, ...) then
 		return false
 	end

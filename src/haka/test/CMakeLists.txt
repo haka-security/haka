@@ -6,7 +6,7 @@
 include(TestPcap)
 
 TEST_PCAP(core rule-error)
-TEST_PCAP(core onexit)
+TEST_PCAP(core hakaevents)
 TEST_PCAP(core timestamp)
 TEST_PCAP(core state_machine)
 TEST_PCAP(core payload)

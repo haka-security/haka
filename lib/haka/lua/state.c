@@ -356,31 +356,43 @@ struct lua_state *lua_state_init()
 	return &ret->state;
 }
 
-static void lua_on_exit(lua_State *L)
+void lua_state_trigger_haka_event(struct lua_state *state, const char *event)
 {
 	int h;
-	LUA_STACK_MARK(L);
+	LUA_STACK_MARK(state->L);
 
-	lua_pushcfunction(L, lua_state_error_formater);
-	h = lua_gettop(L);
+	lua_pushcfunction(state->L, lua_state_error_formater);
+	h = lua_gettop(state->L);
 
-	lua_getglobal(L, "haka");
-	lua_getfield(L, -1, "_exiting");
-
-	if (lua_pcall(L, 0, 0, h)) {
-		lua_state_print_error(L, L"exit");
+	/*
+	 * haka.context:signal(nil, haka.events[event])
+	 */
+	lua_getglobal(state->L, "haka");
+	lua_getfield(state->L, -1, "events");
+	lua_getfield(state->L, -2, "context");
+	lua_getfield(state->L, -1, "signal"); /* function haka.context.signal */
+	lua_pushvalue(state->L, -2);          /* self */
+	lua_pushnil(state->L);                /* emitter */
+	lua_getfield(state->L, -5, event);    /* event */
+	if (lua_isnil(state->L, -1)) {
+		messagef(HAKA_LOG_ERROR, L"lua", L"invalid haka event: %s", event);
+	}
+	else {
+		if (lua_pcall(state->L, 3, 0, h)) {
+			lua_state_print_error(state->L, L"lua");
+		}
 	}
 
-	lua_pop(L, 2);
+	lua_pop(state->L, 4);
 
-	LUA_STACK_CHECK(L, 0);
+	LUA_STACK_CHECK(state->L, 0);
 }
 
 void lua_state_close(struct lua_state *_state)
 {
 	struct lua_state_ext *state = (struct lua_state_ext *)_state;
 
-	lua_on_exit(_state->L);
+	lua_state_trigger_haka_event(_state, "exiting");
 
 	vector_destroy(&state->interrupts);
 	state->has_interrupts = false;

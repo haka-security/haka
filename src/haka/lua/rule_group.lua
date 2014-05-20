@@ -8,7 +8,7 @@ local rule_group = class.class('RuleGroup')
 
 function rule_group.method:__init(args, continue)
 	assert(args.hook, "not hook defined for rule group")
-	assert(class.isa(args.hook, haka.events.Event), "rule hook must be an event")
+	assert(class.isa(args.hook, haka.event.Event), "rule hook must be an event")
 	assert(not args.init or type(args.init) == 'function', "rule group init function expected")
 	assert(not args.continue or type(args.continue) == 'function', "rule group continue function expected")
 	assert(not args.final or type(args.final) == 'function', "rule group final function expected")

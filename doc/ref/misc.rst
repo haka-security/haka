@@ -74,3 +74,22 @@ Time
         :rtype str: string
 
         Convert the time to human readable form.
+
+General Events
+--------------
+
+Haka also uses global events to notify for interesting messages. Those events
+can be used by a regular rule as usual.
+
+.. haka:function:: haka.events.started()
+    :module:
+    :objtype: event
+
+    Event triggered when the Haka configuration is loaded and Haka is ready
+    to process packets.
+
+.. haka:function:: haka.events.exiting()
+    :module:
+    :objtype: event
+
+    Event triggered when Haka is exiting.

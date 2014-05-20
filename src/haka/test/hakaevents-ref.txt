@@ -1,0 +1,2 @@
+info test: started
+info test: exiting
