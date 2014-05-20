@@ -122,6 +122,7 @@ bool time_realm_initialize(struct time_realm *realm, enum time_realm_mode mode)
 		return false;
 	}
 
+	realm->mode = mode;
 	local_storage_init(&realm->states, free_time_realm_state);
 	return true;
 }
@@ -228,8 +229,9 @@ static bool time_realm_insert_timer(struct time_realm_state *state,
 {
 	const list2_iter begin = list2_begin(&state->sorted_timer);
 	const list2_iter end = list2_end(&state->sorted_timer);
-	list2_iter iter = begin;
-	for (; iter != end; iter = list2_next(iter)) {
+	list2_iter iter;
+
+	for (iter = begin; iter != end; iter = list2_next(iter)) {
 		struct timer *cur = list2_get(iter, struct timer, list);
 		if (time_cmp(&timer->trigger_time, &cur->trigger_time) < 0) {
 			break;
@@ -355,7 +357,7 @@ bool time_realm_check(struct time_realm *realm)
 	struct time_realm_state *state = get_time_realm_state(realm, false);
 	if (state && (state->check_timer || state->realm->check_timer)) {
 		bool need_update = false;
-		struct list2 repeat_list;
+		struct list2 repeat_list; /* store repeat timers to reinsert them safely */
 		struct time current = *time_realm_current_time(state->realm);
 		list2_iter iter = list2_begin(&state->sorted_timer);
 		list2_iter end = list2_end(&state->sorted_timer);
@@ -375,6 +377,8 @@ bool time_realm_check(struct time_realm *realm)
 					struct time offset;
 					list2_insert(list2_end(&repeat_list), &timer->list);
 
+					/* Compute the next trigger time as well as the number
+					 * of missed triggers. */
 					time_diff(&offset, &timer->trigger_time, &current);
 
 					count = time_divide(&offset, &timer->delay) + 1;
