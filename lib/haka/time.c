@@ -48,7 +48,9 @@ static void _time_diff(struct time *res, const struct time *t1, const struct tim
 	assert(t1->secs >= t2->secs);
 	res->secs = t1->secs - t2->secs;
 
-	if (t1->nsecs >= t2->nsecs) res->nsecs = t1->nsecs - t2->nsecs;
+	if (t1->nsecs >= t2->nsecs) {
+		res->nsecs = t1->nsecs - t2->nsecs;
+	}
 	else {
 		res->nsecs = t1->nsecs + SEC_TO_NSEC - t2->nsecs;
 		assert(res->secs > 0);
@@ -65,7 +67,7 @@ int time_diff(struct time *res, const struct time *t1, const struct time *t2)
 	else {
 		_time_diff(res, t2, t1);
 	}
-	return -cmp;
+	return cmp;
 }
 
 uint64 time_divide(const struct time *t1, const struct time *t2)
@@ -91,17 +93,17 @@ double time_sec(const struct time *t)
 int time_cmp(const struct time *t1, const struct time *t2)
 {
 	if (t1->secs < t2->secs) {
-		return 1;
+		return -1;
 	}
 	else if (t1->secs > t2->secs) {
-		return -1;
+		return 1;
 	}
 	else {
 		if (t1->nsecs < t2->nsecs) {
-			return 1;
+			return -1;
 		}
 		else if (t1->nsecs > t2->nsecs) {
-			return -1;
+			return 1;
 		}
 		else {
 			return 0;

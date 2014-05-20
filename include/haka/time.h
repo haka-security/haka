@@ -60,7 +60,8 @@ uint64     time_divide(const struct time *t1, const struct time *t2);
 void       time_mult(struct time *res, const struct time *t1, const int mult);
 
 /**
- * Compare two time object.
+ * Compare two time object. It returns -1, 1 or 0 respectivelly if t1 is smaller than
+ * t2, t1 is larger than t2 or t1 is equal to t2.
  */
 int        time_cmp(const struct time *t1, const struct time *t2);
 

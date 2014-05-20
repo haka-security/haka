@@ -71,6 +71,7 @@ bool time_realm_check(struct time_realm *realm);
 
 /**
  * Initialize the current thread for timer support.
+ * \return false if an error occurred.
  */
 bool timer_init_thread();
 
@@ -81,16 +82,19 @@ void timer_destroy(struct timer *timer);
 
 /**
  * Start a timer to be trigger only once.
+ * \return false if an error occurred.
  */
 bool timer_once(struct timer *timer, struct time *delay);
 
 /**
  * Start a timer to be repeated until it is stopped or destroyed.
+ * \return false if an error occurred.
  */
 bool timer_repeat(struct timer *timer, struct time *delay);
 
 /**
  * Stop a timer.
+ * \return false if an error occurred.
  */
 bool timer_stop(struct timer *timer);
 

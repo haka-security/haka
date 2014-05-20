@@ -231,7 +231,7 @@ static bool time_realm_insert_timer(struct time_realm_state *state,
 	list2_iter iter = begin;
 	for (; iter != end; iter = list2_next(iter)) {
 		struct timer *cur = list2_get(iter, struct timer, list);
-		if (time_cmp(&timer->trigger_time, &cur->trigger_time) > 0) {
+		if (time_cmp(&timer->trigger_time, &cur->trigger_time) < 0) {
 			break;
 		}
 	}
@@ -244,55 +244,57 @@ static bool time_realm_insert_timer(struct time_realm_state *state,
 static bool time_realm_update_timer_list(struct time_realm_state *state,
 		bool update_timer)
 {
-	if (update_timer) {
-		if (state->realm->mode == TIME_REALM_REALTIME) {
-			struct itimerspec ts;
-			memset(&ts, 0, sizeof(ts));
+	if (!update_timer) {
+		return true;
+	}
 
-			if (list2_empty(&state->sorted_timer)) {
-				/* stop the timer */
-				if (timer_settime(state->timer, 0, &ts, NULL)) {
-					error(L"%s", errno_error(errno));
-					return false;
-				}
-				return true;
-			}
-			else {
-				struct time diff;
-				struct timer *first = list2_first(&state->sorted_timer, struct timer, list);
-				struct time current = *time_realm_current_time(state->realm);
+	if (state->realm->mode == TIME_REALM_REALTIME) {
+		struct itimerspec ts;
+		memset(&ts, 0, sizeof(ts));
 
-				if (time_diff(&diff, &first->trigger_time, &current) <= 0) {
-					state->check_timer = true;
-
-					/* stop the timer */
-					if (timer_settime(state->timer, 0, &ts, NULL)) {
-						error(L"%s", errno_error(errno));
-						return false;
-					}
-				}
-				else {
-					ts.it_value.tv_sec = diff.secs;
-					ts.it_value.tv_nsec = diff.nsecs;
-
-					if (timer_settime(state->timer, 0, &ts, NULL)) {
-						error(L"%s", errno_error(errno));
-						return false;
-					}
-
-					messagef(HAKA_LOG_DEBUG, L"timer", L"next timer in %f seconds", time_sec(&diff));
-				}
+		if (list2_empty(&state->sorted_timer)) {
+			/* stop the timer */
+			if (timer_settime(state->timer, 0, &ts, NULL) != 0) {
+				error(L"%s", errno_error(errno));
+				return false;
 			}
 		}
 		else {
-			if (!list2_empty(&state->sorted_timer)) {
-				struct time diff;
-				struct timer *first = list2_first(&state->sorted_timer, struct timer, list);
-				struct time current = *time_realm_current_time(state->realm);
+			struct time diff;
+			struct timer *first = list2_first(&state->sorted_timer, struct timer, list);
+			struct time current = *time_realm_current_time(state->realm);
 
-				if (time_diff(&diff, &first->trigger_time, &current) > 0) {
-					messagef(HAKA_LOG_DEBUG, L"timer", L"next timer in %f seconds", time_sec(&diff));
+			if (time_diff(&diff, &first->trigger_time, &current) <= 0) {
+				state->check_timer = true;
+
+				/* stop the timer, the timer will be restarted if needed by the
+				 * next call to timer_realm_check(). */
+				if (timer_settime(state->timer, 0, &ts, NULL) != 0) {
+					error(L"%s", errno_error(errno));
+					return false;
 				}
+			}
+			else {
+				ts.it_value.tv_sec = diff.secs;
+				ts.it_value.tv_nsec = diff.nsecs;
+
+				if (timer_settime(state->timer, 0, &ts, NULL) != 0) {
+					error(L"%s", errno_error(errno));
+					return false;
+				}
+
+				messagef(HAKA_LOG_DEBUG, L"timer", L"next timer in %f seconds", time_sec(&diff));
+			}
+		}
+	}
+	else {
+		if (!list2_empty(&state->sorted_timer)) {
+			struct time diff;
+			struct timer *first = list2_first(&state->sorted_timer, struct timer, list);
+			struct time current = *time_realm_current_time(state->realm);
+
+			if (time_diff(&diff, &first->trigger_time, &current) > 0) {
+				messagef(HAKA_LOG_DEBUG, L"timer", L"next timer in %f seconds", time_sec(&diff));
 			}
 		}
 	}
@@ -365,7 +367,7 @@ bool time_realm_check(struct time_realm *realm)
 
 		while (iter != end) {
 			struct timer *timer = list2_get(iter, struct timer, list);
-			if (time_cmp(&timer->trigger_time, &current) >= 0) {
+			if (time_cmp(&timer->trigger_time, &current) <= 0) {
 				int count;
 
 				iter = list2_erase(&timer->list);
@@ -378,7 +380,7 @@ bool time_realm_check(struct time_realm *realm)
 					count = time_divide(&offset, &timer->delay) + 1;
 					time_mult(&offset, &timer->delay, count);
 					time_add(&timer->trigger_time, &timer->trigger_time, &offset);
-					assert(time_cmp(&timer->trigger_time, &current) <= 0);
+					assert(time_cmp(&timer->trigger_time, &current) >= 0);
 				}
 				else {
 					count = 1;
