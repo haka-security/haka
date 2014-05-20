@@ -102,12 +102,25 @@ static bool check_haka_target(const char *str, const char *name)
 	return false;
 }
 
-static const char iptables_empty_haka_targets[] =
-	"*raw\n"
-	":" HAKA_TARGET_PRE " - [0:0]\n"
-	":" HAKA_TARGET_OUT " - [0:0]\n"
-	"COMMIT\n"
-;
+static const char iptables_empty_haka_pre_target[] = ":" HAKA_TARGET_PRE " - [0:0]\n";
+static const char iptables_empty_haka_out_target[] = ":" HAKA_TARGET_OUT " - [0:0]\n";
+
+static bool append_string(char **res, size_t *ressize, const char *str, size_t len)
+{
+	if (len == (size_t)-1) {
+		len = strlen(str);
+	}
+
+	*res = realloc(*res, *ressize + len + 1);
+	if (!*res) {
+		return false;
+	}
+
+	memcpy(*res + *ressize, str, len + 1);
+	*ressize += len;
+
+	return true;
+}
 
 int save_iptables(const char *table, char **conf, bool all_targets)
 {
@@ -153,7 +166,7 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 		ssize_t line_size;
 		FILE *input = fdopen(pipefd[0], "r");
 		bool filtering = false;
-		bool found = false;
+		bool pre_found = false, out_found = false;
 
 		if (!input) {
 			return errno;
@@ -162,50 +175,86 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 		close(pipefd[1]);
 
 		while ((line_size = getline(&buffer, &buffer_size, input)) >= 0) {
-			if (!all_targets && filtering) {
-				/*
-				 * If all_targets is true, we only want to include the rule in the
-				 * targets HAKA_TARGET_PRE and HAKA_TARGET_OUT. So we need to filter
-				 * each line to only include those but being careful not to add the
-				 * line from another target that jump to one of the haka target
-				 * (ie. -A PREROUTING -j haka-pre)
-				 */
-				char *pattern, *current = buffer;
-				bool skip = true;
+			if (filtering) {
+				if (strcmp(buffer, "COMMIT\n") != 0) {
+					/*
+					 * If all_targets is true, we only want to include the rule in the
+					 * targets HAKA_TARGET_PRE and HAKA_TARGET_OUT. So we need to filter
+					 * each line to only include those but being careful not to add the
+					 * line from another target that jump to one of the haka target
+					 * (ie. -A PREROUTING -j haka-pre)
+					 */
+					char *pattern, *current = buffer;
+					bool skip = true;
 
-				while (true) {
-					if ((pattern = strstr(current, "-j " HAKA_TARGET))) {
-						pattern += 3; /* Skip '-j ' */
+					while (true) {
+						if ((pattern = strstr(current, "-j " HAKA_TARGET))) {
+							pattern += 3; /* Skip '-j ' */
 
-						if (check_haka_target(pattern, HAKA_TARGET_PRE) ||
-							check_haka_target(pattern, HAKA_TARGET_OUT)) {
+							if (check_haka_target(pattern, HAKA_TARGET_PRE) ||
+								check_haka_target(pattern, HAKA_TARGET_OUT)) {
+								skip = true;
+								break;
+							}
+
+							/*
+							 * Advance one more to avoid the next test case to match
+							 * (ie. pattern = strstr(current, HAKA_TARGET))
+							 */
+							current = pattern+1;
+						}
+						else if ((pattern = strstr(current, HAKA_TARGET))) {
+							if (check_haka_target(pattern, HAKA_TARGET_PRE)) {
+								skip = false;
+								pre_found = true;
+								break;
+							}
+							else if (check_haka_target(pattern, HAKA_TARGET_OUT)) {
+								skip = false;
+								out_found = true;
+								break;
+							}
+
+							current = pattern+1;
+						}
+						else {
+							skip = true;
 							break;
 						}
+					}
 
-						current = pattern+1;
-					}
-					else if ((pattern = strstr(current, HAKA_TARGET))) {
-						if (check_haka_target(pattern, HAKA_TARGET_PRE) ||
-							check_haka_target(pattern, HAKA_TARGET_OUT)) {
-							skip = false;
-							found = true;
-							break;
-						}
-
-						current = pattern+1;
-					}
-					else if (strncmp(current, "COMMIT", strlen("COMMIT")) == 0) {
-						skip = false;
-						filtering = false;
-						break;
-					}
-					else {
-						break;
+					if (!all_targets && skip) {
+						continue;
 					}
 				}
+				else {
+					/*
+					 * The target HAKA_TARGET_PRE or HAKA_TARGET_OUT do not
+					 * exist.
+					 * In this case, iptables-restore will be unable to remove them.
+					 * As a workaround, we just install new empty targets to cleanup
+					 * Haka rules. This case only appears when the user sets the option
+					 * enable_iptables=no which is not the default.
+					 */
 
-				if (skip) {
-					continue;
+					if (!pre_found) {
+						if (!append_string(conf, &read_size, iptables_empty_haka_pre_target, -1)) {
+							free(buffer);
+							fclose(input);
+							return ENOMEM;
+						}
+					}
+
+					if (!out_found) {
+						if (!append_string(conf, &read_size, iptables_empty_haka_out_target, -1)) {
+							free(buffer);
+							fclose(input);
+							return ENOMEM;
+						}
+					}
+
+					/* COMMIT and the text after it should not be skipped  */
+					filtering = false;
 				}
 			}
 
@@ -213,9 +262,11 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 				filtering = true;
 			}
 
-			*conf = realloc(*conf, read_size + line_size + 1);
-			memcpy(*conf + read_size, buffer, line_size + 1);
-			read_size += line_size;
+			if (!append_string(conf, &read_size, buffer, line_size)) {
+				free(buffer);
+				fclose(input);
+				return ENOMEM;
+			}
 		}
 
 		free(buffer);
@@ -227,20 +278,7 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 			return error;
 		}
 
-		if (!found) {
-			/*
-			 * The target HAKA_TARGET_PRE or HAKA_TARGET_OUT do not
-			 * exist.
-			 * In this case, iptables-restore will be unable to remove them.
-			 * As a workaround, we just install new empty targets to cleanup
-			 * Haka rules. This case only appears when the user sets the option
-			 * enable_iptables=no which is not the default.
-			 */
-			*conf = realloc(*conf, strlen(iptables_empty_haka_targets) + 1);
-			strcpy(*conf, iptables_empty_haka_targets);
-		}
-
-		/* wait for the child to finish */
+		/* Wait for the child to finish */
 		do {
 			ret = waitpid(child_pid, &status, 0);
 			if (ret == -1) {
