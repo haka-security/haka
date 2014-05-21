@@ -17,7 +17,7 @@ local grammar = haka.grammar.record{
 	haka.grammar.field("data", haka.grammar.array(elem)
 		:options{
 			untilcond = function (elem, ctx)
-				return ctx.iter.meter-1 >= ctx.top.length
+				return ctx.iter.meter-1 >= ctx:result(1).length
 			end,
 			create = function (ctx, entity, init)
 				local vbuf = haka.vbuffer_allocate(2)

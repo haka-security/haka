@@ -368,7 +368,7 @@ http_dissector.grammar.chunk = haka.grammar.record{
 	haka.grammar.bytes():options{
 		count = function (self, ctx) return ctx.chunk_size end,
 		chunked = function (self, sub, last, ctx)
-			ctx.user:push_data(ctx.top, sub, ctx.iter, ctx.chunk_size == 0,
+			ctx.user:push_data(ctx:result(1), sub, ctx.iter, ctx.chunk_size == 0,
 				ctx.user.states.state.name, true)
 		end
 	},
@@ -390,7 +390,7 @@ http_dissector.grammar.body = haka.grammar.branch(
 		content = haka.grammar.bytes():options{
 			count = function (self, ctx) return ctx.content_length or 0 end,
 			chunked = function (self, sub, last, ctx)
-				ctx.user:push_data(ctx.top, sub, ctx.iter, last,
+				ctx.user:push_data(ctx:result(1), sub, ctx.iter, last,
 					ctx.user.states.state.name)
 			end
 		},
@@ -403,7 +403,7 @@ http_dissector.grammar.body = haka.grammar.branch(
 http_dissector.grammar.message = haka.grammar.record{
 	http_dissector.grammar.headers,
 	haka.grammar.execute(function (self, ctx)
-		ctx.user:trigger_event(ctx.top, ctx.iter, ctx.retain_mark)
+		ctx.user:trigger_event(ctx:result(1), ctx.iter, ctx.retain_mark)
 	end),
 	haka.grammar.release,
 	haka.grammar.field('body', http_dissector.grammar.body)

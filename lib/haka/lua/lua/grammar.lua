@@ -94,18 +94,6 @@ end
 
 grammar_dg.ParseContext = class.class('DGParseContext')
 
-grammar_dg.ParseContext.property.top = {
-	get = function (self) return self._results[1] end
-}
-
-grammar_dg.ParseContext.property.result = {
-	get = function (self) return self._results[#self._results] end
-}
-
-grammar_dg.ParseContext.property.prev_result = {
-	get = function (self) return self._results[#self._results-1] end
-}
-
 grammar_dg.ParseContext.property.current_init = {
 	get = function (self)
 		if self._initresults then
@@ -123,6 +111,27 @@ grammar_dg.ParseContext.property.retain_mark = {
 		return self._retain_mark[#self._retain_mark]
 	end
 }
+
+function grammar_dg.ParseContext.method:result(idx)
+	idx = idx or -1
+
+	if idx < 0 then
+		idx = #self._results + 1 + idx
+		if idx < 0 then
+			error("invalid result index")
+		end
+	else
+		if idx > #self._results then
+			error("invalid result index")
+		end
+	end
+	
+	if idx <= 0 then
+		error("invalid result index")
+	end
+
+	return self._results[idx]
+end
 
 local function revalidate(self)
 	local validate = self._validate
@@ -146,7 +155,7 @@ function grammar_dg.ParseContext.method:__init(iter, topresult, init)
 		self._initresults_count = 1
 	end
 
-	self.result.validate = revalidate
+	self:result(1).validate = revalidate
 
 	self.iter.meter = 0
 end
@@ -462,7 +471,7 @@ end
 
 function grammar_dg.RecordStart.method:_apply(ctx)
 	if self.name then
-		local res = ctx.result
+		local res = ctx:result()
 		local new = ctx:push(nil, self.name)
 
 		if self.converter then
@@ -496,8 +505,8 @@ function grammar_dg.RecordFinish.method:extra(name, f)
 end
 
 function grammar_dg.RecordFinish.method:_apply(ctx)
-	local top = ctx.top
-	local res = ctx.result
+	local top = ctx:result(1)
+	local res = ctx:result()
 	if self._pop then
 		ctx:pop()
 	end
@@ -520,7 +529,7 @@ end
 
 function grammar_dg.UnionStart.method:_apply(ctx)
 	if self.name then
-		local res = ctx.result
+		local res = ctx:result()
 		local new = ctx:push(nil, self.name)
 	end
 
@@ -558,7 +567,7 @@ function grammar_dg.ArrayStart.method:__init(name, rule, entity, create, resultc
 end
 
 function grammar_dg.ArrayStart.method:_apply(ctx)
-	local res = ctx.result
+	local res = ctx:result()
 	if self.name then
 		local result = self.resultclass:new()
 		result:_init(ctx.iter:copy(), self.entity, self.create)
@@ -593,7 +602,7 @@ function grammar_dg.ArrayPush.method:__init()
 end
 
 function grammar_dg.ArrayPush.method:_apply(ctx)
-	local res = ctx.result
+	local res = ctx:result()
 	if class.isa(res, grammar.ArrayResult) then
 		rawset(res, '_entitybegin', ctx.iter:copy())
 	end
@@ -608,9 +617,9 @@ function grammar_dg.ArrayPop.method:__init()
 end
 
 function grammar_dg.ArrayPop.method:_apply(ctx)
-	local entityresult = ctx.result
+	local entityresult = ctx:result()
 	ctx:pop()
-	local arrayresult = ctx.result
+	local arrayresult = ctx:result()
 	if class.isa(arrayresult, grammar.ArrayResult) then
 		rawset(entityresult, '_sub', haka.vbuffer_sub(arrayresult._entitybegin, ctx.iter))
 		rawset(arrayresult, '_entitybegin', nil)
@@ -641,7 +650,7 @@ function grammar_dg.Execute.method:__init(rule, id, callback)
 end
 
 function grammar_dg.Execute.method:_apply(ctx)
-	self.callback(ctx.result, ctx)
+	self.callback(ctx:result(), ctx)
 end
 
 grammar_dg.Retain = class.class('DGRetain', grammar_dg.Control)
@@ -694,7 +703,7 @@ function grammar_dg.Branch.method:_dump_graph_edges(file, ref)
 end
 
 function grammar_dg.Branch.method:next(ctx)
-	local next = self.cases[self.selector(ctx.result, ctx)]
+	local next = self.cases[self.selector(ctx:result(), ctx)]
 	if next then return next
 	else return self._next end
 end
@@ -710,11 +719,11 @@ end
 grammar_dg.Primitive = class.class('DGPrimitive', grammar_dg.Entity)
 
 function grammar_dg.Primitive.method:_apply(ctx)
-	return self:_parse(ctx.result, ctx.iter, ctx)
+	return self:_parse(ctx:result(), ctx.iter, ctx)
 end
 
 function grammar_dg.Primitive.method:_create(ctx)
-	return self:_init(ctx.result, ctx.iter, ctx, ctx.current_init)
+	return self:_init(ctx:result(), ctx.iter, ctx, ctx.current_init)
 end
 
 grammar_dg.Number = class.class('DGNumber', grammar_dg.Primitive)
@@ -1213,7 +1222,7 @@ function grammar.Array._options.count(self, size)
 	end
 
 	self.more = function (array, ctx)
-		return #array < sizefunc(ctx.prev_result, ctx)
+		return #array < sizefunc(ctx:result(-2), ctx)
 	end
 end
 

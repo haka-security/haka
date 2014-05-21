@@ -42,7 +42,7 @@ local ipv4_addr_convert = {
 }
 
 local function pointer_resolution(self, ctx)
-	ctx = ctx.top
+	ctx = ctx:result(1)
 	for offset, label in sorted_pairs(ctx._labels) do
 		if label.compression_scheme == POINTER_COMPRESSION then
 			if not ctx._labels[label.pointer] then
@@ -103,10 +103,11 @@ dns_dissector.grammar = haka.grammar:new("udp")
 
 dns_dissector.grammar.label = haka.grammar.record{
 	haka.grammar.execute(function (self, ctx)
-		if #ctx.prev_result-1 > 0 then
-			ctx.prev_result[#ctx.prev_result-1].next = self
+		local prev_result = ctx:result(-2)
+		if #prev_result-1 > 0 then
+			prev_result[#prev_result-1].next = self
 		end
-		ctx.top._labels[ctx.iter.meter] = self
+		ctx:result(1)._labels[ctx.iter.meter] = self
 	end),
 	haka.grammar.field('compression_scheme', haka.grammar.number(2)),
 	haka.grammar.branch({
@@ -236,19 +237,19 @@ dns_dissector.grammar.resourcerecord = haka.grammar.record{
 }
 
 dns_dissector.grammar.answer = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{
-	count = function (self, ctx) return ctx.top.ancount end
+	count = function (self, ctx) return ctx:result(1).ancount end
 }
 
 dns_dissector.grammar.authority = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{
-	count = function (self, ctx) return ctx.top.nscount end
+	count = function (self, ctx) return ctx:result(1).nscount end
 }
 
 dns_dissector.grammar.additional = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{
-	count = function (self, ctx) return ctx.top.arcount end
+	count = function (self, ctx) return ctx:result(1).arcount end
 }
 
 dns_dissector.grammar.message = haka.grammar.record{
-	haka.grammar.execute(function (self, ctx) ctx.top._labels = {} end),
+	haka.grammar.execute(function (self, ctx) ctx:result(1)._labels = {} end),
 	dns_dissector.grammar.header,
 	haka.grammar.field('question',   dns_dissector.grammar.question),
 	haka.grammar.field('answer',    dns_dissector.grammar.answer),

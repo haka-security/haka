@@ -68,7 +68,7 @@ local header = haka.grammar.record{
 	haka.grammar.field('opt',         haka.grammar.array(option)
 		:options{
 			untilcond = function (elem, ctx)
-				return ctx.iter.meter >= ctx.top.hdr_len or
+				return ctx.iter.meter >= ctx:result(1).hdr_len or
 					(elem and elem.type == 0)
 			end
 		}),
