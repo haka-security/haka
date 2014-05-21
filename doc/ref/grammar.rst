@@ -258,26 +258,6 @@ Final elements
         :param context: Full parsing context.
         :paramtype context: :haka:class:`ParseContext`
 
-.. haka:function:: retain(readonly = false) -> entity
-
-    :param readonly: True if the retain should only be read-only.
-    :paramtype readonly: boolean
-    :return entity: Created entity.
-    :rtype entity: :haka:class:`GrammarEntity`
-
-    When working on a stream, it is needed to specify which part of the stream to keep before being able
-    to send it on the network. This element allows to control it.
-
-    .. seealso:: :haka:func:`release`
-
-.. haka:data:: release
-
-    :type: :haka:class:`GrammarEntity`
-
-    When working on a stream, this element will tell Haka to send some retained data.
-
-    .. seealso:: :haka:func:`retain`
-
 
 Compounds
 ^^^^^^^^^
@@ -292,11 +272,36 @@ Compounds
     Create a record for a list of sub entities. Each entity is expected to appear
     one by one in order.
 
+    When working on a stream, the data behind the elements is kept which allow
+    transparent access and modification.
+
     **Usage:**
 
     ::
 
         haka.grammar.record{
+            haka.grammar.field('type', haka.grammar.number(8)),
+            haka.grammar.bytes()
+        }
+
+.. haka:function:: sequence(entities) -> entity
+
+    :param entities: List of entities for the sequence
+    :paramtype entities: table of grammar entities
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Create a sequence for a list of sub entities. Each entity is expected to appear
+    one by one in order.
+
+    This element is similar to the :haka:func:`record` but the data in a stream will
+    immediatly be sent on the network.
+
+    **Usage:**
+
+    ::
+
+        haka.grammar.sequence{
             haka.grammar.number(8),
             haka.grammar.bytes()
         }
