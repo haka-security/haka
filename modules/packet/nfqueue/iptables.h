@@ -5,7 +5,13 @@
 #ifndef _IPTABLES_H
 #define _IPTABLES_H
 
-int apply_iptables(const char *conf);
-int save_iptables(const char *table, char **conf);
+#include <haka/types.h>
+
+#define HAKA_TARGET         "HAKA"
+#define HAKA_TARGET_PRE     HAKA_TARGET "-PRE"
+#define HAKA_TARGET_OUT     HAKA_TARGET "-OUT"
+
+int apply_iptables(const char *table, const char *conf, bool noflush);
+int save_iptables(const char *table, char **conf, bool all_targets);
 
 #endif /* _IPTABLES_H */

@@ -70,47 +70,56 @@ size_t nfqueue_len = 1024;
 /* Iptables rules to add (iptables-restore format) */
 static const char iptables_config_template_begin[] =
 "*raw\n"
+":" HAKA_TARGET_PRE " - [0:0]\n"
+":" HAKA_TARGET_OUT " - [0:0]\n"
+;
+
+static const char iptables_config_install_begin[] =
 ":PREROUTING ACCEPT [0:0]\n"
 ":OUTPUT ACCEPT [0:0]\n"
 ;
 
 static const char iptables_config_template_mt_iface[] =
-"-A PREROUTING -i %s -m mark --mark 0xffff -j ACCEPT\n"
-"-A PREROUTING -i %s -j NFQUEUE --queue-balance 0:%i\n"
-"-A OUTPUT -o %s -m mark --mark 0xffff -j ACCEPT\n"
-"-A OUTPUT -o %s -j MARK --set-mark 0xffff\n"
-"-A OUTPUT -o %s -j NFQUEUE --queue-balance 0:%i\n"
+"-A " HAKA_TARGET_PRE " -i %s -m mark --mark 0xffff -j ACCEPT\n"
+"-A " HAKA_TARGET_PRE " -i %s -j NFQUEUE --queue-balance 0:%i\n"
+"-A " HAKA_TARGET_OUT " -o %s -m mark --mark 0xffff -j ACCEPT\n"
+"-A " HAKA_TARGET_OUT " -o %s -j MARK --set-mark 0xffff\n"
+"-A " HAKA_TARGET_OUT " -o %s -j NFQUEUE --queue-balance 0:%i\n"
 ;
 
 static const char iptables_config_template_iface[] =
-"-A PREROUTING -i %s -m mark --mark 0xffff -j ACCEPT\n"
-"-A PREROUTING -i %s -j NFQUEUE\n"
-"-A OUTPUT -o %s -m mark --mark 0xffff -j ACCEPT\n"
-"-A OUTPUT -o %s -j MARK --set-mark 0xffff\n"
-"-A OUTPUT -o %s -j NFQUEUE\n"
+"-A " HAKA_TARGET_PRE " -i %s -m mark --mark 0xffff -j ACCEPT\n"
+"-A " HAKA_TARGET_PRE " -i %s -j NFQUEUE\n"
+"-A " HAKA_TARGET_OUT " -o %s -m mark --mark 0xffff -j ACCEPT\n"
+"-A " HAKA_TARGET_OUT " -o %s -j MARK --set-mark 0xffff\n"
+"-A " HAKA_TARGET_OUT " -o %s -j NFQUEUE\n"
 ;
 
 static const char iptables_config_template_mt_all[] =
-"-A PREROUTING -m mark --mark 0xffff -j ACCEPT\n"
-"-A PREROUTING -j NFQUEUE --queue-balance 0:%i\n"
-"-A OUTPUT -m mark --mark 0xffff -j ACCEPT\n"
-"-A OUTPUT -j MARK --set-mark 0xffff\n"
-"-A OUTPUT -j NFQUEUE --queue-balance 0:%i\n"
+"-A " HAKA_TARGET_PRE " -m mark --mark 0xffff -j ACCEPT\n"
+"-A " HAKA_TARGET_PRE " -j NFQUEUE --queue-balance 0:%i\n"
+"-A " HAKA_TARGET_OUT " -m mark --mark 0xffff -j ACCEPT\n"
+"-A " HAKA_TARGET_OUT " -j MARK --set-mark 0xffff\n"
+"-A " HAKA_TARGET_OUT " -j NFQUEUE --queue-balance 0:%i\n"
 ;
 
 static const char iptables_config_template_all[] =
-"-A PREROUTING -m mark --mark 0xffff -j ACCEPT\n"
-"-A PREROUTING -j NFQUEUE\n"
-"-A OUTPUT -m mark --mark 0xffff -j ACCEPT\n"
-"-A OUTPUT -j MARK --set-mark 0xffff\n"
-"-A OUTPUT -j NFQUEUE\n"
+"-A " HAKA_TARGET_PRE " -m mark --mark 0xffff -j ACCEPT\n"
+"-A " HAKA_TARGET_PRE " -j NFQUEUE\n"
+"-A " HAKA_TARGET_OUT " -m mark --mark 0xffff -j ACCEPT\n"
+"-A " HAKA_TARGET_OUT " -j MARK --set-mark 0xffff\n"
+"-A " HAKA_TARGET_OUT " -j NFQUEUE\n"
 ;
 
+static const char iptables_config_install_end[] =
+"-A PREROUTING -j " HAKA_TARGET_PRE "\n"
+"-A OUTPUT -j " HAKA_TARGET_OUT "\n"
+;
 static const char iptables_config_template_end[] =
 "COMMIT\n"
 ;
 
-static int iptables_config_build(char *output, size_t outsize, char **ifaces, int threads)
+static int iptables_config_build(char *output, size_t outsize, char **ifaces, int threads, bool install)
 {
 	int size, total_size = 0;
 
@@ -118,6 +127,13 @@ static int iptables_config_build(char *output, size_t outsize, char **ifaces, in
 	if (!size) return -1;
 	if (output) { output += size; outsize-=size; }
 	total_size += size;
+
+	if (install) {
+		size = snprintf(output, outsize, iptables_config_install_begin);
+		if (!size) return -1;
+		if (output) { output += size; outsize-=size; }
+		total_size += size;
+	}
 
 	if (ifaces) {
 		char **iface = ifaces;
@@ -151,6 +167,13 @@ static int iptables_config_build(char *output, size_t outsize, char **ifaces, in
 		total_size += size;
 	}
 
+	if (install) {
+		size = snprintf(output, outsize, iptables_config_install_end);
+		if (!size) return -1;
+		if (output) { output += size; outsize-=size; }
+		total_size += size;
+	}
+
 	size = snprintf(output, outsize, iptables_config_template_end);
 	if (!size) return -1;
 	if (output) { output += size; outsize-=size; }
@@ -159,11 +182,11 @@ static int iptables_config_build(char *output, size_t outsize, char **ifaces, in
 	return total_size;
 }
 
-static char *iptables_config(char **ifaces, int threads)
+static char *iptables_config(char **ifaces, int threads, bool install)
 {
 	char *new_iptables_config;
 
-	const int size = iptables_config_build(NULL, 0, ifaces, threads);
+	const int size = iptables_config_build(NULL, 0, ifaces, threads, install);
 	if (size <= 0) {
 		return NULL;
 	}
@@ -173,12 +196,13 @@ static char *iptables_config(char **ifaces, int threads)
 		return NULL;
 	}
 
-	iptables_config_build(new_iptables_config, size+1, ifaces, threads);
+	iptables_config_build(new_iptables_config, size+1, ifaces, threads, install);
 	return new_iptables_config;
 }
 
 /* Iptables raw table current configuration */
-static char *iptables_saved;
+static char *iptables_saved = NULL;
+static bool iptables_save_need_flush = true;
 
 
 static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
@@ -244,8 +268,8 @@ static void cleanup_state(struct packet_module_state *state)
 	state->queue = NULL;
 	state->handle = NULL;
 
-	close(state->send_fd);
-	close(state->send_mark_fd);
+	if (state->send_fd >= 0) close(state->send_fd);
+	if (state->send_mark_fd >= 0) close(state->send_mark_fd);
 
 	free(state);
 }
@@ -262,6 +286,7 @@ static int open_send_socket(bool mark)
 	}
 
 	if (setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
+		close(fd);
 		messagef(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup send socket: %s", errno_error(errno));
 		return -1;
 	}
@@ -269,6 +294,7 @@ static int open_send_socket(bool mark)
 	if (mark) {
 		one = 0xffff;
 		if (setsockopt(fd, SOL_SOCKET, SO_MARK, &one, sizeof(one)) < 0) {
+			close(fd);
 			messagef(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup send socket: %s", errno_error(errno));
 			return -1;
 		}
@@ -302,6 +328,11 @@ static struct packet_module_state *init_state(int thread_id)
 	if (!state) {
 		return NULL;
 	}
+
+	state->handle = NULL;
+	state->queue = NULL;
+	state->send_fd = -1;
+	state->send_mark_fd = -1;
 
 	/* Setup nfqueue connection */
 	state->handle = nfq_open();
@@ -395,7 +426,7 @@ static void close_pcap(struct pcap_dump *pcap)
 static void restore_iptables()
 {
 	if (iptables_saved) {
-		if (apply_iptables(iptables_saved) != 0) {
+		if (apply_iptables("raw", iptables_saved, !iptables_save_need_flush) != 0) {
 			message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot restore iptables rules");
 		}
 	}
@@ -426,9 +457,13 @@ static int init(struct parameters *args)
 	const char *file_out = NULL;
 	int count;
 	bool dump = false;
+	bool install = true;
+
+	install = parameters_get_boolean(args, "enable_iptables", true);
 
 	/* Setup iptables rules */
-	if (save_iptables("raw", &iptables_saved)) {
+	iptables_save_need_flush = install;
+	if (save_iptables("raw", &iptables_saved, install)) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot save iptables rules");
 		cleanup();
 		return 1;
@@ -481,7 +516,11 @@ static int init(struct parameters *args)
 		ifaces[index] = NULL;
 	}
 
-	new_iptables_config = iptables_config(ifaces, thread_count);
+	if (!install) {
+		message(HAKA_LOG_WARNING, MODULE_NAME, L"iptables setup rely on user rules");
+	}
+
+	new_iptables_config = iptables_config(ifaces, thread_count, install);
 	if (!new_iptables_config) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot generate iptables rules");
 		free(ifaces);
@@ -494,7 +533,7 @@ static int init(struct parameters *args)
 	free(interfaces_buf);
 	interfaces_buf = NULL;
 
-	if (apply_iptables(new_iptables_config)) {
+	if (apply_iptables("raw", new_iptables_config, !install)) {
 		message(HAKA_LOG_ERROR, MODULE_NAME, L"cannot setup iptables rules");
 		free(new_iptables_config);
 		cleanup();
