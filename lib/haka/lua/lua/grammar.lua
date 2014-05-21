@@ -1449,7 +1449,12 @@ function grammar_class.method:__init(name)
 end
 
 function grammar_class.method:__index(name)
-	return self._rules[name]
+	local ret = self._rules[name]
+	if not ret then
+		error(string.format("unknown grammar rule '%s'", name))
+	end
+	
+	return ret
 end
 
 function grammar_class.method:__newindex(key, value)
