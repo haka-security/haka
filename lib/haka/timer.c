@@ -379,12 +379,19 @@ bool time_realm_check(struct time_realm *realm)
 
 					/* Compute the next trigger time as well as the number
 					 * of missed triggers. */
-					time_diff(&offset, &timer->trigger_time, &current);
+					if (time_diff(&offset, &timer->trigger_time, &current) <= 0) {
+						count = time_divide(&offset, &timer->delay) + 1;
+						time_mult(&offset, &timer->delay, count);
+						time_add(&timer->trigger_time, &timer->trigger_time, &offset);
 
-					count = time_divide(&offset, &timer->delay) + 1;
-					time_mult(&offset, &timer->delay, count);
-					time_add(&timer->trigger_time, &timer->trigger_time, &offset);
-					assert(time_cmp(&timer->trigger_time, &current) >= 0);
+						assert(time_cmp(&timer->trigger_time, &current) >= 0);
+					}
+					else {
+						/* The time seams to have gone back in time, this is case
+						 * should not be reached. */
+						time_add(&timer->trigger_time, &current, &timer->delay);
+						count = 1;
+					}
 				}
 				else {
 					count = 1;
