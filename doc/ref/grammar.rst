@@ -551,7 +551,7 @@ Parsing error
 
     .. haka:attribute:: ParseError.iterator
 
-        :type: :haka:class:`vbuffer_iterator`
+        :type: :haka:class:`vbuffer_iterator` |nbsp|
 
         Iterator at the position where the parsing error occurred.
 
