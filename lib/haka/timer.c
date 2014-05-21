@@ -149,7 +149,7 @@ void time_realm_update(struct time_realm *realm, const struct time *value)
 		messagef(HAKA_LOG_DEBUG, L"timer", L"static time going backward (ignored)");
 	}
 	else {
-		messagef(HAKA_LOG_DEBUG, L"timer", L"static time offset %s%f seconds", sign > 0? "+" : "-", time_sec(&difftime));
+		messagef(HAKA_LOG_DEBUG, L"timer", L"static time offset %s%f seconds", sign >= 0? "+" : "-", time_sec(&difftime));
 
 		realm->time = *value;
 		realm->check_timer = true;
