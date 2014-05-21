@@ -1074,6 +1074,7 @@ function grammar.Entity._options.memoize(self)
 	self.memoize = true
 end
 
+
 grammar.Record = class.class('Record', grammar.Entity)
 
 function grammar.Record.method:__init(entities)
@@ -1093,10 +1094,12 @@ end
 function grammar.Record.method:compile(rule, id)
 	local iter, ret
 
-	ret = grammar_dg.RecordStart:new(self.named, self.rule)
-	if self.converter then ret:convert(self.converter, self.memoize) end
-	if self.validate then ret:validate(self.validate) end
-	iter = ret
+	ret = grammar_dg.Retain:new(haka.packet_mode() == 'passthrough')
+
+	iter = grammar_dg.RecordStart:new(self.named)
+	if self.converter then iter:convert(self.converter, self.memoize) end
+	if self.validate then iter:validate(self.validate) end
+	ret:add(iter)
 
 	for i, entity in ipairs(self.entities) do
 		local next = entity:compile(self.rule or rule, i)
@@ -1118,6 +1121,45 @@ function grammar.Record.method:compile(rule, id)
 	for name, f in pairs(self.extra_entities) do
 		pop:extra(name, f)
 	end
+	iter:add(pop)
+	iter:add(grammar_dg.Release:new())
+
+	return ret
+end
+
+
+grammar.Sequence = class.class('Sequence', grammar.Entity)
+
+function grammar.Sequence.method:__init(entities)
+	self.entities = entities
+end
+
+function grammar.Sequence.method:compile(rule, id)
+	local iter, ret
+
+	ret = grammar_dg.RecordStart:new(self.named)
+	if self.converter then ret:convert(self.converter, self.memoize) end
+	if self.validate then ret:validate(self.validate) end
+	iter = ret
+
+	for i, entity in ipairs(self.entities) do
+		if entity.named then
+			haka.log.warning("grammar", "named element '%s' are not supported in sequence", entity.named)
+		end
+
+		local next = entity:compile(self.rule or rule, i)
+		if next then
+			if iter then
+				iter:add(next)
+				iter = next
+			else
+				ret = next
+				iter = ret
+			end
+		end
+	end
+
+	local pop = grammar_dg.RecordFinish:new(self.named ~= nil)
 	iter:add(pop)
 
 	return ret
@@ -1362,6 +1404,10 @@ function grammar.record(entities)
 	return grammar.Record:new(entities)
 end
 
+function grammar.sequence(entities)
+	return grammar.Sequence:new(entities)
+end
+
 function grammar.union(entities)
 	return grammar.Union:new(entities)
 end
@@ -1425,16 +1471,6 @@ end
 function grammar.execute(func)
 	return grammar.Execute:new(func)
 end
-
-function grammar.retain(readonly)
-	if readonly == nil then
-		readonly = haka.packet_mode() == 'passthrough'
-	end
-
-	return grammar.Retain:new(readonly)
-end
-
-grammar.release = grammar.Release:new()
 
 function grammar.empty()
 	return grammar.Empty:new()

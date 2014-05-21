@@ -350,21 +350,21 @@ local erase_since_retain = haka.grammar.execute(function (self, ctx)
 end)
 
 http_dissector.grammar.chunk_end_crlf = haka.grammar.record{
-	haka.grammar.retain(),
 	http_dissector.grammar.CRLF,
-	erase_since_retain,
-	haka.grammar.release
+	erase_since_retain
 }
 
-http_dissector.grammar.chunk = haka.grammar.record{
-	haka.grammar.retain(),
+http_dissector.grammar.chunk_line = haka.grammar.record{
 	haka.grammar.field('chunk_size', haka.grammar.token('[0-9a-fA-F]+')
 		:convert(haka.grammar.converter.tonumber("%x", 16))),
 	haka.grammar.execute(function (self, ctx) ctx.chunk_size = self.chunk_size end),
 	http_dissector.grammar.optional_WS,
 	http_dissector.grammar.CRLF,
-	erase_since_retain,
-	haka.grammar.release,
+	erase_since_retain
+}
+
+http_dissector.grammar.chunk = haka.grammar.sequence{
+	http_dissector.grammar.chunk_line,
 	haka.grammar.bytes():options{
 		count = function (self, ctx) return ctx.chunk_size end,
 		chunked = function (self, sub, last, ctx)
@@ -376,13 +376,11 @@ http_dissector.grammar.chunk = haka.grammar.record{
 		function (self, context) return self.chunk_size > 0 end)
 }
 
-http_dissector.grammar.chunks = haka.grammar.record{
+http_dissector.grammar.chunks = haka.grammar.sequence{
 	haka.grammar.array(http_dissector.grammar.chunk):options{
 		untilcond = function (elem) return elem and elem.chunk_size == 0 end
 	},
-	haka.grammar.retain(),
-	http_dissector.grammar.headers,
-	haka.grammar.release
+	http_dissector.grammar.headers
 }
 
 http_dissector.grammar.body = haka.grammar.branch(
@@ -400,31 +398,36 @@ http_dissector.grammar.body = haka.grammar.branch(
 	function (self, ctx) return ctx.mode end
 )
 
-http_dissector.grammar.message = haka.grammar.record{
+-- http request
+http_dissector.grammar.request = haka.grammar.record{
+	http_dissector.grammar.request_line,
 	http_dissector.grammar.headers,
 	haka.grammar.execute(function (self, ctx)
 		ctx.user:trigger_event(ctx:result(1), ctx.iter, ctx.retain_mark)
 	end),
-	haka.grammar.release,
-	haka.grammar.field('body', http_dissector.grammar.body)
 }
 
--- http request
-http_dissector.grammar.request = haka.grammar.record{
-	haka.grammar.retain(),
-	http_dissector.grammar.request_line,
-	http_dissector.grammar.message
+http_dissector.grammar.request_message = haka.grammar.sequence{
+	http_dissector.grammar.request,
+	http_dissector.grammar.body
 }
 
 -- http response
 http_dissector.grammar.response = haka.grammar.record{
-	haka.grammar.retain(),
 	http_dissector.grammar.response_line,
-	http_dissector.grammar.message
+	http_dissector.grammar.headers,
+	haka.grammar.execute(function (self, ctx)
+		ctx.user:trigger_event(ctx:result(1), ctx.iter, ctx.retain_mark)
+	end)
 }
 
-local request = http_dissector.grammar.request:compile()
-local response = http_dissector.grammar.response:compile()
+http_dissector.grammar.response_message = haka.grammar.sequence{
+	http_dissector.grammar.response,
+	http_dissector.grammar.body
+}
+
+local request = http_dissector.grammar.request_message:compile()
+local response = http_dissector.grammar.response_message:compile()
 
 
 --
