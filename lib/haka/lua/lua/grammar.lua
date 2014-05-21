@@ -180,6 +180,7 @@ function grammar_dg.ParseContext.method:parse(entity)
 	local iter = entity
 	local err
 	while iter do
+		iter:_trace(self.iter)
 		err = iter:_apply(self)
 		if err then
 			break
@@ -211,7 +212,7 @@ function grammar_dg.ParseContext.method:pop()
 	end
 end
 
-function grammar_dg.ParseContext.method:push(result)
+function grammar_dg.ParseContext.method:push(result, name)
 	local new = result or grammar.Result:new()
 	rawset(new, '_validate', self._validate)
 	self._results[#self._results+1] = new
@@ -446,6 +447,27 @@ function grammar_dg.Entity.method:dump_graph(file)
 	file:write("}\n")
 end
 
+function grammar_dg.Entity.method:trace(position, msg, ...)
+	if self.id then
+		haka.log.debug("grammar", "in rule %s field %s: %s\n\tat byte %d: %s...",
+			self.rule or "<unknown>", self.name or self.id or "<unknown>",
+			string.format(msg, ...), position.meter,
+			safe_string(position:copy():sub(20):asstring()))
+	end
+end
+
+function grammar_dg.Entity.method:_trace(position)
+	local name = class.classof(self).trace_name
+	if name then
+		local descr = self:_dump_graph_descr()
+		if descr then
+			self:trace(position, 'parsing %s %s', name, descr)
+		else
+			self:trace(position, 'parsing %s', name)
+		end
+	end
+end
+
 grammar_dg.Control = class.class('DGControl', grammar_dg.Entity)
 
 function grammar_dg.Control.method:_dump_graph_options()
@@ -464,8 +486,10 @@ end
 
 grammar_dg.RecordStart = class.class('DGRecordStart', grammar_dg.Control)
 
-function grammar_dg.RecordStart.method:__init(name)
-	class.super(grammar_dg.RecordStart).__init(self)
+grammar_dg.RecordStart.trace_name = 'record'
+
+function grammar_dg.RecordStart.method:__init(rule, id, name)
+	class.super(grammar_dg.RecordStart).__init(self, rule, id)
 	self.name = name
 end
 
@@ -522,8 +546,10 @@ end
 
 grammar_dg.UnionStart = class.class('DGUnionStart', grammar_dg.Control)
 
-function grammar_dg.UnionStart.method:__init(name, rule)
-	class.super(grammar_dg.UnionStart).__init(self, rule)
+grammar_dg.UnionStart.trace_name = 'union'
+
+function grammar_dg.UnionStart.method:__init(name, rule, id)
+	class.super(grammar_dg.UnionStart).__init(self, rule, id)
 	self.name = name
 end
 
@@ -558,8 +584,10 @@ end
 
 grammar_dg.ArrayStart = class.class('DGArrayStart', grammar_dg.Control)
 
-function grammar_dg.ArrayStart.method:__init(name, rule, entity, create, resultclass)
-	class.super(grammar_dg.ArrayStart).__init(self, rule)
+grammar_dg.ArrayStart.trace_name = 'array'
+
+function grammar_dg.ArrayStart.method:__init(rule, id, name, entity, create, resultclass)
+	class.super(grammar_dg.ArrayStart).__init(self, rule, id)
 	self.name = name
 	self.entity = entity
 	self.create = create
@@ -597,11 +625,13 @@ end
 
 grammar_dg.ArrayPush = class.class('DGArrayPush', grammar_dg.Control)
 
-function grammar_dg.ArrayPush.method:__init()
-	class.super(grammar_dg.ArrayPush).__init(self)
+function grammar_dg.ArrayPush.method:__init(rule, id)
+	class.super(grammar_dg.ArrayPush).__init(self, rule, id)
 end
 
 function grammar_dg.ArrayPush.method:_apply(ctx)
+	self:trace(ctx.iter, "append array element")
+
 	local res = ctx:result()
 	if class.isa(res, grammar.ArrayResult) then
 		rawset(res, '_entitybegin', ctx.iter:copy())
@@ -680,8 +710,8 @@ end
 
 grammar_dg.Branch = class.class('DGBranch', grammar_dg.Control)
 
-function grammar_dg.Branch.method:__init(selector)
-	class.super(grammar_dg.Branch).__init(self)
+function grammar_dg.Branch.method:__init(rule, id, selector)
+	class.super(grammar_dg.Branch).__init(self, rule, id)
 	self.selector = selector
 	self.cases = {}
 end
@@ -703,7 +733,11 @@ function grammar_dg.Branch.method:_dump_graph_edges(file, ref)
 end
 
 function grammar_dg.Branch.method:next(ctx)
-	local next = self.cases[self.selector(ctx:result(), ctx)]
+	local case = self.selector(ctx:result(), ctx)
+	self:trace(ctx.iter, "select branch '%s'", case)
+
+	local next = self.cases[case]
+
 	if next then return next
 	else return self._next end
 end
@@ -727,6 +761,8 @@ function grammar_dg.Primitive.method:_create(ctx)
 end
 
 grammar_dg.Number = class.class('DGNumber', grammar_dg.Primitive)
+
+grammar_dg.Number.trace_name = 'number'
 
 function grammar_dg.Number.method:__init(rule, id, size, endian, name)
 	class.super(grammar_dg.Number).__init(self, rule, id)
@@ -887,6 +923,8 @@ end
 
 grammar_dg.Token = class.class('DGToken', grammar_dg.Primitive)
 
+grammar_dg.Token.trace_name = 'token'
+
 function grammar_dg.Token.method:__init(rule, id, pattern, re, full_re, name)
 	class.super(grammar_dg.Token).__init(self, rule, id)
 	self.pattern = pattern
@@ -896,7 +934,7 @@ function grammar_dg.Token.method:__init(rule, id, pattern, re, full_re, name)
 end
 
 function grammar_dg.Token.method:_dump_graph_descr()
-	return string.format("/%s/", self.pattern)
+	return string.format("/%s/", safe_string(self.pattern))
 end
 
 function grammar_dg.Token.method:_parse(res, iter, ctx)
@@ -1096,7 +1134,7 @@ function grammar.Record.method:compile(rule, id)
 
 	ret = grammar_dg.Retain:new(haka.packet_mode() == 'passthrough')
 
-	iter = grammar_dg.RecordStart:new(self.named)
+	iter = grammar_dg.RecordStart:new(rule, id, self.named)
 	if self.converter then iter:convert(self.converter, self.memoize) end
 	if self.validate then iter:validate(self.validate) end
 	ret:add(iter)
@@ -1137,7 +1175,7 @@ end
 function grammar.Sequence.method:compile(rule, id)
 	local iter, ret
 
-	ret = grammar_dg.RecordStart:new(self.named)
+	ret = grammar_dg.RecordStart:new(rule, id, self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end
 	if self.validate then ret:validate(self.validate) end
 	iter = ret
@@ -1173,7 +1211,7 @@ function grammar.Union.method:__init(entities)
 end
 
 function grammar.Union.method:compile(rule, id)
-	local ret = grammar_dg.UnionStart:new(self.named, self.rule)
+	local ret = grammar_dg.UnionStart:new(self.named, rule, id)
 
 	for i, value in ipairs(self.entities) do
 		local next = value:compile(self.rule or rule, i)
@@ -1199,7 +1237,7 @@ function grammar.Branch.method:__init(cases, select)
 end
 
 function grammar.Branch.method:compile(rule, id)
-	local ret = grammar_dg.Branch:new(self.selector)
+	local ret = grammar_dg.Branch:new(rule or rule, id, self.selector)
 	for key, value in pairs(self.cases) do
 		if key ~= 'default' then
 			local next = value:compile(self.rule or rule, key)
@@ -1234,16 +1272,16 @@ function grammar.Array.method:compile(rule, id)
 	if not entity then
 		error("cannot create an array of empty element")
 	end
-	local start = grammar_dg.ArrayStart:new(self.named, self.rule, entity, self.create, self.resultclass)
+	local start = grammar_dg.ArrayStart:new(rule, id, self.named, entity, self.create, self.resultclass)
 	if self.converter then start:convert(self.converter, self.memoize) end
 	local finish = grammar.ResultPop:new()
 
 	local pop = grammar_dg.ArrayPop:new()
-	local inner = grammar_dg.ArrayPush:new()
+	local inner = grammar_dg.ArrayPush:new(rule, id)
 	inner:add(self.entity:compile(self.rule or rule, id))
 	inner:add(pop)
 
-	local loop = grammar_dg.Branch:new(self.more)
+	local loop = grammar_dg.Branch:new(nil, nil, self.more)
 	pop:add(loop)
 	loop:case(true, inner)
 	loop:add(finish)

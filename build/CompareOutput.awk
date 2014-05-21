@@ -14,6 +14,11 @@ $0 ~ /^[^ \t]+[ \t]+[^:]+:[ ]+.*$/ {
 	$0 = $1 " " $2 " " substr($0, index($0,$3));
 }
 
+$0 ~ /^[^ \t]/ {
+	trace = 0;
+	alert = 0;
+}
+
 $0 ~ /warn core:/ {
 	print;
 }
@@ -28,27 +33,15 @@ $0 ~ /info core: unload module/ {
 	next;
 }
 
-$0 ~ /^debug packet:/ {
-	next;
-}
+$0 ~ /^debug packet:/ { next; }
+$0 ~ /^debug pcre:/ { next; }
+$0 ~ /^debug state-machine:/ { next; }
+$0 ~ /^debug event: signal/ { next; }
+$0 ~ /^debug timer: / { next; }
+$0 ~ /^info pcap: progress/ { next; }
 
-$0 ~ /^debug pcre:/ {
-	next;
-}
-
-$0 ~ /^debug state-machine:/ {
-	next;
-}
-
-$0 ~ /^debug event: signal/ {
-	next;
-}
-
-$0 ~ /^debug timer: / {
-	next;
-}
-
-$0 ~ /^info pcap: progress/ {
+$0 ~ /^debug grammar: in rule / {
+	trace = 1;
 	next;
 }
 
@@ -72,11 +65,6 @@ $0 ~ /^alert:/ {
 $0 ~ /^\ttime = / {
 	if (!alert) print;
 	next;
-}
-
-$0 ~ /^[^ \t]/ {
-	trace = 0;
-	alert = 0;
 }
 
 {
