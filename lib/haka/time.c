@@ -12,7 +12,7 @@
 #include <haka/error.h>
 
 
-#define SEC_TO_NSEC      1000000000
+#define SEC_TO_NSEC      1000000000ULL
 #define SEC_TO_NSEC_F    1000000000.
 
 const struct time invalid_time = INVALID_TIME;
