@@ -576,20 +576,16 @@ Parsing context
 
     Parsing context used in all parsing related functions.
 
-    .. haka:attribute:: ParseContext.result
-        :readonly:
+    .. haka:method:: ParseContext:result(index)
 
-        Current parsing result.
+        :param index: Index of the result in the stack.
+        :ptype index: number
 
-    .. haka:attribute:: ParseContext.top
-        :readonly:
-
-        Top level parsing result.
-
-    .. haka:attribute:: ParseContext.prev_result
-        :readonly:
-
-        Previous level parsing result.
+        Get a parsing result from the stack. The index can be a normal index (ie. ``1``
+        being the top-level result...) or a pseudo index when it is negative. In this
+        case the return value is the result at the position stating from the last
+        element. For instance ``-1`` is the last result, ``-2`` is the last but one
+        result.
 
     .. haka:attribute:: ParseContext.user
 
