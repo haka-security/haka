@@ -91,6 +91,7 @@ function module.classof(instance)
 end
 
 function module.super(cls)
+	assert(cls)
 	return rawget(cls.super, '__view')
 end
 
@@ -107,7 +108,7 @@ function module.class(name, super)
 		if convert then
 			return convert(self)
 		else
-			return string.format("<class instance %s: %p>", module.classof(self).name, self)
+			return string.format("<class instance %s: 0x%x>", module.classof(self).name, topointer(self))
 		end
 	end
 

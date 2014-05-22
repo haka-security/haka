@@ -98,6 +98,12 @@ int lua_state_error_formater(lua_State *L)
 	}
 }
 
+static int lua_casttopointer(lua_State* L)
+{
+	lua_pushfstring(L, "%p", lua_topointer(L, 1));
+	return 1;
+}
+
 static int lua_print(lua_State* L)
 {
 	int i;
@@ -359,6 +365,9 @@ struct lua_state *lua_state_init()
 
 	lua_pushcfunction(L, lua_print);
 	lua_setglobal(L, "print");
+
+	lua_pushcfunction(L, lua_casttopointer);
+	lua_setglobal(L, "topointer");
 
 #if !HAKA_LUAJIT && !HAKA_LUA52
 	lua_getglobal(L, "string");
