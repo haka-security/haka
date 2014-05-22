@@ -633,6 +633,13 @@ function grammar_dg.Try.method:__init(name, rule)
 	self.cases = {}
 end
 
+function grammar_dg.Try.method:_dump_graph_edges(file, ref)
+	for index, case in pairs(self.cases) do
+		case:_dump_graph(file, ref)
+		file:write(string.format('%s -> %s;\n', ref[self], ref[case]))
+	end
+end
+
 function grammar_dg.Try.method:_apply(ctx)
 	-- We need a temp ctx so we don't care about self.name
 	ctx:push(nil, self.name)
