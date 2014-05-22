@@ -12,20 +12,51 @@ Grammar
 Haka allows the user to describe a full protocol grammar. This section describes all constructs available
 to build rules for the grammar.
 
-.. haka:function:: new(name) -> grammar
+.. haka:function:: new(name, descr) -> grammar
 
     :param name: Name of the grammar.
     :paramtype name: string
+    :param descr: Function that describe the grammar rules.
+    :ptype descr: function
     :return grammar: Created grammar object.
     :rtype grammar: :haka:class:`Grammar`
 
     Create a new grammar. The name is mainly used to report detailed
     information to the user.
 
+    The `descr` parameter is a function that describe the grammar rules. Its
+    environment allows to access all grammar primitives listed in this pages.
+    The functions and variables available in this scope are shown prefixed
+    with `grammar`.
+
+    The grammar description must export public elements in order to be able to
+    use them and to parse some data. To do this, the :haka:func:`export` function
+    allow to notify which elements are going to be used for parsing. You should only
+    export root elements that are going to be used as entry point for parsing.
+
+.. haka:function:: export(...)
+    :objtype: grammar
+    :module:
+
+    :param ...: List of elements to be exported.
+    :ptype ...: :haka:class:`GrammarEntity`
+
+    Export some grammar elements to be able to use them for parsing.
+
 .. haka:class:: Grammar
     :module:
 
     Object holding grammar rules.
+
+    .. haka:operator:: Grammar[name] -> entity
+
+        :param name: Rule name.
+        :ptype name: string
+        :return entity: Compiled grammar representation.
+        :rtype entity: :haka:class:`CompiledGrammarEntity`
+
+        Get a rule for parsing. This rule must have been exported using the
+        function :haka:func:`export`.
 
 
 Elements
@@ -87,18 +118,13 @@ properties.
 
         Set a conversion operation to apply to the element data.
 
-    .. haka:method:: GrammarEntity:compile() -> compiled_entity
-
-        :return compiled_entity: Compiled grammar.
-        :rtype compiled_entity: :haka:class:`CompiledGrammarEntity`
-
-        Compile the grammar representation.
-
 
 Final elements
 ^^^^^^^^^^^^^^
 
 .. haka:function:: number(bits) -> entity
+    :objtype: grammar
+    :module:
 
     :param bits: Size of the number in bits.
     :paramtype bits: number
@@ -120,11 +146,13 @@ Final elements
 
     ::
 
-        haka.grammar.number(8)
+        number(8)
 
     Parse a binary number.
 
 .. haka:function:: token(pattern) -> entity
+    :objtype: grammar
+    :module:
 
     :param pattern: Regular expression pattern for the token.
     :paramtype pattern: string
@@ -139,15 +167,19 @@ Final elements
 
     ::
 
-        haka.grammar.token('%s+')
+        token('%s+')
 
 .. haka:data:: flag
+    :objtype: grammar
+    :module:
 
     :type: :haka:class:`GrammarEntity`
 
     Parse a flag of 1 bit and returns it as a ``boolean``.
 
 .. haka:function:: bytes() -> entity
+    :objtype: grammar
+    :module:
 
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
@@ -194,6 +226,8 @@ Final elements
 
 .. haka:function:: padding{align=align_bit} -> entity
                    padding{size=size_bit} -> entity
+    :objtype: grammar
+    :module:
 
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
@@ -201,6 +235,8 @@ Final elements
     Parse some padding. The padding can be given by size or by alignment.
 
 .. haka:function:: field(name, entity) -> entity
+    :objtype: grammar
+    :module:
 
     :param name: Name of the field in the result.
     :paramtype name: string
@@ -216,9 +252,11 @@ Final elements
 
     ::
 
-        haka.grammar.field("WS", haka.grammar.token('%s+'))
+        field("WS", token('%s+'))
 
 .. haka:function:: verify(verif, msg) -> entity
+    :objtype: grammar
+    :module:
 
     :param verif: Verification function.
     :paramtype verif: function
@@ -241,6 +279,8 @@ Final elements
         :rtype is_valid: boolean
 
 .. haka:function:: execute(exec) -> entity
+    :objtype: grammar
+    :module:
 
     :param exec: Generic function.
     :paramtype exec: function
@@ -263,8 +303,10 @@ Compounds
 ^^^^^^^^^
 
 .. haka:function:: record(entities) -> entity
+    :objtype: grammar
+    :module:
 
-    :param entities: List of entities for the record
+    :param entities: List of entities for the record.
     :paramtype entities: table of grammar entities
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
@@ -279,14 +321,16 @@ Compounds
 
     ::
 
-        haka.grammar.record{
-            haka.grammar.field('type', haka.grammar.number(8)),
-            haka.grammar.bytes()
+        record{
+            field('type', number(8)),
+            bytes()
         }
 
 .. haka:function:: sequence(entities) -> entity
+    :objtype: grammar
+    :module:
 
-    :param entities: List of entities for the sequence
+    :param entities: List of entities for the sequence.
     :paramtype entities: table of grammar entities
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
@@ -301,12 +345,14 @@ Compounds
 
     ::
 
-        haka.grammar.sequence{
-            haka.grammar.number(8),
-            haka.grammar.bytes()
+        sequence{
+            number(8),
+            bytes()
         }
 
 .. haka:function:: union(entities) -> entity
+    :objtype: grammar
+    :module:
 
     :param entities: List of entities for the union
     :paramtype entities: Table of grammar entities
@@ -317,6 +363,8 @@ Compounds
     beginning of the union.
 
 .. haka:function:: branch(cases, selector) -> entity
+    :objtype: grammar
+    :module:
 
     :param cases: Branch cases.
     :paramtype cases: associative table of named grammar entities
@@ -344,15 +392,17 @@ Compounds
 
     ::
 
-        haka.grammar.branch({
-                num8  = haka.grammar.number(8),
-                num16 = haka.grammar.number(16),
+        branch({
+                num8  = number(8),
+                num16 = number(16),
             }, function (result, context)
                 return result.type
             end
         )
 
 .. haka:function:: optional(entity, present) -> entity
+    :objtype: grammar
+    :module:
 
     :param entity: Optional grammar entity.
     :paramtype entity: grammar entity
@@ -374,6 +424,8 @@ Compounds
         :rtype is_present: boolean
 
 .. haka:function:: array(entity) -> entity
+    :objtype: grammar
+    :module:
 
     :param entity: Entity representing an element of the array.
     :paramtype entity: grammar entity
@@ -434,7 +486,7 @@ Compounds
 
     ::
 
-        haka.grammar.array(haka.grammar.number(8))
+        array(number(8))
             :options{count = 10}
 
 
@@ -605,3 +657,28 @@ Parsing context
         :rtype byte: number
 
         Return the next byte. This function can be used to resolve grammar ambiguity.
+
+
+Example
+-------
+
+This is an example of a very simple grammar expressed in Haka:
+
+::
+
+    local grammar = haka.grammar.new("example", fonction ()
+        elem = record{
+            field("A", number(32)),
+            field("B", number(32))
+        }
+
+        block = record{
+            field("count", number(32)),
+            field("list", array(elem)
+                :options{count = function (self)
+                    return self.count
+                end})
+        }
+
+        export(block)
+    end)
