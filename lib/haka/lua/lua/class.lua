@@ -174,6 +174,19 @@ function module.class(name, super)
 	return cls
 end
 
+function module.merge(dst, src)
+	local psrc = rawget(src, '__property')
+	if psrc then
+		local pdst = rawget(dst, '__property')
+		if not pdst then
+			rawset(dst, '__property', rawget(src, '__property'))
+		else
+			table.merge(pdst, psrc)
+		end
+		rawset(src, '__property', nil)
+	end
+end
+
 
 function module.isa(instance, cls)
 	local c = module.classof(instance)

@@ -126,12 +126,24 @@ function grammar_dg.ParseContext.method:result(idx)
 			error("invalid result index")
 		end
 	end
-	
+
 	if idx <= 0 then
 		error("invalid result index")
 	end
 
 	return self._results[idx]
+end
+
+function grammar_dg.ParseContext.method:mark(readonly)
+	local mark = self.iter:copy()
+	mark:mark(readonly)
+	table.insert(self._retain_mark, mark)
+end
+
+function grammar_dg.ParseContext.method:unmark()
+	local mark = self.retain_mark
+	self._retain_mark[#self._retain_mark] = nil
+	mark:unmark()
 end
 
 local function revalidate(self)
@@ -146,6 +158,7 @@ function grammar_dg.ParseContext.method:__init(iter, topresult, init)
 	self.iter = iter
 	self._bitoffset = 0
 	self._marks = {}
+	self._catches = {}
 	self._results = {}
 	self._validate = {}
 	self._retain_mark = {}
@@ -184,9 +197,15 @@ function grammar_dg.ParseContext.method:parse(entity)
 		iter:_trace(self.iter)
 		err = iter:_apply(self)
 		if err then
-			break
+			iter = self:catch()
+			if not iter then
+				break
+			else
+				err = nil
+			end
+		else
+			iter = iter:next(self)
 		end
-		iter = iter:next(self)
 	end
 	return self._results[1], err
 end
@@ -260,6 +279,27 @@ function grammar_dg.ParseContext.method:seekmark()
 	self._bitoffset = mark.bitoffset
 end
 
+function grammar_dg.ParseContext.method:pushcatch(entity)
+	self._catches[#self._catches+1] = {
+		entity = entity
+	}
+end
+
+function grammar_dg.ParseContext.method:catch()
+	if #self._catches > 0 then
+		self._catches[#self._catches].entity._catched = true
+		return self._catches[#self._catches].entity
+	else
+		return nil
+	end
+end
+
+function grammar_dg.ParseContext.method:popcatch(entity)
+	local catch = self._catches[#self._catches]
+	self._catches[#self._catches] = nil
+	return catch
+end
+
 function grammar_dg.ParseContext.method:error(position, field, description, ...)
 	local context = {}
 	description = string.format(description, ...)
@@ -318,7 +358,7 @@ function grammar_dg.Entity.method:_add(next, set)
 	for _, entity in ipairs(nexts) do
 		entity:_add(next, set)
 	end
-	
+
 	if not self._next then
 		self._next = next
 	end
@@ -583,6 +623,112 @@ function grammar_dg.UnionFinish.method:_apply(ctx)
 	ctx:popmark()
 end
 
+grammar_dg.Try = class.class('DGTry', grammar_dg.Control)
+
+function grammar_dg.Try.method:__init(name, rule)
+	class.super(grammar_dg.Try).__init(self, rule)
+	self.name = name
+	self.cases = {}
+end
+
+function grammar_dg.Try.method:_apply(ctx)
+	-- We need a temp ctx so we don't care about self.name
+	ctx:push(nil, self.name)
+	ctx:pushmark()
+end
+
+function grammar_dg.Try.method:case(case)
+	self.cases[#self.cases+1] = case
+end
+
+function grammar_dg.Try.method:next(ctx)
+	local next = self.cases[1]
+	if next then
+		return next
+	else
+		return self._next
+	end
+end
+
+function grammar_dg.Try.method:_nexts(list)
+	for _, value in pairs(self.cases) do
+		table.insert(list, value)
+	end
+
+	return class.super(grammar_dg.Try)._nexts(self, list)
+end
+
+grammar_dg.Catch = class.class('DGCatch', grammar_dg.Control)
+
+function grammar_dg.Catch.method:__init(fallback, rule)
+	class.super(grammar_dg.Catch).__init(self, rule)
+	self._fallback = nil
+	self._catched = false
+	self._retain_count = 0
+end
+
+function grammar_dg.Catch.method:fallback(fallback)
+	self._fallback = fallback
+end
+
+function grammar_dg.Catch.method:_apply(ctx)
+	if not self._catched then
+		self._retain_count = #ctx._retain_mark
+		ctx:pushcatch(self)
+	else
+		while #ctx._retain_mark > self._retain_count do
+			ctx:unmark()
+		end
+		ctx:popcatch()
+		ctx:seekmark()
+		if not self._fallback then
+			ctx:pop()
+			ctx:popmark()
+			return ctx:error(ctx.iter:copy(), self, "no case can match")
+		end
+	end
+end
+
+function grammar_dg.Catch.method:next(ctx)
+	if not self._catched then
+		return self._next
+	else
+		return self._fallback
+	end
+end
+
+grammar_dg.TryFinish = class.class('DGTryFinish', grammar_dg.Control)
+
+function grammar_dg.TryFinish.method:__init(name)
+	class.super(grammar_dg.TryFinish).__init(self)
+	self.name = name
+end
+
+function grammar_dg.TryFinish.method:_apply(ctx)
+	if not self.name then
+		-- Merge unnamed temp result ctx with parent result context
+		local res = ctx:result()
+		ctx:pop()
+
+		local src = rawget(res, '_validate')
+		if src then
+			local dst = rawget(ctx:result(), '_validate')
+			if not dst then
+				rawset(ctx:result(), '_validate', rawget(res, '_validate'))
+			else
+				table.merge(dst, src)
+			end
+			rawset(res, '_validate', nil)
+		end
+
+		class.merge(ctx:result(), res)
+	else
+		ctx:pop()
+	end
+	ctx:popmark()
+	ctx:popcatch()
+end
+
 grammar_dg.ArrayStart = class.class('DGArrayStart', grammar_dg.Control)
 
 grammar_dg.ArrayStart.trace_name = 'array'
@@ -696,17 +842,13 @@ function grammar_dg.Retain.method:_apply(ctx)
 	-- to arrive before marking the end of a previous chunk
 	ctx.iter:wait()
 
-	local mark = ctx.iter:copy()
-	mark:mark(self.readonly)
-	table.insert(ctx._retain_mark, mark)
+	ctx:mark(self.readonly)
 end
 
 grammar_dg.Release = class.class('DGRelease', grammar_dg.Control)
 
 function grammar_dg.Release.method:_apply(ctx)
-	local mark = ctx._retain_mark[#ctx._retain_mark]
-	ctx._retain_mark[#ctx._retain_mark] = nil
-	mark:unmark()
+	ctx:unmark()
 end
 
 grammar_dg.Branch = class.class('DGBranch', grammar_dg.Control)
@@ -926,11 +1068,10 @@ grammar_dg.Token = class.class('DGToken', grammar_dg.Primitive)
 
 grammar_dg.Token.trace_name = 'token'
 
-function grammar_dg.Token.method:__init(rule, id, pattern, re, full_re, name)
+function grammar_dg.Token.method:__init(rule, id, pattern, re, name)
 	class.super(grammar_dg.Token).__init(self, rule, id)
 	self.pattern = pattern
 	self.re = re
-	self.full_re = full_re
 	self.name = name
 end
 
@@ -939,10 +1080,7 @@ function grammar_dg.Token.method:_dump_graph_descr()
 end
 
 function grammar_dg.Token.method:_parse(res, iter, ctx)
-	if not ctx.sink then
-		ctx.sink = self.re:create_sink()
-	end
-
+	local sink = self.re:create_sink()
 	local begin
 
 	while true do
@@ -955,8 +1093,8 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 
 		local sub = iter:sub('available')
 
-		local match, mbegin, mend = ctx.sink:feed(sub, sub == nil)
-		if not match and not ctx.sink:ispartial() then break end
+		local match, mbegin, mend = sink:feed(sub, sub == nil)
+		if not match and not sink:ispartial() then break end
 
 		if match then
 			begin:unmark()
@@ -984,7 +1122,7 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 							newvalue = self.converter.set(newvalue)
 						end
 
-						if not self.full_re:match(newvalue) then
+						if not self.re:match(newvalue) then
 							error(string.format("token value '%s' does not verify /%s/", newvalue, self.pattern))
 						end
 
@@ -992,7 +1130,7 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 					end
 				)
 			end
-			ctx.sink = nil
+			sink = nil
 			return
 		end
 
@@ -1000,6 +1138,9 @@ function grammar_dg.Token.method:_parse(res, iter, ctx)
 	end
 
 	-- No match found return an error
+	if begin then
+		begin:unmark()
+	end
 	return ctx:error(begin:copy(), self, "token /%s/ doesn't match", self.pattern)
 end
 
@@ -1227,6 +1368,37 @@ function grammar_int.Union.method:compile(rule, id)
 	return ret
 end
 
+grammar_int.Try = class.class('Try', grammar.Entity)
+
+function grammar_int.Try.method:__init(cases)
+	self.cases = cases
+end
+
+function grammar_int.Try.method:compile(rule, id)
+	local ret = grammar_dg.Try:new(self.named, self.rule)
+	local catch = nil
+	local last_catch = nil
+
+	-- For each case we prepend a catch entity
+	-- and we chain catch entities together to try every cases
+	for i, case in ipairs(self.cases) do
+		local next = case:compile(self.rule or rule, i)
+		if next then
+			catch = grammar_dg.Catch:new(self.rule)
+			catch:add(next)
+			ret:case(catch)
+			-- Update last catch to point to current catch
+			if last_catch then
+				last_catch:fallback(catch)
+			end
+			last_catch = catch
+		end
+	end
+
+	ret:add(grammar_dg.TryFinish:new(self.named))
+
+	return ret
+end
 
 grammar_int.Branch = class.class('Branch', grammar_int.Entity)
 
@@ -1391,9 +1563,8 @@ end
 function grammar_int.Token.method:compile(rule, id)
 	if not self.re then
 		self.re = rem.re:compile("^(?:"..self.pattern..")")
-		self.full_re = rem.re:compile("^(?:"..self.pattern..")")
 	end
-	local ret = grammar_dg.Token:new(rule, id, self.pattern, self.re, self.full_re, self.named)
+	local ret = grammar_dg.Token:new(rule, id, self.pattern, self.re, self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end
 	return ret
 end
@@ -1450,6 +1621,10 @@ end
 
 function grammar_int.union(entities)
 	return grammar_int.Union:new(entities)
+end
+
+function grammar_int.try(cases)
+	return grammar_int.Try:new(cases)
 end
 
 function grammar_int.branch(cases, select)

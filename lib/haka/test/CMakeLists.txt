@@ -22,3 +22,5 @@ foreach(module IN LISTS module-regexp)
 
 	TEST_UNIT_LUA(MODULE libhaka NAME regexp-${module} FILES regexp-lua ENV "HAKA_MODULE=${module}")
 endforeach(module)
+
+TEST_UNIT_LUA(MODULE libhaka NAME grammar-try FILES grammar-try.lua)
