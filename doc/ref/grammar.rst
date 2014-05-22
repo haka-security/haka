@@ -581,7 +581,10 @@ Parsing context
         :param index: Index of the result in the stack.
         :ptype index: number
 
-        Get a parsing result from the stack. The index can be a normal index (ie. ``1``
+        Get a parsing result from the stack of results. This stack holds all results
+        created during the parsing for records, arrays...
+
+        The index can be a normal index (ie. ``1``
         being the top-level result...) or a pseudo index when it is negative. In this
         case the return value is the result at the position stating from the last
         element. For instance ``-1`` is the last result, ``-2`` is the last but one
