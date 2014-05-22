@@ -362,12 +362,21 @@ Compounds
     Create a union for a list of sub entities. Each entity will be parsed for the
     beginning of the union.
 
+.. haka:function:: try(cases) -> entity
+
+    :param cases: List of grammar entity to try.
+    :paramtype cases: Table of grammar entities.
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Create a try. Parser will try, in order, each case until one of it finishes successfully.
+
 .. haka:function:: branch(cases, selector) -> entity
     :objtype: grammar
     :module:
 
     :param cases: Branch cases.
-    :paramtype cases: associative table of named grammar entities
+    :paramtype cases: Associative table of named grammar entities
     :param selector: Function that will select which case to take.
     :paramtype selector: function
     :return entity: Created entity.
