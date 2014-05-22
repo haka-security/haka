@@ -600,6 +600,7 @@ function grammar_dg.UnionStart.method:_apply(ctx)
 		local new = ctx:push(nil, self.name)
 	end
 
+	ctx:mark(false)
 	ctx:pushmark()
 end
 
@@ -621,6 +622,7 @@ function grammar_dg.UnionFinish.method:_apply(ctx)
 		ctx:pop()
 	end
 	ctx:popmark()
+	ctx:unmark()
 end
 
 grammar_dg.Try = class.class('DGTry', grammar_dg.Control)
@@ -635,6 +637,7 @@ function grammar_dg.Try.method:_apply(ctx)
 	-- We need a temp ctx so we don't care about self.name
 	ctx:push(nil, self.name)
 	ctx:pushmark()
+	ctx:mark(false)
 end
 
 function grammar_dg.Try.method:case(case)
@@ -684,6 +687,7 @@ function grammar_dg.Catch.method:_apply(ctx)
 		if not self._fallback then
 			ctx:pop()
 			ctx:popmark()
+			ctx:unmark()
 			return ctx:error(ctx.iter:copy(), self, "no case can match")
 		end
 	end
@@ -727,6 +731,7 @@ function grammar_dg.TryFinish.method:_apply(ctx)
 	end
 	ctx:popmark()
 	ctx:popcatch()
+	ctx:unmark()
 end
 
 grammar_dg.ArrayStart = class.class('DGArrayStart', grammar_dg.Control)
