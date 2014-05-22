@@ -450,7 +450,7 @@ end
 function grammar_dg.Entity.method:trace(position, msg, ...)
 	if self.id then
 		haka.log.debug("grammar", "in rule %s field %s: %s\n\tat byte %d: %s...",
-			self.rule or "<unknown>", self.name or self.id or "<unknown>",
+			self.rule or "<unknown>", self.name or self.id,
 			string.format(msg, ...), position.meter,
 			safe_string(position:copy():sub(20):asstring()))
 	end
@@ -548,7 +548,7 @@ grammar_dg.UnionStart = class.class('DGUnionStart', grammar_dg.Control)
 
 grammar_dg.UnionStart.trace_name = 'union'
 
-function grammar_dg.UnionStart.method:__init(name, rule, id)
+function grammar_dg.UnionStart.method:__init(rule, id, name)
 	class.super(grammar_dg.UnionStart).__init(self, rule, id)
 	self.name = name
 end
@@ -1211,7 +1211,7 @@ function grammar.Union.method:__init(entities)
 end
 
 function grammar.Union.method:compile(rule, id)
-	local ret = grammar_dg.UnionStart:new(self.named, rule, id)
+	local ret = grammar_dg.UnionStart:new(rule, id, self.named)
 
 	for i, value in ipairs(self.entities) do
 		local next = value:compile(self.rule or rule, i)
@@ -1237,7 +1237,7 @@ function grammar.Branch.method:__init(cases, select)
 end
 
 function grammar.Branch.method:compile(rule, id)
-	local ret = grammar_dg.Branch:new(rule or rule, id, self.selector)
+	local ret = grammar_dg.Branch:new(rule, id, self.selector)
 	for key, value in pairs(self.cases) do
 		if key ~= 'default' then
 			local next = value:compile(self.rule or rule, key)
