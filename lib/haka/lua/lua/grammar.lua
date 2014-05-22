@@ -1534,6 +1534,21 @@ function Grammar.method:__init(name)
 	rawset(self, '_exports', {})
 end
 
+function Grammar.method:dump_graph(file)
+	file:write("digraph grammar {\n")
+
+	local ref = {}
+	ref._index = 1
+
+	for name, rule in pairs(self._exports) do
+		file:write(string.format("subgraph cluster_%s { label=%s \n", name, name))
+		rule:_dump_graph(file, ref)
+		file:write("}\n")
+	end
+
+	file:write("}\n")
+end
+
 function Grammar.method:__index(name)
 	local ret = self._exports[name]
 	if not ret then
