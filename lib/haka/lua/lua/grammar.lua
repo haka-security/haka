@@ -258,10 +258,15 @@ function grammar_dg.ParseContext.method:pushmark()
 	}
 end
 
-function grammar_dg.ParseContext.method:popmark()
+function grammar_dg.ParseContext.method:popmark(seek)
+	local seek = seek or false
 	local mark = self._marks[#self._marks]
-	self.iter:move_to(mark.max_iter)
-	self._bitoffset = mark.max_bitoffset
+
+	if seek then
+		self.iter:move_to(mark.max_iter)
+		self._bitoffset = mark.max_bitoffset
+	end
+
 	self._marks[#self._marks] = nil
 end
 
@@ -280,23 +285,50 @@ function grammar_dg.ParseContext.method:seekmark()
 end
 
 function grammar_dg.ParseContext.method:pushcatch(entity)
+	self:mark(false)
+	self:pushmark()
+
 	self._catches[#self._catches+1] = {
-		entity = entity
+		entity = entity,
+		retain_count = #self._retain_mark,
+		mark_count = #self._marks,
 	}
 end
 
 function grammar_dg.ParseContext.method:catch()
-	if #self._catches > 0 then
-		self._catches[#self._catches].entity._catched = true
-		return self._catches[#self._catches].entity
-	else
+	local catch = self._catches[#self._catches]
+	if not catch then
 		return nil
 	end
+
+	-- Unmark each retain started in failing case
+	while #self._retain_mark > catch.retain_count do
+		self:unmark()
+	end
+
+	-- remove all marks done in failing case
+	while #self._marks > catch.mark_count do
+		self:popmark(false)
+	end
+
+
+	self:seekmark()
+	self:popcatch()
+
+	-- Should be done in Try entity but we can't
+	self:pop()
+
+	return catch.entity
 end
 
 function grammar_dg.ParseContext.method:popcatch(entity)
 	local catch = self._catches[#self._catches]
+
+	self:popmark(false)
+	self:unmark()
+
 	self._catches[#self._catches] = nil
+
 	return catch
 end
 
@@ -627,85 +659,28 @@ end
 
 grammar_dg.Try = class.class('DGTry', grammar_dg.Control)
 
-function grammar_dg.Try.method:__init(name, rule)
-	class.super(grammar_dg.Try).__init(self, rule)
+function grammar_dg.Try.method:__init(rule, id, name)
+	class.super(grammar_dg.Try).__init(self, rule, id)
 	self.name = name
-	self.cases = {}
+	self._catch = nil
+end
+
+function grammar_dg.Try.method:catch(catch)
+	self._catch = catch
 end
 
 function grammar_dg.Try.method:_dump_graph_edges(file, ref)
-	for index, case in pairs(self.cases) do
-		case:_dump_graph(file, ref)
-		file:write(string.format('%s -> %s;\n', ref[self], ref[case]))
-	end
+	self._next:_dump_graph(file, ref)
+	file:write(string.format('%s -> %s;\n', ref[self], ref[self._next]))
+	self._catch:_dump_graph(file, ref)
+	file:write(string.format('%s -> %s [label="catch"];\n', ref[self], ref[self._catch]))
 end
 
 function grammar_dg.Try.method:_apply(ctx)
-	-- We need a temp ctx so we don't care about self.name
+	-- Create a result ctx even if self.name is null
+	-- in order to be able to delete it if case fail
 	ctx:push(nil, self.name)
-	ctx:pushmark()
-	ctx:mark(false)
-end
-
-function grammar_dg.Try.method:case(case)
-	self.cases[#self.cases+1] = case
-end
-
-function grammar_dg.Try.method:next(ctx)
-	local next = self.cases[1]
-	if next then
-		return next
-	else
-		return self._next
-	end
-end
-
-function grammar_dg.Try.method:_nexts(list)
-	for _, value in pairs(self.cases) do
-		table.insert(list, value)
-	end
-
-	return class.super(grammar_dg.Try)._nexts(self, list)
-end
-
-grammar_dg.Catch = class.class('DGCatch', grammar_dg.Control)
-
-function grammar_dg.Catch.method:__init(fallback, rule)
-	class.super(grammar_dg.Catch).__init(self, rule)
-	self._fallback = nil
-	self._catched = false
-	self._retain_count = 0
-end
-
-function grammar_dg.Catch.method:fallback(fallback)
-	self._fallback = fallback
-end
-
-function grammar_dg.Catch.method:_apply(ctx)
-	if not self._catched then
-		self._retain_count = #ctx._retain_mark
-		ctx:pushcatch(self)
-	else
-		while #ctx._retain_mark > self._retain_count do
-			ctx:unmark()
-		end
-		ctx:popcatch()
-		ctx:seekmark()
-		if not self._fallback then
-			ctx:pop()
-			ctx:popmark()
-			ctx:unmark()
-			return ctx:error(ctx.iter:copy(), self, "no case can match")
-		end
-	end
-end
-
-function grammar_dg.Catch.method:next(ctx)
-	if not self._catched then
-		return self._next
-	else
-		return self._fallback
-	end
+	ctx:pushcatch(self._catch)
 end
 
 grammar_dg.TryFinish = class.class('DGTryFinish', grammar_dg.Control)
@@ -736,9 +711,8 @@ function grammar_dg.TryFinish.method:_apply(ctx)
 	else
 		ctx:pop()
 	end
-	ctx:popmark()
+
 	ctx:popcatch()
-	ctx:unmark()
 end
 
 grammar_dg.ArrayStart = class.class('DGArrayStart', grammar_dg.Control)
@@ -1387,29 +1361,34 @@ function grammar_int.Try.method:__init(cases)
 end
 
 function grammar_int.Try.method:compile(rule, id)
-	local ret = grammar_dg.Try:new(self.named, self.rule)
-	local catch = nil
-	local last_catch = nil
+	local first_try = nil
+	local previous_try = nil
+	local finish = grammar_dg.TryFinish:new(self.rule or rule, id, self.named)
 
 	-- For each case we prepend a catch entity
 	-- and we chain catch entities together to try every cases
 	for i, case in ipairs(self.cases) do
 		local next = case:compile(self.rule or rule, i)
 		if next then
-			catch = grammar_dg.Catch:new(self.rule)
-			catch:add(next)
-			ret:case(catch)
-			-- Update last catch to point to current catch
-			if last_catch then
-				last_catch:fallback(catch)
+			local try = grammar_dg.Try:new(self.rule or rule, id, self.named)
+			try:add(next)
+			try:add(finish)
+			if previous_try then
+				previous_try:catch(try)
 			end
-			last_catch = catch
+			previous_try = try
+			first_try = first_try or try
 		end
 	end
 
-	ret:add(grammar_dg.TryFinish:new(self.named))
+	if not first_try then
+		error("cannot create a try without any case")
+	end
 
-	return ret
+	-- End with error if everything failed
+	previous_try:catch(grammar_dg.Error:new(self.rule or rule, "no case successfull"))
+
+	return first_try
 end
 
 grammar_int.Branch = class.class('Branch', grammar_int.Entity)

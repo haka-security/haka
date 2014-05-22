@@ -31,6 +31,7 @@ function TestGrammarTry:test_compile()
 	-- When
 	local gr = haka.grammar.new("test", function ()
 		elem = try{
+			number(1)
 		}
 
 		export(elem)
