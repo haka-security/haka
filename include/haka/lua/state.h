@@ -34,4 +34,9 @@ struct lua_state *lua_state_get(struct lua_State *L);
 
 extern void (*lua_state_error_hook)(struct lua_State *L);
 
+#if HAKA_LUA52
+void lua_getfenv(struct lua_State *L, int index);
+int  lua_setfenv(struct lua_State *L, int index);
+#endif
+
 #endif /* _HAKA_LUA_STATE_H */

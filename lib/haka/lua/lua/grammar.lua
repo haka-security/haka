@@ -6,6 +6,7 @@ local class = require('class')
 local rem = require("regexp/pcre")
 
 local grammar_dg = {}
+local grammar_int = {}
 local grammar = {}
 
 --
@@ -474,13 +475,13 @@ function grammar_dg.Control.method:_dump_graph_options()
 	return ',fillcolor="#dddddd",style="filled"'
 end
 
-grammar.ResultPop = class.class('DGResultPop', grammar_dg.Control)
+grammar_dg.ResultPop = class.class('DGResultPop', grammar_dg.Control)
 
-function grammar.ResultPop.method:__init()
-	class.super(grammar.ResultPop).__init(self)
+function grammar_dg.ResultPop.method:__init()
+	class.super(grammar_dg.ResultPop).__init(self)
 end
 
-function grammar.ResultPop.method:_apply(ctx)
+function grammar_dg.ResultPop.method:_apply(ctx)
 	ctx:pop()
 end
 
@@ -1013,6 +1014,7 @@ end
 --
 
 grammar.converter = {}
+grammar_int.converter = grammar.converter
 
 function grammar.converter.mult(val)
 	return {
@@ -1048,28 +1050,28 @@ grammar.converter.string = {
 -- Grammar description
 --
 
-grammar.Entity = class.class('Entity')
+grammar_int.Entity = class.class('Entity')
 
-function grammar.Entity.method:_as(name)
+function grammar_int.Entity.method:_as(name)
 	local clone = self:clone()
 	clone.named = name
 	return clone
 end
 
-function grammar.Entity.method:convert(converter, memoize)
+function grammar_int.Entity.method:convert(converter, memoize)
 	local clone = self:clone()
 	clone.converter = converter
 	clone.memoize = memoize or clone.memoize
 	return clone
 end
 
-function grammar.Entity.method:validate(validate)
+function grammar_int.Entity.method:validate(validate)
 	local clone = self:clone()
 	clone.validate = validate
 	return clone
 end
 
-function grammar.Entity.getoption(cls, opt)
+function grammar_int.Entity.getoption(cls, opt)
 	local v
 
 	if cls._options then
@@ -1088,15 +1090,15 @@ function grammar.Entity.getoption(cls, opt)
 	end
 end
 
-function grammar.Entity.method:options(options)
+function grammar_int.Entity.method:options(options)
 	local clone = self:clone()
 	for k, v in pairs(options) do
 		if type(k) == 'string' then
-			local opt = grammar.Entity.getoption(class.classof(self), k)
+			local opt = grammar_int.Entity.getoption(class.classof(self), k)
 			assert(opt, string.format("invalid option '%s'", k))
 			opt(clone, v)
 		elseif type(v) == 'string' then
-			local opt = grammar.Entity.getoption(class.classof(self), v)
+			local opt = grammar_int.Entity.getoption(class.classof(self), v)
 			assert(opt, string.format("invalid option '%s'", v))
 			opt(clone)
 		else
@@ -1106,22 +1108,22 @@ function grammar.Entity.method:options(options)
 	return clone
 end
 
-grammar.Entity._options = {}
+grammar_int.Entity._options = {}
 
-function grammar.Entity._options.memoize(self)
+function grammar_int.Entity._options.memoize(self)
 	self.memoize = true
 end
 
 
-grammar.Record = class.class('Record', grammar.Entity)
+grammar_int.Record = class.class('Record', grammar_int.Entity)
 
-function grammar.Record.method:__init(entities)
+function grammar_int.Record.method:__init(entities)
 	self.entities = entities
 	self.extra_entities = {}
 	self.on_finish = {}
 end
 
-function grammar.Record.method:extra(functions)
+function grammar_int.Record.method:extra(functions)
 	for name, func in pairs(functions) do
 		if type(name) == 'string' then self.extra_entities[name] = func
 		else table.insert(self.on_finish, func) end
@@ -1129,7 +1131,7 @@ function grammar.Record.method:extra(functions)
 	return self
 end
 
-function grammar.Record.method:compile(rule, id)
+function grammar_int.Record.method:compile(rule, id)
 	local iter, ret
 
 	ret = grammar_dg.Retain:new(haka.packet_mode() == 'passthrough')
@@ -1166,13 +1168,13 @@ function grammar.Record.method:compile(rule, id)
 end
 
 
-grammar.Sequence = class.class('Sequence', grammar.Entity)
+grammar_int.Sequence = class.class('Sequence', grammar_int.Entity)
 
-function grammar.Sequence.method:__init(entities)
+function grammar_int.Sequence.method:__init(entities)
 	self.entities = entities
 end
 
-function grammar.Sequence.method:compile(rule, id)
+function grammar_int.Sequence.method:compile(rule, id)
 	local iter, ret
 
 	ret = grammar_dg.RecordStart:new(rule, id, self.named)
@@ -1204,13 +1206,13 @@ function grammar.Sequence.method:compile(rule, id)
 end
 
 
-grammar.Union = class.class('Union', grammar.Entity)
+grammar_int.Union = class.class('Union', grammar_int.Entity)
 
-function grammar.Union.method:__init(entities)
+function grammar_int.Union.method:__init(entities)
 	self.entities = entities
 end
 
-function grammar.Union.method:compile(rule, id)
+function grammar_int.Union.method:compile(rule, id)
 	local ret = grammar_dg.UnionStart:new(rule, id, self.named)
 
 	for i, value in ipairs(self.entities) do
@@ -1226,9 +1228,9 @@ function grammar.Union.method:compile(rule, id)
 end
 
 
-grammar.Branch = class.class('Branch', grammar.Entity)
+grammar_int.Branch = class.class('Branch', grammar_int.Entity)
 
-function grammar.Branch.method:__init(cases, select)
+function grammar_int.Branch.method:__init(cases, select)
 	self.selector = select
 	self.cases = { default = 'error' }
 	for key, value in pairs(cases) do
@@ -1236,7 +1238,7 @@ function grammar.Branch.method:__init(cases, select)
 	end
 end
 
-function grammar.Branch.method:compile(rule, id)
+function grammar_int.Branch.method:compile(rule, id)
 	local ret = grammar_dg.Branch:new(rule, id, self.selector)
 	for key, value in pairs(self.cases) do
 		if key ~= 'default' then
@@ -1261,20 +1263,20 @@ function grammar.Branch.method:compile(rule, id)
 end
 
 
-grammar.Array = class.class('Array', grammar.Entity)
+grammar_int.Array = class.class('Array', grammar_int.Entity)
 
-function grammar.Array.method:__init(entity)
+function grammar_int.Array.method:__init(entity)
 	self.entity = entity
 end
 
-function grammar.Array.method:compile(rule, id)
+function grammar_int.Array.method:compile(rule, id)
 	local entity = self.entity:compile(self.rule or rule, id)
 	if not entity then
 		error("cannot create an array of empty element")
 	end
 	local start = grammar_dg.ArrayStart:new(rule, id, self.named, entity, self.create, self.resultclass)
 	if self.converter then start:convert(self.converter, self.memoize) end
-	local finish = grammar.ResultPop:new()
+	local finish = grammar_dg.ResultPop:new()
 
 	local pop = grammar_dg.ArrayPop:new()
 	local inner = grammar_dg.ArrayPush:new(rule, id)
@@ -1290,9 +1292,9 @@ function grammar.Array.method:compile(rule, id)
 	return start
 end
 
-grammar.Array._options = {}
+grammar_int.Array._options = {}
 
-function grammar.Array._options.count(self, size)
+function grammar_int.Array._options.count(self, size)
 	local sizefunc
 
 	if type(size) ~= 'function' then
@@ -1306,49 +1308,49 @@ function grammar.Array._options.count(self, size)
 	end
 end
 
-function grammar.Array._options.untilcond(self, condition)
+function grammar_int.Array._options.untilcond(self, condition)
 	self.more = function (array, ctx)
 		if #array == 0 then return not condition(nil, ctx)
 		else return not condition(array[#array], ctx) end
 	end
 end
 
-function grammar.Array._options.whilecond(self, condition)
+function grammar_int.Array._options.whilecond(self, condition)
 	self.more = function (array, ctx)
 		if #array == 0 then return condition(nil, ctx)
 		else return condition(array[#array], ctx) end
 	end
 end
 
-function grammar.Array._options.create(self, f)
+function grammar_int.Array._options.create(self, f)
 	self.create = f
 end
 
-function grammar.Array._options.result(self, resultclass)
+function grammar_int.Array._options.result(self, resultclass)
 	self.resultclass = resultclass
 end
 
 
-grammar.Number = class.class('Number', grammar.Entity)
+grammar_int.Number = class.class('Number', grammar_int.Entity)
 
-function grammar.Number.method:__init(bits)
+function grammar_int.Number.method:__init(bits)
 	self.bits = bits
 end
 
-function grammar.Number.method:compile(rule, id)
+function grammar_int.Number.method:compile(rule, id)
 	local ret = grammar_dg.Number:new(rule, id, self.bits, self.endian, self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end
 	if self.validate then ret:validate(self.validate) end
 	return ret
 end
 
-grammar.Number._options = {}
-function grammar.Number._options.endianness(self, endian) self.endian = endian end
+grammar_int.Number._options = {}
+function grammar_int.Number._options.endianness(self, endian) self.endian = endian end
 
 
-grammar.Bytes = class.class('Bytes', grammar.Entity)
+grammar_int.Bytes = class.class('Bytes', grammar_int.Entity)
 
-function grammar.Bytes.method:compile(rule, id)
+function grammar_int.Bytes.method:compile(rule, id)
 	if type(self.count) ~= 'function' then
 		local count = self.count
 		self.count = function (self) return count end
@@ -1360,18 +1362,18 @@ function grammar.Bytes.method:compile(rule, id)
 	return ret
 end
 
-grammar.Bytes._options = {}
-function grammar.Bytes._options.chunked(self, callback) self.chunked = callback end
-function grammar.Bytes._options.count(self, count) self.count = count end
+grammar_int.Bytes._options = {}
+function grammar_int.Bytes._options.chunked(self, callback) self.chunked = callback end
+function grammar_int.Bytes._options.count(self, count) self.count = count end
 
 
-grammar.Bits = class.class('Bits', grammar.Entity)
+grammar_int.Bits = class.class('Bits', grammar_int.Entity)
 
-function grammar.Bits.method:__init(bits)
+function grammar_int.Bits.method:__init(bits)
 	self.bits = bits
 end
 
-function grammar.Bits.method:compile(rule, id)
+function grammar_int.Bits.method:compile(rule, id)
 	if type(self.bits) ~= 'function' then
 		local bits = self.bits
 		self.bits = function (self) return bits end
@@ -1380,13 +1382,13 @@ function grammar.Bits.method:compile(rule, id)
 	return grammar_dg.Bits:new(rule, id, self.bits)
 end
 
-grammar.Token = class.class('Token', grammar.Entity)
+grammar_int.Token = class.class('Token', grammar_int.Entity)
 
-function grammar.Token.method:__init(pattern)
+function grammar_int.Token.method:__init(pattern)
 	self.pattern = pattern
 end
 
-function grammar.Token.method:compile(rule, id)
+function grammar_int.Token.method:compile(rule, id)
 	if not self.re then
 		self.re = rem.re:compile("^(?:"..self.pattern..")")
 		self.full_re = rem.re:compile("^(?:"..self.pattern..")")
@@ -1396,162 +1398,214 @@ function grammar.Token.method:compile(rule, id)
 	return ret
 end
 
-grammar.Execute = class.class('Execute', grammar.Entity)
+grammar_int.Execute = class.class('Execute', grammar_int.Entity)
 
-function grammar.Execute.method:__init(func)
+function grammar_int.Execute.method:__init(func)
 	self.func = func
 end
 
-function grammar.Execute.method:compile(rule, id)
+function grammar_int.Execute.method:compile(rule, id)
 	return grammar_dg.Execute:new(rule, id, self.func)
 end
 
-grammar.Retain = class.class('Retain', grammar.Entity)
+grammar_int.Retain = class.class('Retain', grammar_int.Entity)
 
-function grammar.Retain.method:__init(readonly)
+function grammar_int.Retain.method:__init(readonly)
 	self.readonly = readonly
 end
 
-function grammar.Retain.method:compile(rule, id)
+function grammar_int.Retain.method:compile(rule, id)
 	return grammar_dg.Retain:new(self.readonly)
 end
 
-grammar.Release = class.class('Release', grammar.Entity)
+grammar_int.Release = class.class('Release', grammar_int.Entity)
 
-function grammar.Release.method:compile(rule, id)
+function grammar_int.Release.method:compile(rule, id)
 	return grammar_dg.Release:new()
 end
 
-grammar.Empty = class.class('Empty', grammar.Entity)
+grammar_int.Empty = class.class('Empty', grammar_int.Entity)
 
-function grammar.Empty.method:compile(rule, id)
+function grammar_int.Empty.method:compile(rule, id)
 	return nil
 end
 
-grammar.Error = class.class('Error', grammar.Entity)
+grammar_int.Error = class.class('Error', grammar_int.Entity)
 
-function grammar.Error.method:__init(msg)
+function grammar_int.Error.method:__init(msg)
 	self.msg = msg
 end
 
-function grammar.Error.method:compile(rule, id)
+function grammar_int.Error.method:compile(rule, id)
 	return grammar_dg.Error:new(id, self.msg)
 end
 
-function grammar.record(entities)
-	return grammar.Record:new(entities)
+function grammar_int.record(entities)
+	return grammar_int.Record:new(entities)
 end
 
-function grammar.sequence(entities)
-	return grammar.Sequence:new(entities)
+function grammar_int.sequence(entities)
+	return grammar_int.Sequence:new(entities)
 end
 
-function grammar.union(entities)
-	return grammar.Union:new(entities)
+function grammar_int.union(entities)
+	return grammar_int.Union:new(entities)
 end
 
-function grammar.branch(cases, select)
-	return grammar.Branch:new(cases, select)
+function grammar_int.branch(cases, select)
+	return grammar_int.Branch:new(cases, select)
 end
 
-function grammar.optional(entity, present)
-	return grammar.Branch:new({
+function grammar_int.optional(entity, present)
+	return grammar_int.Branch:new({
 		[true] = entity,
 		default = 'continue'
 	}, present)
 end
 
-function grammar.array(entity)
-	return grammar.Array:new(entity)
+function grammar_int.array(entity)
+	return grammar_int.Array:new(entity)
 end
 
-function grammar.number(bits)
-	return grammar.Number:new(bits)
+function grammar_int.number(bits)
+	return grammar_int.Number:new(bits)
 end
 
-function grammar.token(pattern)
-	return grammar.Token:new(pattern)
+function grammar_int.token(pattern)
+	return grammar_int.Token:new(pattern)
 end
 
-grammar.flag = grammar.number(1):convert(grammar.converter.bool, false)
+grammar_int.flag = grammar_int.number(1):convert(grammar_int.converter.bool, false)
 
-function grammar.bytes()
-	return grammar.Bytes:new()
+function grammar_int.bytes()
+	return grammar_int.Bytes:new()
 end
 
-function grammar.padding(args)
+function grammar_int.padding(args)
 	if args.align then
 		local align = args.align
-		return grammar.Bits:new(function (self, ctx)
+		return grammar_int.Bits:new(function (self, ctx)
 			local rem = (ctx.iter.meter * 8 + ctx._bitoffset) % align
 			if rem > 0 then return align -rem
 			else return 0 end
 		end)
 	elseif args.size then
-		return grammar.Bits:new(args.size)
+		return grammar_int.Bits:new(args.size)
 	else
 		error("invalid padding option")
 	end
 end
 
-function grammar.field(name, field)
+function grammar_int.field(name, field)
 	return field:_as(name)
 end
 
-function grammar.verify(func, msg)
-	return grammar.Execute:new(function (self, ctx)
+function grammar_int.verify(func, msg)
+	return grammar_int.Execute:new(function (self, ctx)
 		if not func(self, ctx) then
 			error(msg)
 		end
 	end)
 end
 
-function grammar.execute(func)
-	return grammar.Execute:new(func)
+function grammar_int.execute(func)
+	return grammar_int.Execute:new(func)
 end
 
-function grammar.empty()
-	return grammar.Empty:new()
+function grammar_int.empty()
+	return grammar_int.Empty:new()
 end
 
-function grammar.error(msg)
-	return grammar.Error:new(msg)
+function grammar_int.error(msg)
+	return grammar_int.Error:new(msg)
 end
 
-grammar.text = grammar.bytes():convert(grammar.converter.string, true)
+grammar_int.text = grammar_int.bytes():convert(grammar_int.converter.string, true)
 
 --
 -- Grammar
 --
 
-local grammar_class = class.class("Grammar")
+local Grammar = class.class("Grammar")
 
-function grammar_class.method:__init(name)
-	self._name = name
-	self._rules = {}
+function Grammar.method:__init(name)
+	rawset(self, '_name', name)
+	rawset(self, '_rules', {})
+	rawset(self, '_exports', {})
 end
 
-function grammar_class.method:__index(name)
-	local ret = self._rules[name]
+function Grammar.method:__index(name)
+	local ret = self._exports[name]
 	if not ret then
-		error(string.format("unknown grammar rule '%s'", name))
+		error(string.format("unknown grammar public rule '%s'", name))
 	end
-	
+
 	return ret
 end
 
-function grammar_class.method:__newindex(key, value)
-	if class.isa(value, grammar.Entity) then
-		value.rule = key
-		self._rules[key] = value
-	else
-		rawset(self, key, value)
+function Grammar.method:__newindex(key, value)
+	error("read-only table")
+end
+
+
+local GrammarEnv = class.class("GrammarEnv")
+
+function GrammarEnv.method:__init(res, env)
+	rawset(self, '_res', res)
+	rawset(self, '_env', env)
+	
+	self.export = function (...)
+		local rules = table.invert(self._res._rules)
+
+		for _, value in ipairs({...}) do
+			local name = rules[value]
+			if not name then
+				error("exported rule must be registered in the grammar")
+			end
+
+			self._res._exports[name] = value:compile()
+		end
 	end
 end
 
-function grammar.new(name)
-	return grammar_class:new(name)
+function GrammarEnv.method:__index(name)
+	local ret
+
+	-- Search in the grammar environment
+	ret = grammar_int[name]
+	if ret then return ret end
+
+	-- Search the defined rules
+	ret = self._res._rules[name]
+	if ret then return ret end
+
+	-- Or in the global environment
+	return self._env[name]
 end
 
+function GrammarEnv.method:__newindex(key, value)
+	-- Forbid override to grammar elements
+	if grammar[name] then
+		error(string.format("'%s' is reserved in the grammar scope", key))
+	end
+
+	-- Add the object in the rules
+	self._res._rules[key] = value
+
+	if class.isa(value, grammar_int.Entity) then
+		value.rule = key
+	end
+end
+
+function grammar.new(name, def)
+	assert(type(def) == 'function', "grammar definition must by a function")
+
+	local g = Grammar:new(name)
+	local env = GrammarEnv:new(g, debug.getfenv(def))
+	debug.setfenv(def, env)
+
+	def()
+	return g
+end
 
 haka.grammar = grammar

@@ -54,6 +54,14 @@ function table.dict(table)
 	return ret
 end
 
+function table.invert(table)
+	local ret = {}
+	for k, v in pairs(table) do
+		ret[v] = k
+	end
+	return ret
+end
+
 function table.contains(table, elem)
 	return table[elem] ~= nil
 end

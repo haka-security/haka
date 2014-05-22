@@ -14,74 +14,76 @@ local ipv4_addr_convert = {
 	set = function (x) return x.packed end
 }
 
-local option_header  = haka.grammar.record{
-	haka.grammar.field('copy',        haka.grammar.number(1)),
-	haka.grammar.field('class',       haka.grammar.number(2)),
-	haka.grammar.field('number',      haka.grammar.number(5)),
-}
-
-local option_data = haka.grammar.record{
-	haka.grammar.field('len',         haka.grammar.number(8))
-		:validate(function (self) self.len = #self.data+2 end),
-	haka.grammar.field('data',        haka.grammar.bytes()
-		:options{count = function (self) return self.len-2 end})
-}
-
-local option = haka.grammar.record{
-	haka.grammar.union{
-		option_header,
-		haka.grammar.field('type',    haka.grammar.number(8))
-	},
-	haka.grammar.optional(option_data,
-		function (self) return self.type ~= 0 and self.type ~= 1 end
-	)
-}
-
-local header = haka.grammar.record{
-	haka.grammar.field('version',     haka.grammar.number(4))
-		:validate(function (self) self.version = 4 end),
-	haka.grammar.field('hdr_len',     haka.grammar.number(4))
-		:convert(haka.grammar.converter.mult(4))
-		:validate(function (self) self.hdr_len = self:_compute_hdr_len(self) end),
-	haka.grammar.field('tos',         haka.grammar.number(8)),
-	haka.grammar.field('len',         haka.grammar.number(16))
-		:validate(function (self) self.len = self.hdr_len + #self.payload end),
-	haka.grammar.field('id',          haka.grammar.number(16)),
-	haka.grammar.field('flags',       haka.grammar.record{
-		haka.grammar.field('rb',      haka.grammar.flag),
-		haka.grammar.field('df',      haka.grammar.flag),
-		haka.grammar.field('mf',      haka.grammar.flag),
-	}),
-	haka.grammar.field('frag_offset', haka.grammar.number(13)
-		:convert(haka.grammar.converter.mult(8))),
-	haka.grammar.field('ttl',         haka.grammar.number(8)),
-	haka.grammar.field('proto',       haka.grammar.number(8)),
-	haka.grammar.field('checksum',    haka.grammar.number(16))
-		:validate(function (self)
-			self.checksum = 0
-			self.checksum = ipv4.inet_checksum_compute(self._payload:sub(0, self.hdr_len))
-		end),
-	haka.grammar.field('src',         haka.grammar.number(32)
-		:convert(ipv4_addr_convert, true)),
-	haka.grammar.field('dst',         haka.grammar.number(32)
-		:convert(ipv4_addr_convert, true)),
-	haka.grammar.field('opt',         haka.grammar.array(option)
-		:options{
-			untilcond = function (elem, ctx)
-				return ctx.iter.meter >= ctx:result(1).hdr_len or
-					(elem and elem.type == 0)
-			end
+ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
+	local option_header  = record{
+		field('copy',        number(1)),
+		field('class',       number(2)),
+		field('number',      number(5)),
+	}
+	
+	local option_data = record{
+		field('len',         number(8))
+			:validate(function (self) self.len = #self.data+2 end),
+		field('data',        bytes()
+			:options{count = function (self) return self.len-2 end})
+	}
+	
+	local option = record{
+		union{
+			option_header,
+			field('type',    number(8))
+		},
+		optional(option_data,
+			function (self) return self.type ~= 0 and self.type ~= 1 end
+		)
+	}
+	
+	local header = record{
+		field('version',     number(4))
+			:validate(function (self) self.version = 4 end),
+		field('hdr_len',     number(4))
+			:convert(converter.mult(4))
+			:validate(function (self) self.hdr_len = self:_compute_hdr_len(self) end),
+		field('tos',         number(8)),
+		field('len',         number(16))
+			:validate(function (self) self.len = self.hdr_len + #self.payload end),
+		field('id',          number(16)),
+		field('flags',       record{
+			field('rb',      flag),
+			field('df',      flag),
+			field('mf',      flag),
 		}),
-	haka.grammar.padding{align = 32},
-	haka.grammar.verify(function (self, ctx)
-		if ctx.iter.meter ~= self.hdr_len then
-			error(string.format("invalid ipv4 header size, expected %d bytes, got %d bytes", self.hdr_len, ctx.iter.meter))
-		end
-	end),
-	haka.grammar.field('payload',     haka.grammar.bytes())
-}
+		field('frag_offset', number(13)
+			:convert(converter.mult(8))),
+		field('ttl',         number(8)),
+		field('proto',       number(8)),
+		field('checksum',    number(16))
+			:validate(function (self)
+				self.checksum = 0
+				self.checksum = ipv4.inet_checksum_compute(self._payload:sub(0, self.hdr_len))
+			end),
+		field('src',         number(32)
+			:convert(ipv4_addr_convert, true)),
+		field('dst',         number(32)
+			:convert(ipv4_addr_convert, true)),
+		field('opt',         array(option)
+			:options{
+				untilcond = function (elem, ctx)
+					return ctx.iter.meter >= ctx:result(1).hdr_len or
+						(elem and elem.type == 0)
+				end
+			}),
+		padding{align = 32},
+		verify(function (self, ctx)
+			if ctx.iter.meter ~= self.hdr_len then
+				error(string.format("invalid ipv4 header size, expected %d bytes, got %d bytes", self.hdr_len, ctx.iter.meter))
+			end
+		end),
+		field('payload',     bytes())
+	}
 
-ipv4_dissector.grammar = header:compile()
+	export(header)
+end)
 
 function ipv4_dissector.method:parse_payload(pkt, payload)
 	self.raw = pkt

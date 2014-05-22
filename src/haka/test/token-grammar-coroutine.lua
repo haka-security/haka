@@ -6,19 +6,23 @@ local class = require('class')
 require('protocol/ipv4')
 local tcp_connection = require('protocol/tcp_connection')
 
-local header = haka.grammar.record{
-	haka.grammar.field("name", haka.grammar.token("[^:\r\n]+")),
-	haka.grammar.token(": "),
-	haka.grammar.field("value", haka.grammar.token("[^\r\n]+")),
-	haka.grammar.token("[\r\n]+"),
-}
+local grammar = haka.grammar.new("test", function ()
+	header = record{
+		field("name", token("[^:\r\n]+")),
+		token(": "),
+		field("value", token("[^\r\n]+")),
+		token("[\r\n]+"),
+	}
 
-local grammar = haka.grammar.record{
-	haka.grammar.field("hello_world", haka.grammar.token("hello world")),
-	haka.grammar.token("\r\n"),
-	haka.grammar.field('headers', haka.grammar.array(header)
-		:options{ count = 3 }),
-}:compile()
+	grammar = record{
+		field("hello_world", token("hello world")),
+		token("\r\n"),
+		field('headers', array(header)
+			:options{ count = 3 }),
+	}
+
+	export(grammar)
+end)
 
 haka.rule{
 	-- Intercept tcp packets
@@ -31,7 +35,7 @@ haka.rule{
 			local ctx = class.class('ctx'):new()
 			local mark = iter:copy()
 			mark:mark()
-			grammar:parse(iter, ctx)
+			grammar.grammar:parse(iter, ctx)
 			print("hello_world= "..ctx.hello_world)
 			for _,header in ipairs(ctx.headers) do
 				print(header.name..": "..header.value)

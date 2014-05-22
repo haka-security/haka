@@ -9,13 +9,17 @@ TestGrammar = {}
 function TestGrammar:test_union()
 	-- Given
 	local buf = haka.vbuffer_from("\xC1")
-	local grammar = haka.grammar.union{
-		haka.grammar.field('a', haka.grammar.number(2)),
-		haka.grammar.field('b', haka.grammar.number(8)),
-	}:compile()
+	local grammar = haka.grammar.new("test", function ()
+		elem = union{
+			field('a', number(2)),
+			field('b', number(8))
+		}
+
+		export(elem)
+	end)
 
 	-- When
-	local result = grammar:parse(buf:pos('begin'))
+	local result = grammar.elem:parse(buf:pos('begin'))
 
 	assertEquals(result.a, 3)
 	assertEquals(result.b, 193)

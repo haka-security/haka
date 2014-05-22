@@ -304,6 +304,35 @@ static void load_module(struct lua_State *L, lua_CFunction luaopen, const char *
 	else lua_pop(L, 1);
 }
 
+#if HAKA_LUA52
+void lua_getfenv(struct lua_State *L, int index)
+{
+	lua_getupvalue(L, index, 1);
+}
+
+int  lua_setfenv(struct lua_State *L, int index)
+{
+	return lua_setupvalue(L, index, 1) == NULL ? 0 : 1;
+}
+
+static int lua_getfenv_wrapper(lua_State *L)
+{
+	lua_getfenv(L, 1);
+	return 1;
+}
+
+static int lua_setfenv_wrapper(lua_State *L)
+{
+	int ret;
+
+	lua_pushvalue(L, 1);
+	lua_pushvalue(L, 2);
+	ret = lua_setfenv(L, -2);
+	lua_pop(L, 1);
+	return ret;
+}
+#endif
+
 struct lua_state *lua_state_init()
 {
 	struct lua_state_ext *ret;
@@ -335,6 +364,15 @@ struct lua_state *lua_state_init()
 	lua_getglobal(L, "string");
 	lua_pushcfunction(L, str_format);
 	lua_setfield(L, -2, "format");
+#endif
+
+#if HAKA_LUA52
+	lua_getglobal(L, "debug");
+	lua_pushcfunction(L, lua_getfenv_wrapper);
+	lua_setfield(L, -2, "getfenv");
+	lua_pushcfunction(L, lua_setfenv_wrapper);
+	lua_setfield(L, -2, "setfenv");
+	lua_pop(L, 1);
 #endif
 
 	lua_getglobal(L, "debug");
