@@ -13,7 +13,9 @@ target_link_libraries(libhaka-vbuffer-stream libhaka)
 
 TEST_UNIT_LUA(MODULE libhaka NAME vbuffer FILES vbuffer.lua)
 TEST_UNIT_LUA(MODULE libhaka NAME vbuffer_stream_blocking FILES vbuffer_stream_blocking.lua)
-TEST_UNIT_LUA(MODULE libhaka NAME grammar FILES grammar-lua.lua)
+
+TEST_UNIT_LUA(MODULE libhaka NAME grammar-union FILES grammar-union.lua)
+TEST_UNIT_LUA(MODULE libhaka NAME grammar-try FILES grammar-try.lua)
 
 get_property(module-regexp GLOBAL PROPERTY module-regexp)
 foreach(module IN LISTS module-regexp)
@@ -23,4 +25,3 @@ foreach(module IN LISTS module-regexp)
 	TEST_UNIT_LUA(MODULE libhaka NAME regexp-${module} FILES regexp-lua ENV "HAKA_MODULE=${module}")
 endforeach(module)
 
-TEST_UNIT_LUA(MODULE libhaka NAME grammar-try FILES grammar-try.lua)

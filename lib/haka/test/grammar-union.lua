@@ -4,9 +4,9 @@
 
 require('luaunit')
 
-TestGrammar = {}
+TestGrammarUnion = {}
 
-function TestGrammar:test_union()
+function TestGrammarUnion:test_union()
 	-- Given
 	local buf = haka.vbuffer_from("\xC1")
 	local grammar = haka.grammar.new("test", function ()
@@ -26,4 +26,4 @@ function TestGrammar:test_union()
 end
 
 LuaUnit:setVerbosity(2)
-assert(LuaUnit:run('TestGrammar') == 0)
+assert(LuaUnit:run('TestGrammarUnion') == 0)
