@@ -170,7 +170,7 @@ end
 -- HTTP parse results
 --
 
-local HeaderResult = class.class("HeaderResult", haka.grammar.ArrayResult)
+local HeaderResult = class.class("HeaderResult", haka.grammar.result.ArrayResult)
 
 function HeaderResult.method:__init()
 	rawset(self, '_cache', {})
