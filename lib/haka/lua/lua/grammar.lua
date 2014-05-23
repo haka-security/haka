@@ -296,10 +296,11 @@ function grammar_dg.ParseContext.method:pushcatch(entity)
 end
 
 function grammar_dg.ParseContext.method:catch()
-	local catch = self._catches[#self._catches]
-	if not catch then
+	if #self._catches == 0 then
 		return nil
 	end
+
+	local catch = self._catches[#self._catches]
 
 	-- Unmark each retain started in failing case
 	while #self._retain_mark > catch.retain_count do
@@ -323,16 +324,15 @@ function grammar_dg.ParseContext.method:catch()
 	self:seekmark()
 	self:popcatch()
 
-
 	return catch.entity
 end
 
 function grammar_dg.ParseContext.method:popcatch(entity)
+	assert(#self._catches)
 	local catch = self._catches[#self._catches]
 
 	self:popmark(false)
 	self:unmark()
-
 	self._catches[#self._catches] = nil
 
 	return catch
@@ -1382,11 +1382,11 @@ function grammar_int.Try.method:compile(rule, id)
 	end
 
 	if not first_try then
-		error("cannot create a try without any case")
+		error("cannot create a try element without any case")
 	end
 
 	-- End with error if everything failed
-	previous_try:catch(grammar_dg.Error:new(self.rule or rule, "no case successfull"))
+	previous_try:catch(grammar_dg.Error:new(self.rule or rule, "cannot find a successful try case"))
 
 	return first_try
 end

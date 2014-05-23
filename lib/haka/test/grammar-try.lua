@@ -37,8 +37,6 @@ function TestGrammarTry:test_try_catch_error()
 	local res = gr.elem:parse(vbuf:pos("begin"))
 	-- Then
 	assertEquals(res.bar, "bar")
-
-	gr:dump_graph(io.open("/tmp/dump.dot", "a"))
 end
 
 function TestGrammarTry:test_try_does_not_leave_result_on_fail()
