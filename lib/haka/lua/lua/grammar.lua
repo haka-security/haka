@@ -15,27 +15,21 @@ local grammar = {}
 
 local ParseError = class.class("ParseError")
 
-function ParseError.method:__init(iterator, rule, description, ...)
-	self.iterator = iterator
-	self.rule = rule
+function ParseError.method:__init(position, field, description, ...)
+	self.position = position
+	self.field = field
 	self.description = description
 end
 
+function ParseError.method:context()
+	local iter = self.position:copy()
+	return string.format("parse error context: %s...", safe_string(iter:sub(100):asstring()))
+end
+
 function ParseError.method:__tostring()
-	local string = {"parse error"}
-
-	table.insert(string, " at byte ")
-	table.insert(string, self.iterator.meter)
-
-	if self.rule then
-		table.insert(string, " in ")
-		table.insert(string, self.rule)
-	end
-
-	table.insert(string, ": ")
-	table.insert(string, self.description)
-
-	return table.concat(string)
+	return string.format("parse error at byte %d for field %s in %s: %s",
+		self.position.meter, self.field.id or "<unknown>", self.field.rule or "<unknown>",
+		self.description)
 end
 
 
@@ -199,8 +193,12 @@ function grammar_dg.ParseContext.method:parse(entity)
 		if err then
 			iter = self:catch()
 			if not iter then
+				haka.log.debug("grammar", tostring(err))
+				haka.log.debug("grammar", err:context())
 				break
 			else
+				haka.log.debug("grammar", "catched: %s", err)
+				haka.log.debug("grammar", "         %s", err:context())
 				err = nil
 			end
 		else
@@ -345,14 +343,8 @@ function grammar_dg.ParseContext.method:error(position, field, description, ...)
 	description = string.format(description, ...)
 
 	position = position or self.iter
-	local iter = position:copy()
 
-	haka.log.debug("grammar", "parse error at byte %d for field %s in %s: %s",
-		position.meter, field.id or "<unknown>", field.rule or "<unknown>",
-		description)
-	haka.log.debug("grammar", "parse error context: %s...", safe_string(iter:sub(100):asstring()))
-
-	return ParseError:new(position, field.rule, description)
+	return ParseError:new(position, field, description)
 end
 
 
