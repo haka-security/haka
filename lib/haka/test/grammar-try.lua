@@ -7,25 +7,7 @@ require('luaunit')
 
 TestGrammarTry = {}
 
-function TestGrammarTry:gen_stream(f)
-	local data = { "bar fo", "o dea", "d beef", " cof", "fee", " foo foo " }
-	local stream = haka.vbuffer_stream()
-	local manager = haka.vbuffer_stream_comanager:new(stream)
-	manager:start(0, f)
-
-	for i, d in ipairs(data) do
-		local current = stream:push(haka.vbuffer_from(d))
-		if i == #data then
-			stream:finish()
-		end
-
-		manager:process_all(current)
-
-		while stream:pop() do end
-	end
-end
-
-function TestGrammarTry:test_compile()
+function TestGrammarTry:test_try_compile()
 	-- Given
 	--   nothing
 	-- When
@@ -40,7 +22,7 @@ function TestGrammarTry:test_compile()
 	assertTrue(gr.elem)
 end
 
-function TestGrammarTry:test_catch_error()
+function TestGrammarTry:test_try_catch_error()
 	-- Given
 	local vbuf = haka.vbuffer_from("bar")
 	local gr = haka.grammar.new("test", function ()
@@ -54,8 +36,37 @@ function TestGrammarTry:test_catch_error()
 	-- When
 	local res = gr.elem:parse(vbuf:pos("begin"))
 	-- Then
-	assertTrue(res.bar)
-	assertIsNil(res.foo)
+	assertEquals(res.bar, "bar")
+
+	gr:dump_graph(io.open("/tmp/dump.dot", "a"))
+end
+
+function TestGrammarTry:test_try_does_not_leave_result_on_fail()
+	-- Given
+	local vbuf = haka.vbuffer_from("bar foo")
+	local gr = haka.grammar.new("test", function ()
+		elem = try{
+			field("rec_fee", record{
+				field("bar", token("bar")),
+				token(" "),
+				field("fee", token("fee")),
+			}),
+			field("rec_foo", record{
+				field("bar", token("bar")),
+				token(" "),
+				field("foo", token("foo")),
+			}),
+		}
+
+		export(elem)
+	end)
+	-- When
+	local res = gr.elem:parse(vbuf:pos("begin"))
+	-- Then
+	assertIsNil(res.rec_fee)
+	assertIsTable(res.rec_foo)
+	assertEquals(res.rec_foo.bar, "bar")
+	assertEquals(res.rec_foo.foo, "foo")
 end
 
 LuaUnit:setVerbosity(1)

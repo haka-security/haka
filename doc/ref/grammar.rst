@@ -369,7 +369,7 @@ Compounds
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
 
-    Create a try. Parser will try, in order, each case until one of it finishes successfully.
+    Parser will try, in order, each case until one of it finishes successfully.
 
 .. haka:function:: branch(cases, selector) -> entity
     :objtype: grammar

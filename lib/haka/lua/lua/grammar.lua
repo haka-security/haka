@@ -285,6 +285,7 @@ function grammar_dg.ParseContext.method:seekmark()
 end
 
 function grammar_dg.ParseContext.method:pushcatch(entity)
+	-- Should have created a ctx result
 	self:mark(false)
 	self:pushmark()
 
@@ -292,6 +293,7 @@ function grammar_dg.ParseContext.method:pushcatch(entity)
 		entity = entity,
 		retain_count = #self._retain_mark,
 		mark_count = #self._marks,
+		result_count = #self._results,
 	}
 end
 
@@ -311,12 +313,18 @@ function grammar_dg.ParseContext.method:catch()
 		self:popmark(false)
 	end
 
+	-- remove all result ctx
+	while #self._results > catch.result_count do
+		self:pop()
+	end
+
+	-- Also remove result created by Try
+	-- Should be done in Try entity but we can't
+	self:pop()
 
 	self:seekmark()
 	self:popcatch()
 
-	-- Should be done in Try entity but we can't
-	self:pop()
 
 	return catch.entity
 end

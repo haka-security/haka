@@ -185,6 +185,8 @@ function module.merge(dst, src)
 		end
 		rawset(src, '__property', nil)
 	end
+
+	table.merge(dst, src)
 end
 
 
