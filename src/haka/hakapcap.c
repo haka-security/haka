@@ -42,7 +42,7 @@ static void help(const char *program)
 	fprintf(stdout, "\t-l,--loglevel <level>: Set the log level\n");
 	fprintf(stdout, "\t                         (debug, info, warning, error or fatal)\n");
 	fprintf(stdout, "\t-a,--alert-to <file>:  Redirect alerts to given file\n");
-	fprintf(stdout, "\t--luadebug:            Activate lua debugging\n");
+	fprintf(stdout, "\t--debug-lua:           Activate lua debugging\n");
 	fprintf(stdout, "\t--debug-grammar:       Activate grammar internal graph dump (saved in file <name>.dot)\n");
 	fprintf(stdout, "\t--no-pass-through, --pass-through:\n");
 	fprintf(stdout, "\t                       Select pass-through mode (default: true)\n");
@@ -65,7 +65,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "debug",           no_argument,       0, 'd' },
 		{ "loglevel",        required_argument, 0, 'l' },
 		{ "alert-to",        required_argument, 0, 'a' },
-		{ "luadebug",        no_argument,       0, 'L' },
+		{ "debug-lua",       no_argument,       0, 'L' },
 		{ "debug-grammar",   no_argument,       0, 'G' },
 		{ "no-pass-through", no_argument,       0, 'p' },
 		{ "pass-through",    no_argument,       0, 'P' },

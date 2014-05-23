@@ -53,7 +53,7 @@ static void help(const char *program)
 	fprintf(stdout, "\t                       Override configuration parameter\n");
 	fprintf(stdout, "\t-l,--loglevel <level>: Set the log level\n");
 	fprintf(stdout, "\t                         (debug, info, warning, error or fatal)\n");
-	fprintf(stdout, "\t--luadebug:            Activate lua debugging (and keep haka in foreground)\n");
+	fprintf(stdout, "\t--debug-lua:           Activate lua debugging (and keep haka in foreground)\n");
 	fprintf(stdout, "\t--debug-grammar:       Activate grammar internal graph dump (saved in file <name>.dot)\n");
 	fprintf(stdout, "\t--no-daemon:           Do no run in the background\n");
 }
@@ -104,7 +104,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "config",        required_argument, 0, 'c' },
 		{ "debug",         no_argument,       0, 'd' },
 		{ "loglevel",      required_argument, 0, 'l' },
-		{ "luadebug",      no_argument,       0, 'L' },
+		{ "debug-lua",     no_argument,       0, 'L' },
 		{ "debug-grammar", no_argument,       0, 'G' },
 		{ "no-daemon",     no_argument,       0, 'D' },
 		{ "opt",           required_argument, 0, 'o' },

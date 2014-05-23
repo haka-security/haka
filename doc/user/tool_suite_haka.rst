@@ -51,7 +51,7 @@ Options
 
     Override the configuration rule file.
 
-.. option:: --luadebug
+.. option:: --debug-lua
 
     Start haka with debugger capability.
 
