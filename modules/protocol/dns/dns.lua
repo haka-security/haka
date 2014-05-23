@@ -260,13 +260,17 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 	export(message)
 end)
 
+function module.dissect(flow)
+	flow:select_next_dissector(dns_dissector:new(flow))
+end
+
 function module.install_udp_rule(port)
 	haka.rule{
 		hook = udp_connection.events.new_connection,
 		eval = function (flow, pkt)
 			if pkt.dstport == port then
 				haka.log.debug('dns', "selecting dns dissector on flow")
-				flow:select_next_dissector(dns_dissector:new(flow))
+				module.dissect(flow)
 			end
 		end
 	}

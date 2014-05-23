@@ -152,13 +152,17 @@ function http_dissector.method:receive_streamed(flow, iter, direction)
 	end
 end
 
+function module.dissect(flow)
+	flow:select_next_dissector(http_dissector:new(flow))
+end
+
 function module.install_tcp_rule(port)
 	haka.rule{
 		hook = tcp_connection.events.new_connection,
 		eval = function (flow, pkt)
 			if pkt.dstport == port then
 				haka.log.debug('http', "selecting http dissector on flow")
-				flow:select_next_dissector(http_dissector:new(flow))
+				module.dissect(flow)
 			end
 		end
 	}
@@ -523,9 +527,5 @@ http_dissector.states.connect = http_dissector.states:state{
 http_dissector.states.initial = http_dissector.states.request
 
 module.events = http_dissector.events
-
-function module.dissect(flow)
-	flow:select_next_dissector(http_dissector:new(flow))
-end
 
 return module
