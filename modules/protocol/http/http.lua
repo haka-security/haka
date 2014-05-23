@@ -466,7 +466,7 @@ http_dissector.states.request = http_dissector.states:state{
 		self.request, err = http_dissector.grammar.request:parse(iter, self.request, self)
 		if err then
 			haka.alert{
-				description = string.format("invalid http %s", err.rule),
+				description = string.format("invalid http %s", err.field.rule),
 				severity = 'low'
 			}
 			return context.states.ERROR
@@ -501,7 +501,7 @@ http_dissector.states.response = http_dissector.states:state{
 		self.response, err = http_dissector.grammar.response:parse(iter, self.response, self)
 		if err then
 			haka.alert{
-				description = string.format("invalid http %s", err.rule),
+				description = string.format("invalid http %s", err.field.rule),
 				severity = 'low'
 			}
 			return context.states.ERROR
