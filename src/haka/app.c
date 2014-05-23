@@ -131,7 +131,7 @@ void initialize()
 	}
 }
 
-void prepare(int threadcount, bool attach_debugger)
+void prepare(int threadcount, bool attach_debugger, bool grammar_debug)
 {
 	struct packet_module *packet_module = get_packet_module();
 	assert(packet_module);
@@ -172,7 +172,7 @@ void prepare(int threadcount, bool attach_debugger)
 		module_path = NULL;
 	}
 
-	thread_states = thread_pool_create(threadcount, packet_module, attach_debugger);
+	thread_states = thread_pool_create(threadcount, packet_module, attach_debugger, grammar_debug);
 	if (!thread_states) {
 		assert(check_error());
 		message(HAKA_LOG_FATAL, L"core", clear_error());

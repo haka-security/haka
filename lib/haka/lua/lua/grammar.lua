@@ -1565,6 +1565,8 @@ end
 
 local GrammarEnv = class.class("GrammarEnv")
 
+GrammarEnv.dump_graph = false
+
 function GrammarEnv.method:__init(res, env)
 	rawset(self, '_res', res)
 	rawset(self, '_env', env)
@@ -1620,7 +1622,17 @@ function grammar.new(name, def)
 	debug.setfenv(def, env)
 
 	def()
+
+	if grammar.debug then
+		haka.log.warning("grammar", "dumping '%s' grammar graph to %s.dot", g._name, g._name)
+		f = io.open(string.format("%s.dot", g._name), "w+")
+		g:dump_graph(f)
+		f:close()
+	end
+
 	return g
 end
+
+grammar.debug = false
 
 haka.grammar = grammar

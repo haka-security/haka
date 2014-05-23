@@ -132,7 +132,8 @@ static void cleanup_thread_state(struct thread_state *state)
 	free(state);
 }
 
-static struct thread_state *init_thread_state(struct packet_module *packet_module, int thread_id)
+static struct thread_state *init_thread_state(struct packet_module *packet_module,
+		int thread_id, bool grammar_debug)
 {
 	struct thread_state *state;
 
@@ -159,6 +160,12 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		cleanup_thread_state(state);
 		return NULL;
 	}
+
+	/* Set grammar debugging */
+	lua_getglobal(state->lua->L, "haka");
+	lua_getfield(state->lua->L, -1, "grammar");
+	lua_pushboolean(state->lua->L, grammar_debug);
+	lua_setfield(state->lua->L, -2, "debug");
 
 	/* Load Lua sources */
 	lua_state_require(state->lua, "rule");
@@ -194,6 +201,8 @@ static bool init_thread_lua_state(struct thread_state *state)
 	if (lua_pcall(state->lua->L, 1, 0, h)) {
 		lua_state_print_error(state->lua->L, L"init");
 		lua_pop(state->lua->L, 1);
+
+		LUA_STACK_CHECK(state->lua->L, 0);
 		return false;
 	}
 
@@ -207,6 +216,8 @@ static bool init_thread_lua_state(struct thread_state *state)
 	if (lua_pcall(state->lua->L, 0, 0, h)) {
 		lua_state_print_error(state->lua->L, L"init");
 		lua_pop(state->lua->L, 1);
+
+		LUA_STACK_CHECK(state->lua->L, 0);
 		return false;
 	}
 	lua_pop(state->lua->L, 2);
@@ -303,7 +314,7 @@ static void *thread_main_loop(void *_state)
 }
 
 struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module,
-		bool attach_debugger)
+		bool attach_debugger, bool grammar_debug)
 {
 	int i;
 	struct thread_pool *pool;
@@ -345,7 +356,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 	}
 
 	for (i=0; i<count; ++i) {
-		pool->threads[i] = init_thread_state(packet_module, i);
+		pool->threads[i] = init_thread_state(packet_module, i, grammar_debug);
 		if (!pool->threads[i]) {
 			error(L"thread initialization error");
 			thread_pool_cleanup(pool);
