@@ -37,9 +37,6 @@ http_dissector.property.connection = {
 function http_dissector.method:__init(flow)
 	class.super(http_dissector).__init(self)
 	self.flow = flow
-	if flow then
-		self.connection = flow.connection
-	end
 	self.states = http_dissector.states:instanciate()
 	self.states.http = self
 	self._want_data_modification = false
