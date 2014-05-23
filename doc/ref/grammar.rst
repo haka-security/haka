@@ -298,6 +298,16 @@ Final elements
         :param context: Full parsing context.
         :paramtype context: :haka:class:`ParseContext`
 
+.. haka:function:: fail(msg) -> entity
+    :objtype: grammar
+    :module:
+
+    :param msg: Error messgae.
+    :paramtype msg: string
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Always fail the parsing when reaching this element.
 
 Compounds
 ^^^^^^^^^

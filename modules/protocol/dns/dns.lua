@@ -117,7 +117,7 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 					}),
 				},
 			pointer = field('pointer', number(14)),
-			default = error("unsupported compression scheme"),
+			default = fail("unsupported compression scheme"),
 			},
 			function (self, ctx)
 				if self.compression_scheme == POINTER_COMPRESSION then

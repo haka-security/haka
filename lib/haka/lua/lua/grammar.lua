@@ -558,7 +558,7 @@ function grammar_int.empty()
 	return grammar_int.Empty:new()
 end
 
-function grammar_int.error(msg)
+function grammar_int.fail(msg)
 	return grammar_int.Error:new(msg)
 end
 
@@ -605,16 +605,9 @@ function Grammar.method:__newindex(key, value)
 end
 
 
-local GrammarEnv = class.class("GrammarEnv")
-
-GrammarEnv.dump_graph = false
-
-function GrammarEnv.method:__init(res, env)
-	rawset(self, '_res', res)
-	rawset(self, '_env', env)
-	
-	self.export = function (...)
-		local rules = table.invert(self._res._rules)
+local function grammar_env(gr)
+	local export = function (...)
+		local rules = table.invert(gr._rules)
 
 		for _, value in ipairs({...}) do
 			local name = rules[value]
@@ -622,48 +615,57 @@ function GrammarEnv.method:__init(res, env)
 				error("exported rule must be registered in the grammar")
 			end
 
-			self._res._exports[name] = value:compile()
+			gr._exports[name] = value:compile()
 		end
 	end
-end
 
-function GrammarEnv.method:__index(name)
-	local ret
+	return {
+		__index = function (self, name)
+			local ret
 
-	-- Search in the grammar environment
-	ret = grammar_int[name]
-	if ret then return ret end
+			-- Search in the grammar environment
+			ret = grammar_int[name]
+			if ret then return ret end
 
-	-- Search the defined rules
-	ret = self._res._rules[name]
-	if ret then return ret end
+			if name == 'export' then
+				return export
+			end
 
-	-- Or in the global environment
-	return self._env[name]
-end
+			-- Search the defined rules
+			ret = gr._rules[name]
+			if ret then return ret end
 
-function GrammarEnv.method:__newindex(key, value)
-	-- Forbid override to grammar elements
-	if grammar[name] then
-		error(string.format("'%s' is reserved in the grammar scope", key))
-	end
+			return nil
+		end;
+		__newindex = function (self, key, value)
+			-- Forbid override to grammar elements
+			if grammar_int[key] or key == 'export' then
+				error(string.format("'%s' is reserved in the grammar scope", key))
+			end
 
-	-- Add the object in the rules
-	self._res._rules[key] = value
-
-	if class.isa(value, grammar_int.Entity) then
-		value.rule = key
-	end
+			if class.isa(value, grammar_int.Entity) then
+				-- Add the object in the rules
+				gr._rules[key] = value
+				value.rule = key
+			else
+				rawset(self, key, value)
+			end
+		end
+	}
 end
 
 function grammar.new(name, def)
 	assert(type(def) == 'function', "grammar definition must by a function")
 
 	local g = Grammar:new(name)
-	local env = GrammarEnv:new(g, debug.getfenv(def))
-	debug.setfenv(def, env)
+
+	-- Add a metatable to the environment only during the definition
+	-- of the grammar.
+	local env = debug.getfenv(def)
+	setmetatable(env, grammar_env(g))
 
 	def()
+	setmetatable(env, nil)
 
 	if grammar.debug then
 		haka.log.warning("grammar", "dumping '%s' grammar graph to %s.dot", g._name, g._name)
