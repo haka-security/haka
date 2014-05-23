@@ -438,6 +438,10 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 
 	function states.StateMachineInstance.method:__index(name)
 		local current = rawget(self, 'states')[rawget(self, '_instance').state]
+		if not current then
+			error("state machine instance has finished")
+		end
+
 		local trans = current['_internal_' .. name]
 		if not trans then
 			error(string.format("no transition named '%s' on state '%s'", name, self.state.name))
