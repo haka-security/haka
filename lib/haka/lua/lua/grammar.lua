@@ -423,15 +423,16 @@ end
 
 grammar_int.Token = class.class('Token', grammar_int.Entity)
 
-function grammar_int.Token.method:__init(pattern)
+function grammar_int.Token.method:__init(pattern, raw)
 	self.pattern = pattern
+	self.raw = raw
 end
 
 function grammar_int.Token.method:compile(rule, id)
 	if not self.re then
 		self.re = rem.re:compile("^(?:"..self.pattern..")")
 	end
-	local ret = grammar_dg.Token:new(rule, id, self.pattern, self.re, self.named)
+	local ret = grammar_dg.Token:new(rule, id, self.pattern, self.re, self.named, self.raw)
 	if self.converter then ret:convert(self.converter, self.memoize) end
 	return ret
 end
@@ -514,7 +515,11 @@ function grammar_int.number(bits)
 end
 
 function grammar_int.token(pattern)
-	return grammar_int.Token:new(pattern)
+	return grammar_int.Token:new(pattern, false)
+end
+
+function grammar_int.raw_token(pattern)
+	return grammar_int.Token:new(pattern, true)
 end
 
 grammar_int.flag = grammar_int.number(1):convert(grammar_int.converter.bool, false)

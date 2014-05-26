@@ -159,7 +159,7 @@ Final elements
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
 
-    Match a regular expression on the data.
+    Match a regular expression on the data and return a string.
 
     .. note:: The regular expression will surrounded by non-capturing group : ``"^(?:"...")"``.
 
@@ -168,6 +168,19 @@ Final elements
     ::
 
         token('%s+')
+
+.. haka:function:: raw_token(pattern) -> entity
+    :objtype: grammar
+    :module:
+
+    :param pattern: Regular expression pattern for the token.
+    :paramtype pattern: string
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Match a regular expression on the data and return the bytes matched.
+
+    .. note:: The regular expression will surrounded by non-capturing group : ``"^(?:"...")"``.
 
 .. haka:data:: flag
     :objtype: grammar

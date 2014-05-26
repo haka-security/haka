@@ -715,11 +715,12 @@ dg.Token = class.class('DGToken', dg.Primitive)
 
 dg.Token.trace_name = 'token'
 
-function dg.Token.method:__init(rule, id, pattern, re, name)
+function dg.Token.method:__init(rule, id, pattern, re, name, raw)
 	class.super(dg.Token).__init(self, rule, id)
 	self.pattern = pattern
 	self.re = re
 	self.name = name
+	self.raw = raw
 end
 
 function dg.Token.method:_dump_graph_descr()
@@ -751,32 +752,39 @@ function dg.Token.method:_parse(res, iter, ctx)
 
 			iter:split()
 
-			local result = haka.vbuffer_sub(begin, mend)
-			local string = result:asstring()
-
-			if self.converter then
-				string = self.converter.get(string)
-			end
-
 			if self.name then
-				res:addproperty(self.name,
-					function (this)
-						return string
-					end,
-					function (this, newvalue)
-						string = newvalue
-						if self.converter then
-							newvalue = self.converter.set(newvalue)
-						end
-
-						if not self.re:match(newvalue) then
-							error(string.format("token value '%s' does not verify /%s/", newvalue, self.pattern))
-						end
-
-						result:setstring(newvalue)
+				local result = haka.vbuffer_sub(begin, mend)
+	
+				if self.raw then
+					self:genproperty(res, self.name,
+						function (this) return result end)
+				else
+					local string = result:asstring()
+	
+					if self.converter then
+						string = self.converter.get(string)
 					end
-				)
+	
+					res:addproperty(self.name,
+						function (this)
+							return string
+						end,
+						function (this, newvalue)
+							string = newvalue
+							if self.converter then
+								newvalue = self.converter.set(newvalue)
+							end
+	
+							if not self.re:match(newvalue) then
+								error(string.format("token value '%s' does not verify /%s/", newvalue, self.pattern))
+							end
+	
+							result:setstring(newvalue)
+						end
+					)
+				end
 			end
+
 			sink = nil
 			return
 		end

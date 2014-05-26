@@ -16,6 +16,7 @@ TEST_UNIT_LUA(MODULE libhaka NAME vbuffer_stream_blocking FILES vbuffer_stream_b
 
 TEST_UNIT_LUA(MODULE libhaka NAME grammar-union FILES grammar-union.lua)
 TEST_UNIT_LUA(MODULE libhaka NAME grammar-try FILES grammar-try.lua)
+TEST_UNIT_LUA(MODULE libhaka NAME grammar-token FILES grammar-token.lua)
 
 get_property(module-regexp GLOBAL PROPERTY module-regexp)
 foreach(module IN LISTS module-regexp)
