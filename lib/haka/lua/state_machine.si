@@ -314,11 +314,24 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 		end
 	end
 
-
 	states.CompiledState = class.class('CompiledState')
 
+	local function transition_wrapper(state_machine, f)
+		return function (...)
+			local newstatename = f(...)
+			if newstatename then
+				newstate = state_machine._state_table[newstatename]
+				if not newstate then
+					error(string.format("unknown state '%s'", newstatename))
+				end
+
+				return newstate._state
+			end
+		end
+	end
+
 	function states.CompiledState.method:__init(state_machine, state, name)
-		self._state = state_machine:create_state(name)
+		self._state = state_machine._state_machine:create_state(name)
 		self.name = name
 
 		for n, f in pairs(state) do
@@ -326,38 +339,27 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 				assert(type(f) == 'table', "timeout transition must be a table")
 				for timeout, callback in pairs(f) do
 					assert(type(callback) == 'function', "transition must be a function")
-					self._state:transition_timeout(timeout, callback)
+					self._state:transition_timeout(timeout, transition_wrapper(state_machine, callback))
 				end
 			else
 				assert(type(f) == 'function', "transition must be a function")
 
 				if n == 'error' then
-					self._state:transition_error(f)
+					self._state:transition_error(function(...) f(...) end)
 				elseif n == 'enter' then
-					self._state:transition_enter(f)
+					self._state:transition_enter(transition_wrapper(state_machine, f))
 				elseif n == 'leave' then
-					self._state:transition_leave(f)
+					self._state:transition_leave(transition_wrapper(state_machine, f))
 				elseif n == 'init' then
-					self._state:transition_init(f)
+					self._state:transition_init(transition_wrapper(state_machine, f))
 				elseif n == 'finish' then
-					self._state:transition_finish(f)
+					self._state:transition_finish(function(...) f(...) end)
 				else
 					self[n] = f
-					self['_internal_' .. n] = function (self, ...)
-						local newstate = f(self, ...)
-						if newstate then
-							if class.isa(newstate, states.CompiledState) then
-								return self._instance:update(newstate._state)
-							else
-								return self._instance:update(newstate)
-							end
-						end
-					end
 				end
 			end
 		end
 	end
-
 
 	states.StateMachine = class.class('StateMachine')
 
@@ -367,12 +369,7 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 		self._default = {}
 	end
 
-	function states.StateMachine.method:state(transitions)
-		assert(class.isa(self, states.StateMachine))
-		return states.State:new(transitions)
-	end
-
-	function states.StateMachine.method:default(transitions)
+	function states.StateMachine.method:default_transitions(transitions)
 		assert(class.isa(self, states.StateMachine))
 		self._default = transitions
 	end
@@ -380,26 +377,30 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 	function states.StateMachine.method:compile()
 		if not self._state_machine then
 			local state_machine = state_machine(self.name)
+			self._state_machine = state_machine
+
 			local state_table = {}
 			local initial
 
-			for name, state in pairs(self) do
+			for name, state in pairs(self._states) do
 				if name ~= 'initial' and class.isa(state, states.State) then
 					state:merge(self._default)
-					local new_state = states.CompiledState:new(state_machine, state, name)
+					local new_state = states.CompiledState:new(self, state, name)
 					state_table[name] = new_state
 
-					if state == self.initial then
+					if state == self._states.initial then
 						initial = new_state
 					end
 				end
 			end
 
 			if not initial then
-				if class.isa(self.initial, states.State) then
-					self.initial:merge(self._default)
-					initial = states.CompiledState:new(state_machine, self.initial, 'initial')
-					state_table['initial'] = initial
+				if self._states.initial then
+					local state = self._states.initial
+					state:merge(self._default)
+					local new_state = states.CompiledState:new(self, state, 'initial')
+					state_table['initial'] = new_state
+					initial = new_state
 				else
 					error("state machine must have in initial state")
 				end
@@ -408,55 +409,120 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 			state_machine.initial = initial._state
 			state_table.initial = initial
 
-			state_table.ERROR = state_machine.error_state
-			state_table.FINISH = state_machine.finish_state
+			state_table.error = { _state = state_machine.error_state }
+			state_table.finish = { _state = state_machine.finish_state }
 
 			state_machine:compile()
 
-			self._state_machine = state_machine
 			self._state_table = state_table
 		end
 	end
 
-	function states.StateMachine.method:instanciate()
-		self:compile()
-		return states.StateMachineInstance:new(self)
+	function states.StateMachine.method:instanciate(owner)
+		return states.StateMachineInstance:new(self, owner)
 	end
-
 
 	states.StateMachineInstance = class.class('StateMachineInstance')
 
-	states.StateMachineInstance.property.state = {
+	states.StateMachineInstance.property.current = {
 		get = function (self)
-			return self.states[self._instance.state]
+			return self._instance.state
 		end
 	}
 
-	function states.StateMachineInstance.method:__init(state_machine)
+	function states.StateMachineInstance.method:__init(state_machine, owner)
+		assert(state_machine, "state machine description required")
+		assert(owner, "state machine context required")
+
 		self._state_machine = state_machine
 		self.states = state_machine._state_table
-		self._instance = state_machine._state_machine:instanciate(self)
+		self._instance = state_machine._state_machine:instanciate(owner)
 		self._instance:init()
+		self._owner = owner
 	end
 
-	function states.StateMachineInstance.method:__index(name)
-		local current = rawget(self, 'states')[rawget(self, '_instance').state]
+	function states.StateMachineInstance.method:transition(name, ...)
+		local current = self.states[self._instance.state]
 		if not current then
 			error("state machine instance has finished")
 		end
 
-		local trans = current['_internal_' .. name]
+		local trans = current[name]
 		if not trans then
 			error(string.format("no transition named '%s' on state '%s'", name, self.state.name))
 		end
-		return trans
+
+		local newstatename = trans(self._owner, ...)
+		if newstatename then
+			newstate = self.states[newstatename]
+			if not newstate then
+				error(string.format("unknown state '%s'", newstatename))
+			end
+
+			self._instance:update(newstate._state)
+		end
 	end
 
 	function states.StateMachineInstance.method:finish()
 		self._instance:finish()
 	end
 
-	function haka.state_machine(name)
-		return states.StateMachine:new(name)
+
+	local state_machine_int = {}
+
+	function state_machine_int.state(transitions)
+		return states.State:new(transitions)
+	end
+
+	local function state_machine_env(cur_states)
+		state_machine_int.default_transitions = function (transitions)
+			cur_states:default_transitions(transitions)
+		end
+
+		return {
+			__index = function (self, name)
+				local ret
+
+				-- Search in the state_machine environment
+				ret = state_machine_int[name]
+				if ret then return ret end
+
+				-- Search the defined rules
+				ret = cur_states._states[name]
+				if ret then return ret end
+
+				return nil
+			end;
+			__newindex = function (self, key, value)
+				-- Forbid override to state_machine elements
+				if state_machine_int[key] then
+					error(string.format("'%s' is reserved in the state machine scope", key))
+				end
+
+				if class.isa(value, states.State) then
+					-- Add the object in the states
+					cur_states._states[key] = value
+				else
+					rawset(self, key, value)
+				end
+			end
+		}
+	end
+
+	function haka.state_machine(name, def)
+		assert(type(def) == 'function', "state machine definition must by a function")
+
+		local states = states.StateMachine:new(name)
+
+		-- Add a metatable to the environment only during the definition
+		-- of the grammar.
+		local env = debug.getfenv(def)
+		setmetatable(env, state_machine_env(states))
+
+		def()
+		setmetatable(env, nil)
+
+		states:compile()
+		return states
 	end
 }

@@ -37,8 +37,7 @@ http_dissector.property.connection = {
 function http_dissector.method:__init(flow)
 	class.super(http_dissector).__init(self)
 	self.flow = flow
-	self.states = http_dissector.states:instanciate()
-	self.states.http = self
+	self.state = http_dissector.states:instanciate(self)
 	self._want_data_modification = false
 end
 
@@ -113,7 +112,7 @@ function http_dissector.method:push_data(current, data, iter, last, state, chunk
 end
 
 function http_dissector.method:trigger_event(res, iter, mark)
-	local state = self.states.state.name
+	local state = self.state.current
 
 	self:trigger(state, res)
 
@@ -144,7 +143,7 @@ function http_dissector.method:receive_streamed(flow, iter, direction)
 	assert(flow == self.flow)
 
 	while iter:wait() do
-		self.states:update(direction, iter)
+		self.state:transition('update', direction, iter)
 		self:continue()
 	end
 end
@@ -369,7 +368,7 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 			count = function (self, ctx) return ctx.chunk_size end,
 			chunked = function (self, sub, last, ctx)
 				ctx.user:push_data(ctx:result(1), sub, ctx.iter, ctx.chunk_size == 0,
-					ctx.user.states.state.name, true)
+					ctx.user.state.current, true)
 			end
 		},
 		optional(chunk_end_crlf,
@@ -389,7 +388,7 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 				count = function (self, ctx) return ctx.content_length or 0 end,
 				chunked = function (self, sub, last, ctx)
 					ctx.user:push_data(ctx:result(1), sub, ctx.iter, last,
-						ctx.user.states.state.name)
+						ctx.user.state.current)
 				end
 			},
 			chunked = chunks,
@@ -442,85 +441,81 @@ end)
 --  HTTP States
 --
 
-http_dissector.states = haka.state_machine("http")
+http_dissector.states = haka.state_machine("http", function ()
+	default_transitions{
+		error = function (self)
+			self:drop()
+		end,
+		update = function (self, direction, iter)
+			return self.state:transition(direction, iter)
+		end
+	}
 
-http_dissector.states:default{
-	error = function (context)
-		context.http:drop()
-	end,
-	update = function (context, direction, iter)
-		return context[direction](context, iter)
-	end
-}
+	request = state{
+		up = function (self, iter)
+			self.request = HttpRequestResult:new()
+			self.response = nil
+			self._want_data_modification = false
 
-http_dissector.states.request = http_dissector.states:state{
-	up = function (context, iter)
-		local self = context.http
+			local err
+			self.request, err = http_dissector.grammar.request:parse(iter, self.request, self)
+			if err then
+				haka.alert{
+					description = string.format("invalid http %s", err.field.rule),
+					severity = 'low'
+				}
+				return 'error'
+			end
 
-		self.request = HttpRequestResult:new()
-		self.response = nil
-		self._want_data_modification = false
-
-		local err
-		self.request, err = http_dissector.grammar.request:parse(iter, self.request, self)
-		if err then
+			return 'response'
+		end,
+		down = function (self)
 			haka.alert{
-				description = string.format("invalid http %s", err.field.rule),
+				description = "http: unexpected data from server",
 				severity = 'low'
 			}
-			return context.states.ERROR
+			return 'error'
 		end
+	}
 
-		return context.states.response
-	end,
-	down = function (context)
-		haka.alert{
-			description = "http: unexpected data from server",
-			severity = 'low'
-		}
-		return context.states.ERROR
-	end
-}
-
-http_dissector.states.response = http_dissector.states:state{
-	up = function (context, iter)
-		haka.alert{
-			description = "http: unexpected data from client",
-			severity = 'low'
-		}
-		return context.states.ERROR
-	end,
-	down = function (context, iter)
-		local self = context.http
-
-		self.response = HttpResponseResult:new()
-		self._want_data_modification = false
-
-		local err
-		self.response, err = http_dissector.grammar.response:parse(iter, self.response, self)
-		if err then
+	response = state{
+		up = function (self, iter)
 			haka.alert{
-				description = string.format("invalid http %s", err.field.rule),
+				description = "http: unexpected data from client",
 				severity = 'low'
 			}
-			return context.states.ERROR
+			return 'error'
+		end,
+		down = function (self, iter)
+			self.response = HttpResponseResult:new()
+			self._want_data_modification = false
+
+			local err
+			self.response, err = http_dissector.grammar.response:parse(iter, self.response, self)
+			if err then
+				haka.alert{
+					description = string.format("invalid http %s", err.field.rule),
+					severity = 'low'
+				}
+				return 'error'
+			end
+
+			if self.request.method:lower() == 'connect' then
+				return 'connect'
+			else
+				return 'request'
+			end
+		end,
+	}
+
+	connect = state{
+		update = function (self, direction, iter)
+			iter:advance('all')
 		end
+	}
 
-		if self.request.method:lower() == 'connect' then
-			return context.states.connect
-		else
-			return context.states.request
-		end
-	end,
-}
-
-http_dissector.states.connect = http_dissector.states:state{
-	update = function (context, direction, iter)
-		iter:advance('all')
-	end
-}
-
-http_dissector.states.initial = http_dissector.states.request
+	initial = request
+end)
 
 module.events = http_dissector.events
 

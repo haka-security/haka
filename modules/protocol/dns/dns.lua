@@ -87,13 +87,12 @@ dns_dissector:register_event('response', continue)
 
 function dns_dissector.method:__init(flow)
 	self.flow = flow
-	self.states = dns_dissector.states:instanciate()
-	self.states.dns = self
+	self.state = dns_dissector.states:instanciate(self)
 	self.dns_pending_queries = {}
 end
 
 function dns_dissector.method:receive(pkt, payload, direction)
-	self.states:update(payload, direction, pkt)
+	self.state:transition('update', payload, direction, pkt)
 end
 
 function dns_dissector.method:continue()
@@ -281,8 +280,6 @@ end
 -- DNS States
 --
 
-dns_dissector.states = haka.state_machine("dns")
-
 local DnsResult = class.class('DnsResult')
 
 function DnsResult.method:__init(dissector, pkt)
@@ -294,52 +291,51 @@ function DnsResult.method:drop()
 	self._dissector.flow:drop(self._pkt)
 end
 
-dns_dissector.states:default{
-	error = function (context)
-		local self = context.dns
-		self.flow:drop()
-	end,
-	update = function (context, payload, direction, pkt)
-		local res, err = dns_dissector.grammar.message:parse(payload:pos('begin'), DnsResult:new(context.dns, pkt))
-		if err then
-			haka.alert{
-				description = string.format("invalid dns %s", err.rule),
-				severity = 'low'
-			}
-			context.dns.flow:drop(pkt)
-		else
-			return context[direction](context, res, payload, pkt)
+dns_dissector.states = haka.state_machine("dns", function ()
+	default_transitions{
+		error = function (self)
+			self.flow:drop()
+		end,
+		update = function (self, payload, direction, pkt)
+			local res, err = dns_dissector.grammar.message:parse(payload:pos('begin'), DnsResult:new(self, pkt))
+			if err then
+				haka.alert{
+					description = string.format("invalid dns %s", err.rule),
+					severity = 'low'
+				}
+				self.flow:drop(pkt)
+			else
+				return self.state:transition(direction, res, payload, pkt)
+			end
 		end
-	end
-}
+	}
 
-dns_dissector.states.message = dns_dissector.states:state{
-	up = function (context, res, payload, pkt)
-		local self = context.dns
-		self:trigger("query", res)
-		self.dns_pending_queries[res.id] = res
-		self.flow:send(pkt, payload, true)
-		res._data = payload
-	end,
-	down = function (context, res, payload, pkt)
-		local self = context.dns
-		local id = res.id
-		local query = self.dns_pending_queries[id]
-		if not query then
-			haka.alert{
-				description = "dns: mismatching response",
-				severity = 'low'
-			}
-			self.flow:drop(pkt)
-		else
-			self:trigger("response", res, query)
-			self.dns_pending_queries[id] = nil
-			self.flow:send(pkt, payload)
-		end
-	end,
-}
+	message = state{
+		up = function (self, res, payload, pkt)
+			self:trigger("query", res)
+			self.dns_pending_queries[res.id] = res
+			self.flow:send(pkt, payload, true)
+			res._data = payload
+		end,
+		down = function (self, res, payload, pkt)
+			local id = res.id
+			local query = self.dns_pending_queries[id]
+			if not query then
+				haka.alert{
+					description = "dns: mismatching response",
+					severity = 'low'
+				}
+				self.flow:drop(pkt)
+			else
+				self:trigger("response", res, query)
+				self.dns_pending_queries[id] = nil
+				self.flow:send(pkt, payload)
+			end
+		end,
+	}
 
-dns_dissector.states.initial = dns_dissector.states.message
+	initial = message
+end)
 
 module.events = dns_dissector.events
 

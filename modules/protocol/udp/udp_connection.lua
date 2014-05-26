@@ -54,63 +54,63 @@ function udp_connection_dissector:receive(pkt)
 	end
 end
 
-udp_connection_dissector.states = haka.state_machine("udp")
-
-udp_connection_dissector.states:default{
-	error = function (context)
-		return context.states.drop
-	end,
-	finish = function (context)
-		context.flow:trigger('end_connection')
-		context.flow.connection:close()
-	end,
-	drop = function (context)
-		return context.states.drop
-	end
-}
-
-udp_connection_dissector.states.drop = udp_connection_dissector.states:state{
-	enter = function (context)
-		context.flow:trigger('end_connection')
-		context.flow.dropped = true
-		context.flow.connection:drop()
-	end,
-	timeouts = {
-		[60] = function (context)
-			return context.states.FINISH
-		end
-	},
-	update = function (context, pkt, direction)
-		pkt:drop()
-	end,
-	finish = function (context)
-		context.flow.connection:close()
-	end
-}
-
-udp_connection_dissector.states.established = udp_connection_dissector.states:state{
-	update = function (context, pkt, direction)
-		context.flow:trigger('receive_data', pkt, direction)
-
-		local next_dissector = context.flow:next_dissector()
-		if next_dissector then
-			local payload
-			pkt._restore, payload = pkt.payload:select()
-			return next_dissector:receive(pkt, payload, direction)
-		else
-			pkt:send()
-		end
-
-		return context.states.established
-	end,
-	timeouts = {
-		[60] = function (context)
-			return context.states.FINISH
+udp_connection_dissector.states = haka.state_machine("udp", function ()
+	default_transitions{
+		error = function (self)
+			return 'drop'
+		end,
+		finish = function (self)
+			self:trigger('end_connection')
+			self.connection:close()
+		end,
+		drop = function (self)
+			return 'drop'
 		end
 	}
-}
 
-udp_connection_dissector.states.initial = udp_connection_dissector.states.established
+	drop = state{
+		enter = function (self)
+			self:trigger('end_connection')
+			self.dropped = true
+			self.connection:drop()
+		end,
+		timeouts = {
+			[60] = function (self)
+				return 'finish'
+			end
+		},
+		update = function (self, pkt, direction)
+			pkt:drop()
+		end,
+		finish = function (self)
+			self.connection:close()
+		end
+	}
+
+	established = state{
+		update = function (self, pkt, direction)
+			self:trigger('receive_data', pkt, direction)
+	
+			local next_dissector = self:next_dissector()
+			if next_dissector then
+				local payload
+				pkt._restore, payload = pkt.payload:select()
+				return next_dissector:receive(pkt, payload, direction)
+			else
+				pkt:send()
+			end
+
+			return 'established'
+		end,
+		timeouts = {
+			[60] = function (self)
+				return 'error'
+			end
+		}
+	}
+
+	initial = established
+end)
 
 function udp_connection_dissector.method:__init(pkt)
 	self.dropped = false
@@ -122,12 +122,11 @@ end
 
 function udp_connection_dissector.method:init(connection)
 	self.connection = connection
-	self.states = udp_connection_dissector.states:instanciate()
-	self.states.flow = self
+	self.state = udp_connection_dissector.states:instanciate(self)
 end
 
 function udp_connection_dissector.method:emit(pkt, direction)
-	self.states:update(pkt, direction)
+	self.state:transition('update', pkt, direction)
 end
 
 function udp_connection_dissector.method:send(pkt, payload, clone)
@@ -139,7 +138,7 @@ function udp_connection_dissector.method:drop(pkt)
 	if pkt then
 		return pkt:drop()
 	else
-		return self.states:drop()
+		return self.state:transition('drop')
 	end
 end
 

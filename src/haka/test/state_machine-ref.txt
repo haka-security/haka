@@ -1,9 +1,9 @@
 enter state1
 initialize state1
-input state1 received: hello from state 'state1'
+0 state1 received: hello from state 'state1'
 leave state1
 enter state4
-output state4 received: hello from state 'state4'
+1 state4 received: hello from state 'state4'
 leave state4
 enter state1
 timeout from state1

@@ -616,6 +616,28 @@ end
 
 grammar_int.text = grammar_int.bytes():convert(grammar_int.converter.string, true)
 
+local GrammarProxy = class.class("GrammarProxy", grammar_int.Entity)
+
+function GrammarProxy.method:__init(target)
+	self._target = target
+end
+
+function GrammarProxy.method:do_compile(env, rule, id)
+	local entity = env._grammar._rules[self._target]
+	if not entity then
+		error("use of unimplemented entity: %s", proxy._target)
+	end
+
+	if self.named then
+		local clone = entity:clone()
+		clone.named = self.named
+		entity = clone
+	end
+
+	return entity:compile(env, rule, id)
+end
+
+
 --
 -- Grammar
 --
@@ -656,60 +678,34 @@ function Grammar.method:__newindex(key, value)
 	error("read-only table")
 end
 
-local GrammarProxy = class.class("GrammarProxy", grammar_int.Entity)
-
-function GrammarProxy.method:__init(target)
-	self._target = target
+function Grammar.method:export(...)
+	for _, proxy in ipairs({...}) do
+		self._exports[proxy._target] = true
+	end
 end
 
-function GrammarProxy.method:do_compile(env, rule, id)
-	local entity = env._grammar._rules[self._target]
-	if not entity then
-		error("use of unimplemented entity: %s", proxy._target)
+function Grammar.method:extend(...)
+	for _, grammar in ipairs({...}) do
+		table.merge(self._rules, grammar._rules)
+		-- We just need key of exports to recompile it
+		table.merge(self._exports, grammar._exports)
 	end
+end
 
-	if self.named then
-		local clone = entity:clone()
-		clone.named = self.named
-		entity = clone
+function Grammar.method:define(...)
+	for _, name in ipairs({...}) do
+		self._rules[name] = GrammarProxy:new(name)
 	end
-
-	return entity:compile(env, rule, id)
 end
 
 local function grammar_env(gr)
-	local func = {
-		export = function (...)
-			for _, proxy in ipairs({...}) do
-				if not class.isa(proxy, GrammarProxy) then
-					error("can only export named rules")
-				end
-				gr._exports[proxy._target] = true
-			end
-		end,
-		extend = function (...)
-			for _, grammar in ipairs({...}) do
-				table.merge(gr._rules, grammar._rules)
-				-- We just need key of exports to recompile it
-				table.merge(gr._exports, grammar._exports)
-			end
-		end,
-		define = function (...)
-			for _, name in ipairs({...}) do
-				gr._rules[name] = GrammarProxy:new(name)
-			end
-		end
-	}
+	grammar_int.export = function (...) gr:export(...) end
+	grammar_int.extend = function (...) gr:extend(...) end
+	grammar_int.define = function (...) gr:define(...) end
 
 	return {
 		__index = function (self, name)
 			local ret
-
-			-- Search in grammar function
-			ret = func[name]
-			if ret then
-				return ret
-			end
 
 			-- Search in the grammar environment
 			ret = grammar_int[name]
@@ -730,7 +726,7 @@ local function grammar_env(gr)
 		end;
 		__newindex = function (self, key, value)
 			-- Forbid override to grammar elements
-			if grammar_int[key] or key == 'export' then
+			if grammar_int[key] then
 				error(string.format("'%s' is reserved in the grammar scope", key))
 			end
 
