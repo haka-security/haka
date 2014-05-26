@@ -134,7 +134,7 @@ function grammar_int.Record.method:extra(functions)
 	return self
 end
 
-function grammar_int.Record.method:compile(rule, id)
+function grammar_int.Record.method:compile(g, rule, id)
 	local iter, ret
 
 	ret = grammar_dg.Retain:new(haka.packet_mode() == 'passthrough')
@@ -145,7 +145,7 @@ function grammar_int.Record.method:compile(rule, id)
 	ret:add(iter)
 
 	for i, entity in ipairs(self.entities) do
-		local next = entity:compile(self.rule or rule, i)
+		local next = entity:compile(g, self.rule or rule, i)
 		if next then
 			if iter then
 				iter:add(next)
@@ -177,7 +177,7 @@ function grammar_int.Sequence.method:__init(entities)
 	self.entities = entities
 end
 
-function grammar_int.Sequence.method:compile(rule, id)
+function grammar_int.Sequence.method:compile(g, rule, id)
 	local iter, ret
 
 	ret = grammar_dg.RecordStart:new(rule, id, self.named)
@@ -190,7 +190,7 @@ function grammar_int.Sequence.method:compile(rule, id)
 			haka.log.warning("grammar", "named element '%s' are not supported in sequence", entity.named)
 		end
 
-		local next = entity:compile(self.rule or rule, i)
+		local next = entity:compile(g, self.rule or rule, i)
 		if next then
 			if iter then
 				iter:add(next)
@@ -215,11 +215,11 @@ function grammar_int.Union.method:__init(entities)
 	self.entities = entities
 end
 
-function grammar_int.Union.method:compile(rule, id)
+function grammar_int.Union.method:compile(g, rule, id)
 	local ret = grammar_dg.UnionStart:new(rule, id, self.named)
 
-	for i, value in ipairs(self.entities) do
-		local next = value:compile(self.rule or rule, i)
+	for i, entity in ipairs(self.entities) do
+		local next = entity:compile(g, self.rule or rule, i)
 		if next then
 			ret:add(next)
 			ret:add(grammar_dg.UnionRestart:new())
@@ -236,15 +236,15 @@ function grammar_int.Try.method:__init(cases)
 	self.cases = cases
 end
 
-function grammar_int.Try.method:compile(rule, id)
+function grammar_int.Try.method:compile(g, rule, id)
 	local first_try = nil
 	local previous_try = nil
 	local finish = grammar_dg.TryFinish:new(self.rule or rule, id, self.named)
 
 	-- For each case we prepend a catch entity
 	-- and we chain catch entities together to try every cases
-	for i, case in ipairs(self.cases) do
-		local next = case:compile(self.rule or rule, i)
+	for i, entity in ipairs(self.cases) do
+		local next = entity:compile(g, self.rule or rule, i)
 		if next then
 			local try = grammar_dg.Try:new(self.rule or rule, id, self.named)
 			try:add(next)
@@ -277,11 +277,11 @@ function grammar_int.Branch.method:__init(cases, select)
 	end
 end
 
-function grammar_int.Branch.method:compile(rule, id)
+function grammar_int.Branch.method:compile(g, rule, id)
 	local ret = grammar_dg.Branch:new(rule, id, self.selector)
-	for key, value in pairs(self.cases) do
+	for key, entity in pairs(self.cases) do
 		if key ~= 'default' then
-			local next = value:compile(self.rule or rule, key)
+			local next = entity:compile(g, self.rule or rule, key)
 			if next then
 				ret:case(key, next)
 			end
@@ -292,7 +292,7 @@ function grammar_int.Branch.method:compile(rule, id)
 	if default == 'error' then
 		ret._next = grammar_dg.Error:new(self.rule or rule, "invalid case")
 	elseif default ~= 'continue' then
-		local next = default:compile(self.rule or rule, 'default')
+		local next = default:compile(g, self.rule or rule, 'default')
 		if next then
 			ret._next = next
 		end
@@ -308,8 +308,8 @@ function grammar_int.Array.method:__init(entity)
 	self.entity = entity
 end
 
-function grammar_int.Array.method:compile(rule, id)
-	local entity = self.entity:compile(self.rule or rule, id)
+function grammar_int.Array.method:compile(g, rule, id)
+	local entity = self.entity:compile(g, self.rule or rule, id)
 	if not entity then
 		error("cannot create an array of empty element")
 	end
@@ -319,7 +319,7 @@ function grammar_int.Array.method:compile(rule, id)
 
 	local pop = grammar_dg.ArrayPop:new()
 	local inner = grammar_dg.ArrayPush:new(rule, id)
-	inner:add(self.entity:compile(self.rule or rule, id))
+	inner:add(self.entity:compile(g, self.rule or rule, id))
 	inner:add(pop)
 
 	local loop = grammar_dg.Branch:new(nil, nil, self.more)
@@ -376,7 +376,7 @@ function grammar_int.Number.method:__init(bits)
 	self.bits = bits
 end
 
-function grammar_int.Number.method:compile(rule, id)
+function grammar_int.Number.method:compile(g, rule, id)
 	local ret = grammar_dg.Number:new(rule, id, self.bits, self.endian, self.named)
 	if self.converter then ret:convert(self.converter, self.memoize) end
 	if self.validate then ret:validate(self.validate) end
@@ -389,7 +389,7 @@ function grammar_int.Number._options.endianness(self, endian) self.endian = endi
 
 grammar_int.Bytes = class.class('Bytes', grammar_int.Entity)
 
-function grammar_int.Bytes.method:compile(rule, id)
+function grammar_int.Bytes.method:compile(g, rule, id)
 	if type(self.count) ~= 'function' then
 		local count = self.count
 		self.count = function (self) return count end
@@ -412,7 +412,7 @@ function grammar_int.Bits.method:__init(bits)
 	self.bits = bits
 end
 
-function grammar_int.Bits.method:compile(rule, id)
+function grammar_int.Bits.method:compile(g, rule, id)
 	if type(self.bits) ~= 'function' then
 		local bits = self.bits
 		self.bits = function (self) return bits end
@@ -428,7 +428,7 @@ function grammar_int.Token.method:__init(pattern, raw)
 	self.raw = raw
 end
 
-function grammar_int.Token.method:compile(rule, id)
+function grammar_int.Token.method:compile(g, rule, id)
 	if not self.re then
 		self.re = rem.re:compile("^(?:"..self.pattern..")")
 	end
@@ -443,7 +443,7 @@ function grammar_int.Execute.method:__init(func)
 	self.func = func
 end
 
-function grammar_int.Execute.method:compile(rule, id)
+function grammar_int.Execute.method:compile(g, rule, id)
 	return grammar_dg.Execute:new(rule, id, self.func)
 end
 
@@ -453,19 +453,19 @@ function grammar_int.Retain.method:__init(readonly)
 	self.readonly = readonly
 end
 
-function grammar_int.Retain.method:compile(rule, id)
+function grammar_int.Retain.method:compile(g, rule, id)
 	return grammar_dg.Retain:new(self.readonly)
 end
 
 grammar_int.Release = class.class('Release', grammar_int.Entity)
 
-function grammar_int.Release.method:compile(rule, id)
+function grammar_int.Release.method:compile(g, rule, id)
 	return grammar_dg.Release:new()
 end
 
 grammar_int.Empty = class.class('Empty', grammar_int.Entity)
 
-function grammar_int.Empty.method:compile(rule, id)
+function grammar_int.Empty.method:compile(g, rule, id)
 	return nil
 end
 
@@ -475,7 +475,7 @@ function grammar_int.Error.method:__init(msg)
 	self.msg = msg
 end
 
-function grammar_int.Error.method:compile(rule, id)
+function grammar_int.Error.method:compile(g, rule, id)
 	return grammar_dg.Error:new(id, self.msg)
 end
 
@@ -609,36 +609,63 @@ function Grammar.method:__newindex(key, value)
 	error("read-only table")
 end
 
+local GrammarProxy = class.class("GrammarProxy", grammar_int.Entity)
+
+function GrammarProxy.method:__init(name)
+	self._name = name
+end
+
+function GrammarProxy.method:compile(g, rule, id)
+	local entity = g._rules[self._name]
+	if not entity then
+		error("use of unimplemented entity: %s", proxy._name)
+	end
+
+	if self.named then
+		local clone = entity:clone()
+		clone.named = self.named
+		return clone:compile(g, rule, id)
+	else
+		return entity:compile(g, rule, id)
+	end
+end
 
 local function grammar_env(gr)
-	local export = function (...)
-		local rules = table.invert(gr._rules)
-
-		for _, value in ipairs({...}) do
-			local name = rules[value]
-			if not name then
-				error("exported rule must be registered in the grammar")
+	local func = {
+		export = function (...)
+			for _, proxy in ipairs({...}) do
+				gr._exports[proxy._name] = true
 			end
-
-			gr._exports[name] = value:compile()
+		end,
+		extend = function (...)
+			for _, grammar in ipairs({...}) do
+				table.merge(gr._rules, grammar._rules)
+				-- We just need key of exports to recompile it
+				table.merge(gr._exports, grammar._exports)
+			end
 		end
-	end
+	}
 
 	return {
 		__index = function (self, name)
 			local ret
 
+			-- Search in grammar function
+			ret = func[name]
+			if ret then
+				return ret
+			end
+
 			-- Search in the grammar environment
 			ret = grammar_int[name]
 			if ret then return ret end
 
-			if name == 'export' then
-				return export
-			end
-
 			-- Search the defined rules
 			ret = gr._rules[name]
-			if ret then return ret end
+			if ret then
+				-- Create a proxy to allow inheritance
+				return GrammarProxy:new(name)
+			end
 
 			return nil
 		end;
@@ -660,7 +687,7 @@ local function grammar_env(gr)
 end
 
 function grammar.new(name, def)
-	assert(type(def) == 'function', "grammar definition must by a function")
+	assert(type(def) == 'function', "grammar definition must be a function")
 
 	local g = Grammar:new(name)
 
@@ -671,6 +698,16 @@ function grammar.new(name, def)
 
 	def()
 	setmetatable(env, nil)
+
+	-- Compile exported entities
+	for name, _  in pairs(g._exports) do
+		local value = g._rules[name]
+		if not value then
+			error("exported rule must be registered in the grammar: "..name)
+		end
+
+		g._exports[name] = value:compile(g)
+	end
 
 	if grammar.debug then
 		haka.log.warning("grammar", "dumping '%s' grammar graph to %s.dot", g._name, g._name)
