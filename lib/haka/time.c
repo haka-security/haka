@@ -81,10 +81,11 @@ uint64 time_divide(const struct time *t1, const struct time *t2)
 
 void time_mult(struct time *res, const struct time *t1, const int mult)
 {
+	const uint64 nsecs = ((uint64)t1->nsecs) * mult;
+
 	res->secs = t1->secs * mult;
-	res->nsecs = t1->nsecs * mult;
-	res->secs += res->nsecs / SEC_TO_NSEC;
-	res->nsecs %= SEC_TO_NSEC;
+	res->secs += nsecs / SEC_TO_NSEC;
+	res->nsecs = nsecs % SEC_TO_NSEC;
 }
 
 double time_sec(const struct time *t)
