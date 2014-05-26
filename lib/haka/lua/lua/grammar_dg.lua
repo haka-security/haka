@@ -346,8 +346,8 @@ end
 
 dg.TryFinish = class.class('DGTryFinish', dg.Control)
 
-function dg.TryFinish.method:__init(name)
-	class.super(dg.TryFinish).__init(self)
+function dg.TryFinish.method:__init(rule, id, name)
+	class.super(dg.TryFinish).__init(self, rule, id)
 	self.name = name
 end
 

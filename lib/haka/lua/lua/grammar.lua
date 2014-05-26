@@ -230,7 +230,7 @@ function grammar_int.Union.method:compile(rule, id)
 	return ret
 end
 
-grammar_int.Try = class.class('Try', grammar.Entity)
+grammar_int.Try = class.class('Try', grammar_int.Entity)
 
 function grammar_int.Try.method:__init(cases)
 	self.cases = cases
