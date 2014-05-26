@@ -63,6 +63,8 @@ struct state_machine_instance {
 	int                           used_timer;
 	bool                          in_transition:1;
 	bool                          finished:1;
+	bool                          error:1;
+	bool                          in_error:1;
 };
 
 struct timeout_data {
@@ -462,6 +464,8 @@ struct state_machine_instance *state_machine_instance(struct state_machine *stat
 	instance->used_timer = 0;
 	instance->in_transition = false;
 	instance->finished = false;
+	instance->error = false;
+	instance->in_error = false;
 
 	messagef(HAKA_LOG_DEBUG, MODULE, L"%s: initial state '%s'",
 			instance->state_machine->name, state_machine->initial->name);
@@ -475,6 +479,8 @@ void state_machine_instance_init(struct state_machine_instance *instance)
 
 	state_machine_enter_state(instance, instance->state_machine->initial);
 	instance->finished = false;
+	instance->error = false;
+	instance->in_error = false;
 
 	if (have_transition(instance, &instance->current->init)) {
 		messagef(HAKA_LOG_DEBUG, MODULE, L"%s: init transition on state '%s'",
@@ -554,14 +560,9 @@ void state_machine_instance_update(struct state_machine_instance *instance, stru
 }
 
 static void _state_machine_instance_transition(struct state_machine_instance *instance,
-		struct transition *trans, const char *type)
+		struct transition *trans, const char *type, bool allow_state_change)
 {
 	struct state *newstate;
-
-	if (instance->finished) {
-		error(L"state machine instance has finished");
-		return;
-	}
 
 	if (instance->current) {
 		if (trans->callback) {
@@ -570,7 +571,7 @@ static void _state_machine_instance_transition(struct state_machine_instance *in
 						instance->state_machine->name, type, instance->current->name);
 
 				newstate = trans->callback->callback(instance, trans->callback);
-				if (newstate) {
+				if (newstate && allow_state_change) {
 					state_machine_instance_update(instance, newstate);
 				}
 			}
@@ -580,7 +581,22 @@ static void _state_machine_instance_transition(struct state_machine_instance *in
 
 void state_machine_instance_error(struct state_machine_instance *instance)
 {
-	_state_machine_instance_transition(instance, &instance->current->error, "error");
+	if (instance->in_error) {
+		return;
+	}
+
+	if (instance->finished) {
+		error(L"state machine instance has finished");
+		return;
+	}
+
+	instance->error = true;
+	instance->in_error = true;
+
+	_state_machine_instance_transition(instance, &instance->current->error, "error", false);
+	state_machine_instance_finish(instance);
+
+	instance->in_error = false;
 }
 
 struct state_machine *state_machine_instance_get(struct state_machine_instance *instance)
@@ -596,4 +612,14 @@ struct state_machine_context *state_machine_instance_context(struct state_machin
 struct state *state_machine_instance_state(struct state_machine_instance *instance)
 {
 	return instance->current;
+}
+
+bool state_machine_instance_isfinished(struct state_machine_instance *instance)
+{
+	return instance->finished;
+}
+
+bool state_machine_instance_iserror(struct state_machine_instance *instance)
+{
+	return instance->error;
 }
