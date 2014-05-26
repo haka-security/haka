@@ -136,13 +136,17 @@ Compiled regular expression
 
         Match the compiled regular expression against a given buffer.
 
-    .. haka:method:: regexp:match(buffer_iterator) -> match
+    .. haka:method:: regexp:match(buffer_iterator, createsub = false[, readonly]) -> match
         :noindex:
 
         :param buffer_iterator: Buffer iterator against which the regular expression is matched.
         :paramtype buffer_iterator: :haka:class:`vbuffer_iterator`
-        :return match: Matching sub-buffer or ``nil`` if no match
-        :rtype match: :haka:class:`vbuffer_sub`
+        :param createsub: If ``true`` a sub buffer will be returned otherwise it is a boolean.
+        :ptype createsub: boolean
+        :param readonly: Set to ``true`` if working on a read-only buffer.
+        :ptype readonly: boolean
+        :return match: If `createsub` is ``true`` return matching sub-buffer or ``nil``, otherwise return a boolean
+        :rtype match: :haka:class:`vbuffer_sub` or boolean
 
         Match the compiled regular expression against a given buffer iterator.
 
