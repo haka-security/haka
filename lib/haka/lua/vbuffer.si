@@ -909,6 +909,20 @@ struct vbuffer_sub_stream {
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 
 
+%native(vbuffer_stream_comanager_hash) int vbuffer_stream_comanager_hash(struct lua_State *L);
+
+%{
+	STATIC_ASSERT(sizeof(long) == sizeof(void *), invalid_pointer_size);
+
+	int vbuffer_stream_comanager_hash(struct lua_State *L)
+	{
+		const void *f = lua_topointer(L, 1);
+		const void *self = lua_topointer(L, 2);
+		lua_pushnumber(L, ((long)f) ^ ((long)self));
+		return 1;
+	}
+%}
+
 %luacode {
 	local class = require('class')
 
@@ -962,4 +976,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 			end
 		end
 	end
+
+	haka.vbuffer_stream_comanager.method.hash = haka.vbuffer_stream_comanager_hash
+	haka.vbuffer_stream_comanager_hash = nil
 }
