@@ -659,14 +659,14 @@ end
 
 local GrammarProxy = class.class("GrammarProxy", grammar_int.Entity)
 
-function GrammarProxy.method:__init(name)
-	self._name = name
+function GrammarProxy.method:__init(target)
+	self._target = target
 end
 
 function GrammarProxy.method:do_compile(env, rule, id)
-	local entity = env._grammar._rules[self._name]
+	local entity = env._grammar._rules[self._target]
 	if not entity then
-		error("use of unimplemented entity: %s", proxy._name)
+		error("use of unimplemented entity: %s", proxy._target)
 	end
 
 	if self.named then
@@ -682,7 +682,7 @@ function grammar_env(gr)
 	local func = {
 		export = function (...)
 			for _, proxy in ipairs({...}) do
-				gr._exports[proxy._name] = true
+				gr._exports[proxy._target] = true
 			end
 		end,
 		extend = function (...)
