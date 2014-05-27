@@ -280,13 +280,8 @@ dg.RecordFinish = class.class('DGRecordFinish', dg.Control)
 
 function dg.RecordFinish.method:__init(pop)
 	class.super(dg.RecordFinish).__init(self)
-	self._onfinish = {}
 	self._extra = {}
 	self._pop = pop
-end
-
-function dg.RecordFinish.method:onfinish(f)
-	table.insert(self._onfinish, f)
 end
 
 function dg.RecordFinish.method:extra(name, f)
@@ -298,10 +293,6 @@ function dg.RecordFinish.method:_apply(ctx)
 	local res = ctx:result()
 	if self._pop then
 		ctx:pop()
-	end
-
-	for _, func in ipairs(self._onfinish) do
-		func(res, ctx)
 	end
 
 	for name, func in pairs(self._extra) do
@@ -699,8 +690,9 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 	end
 
 	local sub
-	local size = self.size(res, ctx)
-	if size then
+	local size
+	if self.size then
+		size = self.size(res, ctx)
 		if size < 0 then
 			return ctx:error(nil, self, "byte count must not be negative, got %d", size)
 		end

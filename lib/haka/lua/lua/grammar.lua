@@ -90,58 +90,21 @@ end
 
 function grammar_int.Entity.method:convert(converter, memoize)
 	local clone = self:clone()
-	clone.converter = converter
-	clone.memoize = memoize or clone.memoize
+	clone._converter = converter
+	clone._memoize = memoize or clone._memoize
 	return clone
 end
 
 function grammar_int.Entity.method:validate(validate)
 	local clone = self:clone()
-	clone.validate = validate
+	clone._validate = validate
 	return clone
 end
 
-function grammar_int.Entity.getoption(cls, opt)
-	local v
-
-	if cls._options then
-		v = cls._options[opt]
-		if v then return v end
-	end
-
-	local super = cls.super
-	while super do
-		if super._options then
-			v = super._options[opt]
-			if v then return v end
-		end
-
-		super = super.super
-	end
-end
-
-function grammar_int.Entity.method:options(options)
+function grammar_int.Entity.method:memoize()
 	local clone = self:clone()
-	for k, v in pairs(options) do
-		if type(k) == 'string' then
-			local opt = grammar_int.Entity.getoption(class.classof(self), k)
-			assert(opt, string.format("invalid option '%s'", k))
-			opt(clone, v)
-		elseif type(v) == 'string' then
-			local opt = grammar_int.Entity.getoption(class.classof(self), v)
-			assert(opt, string.format("invalid option '%s'", v))
-			opt(clone)
-		else
-			error("invalid option")
-		end
-	end
+	clone._memoize = true
 	return clone
-end
-
-grammar_int.Entity._options = {}
-
-function grammar_int.Entity._options.memoize(self)
-	self.memoize = true
 end
 
 grammar_int.Compound = class.class('Compound', grammar_int.Entity)
@@ -167,14 +130,17 @@ grammar_int.Record = class.class('Record', grammar_int.Compound)
 function grammar_int.Record.method:__init(entities)
 	self.entities = entities
 	self.extra_entities = {}
-	self.on_finish = {}
 end
 
 function grammar_int.Record.method:extra(functions)
 	for name, func in pairs(functions) do
-		if type(name) == 'string' then self.extra_entities[name] = func
-		else table.insert(self.on_finish, func) end
+		if type(name) ~= 'string' then
+			error("record extra need to be named")
+		end
+		
+		self.extra_entities[name] = func
 	end
+
 	return self
 end
 
@@ -184,8 +150,8 @@ function grammar_int.Record.method:do_compile(env, rule, id)
 	ret = grammar_dg.Retain:new(haka.packet_mode() == 'passthrough')
 
 	iter = grammar_dg.RecordStart:new(rule, id, self.named)
-	if self.converter then iter:convert(self.converter, self.memoize) end
-	if self.validate then iter:validate(self.validate) end
+	if self._converter then iter:convert(self._converter, self._memoize) end
+	if self._validate then iter:validate(self._validate) end
 	ret:add(iter)
 
 	for i, entity in ipairs(self.entities) do
@@ -202,9 +168,6 @@ function grammar_int.Record.method:do_compile(env, rule, id)
 	end
 
 	local pop = grammar_dg.RecordFinish:new(self.named ~= nil)
-	for _, f in ipairs(self.on_finish) do
-		pop:onfinish(f)
-	end
 	for name, f in pairs(self.extra_entities) do
 		pop:extra(name, f)
 	end
@@ -226,8 +189,8 @@ function grammar_int.Sequence.method:do_compile(env, rule, id)
 
 	ret = grammar_dg.RecordStart:new(rule, id, self.named)
 
-	if self.converter then ret:convert(self.converter, self.memoize) end
-	if self.validate then ret:validate(self.validate) end
+	if self._converter then ret:convert(self._converter, self._memoize) end
+	if self._validate then ret:validate(self._validate) end
 	iter = ret
 
 	for i, entity in ipairs(self.entities) do
@@ -358,7 +321,7 @@ end
 
 function grammar_int.Array.method:do_compile(env, rule, id)
 	local start = grammar_dg.ArrayStart:new(rule, id, self.named, self.create, self.resultclass)
-	if self.converter then start:convert(self.converter, self.memoize) end
+	if self._converter then start:convert(self._converter, self._memoize) end
 
 	local loop = grammar_dg.Branch:new(nil, nil, self.more)
 	local push = grammar_dg.ArrayPush:new(rule, id)
@@ -378,9 +341,9 @@ function grammar_int.Array.method:do_compile(env, rule, id)
 	return start
 end
 
-grammar_int.Array._options = {}
+function grammar_int.Array.method:count(size)
+	local clone = self:clone()
 
-function grammar_int.Array._options.count(self, size)
 	local sizefunc
 
 	if type(size) ~= 'function' then
@@ -389,68 +352,89 @@ function grammar_int.Array._options.count(self, size)
 		sizefunc = size
 	end
 
-	self.more = function (array, ctx)
+	clone.more = function (array, ctx)
 		return #array < sizefunc(ctx:result(-2), ctx)
 	end
+
+	return clone
 end
 
-function grammar_int.Array._options.untilcond(self, condition)
-	self.more = function (array, ctx)
+function grammar_int.Array.method:untilcond(condition)
+	local clone = self:clone()
+
+	clone.more = function (array, ctx)
 		if #array == 0 then return not condition(nil, ctx)
 		else return not condition(array[#array], ctx) end
 	end
+
+	return clone
 end
 
-function grammar_int.Array._options.whilecond(self, condition)
+function grammar_int.Array.method:whilecond(condition)
+	local clone = self:clone()
+
 	self.more = function (array, ctx)
 		if #array == 0 then return condition(nil, ctx)
 		else return condition(array[#array], ctx) end
 	end
+
+	return clone
 end
 
-function grammar_int.Array._options.create(self, f)
-	self.create = f
+function grammar_int.Array.method:create(f)
+	local clone = self:clone()
+	clone.create = f
+	return clone
 end
 
-function grammar_int.Array._options.result(self, resultclass)
-	self.resultclass = resultclass
+function grammar_int.Array.method:result(resultclass)
+	local clone = self:clone()
+	clone.resultclass = resultclass
+	return clone
 end
 
 
 grammar_int.Number = class.class('Number', grammar_int.Entity)
 
-function grammar_int.Number.method:__init(bits)
+function grammar_int.Number.method:__init(bits, endian)
 	self.bits = bits
+	self.endian = endian or 'big'
 end
 
 function grammar_int.Number.method:do_compile(env, rule, id)
 	local ret = grammar_dg.Number:new(rule, id, self.bits, self.endian, self.named)
-	if self.converter then ret:convert(self.converter, self.memoize) end
-	if self.validate then ret:validate(self.validate) end
+	if self._converter then ret:convert(self._converter, self._memoize) end
+	if self._validate then ret:validate(self._validate) end
 	return ret
 end
-
-grammar_int.Number._options = {}
-function grammar_int.Number._options.endianness(self, endian) self.endian = endian end
 
 
 grammar_int.Bytes = class.class('Bytes', grammar_int.Entity)
 
 function grammar_int.Bytes.method:do_compile(env, rule, id)
-	if type(self.count) ~= 'function' then
-		local count = self.count
-		self.count = function (self) return count end
-	end
-
-	local ret = grammar_dg.Bytes:new(rule, id, self.count, self.named, self.chunked)
-	if self.converter then ret:convert(self.converter, self.memoize) end
-	if self.validate then ret:validate(self.validate) end
+	local ret = grammar_dg.Bytes:new(rule, id, self._count, self.named, self._chunked)
+	if self._converter then ret:convert(self._converter, self._memoize) end
+	if self._validate then ret:validate(self._validate) end
 	return ret
 end
 
-grammar_int.Bytes._options = {}
-function grammar_int.Bytes._options.chunked(self, callback) self.chunked = callback end
-function grammar_int.Bytes._options.count(self, count) self.count = count end
+function grammar_int.Bytes.method:chunked(callback)
+	local clone = self:clone()
+	clone._chunked = callback
+	return clone
+end
+
+function grammar_int.Bytes.method:count(count)
+	local clone = self:clone()
+
+	if type(count) ~= 'function' then
+		clone._count = function (self) return count end
+	else
+		clone._count = count
+	end
+
+	return clone
+end
 
 
 grammar_int.Bits = class.class('Bits', grammar_int.Entity)
@@ -480,7 +464,7 @@ function grammar_int.Token.method:do_compile(env, rule, id)
 		self.re = rem.re:compile("^(?:"..self.pattern..")")
 	end
 	local ret = grammar_dg.Token:new(rule, id, self.pattern, self.re, self.named, self.raw)
-	if self.converter then ret:convert(self.converter, self.memoize) end
+	if self._converter then ret:convert(self._converter, self._memoize) end
 	return ret
 end
 
@@ -575,19 +559,12 @@ function grammar_int.bytes()
 	return grammar_int.Bytes:new()
 end
 
-function grammar_int.padding(args)
-	if args.align then
-		local align = args.align
-		return grammar_int.Bits:new(function (self, ctx)
-			local rem = (ctx.iter.meter * 8 + ctx._bitoffset) % align
-			if rem > 0 then return align -rem
-			else return 0 end
-		end)
-	elseif args.size then
-		return grammar_int.Bits:new(args.size)
-	else
-		error("invalid padding option")
-	end
+function grammar_int.padding_align(size)
+	return grammar_int.Bits:new(function (self, ctx)
+		local rem = (ctx.iter.meter * 8 + ctx._bitoffset) % align
+		if rem > 0 then return size -rem
+		else return 0 end
+	end)
 end
 
 function grammar_int.field(name, field)

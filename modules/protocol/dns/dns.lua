@@ -112,9 +112,9 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 		branch({
 			name = record{
 					field('length', number(6)),
-					field('name', bytes():options{
-						count = function (self, ctx, el) return self.length end
-					}),
+					field('name', bytes()
+						:count(function (self, ctx, el) return self.length end)
+					),
 				},
 			pointer = field('pointer', number(14)),
 			default = fail("unsupported compression scheme"),
@@ -129,23 +129,24 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 		)
 	}
 
-	dn = array(label):options{
-			untilcond = function (label)
-				return label and (label.length == 0 or label.pointer ~= nil)
-			end,
-	}:convert(dn_converter, true)
+	dn = array(label)
+		:untilcond(function (label)
+			return label and (label.length == 0 or label.pointer ~= nil)
+		end)
+		:convert(dn_converter, true)
 
-	dns_dissector.type = number(16):convert({
-		get = function (type) return TYPE[type] or type end,
-		set = function (type)
-			for i, type in TYPE do
-				if type == type then
-					return i
+	dns_dissector.type = number(16)
+		:convert({
+			get = function (type) return TYPE[type] or type end,
+			set = function (type)
+				for i, type in TYPE do
+					if type == type then
+						return i
+					end
 				end
+				error("unknown type: "..type)
 			end
-			error("unknown type: "..type)
-		end
-	})
+		})
 
 	header = record{
 		field('id',      number(16)),
@@ -170,22 +171,22 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 	}
 
 	soa = record{
-		field('mname', dn),
-		field('rname', dn),
-		field('serial', number(32)),
+		field('mname',   dn),
+		field('rname',   dn),
+		field('serial',  number(32)),
 		field('refresh', number(32)),
-		field('retry', number(32)),
-		field('expire', number(32)),
+		field('retry',   number(32)),
+		field('expire',  number(32)),
 		field('minimum', number(32)),
 	}
 
 	wks = record{
-		field('ip', number(32)
+		field('ip',    number(32)
 			:convert(ipv4_addr_convert, true)),
 		field('proto', number(8)),
-		field('ports', bytes():options{
-			count = function (self, ctx) return self.length - 40 end -- remove wks headers
-		}),
+		field('ports', bytes()
+			:count(function (self, ctx) return self.length - 40 end) -- remove wks headers
+		),
 	}
 
 	mx = record{
@@ -215,19 +216,19 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 				MB =      field('name', dn),
 				MG =      field('name', dn),
 				MR =      field('name', dn),
-				NULL =    field('data', bytes():options{
-					count = function (self, ctx) return self.length end
-				}),
+				NULL =    field('data', bytes()
+					:count(function (self, ctx) return self.length end)
+				),
 				WKS =     wks,
 				PTR =     field('name', dn),
 				MINFO =   minfo,
 				MX =      mx,
-				TXT =     field('data', text:options{
-					count = function (self, ctx) return self.length end
-				}),
-				default = field('unknown', bytes():options{
-					count = function (self, ctx) return self.length end
-				}),
+				TXT =     field('data', text
+					:count(function (self, ctx) return self.length end)
+				),
+				default = field('unknown', bytes()
+					:count(function (self, ctx) return self.length end)
+				),
 			},
 			function (self, ctx)
 				return self.type
@@ -235,17 +236,14 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 		),
 	}
 
-	answer = array(resourcerecord):options{
-		count = function (self, ctx) return ctx:result(1).ancount end
-	}
+	answer = array(resourcerecord)
+		:count(function (self, ctx) return ctx:result(1).ancount end)
 
-	authority = array(resourcerecord):options{
-		count = function (self, ctx) return ctx:result(1).nscount end
-	}
+	authority = array(resourcerecord)
+		:count(function (self, ctx) return ctx:result(1).nscount end)
 
-	additional = array(resourcerecord):options{
-		count = function (self, ctx) return ctx:result(1).arcount end
-	}
+	additional = array(resourcerecord)
+		:count(function (self, ctx) return ctx:result(1).arcount end)
 
 	message = record{
 		execute(function (self, ctx) ctx:result(1)._labels = {} end),

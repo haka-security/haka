@@ -25,7 +25,8 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 		field('len',         number(8))
 			:validate(function (self) self.len = #self.data+2 end),
 		field('data',        bytes()
-			:options{count = function (self) return self.len-2 end})
+			:count(function (self) return self.len-2 end)
+		)
 	}
 	
 	local option = record{
@@ -53,8 +54,8 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 			field('df',      flag),
 			field('mf',      flag),
 		}),
-		field('frag_offset', number(13)
-			:convert(converter.mult(8))),
+		field('frag_offset', number(13))
+			:convert(converter.mult(8)),
 		field('ttl',         number(8)),
 		field('proto',       number(8)),
 		field('checksum',    number(16))
@@ -62,18 +63,17 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 				self.checksum = 0
 				self.checksum = ipv4.inet_checksum_compute(self._payload:sub(0, self.hdr_len))
 			end),
-		field('src',         number(32)
-			:convert(ipv4_addr_convert, true)),
-		field('dst',         number(32)
-			:convert(ipv4_addr_convert, true)),
+		field('src',         number(32))
+			:convert(ipv4_addr_convert, true),
+		field('dst',         number(32))
+			:convert(ipv4_addr_convert, true),
 		field('opt',         array(option)
-			:options{
-				untilcond = function (elem, ctx)
-					return ctx.iter.meter >= ctx:result(1).hdr_len or
-						(elem and elem.type == 0)
-				end
-			}),
-		padding{align = 32},
+			:untilcond(function (elem, ctx)
+				return ctx.iter.meter >= ctx:result(1).hdr_len or
+					(elem and elem.type == 0)
+			end)
+		),
+		padding_align(32),
 		verify(function (self, ctx)
 			if ctx.iter.meter ~= self.hdr_len then
 				error(string.format("invalid ipv4 header size, expected %d bytes, got %d bytes", self.hdr_len, ctx.iter.meter))

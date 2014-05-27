@@ -16,16 +16,15 @@ local grammar = haka.grammar.new("test", function ()
 	grammar = record{
 		field("length", number(8, 'big')),
 		field("data", array(elem)
-			:options{
-				untilcond = function (elem, ctx)
-					return ctx.iter.meter-1 >= ctx:result(1).length
-				end,
-				create = function (ctx, entity, init)
-					local vbuf = haka.vbuffer_allocate(2)
-					entity:create(vbuf:pos('begin'), ctx, init)
-					return vbuf
-				end
-			})
+			:untilcond(function (elem, ctx)
+				return ctx.iter.meter-1 >= ctx:result(1).length
+			end)
+			:create(function (ctx, entity, init)
+				local vbuf = haka.vbuffer_allocate(2)
+				entity:create(vbuf:pos('begin'), ctx, init)
+				return vbuf
+			end)
+		)
 	}
 
 	export(grammar)

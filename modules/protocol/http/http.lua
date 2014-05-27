@@ -302,10 +302,8 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 		token(':'),
 		WS,
 		field('value', token('[^%r%n]+')),
-		CRLF
-	}
-	:extra{
-		function (self, ctx)
+		CRLF,
+		execute(function (self, ctx)
 			local lower_name =  self.name:lower()
 			if lower_name == 'content-length' then
 				ctx.content_length = tonumber(self.value)
@@ -314,22 +312,22 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 			       self.value:lower() == 'chunked' then
 				ctx.mode = 'chunked'
 			end
-		end
+		end)
 	}
 
 	headers = record{
-		field('headers', array(header):options{
-			untilcond = function (elem, ctx)
+		field('headers', array(header)
+			:untilcond(function (elem, ctx)
 				local la = ctx:lookahead()
 				return la == 0xa or la == 0xd
-			end,
-			result = HeaderResult,
-			create = function (ctx, entity, init)
+			end)
+			:result(HeaderResult)
+			:create(function (ctx, entity, init)
 				local vbuf = haka.vbuffer_from(init.name..': '..init.value..'\r\n')
 				entity:create(vbuf:pos('begin'), ctx, init)
 				return vbuf
-			end
-		}),
+			end)
+		),
 		CRLF
 	}
 
@@ -358,33 +356,30 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 
 	chunk = sequence{
 		chunk_line,
-		bytes():options{
-			count = function (self, ctx) return ctx.chunk_size end,
-			chunked = function (self, sub, last, ctx)
+		bytes()
+			:count(function (self, ctx) return ctx.chunk_size end)
+			:chunked(function (self, sub, last, ctx)
 				ctx.user:push_data(ctx:result(1), sub, ctx.iter, ctx.chunk_size == 0,
 					ctx.user.state.current, true)
-			end
-		},
+			end),
 		optional(chunk_end_crlf,
 			function (self, context) return self.chunk_size > 0 end)
 	}
 
 	chunks = sequence{
-		array(chunk):options{
-			untilcond = function (elem) return elem and elem.chunk_size == 0 end
-		},
+		array(chunk)
+			:untilcond(function (elem) return elem and elem.chunk_size == 0 end),
 		headers
 	}
 
 	body = branch(
 		{
-			content = bytes():options{
-				count = function (self, ctx) return ctx.content_length or 0 end,
-				chunked = function (self, sub, last, ctx)
+			content = bytes()
+				:count(function (self, ctx) return ctx.content_length or 0 end)
+				:chunked(function (self, sub, last, ctx)
 					ctx.user:push_data(ctx:result(1), sub, ctx.iter, last,
 						ctx.user.state.current)
-				end
-			},
+				end),
 			chunked = chunks,
 			default = 'continue'
 		},

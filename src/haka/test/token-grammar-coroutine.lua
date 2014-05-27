@@ -18,7 +18,8 @@ local grammar = haka.grammar.new("test", function ()
 		field("hello_world", token("hello world")),
 		token("\r\n"),
 		field('headers', array(header)
-			:options{ count = 3 }),
+			:count(3)
+		),
 	}
 
 	export(grammar)

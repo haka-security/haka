@@ -62,13 +62,13 @@ function TestGrammarInheritance:test_recursion()
 		define("root")
 
 		root = record{
-				field("count", number(8)),
-				field("child", array(root):options{
-					count = function (self, ctx)
-						return ctx:result(-2).count
-					end
-				}),
-			}
+			field("count", number(8)),
+			field("child", array(root)
+				:count(function (self, ctx)
+					return ctx:result(-2).count
+				end)
+			),
+		}
 
 		export(root)
 	end)
