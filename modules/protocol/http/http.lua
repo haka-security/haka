@@ -403,7 +403,6 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 		execute(function (self, ctx)
 			ctx.user:trigger_event(ctx.top, ctx.iter, ctx.retain_mark)
 		end),
-		release,
 		field('body', body)
 	}
 
