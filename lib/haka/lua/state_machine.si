@@ -316,17 +316,21 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 
 	states.CompiledState = class.class('CompiledState')
 
-	local function transition_wrapper(state_machine, f)
-		return function (...)
-			local newstatename = f(...)
-			if newstatename then
-				newstate = state_machine._state_table[newstatename]
-				if not newstate then
-					error(string.format("unknown state '%s'", newstatename))
-				end
-
-				return newstate._state
+	local function transition_wrapper(state_table, f, ...)
+		local newstatename = f(...)
+		if newstatename then
+			newstate = state_table[newstatename]
+			if not newstate then
+				error(string.format("unknown state '%s'", newstatename))
 			end
+
+			return newstate._state
+		end
+	end
+
+	local function build_transition_wrapper(state_table, f)
+		return function (...)
+			return transition_wrapper(state_table, f, ...)
 		end
 	end
 
@@ -339,7 +343,7 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 				assert(type(f) == 'table', "timeout transition must be a table")
 				for timeout, callback in pairs(f) do
 					assert(type(callback) == 'function', "transition must be a function")
-					self._state:transition_timeout(timeout, transition_wrapper(state_machine, callback))
+					self._state:transition_timeout(timeout, build_transition_wrapper(state_machine._state_table, callback))
 				end
 			else
 				assert(type(f) == 'function', "transition must be a function")
@@ -347,11 +351,11 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 				if n == 'error' then
 					self._state:transition_error(function(...) f(...) end)
 				elseif n == 'enter' then
-					self._state:transition_enter(transition_wrapper(state_machine, f))
+					self._state:transition_enter(build_transition_wrapper(state_machine._state_table, f))
 				elseif n == 'leave' then
-					self._state:transition_leave(transition_wrapper(state_machine, f))
+					self._state:transition_leave(build_transition_wrapper(state_machine._state_table, f))
 				elseif n == 'init' then
-					self._state:transition_init(transition_wrapper(state_machine, f))
+					self._state:transition_init(build_transition_wrapper(state_machine._state_table, f))
 				elseif n == 'finish' then
 					self._state:transition_finish(function(...) f(...) end)
 				else
@@ -376,17 +380,16 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 
 	function states.StateMachine.method:compile()
 		if not self._state_machine then
-			local state_machine = state_machine(self.name)
-			self._state_machine = state_machine
+			self._state_machine = state_machine(self.name)
+			self._state_table = {}
 
-			local state_table = {}
 			local initial
 
 			for name, state in pairs(self._states) do
 				if name ~= 'initial' and class.isa(state, states.State) then
 					state:merge(self._default)
 					local new_state = states.CompiledState:new(self, state, name)
-					state_table[name] = new_state
+					self._state_table[name] = new_state
 
 					if state == self._states.initial then
 						initial = new_state
@@ -399,22 +402,19 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 					local state = self._states.initial
 					state:merge(self._default)
 					local new_state = states.CompiledState:new(self, state, 'initial')
-					state_table['initial'] = new_state
+					self._state_table['initial'] = new_state
 					initial = new_state
 				else
 					error("state machine must have in initial state")
 				end
 			end
 
-			state_machine.initial = initial._state
-			state_table.initial = initial
+			self._state_machine.initial = initial._state
+			self._state_table.initial = initial
+			self._state_table.error = { _state = self._state_machine.error_state }
+			self._state_table.finish = { _state = self._state_machine.finish_state }
 
-			state_table.error = { _state = state_machine.error_state }
-			state_table.finish = { _state = state_machine.finish_state }
-
-			state_machine:compile()
-
-			self._state_table = state_table
+			self._state_machine:compile()
 		end
 	end
 
@@ -452,14 +452,9 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 			error(string.format("no transition named '%s' on state '%s'", name, self.state.name))
 		end
 
-		local newstatename = trans(self._owner, ...)
-		if newstatename then
-			newstate = self.states[newstatename]
-			if not newstate then
-				error(string.format("unknown state '%s'", newstatename))
-			end
-
-			self._instance:update(newstate._state)
+		local newstate = transition_wrapper(self.states, trans, self._owner, ...)
+		if newstate then
+			self._instance:update(newstate)
 		end
 	end
 
