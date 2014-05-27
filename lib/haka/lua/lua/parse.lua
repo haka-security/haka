@@ -7,6 +7,8 @@ local parseResult = require('parse_result')
 
 local parse = {}
 
+parse.max_recursion = 10
+
 --
 -- Parsing Error
 --
@@ -54,6 +56,35 @@ parse.Context.property.retain_mark = {
 	end
 }
 
+local function revalidate(self)
+	local validate = self._validate
+	self._validate = {}
+	for f, arg in pairs(validate) do
+		f(arg)
+	end
+end
+
+function parse.Context.method:__init(iter, topresult, init)
+	self.iter = iter
+	self._bitoffset = 0
+	self._marks = {}
+	self._catches = {}
+	self._results = {}
+	self._validate = {}
+	self._retain_mark = {}
+	self._recurs = {}
+	self:push(topresult)
+
+	if init then
+		self._initresults = { init }
+		self._initresults_count = 1
+	end
+
+	self:result(1).validate = revalidate
+
+	self.iter.meter = 0
+end
+
 function parse.Context.method:result(idx)
 	idx = idx or -1
 
@@ -85,34 +116,6 @@ function parse.Context.method:unmark()
 	local mark = self.retain_mark
 	self._retain_mark[#self._retain_mark] = nil
 	mark:unmark()
-end
-
-local function revalidate(self)
-	local validate = self._validate
-	self._validate = {}
-	for f, arg in pairs(validate) do
-		f(arg)
-	end
-end
-
-function parse.Context.method:__init(iter, topresult, init)
-	self.iter = iter
-	self._bitoffset = 0
-	self._marks = {}
-	self._catches = {}
-	self._results = {}
-	self._validate = {}
-	self._retain_mark = {}
-	self:push(topresult)
-
-	if init then
-		self._initresults = { init }
-		self._initresults_count = 1
-	end
-
-	self:result(1).validate = revalidate
-
-	self.iter.meter = 0
 end
 
 function parse.Context.method:update(iter)
@@ -151,14 +154,18 @@ function parse.Context.method:parse(entity)
 		else
 			iter = iter:next(self)
 		end
+
+		if not iter then
+			iter = self:poprecurs()
+		end
 	end
 	return self._results[1], err
 end
 
-function parse.Context.method:create(entity)
+function parse.Context.method:create(entity, stop)
 	local iter = entity
 	local err
-	while iter do
+	while iter and #self._results > 0 do
 		err = iter:_create(self)
 		if err then
 			break
@@ -283,6 +290,21 @@ function parse.Context.method:popcatch(entity)
 	self._catches[#self._catches] = nil
 
 	return catch
+end
+
+function parse.Context.method:pushrecurs(finish)
+	if #self._recurs >= parse.max_recursion then
+		error("grammar max recursion reached")
+	end
+
+	self._recurs[#self._recurs+1] = finish
+end
+
+function parse.Context.method:poprecurs()
+	-- Don't throw error if no more recurs as it can happen on normal end
+	local finish = self._recurs[#self._recurs]
+	self._recurs[#self._recurs] = nil
+	return finish
 end
 
 function parse.Context.method:error(position, field, description, ...)

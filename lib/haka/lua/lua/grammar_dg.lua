@@ -208,6 +208,37 @@ function dg.Control.method:_dump_graph_options()
 	return ',fillcolor="#dddddd",style="filled"'
 end
 
+dg.Compound = class.class('DGCompound', dg.Control)
+
+dg.Recurs = class.class('DGRecurs', dg.Control)
+
+dg.Recurs.trace_name = 'recursion'
+
+function dg.Recurs.method:__init(rule, id, recurs)
+	class.super(dg.Recurs):__init(rule, id)
+	self._recurs = recurs
+end
+
+function dg.Recurs.method:_dump_graph_edges(file, ref)
+	self._next:_dump_graph(file, ref)
+	file:write(string.format('%s -> %s [label="recursion"];\n', ref[self], ref[self._recurs]))
+	if self._next then
+		self._next:_dump_graph(file, ref)
+		file:write(string.format('%s -> %s [label="finish"];\n', ref[self], ref[self._next]))
+	else
+		file:write(string.format('%s -> end [label="finish"];\n', ref[self]))
+		file:write('end [fillcolor="#ff0000",style="filled"];\n')
+	end
+end
+
+function dg.Recurs.method:next()
+	return self._recurs
+end
+
+function dg.Recurs.method:_apply(ctx)
+	ctx:pushrecurs(self._next)
+end
+
 dg.ResultPop = class.class('DGResultPop', dg.Control)
 
 function dg.ResultPop.method:__init()
@@ -380,12 +411,15 @@ dg.ArrayStart = class.class('DGArrayStart', dg.Control)
 
 dg.ArrayStart.trace_name = 'array'
 
-function dg.ArrayStart.method:__init(rule, id, name, entity, create, resultclass)
+function dg.ArrayStart.method:__init(rule, id, name, create, resultclass)
 	class.super(dg.ArrayStart).__init(self, rule, id)
 	self.name = name
-	self.entity = entity
 	self.create = create
 	self.resultclass = resultclass or parseResult.ArrayResult
+end
+
+function dg.ArrayStart.method:set_entity(entity)
+	self.entity = entity
 end
 
 function dg.ArrayStart.method:_apply(ctx)
@@ -443,6 +477,13 @@ end
 function dg.ArrayPop.method:_apply(ctx)
 	local entityresult = ctx:result()
 	ctx:pop()
+
+	if #ctx._results == 0 then
+		-- On creation we might not have results anymore
+		-- just skip it
+		return
+	end
+
 	local arrayresult = ctx:result()
 	if class.isa(arrayresult, parseResult.ArrayResult) then
 		rawset(entityresult, '_sub', haka.vbuffer_sub(arrayresult._entitybegin, ctx.iter))
@@ -524,12 +565,16 @@ end
 
 function dg.Branch.method:next(ctx)
 	local case = self.selector(ctx:result(), ctx)
-	self:trace(ctx.iter, "select branch '%s'", case)
 
 	local next = self.cases[case]
 
-	if next then return next
-	else return self._next end
+	if next then
+		self:trace(ctx.iter, "select branch '%s'", case)
+		return next
+	else
+		self:trace(ctx.iter, "select branch 'default'")
+		return self._next
+	end
 end
 
 function dg.Branch.method:_nexts(list)

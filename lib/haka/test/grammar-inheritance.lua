@@ -52,7 +52,33 @@ function TestGrammarInheritance:test_inheritance_override()
 	end)
 
 	-- Then
-	assertEquals(class.classof(superman.hand._next).name, "DGBytes")
+	assertEquals(class.classof(superman.hand._next._next).name, "DGBytes")
+end
+
+function TestGrammarInheritance:test_recursion()
+	-- Given
+	local buf = haka.vbuffer_from("\x02\x01\x00\x00")
+	local g = haka.grammar.new("recurs", function ()
+		define("root")
+
+		root = record{
+				field("count", number(8)),
+				field("child", array(root):options{
+					count = function (self, ctx)
+						return ctx:result(-2).count
+					end
+				}),
+			}
+
+		export(root)
+	end)
+	-- When
+	local ret = g.root:parse(buf:pos('begin'))
+	-- Then
+	assertEquals(ret.count, 2)
+	assertEquals(ret.child[1].count, 1)
+	assertEquals(ret.child[1].child[1].count, 0)
+	assertEquals(ret.child[2].count, 0)
 end
 
 LuaUnit:setVerbosity(2)

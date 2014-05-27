@@ -128,13 +128,13 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 			end
 		)
 	}
-	
+
 	dn = array(label):options{
 			untilcond = function (label)
 				return label and (label.length == 0 or label.pointer ~= nil)
 			end,
 	}:convert(dn_converter, true)
-	
+
 	dns_dissector.type = number(16):convert({
 		get = function (type) return TYPE[type] or type end,
 		set = function (type)
@@ -146,7 +146,7 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 			error("unknown type: "..type)
 		end
 	})
-	
+
 	header = record{
 		field('id',      number(16)),
 		field('qr',      flag),
@@ -162,13 +162,13 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 		field("nscount", number(16)),
 		field("arcount", number(16)),
 	}
-	
+
 	question = record{
 		field('name',    dn),
 		field('type',    dns_dissector.type),
 		field('class',   number(16)),
 	}
-	
+
 	soa = record{
 		field('mname', dn),
 		field('rname', dn),
@@ -178,7 +178,7 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 		field('expire', number(32)),
 		field('minimum', number(32)),
 	}
-	
+
 	wks = record{
 		field('ip', number(32)
 			:convert(ipv4_addr_convert, true)),
@@ -187,17 +187,17 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 			count = function (self, ctx) return self.length - 40 end -- remove wks headers
 		}),
 	}
-	
+
 	mx = record{
 		field('pref', number(16)),
 		field('name', dn),
 	}
-	
+
 	minfo = record{
 		field('rname', dn),
 		field('ename', dn),
 	}
-	
+
 	resourcerecord = record{
 		field('name',    dn),
 		field('type',    dns_dissector.type),
@@ -234,19 +234,19 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 			end
 		),
 	}
-	
+
 	answer = array(resourcerecord):options{
 		count = function (self, ctx) return ctx:result(1).ancount end
 	}
-	
+
 	authority = array(resourcerecord):options{
 		count = function (self, ctx) return ctx:result(1).nscount end
 	}
-	
+
 	additional = array(resourcerecord):options{
 		count = function (self, ctx) return ctx:result(1).arcount end
 	}
-	
+
 	message = record{
 		execute(function (self, ctx) ctx:result(1)._labels = {} end),
 		header,
