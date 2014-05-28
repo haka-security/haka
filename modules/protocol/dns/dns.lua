@@ -89,6 +89,7 @@ function dns_dissector.method:__init(flow)
 	self.flow = flow
 	self.states = dns_dissector.states:instanciate()
 	self.states.dns = self
+	self.dns_pending_queries = {}
 end
 
 function dns_dissector.method:receive(pkt, payload, direction)
@@ -282,8 +283,6 @@ end
 
 dns_dissector.states = haka.state_machine("dns")
 
-local dns_pending_queries = {}
-
 local DnsResult = class.class('DnsResult')
 
 function DnsResult.method:__init(dissector, pkt)
@@ -318,14 +317,14 @@ dns_dissector.states.message = dns_dissector.states:state{
 	up = function (context, res, payload, pkt)
 		local self = context.dns
 		self:trigger("query", res)
-		dns_pending_queries[res.id] = res
+		self.dns_pending_queries[res.id] = res
 		self.flow:send(pkt, payload, true)
 		res._data = payload
 	end,
 	down = function (context, res, payload, pkt)
 		local self = context.dns
 		local id = res.id
-		local query = dns_pending_queries[id]
+		local query = self.dns_pending_queries[id]
 		if not query then
 			haka.alert{
 				description = "dns: mismatching response",
@@ -334,7 +333,7 @@ dns_dissector.states.message = dns_dissector.states:state{
 			self.flow:drop(pkt)
 		else
 			self:trigger("response", res, query)
-			dns_pending_queries[id] = nil
+			self.dns_pending_queries[id] = nil
 			self.flow:send(pkt, payload)
 		end
 	end,
