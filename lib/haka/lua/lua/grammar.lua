@@ -680,6 +680,9 @@ end
 
 function Grammar.method:export(...)
 	for _, proxy in ipairs({...}) do
+		if not class.isa(proxy, GrammarProxy) then
+			error("can only export named rules")
+		end
 		self._exports[proxy._target] = true
 	end
 end
