@@ -385,28 +385,24 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 
 			local initial
 
+			if not self._initial then
+				error("state machine must have an initial state")
+			end
+
 			for name, state in pairs(self._states) do
-				if name ~= 'initial' and class.isa(state, states.State) then
+				if class.isa(state, states.State) then
 					state:merge(self._default)
 					local new_state = states.CompiledState:new(self, state, name)
 					self._state_table[name] = new_state
 
-					if state == self._states.initial then
+					if state == self._initial then
 						initial = new_state
 					end
 				end
 			end
 
 			if not initial then
-				if self._states.initial then
-					local state = self._states.initial
-					state:merge(self._default)
-					local new_state = states.CompiledState:new(self, state, 'initial')
-					self._state_table['initial'] = new_state
-					initial = new_state
-				else
-					error("state machine must have in initial state")
-				end
+				error("state machine has an unknown initial state")
 			end
 
 			self._state_machine.initial = initial._state
@@ -472,6 +468,9 @@ void state_machine_initial_set(struct state_machine *machine, struct state *init
 	local function state_machine_env(cur_states)
 		state_machine_int.default_transitions = function (transitions)
 			cur_states:default_transitions(transitions)
+		end
+		state_machine_int.initial = function (state)
+			cur_states._initial = state
 		end
 
 		return {

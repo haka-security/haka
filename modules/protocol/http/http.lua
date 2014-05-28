@@ -514,7 +514,7 @@ http_dissector.states = haka.state_machine("http", function ()
 		end
 	}
 
-	initial = request
+	initial(request)
 end)
 
 module.events = http_dissector.events

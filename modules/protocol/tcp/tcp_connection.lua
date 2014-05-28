@@ -130,7 +130,7 @@ tcp_connection_dissector.states = haka.state_machine("tcp", function ()
 		end
 	}
 
-	initial = state{
+	syn = state{
 		init = function (self)
 			self.input = 'up'
 			self.output = 'down'
@@ -329,6 +329,8 @@ tcp_connection_dissector.states = haka.state_machine("tcp", function ()
 			self:_close()
 		end
 	}
+
+	initial(syn)
 end)
 
 function tcp_connection_dissector.method:__init()

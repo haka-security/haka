@@ -334,7 +334,7 @@ dns_dissector.states = haka.state_machine("dns", function ()
 		end,
 	}
 
-	initial = message
+	initial(message)
 end)
 
 module.events = dns_dissector.events

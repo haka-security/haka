@@ -78,7 +78,7 @@ local machine = haka.state_machine("test", function ()
 		end
 	}
 
-	initial = state1
+	initial(state1)
 end)
 
 local context = {}

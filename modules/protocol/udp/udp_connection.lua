@@ -109,7 +109,7 @@ udp_connection_dissector.states = haka.state_machine("udp", function ()
 		}
 	}
 
-	initial = established
+	initial(established)
 end)
 
 function udp_connection_dissector.method:__init(pkt)
