@@ -24,16 +24,15 @@ function GrammarEnv.method:__init(grammar)
 end
 
 function GrammarEnv.method:get(entity)
-	local dg = rawget(self._compiled, entity)
-	return dg
+	return self._compiled[entity]
 end
 
 function GrammarEnv.method:register(entity, dg)
-	rawset(self._compiled, entity, dg)
+	self._compiled[entity] = dg
 end
 
 function GrammarEnv.method:unregister(entity, dg)
-	rawset(self._compiled, entity, nil)
+	self._compiled[entity] = nil
 end
 
 --
@@ -678,10 +677,13 @@ function GrammarProxy.method:do_compile(env, rule, id)
 	return entity:compile(env, rule, id)
 end
 
-function grammar_env(gr)
+local function grammar_env(gr)
 	local func = {
 		export = function (...)
 			for _, proxy in ipairs({...}) do
+				if not class.isa(proxy, GrammarProxy) then
+					error("can only export named rules")
+				end
 				gr._exports[proxy._target] = true
 			end
 		end,

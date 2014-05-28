@@ -135,11 +135,19 @@ function parse.Context.method:lookahead()
 end
 
 function parse.Context.method:parse(entity)
+	return self:_traverse(entity, "_apply")
+end
+
+function parse.Context.method:create(entity)
+	return self:_traverse(entity, "_create")
+end
+
+function parse.Context.method:_traverse(entity, f)
 	local iter = entity
 	local err
-	while iter do
+	while iter and #self._results > 0 do
 		iter:_trace(self.iter)
-		err = iter:_apply(self)
+		err = iter[f](iter, self)
 		if err then
 			iter = self:catch()
 			if not iter then
@@ -158,19 +166,6 @@ function parse.Context.method:parse(entity)
 		if not iter then
 			iter = self:poprecurs()
 		end
-	end
-	return self._results[1], err
-end
-
-function parse.Context.method:create(entity, stop)
-	local iter = entity
-	local err
-	while iter and #self._results > 0 do
-		err = iter:_create(self)
-		if err then
-			break
-		end
-		iter = iter:next(self)
 	end
 	return self._results[1], err
 end
