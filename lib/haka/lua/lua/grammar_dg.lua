@@ -546,7 +546,7 @@ function dg.Error.method:_dump_graph_options()
 end
 
 function dg.Error.method:_apply(ctx)
-	return ctx:error(nil, self, self.msg)
+	return ctx:error(self.msg)
 end
 
 dg.Execute = class.class('DGExecute', dg.Control)
@@ -746,7 +746,7 @@ end
 
 function dg.Bytes.method:_parse(res, iter, ctx)
 	if ctx._bitoffset ~= 0 then
-		return ctx:error(nil, self, "byte primitive requires aligned bits")
+		return ctx:error("byte primitive requires aligned bits")
 	end
 
 	local sub
@@ -754,7 +754,7 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 	if self.size then
 		size = self.size(res, ctx)
 		if size < 0 then
-			return ctx:error(nil, self, "byte count must not be negative, got %d", size)
+			return ctx:error("byte count must not be negative, got %d", size)
 		end
 	else
 		size = 'all'
@@ -905,7 +905,9 @@ function dg.Token.method:_parse(res, iter, ctx)
 	if begin then
 		begin:unmark()
 	end
-	return ctx:error(begin:copy(), self, "token /%s/ doesn't match", self.pattern)
+	
+	ctx:update(begin)
+	return ctx:error("token /%s/ doesn't match", self.pattern)
 end
 
 function dg.Token.method:_init(res, input, ctx, init)

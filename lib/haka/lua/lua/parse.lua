@@ -148,22 +148,26 @@ function parse.Context.method:_traverse(entity, f, all)
 
 	self._level = all
 	self._level_exit = 0
+	self._error = nil
 
 	while iter do
 		self._start_rec = false
 
 		iter:_trace(self.iter)
-		err = iter[f](iter, self)
-		if err then
+		iter[f](iter, self)
+
+		if self._error then
+			self._error.field = iter
+
 			iter = self:catch()
 			if not iter then
-				haka.log.debug("grammar", tostring(err))
-				haka.log.debug("grammar", err:context())
+				haka.log.debug("grammar", tostring(self._error))
+				haka.log.debug("grammar", self._error:context())
 				break
 			else
-				haka.log.debug("grammar", "catched: %s", err)
-				haka.log.debug("grammar", "         %s", err:context())
-				err = nil
+				haka.log.debug("grammar", "catched: %s", self._error)
+				haka.log.debug("grammar", "         %s", self._error:context())
+				self._error = nil
 			end
 		else
 			iter = iter:next(self)
@@ -174,7 +178,7 @@ function parse.Context.method:_traverse(entity, f, all)
 			if not iter then break end
 		end
 	end
-	return self._results[1], err
+	return self._results[1], self._error
 end
 
 function parse.Context.method:pushlevel()
@@ -330,13 +334,10 @@ function parse.Context.method:poprecurs()
 	end
 end
 
-function parse.Context.method:error(position, field, description, ...)
+function parse.Context.method:error(description, ...)
 	local context = {}
 	description = string.format(description, ...)
-
-	position = position or self.iter
-
-	return ParseError:new(position, field, description)
+	self._error = ParseError:new(self.iter, nil, description)
 end
 
 return parse
