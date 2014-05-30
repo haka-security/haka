@@ -694,7 +694,7 @@ local function grammar_env(gr)
 			-- Search the defined rules
 			ret = gr._rules[name]
 			if ret then
-				if class.isa(ret, GrammarProxy) then
+				if class.isa(ret, GrammarProxy) and ret._target == name then
 					return ret
 				else
 					-- Create a proxy to allow inheritance
@@ -733,13 +733,6 @@ function grammar.new(name, def)
 
 	def()
 	setmetatable(env, nil)
-
-	-- Search for unimplemented rule
-	for name, rule in pairs(g._rules) do
-		if class.isa(rule, GrammarProxy) then
-			error("unimplemented rule: "..name)
-		end
-	end
 
 	-- Compile exported entities
 	for name, _  in pairs(g._exports) do
