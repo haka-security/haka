@@ -67,51 +67,74 @@ function dg.Entity.method:convert(converter, memoize)
 end
 
 function dg.Entity.method:validate(validate)
-	self.validate = validate
+	self._validate = validate
+end
+
+function dg.Entity.method:add_apply(apply)
+	if not self._post_apply then
+		self._post_apply = {}
+	end
+
+	table.insert(self._post_apply, apply)
+end
+
+function dg.Entity.method:do_apply(value, ctx)
+	local res = ctx:result()
+	
+	if self.converter then
+		res = self.converter.get(res)
+	end
+
+	for _, apply in ipairs(self._post_apply) do
+		apply(value, res, ctx)
+	end
 end
 
 function dg.Entity.method:genproperty(obj, name, get, set)
 	local fget, fset = get, set
 
 	if self.converter then
-		if self.memoize then
-			local memname = '_' .. name .. '_memoize'
-			fget = function (this)
-				local ret = rawget(this, memname)
-				if not ret then
-					ret = self.converter.get(get(this))
-					rawset(this, memname, ret)
-				end
-				return ret
-			end
-			fset = function (this, newval)
-				rawset(this, memname, nil)
-				return set(this, self.converter.set(newval))
-			end
-		else
-			fget = function (this)
-				return self.converter.get(get(this))
-			end
-			fset = function (this, newval)
-				return set(this, self.converter.set(newval))
-			end
+		fget = function (this)
+			return self.converter.get(get(this))
+		end
+		fset = function (this, newval)
+			return set(this, self.converter.set(newval))
 		end
 	end
 
-	if self.validate then
+	if self.memoize then
+		local memname = '_' .. name .. '_memoize'
 		local oldget, oldset = fget, fset
 
 		fget = function (this)
-			if this._validate[self.validate] then
-				self.validate(this)
+			local ret = rawget(this, memname)
+			if not ret then
+				ret = oldget(this)
+				rawset(this, memname, ret)
+			end
+			return ret
+		end
+		fset = function (this, newval)
+			rawset(this, memname, nil)
+			return oldset(this, newval)
+		end
+	end
+
+	if self._validate then
+		local oldget, oldset = fget, fset
+		local validate = self._validate
+
+		fget = function (this)
+			if this._validate[validate] then
+				validate(this)
 			end
 			return oldget(this)
 		end
 		fset = function (this, newval)
 			if newval == nil then
-				this._validate[self.validate] = this
+				this._validate[validate] = this
 			else
-				this._validate[self.validate] = nil
+				this._validate[validate] = nil
 				return oldset(this, newval)
 			end
 		end
@@ -306,7 +329,11 @@ function dg.RecordFinish.method:_apply(ctx)
 	end
 
 	for name, func in pairs(self._extra) do
-		res[name] = func(res, ctx)
+		res:addproperty(name, func(res), nil)
+	end
+
+	if self._post_apply then
+		self:do_apply(res, ctx)
 	end
 end
 
@@ -343,9 +370,16 @@ function dg.UnionFinish.method:__init(pop)
 end
 
 function dg.UnionFinish.method:_apply(ctx)
+	local res = ctx:result()
+
 	if self._pop then
 		ctx:pop()
 	end
+
+	if self._post_apply then
+		self:do_apply(res, ctx)
+	end
+
 	ctx:popmark()
 	ctx:unmark()
 end
@@ -384,11 +418,15 @@ function dg.TryFinish.method:__init(rule, id, name)
 end
 
 function dg.TryFinish.method:_apply(ctx)
+	local res = ctx:result()
+	ctx:pop()
+
+	if self._post_apply then
+		self:do_apply(res, ctx)
+	end
+
 	if not self.name then
 		-- Merge unnamed temp result ctx with parent result context
-		local res = ctx:result()
-		ctx:pop()
-
 		local src = rawget(res, '_validate')
 		if src then
 			local dst = rawget(ctx:result(), '_validate')
@@ -401,8 +439,6 @@ function dg.TryFinish.method:_apply(ctx)
 		end
 
 		class.merge(ctx:result(), res)
-	else
-		ctx:pop()
 	end
 
 	ctx:popcatch()
@@ -449,7 +485,12 @@ function dg.ArrayFinish.method:__init()
 end
 
 function dg.ArrayFinish.method:apply(ctx)
+	local res = ctx:result()
 	ctx:pop()
+
+	if self._post_apply then
+		self:do_apply(res, ctx)
+	end
 end
 
 dg.ArrayPush = class.class('DGArrayPush', dg.Control)
@@ -624,15 +665,13 @@ function dg.Number.method:_parse(res, input, ctx)
 
 	ctx._bitoffset = bit
 
-	if bitoffset == 0 and bit == 0 then
-		if self.name then
+	if self.name then
+		if bitoffset == 0 and bit == 0 then
 			self:genproperty(res, self.name,
 				function (this) return sub:asnumber(self.endian) end,
 				function (this, newvalue) return sub:setnumber(newvalue, self.endian) end
 			)
-		end
-	else
-		if self.name then
+		else
 			self:genproperty(res, self.name,
 				function (this)
 					return sub:asbits(bitoffset, self.size, self.endian)
@@ -642,6 +681,17 @@ function dg.Number.method:_parse(res, input, ctx)
 				end
 			)
 		end
+	end
+
+	if self._post_apply then
+		local value
+		if bitoffset == 0 and bit == 0 then
+			value = sub:asnumber(self.endian)
+		else
+			value = sub:asbits(bitoffset, self.size, self.endian)
+		end
+
+		self:do_apply(value, ctx)
 	end
 end
 
@@ -653,8 +703,8 @@ function dg.Number.method:_init(res, input, ctx, init)
 			local initval = init[self.name]
 			if initval then
 				res[self.name] = initval
-			elseif self.validate then
-				res._validate[self.validate] = res
+			elseif self._validate then
+				res._validate[self._validate] = res
 			end
 		else
 			res[self.name] = nil
@@ -799,36 +849,48 @@ function dg.Token.method:_parse(res, iter, ctx)
 
 			iter:split()
 
-			if self.name then
+			if self.name or self._post_apply then
 				local result = haka.vbuffer_sub(begin, mend)
-	
+
 				if self.raw then
-					self:genproperty(res, self.name,
-						function (this) return result end)
+					if self.name then
+						self:genproperty(res, self.name,
+							function (this) return result end)
+					end
+
+					if self._post_apply then
+						sel:do_apply(res, ctx)
+					end
 				else
 					local string = result:asstring()
-	
+
+					if self._post_apply then
+						self:do_apply(string, ctx)
+					end
+
 					if self.converter then
 						string = self.converter.get(string)
 					end
-	
-					res:addproperty(self.name,
-						function (this)
-							return string
-						end,
-						function (this, newvalue)
-							string = newvalue
-							if self.converter then
-								newvalue = self.converter.set(newvalue)
+
+					if self.name then
+						res:addproperty(self.name,
+							function (this)
+								return string
+							end,
+							function (this, newvalue)
+								string = newvalue
+								if self.converter then
+									newvalue = self.converter.set(newvalue)
+								end
+
+								if not self.re:match(newvalue) then
+									error(string.format("token value '%s' does not verify /%s/", newvalue, self.pattern))
+								end
+
+								result:setstring(newvalue)
 							end
-	
-							if not self.re:match(newvalue) then
-								error(string.format("token value '%s' does not verify /%s/", newvalue, self.pattern))
-							end
-	
-							result:setstring(newvalue)
-						end
-					)
+						)
+					end
 				end
 			end
 

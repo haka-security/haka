@@ -302,18 +302,17 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 		token(':'),
 		WS,
 		field('value', token('[^%r%n]+')),
-		CRLF,
-		execute(function (self, ctx)
-			local lower_name =  self.name:lower()
-			if lower_name == 'content-length' then
-				ctx.content_length = tonumber(self.value)
-				ctx.mode = 'content'
-			elseif lower_name == 'transfer-encoding' and
-			       self.value:lower() == 'chunked' then
-				ctx.mode = 'chunked'
-			end
-		end)
-	}
+		CRLF
+	}:apply(function (self, res, ctx)
+		local lower_name =  self.name:lower()
+		if lower_name == 'content-length' then
+			ctx.content_length = tonumber(self.value)
+			ctx.mode = 'content'
+		elseif lower_name == 'transfer-encoding' and
+		       self.value:lower() == 'chunked' then
+			ctx.mode = 'chunked'
+		end
+	end)
 
 	headers = record{
 		field('headers', array(header)

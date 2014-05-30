@@ -73,10 +73,16 @@ grammar.converter.string = {
 
 
 --
--- Grammar description
+-- Grammar description classes
 --
 
 grammar_int.Entity = class.class('Entity')
+
+function grammar_int.Entity.method:clone()
+	local clone = class.super(grammar_int.Entity).clone(self)
+	if self._apply then clone._apply = table.copy(self._apply) end
+	return clone
+end
 
 function grammar_int.Entity.method:_as(name)
 	local clone = self:clone()
@@ -105,6 +111,31 @@ function grammar_int.Entity.method:memoize()
 	local clone = self:clone()
 	clone._memoize = true
 	return clone
+end
+
+function grammar_int.Entity.method:apply(apply)
+	local clone = self:clone()
+	if not clone._apply then clone._apply = {} end
+	table.insert(clone._apply, apply)
+	return clone
+end
+
+function grammar_int.Entity.method:property_setup(item)
+	if self._converter or self._memoize then item:convert(self._converter, self._memoize) end
+	if self._validate then item:validate(self._validate) end
+end
+
+function grammar_int.Entity.method:post_setup(item)
+	if self._apply then
+		for _, apply in ipairs(self._apply) do
+			item:add_apply(apply)
+		end
+	end
+end
+
+function grammar_int.Entity.method:compile_setup(item)
+	self:property_setup(item)
+	self:post_setup(item)
 end
 
 grammar_int.Compound = class.class('Compound', grammar_int.Entity)
@@ -151,8 +182,7 @@ function grammar_int.Record.method:do_compile(env, rule, id)
 	ret = grammar_dg.Retain:new(haka.packet_mode() == 'passthrough')
 
 	iter = grammar_dg.RecordStart:new(rule, id, self.named)
-	if self._converter then iter:convert(self._converter, self._memoize) end
-	if self._validate then iter:validate(self._validate) end
+	self:property_setup(iter)
 	ret:add(iter)
 
 	for i, entity in ipairs(self.entities) do
@@ -169,6 +199,8 @@ function grammar_int.Record.method:do_compile(env, rule, id)
 	end
 
 	local pop = grammar_dg.RecordFinish:new(self.named ~= nil)
+	self:post_setup(pop)
+
 	for name, f in pairs(self.extra_entities) do
 		pop:extra(name, f)
 	end
@@ -189,9 +221,7 @@ function grammar_int.Sequence.method:do_compile(env, rule, id)
 	local iter, ret
 
 	ret = grammar_dg.RecordStart:new(rule, id, self.named)
-
-	if self._converter then ret:convert(self._converter, self._memoize) end
-	if self._validate then ret:validate(self._validate) end
+	self:property_setup(ret)
 	iter = ret
 
 	for i, entity in ipairs(self.entities) do
@@ -212,6 +242,7 @@ function grammar_int.Sequence.method:do_compile(env, rule, id)
 	end
 
 	local pop = grammar_dg.RecordFinish:new(self.named ~= nil)
+	self:post_setup(pop)
 	iter:add(pop)
 
 	return ret
@@ -322,7 +353,7 @@ end
 
 function grammar_int.Array.method:do_compile(env, rule, id)
 	local start = grammar_dg.ArrayStart:new(rule, id, self.named, self.create, self.resultclass)
-	if self._converter then start:convert(self._converter, self._memoize) end
+	self:property_setup(start)
 
 	local loop = grammar_dg.Branch:new(nil, nil, self.more)
 	local push = grammar_dg.ArrayPush:new(rule, id)
@@ -404,8 +435,7 @@ end
 
 function grammar_int.Number.method:do_compile(env, rule, id)
 	local ret = grammar_dg.Number:new(rule, id, self.bits, self.endian, self.named)
-	if self._converter then ret:convert(self._converter, self._memoize) end
-	if self._validate then ret:validate(self._validate) end
+	self:compile_setup(ret)
 	return ret
 end
 
@@ -414,8 +444,7 @@ grammar_int.Bytes = class.class('Bytes', grammar_int.Entity)
 
 function grammar_int.Bytes.method:do_compile(env, rule, id)
 	local ret = grammar_dg.Bytes:new(rule, id, self._count, self.named, self._chunked)
-	if self._converter then ret:convert(self._converter, self._memoize) end
-	if self._validate then ret:validate(self._validate) end
+	self:compile_setup(ret)
 	return ret
 end
 
@@ -465,7 +494,7 @@ function grammar_int.Token.method:do_compile(env, rule, id)
 		self.re = rem.re:compile("^(?:"..self.pattern..")")
 	end
 	local ret = grammar_dg.Token:new(rule, id, self.pattern, self.re, self.named, self.raw)
-	if self._converter then ret:convert(self._converter, self._memoize) end
+	self:compile_setup(ret)
 	return ret
 end
 
@@ -510,6 +539,35 @@ end
 function grammar_int.Error.method:do_compile(env, rule, id)
 	return grammar_dg.Error:new(id, self.msg)
 end
+
+local GrammarProxy = class.class("GrammarProxy", grammar_int.Entity)
+
+function GrammarProxy.method:__init(target)
+	self._target = target
+end
+
+function GrammarProxy.method:do_compile(env, rule, id)
+	local entity = env._grammar._rules[self._target]
+	if not entity or entity._target == self._target then
+		error(string.format("undefined entity: %s", self._target))
+	end
+
+	local clone = entity:clone()
+	if self.named then clone.named = self.named end
+	if self._apply then
+		if not clone._apply then clone._apply = {} end
+		table.merge(clone._apply, self._apply)
+	end
+	if self._converter then clone._converter = self._converter end
+	if self._memoize  then clone._memoize = self._memoize end
+	local ret = clone:compile(env, rule, id)
+	return ret
+end
+
+
+--
+-- Grammar description public API
+--
 
 function grammar_int.record(entities)
 	return grammar_int.Record:new(entities)
@@ -593,27 +651,6 @@ function grammar_int.fail(msg)
 end
 
 grammar_int.text = grammar_int.bytes():convert(grammar_int.converter.string, true)
-
-local GrammarProxy = class.class("GrammarProxy", grammar_int.Entity)
-
-function GrammarProxy.method:__init(target)
-	self._target = target
-end
-
-function GrammarProxy.method:do_compile(env, rule, id)
-	local entity = env._grammar._rules[self._target]
-	if not entity or entity._target == self._target then
-		error(string.format("use of unimplemented entity: %s", self._target))
-	end
-
-	if self.named then
-		local clone = entity:clone()
-		clone.named = self.named
-		entity = clone
-	end
-
-	return entity:compile(env, rule, id)
-end
 
 
 --

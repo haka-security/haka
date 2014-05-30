@@ -46,6 +46,14 @@ function table.merge(dst, src)
 	end
 end
 
+function table.copy(src)
+	local dst = {}
+	for k,v in pairs(src) do
+		dst[k] = v
+	end
+	return dst
+end
+
 function table.dict(table)
 	local ret = {}
 	for _, v in pairs(table) do
