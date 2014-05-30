@@ -120,6 +120,27 @@ function grammar_int.Entity.method:apply(apply)
 	return clone
 end
 
+function grammar_int.Entity.method:const(value)
+	local apply
+
+	if type(value) ~= 'function' then
+		apply = function (v, res, ctx)
+			if v ~= value then
+				ctx:error("incorrect value, expected '%s' got '%s'", value, v)
+			end
+		end
+	else
+		apply = function (v, res, ctx)
+			local ref = value(res, ctx)
+			if v ~= ref then
+				ctx:error("incorrect value, expected '%s' got '%s'", ref, v)
+			end
+		end
+	end
+
+	return self:apply(apply)
+end
+
 function grammar_int.Entity.method:property_setup(item)
 	if self._converter or self._memoize then item:convert(self._converter, self._memoize) end
 	if self._validate then item:validate(self._validate) end

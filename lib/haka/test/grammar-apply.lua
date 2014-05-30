@@ -91,5 +91,29 @@ function TestGrammarApply:test_apply_on_proxy()
 	assertEquals(result.ok, true)
 end
 
+function TestGrammarApply:test_const()
+	-- Given
+	local buf = haka.vbuffer_from("abcdefghijklmnopqrstuvwxyz0123456789")
+	local grammar = haka.grammar.new("test", function ()
+		rec = record{
+			field("token", token("[a-z]*"))
+				:const("abcdefghijklmnopqrstuvwxyz"),
+			field("num", token("[0-9]*"))
+				:const(function () return "0123456789" end)
+		}
+
+		elem = rec:apply(function (value)
+			value.ok = true
+		end)
+
+		export(elem)
+	end)
+
+	-- When
+	local result = grammar.elem:parse(buf:pos('begin'))
+
+	-- Should not fail
+end
+
 LuaUnit:setVerbosity(2)
 assert(LuaUnit:run('TestGrammarApply') == 0)
