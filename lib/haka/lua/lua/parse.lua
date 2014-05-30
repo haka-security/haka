@@ -73,11 +73,11 @@ function parse.Context.method:__init(iter, topresult, init)
 	self._validate = {}
 	self._retain_mark = {}
 	self._recurs = {}
+	self._level = 0
 	self:push(topresult)
 
 	if init then
 		self._initresults = { init }
-		self._initresults_count = 1
 	end
 
 	self:result(1).validate = revalidate
@@ -135,17 +135,23 @@ function parse.Context.method:lookahead()
 end
 
 function parse.Context.method:parse(entity)
-	return self:_traverse(entity, "_apply")
+	return self:_traverse(entity, "_apply", 1)
 end
 
 function parse.Context.method:create(entity)
-	return self:_traverse(entity, "_create")
+	return self:_traverse(entity, "_create", 0)
 end
 
-function parse.Context.method:_traverse(entity, f)
+function parse.Context.method:_traverse(entity, f, all)
 	local iter = entity
 	local err
-	while iter and #self._results > 0 do
+
+	self._level = all
+	self._level_exit = 0
+
+	while iter do
+		self._start_rec = false
+
 		iter:_trace(self.iter)
 		err = iter[f](iter, self)
 		if err then
@@ -163,19 +169,29 @@ function parse.Context.method:_traverse(entity, f)
 			iter = iter:next(self)
 		end
 
-		if not iter then
+		while not self._start_rec and self._level == self._level_exit do
 			iter = self:poprecurs()
+			if not iter then break end
 		end
 	end
 	return self._results[1], err
 end
 
+function parse.Context.method:pushlevel()
+	self._level = self._level+1
+end
+
+function parse.Context.method:poplevel()
+	self._level = self._level-1
+end
+
 function parse.Context.method:pop()
+	assert(#self._results > 0)
+
 	self._results[#self._results] = nil
 
 	if self._initresults then
-		self._initresults[self._initresults_count] = nil
-		self._initresults_count = self._initresults_count-1
+		self._initresults[#self._initresults] = nil
 	end
 end
 
@@ -185,9 +201,8 @@ function parse.Context.method:push(result, name)
 	self._results[#self._results+1] = new
 	if self._initresults then
 		local curinit = self._initresults[#self._initresults]
-		self._initresults_count = self._initresults_count+1
 		if curinit then
-			self._initresults[self._initresults_count] = curinit[name]
+			self._initresults[#self._initresults+1] = curinit[name]
 		else
 			self._initresults[#self._initresults+1] = nil
 		end
@@ -292,14 +307,27 @@ function parse.Context.method:pushrecurs(finish)
 		error("grammar max recursion reached")
 	end
 
-	self._recurs[#self._recurs+1] = finish
+	self._recurs[#self._recurs+1] = {
+		elem = finish,
+		level = self._level_exit
+	}
+
+	self._level_exit = self._level
+	self._start_rec = true
 end
 
 function parse.Context.method:poprecurs()
 	-- Don't throw error if no more recurs as it can happen on normal end
-	local finish = self._recurs[#self._recurs]
-	self._recurs[#self._recurs] = nil
-	return finish
+	local state = self._recurs[#self._recurs]
+	if state then
+		self._recurs[#self._recurs] = nil
+		self._level_exit = state.level
+
+		return state.elem
+	else
+		self._level = 0
+		return nil
+	end
 end
 
 function parse.Context.method:error(position, field, description, ...)

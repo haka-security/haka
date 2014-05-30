@@ -55,6 +55,37 @@ function TestGrammarInheritance:test_inheritance_override()
 	assertEquals(class.classof(superman.hand._next._next).name, "DGBytes")
 end
 
+function TestGrammarInheritance:test_proxy()
+	-- Given
+	local human = haka.grammar.new("human", function ()
+		finger = token("finger")
+
+		hand = record{
+			field("finger", finger),
+		}
+
+		export(hand)
+	end)
+
+	-- Then
+	assertEquals(human.hand._next._next._next.name, "finger")
+end
+
+function TestGrammarInheritance:test_proxy_error()
+	-- Given
+	assertError(function ()
+		local human = haka.grammar.new("human", function ()
+			define("finger")
+	
+			hand = record{
+				field("finger", finger),
+			}
+	
+			export(hand)
+		end)
+	end)
+end
+
 function TestGrammarInheritance:test_recursion()
 	-- Given
 	local buf = haka.vbuffer_from("\x02\x01\x00\x00")

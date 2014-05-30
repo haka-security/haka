@@ -210,6 +210,16 @@ end
 
 dg.Compound = class.class('DGCompound', dg.Control)
 
+function dg.Compound.method:_apply(ctx)
+	ctx:pushlevel()
+end
+
+dg.CompoundEnd = class.class('DGCompoundEnd', dg.Control)
+
+function dg.CompoundEnd.method:_apply(ctx)
+	ctx:poplevel()
+end
+
 dg.Recurs = class.class('DGRecurs', dg.Control)
 
 dg.Recurs.trace_name = 'recursion'

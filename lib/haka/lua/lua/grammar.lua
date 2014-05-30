@@ -116,11 +116,12 @@ function grammar_int.Compound.method:compile(env, rule, id)
 	end
 
 	-- Create a DGCompound in order to use it for recursive case
-	local compound = grammar_dg.Compound:new(rule, id, compiled)
+	local compound = grammar_dg.Compound:new(rule, id)
 	env:register(self, compound)
 	local ret = self:do_compile(env, rule, id)
 	env:unregister(self)
 	compound:add(ret)
+	compound:add(grammar_dg.CompoundEnd:new(rule, id))
 	return compound
 end
 
@@ -601,8 +602,8 @@ end
 
 function GrammarProxy.method:do_compile(env, rule, id)
 	local entity = env._grammar._rules[self._target]
-	if not entity then
-		error("use of unimplemented entity: %s", proxy._target)
+	if not entity or entity._target == self._target then
+		error(string.format("use of unimplemented entity: %s", self._target))
 	end
 
 	if self.named then
