@@ -19,7 +19,7 @@ local grammar = haka.grammar.new("test", function ()
 			:untilcond(function (elem, ctx)
 				return ctx.iter.meter-1 >= ctx:result(1).length
 			end)
-			:create(function (ctx, entity, init)
+			:creation(function (ctx, entity, init)
 				local vbuf = haka.vbuffer_allocate(2)
 				entity:create(vbuf:pos('begin'), ctx, init)
 				return vbuf

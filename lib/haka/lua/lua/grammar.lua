@@ -381,7 +381,7 @@ function grammar_int.Array.method:whilecond(condition)
 	return clone
 end
 
-function grammar_int.Array.method:create(f)
+function grammar_int.Array.method:creation(f)
 	local clone = self:clone()
 	clone.create = f
 	return clone

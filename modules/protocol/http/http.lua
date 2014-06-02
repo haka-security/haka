@@ -322,7 +322,7 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 				return la == 0xa or la == 0xd
 			end)
 			:result(HeaderResult)
-			:create(function (ctx, entity, init)
+			:creation(function (ctx, entity, init)
 				local vbuf = haka.vbuffer_from(init.name..': '..init.value..'\r\n')
 				entity:create(vbuf:pos('begin'), ctx, init)
 				return vbuf
