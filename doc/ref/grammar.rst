@@ -34,6 +34,27 @@ to build rules for the grammar.
     allow to notify which elements are going to be used for parsing. You should only
     export root elements that are going to be used as entry point for parsing.
 
+.. haka:function:: extend(...)
+    :objtype: grammar
+    :module:
+
+    :param ...: List of grammar to extend.
+    :ptype ...: :haka:class:`Grammar`
+
+    Extend your grammar with some other grammar. It will import named rules and
+    exports from the grammar you extend. You can override any of the imported
+    named rules afterwards.
+
+.. haka:function:: define(...)
+    :objtype: grammar
+    :module:
+
+    :param ...: List of elements to be defined.
+    :ptype ...: string
+
+    Declare some grammar elements so that they can be used recursively
+    afterwards.
+
 .. haka:function:: export(...)
     :objtype: grammar
     :module:
