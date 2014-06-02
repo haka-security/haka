@@ -2,16 +2,12 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Tutorial
-=========
+.. highlightlang:: lua
 
-.. toctree::
-   :maxdepth: 2
+.. _smtp-full:
 
-   tutorial/hellopacket.rst
-   tutorial/filter.rst
-   tutorial/stats.rst
-   tutorial/sqli.rst
-   tutorial/ruleset.rst
-   tutorial/smtp_dissector.rst
+Putting all together
+--------------------
+
+.. literalinclude:: smtp.lua
 
