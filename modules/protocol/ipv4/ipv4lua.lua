@@ -67,13 +67,12 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 			:convert(ipv4_addr_convert, true),
 		field('dst',         number(32))
 			:convert(ipv4_addr_convert, true),
-		field('opt',         array(option)
+		field('opt',         array(option))
 			:untilcond(function (elem, ctx)
 				return ctx.iter.meter >= ctx:result(1).hdr_len or
 					(elem and elem.type == 0)
-			end)
-		),
-		padding_align(32),
+			end),
+		align(32),
 		verify(function (self, ctx)
 			if ctx.iter.meter ~= self.hdr_len then
 				error(string.format("invalid ipv4 header size, expected %d bytes, got %d bytes", self.hdr_len, ctx.iter.meter))
