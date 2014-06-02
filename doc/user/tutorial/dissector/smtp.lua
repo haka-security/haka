@@ -27,44 +27,44 @@ local CMD = {
 --
 -- Dissector
 --
-local smtp_dissector = haka.dissector.new{
+local SmtpDissector = haka.dissector.new{
 	type = haka.dissector.FlowDissector,
 	name = 'smtp'
 }
 
-smtp_dissector.property.connection = {
+SmtpDissector.property.connection = {
 	get = function (self)
 		self.connection = self.flow.connection
 		return self.connection
 	end
 }
 
-function smtp_dissector.method:__init(flow)
-	class.super(smtp_dissector).__init(self)
+function SmtpDissector.method:__init(flow)
+	class.super(SmtpDissector).__init(self)
 	self.flow = flow
-	self.state = smtp_dissector.states:instanciate(self)
+	self.state = SmtpDissector.states:instanciate(self)
 end
 
-function smtp_dissector.method:continue()
+function SmtpDissector.method:continue()
 	if not self.flow then
 		haka.abort()
 	end
 end
 
-function smtp_dissector.method:drop()
+function SmtpDissector.method:drop()
 	self.flow:drop()
 	self.flow = nil
 end
 
-function smtp_dissector.method:reset()
+function SmtpDissector.method:reset()
 	self.flow:reset()
 	self.flow = nil
 end
 
-function smtp_dissector.method:receive(stream, current, direction)
+function SmtpDissector.method:receive(stream, current, direction)
 	return haka.dissector.pcall(self, function ()
 		if not self._receive_callback then
-			self._receive_callback = haka.event.method(self, smtp_dissector.method.receive_streamed)
+			self._receive_callback = haka.event.method(self, SmtpDissector.method.receive_streamed)
 		end
 		self.flow:streamed(self._receive_callback, stream, current, direction)
 		if self.flow then
@@ -73,7 +73,7 @@ function smtp_dissector.method:receive(stream, current, direction)
 	end)
 end
 
-function smtp_dissector.method:receive_streamed(flow, iter, direction)
+function SmtpDissector.method:receive_streamed(flow, iter, direction)
 	assert(flow == self.flow)
 
 	while iter:wait() do
@@ -95,20 +95,20 @@ function module.install_tcp_rule(port)
 end
 
 function module.dissect(flow)
-	flow:select_next_dissector(smtp_dissector:new(flow))
+	flow:select_next_dissector(SmtpDissector:new(flow))
 end
 
 --
 -- Events
 --
-smtp_dissector:register_event('command')
-smtp_dissector:register_event('response')
-smtp_dissector:register_event('mail_content', nil, haka.dissector.FlowDissector.stream_wrapper)
+SmtpDissector:register_event('command')
+SmtpDissector:register_event('response')
+SmtpDissector:register_event('mail_content', nil, haka.dissector.FlowDissector.stream_wrapper)
 
 --
 --	Grammar
 --
-smtp_dissector.grammar = haka.grammar.new("smtp", function ()
+SmtpDissector.grammar = haka.grammar.new("smtp", function ()
 	-- terminal tokens
 	EMPTY = token('')
 	WS = token('[[:blank:]]+')
@@ -146,7 +146,7 @@ smtp_dissector.grammar = haka.grammar.new("smtp", function ()
 	}
 
 	-- smtp response
-	smtp_response = record {
+	smtp_response = record{
 		CODE,
 		SEP,
 		MESSAGE,
@@ -161,8 +161,8 @@ smtp_dissector.grammar = haka.grammar.new("smtp", function ()
 		})
 
 	-- smtp data
-	smtp_data = record { 
-		DATA 
+	smtp_data = record{
+		DATA
 	}
 
 	export(smtp_command, smtp_responses, smtp_data)
@@ -171,7 +171,7 @@ end)
 --
 -- State machine
 --
-smtp_dissector.states = haka.state_machine("smtp", function ()
+SmtpDissector.states = haka.state_machine("smtp", function ()
 	session_initiation = state {
 		up = function (self, iter)
 			haka.alert{
@@ -182,7 +182,7 @@ smtp_dissector.states = haka.state_machine("smtp", function ()
 		end,
 		down = function (self, iter)
 			local err
-			self.response, err = smtp_dissector.grammar.smtp_responses:parse(iter, nil, self)
+			self.response, err = SmtpDissector.grammar.smtp_responses:parse(iter, nil, self)
 			if err then
 				haka.alert{
 					description = string.format("invalid smtp response %s", err),
@@ -207,7 +207,7 @@ smtp_dissector.states = haka.state_machine("smtp", function ()
 	client_initiation = state {
 		up = function (self, iter)
 			local err
-			self.command, err = smtp_dissector.grammar.smtp_command:parse(iter, nil, self)
+			self.command, err = SmtpDissector.grammar.smtp_command:parse(iter, nil, self)
 			if err then
 				haka.alert{
 					description = string.format("invalid smtp command %s", err),
@@ -246,7 +246,7 @@ smtp_dissector.states = haka.state_machine("smtp", function ()
 		end,
 		down = function (self, iter)
 			local err
-			self.response, err = smtp_dissector.grammar.smtp_responses:parse(iter, nil, self)
+			self.response, err = SmtpDissector.grammar.smtp_responses:parse(iter, nil, self)
 			if err then
 				haka.alert{
 					description = string.format("invalid smtp response %s", err),
@@ -269,7 +269,7 @@ smtp_dissector.states = haka.state_machine("smtp", function ()
 	command = state {
 		up = function (self, iter)
 			local err
-			self.command, err = smtp_dissector.grammar.smtp_command:parse(iter, nil, self)
+			self.command, err = SmtpDissector.grammar.smtp_command:parse(iter, nil, self)
 			if err then
 				haka.alert{
 					description = string.format("invalid smtp command %s", err),
@@ -294,7 +294,7 @@ smtp_dissector.states = haka.state_machine("smtp", function ()
 			self.mail = haka.vbuffer_sub_stream()
 		end,
 		up = function (self, iter)
-			local data, err = smtp_dissector.grammar.smtp_data:parse(iter, nil, self)
+			local data, err = SmtpDissector.grammar.smtp_data:parse(iter, nil, self)
 			if err then
 				haka.alert{
 					description = string.format("invalid data blob %s", err),
@@ -340,7 +340,7 @@ smtp_dissector.states = haka.state_machine("smtp", function ()
 	initial(session_initiation)
 end)
 
-module.events = smtp_dissector.events
+module.events = SmtpDissector.events
 
 return module
 

@@ -11,18 +11,18 @@ State machine
 
 Creating the state machine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Smtp state machine is created following this squeleton where we define five states to manage intiation phase, command/response and data transfert. For each of these states we define two main transitions `up` and `down` that will handle received data depending on their direction: from client to server or from server to client. 
+Smtp state machine is created following this squeleton where we define five states to manage intiation phase, command/response and data transfert. For each of these states we define two main transitions `up` and `down` that will handle received data depending on their direction: from client to server or from server to client.
 
 .. code-block:: lua
 
-    smtp_dissector.states = haka.state_machine("smtp", function ()
+    SmtpDissector.states = haka.state_machine("smtp", function ()
 
         session_initiation = state {
             up = function (...)
         
             down = function (...)
         }
-        
+
         client_initiation = state {
                ...
         }
@@ -47,14 +47,14 @@ Smtp state machine is created following this squeleton where we define five stat
                 return self.state:transition(direction, iter)
             end
         }
- 
+
         initial(session_initiation)
     end)
 
 
 `default_transitions` are transitions common to all states. In our case, all states share these two transitions:
 
-* `error`: built-in transition used to handle errors which we manage by dropping the connection (remember that we defined a drop connection in our dissector). 
+* `error`: built-in transition used to handle errors which we manage by dropping the connection (remember that we defined a drop connection in our dissector).
 
 * `update`: user-defined transition. It's only purpose it to pass the control to the rigth transition (`up̀` or `down`) when new data are available.
 
@@ -80,7 +80,7 @@ This phase consists of two steps. In the first step, the client waits for a mess
         end,
         down = function (self, iter)
             local err
-            self.response, err = smtp_dissector.grammar.smtp_responses:parse(iter, nil, self)
+            self.response, err = SmtpDissector.grammar.smtp_responses:parse(iter, nil, self)
             if err then
                 haka.alert{
                     description = string.format("invalid smtp response %s", err),
@@ -113,7 +113,7 @@ In the same way, we define a `client_initiation` state where we report an error 
     client_initiation = state {
         up = function (self, iter)
             local err
-            self.command, err = smtp_dissector.grammar.smtp_command:parse(iter, nil, self)
+            self.command, err = SmtpDissector.grammar.smtp_command:parse(iter, nil, self)
             if err then
                 haka.alert{
                     description = string.format("invalid smtp command %s", err),
@@ -142,7 +142,7 @@ In the same way, we define a `client_initiation` state where we report an error 
         end,
     }
 
-We switch to respons state in case fo successful parsing.
+We switch to response state in case fo successful parsing.
 
 Managing command/response comunication
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -152,7 +152,7 @@ Simillarly, we define two states to manage command and response. In the former, 
 
     response = state {
         up = function (self, iter)
-            ...    
+            ...
         end,
         down = function (self, iter)
             ...
@@ -181,7 +181,7 @@ We get here (i.e. `data_transmission` state) if server responds with a status co
             self.mail = haka.vbuffer_sub_stream()
         end,
         up = function (self, iter)
-            local data, err = smtp_dissector.grammar.smtp_data:parse(iter, nil, self)
+            local data, err = SmtpDissector.grammar.smtp_data:parse(iter, nil, self)
             if err then
                 haka.alert{
                     description = string.format("invalid data blob %s", err),
@@ -213,5 +213,5 @@ We get here (i.e. `data_transmission` state) if server responds with a status co
             self.mail = nil
         end,
     }
- 
+
 The above state defines two predefined transitions `enter` and `leave` which are activated when entering an leaving the state, respectively. The former is used to build a stream to collect mail content weheras the latter is used to destroy the stream. We will focus here on the `up` transtion where the data are first parsed then pushed on the stream. If we detect an end of mail transfert (line made of a single '.' followed by a traling CRLF), then we mark that we reached the end of the stream and switch again to the `command` state where the client can issue a new transaction mail.

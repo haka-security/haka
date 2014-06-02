@@ -2,8 +2,6 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-.. highlightlang:: lua
-
 Introduction
 ------------
 
@@ -12,7 +10,7 @@ error-prone, time-consuming, and tedious. Haka features a new API enabling the
 specification of network protocols and their underliying state machine. The
 resulting specification process leads to a protocol dissector managing
 transitions between protocol states and enabling read/write access to all
-protocol fields. 
+protocol fields.
 
 Haka grammar covers the specification of text-based (e.g. http) as well as
 binary-based protocols (e.g. dns). Thanks to this grammar, we successfully built

@@ -1,15 +1,24 @@
-.. _smtp_dissector:
+.. This Source Code Form is subject to the terms of the Mozilla Public
+.. License, v. 2.0. If a copy of the MPL was not distributed with this
+.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+.. highlightlang:: lua
+
+.. _SmtpDissector:
 
 Dissector
 ---------
-First of all, we load the required packages and initialize the dissector module
+First of all, we load the required packages and initialize the dissector module:
 
 .. code-block:: lua
-    
+
     local class = require('class')
     local tcp_connection = require('protocol/tcp_conenction')
 
     local module = {}
+
+Note that we load the tcp_connection module since we built a smtp dissector over
+tcp protocol.
 
 Creating the dissector
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -17,21 +26,24 @@ Next, we create the dissector by specifying its name and its type:
 
 .. code-block:: lua
 
-    local smtp_dissector = haka.dissector.new{
+    local SmtpDissector = haka.dissector.new{
         type = haka.dissector.FlowDissector,
         name = 'smtp'
     }
 
+We select a `FlowDissector` type since smtp communications are flow-based (i.e.
+multiple packets are exchanged during a smtp session).
+
 Initializing the dissector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The created dissector, namley `smtp-dissector`, is a particular class. Before instanciating it, we need to define first its constructor:
+The created dissector, namley `SmtpDissector`, is a particular class. Before instanciating it, we need to define first its constructor:
 
 .. code-block:: lua
 
-    function smtp_dissector.method:__init(flow)
-        class.super(smtp_dissector).__init(self)
+    function SmtpDissector.method:__init(flow)
+        class.super(SmtpDissector).__init(self)
         self.flow = flow
-        self.state = smtp_dissector.states:instanciate(self)
+        self.state = SmtpDissector.states:instanciate(self)
     end
 
 This constructor function takes as input a flow passed by the previous dissector and instanciates the state machine (see section :ref:`smtp_state_machine`).
@@ -49,30 +61,30 @@ At this point, the dissector is created but not yet instaciated. Here, we define
                 if pkt.dstport == port then
                     haka.log.debug('smtp', "selecting smtp dissector on flow")
                     module.dissect(flow)
-                end 
-            end 
-        }   
+                end
+            end
+        }
     end
 
     function module.dissect(flow)
-        flow:select_next_dissector(smtp_dissector:new(flow))
+        flow:select_next_dissector(SmtpDissector:new(flow))
     end
 
 Managing data reception
 ^^^^^^^^^^^^^^^^^^^^^^^
 Each flow-dissector must implement a `receive` method. In the case of application protocols, this function has three parameters: the stream, the current position in the stream and the direction (`up` or `down`).
 
-The `receive` method is called by the previous dissector whenever new data is available which in turns calls the `streamed_receive` function in streamed mode. That is, the function will block waiting for available data on the stream to proceed. Data that are ready on the stream are then sent. 
+The `receive` method is called by the previous dissector whenever new data is available which in turns calls the `streamed_receive` function in streamed mode. That is, the function will block waiting for available data on the stream to proceed. Data that are ready on the stream are then sent.
 
 Note that the `receive` core function is executed in a protected environment which enable
-us to catch errors.
+us to catch errors and correctly handle them. A method error is called in this case on the dissector. By default, it will drop the connection and this it is not needed to redefine it.
 
 .. code-block:: lua
 
-    function smtp_dissector.method:receive(stream, current, direction)
+    function SmtpDissector.method:receive(stream, current, direction)
         return haka.dissector.pcall(self, function ()
             if not self._receive_callback then
-                self._receive_callback = haka.event.method(self, smtp_dissector.method.receive_streamed)
+                self._receive_callback = haka.event.method(self, SmtpDissector.method.receive_streamed)
             end
             self.flow:streamed(self._receive_callback, stream, current, direction)
             if self.flow then
@@ -81,13 +93,9 @@ us to catch errors.
         end)
     end
 
-.. This Source Code Form is subject to the terms of the Mozilla Public
-.. License, v. 2.0. If a copy of the MPL was not distributed with this
-.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 .. highlightlang:: lua
 
-.. _smtp_dissector:
+.. _SmtpDissector:
 
 The following function passes the control to the current state of the
 state-machine to handle new available data and then checks, through a call to
@@ -96,7 +104,7 @@ connection) or not.
 
 .. code-block:: lua
 
-    function smtp_dissector.method:receive_streamed(flow, iter, direction)
+    function SmtpDissector.method:receive_streamed(flow, iter, direction)
         assert(flow == self.flow)
         while iter:wait() do
             self.states:update(direction, iter)
@@ -106,36 +114,35 @@ connection) or not.
 
 Adding extras properties and functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-As stated above, `smtp-dissector` is a paritcular class (see :doc:`\../../../ref/class`) which could be extended by
-adding extras methods ans properties.
+As stated above, `SmtpDissector` is a paritcular class (see :doc:`\../../../ref/class`) which could be extended by adding extras methods and properties.
 
-* Adding properties: this is done through the property field of smtp_dissector class. 
+* Adding properties: this is done through the property field of SmtpDissector class.
 
 .. code-block:: lua
 
-    smtp_dissector.property.connection = {
+    SmtpDissector.property.connection = {
         get = function (self)
             self.connection = self.flow.connection
             return self.connection
         end
     }
 
-* Adding methods: this is done through the `method` field of `smtp_dissector` class. In our example, we define the mandatory function `continue` and two extras functions `drop` and `reset` to drop and reset a smtp connection, respectively.
+* Adding methods: this is done through the `method` field of `SmtpDissector` class. In our example, we define the mandatory function `continue` and two extras functions `drop` and `reset` to drop and reset a smtp connection, respectively.
 
 .. code-block:: lua
 
-    function smtp_dissector.method:continue()
+    function SmtpDissector.method:continue()
         if not self.flow then
             haka.abort()
         end
     end
 
-    function smtp_dissector.method:drop()
+    function SmtpDissector.method:drop()
         self.flow:drop()
         self.flow = nil
     end
 
-    function smtp_dissector.method:reset()
+    function SmtpDissector.method:reset()
         self.flow:reset()
         self.flow = nil
     end
