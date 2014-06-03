@@ -83,7 +83,7 @@ function dg.Entity.method:do_apply(value, ctx)
 		local res = ctx:result()
 
 		if self.converter then
-			res = self.converter.get(res)
+			value = self.converter.get(value)
 		end
 
 		for _, apply in ipairs(self._post_apply) do
