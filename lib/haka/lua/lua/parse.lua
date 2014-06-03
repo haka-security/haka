@@ -135,22 +135,25 @@ function parse.Context.method:lookahead()
 end
 
 function parse.Context.method:parse(entity)
-	return self:_traverse(entity, "_apply", 1)
+	return self:_traverse(entity, "_apply", true)
 end
 
 function parse.Context.method:create(entity)
-	return self:_traverse(entity, "_create", 0)
+	return self:_traverse(entity, "_create", false)
 end
 
 function parse.Context.method:_traverse(entity, f, all)
 	local iter = entity
 	local err
 
-	self._level = all
+	if all then self._level = 1
+	else self._level = 0 end
+
 	self._level_exit = 0
 	self._error = nil
 
 	while iter do
+		-- This flag is updated when starting a recursion.
 		self._start_rec = false
 
 		iter:_trace(self.iter)
@@ -173,6 +176,10 @@ function parse.Context.method:_traverse(entity, f, all)
 			iter = iter:next(self)
 		end
 
+		-- When the current level reach _level_exit, we should pop a recursion
+		-- level or exit if none. If the recursion was just started, the check
+		-- self._level == self._level_exit is always true. We need then to handle
+		-- it correctly using the flag self._start_rec.
 		while not self._start_rec and self._level == self._level_exit do
 			iter = self:poprecurs()
 			if not iter then break end
