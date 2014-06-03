@@ -79,14 +79,18 @@ function dg.Entity.method:add_apply(apply)
 end
 
 function dg.Entity.method:do_apply(value, ctx)
-	local res = ctx:result()
-	
-	if self.converter then
-		res = self.converter.get(res)
-	end
+	if self._post_apply then
+		local res = ctx:result()
 
-	for _, apply in ipairs(self._post_apply) do
-		apply(value, res, ctx)
+		if self.converter then
+			res = self.converter.get(res)
+		end
+
+		for _, apply in ipairs(self._post_apply) do
+			apply(value, res, ctx)
+			
+			if ctx._error then break end
+		end
 	end
 end
 
@@ -332,9 +336,7 @@ function dg.RecordFinish.method:_apply(ctx)
 		res:addproperty(name, func(res), nil)
 	end
 
-	if self._post_apply then
-		self:do_apply(res, ctx)
-	end
+	self:do_apply(res, ctx)
 end
 
 dg.UnionStart = class.class('DGUnionStart', dg.Control)
@@ -376,9 +378,7 @@ function dg.UnionFinish.method:_apply(ctx)
 		ctx:pop()
 	end
 
-	if self._post_apply then
-		self:do_apply(res, ctx)
-	end
+	self:do_apply(res, ctx)
 
 	ctx:popmark()
 	ctx:unmark()
@@ -421,9 +421,7 @@ function dg.TryFinish.method:_apply(ctx)
 	local res = ctx:result()
 	ctx:pop()
 
-	if self._post_apply then
-		self:do_apply(res, ctx)
-	end
+	self:do_apply(res, ctx)
 
 	if not self.name then
 		-- Merge unnamed temp result ctx with parent result context
@@ -488,9 +486,7 @@ function dg.ArrayFinish.method:apply(ctx)
 	local res = ctx:result()
 	ctx:pop()
 
-	if self._post_apply then
-		self:do_apply(res, ctx)
-	end
+	self:do_apply(res, ctx)
 end
 
 dg.ArrayPush = class.class('DGArrayPush', dg.Control)
@@ -858,15 +854,11 @@ function dg.Token.method:_parse(res, iter, ctx)
 							function (this) return result end)
 					end
 
-					if self._post_apply then
-						sel:do_apply(res, ctx)
-					end
+					self:do_apply(res, ctx)
 				else
 					local string = result:asstring()
 
-					if self._post_apply then
-						self:do_apply(string, ctx)
-					end
+					self:do_apply(string, ctx)
 
 					if self.converter then
 						string = self.converter.get(string)
