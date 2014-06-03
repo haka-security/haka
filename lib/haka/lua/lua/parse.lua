@@ -342,6 +342,10 @@ function parse.Context.method:poprecurs()
 end
 
 function parse.Context.method:error(description, ...)
+	if self._error then
+		error("multiple parse errors raised")
+	end
+
 	local context = {}
 	description = string.format(description, ...)
 	self._error = ParseError:new(self.iter, nil, description)
