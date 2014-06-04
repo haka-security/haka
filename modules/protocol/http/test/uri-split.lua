@@ -2,7 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require('luaunit')
 local http = require('protocol/http')
 
 local function count_table(tab)
@@ -155,5 +154,4 @@ for k, v in pairs(_cookie) do
 	end
 end
 
-LuaUnit:setVerbosity(1)
-assert(LuaUnit:run('TestUriSplit', 'TestCookieSplit') == 0)
+addTestSuite('TestUriSplit', 'TestCookieSplit')

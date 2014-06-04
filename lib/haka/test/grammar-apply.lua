@@ -2,8 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require('luaunit')
-
 TestGrammarApply = {}
 
 function TestGrammarApply:test_apply_on_record()
@@ -156,5 +154,4 @@ function TestGrammarApply:test_const_failure()
 	assertNotEquals(err, nil)
 end
 
-LuaUnit:setVerbosity(2)
-assert(LuaUnit:run('TestGrammarApply') == 0)
+addTestSuite('TestGrammarApply')

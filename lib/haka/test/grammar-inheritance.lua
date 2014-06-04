@@ -2,7 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require('luaunit')
 local class = require('class')
 
 TestGrammarInheritance = {}
@@ -73,7 +72,7 @@ end
 
 function TestGrammarInheritance:test_proxy_error()
 	-- Given
-	assertError(function ()
+	assertError("undefined entity: finger", function ()
 		local human = haka.grammar.new("human", function ()
 			define("finger")
 	
@@ -112,5 +111,4 @@ function TestGrammarInheritance:test_recursion()
 	assertEquals(ret.child[2].count, 0)
 end
 
-LuaUnit:setVerbosity(2)
-assert(LuaUnit:run('TestGrammarInheritance') == 0)
+addTestSuite('TestGrammarInheritance')

@@ -2,8 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require('luaunit')
-
 TestGrammarToken = {}
 
 function TestGrammarToken:test_token()
@@ -36,5 +34,4 @@ function TestGrammarToken:test_raw_token()
 	assertEquals(result.token:asstring(), "abcdefghijklmnopqrstuvwxyz")
 end
 
-LuaUnit:setVerbosity(2)
-assert(LuaUnit:run('TestGrammarToken') == 0)
+addTestSuite('TestGrammarToken')

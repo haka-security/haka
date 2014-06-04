@@ -2,8 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require('luaunit')
-
 TestVBuffer = {}
 
 function TestVBuffer:test_invalid_iterator_erase_from_start()
@@ -78,5 +76,4 @@ function TestVBuffer:test_append_on_itself()
 	assertEquals(not success and msg, "circular buffer insertion")
 end
 
-LuaUnit:setVerbosity(1)
-assert(LuaUnit:run('TestVBuffer') == 0)
+addTestSuite('TestVBuffer')

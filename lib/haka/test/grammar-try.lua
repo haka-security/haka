@@ -2,9 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require('luaunit')
-
-
 TestGrammarTry = {}
 
 function TestGrammarTry:test_try_compile()
@@ -67,5 +64,4 @@ function TestGrammarTry:test_try_does_not_leave_result_on_fail()
 	assertEquals(res.rec_foo.foo, "foo")
 end
 
-LuaUnit:setVerbosity(1)
-assert(LuaUnit:run('TestGrammarTry') == 0)
+addTestSuite('TestGrammarTry')
