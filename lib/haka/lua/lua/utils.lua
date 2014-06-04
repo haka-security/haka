@@ -73,3 +73,9 @@ end
 function table.contains(table, elem)
 	return table[elem] ~= nil
 end
+
+if not table.pack then
+	function table.pack(...)
+		return { n = select('#', ...), ... }
+	end
+end

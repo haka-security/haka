@@ -715,7 +715,9 @@ function Grammar.method:__newindex(key, value)
 end
 
 function Grammar.method:export(...)
-	for _, proxy in ipairs({...}) do
+	local args = table.pack(...)
+	for i=1,args.n do
+		local proxy = args[i]
 		if not class.isa(proxy, GrammarProxy) then
 			error("can only export named rules")
 		end
@@ -724,7 +726,9 @@ function Grammar.method:export(...)
 end
 
 function Grammar.method:extend(...)
-	for _, grammar in ipairs({...}) do
+	local args = table.pack(...)
+	for i=1,args.n do
+		local grammar = args[i]
 		table.merge(self._rules, grammar._rules)
 		-- We just need key of exports to recompile it
 		table.merge(self._exports, grammar._exports)
@@ -732,7 +736,9 @@ function Grammar.method:extend(...)
 end
 
 function Grammar.method:define(...)
-	for _, name in ipairs({...}) do
+	local args = table.pack(...)
+	for i=1,args.n do
+		local name = args[i]
 		self._rules[name] = GrammarProxy:new(name)
 	end
 end

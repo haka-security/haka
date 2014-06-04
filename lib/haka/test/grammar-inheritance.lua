@@ -111,4 +111,15 @@ function TestGrammarInheritance:test_recursion()
 	assertEquals(ret.child[2].count, 0)
 end
 
+function TestGrammarInheritance:test_export_unknown()
+	-- Given
+	assertError("can only export named rules", function ()
+		local gr = haka.grammar.new("grammar", function ()
+			head = token('head')
+
+			export(head, body)
+		end)
+	end)
+end
+
 addTestSuite('TestGrammarInheritance')
