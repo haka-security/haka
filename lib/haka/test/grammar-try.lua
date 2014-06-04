@@ -36,6 +36,25 @@ function TestGrammarTry:test_try_catch_error()
 	assertEquals(res.bar, "bar")
 end
 
+function TestGrammarTry:test_try_dual()
+	-- Given
+	local vbuf = haka.vbuffer_from("bar")
+	local gr = haka.grammar.new("test", function ()
+		elem = try{
+			try{
+				field("fee", token("fee")),
+				field("foo", token("foo")),
+			},
+			field("bar", token("bar"))
+		}
+		export(elem)
+	end)
+	-- When
+	local res = gr.elem:parse(vbuf:pos("begin"))
+	-- Then
+	assertEquals(res.bar, "bar")
+end
+
 function TestGrammarTry:test_try_does_not_leave_result_on_fail()
 	-- Given
 	local vbuf = haka.vbuffer_from("bar foo")

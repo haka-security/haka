@@ -65,7 +65,6 @@ function TestGrammarInheritance:test_proxy()
 
 		export(hand)
 	end)
-
 	-- Then
 	assertEquals(human.hand._next._next._next.name, "finger")
 end
@@ -83,6 +82,36 @@ function TestGrammarInheritance:test_proxy_error()
 			export(hand)
 		end)
 	end)
+end
+
+function TestGrammarInheritance:test_inheritance_multiple()
+	-- Given
+	local human = haka.grammar.new("human", function ()
+		finger = token("finger")
+
+		hand = sequence{
+			finger,
+
+		}
+
+		export(hand)
+	end)
+
+	-- When
+	local superman = haka.grammar.new("superman", function ()
+		extend(human)
+
+		finger = empty()
+	end)
+
+	local superwoman = haka.grammar.new("superwoman", function ()
+		extend(superman)
+	
+		finger = bytes(32)
+	end)
+
+	-- Then
+	assertEquals(class.classof(superwoman.hand._next._next).name, "DGBytes")
 end
 
 function TestGrammarInheritance:test_recursion()
