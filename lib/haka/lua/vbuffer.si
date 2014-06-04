@@ -860,7 +860,13 @@ struct vbuffer_sub_stream {
 		%rename(push) _push;
 		struct vbuffer_iterator *_push(struct vbuffer_sub *data)
 		{
-			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+			struct vbuffer_iterator *iter;
+
+			if (!data) {
+				return NULL;
+			}
+
+			iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
 				error(L"memory error");
 				return NULL;

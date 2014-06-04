@@ -35,7 +35,12 @@ bool vbuffer_sub_stream_init(struct vbuffer_sub_stream *stream)
 bool vbuffer_sub_stream_push(struct vbuffer_sub_stream *stream, struct vbuffer_sub *buffer, struct vbuffer_iterator *current)
 {
 	struct vbuffer extract;
-	struct vbuffer_sub_stream_chunk *chunk = malloc(sizeof(struct vbuffer_sub_stream_chunk));
+	struct vbuffer_sub_stream_chunk *chunk;
+
+	assert(stream);
+	assert(buffer);
+
+	chunk = malloc(sizeof(struct vbuffer_sub_stream_chunk));
 	if (!chunk) {
 		error(L"memory error");
 		return false;
