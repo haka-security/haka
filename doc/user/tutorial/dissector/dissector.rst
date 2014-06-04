@@ -8,7 +8,11 @@
 
 Dissector
 ---------
-First of all, we load the required packages and initialize the dissector module:
+In order to create a smtp dissector, we create a new file (`smtp.lua`) and save it in a
+location that will be used later as a path for all Haka scripts requiring this
+dissector.
+
+The first step it to load the required packages and initialize the dissector module:
 
 .. code-block:: lua
 
@@ -17,7 +21,7 @@ First of all, we load the required packages and initialize the dissector module:
 
     local module = {}
 
-Note that we load the tcp_connection module since we built a smtp dissector over
+Note that we load the `tcp_connection` module since we built a smtp dissector over
 tcp protocol.
 
 Creating the dissector
@@ -36,7 +40,7 @@ multiple packets are exchanged during a smtp session).
 
 Initializing the dissector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The created dissector, namley `SmtpDissector`, is a particular class. Before instanciating it, we need to define first its constructor:
+The created dissector, namely `SmtpDissector`, is a particular class. Before instanciating it, we need to define first its constructor:
 
 .. code-block:: lua
 
@@ -72,28 +76,24 @@ At this point, the dissector is created but not yet instaciated. Here, we define
 
 Managing data reception
 ^^^^^^^^^^^^^^^^^^^^^^^
-Each flow-dissector must implement a `receive` method. In the case of application protocols, this function has three parameters: the stream, the current position in the stream and the direction (`up` or `down`).
+Each flow-dissector must implement a `receive` method to manage data received from low-layer dissector. In the case of application protocols, this function has three parameters: the stream, the current position in the stream and the direction (`up` or `down`).
 
-The `receive` method is called by the previous dissector whenever new data is available which in turns calls the `streamed_receive` function in streamed mode. That is, the function will block waiting for available data on the stream to proceed. Data that are ready on the stream are then sent.
+The `receive` method is called by the previous dissector (`tcp_connection`) whenever new data is available which in turns calls the `streamed_receive` function. This function is executed in a streamed mode. That is, the function will block waiting for available data on the stream to proceed. Data that are ready on the stream are then sent.
 
-Note that the `receive` core function is executed in a protected environment which enable
+Note that the `receive` function is executed in a protected environment which enable
 us to catch errors and correctly handle them. A method error is called in this case on the dissector. By default, it will drop the connection and this it is not needed to redefine it.
 
 .. code-block:: lua
 
     function SmtpDissector.method:receive(stream, current, direction)
-        return haka.dissector.pcall(self, function ()
-            if not self._receive_callback then
-                self._receive_callback = haka.event.method(self, SmtpDissector.method.receive_streamed)
-            end
-            self.flow:streamed(self._receive_callback, stream, current, direction)
-            if self.flow then
-                self.flow:send(direction)
-            end
-        end)
-    end
+	    return haka.dissector.pcall(self, function ()
+		    self.flow:streamed(stream, self.receive_streamed, self, current, direction)
 
-.. highlightlang:: lua
+    		if self.flow then
+	    		self.flow:send(direction)
+		    end
+    	end)
+    end
 
 .. _SmtpDissector:
 
@@ -104,17 +104,16 @@ connection) or not.
 
 .. code-block:: lua
 
-    function SmtpDissector.method:receive_streamed(flow, iter, direction)
-        assert(flow == self.flow)
-        while iter:wait() do
-            self.states:update(direction, iter)
-            self:continue()
-        end
+    function SmtpDissector.method:receive_streamed(iter, direction)
+    	while iter:wait() do
+	    	self.state:transition('update', direction, iter)
+	    	self:continue()
+    	end
     end
 
 Adding extras properties and functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-As stated above, `SmtpDissector` is a paritcular class (see :doc:`\../../../ref/class`) which could be extended by adding extras methods and properties.
+As stated above, `SmtpDissector` is a paritcular class (see :doc:`\../../../ref/class`) on which you can add extra methods and properties.
 
 * Adding properties: this is done through the property field of SmtpDissector class.
 

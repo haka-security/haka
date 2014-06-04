@@ -11,7 +11,7 @@ State machine
 
 Creating the state machine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Smtp state machine is created following this squeleton where we define five states to manage intiation phase, command/response and data transfert. For each of these states we define two main transitions `up` and `down` that will handle received data depending on their direction: from client to server or from server to client.
+Smtp state machine is created through the following skeleton where we define five states to manage intiation phase, command/response and data transfert. For each of these states we define two main transitions `up` and `down` that will handle received data depending on their direction: from client to server or from server to client.
 
 .. code-block:: lua
 
@@ -19,7 +19,7 @@ Smtp state machine is created following this squeleton where we define five stat
 
         session_initiation = state {
             up = function (...)
-        
+
             down = function (...)
         }
 
@@ -58,7 +58,7 @@ Smtp state machine is created following this squeleton where we define five stat
 
 * `update`: user-defined transition. It's only purpose it to pass the control to the rigth transition (`up̀` or `down`) when new data are available.
 
-Finally, the last line allows to select the initial state.
+Finally, the last line allow us to select the initial state.
 
 Adding new states
 ^^^^^^^^^^^^^^^^^
@@ -66,7 +66,7 @@ Adding new states
 Managing initiation phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This phase consists of two steps. In the first step, the client waits for a message a welcoming message. This is handled by our initial state `session initiation`:
+This phase consists of two steps. In the first step, the client waits for a welcoming message. This is handled by our initial state `session_initiation`:
 
 .. code-block:: lua
 
@@ -102,11 +102,11 @@ This phase consists of two steps. In the first step, the client waits for a mess
         end
     }
 
-In the `up` transiton, we report an error as we are not expecting in this state to receive command from client. In the `down` transition, we parse the received data and check if their syntax conform to the grammar defined previously for responses messages: `smtp_responses`, and report an error otherwise. If the received message is well-formed then we check its status code, trigger a `response` event, and switch to the `client_intiation` state.
+In the `up` transition, we report an error as we are not expecting to receive command from client. In the `down` transition, we parse the received data and check if their syntax conform to the grammar defined previously for responses messages: `smtp_responses`, and report an error otherwise. If the received message is well-formed then we check its status code, trigger a `response` event, and switch to the `client_intiation` state.
 
-.. note:: For a sake of convenience, we do not fully manage smtp status code. For instance, we must switch to a state where we handle the case where the service is unavailable unstead of reporting  an error. Creating a new state to manage this case is left as an exercice to the reader.
+.. note:: For a sake of convenience, we do not fully manage smtp status code. For instance, we must switch to a state where we handle the case where the service is unavailable instead of reporting  an error. Creating a new state to manage this case is left as an exercice to the reader.
 
-In the same way, we define a `client_initiation` state where we report an error in the `down` transition and parse the received message in the `up` transtion. Note that we check additionnaly that the command value (this value is avalable in the parsing result ; remember that we defined a `field` named command in our grammar) must be equal to 'HELO' or 'EHLO':
+In the same way, we define a `client_initiation` state where we report an error in the `down` transition and parse the received message in the `up` transtion. Note that we check additionnaly that the `command` value (this value is avalable in the parsing result ; remember that we defined a `field` named command in our grammar) must be equal to 'HELO' or 'EHLO':
 
 .. code-block:: lua
 
@@ -142,7 +142,7 @@ In the same way, we define a `client_initiation` state where we report an error 
         end,
     }
 
-We switch to response state in case fo successful parsing.
+We switch to response state in case of successful parsing.
 
 Managing command/response comunication
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,4 +214,8 @@ We get here (i.e. `data_transmission` state) if server responds with a status co
         end,
     }
 
-The above state defines two predefined transitions `enter` and `leave` which are activated when entering an leaving the state, respectively. The former is used to build a stream to collect mail content weheras the latter is used to destroy the stream. We will focus here on the `up` transtion where the data are first parsed then pushed on the stream. If we detect an end of mail transfert (line made of a single '.' followed by a traling CRLF), then we mark that we reached the end of the stream and switch again to the `command` state where the client can issue a new transaction mail.
+The above state defines two predefined transitions `enter` and `leave` which are activated when entering an leaving the state, respectively. The former is used to build a stream to collect mail content whereas the latter is used to destroy the stream. We will focus here on the `up` transtion where the data are first parsed then pushed on the stream. If we detect an end of mail transfert (line made of a single '.' followed by a traling CRLF), then we mark that we reached the end of the stream and switch again to the `command` state where the client can issue a new transaction mail.
+
+Note that thanks to the stream, we are able to collect mail content in a streamed
+fashion by blocking transparently when data are not yet available.
+

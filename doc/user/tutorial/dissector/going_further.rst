@@ -5,5 +5,5 @@
 Going further
 -------------
 In this tutorial, we covered the specification of a text-based protocol with Haka.
-Interested readers could find in ``modules/protocol`` folder (package sources) the specification of a dozens of protocols such as dns which involve other useful grammar entities.
+Interested readers could find in ``modules/protocol`` folder (package sources) the specification of several protocols such as dns which involve other useful grammar entities.
 

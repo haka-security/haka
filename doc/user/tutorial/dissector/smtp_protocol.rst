@@ -7,7 +7,7 @@
 SMTP protocol
 -------------
 SMTP stands for Simple Mail Transfer Protocol and was designed to deliver mail
-reliabily. It is command/reponses protocol that starts with a session initiation
+reliabily. It is a command/reponses protocol that starts with a session initiation
 during which the server sends first a welcoming message together with a status
 code indicating if the transaction (220) has succeed or not (554). Then, the
 client identifies himself using the commands EHLO ot HELO and awaits for server
@@ -21,8 +21,8 @@ response server response to proceed::
     S: 250-DSN
 
 Mail transaction starts after the above initiation phase. At each step, the
-client sends a smtp command and receives a one or multiple response messages
-from the server. Three steps are needed to transfert a mail, namely, through
+client sends a smtp command and receives one or multiple response messages
+from the server. Three steps are required to transfert a mail, namely, through
 MAIL, RCPT and DATA commands::
 
     C: MAIL FROM:<Smith@bar.com>

@@ -12,13 +12,13 @@ Grammar
 
 Grammar building blocks
 ^^^^^^^^^^^^^^^^^^^^^^^
-Haka grammar is made of basic blocks and coumpound blocks. The former enable parsing of basic elements such as booleans (`flag`), bytes (`bytes`), number (`number`), regular expression (`token`), etc. The latter allow to form complex blocks by combining basic and compound blocks. For instance, the `record` block is used to define a structure of elements.
+Haka grammar is made of basic blocks and coumpound blocks. The former enable parsing of basic elements such as booleans (:haka:func:`haka.grammar.flag`), bytes (:haka:func:`haka.grammar.bytes`), number (:haka:func:`haka.grammar.number`), regular expression (:haka:func:`haka.grammar.token`), etc. The latter allow to form complex blocks by combining basic and compound blocks. For instance, the `record` block (:haka:func:`haka.grammar.record`) is used to define a structure of elements.
 
 Creating the grammar
 ^^^^^^^^^^^^^^^^^^^^
-Smtp protocol grammar is defined following this squeleton where we define
-protocol messages syntax and then export them. That is, compiled grammar blocks
-(e.g. exported elements) are ready to be parsed:
+Smtp protocol grammar is defined through the following skeleton where we define
+protocol messages syntax. Then, we can export the root elements of our grammar
+in order to compile them and make them ready to be parsed:
 
 .. code-block:: lua
 
@@ -41,9 +41,9 @@ protocol messages syntax and then export them. That is, compiled grammar blocks
         export(smtp_command, smtp_response, smtp_data)
     end)
 
-Specifying terminal tokens
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here, we give the definition of terminal tokens that will be used to specify
+Specifying terminal enitites
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here, we give the definition of terminal entities that will be used to specify
 smtp messages structure:
 
 .. code-block:: lua
@@ -63,16 +63,16 @@ smtp messages structure:
         MESSAGE
     }
 
-The first three ones are self explanatory. Except for `PARAM`, the rest of tokens are encapsultaed in a `field` element which means that the parsed content will be available for read/write through the provided field name. Finally, `PARAM` is defined using the `record` keyword wich represents a sequence of elements.
+The first three ones are self explanatory. Except for `PARAM`, the rest of entities are encapsulated in a `field` element which means that the parsed content will be available for read/write through the provided field name. Finally, `PARAM` is defined using the `record` keyword wich represents consecutive elements.
 
 Specifying protocol message syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We distinguish three SMTP messages: commands, responses and data (mail content). Hereafter, we give their specification using the Haka grammar:
+We distinguish three SMTP messages: commands, responses and data (mail content). Hereafter, we give their specification using the Haka grammar.
 
 SMTP commands
 ~~~~~~~~~~~~~
 
-Following RFC 2821, smtp command messages are alphabetic chars terminated by un CRLF. Command themselves are followed by white space(s) if paramters are present. These parameters could be required (MAIL, RCPT), optional (HELP) or not permitted at all (DATA, QUIT). These information is stored in the following table which will be used later by the grammar to adapt dissection according to parsed smtp commands:
+Following RFC 2821, smtp command messages are alphabetic chars terminated by a CRLF. Command themselves are followed by white space(s) if paramters are present. These parameters could be required (MAIL, RCPT), optional (HELP) or not permitted at all (DATA, QUIT). These information is stored in the following table which will be used later by the grammar to adapt dissection according to parsed smtp commands:
 
 .. code-block:: lua
 
@@ -90,7 +90,13 @@ Following RFC 2821, smtp command messages are alphabetic chars terminated by un 
           ['QUIT'] = 'none'
     }
 
-The syntax of smtp command messages is defined as a `record` starting with a command name (defined previusouly as terminal token) and ending with a trailing CRLF. We use the `branch` keyword to distinguish between the three configuration cases: (i) parameters must follow, (ii) parameters may be present and (iii) no parameter follow. The `branch` entity is endowed with a selection function allowing to select the branch to follow depending on the command name. Note that the gramar has a special element `optional` allowing to handle cases where messages may be present or not. In our case, we detect if paramteres are present by looking one byte further if CRLF is present. This is done thanks to the `lookahead` function (see :doc:`\../../../ref/grammar`)
+The syntax of smtp command messages is defined as a `record` starting with a command name (defined previusouly as terminal token) and ending with a CRLF. We use the `branch` entity to distinguish between the three configuration cases:
+
+* Parameters must follow.
+* Parameters may be present.
+* No parameters follow.
+
+The `branch` entity is endowed with a selection function allowing to select the branch to follow depending on the command name. Note that the grammar has a special element `optional` allowing to handle cases where messages may be present or not. In our case, we detect if paramteres are present by looking one byte further if CRLF is present. This is done thanks to the `lookahead` function (see :doc:`\../../../ref/grammar`)
 
 .. code-block:: lua
 
@@ -132,14 +138,14 @@ Smtp server may respond by a sequence of response messages which are captured in
 
 .. code-block:: lua
 
-    smtp_response = field('responses',
-        array(smtp_response):options {
-            untilcond = function (elem, ctx)
-                return elem and elem.sep == ' '
-            end,
-        })
+	smtp_responses = field('responses',
+		array(smtp_response)
+			:untilcond(function (elem, ctx)
+				return elem and elem.sep == ' '
+			end)
+		)
 
-.. note:: `untilcond` is an array option that returns true when we reach the end of the array. See :doc:`\../../../ref/grammar` to get the list of available options.
+.. note:: `untilcond` is an array option that returns true that indicate that we have reached the end of the array. See :doc:`\../../../ref/grammar` to get the list of available options.
 
 SMTP data
 ~~~~~~~~~

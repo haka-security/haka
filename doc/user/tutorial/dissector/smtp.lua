@@ -63,24 +63,21 @@ end
 
 function SmtpDissector.method:receive(stream, current, direction)
 	return haka.dissector.pcall(self, function ()
-		if not self._receive_callback then
-			self._receive_callback = haka.event.method(self, SmtpDissector.method.receive_streamed)
-		end
-		self.flow:streamed(self._receive_callback, stream, current, direction)
+		self.flow:streamed(stream, self.receive_streamed, self, current, direction)
+
 		if self.flow then
 			self.flow:send(direction)
 		end
 	end)
 end
 
-function SmtpDissector.method:receive_streamed(flow, iter, direction)
-	assert(flow == self.flow)
-
+function SmtpDissector.method:receive_streamed(iter, direction)
 	while iter:wait() do
 		self.state:transition('update', direction, iter)
 		self:continue()
 	end
 end
+
 
 function module.install_tcp_rule(port)
 	haka.rule{
@@ -154,11 +151,11 @@ SmtpDissector.grammar = haka.grammar.new("smtp", function ()
 	}
 
 	smtp_responses = field('responses',
-		array(smtp_response):options {
-			untilcond = function (elem, ctx)
+		array(smtp_response)
+			:untilcond(function (elem, ctx)
 				return elem and elem.sep == ' '
-			end,
-		})
+			end)
+		)
 
 	-- smtp data
 	smtp_data = record{
