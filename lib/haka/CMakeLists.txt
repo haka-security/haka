@@ -55,6 +55,7 @@ add_library(libhaka SHARED
 	lua/state.c
 	lua/ref.c
 	lua/lua.c
+	lua/marshal.c
 	luadebug/interactive.c
 	luadebug/complete.c
 	luadebug/debugger.c
@@ -63,6 +64,7 @@ add_library(libhaka SHARED
 	luadebug/user_readline.c
 	luadebug/user_remote.c
 	${SWIG_libhakaswig_FILES}
+	../../external/lmarshal/lmarshal.c
 )
 
 set_target_properties(libhaka PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
