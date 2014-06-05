@@ -61,6 +61,8 @@ static int init(struct parameters *args)
 	if (!output)
 		return EXIT_FAILURE;
 
+    messagef(HAKA_LOG_INFO, L"netmap", L"input: %s, output: %s", input, output);
+
 	return 0;
 }
 
@@ -85,8 +87,6 @@ static struct packet_module_state *init_state(int thread_id)
 	printf("init_state\n");
 	struct packet_module_state *state;
 
-	assert(input_count > 0);
-
 	state = malloc(sizeof(struct packet_module_state));
 	if (!state) {
 		error(L"memory error");
@@ -95,37 +95,47 @@ static struct packet_module_state *init_state(int thread_id)
 
 	state->idesc = nm_open( input, NULL, 0, NULL);
 	if ( state->idesc == NULL )
-	{
-		printf("cannot open %s\n", input);
+    {
+        messagef(HAKA_LOG_ERROR, L"netmap", L"cannot open %s\n", input);
 		return NULL;
 	}
 
 	state->odesc = nm_open( output, NULL, NM_OPEN_NO_MMAP, state->idesc );
 	if ( state->odesc == NULL )
 	{
-		printf("cannot open %s\n", output);
+        messagef(HAKA_LOG_ERROR, L"netmap", L"cannot open %s\n", output);
 		return NULL;
-	}
-
+    }
 
 	memset( &state->pollfd, 0, sizeof(state->pollfd));
 	state->index = 0;
+
+    messagef(HAKA_LOG_INFO, L"netmap", L"succeed to init state %p ", state );
 
 	return state;
 }
 
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
-	printf("packet_do_receive\n");
+    int err;
+
+    if ( !state )
+        return -1;
 
 	state->pollfd.fd = state->idesc->fd;
 	state->pollfd.events = POLLIN;
+    state->pollfd.revents = 0;
 
-	if ( poll( &state->pollfd, 1, -1) < 0 )
+    messagef(HAKA_LOG_INFO, L"netmap", L"polling on fd %d", state->pollfd.fd );
+
+    err = poll( &state->pollfd, 1, -1);
+    if ( err < 0 )
 	{
-		perror("poll");
+        messagef(HAKA_LOG_ERROR, L"netmap", L"packet_do_receive poll fail ");
 		return -1;
-	}
+    }
+
+    messagef(HAKA_LOG_INFO, L"netmap", L"packet_do_receive poll pass successfully with status %d", err );
 
 	if (state->pollfd.revents & POLLIN)
 	{
@@ -134,9 +144,11 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		{
 			struct netmap_ring * rxring = NETMAP_RXRING(state->idesc->nifp, si);
 			struct netmap_slot * slot;
+            int counter = 1, max = state->idesc->last_rx_ring - state->idesc->first_rx_ring + 1;
 
 			if ( nm_ring_empty(rxring))
-			{
+            {
+                messagef(HAKA_LOG_INFO, L"netmap", L"rx ring %d/%d is empty ", counter, max);
 				si++;
 			}
 			else
@@ -146,24 +158,26 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				char * rxbuf;
 				struct netmap_packet * nmpkt;
 
+                messagef(HAKA_LOG_INFO, L"netmap", L"rx ring %d/%d is not empty ", counter, max);
+
 				idx = rxring->cur;
 
 				space = nm_ring_space(rxring);
 				if ( space < 1 )
 				{
-					fprintf( stderr, "Warning : no slot in ring but poll say there is data\n");
+                    messagef(HAKA_LOG_ERROR, L"netmap", L"Warning : no slot in ring but poll say there is data\n");
 					return 0;
 				}
 				slot = &rxring->slot[idx];
 				if ( slot->buf_idx < 2)
 				{
-					fprintf( stderr, "wrong index rx[%d] = %d\n", idx, slot->buf_idx);
+                    messagef(HAKA_LOG_WARNING, L"netmap", L"wrong index rx[%d] = %d\n", idx, slot->buf_idx);
 					sleep(2);
 				}
 
 				if ( slot->len > 2048 )
 				{
-					fprintf( stderr, "wrong len %d rx[%d]\n", slot->len, idx );
+                    messagef(HAKA_LOG_ERROR, L"netmap", L"wrong len %d rx[%d]\n", slot->len, idx );
 					slot->len = 0;
 					return 0;
 				}
@@ -173,16 +187,28 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				nmpkt = malloc(sizeof(struct netmap_packet));
 				if (!nmpkt)
 				{
+                    messagef(HAKA_LOG_ERROR, L"netmap", L"cannot allocate memory");
 					return ENOMEM;
 				}
-				vbuffer_create_from( &nmpkt->core_packet.payload, rxbuf, slot->len );
+                if ( !vbuffer_create_from( &nmpkt->core_packet.payload, rxbuf, slot->len ) )
+                {
+                    messagef(HAKA_LOG_ERROR, L"netmap", L"vbuffer_create_from fail");
+                    return 0;
+                }
 
 				nmpkt->state = state;
 
 				idx = nm_ring_next( rxring, idx );
 
 				rxring->head = rxring->cur = idx;
+
+                *pkt = (struct packet *)nmpkt;
+
+                messagef(HAKA_LOG_INFO, L"netmap", L" we can send the packet ");
+
+//                state->index++;
 			}
+            counter++;
 		}
 	}
 
@@ -196,7 +222,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	if ( !pkt )
 		return;
 
-	printf("packet_verdict\n");
+    messagef(HAKA_LOG_INFO, L"netmap", L"packet_verdict\n");
 	if ( result == FILTER_ACCEPT)
 	{
 		const uint8 *data;
