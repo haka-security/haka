@@ -84,6 +84,11 @@ void           module_release(struct module *module);
 void           module_set_path(const char *path);
 
 /**
+ * Set the module path using the env variable HAKA_PATH.
+ */
+bool           module_set_default_path();
+
+/**
  * Add a path to the module search path.
  */
 void           module_add_path(const char *path);

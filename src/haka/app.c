@@ -85,12 +85,6 @@ static void handle_sighup()
 	enable_stdout_logging(false);
 }
 
-const char *haka_path()
-{
-	const char *haka_path = getenv("HAKA_PATH");
-	return haka_path ? haka_path : HAKA_PREFIX;
-}
-
 void initialize()
 {
 	/* Set locale */
@@ -103,31 +97,10 @@ void initialize()
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGHUP, handle_sighup);
 
-	/* Default module path */
-	{
-		static const char *HAKA_CORE_PATH = "/share/haka/core/*";
-		static const char *HAKA_MODULE_PATH = "/share/haka/modules/*";
-
-		size_t path_len;
-		char *path;
-		const char *haka_path_s = haka_path();
-
-		path_len = 2*strlen(haka_path_s) + strlen(HAKA_CORE_PATH) + 1 +
-				strlen(HAKA_MODULE_PATH) + 1;
-
-		path = malloc(path_len);
-		if (!path) {
-			fprintf(stderr, "memory allocation error\n");
-			clean_exit();
-			exit(1);
-		}
-
-		snprintf(path, path_len, "%s%s;%s%s", haka_path_s, HAKA_CORE_PATH,
-				haka_path_s, HAKA_MODULE_PATH);
-
-		module_set_path(path);
-
-		free(path);
+	if (!module_set_default_path()) {
+		fprintf(stderr, "%ls\n", clear_error());
+		clean_exit();
+		exit(1);
 	}
 }
 

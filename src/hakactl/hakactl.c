@@ -18,6 +18,7 @@
 #include <haka/colors.h>
 #include <haka/log.h>
 #include <haka/error.h>
+#include <haka/module.h>
 #include <haka/luadebug/user.h>
 
 #include "config.h"
@@ -141,6 +142,12 @@ int main(int argc, char *argv[])
 	if (ret >= 0) {
 		clean_exit();
 		return ret;
+	}
+
+	if (!module_set_default_path()) {
+		fprintf(stderr, "%ls\n", clear_error());
+		clean_exit();
+		exit(1);
 	}
 
 	/* Find commands */

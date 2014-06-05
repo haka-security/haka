@@ -4,6 +4,7 @@
 
 #include <signal.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <haka/system.h>
 #include <haka/error.h>
@@ -54,4 +55,10 @@ bool system_register_fatal_cleanup(void (*callback)())
 	*func = callback;
 
 	return true;
+}
+
+const char *haka_path()
+{
+	const char *haka_path = getenv("HAKA_PATH");
+	return haka_path ? haka_path : HAKA_PREFIX;
 }

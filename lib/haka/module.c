@@ -16,6 +16,7 @@
 #include <haka/error.h>
 #include <haka/compiler.h>
 #include <haka/parameters.h>
+#include <haka/system.h>
 
 
 static char *modules_path = NULL;
@@ -143,6 +144,33 @@ void module_release(struct module *module)
 		module->cleanup();
 		dlclose(module->handle);
 	}
+}
+
+bool module_set_default_path()
+{
+	static const char *HAKA_CORE_PATH = "/share/haka/core/*";
+	static const char *HAKA_MODULE_PATH = "/share/haka/modules/*";
+
+	size_t path_len;
+	char *path;
+	const char *haka_path_s = haka_path();
+
+	path_len = 2*strlen(haka_path_s) + strlen(HAKA_CORE_PATH) + 1 +
+			strlen(HAKA_MODULE_PATH) + 1;
+
+	path = malloc(path_len);
+	if (!path) {
+		error(L"memory error");
+		return false;
+	}
+
+	snprintf(path, path_len, "%s%s;%s%s", haka_path_s, HAKA_CORE_PATH,
+			haka_path_s, HAKA_MODULE_PATH);
+
+	module_set_path(path);
+
+	free(path);
+	return true;
 }
 
 void module_set_path(const char *path)

@@ -7,6 +7,15 @@
 
 #include <haka/types.h>
 
+/**
+ * Register a callback function that will be executed in signal
+ * handler in case of fatal signal.
+ */
 bool system_register_fatal_cleanup(void (*callback)());
+
+/**
+ * Get the haka path from default or env variable HAKA_PATH.
+ */
+const char *haka_path();
 
 #endif /* _HAKA_SYSTEM_H */
