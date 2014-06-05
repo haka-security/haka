@@ -2,14 +2,6 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-.. highlightlang:: lua
-
-
-.. _smtp_grammar:
-
-Grammar
--------
-
 Grammar building blocks
 ^^^^^^^^^^^^^^^^^^^^^^^
 Haka grammar is made of basic blocks and coumpound blocks. The former enable parsing of basic elements such as booleans (:haka:func:`haka.grammar.flag`), bytes (:haka:func:`haka.grammar.bytes`), number (:haka:func:`haka.grammar.number`), regular expression (:haka:func:`haka.grammar.token`), etc. The latter allow to form complex blocks by combining basic and compound blocks. For instance, the `record` block (:haka:func:`haka.grammar.record`) is used to define a structure of elements.
@@ -48,7 +40,6 @@ smtp messages structure:
 
 .. code-block:: lua
 
-    EMPTY = token('')
     WS = token('[[:blank:]]+')
     CRLF = token('[%r]?[%n]')
 
@@ -63,7 +54,7 @@ smtp messages structure:
         MESSAGE
     }
 
-The first three ones are self explanatory. Except for `PARAM`, the rest of entities are encapsulated in a `field` element which means that the parsed content will be available for read/write through the provided field name. Finally, `PARAM` is defined using the `record` keyword wich represents consecutive elements.
+The first ones are self explanatory. Except for `PARAM`, the rest of entities are encapsulated in a `field` element which means that the parsed content will be available for read/write through the provided field name. Finally, `PARAM` is defined using the `record` keyword wich represents consecutive elements.
 
 Specifying protocol message syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -111,7 +102,7 @@ The `branch` entity is endowed with a selection function allowing to select the 
                         return not (la == 0xa or la == 0xd)
                     end
                 ),
-                none = EMPTY
+                none = empty()
             },
             function (self, ctx)
                 return CMD[self.command]

@@ -2,12 +2,8 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-.. highlightlang:: lua
-
-.. _SmtpDissector:
-
-Dissector
----------
+Loading required modules
+^^^^^^^^^^^^^^^^^^^^^^^^
 In order to create a smtp dissector, we create a new file (`smtp.lua`) and save it in a
 location that will be used later as a path for all Haka scripts requiring this
 dissector.

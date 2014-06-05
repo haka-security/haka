@@ -2,16 +2,6 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-.. highlightlang:: lua
-
-.. _smtp_security:
-
-Security rules
---------------
-The purpose of these security rules is to show how use the previously defined
-events and how to filter smtp packets based on fields extracted from parsing
-results.
-
 Filtering spam
 ^^^^^^^^^^^^^^
 As usual, we load first the smtp module disector. Then, we install our newly

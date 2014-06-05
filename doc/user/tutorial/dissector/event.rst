@@ -2,15 +2,6 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-.. highlightlang:: lua
-
-Events
-------
-Events are the glue between dissectors and security rules. Dissectors create
-events and then trigger them. As a result, all security rules hooking to that
-events will be evaluated.
-
-
 Registering events
 ^^^^^^^^^^^^^^^^^^
 Events are created by invoking `register_event` method wich takes as first argument an event name. For our needs, we will create three events:

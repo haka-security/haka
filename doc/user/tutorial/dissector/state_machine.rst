@@ -2,13 +2,6 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-.. highlightlang:: lua
-
-.. _smtp_state_machine:
-
-State machine
--------------
-
 Creating the state machine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Smtp state machine is created through the following skeleton where we define five states to manage intiation phase, command/response and data transfert. For each of these states we define two main transitions `up` and `down` that will handle received data depending on their direction: from client to server or from server to client.
@@ -167,7 +160,7 @@ Simillarly, we define two states to manage command and response. In the former, 
         end
     }
 
-.. note:: See section :ref:`smtp-full` to get the full code of response and command states.
+.. note:: Have a look at :download:`smtp.lua<smtp.lua>` to get the full code of response and command states.
 
 
 Managing content mail transfert

@@ -107,7 +107,6 @@ SmtpDissector:register_event('mail_content', nil, haka.dissector.FlowDissector.s
 --
 SmtpDissector.grammar = haka.grammar.new("smtp", function ()
 	-- terminal tokens
-	EMPTY = token('')
 	WS = token('[[:blank:]]+')
 	CRLF = token('[%r]?[%n]')
 	SEP = field('sep', token('[- ]'))
@@ -133,7 +132,7 @@ SmtpDissector.grammar = haka.grammar.new("smtp", function ()
 						return not (la == 0xa or la == 0xd)
 					end
 				),
-				none = EMPTY
+				none = empty()
 			},
 			function (self, ctx)
 				return CMD[self.command]
