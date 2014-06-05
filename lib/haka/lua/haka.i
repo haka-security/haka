@@ -113,6 +113,8 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	end
 
 	local function addpath(dst, paths, exts)
+		if not paths then return dst end
+
 		local pathtable = string_split(dst, ';')
 
 		for _, path in pairs(string_split(paths, ';')) do
