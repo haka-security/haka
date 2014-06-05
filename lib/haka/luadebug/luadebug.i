@@ -164,6 +164,8 @@ void lua_luadebug_debugger_break();
 
 		if depth == 0 then
 			out(title)
+		elseif obj.__pprint then
+			obj:__pprint(indent, out)
 		else
 			out(title, "{")
 
