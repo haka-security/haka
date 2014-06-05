@@ -49,6 +49,7 @@ add_library(libhaka SHARED
 	vbuffer_sub_stream.c
 	regexp_module.c
 	system.c
+	engine.c
 	container/list.c
 	container/list2.c
 	container/vector.c

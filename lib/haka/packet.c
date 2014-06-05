@@ -13,6 +13,7 @@
 #include <haka/log.h>
 #include <haka/timer.h>
 #include <haka/packet_module.h>
+#include <haka/engine.h>
 
 
 static struct packet_module *packet_module = NULL;
@@ -127,6 +128,14 @@ int packet_receive(struct packet **pkt)
 			time_realm_update(&network_time,
 					packet_module->get_timestamp(*pkt));
 		}
+
+		{
+			volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+			if (stats) {
+				++stats->recv_packets;
+				stats->recv_bytes += vbuffer_size(packet_payload(*pkt));
+			}
+		}
 	}
 
 	time_realm_check(&network_time);
@@ -142,6 +151,11 @@ void packet_drop(struct packet *pkt)
 			packet_module->get_id(pkt));
 
 	packet_module->verdict(pkt, FILTER_DROP);
+
+	{
+		volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+		if (stats) ++stats->drop_packets;
+	}
 }
 
 void packet_accept(struct packet *pkt)
@@ -151,6 +165,14 @@ void packet_accept(struct packet *pkt)
 
 	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%lli",
 			packet_module->get_id(pkt));
+
+	{
+		volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+		if (stats) {
+			++stats->trans_packets;
+			stats->trans_bytes += vbuffer_size(packet_payload(pkt));
+		}
+	}
 
 	packet_module->verdict(pkt, FILTER_ACCEPT);
 }
@@ -215,6 +237,14 @@ bool packet_send(struct packet *pkt)
 
 	messagef(HAKA_LOG_DEBUG, L"packet", L"sending packet id=%lli",
 		packet_module->get_id(pkt));
+
+	{
+		volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+		if (stats) {
+			++stats->trans_packets;
+			stats->trans_bytes += vbuffer_size(packet_payload(pkt));
+		}
+	}
 
 	return packet_module->send_packet(pkt);
 }
