@@ -36,7 +36,7 @@ Debugger
 --------
 
 If you need to inspect an existing configuration, you can use the debugger. You need to activate
-the debugger first. This can be done by starting Haka with the option ``--luadebug``.
+the debugger first. This can be done by starting Haka with the option ``--debug-lua``.
 
 If an error occurs haka will stop and a prompt will allow you to inspect variables,
 up-values, expressions... To get the list of all available commands, simply type ``help``.

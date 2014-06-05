@@ -2,9 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require('luaunit')
-
-
 TestRegexpModule = {}
 
 function TestRegexpModule:gen_stream(f)
@@ -359,5 +356,4 @@ function TestRegexpModule:test_complexe_regexp ()
 	assertEquals(i, 4)
 end
 
-LuaUnit:setVerbosity(1)
-assert(LuaUnit:run('TestRegexpModule') == 0)
+addTestSuite('TestRegexpModule')

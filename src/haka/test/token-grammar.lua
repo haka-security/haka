@@ -6,12 +6,16 @@ local class = require('class')
 require('protocol/ipv4')
 local tcp_connection = require('protocol/tcp_connection')
 
-local grammar = haka.grammar.record{
-	haka.grammar.field("word1", haka.grammar.token("[^ \r\n]+")),
-	haka.grammar.token(" "),
-	haka.grammar.field("word2", haka.grammar.token("[^\r\n]+")),
-	haka.grammar.token("[\r\n]*"),
-}:compile()
+local grammar = haka.grammar.new("test", function ()
+	grammar = record{
+		field("word1", token("[^ \r\n]+")),
+		token(" "),
+		field("word2", token("[^\r\n]+")),
+		token("[\r\n]*"),
+	}
+
+	export(grammar)
+end)
 
 haka.rule{
 	-- Intercept tcp packets
@@ -21,7 +25,7 @@ haka.rule{
 			local ctx = class.class('ctx'):new()
 			local iter = input:pos("begin")
 			if iter:available() > 0 then
-				local ctx, err = grammar:parse(iter, ctx)
+				local ctx, err = grammar.grammar:parse(iter, ctx)
 				if err then
 					print("Parsing error : "..err)
 					return

@@ -7,25 +7,28 @@ local class = require('class')
 require('protocol/ipv4')
 local tcp_connection = require('protocol/tcp_connection')
 
-local elem = haka.grammar.record{
-	haka.grammar.field("flags", haka.grammar.number(3, 'big')),
-	haka.grammar.field("value", haka.grammar.number(13, 'big'))
-}
+local grammar = haka.grammar.new("test", function ()
+	elem = record{
+		field("flags", number(3, 'big')),
+		field("value", number(13, 'big'))
+	}
 
-local grammar = haka.grammar.record{
-	haka.grammar.field("length", haka.grammar.number(8, 'big')),
-	haka.grammar.field("data", haka.grammar.array(elem)
-		:options{
-			untilcond = function (elem, ctx)
-				return ctx.iter.meter-1 >= ctx.top.length
-			end,
-			create = function (ctx, entity, init)
+	grammar = record{
+		field("length", number(8, 'big')),
+		field("data", array(elem)
+			:untilcond(function (elem, ctx)
+				return ctx.iter.meter-1 >= ctx:result(1).length
+			end)
+			:creation(function (ctx, entity, init)
 				local vbuf = haka.vbuffer_allocate(2)
 				entity:create(vbuf:pos('begin'), ctx, init)
 				return vbuf
-			end
-		})
-}:compile()
+			end)
+		)
+	}
+
+	export(grammar)
+end)
 
 haka.rule{
 	-- Intercept tcp packets
@@ -37,7 +40,7 @@ haka.rule{
 		if direction == 'up' then
 			local ctx = class.class('ctx'):new()
 			if iter:available() > 0 then
-				local ctx, err = grammar:parse(iter, ctx)
+				local ctx, err = grammar.grammar:parse(iter, ctx)
 				if err then
 					print("Parsing error : "..err)
 					return

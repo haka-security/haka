@@ -64,12 +64,12 @@ When running this script, Haka will output a high number of errors, complaining 
 
 .. seealso:: :doc:`\../debug` contains documentation on Haka's debugging facilities.
 
-To start Haka in debugging mode, add ``--luadebug`` at the end of the command line:
+To start Haka in debugging mode, add ``--debug-lua`` at the end of the command line:
 
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/filter/
-    $ hakapcap tcpfilter.pcap tcpfilter.lua --luadebug
+    $ hakapcap tcpfilter.pcap tcpfilter.lua --debug-lua
 
 When a Lua error code occurs, the debugger breaks and outputs the error and a backtrace.
 

@@ -42,7 +42,7 @@ local ipv4_addr_convert = {
 }
 
 local function pointer_resolution(self, ctx)
-	ctx = ctx.top
+	ctx = ctx:result(1)
 	for offset, label in sorted_pairs(ctx._labels) do
 		if label.compression_scheme == POINTER_COMPRESSION then
 			if not ctx._labels[label.pointer] then
@@ -87,177 +87,180 @@ dns_dissector:register_event('response', continue)
 
 function dns_dissector.method:__init(flow)
 	self.flow = flow
-	self.states = dns_dissector.states:instanciate()
-	self.states.dns = self
+	self.state = dns_dissector.states:instanciate(self)
+	self.dns_pending_queries = {}
 end
 
 function dns_dissector.method:receive(pkt, payload, direction)
-	self.states:update(payload, direction, pkt)
+	self.state:transition('update', payload, direction, pkt)
 end
 
 function dns_dissector.method:continue()
 	self.flow:continue()
 end
 
-dns_dissector.grammar = haka.grammar:new("udp")
-
-dns_dissector.grammar.label = haka.grammar.record{
-	haka.grammar.execute(function (self, ctx)
-		if #ctx.prev_result-1 > 0 then
-			ctx.prev_result[#ctx.prev_result-1].next = self
-		end
-		ctx.top._labels[ctx.iter.meter] = self
-	end),
-	haka.grammar.field('compression_scheme', haka.grammar.number(2)),
-	haka.grammar.branch({
-		name = haka.grammar.record{
-				haka.grammar.field('length', haka.grammar.number(6)),
-				haka.grammar.field('name', haka.grammar.bytes():options{
-					count = function (self, ctx, el) return self.length end
-				}),
+dns_dissector.grammar = haka.grammar.new("dns", function ()
+	label = record{
+		execute(function (self, ctx)
+			local prev_result = ctx:result(-2)
+			if #prev_result-1 > 0 then
+				prev_result[#prev_result-1].next = self
+			end
+			ctx:result(1)._labels[ctx.iter.meter] = self
+		end),
+		field('compression_scheme', number(2)),
+		branch({
+			name = record{
+					field('length', number(6)),
+					field('name', bytes()
+						:count(function (self, ctx, el) return self.length end)
+					),
+				},
+			pointer = field('pointer', number(14)),
+			default = fail("unsupported compression scheme"),
 			},
-		pointer = haka.grammar.field('pointer', haka.grammar.number(14)),
-		default = haka.grammar.error("unsupported compression scheme"),
-		},
-		function (self, ctx)
-			if self.compression_scheme == POINTER_COMPRESSION then
-				return 'pointer'
-			elseif self.compression_scheme == NO_COMPRESSION then
-				return 'name'
+			function (self, ctx)
+				if self.compression_scheme == POINTER_COMPRESSION then
+					return 'pointer'
+				elseif self.compression_scheme == NO_COMPRESSION then
+					return 'name'
+				end
 			end
-		end
-	)
-}
+		)
+	}
 
-dns_dissector.grammar.dn = haka.grammar.array(dns_dissector.grammar.label):options{
-		untilcond = function (label)
+	dn = array(label)
+		:untilcond(function (label)
 			return label and (label.length == 0 or label.pointer ~= nil)
-		end,
-}:convert(dn_converter, true)
+		end)
+		:convert(dn_converter, true)
 
-dns_dissector.type = haka.grammar.number(16):convert({
-	get = function (type) return TYPE[type] or type end,
-	set = function (type)
-		for i, type in TYPE do
-			if type == type then
-				return i
+	dns_dissector.type = number(16)
+		:convert({
+			get = function (type) return TYPE[type] or type end,
+			set = function (type)
+				for i, type in TYPE do
+					if type == type then
+						return i
+					end
+				end
+				error("unknown type: "..type)
 			end
-		end
-		error("unknown type: "..type)
-	end
-})
+		})
 
-dns_dissector.grammar.header = haka.grammar.record{
-	haka.grammar.field('id',      haka.grammar.number(16)),
-	haka.grammar.field('qr',      haka.grammar.flag),
-	haka.grammar.field('opcode',  haka.grammar.number(4)),
-	haka.grammar.field('aa',      haka.grammar.flag),
-	haka.grammar.field('tc',      haka.grammar.flag),
-	haka.grammar.field("rd",      haka.grammar.flag),
-	haka.grammar.field("ra",      haka.grammar.flag),
-	haka.grammar.number(3),
-	haka.grammar.field("rcode",   haka.grammar.number(4)),
-	haka.grammar.field("qdcount", haka.grammar.number(16)),
-	haka.grammar.field("ancount", haka.grammar.number(16)),
-	haka.grammar.field("nscount", haka.grammar.number(16)),
-	haka.grammar.field("arcount", haka.grammar.number(16)),
-}
+	header = record{
+		field('id',      number(16)),
+		field('qr',      flag),
+		field('opcode',  number(4)),
+		field('aa',      flag),
+		field('tc',      flag),
+		field("rd",      flag),
+		field("ra",      flag),
+		number(3),
+		field("rcode",   number(4)),
+		field("qdcount", number(16)),
+		field("ancount", number(16)),
+		field("nscount", number(16)),
+		field("arcount", number(16)),
+	}
 
-dns_dissector.grammar.question = haka.grammar.record{
-	haka.grammar.field('name',    dns_dissector.grammar.dn),
-	haka.grammar.field('type',    dns_dissector.type),
-	haka.grammar.field('class',   haka.grammar.number(16)),
-}
+	question = record{
+		field('name',    dn),
+		field('type',    dns_dissector.type),
+		field('class',   number(16)),
+	}
 
-dns_dissector.grammar.soa = haka.grammar.record{
-	haka.grammar.field('mname', dns_dissector.grammar.dn),
-	haka.grammar.field('rname', dns_dissector.grammar.dn),
-	haka.grammar.field('serial', haka.grammar.number(32)),
-	haka.grammar.field('refresh', haka.grammar.number(32)),
-	haka.grammar.field('retry', haka.grammar.number(32)),
-	haka.grammar.field('expire', haka.grammar.number(32)),
-	haka.grammar.field('minimum', haka.grammar.number(32)),
-}
+	soa = record{
+		field('mname',   dn),
+		field('rname',   dn),
+		field('serial',  number(32)),
+		field('refresh', number(32)),
+		field('retry',   number(32)),
+		field('expire',  number(32)),
+		field('minimum', number(32)),
+	}
 
-dns_dissector.grammar.wks = haka.grammar.record{
-	haka.grammar.field('ip', haka.grammar.number(32)
-		:convert(ipv4_addr_convert, true)),
-	haka.grammar.field('proto', haka.grammar.number(8)),
-	haka.grammar.field('ports', haka.grammar.bytes():options{
-		count = function (self, ctx) return self.length - 40 end -- remove wks headers
-	}),
-}
+	wks = record{
+		field('ip',    number(32)
+			:convert(ipv4_addr_convert, true)),
+		field('proto', number(8)),
+		field('ports', bytes()
+			:count(function (self, ctx) return self.length - 40 end) -- remove wks headers
+		),
+	}
 
-dns_dissector.grammar.mx = haka.grammar.record{
-	haka.grammar.field('pref', haka.grammar.number(16)),
-	haka.grammar.field('name', dns_dissector.grammar.dn),
-}
+	mx = record{
+		field('pref', number(16)),
+		field('name', dn),
+	}
 
-dns_dissector.grammar.minfo = haka.grammar.record{
-	haka.grammar.field('rname', dns_dissector.grammar.dn),
-	haka.grammar.field('ename', dns_dissector.grammar.dn),
-}
+	minfo = record{
+		field('rname', dn),
+		field('ename', dn),
+	}
 
-dns_dissector.grammar.resourcerecord = haka.grammar.record{
-	haka.grammar.field('name',    dns_dissector.grammar.dn),
-	haka.grammar.field('type',    dns_dissector.type),
-	haka.grammar.field('class',   haka.grammar.number(16)),
-	haka.grammar.field('ttl',     haka.grammar.number(32)),
-	haka.grammar.field('length',  haka.grammar.number(16)),
-	haka.grammar.branch({
-			A =       haka.grammar.field('ip', haka.grammar.number(32)
-				:convert(ipv4_addr_convert, true)),
-			NS =      haka.grammar.field('name', dns_dissector.grammar.dn),
-			MD =      haka.grammar.field('name', dns_dissector.grammar.dn),
-			MF =      haka.grammar.field('name', dns_dissector.grammar.dn),
-			CNAME =   haka.grammar.field('name', dns_dissector.grammar.dn),
-			SOA =     dns_dissector.grammar.soa,
-			MB =      haka.grammar.field('name', dns_dissector.grammar.dn),
-			MG =      haka.grammar.field('name', dns_dissector.grammar.dn),
-			MR =      haka.grammar.field('name', dns_dissector.grammar.dn),
-			NULL =    haka.grammar.field('data', haka.grammar.bytes():options{
-				count = function (self, ctx) return self.length end
-			}),
-			WKS =     dns_dissector.grammar.wks,
-			PTR =     haka.grammar.field('name', dns_dissector.grammar.dn),
-			MINFO =   dns_dissector.grammar.minfo,
-			MX =      dns_dissector.grammar.mx,
-			TXT =     haka.grammar.field('data', haka.grammar.text:options{
-				count = function (self, ctx) return self.length end
-			}),
-			default = haka.grammar.field('unknown', haka.grammar.bytes():options{
-				count = function (self, ctx) return self.length end
-			}),
-		},
-		function (self, ctx)
-			return self.type
-		end
-	),
-}
+	resourcerecord = record{
+		field('name',    dn),
+		field('type',    dns_dissector.type),
+		field('class',   number(16)),
+		field('ttl',     number(32)),
+		field('length',  number(16)),
+		branch({
+				A =       field('ip', number(32)
+					:convert(ipv4_addr_convert, true)),
+				NS =      field('name', dn),
+				MD =      field('name', dn),
+				MF =      field('name', dn),
+				CNAME =   field('name', dn),
+				SOA =     soa,
+				MB =      field('name', dn),
+				MG =      field('name', dn),
+				MR =      field('name', dn),
+				NULL =    field('data', bytes()
+					:count(function (self, ctx) return self.length end)
+				),
+				WKS =     wks,
+				PTR =     field('name', dn),
+				MINFO =   minfo,
+				MX =      mx,
+				TXT =     field('data', text
+					:count(function (self, ctx) return self.length end)
+				),
+				default = field('unknown', bytes()
+					:count(function (self, ctx) return self.length end)
+				),
+			},
+			function (self, ctx)
+				return self.type
+			end
+		),
+	}
 
-dns_dissector.grammar.answer = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{
-	count = function (self, ctx) return ctx.top.ancount end
-}
+	answer = array(resourcerecord)
+		:count(function (self, ctx) return ctx:result(1).ancount end)
 
-dns_dissector.grammar.authority = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{
-	count = function (self, ctx) return ctx.top.nscount end
-}
+	authority = array(resourcerecord)
+		:count(function (self, ctx) return ctx:result(1).nscount end)
 
-dns_dissector.grammar.additional = haka.grammar.array(dns_dissector.grammar.resourcerecord):options{
-	count = function (self, ctx) return ctx.top.arcount end
-}
+	additional = array(resourcerecord)
+		:count(function (self, ctx) return ctx:result(1).arcount end)
 
-dns_dissector.grammar.message = haka.grammar.record{
-	haka.grammar.execute(function (self, ctx) ctx.top._labels = {} end),
-	dns_dissector.grammar.header,
-	haka.grammar.field('question',   dns_dissector.grammar.question),
-	haka.grammar.field('answer',    dns_dissector.grammar.answer),
-	haka.grammar.field('authority',    dns_dissector.grammar.authority),
-	haka.grammar.field('additional',    dns_dissector.grammar.additional),
-	haka.grammar.execute(pointer_resolution),
-}
+	message = record{
+		execute(function (self, ctx) ctx:result(1)._labels = {} end),
+		header,
+		field('question',   question),
+		field('answer',     answer),
+		field('authority',  authority),
+		field('additional', additional),
+		execute(pointer_resolution),
+	}
 
-local dns_message = dns_dissector.grammar.message:compile()
+	export(message)
+end)
+
+function module.dissect(flow)
+	flow:select_next_dissector(dns_dissector:new(flow))
+end
 
 function module.install_udp_rule(port)
 	haka.rule{
@@ -265,7 +268,7 @@ function module.install_udp_rule(port)
 		eval = function (flow, pkt)
 			if pkt.dstport == port then
 				haka.log.debug('dns', "selecting dns dissector on flow")
-				flow:select_next_dissector(dns_dissector:new(flow))
+				module.dissect(flow)
 			end
 		end
 	}
@@ -274,10 +277,6 @@ end
 --
 -- DNS States
 --
-
-dns_dissector.states = haka.state_machine("dns")
-
-local dns_pending_queries = {}
 
 local DnsResult = class.class('DnsResult')
 
@@ -290,52 +289,51 @@ function DnsResult.method:drop()
 	self._dissector.flow:drop(self._pkt)
 end
 
-dns_dissector.states:default{
-	error = function (context)
-		local self = context.dns
-		self.flow:drop()
-	end,
-	update = function (context, payload, direction, pkt)
-		local res, err = dns_message:parse(payload:pos('begin'), DnsResult:new(context.dns, pkt))
-		if err then
-			haka.alert{
-				description = string.format("invalid dns %s", err.rule),
-				severity = 'low'
-			}
-			context.dns.flow:drop(pkt)
-		else
-			return context[direction](context, res, payload, pkt)
+dns_dissector.states = haka.state_machine("dns", function ()
+	default_transitions{
+		error = function (self)
+			self.flow:drop()
+		end,
+		update = function (self, payload, direction, pkt)
+			local res, err = dns_dissector.grammar.message:parse(payload:pos('begin'), DnsResult:new(self, pkt))
+			if err then
+				haka.alert{
+					description = string.format("invalid dns %s", err.rule),
+					severity = 'low'
+				}
+				self.flow:drop(pkt)
+			else
+				return self.state:transition(direction, res, payload, pkt)
+			end
 		end
-	end
-}
+	}
 
-dns_dissector.states.message = dns_dissector.states:state{
-	up = function (context, res, payload, pkt)
-		local self = context.dns
-		self:trigger("query", res)
-		dns_pending_queries[res.id] = res
-		self.flow:send(pkt, payload, true)
-		res._data = payload
-	end,
-	down = function (context, res, payload, pkt)
-		local self = context.dns
-		local id = res.id
-		local query = dns_pending_queries[id]
-		if not query then
-			haka.alert{
-				description = "dns: mismatching response",
-				severity = 'low'
-			}
-			self.flow:drop(pkt)
-		else
-			self:trigger("response", res, query)
-			dns_pending_queries[id] = nil
-			self.flow:send(pkt, payload)
-		end
-	end,
-}
+	message = state{
+		up = function (self, res, payload, pkt)
+			self:trigger("query", res)
+			self.dns_pending_queries[res.id] = res
+			self.flow:send(pkt, payload, true)
+			res._data = payload
+		end,
+		down = function (self, res, payload, pkt)
+			local id = res.id
+			local query = self.dns_pending_queries[id]
+			if not query then
+				haka.alert{
+					description = "dns: mismatching response",
+					severity = 'low'
+				}
+				self.flow:drop(pkt)
+			else
+				self:trigger("response", res, query)
+				self.dns_pending_queries[id] = nil
+				self.flow:send(pkt, payload)
+			end
+		end,
+	}
 
-dns_dissector.states.initial = dns_dissector.states.message
+	initial(message)
+end)
 
 module.events = dns_dissector.events
 

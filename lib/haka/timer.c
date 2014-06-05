@@ -26,8 +26,8 @@ struct timer {
 	struct time             trigger_time;
 	struct time             delay;
 	timer_callback          callback;
-	void                    *data;
-	struct time_realm       *realm;
+	void                   *data;
+	struct time_realm      *realm;
 };
 
 struct time_realm_state {

@@ -53,13 +53,15 @@ static void help(const char *program)
 	fprintf(stdout, "\t                       Override configuration parameter\n");
 	fprintf(stdout, "\t-l,--loglevel <level>: Set the log level\n");
 	fprintf(stdout, "\t                         (debug, info, warning, error or fatal)\n");
-	fprintf(stdout, "\t--luadebug:            Activate lua debugging (and keep haka in foreground)\n");
+	fprintf(stdout, "\t--debug-lua:           Activate lua debugging (and keep haka in foreground)\n");
+	fprintf(stdout, "\t--debug-grammar:       Activate grammar internal graph dump (saved in file <name>.dot)\n");
 	fprintf(stdout, "\t--no-daemon:           Do no run in the background\n");
 }
 
 static bool daemonize = true;
 static char *config = NULL;
 static bool lua_debugger = false;
+static bool grammar_debug = false;
 
 struct config_override {
 	char *key;
@@ -97,16 +99,17 @@ static int parse_cmdline(int *argc, char ***argv)
 	int index = 0;
 
 	static struct option long_options[] = {
-		{ "version",      no_argument,       0, 'v' },
-		{ "help",         no_argument,       0, 'h' },
-		{ "config",       required_argument, 0, 'c' },
-		{ "debug",        no_argument,       0, 'd' },
-		{ "loglevel",     required_argument, 0, 'l' },
-		{ "luadebug",     no_argument,       0, 'L' },
-		{ "no-daemon",    no_argument,       0, 'D' },
-		{ "opt",          required_argument, 0, 'o' },
-		{ "rule",         required_argument, 0, 'r' },
-		{ 0,              0,                 0, 0 }
+		{ "version",       no_argument,       0, 'v' },
+		{ "help",          no_argument,       0, 'h' },
+		{ "config",        required_argument, 0, 'c' },
+		{ "debug",         no_argument,       0, 'd' },
+		{ "loglevel",      required_argument, 0, 'l' },
+		{ "debug-lua",     no_argument,       0, 'L' },
+		{ "debug-grammar", no_argument,       0, 'G' },
+		{ "no-daemon",     no_argument,       0, 'D' },
+		{ "opt",           required_argument, 0, 'o' },
+		{ "rule",          required_argument, 0, 'r' },
+		{ 0,               0,                 0, 0 }
 	};
 
 	while ((c = getopt_long(*argc, *argv, "dl:hc:r:", long_options, &index)) != -1) {
@@ -148,6 +151,10 @@ static int parse_cmdline(int *argc, char ***argv)
 		case 'L':
 			lua_debugger = true;
 			daemonize = false;
+			break;
+
+		case 'G':
+			grammar_debug = true;
 			break;
 
 		case 'o':
@@ -491,7 +498,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	prepare(-1, lua_debugger);
+	prepare(-1, lua_debugger, grammar_debug);
 
 	pid_file = fopen(HAKA_PID_FILE, "w");
 	if (!pid_file) {

@@ -12,149 +12,200 @@ Description
 
 .. haka:module:: haka
 
-.. haka:class:: state_machine
+.. haka:function:: state_machine(name, descr) -> state_machine
+
+    :param name: State machine name.
+    :ptype name: string
+    :param descr: Description function.
+    :ptype descr: function
+    :return state_machine: Compiled state machine.
+    :rtype state_machine: :haka:class:`StateMachine` |nbsp|
+
+    A dissector that need to use a state machine need to describe it first.
+    This function allows to do it.
+
+    The *descr* function is executed to define the states and the transitions
+    that are going to be part of the state machine. Its environment allows to
+    access all state machine primitives listed in this pages. The functions and
+    variables available in this scope are shown prefixed with `state_machine`.
+
+Transition
+^^^^^^^^^^
+
+A transition is basically a Lua function:
+
+.. haka:function:: transition(context, ...) -> new_state
     :module:
+    :noindex:
 
-    A dissector that need to use a state machine need to describe it first. This object allows
-    to do it.
+    :param context: Context of the state machine instance.
+    :return new_state: Next state name or nil if we should stay in the current state.
+    :rtype new_state: string
 
-    A state machine is a collection of states and a collections of transitions.
+    Transition function. Its name can be one of the special transition name or a
+    user name to define a user transition.
 
-    Haka automatically defines some special states:
+Haka defines some special transitions:
 
-    * *ERROR*: error state.
-    * *FINISH*: final state which will terminate the state machine instance.
+.. haka:data:: init
+    :module:
+    :objtype: transition
 
-    A state is represented by an object:
+    Transition activated at machine state initialization.
 
-        .. haka:class:: State
+.. haka:data:: finish
+    :module:
+    :objtype: transition
 
-    Haka also defines some special transitions:
+    Transition activated when quitting the state machine.
 
-    .. haka:data:: init
-        :module:
-        :objtype: transition
+.. haka:data:: enter
+    :module:
+    :objtype: transition
 
-        Transition activated at machine state initialization.
+    Transition activated when entering a new state.
 
-    .. haka:data:: finish
-        :module:
-        :objtype: transition
+.. haka:data:: leave
+    :module:
+    :objtype: transition
 
-        Transition activated when quitting the state machine.
-    .. haka:data:: enter
-        :module:
-        :objtype: transition
+    Transition activated when leaving a state.
 
-        Transition activated when entering a new state.
-    .. haka:data:: leave
-        :module:
-        :objtype: transition
+.. haka:data:: error
+    :module:
+    :objtype: transition
 
-        Transition activated when leaving a state.
-    .. haka:data:: error
-        :module:
-        :objtype: transition
+    Transition triggered on error.
 
-        Transition triggered on error.
-    .. haka:data:: timeout
-        :module:
-        :objtype: transition
+.. haka:data:: timeout
+    :module:
+    :objtype: transition
 
-        Temporal transition. The timeout transitions are described by a table where the key is the timeout value
-        in seconds.
+    Temporal transition. The timeout transitions are described by a table where the key is the timeout value
+    in seconds.
 
-        **Usage:**
+    **Usage:**
 
-        ::
+    ::
 
-            states:default{
-                timeout = {
-                    [10] = function (context)
-                        print("timeout !")
-                    end
-                }
+        state{
+            timeout = {
+                [10] = function (self)
+                    print("timeout !")
+                end
             }
+        }
 
-    A transition is basically a function:
+.. haka:function:: default_transitions{transitions...}
+    :module:
+    :objtype: state_machine
 
-        .. haka:function:: transition(context, ...) -> new_state
-            :module:
-            :noindex:
+    Sets default transitions for the state machine. The parameter
+    should be a table containing a list of transition methods. All those
+    transitions will exists on any state of this state machine.
 
-            :param context: Context of the state machine instance.
-            :paramtype context: :haka:class:`state_machine_instance`
-            :return new_state: Next state or nil if we should stay in the current state.
-            :rtype new_state: :haka:class:`State`
+State
+^^^^^
 
-    .. haka:function:: state_machine(name) -> state_machine
+A state is represented by an abstract object:
 
-        :param name: State machine name.
-        :paramtype name: string
-        :return state_machine: New state machine.
-        :rtype state_machine: :haka:class:`state_machine`
+    .. haka:class:: State
 
-        Create a new state machine.
+The user can define its own state:
 
-    .. haka:method:: state_machine:default{...}
+.. haka:function:: state{transitions...} -> state
+    :module:
+    :objtype: state_machine
 
-        Sets default transitions for the state machine. The parameter
-        should be a table containing a list of transition methods. All those
-        transitions will exists on any state of this state machine.
+    :return state: New state.
+    :rtype state: :haka:class:`State`
 
-    .. haka:method::  state_machine:state{...} -> state
+    Defines a new state and its transitions.
 
-        :return state: New state.
-        :rtype state: :haka:class:`State`
+Haka automatically defines some special states that can be used as
+return value for transitions:
 
-        Defines a new state and its transitions.
+* ``'error'``: raise an error.
+* ``'finish'``: final state which will terminate the state machine instance.
 
-    .. haka:attribute:: state_machine.initial
+It is also needed to define the initial state:
 
-        Initial state for this machine. This need to be set by the user.
+.. haka:function:: initial(state)
+    :module:
+    :objtype: state_machine
 
-    .. haka:method:: state_machine:instanciate() -> instance
+    :param state: Initial state.
+    :ptype state: :haka:class:`State`
 
-        :return instance: State machine instance.
-        :rtype instance: :haka:class:`state_machine_instance`
-
-        Instanciate the state machine.
+    Define the initial state where the state machine should start.
 
 Instance
 --------
 
+.. haka:class:: StateMachine
+    :module:
+
+    This object contains the state machine compiled description.
+
+    .. haka:method:: state_machine:instanciate(context) -> instance
+
+        :param context: User data that are passed to every transitions.
+        :return instance: State machine instance.
+        :rtype instance: :haka:class:`state_machine_instance`
+
+        Instanciate the state machine. The *context* object will be given as
+        the first parameter for every transition called.
+
 .. haka:class:: state_machine_instance
+    :module:
 
     Instance of a state machine.
 
     .. haka:method:: state_machine_instance:finish()
 
-        Terminate the state machine.
+        Terminate the state machine. This will also call the transition
+        **finish** on the current state.
 
-    .. haka:attribute:: state
+    .. haka:attribute:: state_machine_instance:current
         :readonly:
 
-        Current state.
+        :type: string
 
-    .. haka:method:: state_machine_instance:<transition>(...)
+        Current state name.
 
-        Call a transition on the current state. The name *transition* need to be
-        replaced by the name of the transition to call.
+    .. haka:method:: state_machine_instance:transition(name, ...)
 
-    **Example:**
+        :param name: Transition name.
+        :ptype name: string
+
+        Call a transition on the current state.
+
+Example
+-------
 
     ::
 
-        local my_state_machine = haka.state_machine("test")
+        local my_state_machine = haka.state_machine("test", function ()
 
-        my_state_machine.a = my_state_machine:state{
-            update = function (context)
-                print("update")
-            end
-        }
+            A = state{
+                -- user transition
+                update = function (self)
+                    print("update")
+                    return 'B' -- jump to the state B
+                end
+            }
 
-        my_state_machine.initial = my_state_machine.a
+            B = state{
+                -- special enter transition
+                enter = function (self)
+                    return 'finish' -- switch the the special state to terminate
+                end
+            }
 
-        local instance = my_state_machine:instanciate()
+            initial(a) -- start on state A
+        end)
 
-        instance:update() -- call the transition 'update' on the state 'a'
+        local context = {}
+        local instance = my_state_machine:instanciate(context)
+
+        instance:transition('update') -- call the transition 'update' on the state 'A'

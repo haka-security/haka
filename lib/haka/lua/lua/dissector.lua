@@ -199,25 +199,16 @@ end
 dissector.FlowDissector = class.class('FlowDissector', dissector.Dissector)
 
 function dissector.FlowDissector.stream_wrapper(f, options, self, stream, current, ...)
-	if (not current or not current:check_available(1)) and
-	   not stream.isfinished then
-		return
-	end
-
-	local cur
-	if current then cur = current:copy() end
-
 	if options and options.streamed then
-		local comanager = self:get_comanager(stream, ...)
-		if not comanager:has(f) then
-			local args = {...}
-			comanager:start(f, function (iter) return f(self, iter, unpack(args)) end)
+		self:streamed(stream, f, self, current, ...)
+	else
+		if (not current or not current:check_available(1)) and
+		   not stream.isfinished then
+			return
 		end
 
-		comanager:process(f, cur)
-	else
-		if cur then
-			local sub = cur:sub('available')
+		if current then
+			local sub = current:copy():sub('available')
 			if sub then
 				f(self, sub, ...)
 			end
@@ -240,8 +231,26 @@ function dissector.FlowDissector.method:continue()
 	error("not implemented")
 end
 
-function dissector.FlowDissector.method:streamed(f, stream, current, ...)
-	return dissector.FlowDissector.stream_wrapper(f, {streamed=true}, self, stream, current, ...)
+function dissector.FlowDissector.method:streamed(stream, f, this, current, ...)
+	if (not current or not current:check_available(1)) and
+	   not stream.isfinished then
+		return
+	end
+
+	local cur
+	if current then cur = current:copy() end
+
+	local comanager = self:get_comanager(stream, ...)
+
+	-- unique id for the function to execute
+	local id = comanager.hash(f, this)
+
+	if not comanager:has(id) then
+		local args = {...}
+		comanager:start(id, function (iter) return f(this, iter, unpack(args)) end)
+	end
+
+	comanager:process(id, cur)
 end
 
 function dissector.FlowDissector.method:get_comanager(stream)

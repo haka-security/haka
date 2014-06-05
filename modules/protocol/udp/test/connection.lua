@@ -17,8 +17,8 @@ haka.rule{
 
 haka.rule{
 	hook = udp_connection.events.receive_data,
-	eval = function (flow, data)
-		print(string.format("UDP data: %d", #data))
+	eval = function (flow, pkt)
+		print(string.format("UDP data: %d", #pkt.payload))
 	end
 }
 

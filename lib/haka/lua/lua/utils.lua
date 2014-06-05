@@ -46,6 +46,14 @@ function table.merge(dst, src)
 	end
 end
 
+function table.copy(src)
+	local dst = {}
+	for k,v in pairs(src) do
+		dst[k] = v
+	end
+	return dst
+end
+
 function table.dict(table)
 	local ret = {}
 	for _, v in pairs(table) do
@@ -54,6 +62,20 @@ function table.dict(table)
 	return ret
 end
 
+function table.invert(table)
+	local ret = {}
+	for k, v in pairs(table) do
+		ret[v] = k
+	end
+	return ret
+end
+
 function table.contains(table, elem)
 	return table[elem] ~= nil
+end
+
+if not table.pack then
+	function table.pack(...)
+		return { n = select('#', ...), ... }
+	end
 end

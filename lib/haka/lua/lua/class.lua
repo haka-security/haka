@@ -91,6 +91,7 @@ function module.classof(instance)
 end
 
 function module.super(cls)
+	assert(cls)
 	return rawget(cls.super, '__view')
 end
 
@@ -107,7 +108,7 @@ function module.class(name, super)
 		if convert then
 			return convert(self)
 		else
-			return string.format("<class instance %s: %p>", module.classof(self).name, self)
+			return string.format("<class instance %s: 0x%x>", module.classof(self).name, topointer(self))
 		end
 	end
 
@@ -171,6 +172,21 @@ function module.class(name, super)
 
 	super:__class_init(cls)
 	return cls
+end
+
+function module.merge(dst, src)
+	local psrc = rawget(src, '__property')
+	if psrc then
+		local pdst = rawget(dst, '__property')
+		if not pdst then
+			rawset(dst, '__property', rawget(src, '__property'))
+		else
+			table.merge(pdst, psrc)
+		end
+		rawset(src, '__property', nil)
+	end
+
+	table.merge(dst, src)
 end
 
 

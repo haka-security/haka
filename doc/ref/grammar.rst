@@ -12,20 +12,72 @@ Grammar
 Haka allows the user to describe a full protocol grammar. This section describes all constructs available
 to build rules for the grammar.
 
-.. haka:function:: new(name) -> grammar
+.. haka:function:: new(name, descr) -> grammar
 
     :param name: Name of the grammar.
     :paramtype name: string
+    :param descr: Function that describe the grammar rules.
+    :ptype descr: function
     :return grammar: Created grammar object.
     :rtype grammar: :haka:class:`Grammar`
 
     Create a new grammar. The name is mainly used to report detailed
     information to the user.
 
+    The `descr` parameter is a function that describe the grammar rules. Its
+    environment allows to access all grammar primitives listed in this pages.
+    The functions and variables available in this scope are shown prefixed
+    with `grammar`.
+
+    The grammar description must export public elements in order to be able to
+    use them and to parse some data. To do this, the :haka:func:`export` function
+    allow to notify which elements are going to be used for parsing. You should only
+    export root elements that are going to be used as entry point for parsing.
+
+.. haka:function:: extend(...)
+    :objtype: grammar
+    :module:
+
+    :param ...: List of grammar to extend.
+    :ptype ...: :haka:class:`Grammar`
+
+    Extend your grammar with some other grammar. It will import named rules and
+    exports from the grammar you extend. You can override any of the imported
+    named rules afterwards.
+
+.. haka:function:: define(...)
+    :objtype: grammar
+    :module:
+
+    :param ...: List of elements to be defined.
+    :ptype ...: string
+
+    Declare some grammar elements so that they can be used recursively
+    afterwards.
+
+.. haka:function:: export(...)
+    :objtype: grammar
+    :module:
+
+    :param ...: List of elements to be exported.
+    :ptype ...: :haka:class:`GrammarEntity`
+
+    Export some grammar elements to be able to use them for parsing.
+
 .. haka:class:: Grammar
     :module:
 
     Object holding grammar rules.
+
+    .. haka:operator:: Grammar[name] -> entity
+
+        :param name: Rule name.
+        :ptype name: string
+        :return entity: Compiled grammar representation.
+        :rtype entity: :haka:class:`CompiledGrammarEntity`
+
+        Get a rule for parsing. This rule must have been exported using the
+        function :haka:func:`export`.
 
 
 Elements
@@ -37,29 +89,11 @@ properties.
 .. haka:class:: GrammarEntity
     :module:
 
-    Object representing any grammar element. This object have different functions that cnn be used in the
-    grammar specification
+    Object representing any grammar element. This object have different functions that can be used in the
+    grammar specification.
 
-    .. haka:method:: GrammarEntity:options{...} -> entity
-
-        :return entity: Modified grammar entity.
-        :rtype entity: :haka:class:`GrammarEntity`
-
-        Generic option specification function. Check the documentation of the grammar element to get the list
-        of option supported.
-
-        The options are passed as ``key=value`` in the table used as the parameter of the function.
-
-    .. haka:method:: GrammarEntity:extra{...} -> entity
-
-        :return entity: Modified grammar entity.
-        :rtype entity: :haka:class:`GrammarEntity`
-
-        Method only available on record which can be used to add extra element to it. The table should only
-        contain functions.
-
-        Each named element in the array will be added as a extra field in the result.
-        The other element will be executed when the record will be done with its parsing.
+    Some options are available to alter the grammar element. The list of options is specified by each grammar
+    element. In addition, the following option are generic and supported by all elements:
 
     .. haka:method:: GrammarEntity:validate(validator) -> entity
 
@@ -78,60 +112,98 @@ properties.
             :param result: Current parsing result.
             :param context: Full parsing context.
 
-    .. haka:method:: GrammarEntity:convert(converter) -> entity
+    .. haka:method:: GrammarEntity:convert(converter, memoize=false) -> entity
 
         :param converter: Value converter.
         :paramtype converter: :haka:mod:`haka.grammar.converter`
+        :param memoize: Should the value be memoized.
+        :paramtype memoize: boolean
         :return entity: Modified grammar entity.
         :rtype entity: :haka:class:`GrammarEntity`
 
         Set a conversion operation to apply to the element data.
 
-    .. haka:method:: GrammarEntity:compile() -> compiled_entity
+    .. haka:method:: GrammarEntity:memoize() -> entity
 
-        :return compiled_entity: Compiled grammar.
-        :rtype compiled_entity: :haka:class:`CompiledGrammarEntity`
+        :return entity: Modified grammar entity.
+        :rtype entity: :haka:class:`GrammarEntity`
 
-        Compile the grammar representation.
+        Activate memoization of the value.
+
+    .. haka:method:: GrammarEntity:apply(func) -> entity
+
+        :param func: Apply function.
+        :ptype func: function
+        :return entity: Modified grammar entity.
+        :rtype entity: :haka:class:`GrammarEntity`
+
+        Attach an apply function to the grammar element. It is possible to call
+        *apply* multiple times to execute more than one function. This function
+        will be called when the value is parsed:
+
+        .. haka:function:: func(value, result, context)
+            :noindex:
+            :module:
+
+            :param value: Current element value.
+            :param result: Current parsing result.
+            :param context: Full parsing context.
+            :ptype context: :haka:class:`ParseContext`
+
+    .. haka:method:: GrammarEntity:const(value) -> entity
+
+        :param value: Constant value or function to compute one.
+        :ptype value: any or function
+        :return entity: Modified grammar entity.
+        :rtype entity: :haka:class:`GrammarEntity`
+
+        Mark this element as constant. Its value will be verified during
+        parsing. The value can be the value to compare to or a function to
+        compute it. In this last case, the function is the following:
+
+        .. haka:function:: value(result, context) -> value
+            :noindex:
+            :module:
+
+            :param result: Current parsing result.
+            :param context: Full parsing context.
+            :ptype context: :haka:class:`ParseContext`
+            :return value: Constant value to compare to.
+            :rtype value: any
 
 
 Final elements
 ^^^^^^^^^^^^^^
 
-.. haka:function:: number(bits) -> entity
+.. haka:function:: number(bits, endian='big') -> entity
+    :objtype: grammar
+    :module:
 
     :param bits: Size of the number in bits.
     :paramtype bits: number
+    :param endian: Endianness of the raw data: ``little`` or ``big``.
+    :paramtype endian: string
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
-
-    **Supported options:**
-
-    .. haka:data:: endianness
-        :module:
-        :idxctx: number
-        :objtype: option
-        :idxtype: number grammar option
-
-        Endianness of the raw data: ``little`` or ``big``. By default, the data will be treated
-        as big endian.
 
     **Usage:**
 
     ::
 
-        haka.grammar.number(8)
+        number(8)
 
     Parse a binary number.
 
 .. haka:function:: token(pattern) -> entity
+    :objtype: grammar
+    :module:
 
     :param pattern: Regular expression pattern for the token.
     :paramtype pattern: string
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
 
-    Match a regular expression on the data.
+    Match a regular expression on the data and return a string.
 
     .. note:: The regular expression will surrounded by non-capturing group : ``"^(?:"...")"``.
 
@@ -139,15 +211,32 @@ Final elements
 
     ::
 
-        haka.grammar.token('%s+')
+        token('%s+')
+
+.. haka:function:: raw_token(pattern) -> entity
+    :objtype: grammar
+    :module:
+
+    :param pattern: Regular expression pattern for the token.
+    :paramtype pattern: string
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Match a regular expression on the data and return the bytes matched.
+
+    .. note:: The regular expression will surrounded by non-capturing group : ``"^(?:"...")"``.
 
 .. haka:data:: flag
+    :objtype: grammar
+    :module:
 
     :type: :haka:class:`GrammarEntity`
 
     Parse a flag of 1 bit and returns it as a ``boolean``.
 
 .. haka:function:: bytes() -> entity
+    :objtype: grammar
+    :module:
 
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
@@ -156,51 +245,59 @@ Final elements
 
     **Supported options:**
 
-    .. haka:data:: count
-        :module:
-        :idxctx: bytes
-        :objtype: option
-        :idxtype: bytes grammar option
+    .. haka:method:: GrammarElement:count(count) -> entity
 
-        :type: number
+        :param count: Number of bytes.
+        :ptype count: number or function
+        :return entity: Current grammar entity.
+        :rtype entity: :haka:class:`GrammarEntity`
 
-        Number of bytes.
+        Specify the number of element in the bytes array.
 
-    .. haka:function:: count(result, context) -> count
-        :module:
-        :idxctx: bytes
-        :objtype: option
-        :idxtype: bytes grammar option
+        The *count* parameter can be a number or a function called
+        to compute the number of elements:
 
-        :param result: Current parse result.
-        :param context: Full parsing context.
-        :paramtype context: :haka:class:`ParseContext`
-        :return count: Number of bytes.
-        :rtype count: number
+        .. haka:function:: count(result, context) -> count
+            :noindex:
+            :module:
 
-    .. haka:function:: chunked(result, sub, islast, context)
-        :module:
-        :idxctx: bytes
-        :objtype: option
-        :idxtype: bytes grammar option
+            :param result: Current parsing result.
+            :param context: Full parsing context.
+            :ptype context: :haka:class:`ParseContext`
+            :return count: Number of bytes.
+            :rtype count: number
 
-        :param result: Current parsing result.
-        :param sub: Current data block.
-        :param islast: True if this data block is the last one.
-        :param context: Full parsing context.
-        :paramtype context: :haka:class:`ParseContext`
+    .. haka:method:: GrammarElement:chunked(callback) -> entity
 
-        This option allows to get each data as soon as they are received in a callback function.
+        :param callback: Callback function.
+        :ptype callback: function
+        :return entity: Current grammar entity.
+        :rtype entity: :haka:class:`GrammarEntity`
 
-.. haka:function:: padding{align=align_bit} -> entity
-                   padding{size=size_bit} -> entity
+        This option allows to get each data as soon as they are received in a callback function:
+
+        .. haka:function:: callback(result, sub, islast, context)
+            :noindex:
+            :module:
+
+            :param result: Current parsing result.
+            :param sub: Current data block.
+            :param islast: True if this data block is the last one.
+            :param context: Full parsing context.
+            :paramtype context: :haka:class:`ParseContext`
+
+.. haka:function:: padding_aling(align) -> entity
+    :objtype: grammar
+    :module:
 
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
 
-    Parse some padding. The padding can be given by size or by alignment.
+    Parse some padding. The padding allows to match a bit alignment.
 
 .. haka:function:: field(name, entity) -> entity
+    :objtype: grammar
+    :module:
 
     :param name: Name of the field in the result.
     :paramtype name: string
@@ -216,9 +313,11 @@ Final elements
 
     ::
 
-        haka.grammar.field("WS", haka.grammar.token('%s+'))
+        field("WS", token('%s+'))
 
 .. haka:function:: verify(verif, msg) -> entity
+    :objtype: grammar
+    :module:
 
     :param verif: Verification function.
     :paramtype verif: function
@@ -241,6 +340,8 @@ Final elements
         :rtype is_valid: boolean
 
 .. haka:function:: execute(exec) -> entity
+    :objtype: grammar
+    :module:
 
     :param exec: Generic function.
     :paramtype exec: function
@@ -258,33 +359,25 @@ Final elements
         :param context: Full parsing context.
         :paramtype context: :haka:class:`ParseContext`
 
-.. haka:function:: retain(readonly = false) -> entity
+.. haka:function:: fail(msg) -> entity
+    :objtype: grammar
+    :module:
 
-    :param readonly: True if the retain should only be read-only.
-    :paramtype readonly: boolean
+    :param msg: Error messgae.
+    :paramtype msg: string
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
 
-    When working on a stream, it is needed to specify which part of the stream to keep before being able
-    to send it on the network. This element allows to control it.
-
-    .. seealso:: :haka:func:`release`
-
-.. haka:data:: release
-
-    :type: :haka:class:`GrammarEntity`
-
-    When working on a stream, this element will tell Haka to send some retained data.
-
-    .. seealso:: :haka:func:`retain`
-
+    Always fail the parsing when reaching this element.
 
 Compounds
 ^^^^^^^^^
 
 .. haka:function:: record(entities) -> entity
+    :objtype: grammar
+    :module:
 
-    :param entities: List of entities for the record
+    :param entities: List of entities for the record.
     :paramtype entities: table of grammar entities
     :return entity: Created entity.
     :rtype entity: :haka:class:`GrammarEntity`
@@ -292,16 +385,65 @@ Compounds
     Create a record for a list of sub entities. Each entity is expected to appear
     one by one in order.
 
+    When working on a stream, the data behind the elements is kept which allow
+    transparent access and modification.
+
+    **Supported options:**
+
+    .. haka:method:: GrammarEntity:extra{...} -> entity
+
+        :return entity: Current grammar entity.
+        :rtype entity: :haka:class:`GrammarEntity`
+
+        Each named element in the array will be added as a extra field in the result. The table
+        should only contains functions.
+
+        The function are called with the following parameters:
+
+        .. haka:function:: extra(result, context)
+            :noindex:
+            :module:
+
+            :param result: Current parsing result.
+            :param context: Full parsing context.
+            :paramtype context: :haka:class:`ParseContext`
+
     **Usage:**
 
     ::
 
-        haka.grammar.record{
-            haka.grammar.number(8),
-            haka.grammar.bytes()
+        record{
+            field('type', number(8)),
+            bytes()
+        }
+
+.. haka:function:: sequence(entities) -> entity
+    :objtype: grammar
+    :module:
+
+    :param entities: List of entities for the sequence.
+    :paramtype entities: table of grammar entities
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Create a sequence for a list of sub entities. Each entity is expected to appear
+    one by one in order.
+
+    This element is similar to the :haka:func:`record` but the data in a stream will
+    immediatly be sent on the network.
+
+    **Usage:**
+
+    ::
+
+        sequence{
+            number(8),
+            bytes()
         }
 
 .. haka:function:: union(entities) -> entity
+    :objtype: grammar
+    :module:
 
     :param entities: List of entities for the union
     :paramtype entities: Table of grammar entities
@@ -311,10 +453,21 @@ Compounds
     Create a union for a list of sub entities. Each entity will be parsed for the
     beginning of the union.
 
+.. haka:function:: try(cases) -> entity
+
+    :param cases: List of grammar entity to try.
+    :paramtype cases: Table of grammar entities.
+    :return entity: Created entity.
+    :rtype entity: :haka:class:`GrammarEntity`
+
+    Parser will try, in order, each case until one of it finishes successfully.
+
 .. haka:function:: branch(cases, selector) -> entity
+    :objtype: grammar
+    :module:
 
     :param cases: Branch cases.
-    :paramtype cases: associative table of named grammar entities
+    :paramtype cases: Associative table of named grammar entities
     :param selector: Function that will select which case to take.
     :paramtype selector: function
     :return entity: Created entity.
@@ -339,15 +492,17 @@ Compounds
 
     ::
 
-        haka.grammar.branch({
-                num8  = haka.grammar.number(8),
-                num16 = haka.grammar.number(16),
+        branch({
+                num8  = number(8),
+                num16 = number(16),
             }, function (result, context)
                 return result.type
             end
         )
 
 .. haka:function:: optional(entity, present) -> entity
+    :objtype: grammar
+    :module:
 
     :param entity: Optional grammar entity.
     :paramtype entity: grammar entity
@@ -369,6 +524,8 @@ Compounds
         :rtype is_present: boolean
 
 .. haka:function:: array(entity) -> entity
+    :objtype: grammar
+    :module:
 
     :param entity: Entity representing an element of the array.
     :paramtype entity: grammar entity
@@ -379,58 +536,76 @@ Compounds
 
     **Supported options:**
 
-    .. haka:data:: count
-        :module:
-        :idxctx: array
-        :objtype: option
-        :idxtype: array grammar option
+    .. haka:method:: GrammarElement:count(count) -> entity
 
-        :type: number
+        :param count: Number of elements.
+        :ptype count: number or function
+        :return entity: Current grammar entity.
+        :rtype entity: :haka:class:`GrammarEntity`
 
-        Number of element in the array.
+        Specify the number of element in the array.
 
-    .. haka:function:: count(result, context) -> count
-        :module:
-        :idxctx: array
-        :objtype: option
-        :idxtype: array grammar option
+        The *count* parameter can be a number or a function called
+        to compute the number of elements:
 
-        :param result: Current parse result.
-        :param context: Full parsing context.
-        :paramtype context: :haka:class:`ParseContext`
-        :return count: Number of element in the array.
-        :rtype count: number
+        .. haka:function:: count(result, context) -> count
+            :noindex:
+            :module:
 
-    .. haka:function:: untilcond(elem, context) -> should_stop
-        :module:
-        :idxctx: array
-        :objtype: option
-        :idxtype: array grammar option
+            :param result: Current parsing result.
+            :param context: Full parsing context.
+            :ptype context: :haka:class:`ParseContext`
+            :return count: Number of bytes.
+            :rtype count: number
 
-        :param elem: Current element of the array. When called before the first element, the parameter is ``nil``.
-        :param context: Full parsing context.
-        :paramtype context: :haka:class:`ParseContext`
-        :return should_stop: Number ``true`` when the end of the array is reached.
-        :rtype should_stop: number
+    .. haka:method:: GrammarElement:untilcond(check) -> entity
 
-    .. haka:function:: whilecond(elem, context) -> should_continue
-        :module:
-        :idxctx: array
-        :objtype: option
-        :idxtype: array grammar option
+        :param check: Function to verify a property.
+        :ptype check: function
+        :return entity: Current grammar entity.
+        :rtype entity: :haka:class:`GrammarEntity`
 
-        :param elem: Current element of the array. When called before the first element, the parameter is ``nil``.
-        :param context: Full parsing context.
-        :paramtype context: :haka:class:`ParseContext`
-        :return should_continue: Number ``false`` when the end of the array is reached.
-        :rtype should_continue: number
+        .. haka:function:: check(elem, context) -> should_stop
+            :module:
+            :noindex:
+
+            :param elem: Current element of the array.
+            :param context: Full parsing context.
+            :paramtype context: :haka:class:`ParseContext`
+            :return should_stop: Number ``true`` when the end of the array is reached.
+            :rtype should_stop: number
+
+        The check function is evaluated before every elements and should returns ``true``
+        when the last element is reached. When called before the first element, the
+        parameter *elem* is ``nil``.
+
+    .. haka:method:: GrammarElement:whilecond(check) -> entity
+
+        :param check: Function to verify a property.
+        :ptype check: function
+        :return entity: Current grammar entity.
+        :rtype entity: :haka:class:`GrammarEntity`
+
+        .. haka:function:: whilecond(elem, context) -> should_continue
+            :module:
+            :noindex:
+
+            :param elem: Current element of the array.
+            :param context: Full parsing context.
+            :paramtype context: :haka:class:`ParseContext`
+            :return should_continue: Number ``false`` when the end of the array is reached.
+            :rtype should_continue: number
+
+        The check function is evaluated before every elements and should returns ``true``
+        if more elements are expected. When called before the first element, the
+        parameter *elem* is ``nil``.
 
     **Usage:**
 
     ::
 
-        haka.grammar.array(haka.grammar.number(8))
-            :options{count = 10}
+        array(number(8))
+            :count(10)
 
 
 Converters
@@ -551,7 +726,7 @@ Parsing error
 
     .. haka:attribute:: ParseError.iterator
 
-        :type: :haka:class:`vbuffer_iterator`
+        :type: :haka:class:`vbuffer_iterator` |nbsp|
 
         Iterator at the position where the parsing error occurred.
 
@@ -576,20 +751,19 @@ Parsing context
 
     Parsing context used in all parsing related functions.
 
-    .. haka:attribute:: ParseContext.result
-        :readonly:
+    .. haka:method:: ParseContext:result(index)
 
-        Current parsing result.
+        :param index: Index of the result in the stack.
+        :ptype index: number
 
-    .. haka:attribute:: ParseContext.top
-        :readonly:
+        Get a parsing result from the stack of results. This stack holds all results
+        created during the parsing for records, arrays...
 
-        Top level parsing result.
-
-    .. haka:attribute:: ParseContext.prev_result
-        :readonly:
-
-        Previous level parsing result.
+        The index can be a normal index (ie. ``1``
+        being the top-level result...) or a pseudo index when it is negative. In this
+        case the return value is the result at the position stating from the last
+        element. For instance ``-1`` is the last result, ``-2`` is the last but one
+        result.
 
     .. haka:attribute:: ParseContext.user
 
@@ -601,3 +775,29 @@ Parsing context
         :rtype byte: number
 
         Return the next byte. This function can be used to resolve grammar ambiguity.
+
+
+Example
+-------
+
+This is an example of a very simple grammar expressed in Haka:
+
+::
+
+    local grammar = haka.grammar.new("example", fonction ()
+        elem = record{
+            field("A", number(32)),
+            field("B", number(32))
+        }
+
+        block = record{
+            field("count", number(32)),
+            field("list", array(elem)
+                :count(function (self)
+                    return self.count
+                end)
+            )
+        }
+
+        export(block)
+    end)

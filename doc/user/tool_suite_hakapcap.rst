@@ -37,7 +37,7 @@ Options
 
     Save unfiltered packets.
 
-.. option:: --luadebug
+.. option:: --debug-lua
 
     Start hakapcap and automatically attach the Haka debugger.
 

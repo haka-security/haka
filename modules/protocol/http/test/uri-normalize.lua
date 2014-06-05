@@ -2,8 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require('luaunit')
-
 TestHttpNormalize = {}
 
 function TestHttpNormalize:setUp()
@@ -56,5 +54,4 @@ for k, v in pairs(_tests) do
 	end
 end
 
-LuaUnit:setVerbosity(1)
-assert(LuaUnit:run('TestHttpNormalize') == 0)
+addTestSuite('TestHttpNormalize')

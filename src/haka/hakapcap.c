@@ -42,7 +42,8 @@ static void help(const char *program)
 	fprintf(stdout, "\t-l,--loglevel <level>: Set the log level\n");
 	fprintf(stdout, "\t                         (debug, info, warning, error or fatal)\n");
 	fprintf(stdout, "\t-a,--alert-to <file>:  Redirect alerts to given file\n");
-	fprintf(stdout, "\t--luadebug:            Activate lua debugging\n");
+	fprintf(stdout, "\t--debug-lua:           Activate lua debugging\n");
+	fprintf(stdout, "\t--debug-grammar:       Activate grammar internal graph dump (saved in file <name>.dot)\n");
 	fprintf(stdout, "\t--no-pass-through, --pass-through:\n");
 	fprintf(stdout, "\t                       Select pass-through mode (default: true)\n");
 	fprintf(stdout, "\t-o <output>:           Save result in a pcap file\n");
@@ -51,6 +52,7 @@ static void help(const char *program)
 static char *output = NULL, *alert_to = NULL;
 static bool pass_through = true;
 static bool lua_debugger = false;
+static bool grammar_debug = false;
 
 static int parse_cmdline(int *argc, char ***argv)
 {
@@ -63,7 +65,8 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "debug",           no_argument,       0, 'd' },
 		{ "loglevel",        required_argument, 0, 'l' },
 		{ "alert-to",        required_argument, 0, 'a' },
-		{ "luadebug",        no_argument,       0, 'L' },
+		{ "debug-lua",       no_argument,       0, 'L' },
+		{ "debug-grammar",   no_argument,       0, 'G' },
 		{ "no-pass-through", no_argument,       0, 'p' },
 		{ "pass-through",    no_argument,       0, 'P' },
 		{ 0,                 0,                 0, 0 }
@@ -106,6 +109,10 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'L':
 			lua_debugger = true;
+			break;
+
+		case 'G':
+			grammar_debug = true;
 			break;
 
 		default:
@@ -226,7 +233,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Main loop */
-	prepare(1, lua_debugger);
+	prepare(1, lua_debugger, grammar_debug);
 	start();
 
 	clean_exit();

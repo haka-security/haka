@@ -2,8 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require('luaunit')
-
 TestVBufferStream = {}
 
 function TestVBufferStream:gen_stream(f)
@@ -72,5 +70,4 @@ function TestVBufferStream:test_stream_blocking_available()
 	assertEquals(loop, 10)
 end
 
-LuaUnit:setVerbosity(1)
-assert(LuaUnit:run('TestVBufferStream') == 0)
+addTestSuite('TestVBufferStream')

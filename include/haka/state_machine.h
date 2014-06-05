@@ -50,5 +50,7 @@ void                  state_machine_instance_destroy(struct state_machine_instan
 void                  state_machine_instance_update(struct state_machine_instance *instance, struct state *newstate);
 void                  state_machine_instance_error(struct state_machine_instance *instance);
 struct state         *state_machine_instance_state(struct state_machine_instance *instance);
+bool                  state_machine_instance_isfinished(struct state_machine_instance *instance);
+bool                  state_machine_instance_iserror(struct state_machine_instance *instance);
 
 #endif /* _STATE_MACHINE_H */
