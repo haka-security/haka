@@ -33,7 +33,6 @@ struct luadebug_interactive
 
 #define EOF_MARKER   "'<eof>'"
 
-static mutex_t active_session_mutex = MUTEX_INIT;
 static struct luadebug_interactive *current_session;
 static mutex_t current_user_mutex;
 static struct luadebug_user        *current_user = NULL;
@@ -79,7 +78,7 @@ static void on_user_error()
 }
 
 void luadebug_interactive_enter(struct lua_State *L, const char *single, const char *multi,
-		const char *msg)
+		const char *msg, int env, struct luadebug_user *user)
 {
 	char *line, *full_line = NULL;
 	bool multiline = false;
@@ -88,7 +87,12 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 
 	{
 		mutex_lock(&current_user_mutex);
-		session.user = current_user;
+
+		if (!user) {
+			user = current_user;
+		}
+
+		session.user = user;
 
 		if (!session.user) {
 			message(HAKA_LOG_ERROR, L"interactive", L"no input/output handler");
@@ -100,8 +104,6 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 		mutex_unlock(&current_user_mutex);
 	}
 
-	mutex_lock(&active_session_mutex);
-
 	if (!single) single = ">  ";
 	if (!multi) multi = ">> ";
 
@@ -110,18 +112,27 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 	if (!session.user->start(session.user, "haka")) {
 		on_user_error();
 		luadebug_user_release(&session.user);
-		mutex_unlock(&active_session_mutex);
 		return;
 	}
 
 	current_session = &session;
 	LUA_STACK_MARK(L);
 
-	session.user->print(session.user, GREEN "entering interactive session" CLEAR ": %s\n", msg);
+	if (msg) {
+		session.user->print(session.user, "%s\n", msg);
+	}
 
 	session.L = L;
-	session.env_index = capture_env(L, 1);
-	assert(session.env_index != -1);
+
+	if (env == 0) {
+		session.env_index = capture_env(L, 1);
+	}
+	else {
+		if (env < 0) {
+			env = lua_gettop(L)+1+env;
+		}
+		session.env_index = env;
+	}
 
 	session.complete.stack_env = session.env_index;
 
@@ -175,13 +186,15 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 
 		multiline = false;
 
-		/* Change the chunk environment */
-		lua_pushvalue(L, session.env_index);
+		if (session.env_index >= 0) {
+			/* Change the chunk environment */
+			lua_pushvalue(L, session.env_index);
 #if HAKA_LUA52
-		lua_setupvalue(L, -2, 1);
+			lua_setupvalue(L, -2, 1);
 #else
-		lua_setfenv(L, -2);
+			lua_setfenv(L, -2);
 #endif
+		}
 
 		if (status == LUA_ERRSYNTAX) {
 			const char *message;
@@ -230,7 +243,10 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 	session.user->print(session.user, "\n");
 	session.user->print(session.user, GREEN "continue" CLEAR "\n");
 
-	lua_pop(L, 1);
+	if (session.env_index >= 0) {
+		lua_remove(L, session.env_index);
+	}
+
 	LUA_STACK_CHECK(L, 0);
 
 	if (!session.user->stop(session.user)) {
@@ -239,8 +255,6 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 
 	luadebug_user_release(&session.user);
 	current_session = NULL;
-
-	mutex_unlock(&active_session_mutex);
 }
 
 INIT void _luadebug_interactive_init()

@@ -9,7 +9,7 @@
 	#include <haka/luadebug/interactive.h>
 	#include "luadebug/debugger.h"
 
-	#define lua_luadebug_interactive_enter(single, multi, msg) luadebug_interactive_enter(L, single, multi, msg)
+	#define lua_luadebug_interactive_enter(single, multi, msg, user) luadebug_interactive_enter(L, single, multi, msg, 0, user)
 
 	#define lua_luadebug_debugger_start(break_immediatly) luadebug_debugger_start(L, break_immediatly)
 	#define lua_luadebug_debugger_stop()                  luadebug_debugger_stop(L)
@@ -37,7 +37,7 @@
 %nodefaultdtor;
 
 %rename(__interactive_enter) lua_luadebug_interactive_enter;
-void lua_luadebug_interactive_enter(const char *single, const char *multi, const char *msg);
+void lua_luadebug_interactive_enter(const char *single, const char *multi, const char *msg, void *user=NULL);
 
 %rename(__debugger) luadebug_debugger;
 struct luadebug_debugger {

@@ -8,7 +8,7 @@ function haka.interactive_rule(name)
 	return function (...)
 		local inputs = {...}
 
-		local dump = "interactive rule\ninputs = "
+		local dump = color.green .. "interactive rule:" .. color.clear .. "\ninputs = "
 		local function out(...)
 			dump = dump .. table.concat({...}, " ") .. "\n"
 		end

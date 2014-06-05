@@ -307,11 +307,28 @@ char *complete_callback_global(struct lua_State *L, struct luadebug_complete *co
 		context->operator = 0;
 		context->token = text;
 
+		if (context->stack_env >= 0) {
+			lua_pushvalue(L, context->stack_env);
+			if (!lua_getmetatable(L, -1)) {
+				lua_pop(L, 1);
+				return NULL;
+			}
+
+			lua_getfield(L, -1, "__index");
+			if (lua_isnil(L, -1)) {
+				lua_pop(L, 1);
+				return NULL;
+			}
+
+			lua_remove(L, -2);
+		}
+		else {
 #if HAKA_LUA52
-		lua_pushglobaltable(L);
+			lua_pushglobaltable(L);
 #else
-		lua_pushvalue(L, LUA_GLOBALSINDEX);
+			lua_pushvalue(L, LUA_GLOBALSINDEX);
 #endif
+		}
 	}
 
 	return complete_table(L, context, text, state, &complete_underscore_hidden);
@@ -320,12 +337,17 @@ char *complete_callback_global(struct lua_State *L, struct luadebug_complete *co
 char *complete_callback_fenv(struct lua_State *L, struct luadebug_complete *context,
 		const char *text, int state)
 {
-	if (state == 0) {
-		context->operator = 0;
-		context->token = text;
+	if (context->stack_env >= 0) {
+		if (state == 0) {
+			context->operator = 0;
+			context->token = text;
 
-		lua_pushvalue(L, context->stack_env);
+			lua_pushvalue(L, context->stack_env);
+		}
+
+		return complete_table(L, context, text, state, &complete_underscore_hidden);
 	}
-
-	return complete_table(L, context, text, state, &complete_underscore_hidden);
+	else {
+		return NULL;
+	}
 }

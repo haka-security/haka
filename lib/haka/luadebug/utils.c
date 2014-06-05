@@ -15,7 +15,7 @@
 #include <lauxlib.h>
 
 
-static int execute_call(lua_State *L, int n) {
+static int execute_call(lua_State *L, int n, struct luadebug_user *user) {
 	int status;
 	int h;
 
@@ -25,7 +25,7 @@ static int execute_call(lua_State *L, int n) {
 
 	status = lua_pcall(L, n, LUA_MULTRET, h);
 	if (status) {
-		printf(RED "%s\n" CLEAR, lua_tostring(L, -1));
+		user->print(user, RED "%s\n" CLEAR, lua_tostring(L, -1));
 		lua_pop(L, 1);
 	}
 
@@ -130,7 +130,7 @@ int execute_print(lua_State *L, struct luadebug_user *user, bool full, const cha
 	LUA_STACK_MARK(L);
 
 	g = lua_gettop(L);
-	status = execute_call(L, 0);
+	status = execute_call(L, 0, user);
 	h = lua_gettop(L) - g + 1;
 
 	for (i = h; i > 0; --i) {
