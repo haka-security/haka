@@ -15,7 +15,7 @@
 #include <haka/log.h>
 #include <haka/stat.h>
 #include <haka/alert.h>
-#include <haka/container/list.h>
+#include <haka/container/list2.h>
 #include <haka/luadebug/user.h>
 #include <haka/luadebug/debugger.h>
 #include <haka/luadebug/interactive.h>
@@ -34,8 +34,8 @@
 struct ctl_server_state;
 
 struct ctl_client_state {
+	struct list2_elem        list;
 	struct ctl_server_state *server;
-	struct list              list;
 	int                      fd;
 	bool                     thread_created;
 	thread_t                 thread;
@@ -50,12 +50,19 @@ struct ctl_server_state {
 	bool                     exiting;
 	bool                     binded;
 	mutex_t                  lock;
-	struct ctl_client_state *clients;
+	struct list2             clients;
 };
 
 struct ctl_server_state ctl_server = {0};
 
-static bool ctl_client_process_command(struct ctl_client_state *state, const char *command);
+enum clt_client_rc {
+	CTL_CLIENT_OK,
+	CTL_CLIENT_DONE,
+	CTL_CLIENT_DUP,
+	CTL_CLIENT_THREAD,
+};
+
+static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *state, const char *command);
 
 static void ctl_client_cleanup(struct ctl_client_state *state)
 {
@@ -69,7 +76,10 @@ static void ctl_client_cleanup(struct ctl_client_state *state)
 		state->fd = -1;
 	}
 
-	list_remove(state, &state->server->clients, NULL);
+	if (list2_elem_check(&state->list)) {
+		list2_erase(&state->list);
+	}
+
 	free(state);
 
 	mutex_unlock(&server_state->lock);
@@ -116,19 +126,23 @@ UNUSED static bool ctl_start_client_thread(struct ctl_client_state *state, void 
 	return true;
 }
 
-static void ctl_client_process(struct ctl_client_state *state)
+static enum clt_client_rc ctl_client_process(struct ctl_client_state *state)
 {
+	enum clt_client_rc rc;
 	char *command = ctl_recv_chars(state->fd);
+
 	if (!command) {
-		messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %ls", clear_error());
-		return;
+		const wchar_t *error = clear_error();
+		if (wcscmp(error, L"end of file") != 0) {
+			messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %ls", error);
+		}
+		return CTL_CLIENT_DONE;
 	}
 
-	if (ctl_client_process_command(state, command)) {
-		ctl_client_cleanup(state);
-	}
-
+	rc = ctl_client_process_command(state, command);
 	free(command);
+
+	return rc;
 }
 
 static void ctl_server_cleanup(struct ctl_server_state *state)
@@ -140,29 +154,33 @@ static void ctl_server_cleanup(struct ctl_server_state *state)
 	state->exiting = true;
 
 	if (state->thread_created) {
+		list2_iter iter, end;
+
 		thread_cancel(state->thread);
 
 		mutex_unlock(&state->lock);
 		thread_join(state->thread, &ret);
 		mutex_lock(&state->lock);
 
-		while (state->clients) {
-			struct ctl_client_state *current = state->clients;
-			if (current->thread_created) {
-				const thread_t client_thread = current->thread;
+		iter = list2_begin(&state->clients);
+		end = list2_end(&state->clients);
+		while (iter != end) {
+			struct ctl_client_state *client = list2_get(iter, struct ctl_client_state, list);
+			if (client->thread_created) {
+				const thread_t client_thread = client->thread;
 				thread_cancel(client_thread);
 
 				mutex_unlock(&state->lock);
 				thread_join(client_thread, &ret);
 				mutex_lock(&state->lock);
-			}
 
-			if (state->clients == current) {
-				ctl_client_cleanup(current);
+				iter = list2_next(iter);
+			}
+			else {
+				iter = list2_erase(iter);
+				ctl_client_cleanup(client);
 			}
 		}
-
-		state->clients = NULL;
 
 		if (state->fd >= 0) {
 			close(state->fd);
@@ -183,70 +201,18 @@ static void ctl_server_cleanup(struct ctl_server_state *state)
 	mutex_destroy(&state->lock);
 }
 
-static void *ctl_server_coreloop(void *param)
-{
-	struct ctl_server_state *state = (struct ctl_server_state *)param;
-	struct sockaddr_un addr;
-	sigset_t set;
-
-	/* Block all signal to let the main thread handle them */
-	sigfillset(&set);
-	if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
-		message(HAKA_LOG_FATAL, L"core", clear_error());
-		return NULL;
-	}
-
-	state->thread_created = true;
-
-	while (!state->exiting) {
-		socklen_t len = sizeof(addr);
-		int fd;
-
-		thread_testcancel();
-
-		fd = accept(state->fd, (struct sockaddr *)&addr, &len);
-		if (fd < 0) {
-			messagef(HAKA_LOG_DEBUG, MODULE, L"failed to accept ctl connection: %s", errno_error(errno));
-			continue;
-		}
-
-		{
-			struct ctl_client_state *client = NULL;
-
-			thread_setcancelstate(false);
-
-			client = malloc(sizeof(struct ctl_client_state));
-			if (!client) {
-				thread_setcancelstate(true);
-				message(HAKA_LOG_ERROR, MODULE, L"memmory error");
-				continue;
-			}
-
-			list_init(client);
-			client->server = state;
-			client->fd = fd;
-			client->thread_created = false;
-			list_insert_before(client, state->clients, &state->clients, NULL);
-
-			thread_setcancelstate(true);
-
-			ctl_client_process(client);
-		}
-	}
-
-	return NULL;
-}
-
-bool prepare_ctl_server()
+static bool ctl_server_init(struct ctl_server_state *state)
 {
 	struct sockaddr_un addr;
 	socklen_t len;
 	int err;
 
-	mutex_init(&ctl_server.lock, true);
+	mutex_init(&state->lock, true);
+
+	list2_init(&state->clients);
 
 	/* Create the socket */
-	if ((ctl_server.fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+	if ((state->fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
 		messagef(HAKA_LOG_FATAL, MODULE, L"cannot create ctl server socket: %s", errno_error(errno));
 		return false;
 	}
@@ -257,7 +223,7 @@ bool prepare_ctl_server()
 
 	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
-	err = bind(ctl_server.fd, (struct sockaddr *)&addr, len);
+	err = bind(state->fd, (struct sockaddr *)&addr, len);
 	if (err && errno == EADDRINUSE) {
 		if (unlink(HAKA_CTL_SOCKET_FILE)) {
 			messagef(HAKA_LOG_FATAL, MODULE, L"cannot remove ctl server socket: %s", errno_error(errno));
@@ -265,7 +231,7 @@ bool prepare_ctl_server()
 			return false;
 		}
 
-		err = bind(ctl_server.fd, (struct sockaddr *)&addr, len);
+		err = bind(state->fd, (struct sockaddr *)&addr, len);
 	}
 
 	if (err) {
@@ -274,9 +240,120 @@ bool prepare_ctl_server()
 		return false;
 	}
 
-	ctl_server.binded = true;
+	state->binded = true;
 
 	return true;
+}
+
+static void *ctl_server_coreloop(void *param)
+{
+	struct ctl_server_state *state = (struct ctl_server_state *)param;
+	struct sockaddr_un addr;
+	sigset_t set;
+	fd_set listfds, readfds;
+	int maxfd, rc;
+
+	/* Block all signal to let the main thread handle them */
+	sigfillset(&set);
+	if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
+		message(HAKA_LOG_FATAL, L"core", clear_error());
+		return NULL;
+	}
+
+	state->thread_created = true;
+
+	FD_ZERO(&listfds);
+	FD_SET(state->fd, &listfds);
+	maxfd = state->fd;
+
+	while (!state->exiting) {
+		readfds = listfds;
+		rc = select(maxfd+1, &readfds, NULL, NULL, NULL);
+
+		if (rc < 0) {
+			messagef(HAKA_LOG_FATAL, MODULE, L"failed to handle ctl connection: %s", errno_error(errno));
+			return NULL;
+		}
+		else if (rc > 0) {
+			if (FD_ISSET(state->fd, &readfds)) {
+				socklen_t len = sizeof(addr);
+				int fd;
+				struct ctl_client_state *client = NULL;
+
+				thread_testcancel();
+
+				fd = accept(state->fd, (struct sockaddr *)&addr, &len);
+				if (fd < 0) {
+					messagef(HAKA_LOG_DEBUG, MODULE, L"failed to accept ctl connection: %s", errno_error(errno));
+					continue;
+				}
+
+				thread_setcancelstate(false);
+
+				client = malloc(sizeof(struct ctl_client_state));
+				if (!client) {
+					thread_setcancelstate(true);
+					message(HAKA_LOG_ERROR, MODULE, L"memmory error");
+					continue;
+				}
+
+				list2_elem_init(&client->list);
+				client->server = state;
+				client->fd = fd;
+				client->thread_created = false;
+
+				mutex_lock(&state->lock);
+				list2_insert(list2_end(&state->clients), &client->list);
+				mutex_unlock(&state->lock);
+
+				thread_setcancelstate(true);
+
+				FD_SET(client->fd, &listfds);
+				if (client->fd > maxfd) maxfd = client->fd;
+
+				rc--;
+			}
+
+			if (rc > 0) {
+				list2_iter iter = list2_begin(&state->clients);
+				list2_iter end = list2_end(&state->clients);
+				while (iter != end) {
+					struct ctl_client_state *client = list2_get(iter, struct ctl_client_state, list);
+
+					if (FD_ISSET(client->fd, &readfds)) {
+						enum clt_client_rc rc = ctl_client_process(client);
+
+						if (rc == CTL_CLIENT_OK) {
+							iter = list2_next(iter);
+						}
+						else {
+							FD_CLR(client->fd, &listfds);
+
+							if (rc == CTL_CLIENT_DUP) client->fd = -1;
+
+							if (rc != CTL_CLIENT_THREAD) {
+								iter = list2_erase(iter);
+								ctl_client_cleanup(client);
+							}
+							else {
+								iter = list2_next(iter);
+							}
+						}
+					}
+					else {
+						iter = list2_next(iter);
+					}
+				}
+			}
+		}
+	}
+
+	return NULL;
+}
+
+bool prepare_ctl_server()
+{
+	return ctl_server_init(&ctl_server);
 }
 
 bool start_ctl_server()
@@ -410,15 +487,17 @@ struct redirect_alerter *redirect_alerter_create(d)
 	return alerter;
 }
 
-static bool ctl_client_process_command(struct ctl_client_state *state, const char *command)
+static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *state, const char *command)
 {
 	if (strcmp(command, "STATUS") == 0) {
 		ctl_send_chars(state->fd, "OK");
+		return CTL_CLIENT_OK;
 	}
 	else if (strcmp(command, "STOP") == 0) {
 		messagef(HAKA_LOG_INFO, MODULE, L"request to stop haka received");
 		ctl_send_chars(state->fd, "OK");
 		kill(getpid(), SIGTERM);
+		return CTL_CLIENT_DONE;
 	}
 	else if (strcmp(command, "LOGS") == 0) {
 		struct redirect_logger *logger = redirect_logger_create(state->fd);
@@ -427,7 +506,7 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 			ctl_send_chars(state->fd, "ERROR");
 			if (logger) logger->logger.destroy(&logger->logger);
 			if (alerter) alerter->alerter.destroy(&alerter->alerter);
-			return true;
+			return CTL_CLIENT_OK;
 		}
 
 		if (!add_logger(&logger->logger) ||
@@ -435,13 +514,13 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 			ctl_send_chars(state->fd, "ERROR");
 			logger->logger.destroy(&logger->logger);
 			alerter->alerter.destroy(&alerter->alerter);
-			return true;
+			return CTL_CLIENT_OK;
 		}
 
 		ctl_send_chars(state->fd, "OK");
 		logger->fd = state->fd;
 		alerter->fd = state->fd;
-		state->fd = -1;
+		return CTL_CLIENT_DUP;
 	}
 	else if (strcmp(command, "LOGLEVEL") == 0) {
 		char *level = ctl_recv_chars(state->fd);
@@ -453,6 +532,7 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 			setup_loglevel(level);
 			ctl_send_chars(state->fd, "OK");
 		}
+		return CTL_CLIENT_OK;
 	}
 	else if (strcmp(command, "STATS") == 0) {
 		FILE *file;
@@ -460,6 +540,7 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 		if (!file) {
 			messagef(HAKA_LOG_ERROR, MODULE, L"cannot open socket file: %ls", errno_error(errno));
 			ctl_send_chars(state->fd, "ERROR");
+			return CTL_CLIENT_OK;
 		}
 		else {
 			ctl_send_chars(state->fd, "OK");
@@ -467,40 +548,43 @@ static bool ctl_client_process_command(struct ctl_client_state *state, const cha
 			dump_stat(file);
 			fclose(file);
 			state->fd = -1;
+			return CTL_CLIENT_DONE;
 		}
 	}
 	else if (strcmp(command, "DEBUG") == 0) {
 		struct luadebug_user *remote_user = luadebug_user_remote(state->fd);
 		if (!remote_user) {
 			ctl_send_chars(state->fd, "ERROR");
-			return true;
+			return CTL_CLIENT_OK;
 		}
 
 		ctl_send_chars(state->fd, "OK");
-		state->fd = -1;
 
 		luadebug_debugger_user(remote_user);
 		luadebug_user_release(&remote_user);
 
 		thread_pool_attachdebugger(get_thread_pool());
+		return CTL_CLIENT_DUP;
 	}
 	else if (strcmp(command, "INTERACTIVE") == 0) {
 		struct luadebug_user *remote_user = luadebug_user_remote(state->fd);
 		if (!remote_user) {
 			ctl_send_chars(state->fd, "ERROR");
-			return true;
+			return CTL_CLIENT_OK;
 		}
 
 		ctl_send_chars(state->fd, "OK");
-		state->fd = -1;
 
 		luadebug_interactive_user(remote_user);
 		luadebug_user_release(&remote_user);
+		return CTL_CLIENT_DUP;
 	}
 	else if (strlen(command) > 0) {
 		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", command);
 		ctl_send_chars(state->fd, "ERROR");
+		return CTL_CLIENT_OK;
 	}
-
-	return true;
+	else {
+		return CTL_CLIENT_DONE;
+	}
 }
