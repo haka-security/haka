@@ -15,6 +15,11 @@
 
 struct cnx_table;
 
+struct cnx_stats {
+	size_t               packets;
+	size_t               bytes;
+};
+
 struct cnx_key {
 	ipv4addr             srcip;
 	ipv4addr             dstip;
@@ -25,6 +30,7 @@ struct cnx_key {
 struct cnx {
 	struct lua_object    lua_object;
 	struct cnx_key       key;
+	struct cnx_stats     stats[2];
 	bool                 dropped;
 	struct lua_ref       lua_priv;
 	uint32               id;
@@ -40,5 +46,6 @@ struct cnx *cnx_get_byid(struct cnx_table *table, uint32 id);
 
 void cnx_close(struct cnx *cnx);
 void cnx_drop(struct cnx *cnx);
+void cnx_update_stat(struct cnx *cnx, int direction, size_t size);
 
 #endif /* _HAKA_PROTO_IPV4_CNX_H */

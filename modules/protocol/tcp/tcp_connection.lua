@@ -362,6 +362,8 @@ function tcp_connection_dissector.method:restart()
 end
 
 function tcp_connection_dissector.method:emit(pkt, direction)
+	self.connection:update_stat(direction, pkt.ip.len)
+
 	self.state:transition('update', direction, pkt)
 end
 

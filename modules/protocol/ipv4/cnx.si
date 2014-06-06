@@ -75,6 +75,22 @@ struct cnx {
 			if ($self)
 				cnx_drop($self);
 		}
+
+		%rename(update_stat) _update_stat;
+		void _update_stat(const char *direction, int size)
+		{
+			if ($self) {
+				const int dir = strcmp(direction, "up") == 0 ? CNX_DIR_IN : CNX_DIR_OUT;
+				cnx_update_stat($self, dir, size);
+			}
+		}
+
+		%immutable;
+		int id { return $self->id; }
+		int in_bytes { return $self->stats[CNX_DIR_IN].bytes; }
+		int out_bytes { return $self->stats[CNX_DIR_OUT].bytes; }
+		int in_pkts { return $self->stats[CNX_DIR_IN].packets; }
+		int out_pkts { return $self->stats[CNX_DIR_OUT].packets; }
 	}
 };
 

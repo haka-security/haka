@@ -141,6 +141,7 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 {
 	struct cnx_table_elem *elem;
 	bool dropped;
+	int i;
 
 	elem = cnx_find(table, key, NULL, &dropped);
 	if (elem) {
@@ -164,6 +165,12 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 	elem->cnx.key = *key;
 	elem->cnx.id = atomic_inc(&table->id);
 	elem->cnx.dropped = false;
+
+	for (i=0; i<2; ++i) {
+		elem->cnx.stats[i].packets = 0;
+		elem->cnx.stats[i].bytes = 0;
+	}
+
 	lua_ref_init(&elem->cnx.lua_priv);
 	elem->table = table;
 
@@ -256,4 +263,10 @@ void cnx_drop(struct cnx *cnx)
 
 	cnx_release(elem->table, elem, false);
 	elem->cnx.dropped = true;
+}
+
+void cnx_update_stat(struct cnx *cnx, int direction, size_t size)
+{
+	++cnx->stats[direction].packets;
+	cnx->stats[direction].bytes += size;
 }
