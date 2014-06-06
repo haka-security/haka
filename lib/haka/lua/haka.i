@@ -199,6 +199,8 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 
 	haka.console.threads = haka._threads_info
 	haka._threads_info = nil
+
+	persist = {}
 }
 
 %include "lua/vbuffer.si"
