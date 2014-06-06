@@ -6,7 +6,7 @@
 #include <haka/thread.h>
 #include <haka/error.h>
 #include <haka/log.h>
-#include <haka/container/list.h>
+#include <haka/container/list2.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
 #include <haka/lua/marshal.h>
@@ -18,13 +18,13 @@
 
 
 struct remote_launch {
-	struct list    list;
-	void         (*callback)(void *);
-	void          *data;
-	int            state;
-	const wchar_t *error;
-	bool           own_error;
-	semaphore_t    sync;
+	struct list2_elem   list;
+	void              (*callback)(void *);
+	void               *data;
+	int                 state;
+	const wchar_t      *error;
+	bool                own_error;
+	semaphore_t         sync;
 };
 
 struct engine_thread {
@@ -34,15 +34,17 @@ struct engine_thread {
 	thread_t                       thread;
 	int                            id;
 	struct lua_State              *lua_state;
-	struct remote_launch          *first_remote_launch;
-	struct remote_launch          *last_remote_launch;
+	struct list2                   remote_launches;
 };
 
 static local_storage_t engine_thread_localstorage;
 static struct engine_thread **engine_threads = NULL;
 static size_t engine_threads_count = 0;
 
-static void _handler(int sig, siginfo_t *si, void *uc) {}
+static void _handler(int sig, siginfo_t *si, void *uc)
+{
+	/* Nothing to do */
+}
 
 INIT static void engine_init()
 {
@@ -95,6 +97,7 @@ struct engine_thread *engine_thread_init(struct lua_State *state, int id)
 	new->thread = thread_current();
 	new->lua_state = state;
 	new->id = id;
+	list2_init(&new->remote_launches);
 	thread_setid(id);
 
 	sigfillset(&mask);
@@ -112,7 +115,8 @@ struct engine_thread *engine_thread_init(struct lua_State *state, int id)
 
 struct engine_thread *engine_thread_byid(int id)
 {
-	return engine_threads[id];
+	if (id < engine_threads_count) return engine_threads[id];
+	else return NULL;
 }
 
 int engine_thread_id(struct engine_thread *thread)
@@ -122,7 +126,6 @@ int engine_thread_id(struct engine_thread *thread)
 
 static void remote_launch_release(struct engine_thread *thread, struct remote_launch *current)
 {
-	list_remove(current, &thread->first_remote_launch, &thread->last_remote_launch);
 	semaphore_post(&current->sync);
 }
 
@@ -131,15 +134,17 @@ void engine_thread_cleanup(struct engine_thread *thread)
 	if (thread) {
 		mutex_lock(&thread->remote_launch_lock);
 
-		struct remote_launch *cur, *iter = thread->first_remote_launch;
-		while (iter) {
-			cur = iter;
-			iter = list_next(iter);
+		const list2_iter end = list2_end(&thread->remote_launches);
+		list2_iter iter;
+		for (iter = list2_begin(&thread->remote_launches); iter != end; ) {
+			struct remote_launch *current = list2_get(iter, struct remote_launch, list);
 
-			cur->state = -1;
-			cur->error = L"aborted";
-			cur->own_error = false;
-			remote_launch_release(thread, cur);
+			current->state = -1;
+			current->error = L"aborted";
+			current->own_error = false;
+
+			iter = list2_erase(iter);
+			remote_launch_release(thread, current);
 		}
 
 		mutex_unlock(&thread->remote_launch_lock);
@@ -181,7 +186,7 @@ bool engine_thread_remote_launch(struct engine_thread *thread, void (*callback)(
 	struct remote_launch new;
 	assert(thread);
 
-	list_init(&new);
+	list2_elem_init(&new.list);
 	new.callback = callback;
 	new.data = data;
 	new.state = -1;
@@ -190,7 +195,7 @@ bool engine_thread_remote_launch(struct engine_thread *thread, void (*callback)(
 	semaphore_init(&new.sync, 0);
 
 	mutex_lock(&thread->remote_launch_lock);
-	list_insert_after(&new, thread->last_remote_launch, &thread->first_remote_launch, &thread->last_remote_launch);
+	list2_insert(list2_end(&thread->remote_launches), &new.list);
 	mutex_unlock(&thread->remote_launch_lock);
 
 	/* Send SIGUSR1 to exit any waiting function (capture function for instance) */
@@ -248,33 +253,61 @@ static void _lua_remote_launcher(void *_data)
 
 int engine_thread_lua_remote_launch(struct engine_thread *thread, struct lua_State *L, int index)
 {
-	struct lua_remote_launch_data data;
-
-	data.code = lua_marshal(L, index, &data.size);
-	if (!data.code) {
+	size_t codesize;
+	char *result, *code = lua_marshal(L, index, &codesize);
+	if (!code) {
 		return -1;
 	}
 
-	data.res = NULL;
-	data.res_size = 0;
-
-	if (!engine_thread_remote_launch(thread, _lua_remote_launcher, &data)) {
-		free(data.code);
+	result = engine_thread_raw_lua_remote_launch(thread, code, &codesize);
+	if (check_error()) {
+		free(code);
 		return -1;
 	}
 
-	messagef(HAKA_LOG_DEBUG, L"engine", L"lua remote launch: %llu bytes, result: %llu bytes", data.size, data.res_size);
+	free(code);
 
-	if (data.res) {
-		if (!lua_unmarshal(L, data.res, data.res_size)) {
-			free(data.res);
+	if (result) {
+		if (!lua_unmarshal(L, result, codesize)) {
+			free(result);
 			return -1;
 		}
-		free(data.res);
+		free(result);
 		return 1;
 	}
 	else {
 		return 0;
+	}
+}
+
+char* engine_thread_raw_lua_remote_launch(struct engine_thread *thread, const char *code, size_t *size)
+{
+	struct lua_remote_launch_data data;
+
+	assert(code);
+	assert(size);
+
+	data.code = (char *)code;
+	data.size = *size;
+	data.res = NULL;
+	data.res_size = 0;
+
+	messagef(HAKA_LOG_DEBUG, L"engine", L"lua remote launch on thread %d: %llu bytes",
+	         engine_thread_id(thread), data.size);
+
+	if (!engine_thread_remote_launch(thread, _lua_remote_launcher, &data)) {
+		return NULL;
+	}
+
+	messagef(HAKA_LOG_DEBUG, L"engine", L"lua remote launch result on thread %d: %llu bytes",
+	         engine_thread_id(thread), data.res_size);
+
+	if (data.res) {
+		*size = data.res_size;
+		return data.res;
+	}
+	else {
+		return NULL;
 	}
 }
 
@@ -283,24 +316,24 @@ static void _engine_thread_check_remote_launch(void *_thread)
 	struct engine_thread *thread = (struct engine_thread *)_thread;
 
 	mutex_lock(&thread->remote_launch_lock);
-	if (thread->first_remote_launch) {
-		struct remote_launch *cur, *iter = thread->first_remote_launch;
-		while (iter) {
-			cur = iter;
-			iter = list_next(iter);
 
-			cur->callback(cur->data);
-			if (check_error()) {
-				cur->error = wcsdup(clear_error());
-				cur->own_error = true;
-				cur->state = -1;
-			}
-			else {
-				cur->state = 0;
-			}
+	const list2_iter end = list2_end(&thread->remote_launches);
+	list2_iter iter;
+	for (iter = list2_begin(&thread->remote_launches); iter != end; ) {
+		struct remote_launch *current = list2_get(iter, struct remote_launch, list);
 
-			remote_launch_release(thread, cur);
+		current->callback(current->data);
+		if (check_error()) {
+			current->error = wcsdup(clear_error());
+			current->own_error = true;
+			current->state = -1;
 		}
+		else {
+			current->state = 0;
+		}
+
+		iter = list2_erase(iter);
+		remote_launch_release(thread, current);
 	}
 }
 
@@ -312,7 +345,7 @@ static void _engine_thread_check_remote_cleanup(void *_thread)
 
 void engine_thread_check_remote_launch(struct engine_thread *thread)
 {
-	if (thread->first_remote_launch) {
+	if (!list2_empty(&thread->remote_launches)) {
 		thread_protect(_engine_thread_check_remote_launch, thread,
 				_engine_thread_check_remote_cleanup, thread);
 	}

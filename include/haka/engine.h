@@ -41,6 +41,7 @@ volatile struct packet_stats  *engine_thread_statistics(struct engine_thread *th
 
 bool                           engine_thread_remote_launch(struct engine_thread *thread, void (*callback)(void *), void *data);
 int                            engine_thread_lua_remote_launch(struct engine_thread *thread, struct lua_State *L, int index);
+char*                          engine_thread_raw_lua_remote_launch(struct engine_thread *thread, const char *code, size_t *size);
 void                           engine_thread_check_remote_launch(struct engine_thread *thread);
 
 #endif /* _HAKA_ENGINE_H */
