@@ -119,6 +119,12 @@ function list.method:add(data)
 	table.append(rawget(self, '_data'), data)
 end
 
+function list.method:addall(data)
+	for _,d in ipairs(data) do
+		self:add(d)
+	end
+end
+
 function list.method:_aggregate()
 	local aggregator = class.classof(self).field_aggregate
 	local data = rawget(self, '_data')

@@ -499,6 +499,60 @@ end
 
 tcp.select_next_dissector(tcp_connection_dissector)
 
+--
+-- Console utilities
+--
+
+haka.console.tcp = {}
+
+function haka.console.tcp.list_connections()
+	local ret = {}
+	for _, cnx in ipairs(tcp_connection_dissector.cnx_table:all()) do
+		if cnx.data then
+			local tcp_data = cnx.data:namespace('tcp_connection')
+
+			table.insert(ret, {
+				thread = haka.current_thread(),
+				id = tcp_data.connection.id,
+				srcip = tcp_data.srcip,
+				srcport = tcp_data.srcport,
+				dstip = tcp_data.dstip,
+				dstport = tcp_data.dstport,
+				state = tcp_data.state.current,
+				in_pkts = tcp_data.connection.in_pkts,
+				in_bytes = tcp_data.connection.in_bytes,
+				out_pkts = tcp_data.connection.out_pkts,
+				out_bytes = tcp_data.connection.out_bytes
+			})
+		end
+	end
+	return ret
+end
+
+function haka.console.tcp.drop_connection(id)
+	local tcp_conn = tcp_connection_dissector.cnx_table:get_byid(id)
+	if not tcp_conn then
+		error("unknown tcp connection")
+	end
+
+	if tcp_conn.data then
+		local tcp_data = tcp_conn.data:namespace('tcp_connection')
+		tcp_data:drop()
+	end
+end
+
+function haka.console.tcp.reset_connection(id)
+	local tcp_conn = tcp_connection_dissector.cnx_table:get_byid(id)
+	if not tcp_conn then
+		error("unknown tcp connection")
+	end
+
+	if tcp_conn.data then
+		local tcp_data = tcp_conn.data:namespace('tcp_connection')
+		tcp_data:reset()
+	end
+end
+
 return {
 	events = tcp_connection_dissector.events
 }
