@@ -15,6 +15,7 @@
 #include <haka/log.h>
 #include <haka/stat.h>
 #include <haka/alert.h>
+#include <haka/engine.h>
 #include <haka/container/list2.h>
 #include <haka/luadebug/user.h>
 #include <haka/luadebug/debugger.h>
@@ -578,6 +579,63 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 		luadebug_interactive_user(remote_user);
 		luadebug_user_release(&remote_user);
 		return CTL_CLIENT_DUP;
+	}
+	else if (strcmp(command, "EXECUTE") == 0) {
+		int thread = ctl_recv_int(state->fd);
+		if (check_error()) {
+			ctl_send_chars(state->fd, "ERROR", -1);
+			return CTL_CLIENT_OK;
+		}
+
+		size_t len;
+		char *code = ctl_recv_chars(state->fd, &len);
+		if (!code) {
+			ctl_send_chars(state->fd, "ERROR", -1);
+			return CTL_CLIENT_OK;
+		}
+
+		/* Run on the first thread when the thread id is 'any' */
+		if (thread == -2) thread = 0;
+
+		if (thread == -1) {
+			int i;
+			struct engine_thread *engine_thread;
+			for (i=0;; ++i) {
+				char *result;
+
+				engine_thread = engine_thread_byid(i);
+				if (!engine_thread) break;
+
+				result = engine_thread_raw_lua_remote_launch(engine_thread, code, &len);
+				if (result) {
+					ctl_send_chars(state->fd, "RESULT", -1);
+					ctl_send_chars(state->fd, result, len);
+					free(result);
+				}
+			}
+
+			ctl_send_chars(state->fd, "OK", -1);
+		}
+		else {
+			struct engine_thread *engine_thread = engine_thread_byid(thread);
+			if (!engine_thread) {
+				ctl_send_chars(state->fd, "ERROR", -1);
+				free(code);
+				return CTL_CLIENT_OK;
+			}
+
+			char *result = engine_thread_raw_lua_remote_launch(engine_thread, code, &len);
+			if (result) {
+				ctl_send_chars(state->fd, "RESULT", -1);
+				ctl_send_chars(state->fd, result, len);
+				free(result);
+			}
+
+			ctl_send_chars(state->fd, "OK", -1);
+		}
+
+		free(code);
+		return CTL_CLIENT_OK;
 	}
 	else if (strlen(command) > 0) {
 		messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", command);
