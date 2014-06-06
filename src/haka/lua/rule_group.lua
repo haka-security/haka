@@ -3,6 +3,7 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 local class = require('class')
+local rule = require('rule')
 
 local rule_group = class.class('RuleGroup')
 
@@ -14,12 +15,15 @@ function rule_group.method:__init(args, continue)
 	assert(not args.final or type(args.final) == 'function', "rule group final function expected")
 	assert(not args.options or type(args.options) == 'table', "rule group options should be table")
 
+	self.hook = args.hook
+	self.name = args.name
 	self.rules = {}
 	self.init = args.init or function () end
 	self.continue = args.continue or function () return true end
 	self.final = args.final or function () end
 	self.event_continue = continue
 	self.options = args.options or {}
+	self.type = 'group'
 end
 
 function rule_group.method:rule(eval)
@@ -49,8 +53,12 @@ end
 
 function haka.rule_group(args)
 	local group = rule_group:new(args, args.hook.continue)
+
 	haka.context.connections:register(args.hook,
 		function (...) group:eval(...) end,
 		args.options)
+
+	table.insert(rule.rules, group)
+
 	return group
 end
