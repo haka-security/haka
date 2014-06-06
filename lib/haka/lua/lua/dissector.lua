@@ -299,5 +299,21 @@ function dissector.other_direction(dir)
 	return other_direction[dir]
 end
 
+function haka.console.events()
+	local ret = {}
+	local event = {}
+	for disname, dissector in pairs(dissectors) do
+		for _, event in pairs(dissector.events) do
+			local er = { event=event.name, rule_count=0 }
+			table.insert(ret, er)
+			event[event.name] = er
+		end
+	end
+	for event, listeners in pairs(haka.context.connections) do
+		event[event.name].rule_count = #listeners
+	end
+	return ret
+end
+
 
 haka.dissector = dissector

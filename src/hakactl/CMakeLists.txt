@@ -31,6 +31,7 @@ install(TARGETS hakactl RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/sbin)
 
 lua_compile(NAME hakactl-lua FILES
 	lua/thread.lua
+	lua/event.lua
 )
 lua_install(TARGET hakactl-lua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/console)
 
