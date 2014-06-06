@@ -52,6 +52,59 @@ struct cnx_table {
 
 STRUCT_UNKNOWN_KEY_ERROR(cnx_table);
 
+%native(_cnx_table_dump_all) int cnx_table_dump_all(lua_State *L);
+
+%{
+
+	static bool pushpcnx(void *_L, struct cnx *ptr, int index)
+	{
+		lua_State *L = (lua_State *)_L;
+
+		lua_pushnumber(L, index+1);
+
+		if (!lua_object_push(L, ptr, &ptr->lua_object, SWIGTYPE_p_cnx, 0)) {
+			lua_pop(L, 1);
+			return false;
+		}
+
+		lua_settable(L, -3);
+		return true;
+	}
+
+	int cnx_table_dump_all(lua_State *L)
+	{
+		struct cnx_table *table = NULL;
+		bool show_dropped = false;
+		int SWIG_arg = 0;
+		int n = lua_gettop(L);
+
+		SWIG_check_num_args("cnx_table::all", 1, 2)
+
+		if (!SWIG_IsOK(SWIG_ConvertPtr(L, 1, (void**)&table, SWIGTYPE_p_cnx_table, 0)) || !table){
+			SWIG_fail_ptr("cnx_table::all", 1, SWIGTYPE_p_cnx_table);
+		}
+
+		if (n == 3) {
+			show_dropped = lua_toboolean(L, 2);
+		}
+
+		lua_newtable(L);
+		SWIG_arg++;
+		cnx_foreach(table, show_dropped, pushpcnx, L);
+		return SWIG_arg;
+
+	fail:
+		return lua_error(L);
+	}
+%}
+
+%luacode{
+	local this = unpack({...})
+
+	swig.getclassmetatable('cnx_table')['.fn'].all = this._cnx_table_dump_all
+	this._cnx_table_dump_all = nil
+}
+
 struct cnx {
 	%extend {
 		struct lua_ref data;

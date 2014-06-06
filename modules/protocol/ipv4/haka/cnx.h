@@ -39,6 +39,7 @@ struct cnx {
 
 struct cnx_table *cnx_table_new(void (*cnx_release)(struct cnx *, bool));
 void              cnx_table_release(struct cnx_table *table);
+bool              cnx_foreach(struct cnx_table *table, bool include_dropped, bool (*callback)(void *data, struct cnx *, int index), void *data);
 
 struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key);
 struct cnx *cnx_get(struct cnx_table *table, struct cnx_key *key, int *direction, bool *dropped);

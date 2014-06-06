@@ -227,6 +227,26 @@ struct cnx *cnx_get(struct cnx_table *table, struct cnx_key *key,
 	}
 }
 
+bool cnx_foreach(struct cnx_table *table, bool include_dropped, bool (*callback)(void *data, struct cnx *, int index), void *data)
+{
+	struct cnx_table_elem *ptr, *tmp;
+	int index = 0;
+
+	mutex_lock(&table->mutex);
+
+	HASH_ITER(hh, table->head, ptr, tmp) {
+		if (include_dropped || !ptr->cnx.dropped) {
+			if (!callback(data, &ptr->cnx, index++)) {
+				mutex_unlock(&table->mutex);
+				return false;
+			}
+		}
+	}
+
+	mutex_unlock(&table->mutex);
+	return true;
+}
+
 void cnx_close(struct cnx* cnx)
 {
 	struct cnx_table_elem *elem = CNX_ELEM(cnx);
