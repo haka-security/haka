@@ -185,7 +185,7 @@ module.formatter = {}
 local num_units = { 'k', 'M', 'G', 'T' }
 
 function module.formatter.unit(num)
-	if num < 1000 then return tostring(num) end
+	if not num or num < 1000 then return tostring(num) end
 
 	for _,u in ipairs(num_units) do
 		num = num / 1000
