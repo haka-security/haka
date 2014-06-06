@@ -43,6 +43,10 @@ struct cnx_table {
 
 			return cnx;
 		}
+
+		struct cnx *get_byid(int id) {
+			return cnx_get_byid($self, id);
+		}
 	}
 };
 

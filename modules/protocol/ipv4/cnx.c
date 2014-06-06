@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "haka/cnx.h"
-#include <haka/thread.h>
-#include <haka/log.h>
-#include <haka/error.h>
-#include <haka/container/hash.h>
-
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
 #include <assert.h>
+
+#include <haka/cnx.h>
+#include <haka/thread.h>
+#include <haka/log.h>
+#include <haka/error.h>
+#include <haka/container/hash.h>
 
 #define CNX_ELEM(var) ((struct cnx_table_elem *)((uint8 *)var - offsetof(struct cnx_table_elem, cnx)))
 
@@ -25,6 +25,7 @@ struct cnx_table {
 	mutex_t                 mutex;
 	struct cnx_table_elem  *head;
 	void                  (*cnx_release)(struct cnx *, bool);
+	atomic_t                id;
 };
 
 static const size_t hash_keysize = sizeof(struct cnx_key);
@@ -50,6 +51,7 @@ struct cnx_table *cnx_table_new(void (*cnx_release)(struct cnx *, bool))
 
 	table->head = NULL;
 	table->cnx_release = cnx_release;
+	atomic_set(&table->id, 1);
 
 	return table;
 }
@@ -160,6 +162,7 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 
 	elem->cnx.lua_object = lua_object_init;
 	elem->cnx.key = *key;
+	elem->cnx.id = atomic_inc(&table->id);
 	elem->cnx.dropped = false;
 	lua_ref_init(&elem->cnx.lua_priv);
 	elem->table = table;
@@ -176,6 +179,23 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 	}
 
 	return &elem->cnx;
+}
+
+struct cnx *cnx_get_byid(struct cnx_table *table, uint32 id)
+{
+	struct cnx_table_elem *ptr, *tmp;
+
+	mutex_lock(&table->mutex);
+
+	HASH_ITER(hh, table->head, ptr, tmp) {
+		if (ptr->cnx.id == id) {
+			mutex_unlock(&table->mutex);
+			return &ptr->cnx;
+		}
+	}
+
+	mutex_unlock(&table->mutex);
+	return NULL;
 }
 
 struct cnx *cnx_get(struct cnx_table *table, struct cnx_key *key,

@@ -27,6 +27,7 @@ struct cnx {
 	struct cnx_key       key;
 	bool                 dropped;
 	struct lua_ref       lua_priv;
+	uint32               id;
 	void                *priv;
 };
 
@@ -35,6 +36,7 @@ void              cnx_table_release(struct cnx_table *table);
 
 struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key);
 struct cnx *cnx_get(struct cnx_table *table, struct cnx_key *key, int *direction, bool *dropped);
+struct cnx *cnx_get_byid(struct cnx_table *table, uint32 id);
 
 void cnx_close(struct cnx *cnx);
 void cnx_drop(struct cnx *cnx);
