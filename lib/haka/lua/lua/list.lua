@@ -4,9 +4,10 @@
 
 local module = {}
 
+local class = require('class')
 local color = require('color')
 
-local list = class('list')
+local list = class.class('list')
 
 local function format_list(headers, formatter, indent, print, content, extra)
 	local column_size = {}
@@ -62,7 +63,11 @@ local function format_list(headers, formatter, indent, print, content, extra)
 	end
 end
 
-function list.__len(self)
+function list.method:__init()
+	rawset(self, '_data', {})
+end
+
+function list.method:__len(self)
 	local data = rawget(self, '_data')
 	if data then
 		return #self._data
@@ -70,12 +75,12 @@ function list.__len(self)
 end
 
 function list.method:__pprint(indent, print)
-	format_list(classof(self).field, classof(self).field_format,
+	format_list(class.classof(self).field, class.classof(self).field_format,
 		indent, print, self._data, self:_aggregate())
 end
 
 function list.method:print()
-	format_list(classof(self).field, classof(self).field_format,
+	format_list(class.classof(self).field, class.classof(self).field_format,
 		'', print, self._data,  self:_aggregate())
 end
 
@@ -110,16 +115,16 @@ function list.method:sort(order, invert)
 	return self
 end
 
-function list.method:set(data)
-	self._data = data
+function list.method:add(data)
+	table.append(rawget(self, '_data'), data)
 end
 
 function list.method:_aggregate()
-	local aggregator = classof(self).field_aggregate
+	local aggregator = class.classof(self).field_aggregate
 	local data = rawget(self, '_data')
 	if aggregator and data and #data > 1 then
 		local agg = {}
-		for _,h in ipairs(classof(self).field) do
+		for _,h in ipairs(class.classof(self).field) do
 			if aggregator[h] then
 				local values = {}
 				for _,r in ipairs(data) do
@@ -137,10 +142,10 @@ end
 function list.method:get(name)
 	local data = rawget(self, '_data')
 	if data then
-		local key = classof(self).key
+		local key = class.classof(self).key
 		for _,r in ipairs(data) do
 			if r[key] == name then
-				local ret = classof(self):new()
+				local ret = class.classof(self):new()
 				ret._data = { r }
 				return ret
 			end
@@ -157,7 +162,7 @@ function list.method:__index(name)
 		else
 			local elem = data[name]
 			if elem then
-				local ret = classof(self):new()
+				local ret = class.classof(self):new()
 				ret._data = { elem }
 				return ret
 			else
