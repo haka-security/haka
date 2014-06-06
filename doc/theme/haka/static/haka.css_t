@@ -325,6 +325,14 @@ dl.method dt + dt, dl.data dt + dt, dl.attribute dt + dt {
 	padding-left: 0;
 }
 
+#protocol-dissection-smtp-case-study li.toctree-l1 {
+	list-style: disc;
+}
+
+#protocol-dissection-smtp-case-study .toctree-wrapper > ul {
+	padding-left: 40px;
+}
+
 /* Toctree already are numbered so we can remove ticks */
 li.toctree-l1 {
 	list-style: none;
