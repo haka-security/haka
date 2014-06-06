@@ -172,7 +172,9 @@ function list.method:__index(name)
 	end
 end
 
-module.list = list
+function module.new(name)
+	return class.class(name, list)
+end
 
 --
 -- Formatter

@@ -3,9 +3,8 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 local list = require('list')
-local class = require('class')
 
-local thread_info = class.class('thread_info', list.list)
+local thread_info = list.new('thread_info')
 
 thread_info.field = {
 	'id', 'status', 'recv_pkt', 'recv_bytes',
