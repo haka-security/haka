@@ -15,6 +15,7 @@
 #include <haka/alert.h>
 #include <haka/config.h>
 #include <haka/colors.h>
+#include <haka/engine.h>
 
 char *module_prefix = HAKA_MODULE_PREFIX;
 char *module_suffix = HAKA_MODULE_SUFFIX;
@@ -87,6 +88,57 @@ struct time {
 };
 
 STRUCT_UNKNOWN_KEY_ERROR(time);
+
+%native(threads_info) int threads_info(lua_State *L);
+
+%{
+	int threads_info(struct lua_State *L)
+	{
+		int i;
+
+		lua_newtable(L);
+
+		for (i=0;; ++i) {
+			struct engine_thread *engine = engine_thread_byid(i);
+			if (!engine) break;
+
+			volatile struct packet_stats *packet_stats = engine_thread_statistics(engine);
+
+			lua_pushnumber(L, i+1);
+
+			lua_newtable(L);
+
+			lua_pushnumber(L, i);
+			lua_setfield(L, -2, "id");
+
+			switch (engine_thread_status(engine)) {
+			case THREAD_RUNNING: lua_pushstring(L, "running"); break;
+			case THREAD_WAITING: lua_pushstring(L, "waiting"); break;
+			case THREAD_DEBUG:   lua_pushstring(L, "debug"); break;
+			case THREAD_DEFUNC:  lua_pushstring(L, "defunc"); break;
+			case THREAD_STOPPED: lua_pushstring(L, "stopped"); break;
+			default:             assert(0);
+			}
+
+			lua_setfield(L, -2, "status");
+
+			lua_pushnumber(L, (double)packet_stats->recv_packets);
+			lua_setfield(L, -2, "recv_pkt");
+			lua_pushnumber(L, (double)packet_stats->recv_bytes);
+			lua_setfield(L, -2, "recv_bytes");
+			lua_pushnumber(L, (double)packet_stats->trans_packets);
+			lua_setfield(L, -2, "trans_pkt");
+			lua_pushnumber(L, (double)packet_stats->trans_bytes);
+			lua_setfield(L, -2, "trans_bytes");
+			lua_pushnumber(L, (double)packet_stats->drop_packets);
+			lua_setfield(L, -2, "drop_pkt");
+
+			lua_settable(L, -3);
+		}
+
+		return 1;
+	}
+%}
 
 %luacode {
 	haka = unpack({...})

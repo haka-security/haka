@@ -13,6 +13,11 @@ lua_compile(NAME haka-lua FILES
 lua_compile(NAME haka-lua FILES lua/interactive.lua FLAGS ${LUA_FLAGS_DEBUG})
 lua_install(TARGET haka-lua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/core)
 
+lua_compile(NAME haka-lua-console FILES
+	lua/console/threads.lua
+)
+lua_install(TARGET haka-lua-console DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/module/console)
+
 # Build common sources
 add_library(haka-common STATIC
 	app.c
