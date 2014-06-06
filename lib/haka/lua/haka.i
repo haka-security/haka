@@ -89,7 +89,7 @@ struct time {
 
 STRUCT_UNKNOWN_KEY_ERROR(time);
 
-%native(threads_info) int threads_info(lua_State *L);
+%native(_threads_info) int threads_info(lua_State *L);
 
 %{
 	int threads_info(struct lua_State *L)
@@ -194,6 +194,11 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	function haka.abort()
 		error(nil)
 	end
+
+	haka.console = {}
+
+	haka.console.threads = haka._threads_info
+	haka._threads_info = nil
 }
 
 %include "lua/vbuffer.si"

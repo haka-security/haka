@@ -607,6 +607,12 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 				if (!engine_thread) break;
 
 				result = engine_thread_raw_lua_remote_launch(engine_thread, code, &len);
+				if (check_error()) {
+					ctl_send_chars(state->fd, "ERROR", -1);
+					free(code);
+					return CTL_CLIENT_OK;
+				}
+
 				if (result) {
 					ctl_send_chars(state->fd, "RESULT", -1);
 					ctl_send_chars(state->fd, result, len);
@@ -625,6 +631,12 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 			}
 
 			char *result = engine_thread_raw_lua_remote_launch(engine_thread, code, &len);
+			if (check_error()) {
+				ctl_send_chars(state->fd, "ERROR", -1);
+				free(code);
+				return CTL_CLIENT_OK;
+			}
+
 			if (result) {
 				ctl_send_chars(state->fd, "RESULT", -1);
 				ctl_send_chars(state->fd, result, len);

@@ -322,11 +322,17 @@ static void _engine_thread_check_remote_launch(void *_thread)
 	for (iter = list2_begin(&thread->remote_launches); iter != end; ) {
 		struct remote_launch *current = list2_get(iter, struct remote_launch, list);
 
+		messagef(HAKA_LOG_DEBUG, L"engine", L"execute lua remote launch on thread %d",
+		         engine_thread_id(thread));
+
 		current->callback(current->data);
 		if (check_error()) {
 			current->error = wcsdup(clear_error());
 			current->own_error = true;
 			current->state = -1;
+
+			messagef(HAKA_LOG_DEBUG, L"engine", L"remote launch error on thread %d: %ls",
+			         engine_thread_id(thread), current->error);
 		}
 		else {
 			current->state = 0;

@@ -33,7 +33,7 @@ thread_info.field_aggregate = {
 
 function console.threads()
 	local data = hakactl.remote('any', function ()
-		return haka.threads_info()
+		return haka.console.threads()
 	end)
 
 	local info = thread_info:new()
