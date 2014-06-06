@@ -40,6 +40,7 @@ static struct command* commands[] = {
 	&command_loglevel,
 	&command_debug,
 	&command_interactive,
+	&command_console,
 	NULL
 };
 

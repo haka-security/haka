@@ -24,6 +24,7 @@ extern struct command command_logs;
 extern struct command command_loglevel;
 extern struct command command_debug;
 extern struct command command_interactive;
+extern struct command command_console;
 
 extern bool use_colors;
 
