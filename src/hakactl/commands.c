@@ -39,7 +39,7 @@ static int run_stop(int fd, int argc, char *argv[])
 	printf("[....] stopping haka");
 	fflush(stdout);
 
-	if (!ctl_send_chars(fd, "STOP")) {
+	if (!ctl_send_chars(fd, "STOP", -1)) {
 		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		return COMMAND_FAILED;
 	}
@@ -77,12 +77,12 @@ static bool display_log_line(int fd)
 		return false;
 	}
 
-	module = ctl_recv_wchars(fd);
+	module = ctl_recv_wchars(fd, NULL);
 	if (!module) {
 		return false;
 	}
 
-	msg = ctl_recv_wchars(fd);
+	msg = ctl_recv_wchars(fd, NULL);
 	if (!msg) {
 		return false;
 	}
@@ -103,7 +103,7 @@ static int run_logs(int fd, int argc, char *argv[])
 	printf("[....] requesting logs");
 	fflush(stdout);
 
-	if (!ctl_send_chars(fd, "LOGS")) {
+	if (!ctl_send_chars(fd, "LOGS", -1)) {
 		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		return COMMAND_FAILED;
 	}
@@ -139,7 +139,7 @@ static int run_loglevel(int fd, int argc, char *argv[])
 	printf("[....] changing log level");
 	fflush(stdout);
 
-	if ((!ctl_send_chars(fd,"LOGLEVEL")) || (!ctl_send_chars(fd, argv[0]))) {
+	if ((!ctl_send_chars(fd,"LOGLEVEL", -1)) || (!ctl_send_chars(fd, argv[0], -1))) {
 		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		return COMMAND_FAILED;
 	}
@@ -167,7 +167,7 @@ static int run_stats(int fd, int argc, char *argv[])
 	printf("[....] requesting statistics");
 	fflush(stdout);
 
-	if (!ctl_send_chars(fd, "STATS")) {
+	if (!ctl_send_chars(fd, "STATS", -1)) {
 		 printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		 return COMMAND_FAILED;
 	}
@@ -198,7 +198,7 @@ static int run_remote(int fd, const char *command)
 {
 	fflush(stdout);
 
-	if (!ctl_send_chars(fd, command)) {
+	if (!ctl_send_chars(fd, command, -1)) {
 		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		return COMMAND_FAILED;
 	}

@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 	/* Status command */
 	if (strcasecmp(argv[0], "STATUS") == 0) {
 		fflush(stdout);
-		ctl_send_chars(fd, "STATUS");
+		ctl_send_chars(fd, "STATUS", -1);
 
 		if (ctl_expect_chars(fd, "OK")) {
 			printf(": haka is running");
