@@ -231,8 +231,6 @@ static void *thread_main_loop(void *_state)
 	sigset_t set;
 
 	thread_setid(state->thread_id);
-	state->engine = engine_thread_init(state->lua->L, state->thread_id);
-	engine_thread_update_status(state->engine, THREAD_RUNNING);
 
 	if (!state->pool->single) {
 		/* Block all signal to let the main thread handle them */
@@ -245,7 +243,6 @@ static void *thread_main_loop(void *_state)
 			message(HAKA_LOG_FATAL, L"core", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
-			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
 		}
 
@@ -253,7 +250,6 @@ static void *thread_main_loop(void *_state)
 			message(HAKA_LOG_FATAL, L"core", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
-			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
 		}
 
@@ -263,17 +259,18 @@ static void *thread_main_loop(void *_state)
 			message(HAKA_LOG_FATAL, L"core", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
-			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
 		}
 
 		if (!init_thread_lua_state(state)) {
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
-			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
 		}
 	}
+
+	state->engine = engine_thread_init(state->lua->L, state->thread_id);
+	engine_thread_update_status(state->engine, THREAD_RUNNING);
 
 	packet_init(state->capture);
 
