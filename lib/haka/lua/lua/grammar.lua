@@ -810,6 +810,10 @@ function grammar.new(name, def)
 		g._exports[name] = value:compile(genv)
 	end
 
+	if #g._exports == 0 then
+		haka.log.warning("grammar", "grammar '%s' does not have any exported element", g._name)
+	end
+
 	if grammar.debug then
 		haka.log.warning("grammar", "dumping '%s' grammar graph to %s.dot", g._name, g._name)
 		f = io.open(string.format("%s.dot", g._name), "w+")
