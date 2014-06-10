@@ -190,7 +190,7 @@ function grammar_int.Record.method:extra(functions)
 		if type(name) ~= 'string' then
 			error("record extra need to be named")
 		end
-		
+
 		self.extra_entities[name] = func
 	end
 
@@ -548,7 +548,7 @@ end
 grammar_int.Empty = class.class('Empty', grammar_int.Entity)
 
 function grammar_int.Empty.method:do_compile(env, rule, id)
-	return nil
+	return grammar_dg.Empty:new(rule, id)
 end
 
 grammar_int.Error = class.class('Error', grammar_int.Entity)

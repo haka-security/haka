@@ -88,7 +88,7 @@ function dg.Entity.method:do_apply(value, ctx)
 
 		for _, apply in ipairs(self._post_apply) do
 			apply(value, res, ctx)
-			
+
 			if ctx._error then break end
 		end
 	end
@@ -902,9 +902,15 @@ function dg.Token.method:_parse(res, iter, ctx)
 	if begin then
 		begin:unmark()
 	end
-	
+
 	ctx:update(begin)
 	return ctx:error("token /%s/ doesn't match", self.pattern)
+end
+
+dg.Empty = class.class('DGEmpty', dg.Control)
+
+function dg.Empty.method:__init(rule, id)
+	class.super(dg.Empty):__init(rule, id)
 end
 
 function dg.Token.method:_init(res, input, ctx, init)

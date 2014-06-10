@@ -20,6 +20,7 @@ TEST_UNIT_LUA(MODULE libhaka NAME grammar-token FILES grammar-token.lua)
 TEST_UNIT_LUA(MODULE libhaka NAME grammar-inheritance FILES grammar-inheritance.lua)
 TEST_UNIT_LUA(MODULE libhaka NAME grammar-apply FILES grammar-apply.lua)
 TEST_UNIT_LUA(MODULE libhaka NAME grammar-sequence FILES grammar-sequence.lua)
+TEST_UNIT_LUA(MODULE libhaka NAME grammar-empty FILES grammar-empty.lua)
 
 get_property(module-regexp GLOBAL PROPERTY module-regexp)
 foreach(module IN LISTS module-regexp)
