@@ -127,6 +127,16 @@ results.
 
     dissector/security_rule.rst
 
+Full SMTP code
+--------------
+
+As a reference, the full specification of the smtp protocol built in this tutorial
+can be download here: :download:`smtp.lua<dissector/smtp.lua>`.
+
 Going further
 -------------
-In this tutorial, we covered the specification of a text-based protocol with Haka. The full specification is given in :download:`smtp.lua<dissector/smtp.lua>`. Interested readers could find in ``modules/protocol`` folder (package sources) the specification of several protocols such as dns which involve other useful grammar entities.
+
+In this tutorial, we covered the specification of a text-based protocol with Haka.
+Interested readers could find in ``modules/protocol`` folder (package sources) the
+specification of several protocols such as dns which involve other useful grammar
+entities.
