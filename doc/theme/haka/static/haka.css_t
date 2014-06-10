@@ -325,11 +325,13 @@ dl.method dt + dt, dl.data dt + dt, dl.attribute dt + dt {
 	padding-left: 0;
 }
 
-#protocol-dissection-smtp-case-study li.toctree-l1 {
+/* For the SMTP tutorial, we still want the bullet to appear. */
+
+#smtp-protocol-dissection li.toctree-l1 {
 	list-style: disc;
 }
 
-#protocol-dissection-smtp-case-study .toctree-wrapper > ul {
+#smtp-protocol-dissection .toctree-wrapper > ul {
 	padding-left: 40px;
 }
 
