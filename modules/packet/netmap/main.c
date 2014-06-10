@@ -39,36 +39,176 @@ struct netmap_packet {
 };
 
 /* Init parameters */
-static char *input = NULL;
-static char *output = NULL;
+struct netmap_link_s
+{
+    char * input;
+    char * output;
+};
+typedef struct netmap_link_s netmap_link_t;
+
+#define MAX_LINKS 32
+netmap_link_t links[MAX_LINKS];
+int links_count = 0;
+
+#define IFLN_DELIMITER ";"
+
+/*
+ * how many packets on this set of queues ?
+ */
+int
+pkt_queued(struct nm_desc *d, int tx)
+{
+        u_int i, tot = 0;
+
+        if (tx) {
+                for (i = d->first_tx_ring; i <= d->last_tx_ring; i++) {
+                        tot += nm_ring_space(NETMAP_TXRING(d->nifp, i));
+                }
+        } else {
+                for (i = d->first_rx_ring; i <= d->last_rx_ring; i++) {
+                        tot += nm_ring_space(NETMAP_RXRING(d->nifp, i));
+                }
+        }
+        return tot;
+}
 
 static void cleanup()
 {
 	printf("cleanup\n");
 
-	if ( input )
-		free(input);
-	if ( output )
-		free(output);
 }
+
+static bool interface_link_is_shortcut( char * ifln )
+{
+    char * cursor;
+
+    for ( cursor = ifln; *cursor ; cursor++)
+    {
+        if ( *cursor == IFLN_DELIMITER[0] )
+            return true;
+    }
+    return false;
+}
+
+/*
+ * get the interface link string and give input and output.
+ * return the type of ifln.
+ */
+
+#define IFLN_IO_SEPERATOR '>'
+#define IFLN_OI_SEPERATOR '<'
+#define IFLN_IOOI_SEPERATOR '='
+
+static int interface_link_get_in_and_out( char * ifln, netmap_link_t * nml, int idx )
+{
+    char * cursor;
+
+    if ( !ifln || !nml || idx < 0 || idx >= MAX_LINKS )
+        return 0;
+
+    for ( cursor = ifln; *cursor ; cursor++ )
+    {
+        if ( *cursor == IFLN_IO_SEPERATOR )
+        {
+            *cursor = 0;
+            nml[idx].input = strdup(ifln);
+            nml[idx].output = strdup(cursor);
+            return 1;
+        }
+        if ( *cursor == IFLN_OI_SEPERATOR )
+        {
+            *cursor = 0;
+            nml[idx].input = strdup(cursor);
+            nml[idx].output = strdup(ifln);
+            return 1;
+        }
+        if ( *cursor == IFLN_IOOI_SEPERATOR )
+        {
+            *cursor = 0;
+            nml[idx].input = strdup(ifln);
+            nml[idx].output = strdup(cursor+1);
+            idx++;
+            if (idx >= MAX_LINKS)
+            {
+                messagef(HAKA_LOG_ERROR, L"netmap", L"Links table is full ");
+                return 1;
+            }
+            nml[idx].input = strdup(cursor+1);
+            nml[idx].output = strdup(ifln);
+            return 2;
+        }
+    }
+
+    return -1;
+}
+
 
 static int init(struct parameters *args)
 {
-	input = strdup(parameters_get_string(args, "input", NULL));
-	if (!input)
-		return EXIT_FAILURE;
-	output = strdup(parameters_get_string(args, "output", NULL ));
-	if (!output)
-		return EXIT_FAILURE;
+    int idx;
+    char * links_str, * cursor;
+    const char * orig;
 
-    messagef(HAKA_LOG_INFO, L"netmap", L"input: %s, output: %s", input, output);
+    orig = parameters_get_string(args, "links", NULL);
+    if ( !orig )
+    {
+        messagef(HAKA_LOG_ERROR, L"netmap", L"links not found in configuration file" );
+        return -1;
+    }
+
+    links_str = strdup(orig);
+    // remove white space
+    for ( cursor = links_str, idx = 0; *cursor ; cursor++ )
+    {
+        if ( *cursor == ' ' || *cursor == '\t' )
+            idx++;
+        else
+            *(cursor - idx) = *cursor;
+    }
+    messagef(HAKA_LOG_INFO, L"netmap", L"links = %d", links_str );
+
+    for ( idx = 0; idx < MAX_LINKS ; idx++ )
+    {
+        char * link, * token;
+
+        token = strtok( idx==0?links_str:NULL , IFLN_DELIMITER);
+        if ( !token ) // no more token
+            break;
+
+        link = strdup(token);
+        if ( link )
+        {
+            int ret = 0, jdx;
+            // if param is an interface:
+            if ( interface_link_is_shortcut(link) )
+            {
+                char * temp;
+                asprintf( &temp, "%s=%s", link, link );
+                free(link);
+                link = temp;
+            }
+
+            ret = interface_link_get_in_and_out( link, links, idx );
+            if ( ret < 0 )
+            {
+                free(link);
+                return EINVAL;
+            }
+            for ( jdx = 0 ; jdx < ret ; jdx++ )
+            {
+                messagef(HAKA_LOG_INFO, L"netmap", L"%d input: %s, output: %s", links_count+jdx, links[idx+jdx].input, links[idx+jdx].output);
+            }
+            links_count+=ret;
+        }
+    }
+    free(links_str);
 
 	return 0;
 }
 
 static bool multi_threaded()
 {
-	return false;
+    return false;
 }
 
 static bool pass_through()
@@ -84,33 +224,35 @@ static void cleanup_state(struct packet_module_state *state)
 
 static struct packet_module_state *init_state(int thread_id)
 {
-	printf("init_state\n");
-	struct packet_module_state *state;
+    struct packet_module_state *state;
+    char * input = links[0].input;
+    char * output = links[0].output;
 
-	state = malloc(sizeof(struct packet_module_state));
-	if (!state) {
-		error(L"memory error");
-		return NULL;
-	}
-
-	state->idesc = nm_open( input, NULL, 0, NULL);
-	if ( state->idesc == NULL )
-    {
-        messagef(HAKA_LOG_ERROR, L"netmap", L"cannot open %s\n", input);
-		return NULL;
-	}
-
-	state->odesc = nm_open( output, NULL, NM_OPEN_NO_MMAP, state->idesc );
-	if ( state->odesc == NULL )
-	{
-        messagef(HAKA_LOG_ERROR, L"netmap", L"cannot open %s\n", output);
-		return NULL;
+    state = malloc(sizeof(struct packet_module_state));
+    if (!state) {
+        error(L"memory error");
+        return NULL;
     }
 
-	memset( &state->pollfd, 0, sizeof(state->pollfd));
-	state->index = 0;
+    state->idesc = nm_open( input, NULL, 0, NULL);
+    if ( state->idesc == NULL )
+    {
+        messagef(HAKA_LOG_ERROR, L"netmap", L"cannot open %s\n", input);
+        return NULL;
+    }
+
+    state->odesc = nm_open( output, NULL, NM_OPEN_NO_MMAP, state->idesc );
+    if ( state->odesc == NULL )
+    {
+        messagef(HAKA_LOG_ERROR, L"netmap", L"cannot open %s\n", output);
+        return NULL;
+    }
+
+    memset( &state->pollfd, 0, sizeof(state->pollfd));
+    state->index = 0;
 
     messagef(HAKA_LOG_INFO, L"netmap", L"succeed to init state %p ", state );
+
 
 	return state;
 }
@@ -121,6 +263,10 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
     if ( !state )
         return -1;
+
+    messagef(HAKA_LOG_INFO, L"netmap", L"packet queued [input(tx:%d,rx:%d),output(tx:%d,rx:%d)]",
+             pkt_queued(state->idesc, 1), pkt_queued(state->idesc, 0),
+             pkt_queued(state->odesc, 1), pkt_queued(state->odesc, 0));
 
 	state->pollfd.fd = state->idesc->fd;
 	state->pollfd.events = POLLIN;
@@ -135,9 +281,11 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		return -1;
     }
 
-    messagef(HAKA_LOG_INFO, L"netmap", L"packet_do_receive poll pass successfully with status %d", err );
+    messagef(HAKA_LOG_INFO, L"netmap", L"poll pass successfully, packet queued [input(tx:%d,rx:%d),output(tx:%d,rx:%d)]",
+             pkt_queued(state->idesc, 1), pkt_queued(state->idesc, 0),
+             pkt_queued(state->odesc, 1), pkt_queued(state->odesc, 0));
 
-	if (state->pollfd.revents & POLLIN)
+    if ( state->pollfd.revents & POLLIN)
 	{
 		int si = state->idesc->first_rx_ring;
 		while ( si <= state->idesc->last_rx_ring )
@@ -204,13 +352,13 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
                 *pkt = (struct packet *)nmpkt;
 
-                messagef(HAKA_LOG_INFO, L"netmap", L" we can send the packet ");
+                messagef(HAKA_LOG_INFO, L"netmap", L" we can send the packet to haka filtering process ");
 
 //                state->index++;
 			}
             counter++;
 		}
-	}
+    }
 
 	return 0;
 }
@@ -222,14 +370,18 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	if ( !pkt )
 		return;
 
-    messagef(HAKA_LOG_INFO, L"netmap", L"packet_verdict\n");
 	if ( result == FILTER_ACCEPT)
 	{
 		const uint8 *data;
 		size_t len;
+
 		data = vbuffer_flatten( &orig_pkt->payload, &len);
 		nm_inject( pkt->state->odesc, data, len );
+        ioctl(pkt->state->odesc->fd, NIOCTXSYNC, NULL );
+        messagef(HAKA_LOG_INFO, L"netmap", L"ACCEPT : packet %p of %d bytes sent to the output interface", data, len );
 	}
+    else
+        messagef(HAKA_LOG_INFO, L"netmap", L"DROP");
 }
 
 static const char *packet_get_dissector(struct packet *orig_pkt)
