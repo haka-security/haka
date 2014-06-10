@@ -210,8 +210,13 @@ end
 
 function dg.Entity.method:trace(position, msg, ...)
 	if self.id then
-		haka.log.debug("grammar", "in rule %s field %s: %s\n\tat byte %d: %s...",
-			self.rule or "<unknown>", self.name or self.id,
+		local id = self.id
+		if self.name then
+			id = string.format("'%s'", self.name)
+		end
+
+		haka.log.debug("grammar", "in rule '%s' field %s: %s\n\tat byte %d: %s...",
+			self.rule or "<unknown>", id,
 			string.format(msg, ...), position.meter,
 			safe_string(position:copy():sub(20):asstring()))
 	end
