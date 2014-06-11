@@ -158,9 +158,9 @@ udp.select_next_dissector(udp_connection_dissector)
 
 haka.console.udp = {}
 
-function haka.console.udp.list_connections()
+function haka.console.udp.list_connections(show_dropped)
 	local ret = {}
-	for _, cnx in ipairs(udp_connection_dissector.cnx_table:all()) do
+	for _, cnx in ipairs(udp_connection_dissector.cnx_table:all(show_dropped)) do
 		if cnx.data then
 			local udp_data = cnx.data:namespace('udp_connection')
 

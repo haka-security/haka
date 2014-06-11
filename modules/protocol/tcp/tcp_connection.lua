@@ -505,9 +505,9 @@ tcp.select_next_dissector(tcp_connection_dissector)
 
 haka.console.tcp = {}
 
-function haka.console.tcp.list_connections()
+function haka.console.tcp.list_connections(show_dropped)
 	local ret = {}
-	for _, cnx in ipairs(tcp_connection_dissector.cnx_table:all()) do
+	for _, cnx in ipairs(tcp_connection_dissector.cnx_table:all(show_dropped)) do
 		if cnx.data then
 			local tcp_data = cnx.data:namespace('tcp_connection')
 

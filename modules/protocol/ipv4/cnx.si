@@ -84,7 +84,7 @@ STRUCT_UNKNOWN_KEY_ERROR(cnx_table);
 			SWIG_fail_ptr("cnx_table::all", 1, SWIGTYPE_p_cnx_table);
 		}
 
-		if (n == 3) {
+		if (n == 2) {
 			show_dropped = lua_toboolean(L, 2);
 		}
 
