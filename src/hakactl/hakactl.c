@@ -193,13 +193,13 @@ int main(int argc, char *argv[])
 		fflush(stdout);
 		ctl_send_chars(fd, "STATUS", -1);
 
-		if (ctl_expect_chars(fd, "OK")) {
-			printf(": haka is running");
-			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
-		}
-		else {
+		if (ctl_recv_status(fd) == -1) {
 			printf(": haka not responding");
 			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		}
+		else {
+			printf(": haka is running");
+			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 		}
 
 		return COMMAND_SUCCESS;

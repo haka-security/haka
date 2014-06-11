@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include <haka/colors.h>
 #include <haka/log.h>
@@ -12,6 +13,30 @@
 
 #include "commands.h"
 #include "ctl_comm.h"
+
+
+static int check_status(int fd, const char *format, ...)
+{
+	if (ctl_recv_status(fd) == -1) {
+		const wchar_t *err = clear_error();
+		if (!err) err = L"failed!";
+
+		printf(": %s%ls%s", c(RED, use_colors), err, c(CLEAR, use_colors));
+		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		return COMMAND_FAILED;
+	}
+	else {
+		if (format) {
+			va_list ap;
+
+			va_start(ap, format);
+			vprintf(format, ap);
+			va_end(ap);
+		}
+		printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+		return COMMAND_SUCCESS;
+	}
+}
 
 
 /*
@@ -44,15 +69,7 @@ static int run_stop(int fd, int argc, char *argv[])
 		return COMMAND_FAILED;
 	}
 
-	if (ctl_expect_chars(fd, "OK")) {
-		printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
-	}
-	else {
-		printf(": %sfailed!%s", c(RED, use_colors), c(CLEAR, use_colors));
-		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
-	}
-
-	return COMMAND_SUCCESS;
+	return check_status(fd, NULL);
 }
 
 struct command command_stop = {
@@ -108,18 +125,16 @@ static int run_logs(int fd, int argc, char *argv[])
 		return COMMAND_FAILED;
 	}
 
-	if (ctl_expect_chars(fd, "OK")) {
-		printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+	if (check_status(fd, NULL) == COMMAND_SUCCESS) {
 		fflush(stdout);
 
 		while (display_log_line(fd));
+
+		return COMMAND_SUCCESS;
 	}
 	else {
-		printf(": %sfailed!%s", c(RED, use_colors), c(CLEAR, use_colors));
-		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		return COMMAND_FAILED;
 	}
-
-	return COMMAND_SUCCESS;
 }
 
 struct command command_logs = {
@@ -143,12 +158,8 @@ static int run_loglevel(int fd, int argc, char *argv[])
 		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		return COMMAND_FAILED;
 	}
-	if (ctl_expect_chars(fd, "OK")) {
-		printf(": log level set to %s", argv[0]);
-		printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
-	}
 
-	return COMMAND_SUCCESS;
+	return check_status(fd, ": log level set to %s", argv[0]);
 }
 
 struct command command_loglevel = {
@@ -172,13 +183,11 @@ static int run_stats(int fd, int argc, char *argv[])
 		 return COMMAND_FAILED;
 	}
 
-	if (ctl_expect_chars(fd, "OK")) {
-		printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
+	if (check_status(fd, NULL) == COMMAND_SUCCESS) {
 		ctl_output_redirect_chars(fd);
 		return COMMAND_SUCCESS;
 	}
 	else {
-		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		return COMMAND_FAILED;
 	}
 }
@@ -203,28 +212,23 @@ static int run_remote(int fd, const char *command)
 		return COMMAND_FAILED;
 	}
 
-	if (ctl_expect_chars(fd, "OK")) {
-		struct luadebug_user *readline_user = luadebug_user_readline();
-		if (!readline_user) {
-			printf(": %ls", clear_error());
-			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
-		}
-		else {
-			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
-
-			luadebug_user_remote_server(fd, readline_user);
-			if (check_error()) {
-				message(HAKA_LOG_FATAL, L"debug", clear_error());
-				return COMMAND_FAILED;
-			}
-		}
-	}
-	else {
-		printf(": %sfailed!%s", c(RED, use_colors), c(CLEAR, use_colors));
+	struct luadebug_user *readline_user = luadebug_user_readline();
+	if (!readline_user) {
+		printf(": %ls", clear_error());
 		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 	}
 
-	return COMMAND_SUCCESS;
+	if (check_status(fd, NULL) == COMMAND_SUCCESS) {
+		luadebug_user_remote_server(fd, readline_user);
+		if (check_error()) {
+			message(HAKA_LOG_FATAL, L"debug", clear_error());
+			return COMMAND_FAILED;
+		}
+		return COMMAND_SUCCESS;
+	}
+	else {
+		return COMMAND_FAILED;
+	}
 }
 
 static int run_debug(int fd, int argc, char *argv[])

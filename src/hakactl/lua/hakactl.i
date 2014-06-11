@@ -29,7 +29,8 @@
 		const int n = lua_gettop(L);
 		int thread_id;
 		int index;
-		char *code, *answer;
+		char *code;
+		int answer;
 		size_t codesize;
 
 		if (n != 2) {
@@ -54,9 +55,8 @@
 			return 0;
 		}
 
-		ctl_send_int(console_fd, thread_id);
-
-		if (!ctl_send_chars(console_fd, code, codesize)) {
+		if (!ctl_send_int(console_fd, thread_id) ||
+		    !ctl_send_chars(console_fd, code, codesize)) {
 			lua_pushwstring(L, clear_error());
 			lua_error(L);
 			return 0;
@@ -71,16 +71,14 @@
 		index = 1;
 
 		while (true) {
-			answer = ctl_recv_chars(console_fd, NULL);
-			if (!answer) {
+			answer = ctl_recv_status(console_fd);
+			if (answer == -1) {
 				lua_pushwstring(L, clear_error());
 				lua_error(L);
 				return 0;
 			}
 
-			if (strcmp(answer, "RESULT") == 0) {
-				free(answer);
-
+			if (answer == 1) {
 				lua_pushnumber(L, index++);
 
 				code = ctl_recv_chars(console_fd, &codesize);
@@ -101,12 +99,10 @@
 
 				free(code);
 			}
-			else if (strcmp(answer, "OK") == 0) {
-				free(answer);
+			else if (answer == 0) {
 				break;
 			}
 			else {
-				free(answer);
 				lua_pushstring(L, "invalid server answer");
 				lua_error(L);
 				return 0;

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <errno.h>
+#include <assert.h>
 #include <string.h>
 #include <wchar.h>
 #include <unistd.h>
@@ -74,6 +75,40 @@ bool ctl_send_int(int fd, int32 i)
 		return false;
 	}
 	return true;
+}
+
+bool ctl_send_status(int fd, int ret, const wchar_t *err)
+{
+	if (ret == -1) {
+		if (!err) err = L"";
+
+		if (!ctl_send_int(fd, ret)) return false;
+		return ctl_send_wchars(fd, err, -1);
+	}
+	else {
+		return ctl_send_int(fd, ret);
+	}
+}
+
+int ctl_recv_status(int fd)
+{
+	const int32 ret = ctl_recv_int(fd);
+	if (check_error()) {
+		return -1;
+	}
+
+	if (ret == -1) {
+		wchar_t *err = ctl_recv_wchars(fd, NULL);
+		if (!err) {
+			assert(check_error());
+			return -1;
+		}
+
+		error(err);
+		free(err);
+	}
+
+	return ret;
 }
 
 char *ctl_recv_chars(int fd, size_t *_len)
