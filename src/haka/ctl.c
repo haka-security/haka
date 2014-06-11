@@ -272,7 +272,7 @@ static void *ctl_server_coreloop(void *param)
 		rc = select(maxfd+1, &readfds, NULL, NULL, NULL);
 
 		if (rc < 0) {
-			messagef(HAKA_LOG_FATAL, MODULE, L"failed to handle ctl connection: %s", errno_error(errno));
+			messagef(HAKA_LOG_FATAL, MODULE, L"failed to handle ctl connection (closing ctl socket): %s", errno_error(errno));
 			return NULL;
 		}
 		else if (rc > 0) {
