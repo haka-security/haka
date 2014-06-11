@@ -533,7 +533,9 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 		messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", level);
 
 		if (!setup_loglevel(level)) {
-			ctl_send_status(state->fd, -1, clear_error());
+			const wchar_t *err = clear_error();
+			messagef(HAKA_LOG_ERROR, MODULE, err);
+			ctl_send_status(state->fd, -1, err);
 		}
 		else {
 			ctl_send_status(state->fd, 0, NULL);
