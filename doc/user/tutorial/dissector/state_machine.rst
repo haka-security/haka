@@ -49,7 +49,7 @@ Smtp state machine is created through the following skeleton where we define fiv
 
 * `error`: built-in transition used to handle errors which we manage by dropping the connection (remember that we defined a drop connection in our dissector).
 
-* `update`: user-defined transition. It's only purpose it to pass the control to the rigth transition (`up̀` or `down`) when new data are available.
+* `update`: user-defined transition. It's only purpose it to pass the control to the rigth transition (`up̀  or `down`) when new data are available.
 
 Finally, the last line allow us to select the initial state.
 
@@ -160,7 +160,7 @@ Simillarly, we define two states to manage command and response. In the former, 
         end
     }
 
-.. note:: Have a look at :download:`smtp.lua<smtp.lua>` to get the full code of response and command states.
+.. note:: Have a look at :download:`smtp.lua<../../../../sample/smtp_dissector/smtp.lua>` to get the full code of response and command states.
 
 
 Managing content mail transfert

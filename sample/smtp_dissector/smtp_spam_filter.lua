@@ -19,7 +19,7 @@ haka.rule{
 					description = "malformed email address",
 					severity = 'low'
 				}
-			flow:drop()
+				flow:drop()
 			else
 
 				local mailfrom = param:sub(startpos+2, endpos)

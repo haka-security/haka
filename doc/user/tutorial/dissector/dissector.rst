@@ -13,7 +13,7 @@ The first step it to load the required packages and initialize the dissector mod
 .. code-block:: lua
 
     local class = require('class')
-    local tcp_connection = require('protocol/tcp_conenction')
+    local tcp_connection = require('protocol/tcp_connection')
 
     local module = {}
 

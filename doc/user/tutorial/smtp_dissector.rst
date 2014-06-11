@@ -131,7 +131,7 @@ Full SMTP code
 --------------
 
 As a reference, the full specification of the smtp protocol built in this tutorial
-can be download here: :download:`smtp.lua<dissector/smtp.lua>`.
+can be download here: :download:`smtp.lua<../../../sample/smtp_dissector/smtp.lua>`.
 
 Going further
 -------------

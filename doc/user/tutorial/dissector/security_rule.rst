@@ -11,7 +11,7 @@ Next, we hook our security rule on event `command` which will pass to the
 evaluaton function the parsed command message. The rest of the rule is basic: we
 get the parmeter of MAIL command and check if the dommain name is banned.
 
-.. literalinclude:: spam_filter.lua
+.. literalinclude:: ../../../../sample/smtp_dissector/smtp_spam_filter.lua
     :language: lua
     :tab-width: 4
 
@@ -20,7 +20,7 @@ Dumping mail content
 The second security rule hooks on `mail` event and allows us to get the content
 of a mail in a streamed mode.
 
-.. literalinclude:: mail_content.lua
+.. literalinclude:: ../../../../sample/smtp_dissector/smtp_mail_content.lua
     :language: lua
     :tab-width: 4
 
