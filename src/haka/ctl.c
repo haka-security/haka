@@ -46,10 +46,11 @@ struct ctl_client_state {
 
 struct ctl_server_state {
 	int                      fd;
-	bool                     thread_created;
 	thread_t                 thread;
-	bool                     exiting;
-	bool                     binded;
+	bool                     thread_created:1;
+	bool                     binded:1;
+	bool                     created:1;
+	volatile bool            exiting;
 	mutex_t                  lock;
 	struct list2             clients;
 };
@@ -146,40 +147,45 @@ static enum clt_client_rc ctl_client_process(struct ctl_client_state *state)
 	return rc;
 }
 
-static void ctl_server_cleanup(struct ctl_server_state *state)
+static void ctl_server_cleanup(struct ctl_server_state *state, bool cancel_thread)
 {
-	void *ret;
+	if (state && state->created) {
+		void *ret;
 
-	mutex_lock(&state->lock);
-
-	state->exiting = true;
-
-	if (state->thread_created) {
-		list2_iter iter, end;
-
-		thread_cancel(state->thread);
-
-		mutex_unlock(&state->lock);
-		thread_join(state->thread, &ret);
 		mutex_lock(&state->lock);
 
-		iter = list2_begin(&state->clients);
-		end = list2_end(&state->clients);
-		while (iter != end) {
-			struct ctl_client_state *client = list2_get(iter, struct ctl_client_state, list);
-			if (client->thread_created) {
-				const thread_t client_thread = client->thread;
-				thread_cancel(client_thread);
+		state->created = false;
+		state->exiting = true;
+
+		if (state->thread_created) {
+			list2_iter iter, end;
+
+			if (cancel_thread) {
+				thread_cancel(state->thread);
 
 				mutex_unlock(&state->lock);
-				thread_join(client_thread, &ret);
+				thread_join(state->thread, &ret);
 				mutex_lock(&state->lock);
-
-				iter = list2_next(iter);
 			}
-			else {
-				iter = list2_erase(iter);
-				ctl_client_cleanup(client);
+
+			iter = list2_begin(&state->clients);
+			end = list2_end(&state->clients);
+			while (iter != end) {
+				struct ctl_client_state *client = list2_get(iter, struct ctl_client_state, list);
+				if (client->thread_created) {
+					const thread_t client_thread = client->thread;
+					thread_cancel(client_thread);
+
+					mutex_unlock(&state->lock);
+					thread_join(client_thread, &ret);
+					mutex_lock(&state->lock);
+
+					iter = list2_next(iter);
+				}
+				else {
+					iter = list2_erase(iter);
+					ctl_client_cleanup(client);
+				}
 			}
 		}
 
@@ -195,11 +201,11 @@ static void ctl_server_cleanup(struct ctl_server_state *state)
 
 			state->binded = false;
 		}
+
+		mutex_unlock(&state->lock);
+
+		mutex_destroy(&state->lock);
 	}
-
-	mutex_unlock(&state->lock);
-
-	mutex_destroy(&state->lock);
 }
 
 static bool ctl_server_init(struct ctl_server_state *state)
@@ -228,7 +234,7 @@ static bool ctl_server_init(struct ctl_server_state *state)
 	if (err && errno == EADDRINUSE) {
 		if (unlink(HAKA_CTL_SOCKET_FILE)) {
 			messagef(HAKA_LOG_FATAL, MODULE, L"cannot remove ctl server socket: %s", errno_error(errno));
-			ctl_server_cleanup(&ctl_server);
+			ctl_server_cleanup(&ctl_server, true);
 			return false;
 		}
 
@@ -237,11 +243,12 @@ static bool ctl_server_init(struct ctl_server_state *state)
 
 	if (err) {
 		messagef(HAKA_LOG_FATAL, MODULE, L"cannot bind ctl server socket: %s", errno_error(errno));
-		ctl_server_cleanup(&ctl_server);
+		ctl_server_cleanup(&ctl_server, true);
 		return false;
 	}
 
 	state->binded = true;
+	state->created = true;
 
 	return true;
 }
@@ -273,7 +280,7 @@ static void *ctl_server_coreloop(void *param)
 
 		if (rc < 0) {
 			messagef(HAKA_LOG_FATAL, MODULE, L"failed to handle ctl connection (closing ctl socket): %s", errno_error(errno));
-			return NULL;
+			break;
 		}
 		else if (rc > 0) {
 			if (FD_ISSET(state->fd, &readfds)) {
@@ -349,6 +356,8 @@ static void *ctl_server_coreloop(void *param)
 		}
 	}
 
+	ctl_server_cleanup(state, false);
+
 	return NULL;
 }
 
@@ -361,14 +370,14 @@ bool start_ctl_server()
 {
 	if (listen(ctl_server.fd, MAX_CLIENT_QUEUE)) {
 		messagef(HAKA_LOG_FATAL, MODULE, L"failed to listen on ctl socket: %s", errno_error(errno));
-		ctl_server_cleanup(&ctl_server);
+		ctl_server_cleanup(&ctl_server, true);
 		return false;
 	}
 
 	/* Start the processing thread */
 	if (!thread_create(&ctl_server.thread, ctl_server_coreloop, &ctl_server)) {
 		messagef(HAKA_LOG_FATAL, MODULE, clear_error());
-		ctl_server_cleanup(&ctl_server);
+		ctl_server_cleanup(&ctl_server, true);
 		return false;
 	}
 
@@ -377,7 +386,7 @@ bool start_ctl_server()
 
 void stop_ctl_server()
 {
-	ctl_server_cleanup(&ctl_server);
+	ctl_server_cleanup(&ctl_server, true);
 }
 
 
