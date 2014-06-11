@@ -800,6 +800,8 @@ function grammar.new(name, def)
 	setmetatable(env, nil)
 
 	-- Compile exported entities
+	local no_export = true
+
 	for name, _  in pairs(g._exports) do
 		local value = g._rules[name]
 		if not value then
@@ -808,9 +810,11 @@ function grammar.new(name, def)
 
 		local genv = GrammarEnv:new(g)
 		g._exports[name] = value:compile(genv)
+
+		no_export = false
 	end
 
-	if #g._exports == 0 then
+	if no_export then
 		haka.log.warning("grammar", "grammar '%s' does not have any exported element", g._name)
 	end
 
