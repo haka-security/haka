@@ -210,7 +210,7 @@ void dump_stat(FILE *file)
 	thread_pool_dump_stat(thread_states, file);
 }
 
-void setup_loglevel(char *level)
+bool setup_loglevel(char *level)
 {
 	while (true) {
 		char *value;
@@ -230,15 +230,13 @@ void setup_loglevel(char *level)
 
 			module = malloc(sizeof(wchar_t)*(strlen(level)+1));
 			if (!module) {
-				message(HAKA_LOG_FATAL, L"core", L"memory error");
-				clean_exit();
-				exit(1);
+				error(L"memory error");
+				return false;
 			}
 
 			if (mbstowcs(module, level, strlen(level)+1) == -1) {
-				message(HAKA_LOG_FATAL, L"core", L"invalid module string");
-				clean_exit();
-				exit(1);
+				error(L"invalid module string");
+				return false;
 			}
 		}
 		else {
@@ -247,9 +245,7 @@ void setup_loglevel(char *level)
 
 		loglevel = str_to_level(value);
 		if (check_error()) {
-			message(HAKA_LOG_FATAL, L"core", clear_error());
-			clean_exit();
-			exit(1);
+			return false;
 		}
 
 		setlevel(loglevel, module);
@@ -259,4 +255,6 @@ void setup_loglevel(char *level)
 		if (next_level) level = next_level;
 		else break;
 	}
+
+	return true;
 }

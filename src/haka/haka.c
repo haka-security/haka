@@ -237,7 +237,11 @@ int read_configuration(const char *file)
 				exit(1);
 			}
 
-			setup_loglevel(level);
+			if (!setup_loglevel(level)) {
+				message(HAKA_LOG_FATAL, L"core", clear_error());
+				clean_exit();
+				exit(1);
+			}
 
 			free(level);
 		}

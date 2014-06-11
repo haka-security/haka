@@ -532,8 +532,12 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 
 		messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", level);
 
-		setup_loglevel(level);
-		ctl_send_status(state->fd, 0, NULL);
+		if (!setup_loglevel(level)) {
+			ctl_send_status(state->fd, -1, clear_error());
+		}
+		else {
+			ctl_send_status(state->fd, 0, NULL);
+		}
 		return CTL_CLIENT_OK;
 	}
 	else if (strcmp(command, "STATS") == 0) {
