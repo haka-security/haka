@@ -23,3 +23,5 @@ of a mail in a streamed mode.
 .. literalinclude:: mail_content.lua
     :language: lua
     :tab-width: 4
+
+.. note:: These security rules are available in <haka_install_path>/share/haka/sample/smtp_dissetor. A smtp capture sample ``smtp.pcap`` is also provided in order to replay the above rules.

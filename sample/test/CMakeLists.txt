@@ -22,3 +22,6 @@ TEST_PCAP(sample httpmodif CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/ha
 TEST_PCAP(sample tcpfilter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/filter/tcpfilter.lua)
 TEST_PCAP(sample stats_on_exit CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/stats/stats_on_exit.lua)
 TEST_PCAP(sample pdns CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/ruleset/dns/pdns.lua)
+TEST_PCAP(sample smtp_spam_filter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/smtp_dissector/smtp_spam_filter.lua)
+TEST_PCAP(sample smtp_mail_content CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/smtp_dissector/smtp_mail_content.lua)
+TEST_PCAP(sample smtp_command_response CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/smtp_dissector/smtp_command_response.lua)

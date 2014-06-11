@@ -12,5 +12,6 @@ haka.rule{
 		for sub in iter:foreach_available() do
 			io.write(sub:asstring())
 		end
+		print("== End Mail Content ==")
 	end
 }

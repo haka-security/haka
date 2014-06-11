@@ -19,14 +19,17 @@ haka.rule{
 					description = "malformed email address",
 					severity = 'low'
 				}
+			flow:drop()
 			else
-				local mailfrom = param:sub(startpos+2, endpos-1)
-				if mailfrom == "packet-level.com" then
+
+				local mailfrom = param:sub(startpos+2, endpos)
+				if mailfrom == "suspicious.org" then
 					haka.alert {
 						description = "forbidden mail domain",
 						severity = 'low'
 					}
 				end
+				flow:drop()
 			end
 		end
 	end
