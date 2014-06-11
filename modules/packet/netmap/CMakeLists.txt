@@ -4,7 +4,7 @@
 
 #find_package(PCAP)
 #if(PCAP_FOUND)
-	add_library(packet-netmap MODULE main.c)
+        add_library(packet-netmap MODULE main.c libnetmap.c)
 	set_target_properties(packet-netmap PROPERTIES OUTPUT_NAME netmap)
 
 	include_directories(.)
