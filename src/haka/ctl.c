@@ -13,7 +13,6 @@
 #include <haka/error.h>
 #include <haka/thread.h>
 #include <haka/log.h>
-#include <haka/stat.h>
 #include <haka/alert.h>
 #include <haka/engine.h>
 #include <haka/container/list2.h>
@@ -559,23 +558,6 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 			ctl_send_status(state->fd, 0, NULL);
 		}
 		return CTL_CLIENT_OK;
-	}
-	else if (strcmp(command, "STATS") == 0) {
-		FILE *file;
-		file = fdopen(state->fd, "a+");
-		if (!file) {
-			messagef(HAKA_LOG_ERROR, MODULE, L"cannot open socket file: %ls", errno_error(errno));
-			ctl_send_status(state->fd, -1, L"cannot open socket file");
-			return CTL_CLIENT_OK;
-		}
-		else {
-			ctl_send_status(state->fd, 0, NULL);
-
-			stat_printf(file, "\n");
-			dump_stat(file);
-			fclose(file);
-			return CTL_CLIENT_DUP;
-		}
 	}
 	else if (strcmp(command, "DEBUG") == 0) {
 		struct luadebug_user *remote_user = luadebug_user_remote(state->fd);

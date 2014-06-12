@@ -20,7 +20,6 @@ void thread_pool_start(struct thread_pool *pool);
 void thread_pool_attachdebugger(struct thread_pool *pool);
 bool thread_pool_issingle(struct thread_pool *pool);
 struct engine_thread *thread_pool_thread(struct thread_pool *pool, int index);
-void thread_pool_dump_stat(struct thread_pool *pool, FILE *file);
 
 #endif /* _THREAD_H */
 

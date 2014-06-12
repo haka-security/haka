@@ -17,7 +17,6 @@
 #include <haka/error.h>
 #include <haka/thread.h>
 #include <haka/engine.h>
-#include <haka/stat.h>
 #include <haka/timer.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
@@ -502,58 +501,6 @@ void thread_pool_attachdebugger(struct thread_pool *pool)
 {
 	assert(pool);
 	++pool->attach_debugger;
-}
-
-static const size_t columnsize = 20;
-
-void pad_output_stat_bytes(FILE *f, size_t value)
-{
-	const size_t len = stat_print_formated_bytes(f, value);
-	if (len != (size_t)-1) {
-		stat_printf(f, "%*s", columnsize-len, "");
-	}
-}
-
-void pad_output_stat_chars(FILE *f, char *s)
-{
-	const size_t len = stat_printf(f, s);
-	if (len != (size_t)-1) {
-		stat_printf(f, "%*s", columnsize-len, "");
-	}
-}
-
-void thread_pool_dump_stat(struct thread_pool *pool, FILE *f)
-{
-	size_t total_packets = 0, total_bytes = 0;
-	size_t thread_packets, thread_bytes;
-
-	assert(pool);
-
-	pad_output_stat_chars(f, "");
-	pad_output_stat_chars(f, "Packets");
-	pad_output_stat_chars(f, "Bytes");
-	stat_printf(f, "\n");
-	int i;
-	for (i = 0; i < pool->count; i++) {
-		volatile struct packet_stats *stats = engine_thread_statistics(pool->threads[i]->engine);
-
-		const size_t len = stat_printf(f, "Thread %d", i+1);
-		if (len != (size_t)-1) {
-			stat_printf(f, "%*s", columnsize-len, "");
-		}
-		thread_packets = stats->recv_packets;
-		thread_bytes = stats->recv_bytes;
-		pad_output_stat_bytes(f, thread_packets);
-		pad_output_stat_bytes(f, thread_bytes);
-		stat_printf(f, "\n");
-
-		total_packets += thread_packets;
-		total_bytes += thread_bytes;
-	}
-	pad_output_stat_chars(f, "All Threads");
-	pad_output_stat_bytes(f, total_packets);
-	pad_output_stat_bytes(f, total_bytes);
-	stat_printf(f, "\n");
 }
 
 struct engine_thread *thread_pool_thread(struct thread_pool *pool, int index)

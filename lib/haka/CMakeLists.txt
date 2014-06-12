@@ -41,7 +41,6 @@ add_library(libhaka SHARED
 	parameters.c
 	colors.c
 	time.c
-	stat.c
 	timer.c
 	state_machine.c
 	vbuffer.c
