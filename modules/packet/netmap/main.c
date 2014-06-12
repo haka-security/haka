@@ -65,6 +65,7 @@ struct netmap_packet {
 	struct vbuffer              data;
 	struct vbuffer_iterator     select;
     netmap_link_t *             link;
+	enum packet_status status;
 };
 
 static void cleanup()
@@ -364,6 +365,8 @@ static int get_buffer_on_link( netmap_link_t * link, struct netmap_packet ** pkt
 				return ENOMEM;
 			}
 
+			nmpkt->status = STATUS_NORMAL;
+
             *pkt = nmpkt;
         }
         counter++;
@@ -432,27 +435,32 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	if ( !pkt )
 		return;
 
-	if ( result == FILTER_ACCEPT)
-	{
-		const uint8 *data;
-		size_t len;
-
+	if (vbuffer_isvalid(&pkt->data)) {
 		vbuffer_restore(&pkt->select, &pkt->core_packet.payload);
-		data = vbuffer_flatten( &orig_pkt->payload, &len);
-        if ( pkt->link->odesc )
-        {
-            nm_inject( pkt->link->odesc, data, len );
-            ioctl(pkt->link->odesc->fd, NIOCTXSYNC, NULL );
-            messagef(HAKA_LOG_INFO, L"netmap", L"ACCEPT : packet %p of %d bytes sent to the output interface %s", data, len, pkt->link->output );
-        }
-        else
-        {
-            messagef(HAKA_LOG_ERROR, L"netmap", L"packet_verdict : pkt->link->odesc is NULL");
-            show_link(pkt->link);
-        }
+
+		if ( result == FILTER_ACCEPT)
+		{
+			const uint8 *data;
+			size_t len;
+
+			data = vbuffer_flatten( &orig_pkt->payload, &len);
+			if ( pkt->link->odesc )
+			{
+				nm_inject( pkt->link->odesc, data, len );
+				ioctl(pkt->link->odesc->fd, NIOCTXSYNC, NULL );
+				messagef(HAKA_LOG_INFO, L"netmap", L"ACCEPT : packet %p of %d bytes sent to the output interface %s", data, len, pkt->link->output );
+			}
+			else
+			{
+				messagef(HAKA_LOG_ERROR, L"netmap", L"packet_verdict : pkt->link->odesc is NULL");
+				show_link(pkt->link);
+			}
+			pkt->status = STATUS_SENT;
+		}
+		else
+			messagef(HAKA_LOG_INFO, L"netmap", L"DROP");
+		vbuffer_clear(&pkt->data);
 	}
-    else
-        messagef(HAKA_LOG_INFO, L"netmap", L"DROP");
 }
 
 static const char *packet_get_dissector(struct packet *orig_pkt)
@@ -468,13 +476,20 @@ static uint64 packet_get_id(struct packet *orig_pkt)
 
 static void packet_do_release(struct packet *orig_pkt)
 {
-	printf("packet_do_release\n");
+	struct netmap_packet *pkt = (struct netmap_packet*)orig_pkt;
+
+	if (vbuffer_isvalid(&pkt->data)) {
+		packet_verdict(orig_pkt, FILTER_DROP);
+	}
+
+	vbuffer_release(&pkt->core_packet.payload);
+	vbuffer_release(&pkt->data);
+	free(pkt);
 }
 
 static enum packet_status packet_getstate(struct packet *orig_pkt)
 {
-	printf("packet_getstate\n");
-	return STATUS_NORMAL;
+	return ((struct netmap_packet*)orig_pkt)->status;
 }
 
 static struct packet *new_packet(struct packet_module_state *state, size_t size)
