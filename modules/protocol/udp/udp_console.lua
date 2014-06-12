@@ -24,8 +24,8 @@ UdpConnInfo.field_format = {
 
 function UdpConnInfo.method:drop()
 	for _,r in ipairs(self._data) do
-		local id = r.id
-		hakactl.remote(r.thread, function ()
+		local id = r._id
+		hakactl.remote(r._thread, function ()
 			haka.console.udp.drop_connection(id)
 		end)
 	end

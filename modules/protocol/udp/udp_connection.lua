@@ -165,8 +165,9 @@ function haka.console.udp.list_connections(show_dropped)
 			local udp_data = cnx.data:namespace('udp_connection')
 
 			table.insert(ret, {
-				thread = haka.current_thread(),
-				id = udp_data.connection.id,
+				_thread = haka.current_thread(),
+				_id = udp_data.connection.id,
+				id = string.format("%d-%d", haka.current_thread(), udp_data.connection.id),
 				srcip = udp_data.srcip,
 				srcport = udp_data.srcport,
 				dstip = udp_data.dstip,

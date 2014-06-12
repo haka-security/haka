@@ -24,8 +24,8 @@ TcpConnInfo.field_format = {
 
 function TcpConnInfo.method:drop()
 	for _,r in ipairs(self._data) do
-		local id = r.id
-		hakactl.remote(r.thread, function ()
+		local id = r._id
+		hakactl.remote(r._thread, function ()
 			haka.console.tcp.drop_connection(id)
 		end)
 	end
@@ -33,8 +33,8 @@ end
 
 function TcpConnInfo.method:reset()
 	for _,r in ipairs(self._data) do
-		local id = r.id
-		hakactl.remote(r.thread, function ()
+		local id = r._id
+		hakactl.remote(r._thread, function ()
 			haka.console.tcp.reset_connection(id)
 		end)
 	end

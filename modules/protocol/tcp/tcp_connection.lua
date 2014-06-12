@@ -512,8 +512,9 @@ function haka.console.tcp.list_connections(show_dropped)
 			local tcp_data = cnx.data:namespace('tcp_connection')
 
 			table.insert(ret, {
-				thread = haka.current_thread(),
-				id = tcp_data.connection.id,
+				_thread = haka.current_thread(),
+				_id = tcp_data.connection.id,
+				id = string.format("%d-%d", haka.current_thread(), tcp_data.connection.id),
 				srcip = tcp_data.srcip,
 				srcport = tcp_data.srcport,
 				dstip = tcp_data.dstip,
