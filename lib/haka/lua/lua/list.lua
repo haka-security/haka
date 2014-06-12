@@ -167,7 +167,7 @@ function list.method:_aggregate()
 end
 
 function list.method:get(name)
-	check.type(1, name, 'name')
+	check.types(1, name, {'string', 'number'})
 
 	local data = rawget(self, '_data')
 	if data then
