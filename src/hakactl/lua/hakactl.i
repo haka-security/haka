@@ -126,4 +126,6 @@
 			return func()
 		end)
 	end
+
+	haka.mode = 'console'
 }

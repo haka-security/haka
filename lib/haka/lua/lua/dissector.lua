@@ -280,7 +280,10 @@ end
 local dissectors = {}
 
 function dissector.new(args)
-	haka.log.info("dissector", "register new dissector '%s'", args.name)
+	if haka.mode ~= 'console' then
+		haka.log.info("dissector", "register new dissector '%s'", args.name)
+	end
+
 	local d = class.class(args.name, args.type or dissector.Dissector)
 	dissectors[args.name] = d
 	return d

@@ -214,4 +214,6 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	require('context')
 	require('dissector')
 	require('grammar')
+
+	haka.mode = 'normal'
 }
