@@ -35,10 +35,6 @@ Commands
 
     Stop haka daemon.
 
-.. option:: stats
-
-    Show statistics on packet/bytes captured by haka.
-
 .. option:: logs
 
     Show haka logs in realtime.
