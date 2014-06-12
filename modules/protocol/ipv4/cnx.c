@@ -166,7 +166,7 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 	elem->cnx.id = atomic_inc(&table->id);
 	elem->cnx.dropped = false;
 
-	for (i=0; i<2; ++i) {
+	for (i=0; i<CNX_DIR_CNT; ++i) {
 		elem->cnx.stats[i].packets = 0;
 		elem->cnx.stats[i].bytes = 0;
 	}

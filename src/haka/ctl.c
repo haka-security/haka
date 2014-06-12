@@ -253,10 +253,81 @@ static bool ctl_server_init(struct ctl_server_state *state)
 	return true;
 }
 
+static void ctl_server_accept(struct ctl_server_state *state, fd_set *listfds, int *maxfd)
+{
+	struct sockaddr_un addr;
+	socklen_t len = sizeof(addr);
+	int fd;
+	struct ctl_client_state *client = NULL;
+
+	thread_testcancel();
+
+	fd = accept(state->fd, (struct sockaddr *)&addr, &len);
+	if (fd < 0) {
+		messagef(HAKA_LOG_DEBUG, MODULE, L"failed to accept ctl connection: %s", errno_error(errno));
+		return;
+	}
+
+	thread_setcancelstate(false);
+
+	client = malloc(sizeof(struct ctl_client_state));
+	if (!client) {
+		thread_setcancelstate(true);
+		message(HAKA_LOG_ERROR, MODULE, L"memmory error");
+		return;
+	}
+
+	list2_elem_init(&client->list);
+	client->server = state;
+	client->fd = fd;
+	client->thread_created = false;
+
+	mutex_lock(&state->lock);
+	list2_insert(list2_end(&state->clients), &client->list);
+	mutex_unlock(&state->lock);
+
+	thread_setcancelstate(true);
+
+	FD_SET(client->fd, listfds);
+	if (client->fd > *maxfd) *maxfd = client->fd;
+}
+
+static void ctl_server_handle_commands(struct ctl_server_state *state, fd_set *readfds, fd_set *listfds)
+{
+	list2_iter iter = list2_begin(&state->clients);
+	list2_iter end = list2_end(&state->clients);
+	while (iter != end) {
+		struct ctl_client_state *client = list2_get(iter, struct ctl_client_state, list);
+
+		if (FD_ISSET(client->fd, readfds)) {
+			enum clt_client_rc rc = ctl_client_process(client);
+
+			if (rc == CTL_CLIENT_OK) {
+				iter = list2_next(iter);
+			}
+			else {
+				FD_CLR(client->fd, listfds);
+
+				if (rc == CTL_CLIENT_DUP) client->fd = -1;
+
+				if (rc != CTL_CLIENT_THREAD) {
+					iter = list2_erase(iter);
+					ctl_client_cleanup(client);
+				}
+				else {
+					iter = list2_next(iter);
+				}
+			}
+		}
+		else {
+			iter = list2_next(iter);
+		}
+	}
+}
+
 static void *ctl_server_coreloop(void *param)
 {
 	struct ctl_server_state *state = (struct ctl_server_state *)param;
-	struct sockaddr_un addr;
 	sigset_t set;
 	fd_set listfds, readfds;
 	int maxfd, rc;
@@ -284,74 +355,12 @@ static void *ctl_server_coreloop(void *param)
 		}
 		else if (rc > 0) {
 			if (FD_ISSET(state->fd, &readfds)) {
-				socklen_t len = sizeof(addr);
-				int fd;
-				struct ctl_client_state *client = NULL;
-
-				thread_testcancel();
-
-				fd = accept(state->fd, (struct sockaddr *)&addr, &len);
-				if (fd < 0) {
-					messagef(HAKA_LOG_DEBUG, MODULE, L"failed to accept ctl connection: %s", errno_error(errno));
-					continue;
-				}
-
-				thread_setcancelstate(false);
-
-				client = malloc(sizeof(struct ctl_client_state));
-				if (!client) {
-					thread_setcancelstate(true);
-					message(HAKA_LOG_ERROR, MODULE, L"memmory error");
-					continue;
-				}
-
-				list2_elem_init(&client->list);
-				client->server = state;
-				client->fd = fd;
-				client->thread_created = false;
-
-				mutex_lock(&state->lock);
-				list2_insert(list2_end(&state->clients), &client->list);
-				mutex_unlock(&state->lock);
-
-				thread_setcancelstate(true);
-
-				FD_SET(client->fd, &listfds);
-				if (client->fd > maxfd) maxfd = client->fd;
-
+				ctl_server_accept(state, &listfds, &maxfd);
 				rc--;
 			}
 
 			if (rc > 0) {
-				list2_iter iter = list2_begin(&state->clients);
-				list2_iter end = list2_end(&state->clients);
-				while (iter != end) {
-					struct ctl_client_state *client = list2_get(iter, struct ctl_client_state, list);
-
-					if (FD_ISSET(client->fd, &readfds)) {
-						enum clt_client_rc rc = ctl_client_process(client);
-
-						if (rc == CTL_CLIENT_OK) {
-							iter = list2_next(iter);
-						}
-						else {
-							FD_CLR(client->fd, &listfds);
-
-							if (rc == CTL_CLIENT_DUP) client->fd = -1;
-
-							if (rc != CTL_CLIENT_THREAD) {
-								iter = list2_erase(iter);
-								ctl_client_cleanup(client);
-							}
-							else {
-								iter = list2_next(iter);
-							}
-						}
-					}
-					else {
-						iter = list2_next(iter);
-					}
-				}
+				ctl_server_handle_commands(state, &readfds, &listfds);
 			}
 		}
 	}

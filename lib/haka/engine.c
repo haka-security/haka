@@ -131,29 +131,30 @@ static void remote_launch_release(struct engine_thread *thread, struct remote_la
 
 void engine_thread_cleanup(struct engine_thread *thread)
 {
-	if (thread) {
-		mutex_lock(&thread->remote_launch_lock);
+	list2_iter end, iter;
 
-		const list2_iter end = list2_end(&thread->remote_launches);
-		list2_iter iter;
-		for (iter = list2_begin(&thread->remote_launches); iter != end; ) {
-			struct remote_launch *current = list2_get(iter, struct remote_launch, list);
+	assert(thread);
 
-			current->state = -1;
-			current->error = L"aborted";
-			current->own_error = false;
+	mutex_lock(&thread->remote_launch_lock);
 
-			iter = list2_erase(iter);
-			remote_launch_release(thread, current);
-		}
+	end = list2_end(&thread->remote_launches);
+	for (iter = list2_begin(&thread->remote_launches); iter != end; ) {
+		struct remote_launch *current = list2_get(iter, struct remote_launch, list);
 
-		mutex_unlock(&thread->remote_launch_lock);
-		mutex_destroy(&thread->remote_launch_lock);
+		current->state = -1;
+		current->error = L"aborted";
+		current->own_error = false;
 
-		engine_threads[thread->id] = NULL;
-		local_storage_set(&engine_thread_localstorage, NULL);
-		free((void*)thread);
+		iter = list2_erase(iter);
+		remote_launch_release(thread, current);
 	}
+
+	mutex_unlock(&thread->remote_launch_lock);
+	mutex_destroy(&thread->remote_launch_lock);
+
+	engine_threads[thread->id] = NULL;
+	local_storage_set(&engine_thread_localstorage, NULL);
+	free((void*)thread);
 }
 
 struct engine_thread *engine_thread_current()
@@ -177,8 +178,8 @@ enum thread_status engine_thread_update_status(struct engine_thread *thread, enu
 
 volatile struct packet_stats *engine_thread_statistics(struct engine_thread *thread)
 {
-	if (!thread) return NULL;
-	return &thread->packet_stats;
+	if (thread) return &thread->packet_stats;
+	else return NULL;
 }
 
 bool engine_thread_remote_launch(struct engine_thread *thread, void (*callback)(void *), void *data)

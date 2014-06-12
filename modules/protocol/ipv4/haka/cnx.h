@@ -12,6 +12,7 @@
 
 #define CNX_DIR_IN  0
 #define CNX_DIR_OUT 1
+#define CNX_DIR_CNT 2
 
 struct cnx_table;
 
@@ -30,7 +31,7 @@ struct cnx_key {
 struct cnx {
 	struct lua_object    lua_object;
 	struct cnx_key       key;
-	struct cnx_stats     stats[2];
+	struct cnx_stats     stats[CNX_DIR_CNT];
 	bool                 dropped;
 	struct lua_ref       lua_priv;
 	uint32               id;

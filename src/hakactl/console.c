@@ -39,6 +39,7 @@ bool initialize_console(struct lua_state *state)
 	lua_setglobal(state->L, "console");
 	lua_getglobal(state->L, "console");
 
+	/* <haka_path_s><HAKA_CONSOLE/\0 */
 	size = strlen(haka_path_s) + strlen(HAKA_CONSOLE) + 1;
 
 	console_path = malloc(size);
@@ -67,7 +68,7 @@ bool initialize_console(struct lua_state *state)
 				entry.d_name[len - 4] = 0;
 			}
 			else if (len > 3
-					&& strcmp(entry.d_name + (len - 3), ".bc") == 0) {
+			         && strcmp(entry.d_name + (len - 3), ".bc") == 0) {
 				entry.d_name[len - 3] = 0;
 			}
 			else {

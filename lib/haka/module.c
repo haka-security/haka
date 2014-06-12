@@ -155,6 +155,10 @@ bool module_set_default_path()
 	char *path;
 	const char *haka_path_s = haka_path();
 
+	/* format <haka_path_s><HAKA_CORE_PATH>;<haka_path_s><HAKA_MODULE_PATH>\0
+	 * in a string.
+	 */
+
 	path_len = 2*strlen(haka_path_s) + strlen(HAKA_CORE_PATH) + 1 +
 			strlen(HAKA_MODULE_PATH) + 1;
 

@@ -157,12 +157,14 @@ function list.method:get(name)
 			end
 		end
 	end
-	return nil
 end
 
 function list.method:__index(name)
 	local data = rawget(self, '_data')
 	if data then
+		-- If only one element is in the list, we want to allow the user
+		-- to directly call the element by name. Instead of doing "l[1].id"
+		-- it is possible to do "l.id".
 		if #data == 1 then
 			return data[1][name]
 		else
@@ -171,8 +173,6 @@ function list.method:__index(name)
 				local ret = class.classof(self):new()
 				ret._data = { elem }
 				return ret
-			else
-				return nil
 			end
 		end
 	end

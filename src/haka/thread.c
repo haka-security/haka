@@ -107,8 +107,10 @@ static void cleanup_thread_state_lua(struct thread_state *state)
 	assert(state);
 	assert(state->packet_module);
 
-	engine_thread_cleanup(state->engine);
-	state->engine = NULL;
+	if (state->engine) {
+		engine_thread_cleanup(state->engine);
+		state->engine = NULL;
+	}
 
 	if (state->lua) {
 		lua_state_close(state->lua);
