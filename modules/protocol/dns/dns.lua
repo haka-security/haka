@@ -87,12 +87,12 @@ dns_dissector:register_event('response', continue)
 
 function dns_dissector.method:__init(flow)
 	self.flow = flow
-	self.state = dns_dissector.states:instanciate(self)
+	self.state_machine = dns_dissector.state_machine:instanciate(self)
 	self.dns_pending_queries = {}
 end
 
 function dns_dissector.method:receive(pkt, payload, direction)
-	self.state:transition('update', payload, direction, pkt)
+	self.state_machine:update(payload, direction, pkt)
 end
 
 function dns_dissector.method:continue()
@@ -290,7 +290,7 @@ function DnsResult.method:drop()
 	self._dissector.flow:drop(self._pkt)
 end
 
-dns_dissector.states = haka.state_machine("dns", function ()
+dns_dissector.state_machine = haka.state_machine("dns", function ()
 	default_transitions{
 		error = function (self)
 			self.flow:drop()
