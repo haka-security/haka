@@ -16,6 +16,7 @@
 #include <haka/config.h>
 #include <haka/colors.h>
 #include <haka/engine.h>
+#include <haka/system.h>
 
 char *module_prefix = HAKA_MODULE_PREFIX;
 char *module_suffix = HAKA_MODULE_SUFFIX;
@@ -39,6 +40,9 @@ int thread_getid();
 
 %rename(module_path) module_get_path;
 const char *module_get_path();
+
+%rename(exit) haka_exit;
+void haka_exit();
 
 %immutable;
 char *module_prefix;

@@ -62,3 +62,9 @@ const char *haka_path()
 	const char *haka_path = getenv("HAKA_PATH");
 	return haka_path ? haka_path : HAKA_PREFIX;
 }
+
+void haka_exit()
+{
+	messagef(HAKA_LOG_INFO, L"core", L"request to stop haka received");
+	kill(getpid(), SIGTERM);
+}

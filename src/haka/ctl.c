@@ -15,6 +15,7 @@
 #include <haka/log.h>
 #include <haka/alert.h>
 #include <haka/engine.h>
+#include <haka/system.h>
 #include <haka/container/list2.h>
 #include <haka/luadebug/user.h>
 #include <haka/luadebug/debugger.h>
@@ -512,9 +513,8 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 		return CTL_CLIENT_OK;
 	}
 	else if (strcmp(command, "STOP") == 0) {
-		messagef(HAKA_LOG_INFO, MODULE, L"request to stop haka received");
 		ctl_send_status(state->fd, 0, NULL);
-		kill(getpid(), SIGTERM);
+		haka_exit();
 		return CTL_CLIENT_DONE;
 	}
 	else if (strcmp(command, "LOGS") == 0) {
