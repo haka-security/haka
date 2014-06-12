@@ -307,13 +307,13 @@ function haka.console.events()
 	local event = {}
 	for disname, dissector in pairs(dissectors) do
 		for _, event in pairs(dissector.events) do
-			local er = { event=event.name, rule_count=0 }
+			local er = { event=event.name, listener=0 }
 			table.insert(ret, er)
 			event[event.name] = er
 		end
 	end
 	for event, listeners in pairs(haka.context.connections) do
-		event[event.name].rule_count = #listeners
+		event[event.name].listener = #listeners
 	end
 	return ret
 end

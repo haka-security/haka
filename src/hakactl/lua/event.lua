@@ -8,15 +8,15 @@ local class = require('class')
 local EventInfo = list.new('thread_info')
 
 EventInfo.field = {
-	'event', 'rule_count'
+	'event', 'listener'
 }
 
 EventInfo.field_format = {
-	['rule_count'] = list.formatter.unit,
+	['listener'] = list.formatter.unit,
 }
 
 EventInfo.field_aggregate = {
-	['rule_count'] = list.aggregator.add
+	['listener'] = list.aggregator.add
 }
 
 function console.events()
