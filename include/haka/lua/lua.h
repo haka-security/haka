@@ -25,10 +25,6 @@
 
 #endif
 
-#ifdef HAKA_LUA52
-#define lua_objlen    lua_rawlen
-#endif
-
 struct lua_State;
 
 const char *lua_converttostring(struct lua_State *L, int idx, size_t *len);

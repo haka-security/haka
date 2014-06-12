@@ -378,7 +378,11 @@ static void mar_decode_value
             dec_buf.size = l;
             dec_buf.head = l;
             dec_buf.seek = 0;
+#if LUA_VERSION_NUM >= 502
+            lua_load(L, (lua_Reader)buf_read, &dec_buf, "=marshal", NULL);
+#else
             lua_load(L, (lua_Reader)buf_read, &dec_buf, "=marshal");
+#endif
             mar_incr_ptr(l);
 
             lua_pushvalue(L, -1);
@@ -530,7 +534,7 @@ static int mar_clone(lua_State* L)
     return 1;
 }
 
-static const luaL_reg R[] =
+static const luaL_Reg R[] =
 {
     {"encode",      mar_encode},
     {"decode",      mar_decode},
