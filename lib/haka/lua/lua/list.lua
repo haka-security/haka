@@ -143,21 +143,24 @@ function list.method:addall(data)
 	end
 end
 
+function list.method:_aggregate_one(field)
+	local aggregator = class.classof(self).field_aggregate
+	if aggregator and aggregator[field] then
+		local values = {}
+		for _,r in ipairs(self._data) do
+			values[#values+1] = r[field]
+		end
+		return aggregator[field](values)
+	end
+end
+
 function list.method:_aggregate()
 	local aggregator = class.classof(self).field_aggregate
 	local data = rawget(self, '_data')
 	if aggregator and data and #data > 1 then
 		local agg = {}
 		for _,h in ipairs(class.classof(self).field) do
-			if aggregator[h] then
-				local values = {}
-				for _,r in ipairs(data) do
-					values[#values+1] = r[h]
-				end
-				agg[h] = aggregator[h](values)
-			else
-				agg[h] = ''
-			end
+			agg[h] = self:_aggregate_one(h) or ''
 		end
 		return agg
 	end
@@ -182,18 +185,10 @@ end
 function list.method:__index(name)
 	local data = rawget(self, '_data')
 	if data then
-		-- If only one element is in the list, we want to allow the user
-		-- to directly call the element by name. Instead of doing "l[1].id"
-		-- it is possible to do "l.id".
 		if #data == 1 then
 			return data[1][name]
 		else
-			local elem = data[name]
-			if elem then
-				local ret = class.classof(self):new()
-				ret._data = { elem }
-				return ret
-			end
+			return self:_aggregate_one(name)
 		end
 	end
 end
