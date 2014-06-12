@@ -62,11 +62,10 @@ struct packet_module_state {
 
 struct netmap_packet {
     struct packet               core_packet;
+	struct vbuffer              data;
+	struct vbuffer_iterator     select;
     netmap_link_t *             link;
 };
-
-
-
 
 static void cleanup()
 {
@@ -88,7 +87,6 @@ static bool interface_link_is_shortcut( char * ifln )
 
 /*
  * get the interface link string and give input and output.
- * return the type of ifln.
  */
 
 #define IFLN_IO_SEPERATOR '>'
@@ -186,7 +184,9 @@ static int init(struct parameters *args)
             if ( interface_link_is_shortcut(link) )
             {
                 char * temp;
-                asprintf( &temp, "%s=%s", link, link );
+				ret = asprintf( &temp, "%s=%s", link, link );
+				if ( ret < 0 )
+					return ENOMEM;
                 free(link);
                 link = temp;
             }
@@ -281,6 +281,18 @@ static struct packet_module_state *init_state(int thread_id)
 	return state;
 }
 
+
+
+static bool packet_build_payload(struct netmap_packet *packet)
+{
+	struct vbuffer_sub sub;
+
+	vbuffer_sub_create(&sub, &packet->data, sizeof(struct ethhdr), ALL);
+
+	return vbuffer_select(&sub, &packet->core_packet.payload, &packet->select);
+}
+
+
 static int get_buffer_on_link( netmap_link_t * link, struct netmap_packet ** pkt )
 {
     int si, counter=0;
@@ -330,7 +342,7 @@ static int get_buffer_on_link( netmap_link_t * link, struct netmap_packet ** pkt
                 messagef(HAKA_LOG_ERROR, L"netmap", L"cannot allocate memory");
                 return ENOMEM;
             }
-            if ( !vbuffer_create_from( &nmpkt->core_packet.payload, rxbuf, slot->len ) )
+			if ( !vbuffer_create_from( &nmpkt->data, rxbuf, slot->len ) )
             {
                 messagef(HAKA_LOG_ERROR, L"netmap", L"vbuffer_create_from fail");
                 return 0;
@@ -346,12 +358,19 @@ static int get_buffer_on_link( netmap_link_t * link, struct netmap_packet ** pkt
 
             messagef(HAKA_LOG_INFO, L"netmap", L" we can send the packet to haka filtering process ");
 
+			if (!packet_build_payload(nmpkt)) {
+				vbuffer_release(&nmpkt->data);
+				free(nmpkt);
+				return ENOMEM;
+			}
+
             *pkt = nmpkt;
         }
         counter++;
     }
     return counter;
 }
+
 
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
@@ -399,7 +418,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
         {
            err = get_buffer_on_link( &links[idx], (struct netmap_packet **) pkt );
            if ( err < 0 )
-               return err;
+			   return err;
         }
     }
 
@@ -418,6 +437,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 		const uint8 *data;
 		size_t len;
 
+		vbuffer_restore(&pkt->select, &pkt->core_packet.payload);
 		data = vbuffer_flatten( &orig_pkt->payload, &len);
         if ( pkt->link->odesc )
         {
@@ -437,8 +457,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 
 static const char *packet_get_dissector(struct packet *orig_pkt)
 {
-	printf("packet_get_dissector\n");
-	return NULL;
+	return "ipv4";
 }
 
 static uint64 packet_get_id(struct packet *orig_pkt)
