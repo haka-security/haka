@@ -241,7 +241,6 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 	free(full_line);
 
 	session.user->print(session.user, "\n");
-	session.user->print(session.user, GREEN "continue" CLEAR "\n");
 
 	if (env == 0) {
 		lua_remove(L, session.env_index);
