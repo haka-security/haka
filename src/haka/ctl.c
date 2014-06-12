@@ -403,15 +403,21 @@ void stop_ctl_server()
  * Command code
  */
 
-int redirect_message(int fd, log_level level, const wchar_t *module, const wchar_t *message)
+int redirect_message(int fd, mutex_t *mutex, log_level level,
+		const wchar_t *module, const wchar_t *message)
 {
 	if (fd > 0) {
+		mutex_lock(mutex);
+
 		if (!ctl_send_int(fd, level) ||
 			!ctl_send_wchars(fd, module, -1) ||
 			!ctl_send_wchars(fd, message, -1)) {
+			mutex_unlock(mutex);
 			clear_error();
 			return false;
 		}
+
+		mutex_unlock(mutex);
 	}
 	return true;
 }
@@ -419,12 +425,13 @@ int redirect_message(int fd, log_level level, const wchar_t *module, const wchar
 struct redirect_logger {
 	struct logger    logger;
 	int              fd;
+	mutex_t          mutex;
 };
 
 int redirect_logger_message(struct logger *_logger, log_level level, const wchar_t *module, const wchar_t *message)
 {
 	struct redirect_logger *logger = (struct redirect_logger *)_logger;
-	if (!redirect_message(logger->fd, level, module, message)) {
+	if (!redirect_message(logger->fd, &logger->mutex, level, module, message)) {
 		logger->logger.mark_for_remove = true;
 	}
 	return 1;
@@ -436,6 +443,7 @@ void redirect_logger_destroy(struct logger *_logger)
 	if (logger->fd > 0) {
 		close(logger->fd);
 	}
+	mutex_destroy(&logger->mutex);
 	free(logger);
 }
 
@@ -452,6 +460,7 @@ struct redirect_logger *redirect_logger_create(d)
 	logger->logger.destroy = redirect_logger_destroy;
 	logger->logger.mark_for_remove = false;
 	logger->fd = -1;
+	mutex_init(&logger->mutex, false);
 
 	return logger;
 }
@@ -459,12 +468,14 @@ struct redirect_logger *redirect_logger_create(d)
 struct redirect_alerter {
 	struct alerter   alerter;
 	int              fd;
+	mutex_t          mutex;
 };
 
 bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
-	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "", "\n\t", false))) {
+	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, L"alert",
+			alert_tostring(id, time, alert, "", "\n\t", false))) {
 		alerter->alerter.mark_for_remove = true;
 	}
 	return true;
@@ -473,7 +484,8 @@ bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, const struct ti
 bool redirect_alerter_update(struct alerter *_alerter, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
-	if (!redirect_message(alerter->fd, HAKA_LOG_INFO, L"alert", alert_tostring(id, time, alert, "update ", "\n\t", false))) {
+	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, L"alert",
+			alert_tostring(id, time, alert, "update ", "\n\t", false))) {
 		alerter->alerter.mark_for_remove = true;
 	}
 	return true;
@@ -485,6 +497,7 @@ void redirect_alerter_destroy(struct alerter *_alerter)
 	if (alerter->fd > 0) {
 		close(alerter->fd);
 	}
+	mutex_destroy(&alerter->mutex);
 	free(alerter);
 }
 
@@ -502,6 +515,7 @@ struct redirect_alerter *redirect_alerter_create(d)
 	alerter->alerter.destroy = redirect_alerter_destroy;
 	alerter->alerter.mark_for_remove = false;
 	alerter->fd = -1;
+	mutex_init(&alerter->mutex, false);
 
 	return alerter;
 }
