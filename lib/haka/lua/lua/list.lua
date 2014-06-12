@@ -5,6 +5,7 @@
 local module = {}
 
 local class = require('class')
+local check = require('check')
 local color = require('color')
 
 local list = class.class('list')
@@ -85,6 +86,8 @@ function list.method:print()
 end
 
 function list.method:filter(f)
+	check.type(1, f, 'function')
+
 	local newdata = {}
 	for _,r in ipairs(rawget(self, '_data') or {}) do
 		if f(r) then
@@ -96,6 +99,8 @@ function list.method:filter(f)
 end
 
 function list.method:sort(order, invert)
+	check.types(1, order, {'string', 'function'})
+
 	local data = rawget(self, '_data')
 	if data then
 		if type(order) == 'function' then
@@ -105,6 +110,19 @@ function list.method:sort(order, invert)
 				table.sort(data, order)
 			end
 		else
+			local found = false
+
+			for _,field in ipairs(class.classof(self).field) do
+				if field == order then
+					found = true
+					break
+				end
+			end
+
+			if not found then
+				check.error(string.format("order '%s' is not a valid key", order))
+			end
+
 			if invert then
 				table.sort(data, function(a, b) return a[order] > b[order] end)
 			else
@@ -146,6 +164,8 @@ function list.method:_aggregate()
 end
 
 function list.method:get(name)
+	check.type(1, name, 'name')
+
 	local data = rawget(self, '_data')
 	if data then
 		local key = class.classof(self).key

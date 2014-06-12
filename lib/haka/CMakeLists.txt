@@ -25,6 +25,7 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/utils.lua
 	lua/lua/dissector.lua
 	lua/lua/list.lua
+	lua/lua/check.lua
 )
 lua_install(TARGET libhakalua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/core)
 
