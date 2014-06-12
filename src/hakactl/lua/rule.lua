@@ -4,20 +4,20 @@
 
 local list = require('list')
 
-local rule_info = list.new('rule_info')
+local RuleInfo = list.new('rule_info')
 
-rule_info.field = {
+RuleInfo.field = {
 	'name', 'location', 'event', 'type'
 }
 
-rule_info.field_format = {}
+RuleInfo.field_format = {}
 
 function console.rules()
 	local data = hakactl.remote('any', function ()
 		return haka.console.rules()
 	end)
 
-	local info = rule_info:new()
+	local info = RuleInfo:new()
 	info:add(data[1])
 	return info
 end

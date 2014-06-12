@@ -6,23 +6,23 @@ local list = require('list')
 
 require('protocol/ipv4')
 
-local tcp_cnx_info = list.new('tcp_cnx_info')
+local TcpConnInfo = list.new('tcp_cnx_info')
 
-tcp_cnx_info.field = {
+TcpConnInfo.field = {
 	'id', 'srcip', 'srcport', 'dstip', 'dstport', 'state',
 	'in_pkts', 'in_bytes', 'out_pkts', 'out_bytes'
 }
 
-tcp_cnx_info.key = 'id'
+TcpConnInfo.key = 'id'
 
-tcp_cnx_info.field_format = {
+TcpConnInfo.field_format = {
 	['in_pkt']    = list.formatter.unit,
 	['in_bytes']  = list.formatter.unit,
 	['out_pkt']   = list.formatter.unit,
 	['out_bytes'] = list.formatter.unit
 }
 
-function tcp_cnx_info.method:drop()
+function TcpConnInfo.method:drop()
 	for _,r in ipairs(self._data) do
 		local id = r.id
 		hakactl.remote(r.thread, function ()
@@ -31,7 +31,7 @@ function tcp_cnx_info.method:drop()
 	end
 end
 
-function tcp_cnx_info.method:reset()
+function TcpConnInfo.method:reset()
 	for _,r in ipairs(self._data) do
 		local id = r.id
 		hakactl.remote(r.thread, function ()
@@ -47,7 +47,7 @@ function console.tcp.connexions(show_dropped)
 		return haka.console.tcp.list_connections(show_dropped)
 	end)
 
-	local conn = tcp_cnx_info:new()
+	local conn = TcpConnInfo:new()
 	conn:addall(data)
 	return conn
 end

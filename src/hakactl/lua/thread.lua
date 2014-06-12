@@ -4,16 +4,16 @@
 
 local list = require('list')
 
-local thread_info = list.new('thread_info')
+local ThreadInfo = list.new('thread_info')
 
-thread_info.field = {
+ThreadInfo.field = {
 	'id', 'status', 'recv_pkt', 'recv_bytes',
 	'trans_pkt', 'trans_bytes', 'drop_pkt'
 }
 
-thread_info.key = 'id'
+ThreadInfo.key = 'id'
 
-thread_info.field_format = {
+ThreadInfo.field_format = {
 	['recv_pkt']    = list.formatter.unit,
 	['recv_bytes']  = list.formatter.unit,
 	['trans_pkt']   = list.formatter.unit,
@@ -21,7 +21,7 @@ thread_info.field_format = {
 	['drop_pkt']    = list.formatter.unit
 }
 
-thread_info.field_aggregate = {
+ThreadInfo.field_aggregate = {
 	['id']          = list.aggregator.replace('total'),
 	['recv_pkt']    = list.aggregator.add,
 	['recv_bytes']  = list.aggregator.add,
@@ -35,7 +35,7 @@ function console.threads()
 		return haka.console.threads()
 	end)
 
-	local info = thread_info:new()
+	local info = ThreadInfo:new()
 	info:add(data[1])
 	return info
 end

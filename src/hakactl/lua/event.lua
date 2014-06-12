@@ -5,17 +5,17 @@
 local list = require('list')
 local class = require('class')
 
-local event_info = list.new('thread_info')
+local EventInfo = list.new('thread_info')
 
-event_info.field = {
+EventInfo.field = {
 	'event', 'rule_count'
 }
 
-event_info.field_format = {
+EventInfo.field_format = {
 	['rule_count'] = list.formatter.unit,
 }
 
-event_info.field_aggregate = {
+EventInfo.field_aggregate = {
 	['rule_count'] = list.aggregator.add
 }
 
@@ -24,7 +24,7 @@ function console.events()
 		return haka.console.events()
 	end)
 
-	local info = event_info:new()
+	local info = EventInfo:new()
 	info:add(data[1])
 	return info
 end

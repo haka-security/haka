@@ -6,23 +6,23 @@ local list = require('list')
 
 require('protocol/ipv4')
 
-local UdpCnxInfo = list.new('UdpCnxInfo')
+local UdpConnInfo = list.new('UdpCnxInfo')
 
-UdpCnxInfo.field = {
+UdpConnInfo.field = {
 	'id', 'srcip', 'srcport', 'dstip', 'dstport', 'state',
 	'in_pkts', 'in_bytes', 'out_pkts', 'out_bytes'
 }
 
-UdpCnxInfo.key = 'id'
+UdpConnInfo.key = 'id'
 
-UdpCnxInfo.field_format = {
+UdpConnInfo.field_format = {
 	['in_pkt']    = list.formatter.unit,
 	['in_bytes']  = list.formatter.unit,
 	['out_pkt']   = list.formatter.unit,
 	['out_bytes'] = list.formatter.unit
 }
 
-function UdpCnxInfo.method:drop()
+function UdpConnInfo.method:drop()
 	for _,r in ipairs(self._data) do
 		local id = r.id
 		hakactl.remote(r.thread, function ()
@@ -38,7 +38,7 @@ function console.udp.connexions(show_dropped)
 		return haka.console.udp.list_connections(show_dropped)
 	end)
 
-	local conn = UdpCnxInfo:new()
+	local conn = UdpConnInfo:new()
 	conn:addall(data)
 	return conn
 end
