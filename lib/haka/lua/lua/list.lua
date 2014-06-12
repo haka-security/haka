@@ -221,6 +221,12 @@ function module.formatter.unit(num)
 	return string.format("%.2f%s", num, num_units[#num_units])
 end
 
+function module.formatter.optional(default)
+	return function (val)
+		if val then return val
+		else return default end
+	end
+end
 
 --
 -- Aggregation

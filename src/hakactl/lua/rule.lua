@@ -10,7 +10,9 @@ RuleInfo.field = {
 	'name', 'location', 'event', 'type'
 }
 
-RuleInfo.field_format = {}
+RuleInfo.field_format = {
+	['name'] = list.formatter.optional("<no name>")
+}
 
 function console.rules()
 	local data = hakactl.remote('any', function ()
