@@ -42,7 +42,7 @@ end
 
 console.tcp = {}
 
-function console.tcp.connexions(show_dropped)
+function console.tcp.connections(show_dropped)
 	local data = hakactl.remote('all', function ()
 		return haka.console.tcp.list_connections(show_dropped)
 	end)

@@ -33,7 +33,7 @@ end
 
 console.udp = {}
 
-function console.udp.connexions(show_dropped)
+function console.udp.connections(show_dropped)
 	local data = hakactl.remote('all', function ()
 		return haka.console.udp.list_connections(show_dropped)
 	end)
