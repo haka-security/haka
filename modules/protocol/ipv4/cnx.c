@@ -51,7 +51,7 @@ struct cnx_table *cnx_table_new(void (*cnx_release)(struct cnx *, bool))
 
 	table->head = NULL;
 	table->cnx_release = cnx_release;
-	atomic_set(&table->id, 1);
+	atomic_set(&table->id, 0);
 
 	return table;
 }
