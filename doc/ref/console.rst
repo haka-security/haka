@@ -45,7 +45,7 @@ The :haka:class:`List` is the main object that is used to return data to the con
 
         :type: string
 
-        Unique key for this list. This key is used when a user call :haka:func:`<List>.get()`.
+        Unique key for this list. This key is used when a user call *get()*.
         This key must be one known field.
 
     .. haka:data:: List.field_format
