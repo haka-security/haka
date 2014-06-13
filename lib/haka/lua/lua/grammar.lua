@@ -208,14 +208,12 @@ function grammar_int.Record.method:do_compile(env, rule, id)
 
 	for i, entity in ipairs(self.entities) do
 		local next = entity:compile(env, self.rule or rule, i)
-		if next then
-			if iter then
-				iter:add(next)
-				iter = next
-			else
-				ret = next
-				iter = ret
-			end
+		if iter then
+			iter:add(next)
+			iter = next
+		else
+			ret = next
+			iter = ret
 		end
 	end
 
@@ -251,14 +249,12 @@ function grammar_int.Sequence.method:do_compile(env, rule, id)
 		end
 
 		local next = entity:compile(env, self.rule or rule, i)
-		if next then
-			if iter then
-				iter:add(next)
-				iter = next
-			else
-				ret = next
-				iter = ret
-			end
+		if iter then
+			iter:add(next)
+			iter = next
+		else
+			ret = next
+			iter = ret
 		end
 	end
 
@@ -281,10 +277,8 @@ function grammar_int.Union.method:do_compile(env, rule, id)
 
 	for i, entity in ipairs(self.entities) do
 		local next = entity:compile(env, self.rule or rule, i)
-		if next then
-			ret:add(next)
-			ret:add(grammar_dg.UnionRestart:new())
-		end
+		ret:add(next)
+		ret:add(grammar_dg.UnionRestart:new())
 	end
 
 	ret:add(grammar_dg.UnionFinish:new(self.named))
@@ -307,16 +301,14 @@ function grammar_int.Try.method:do_compile(env, rule, id)
 	for i, entity in ipairs(self.cases) do
 		local next = entity:compile(env, self.rule or rule, i)
 
-		if next then
-			local try = grammar_dg.Try:new(self.rule or rule, id, self.named)
-			try:add(next)
-			try:add(finish)
-			if previous_try then
-				previous_try:catch(try)
-			end
-			previous_try = try
-			first_try = first_try or try
+		local try = grammar_dg.Try:new(self.rule or rule, id, self.named)
+		try:add(next)
+		try:add(finish)
+		if previous_try then
+			previous_try:catch(try)
 		end
+		previous_try = try
+		first_try = first_try or try
 	end
 
 	if not first_try then
@@ -345,9 +337,7 @@ function grammar_int.Branch.method:do_compile(env, rule, id)
 	for key, entity in pairs(self.cases) do
 		if key ~= 'default' then
 			local next = entity:compile(env, self.rule or rule, key)
-			if next then
-				ret:case(key, next)
-			end
+			ret:case(key, next)
 		end
 	end
 
@@ -356,9 +346,7 @@ function grammar_int.Branch.method:do_compile(env, rule, id)
 		ret._next = grammar_dg.Error:new(self.rule or rule, "invalid case")
 	elseif default ~= 'continue' then
 		local next = default:compile(env, self.rule or rule, 'default')
-		if next then
-			ret._next = next
-		end
+		ret._next = next
 	end
 
 	return ret
