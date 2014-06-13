@@ -7,75 +7,114 @@
 local ipv4 = require('protocol/ipv4')
 
 local machine = haka.state_machine("test", function ()
-	default_transitions{
-		fail = function (self)
+	state1 = state.basic()
+	state2 = state.basic()
+	state3 = state.basic()
+	state4 = state.basic()
+
+	any:on{
+		event = events.fail,
+		action = function (self)
 			print("fail on", self.instance.current)
 		end,
-		finish = function (self)
+	}
+
+	any:on{
+		event = events.finish,
+		action = function (self)
 			print("finished", self.hello)
 		end,
-		enter = function (self)
-			print("enter", self.instance.current)
+	}
+
+	any:on{
+		event = events.enter,
+		action = function (self)
+			if self.instance then
+				print("enter", self.instance.current)
+			else
+				print("enter initial state")
+			end
 		end,
-		leave = function (self)
+	}
+
+	any:on{
+		event = events.leave,
+		action = function (self)
 			print("leave", self.instance.current)
 		end,
 	}
 
-	state1 = state {
-		init = function (self)
+	state1:on{
+		event = events.init,
+		action = function (self)
 			print("initialize state1")
 		end,
-		enter = function (self)
+	}
+
+	state1:on{
+		event = events.enter,
+		action = function (self)
 			self.mystate = "state1"
 			self.count = 0
 			print("enter state1")
 		end,
-		update = function (self, direction, input)
+	}
+
+	state1:on{
+		event = events.up,
+		action = function (self, direction, input)
 			print(direction, "state1 received:", input)
-			return 'state4'
 		end,
-		timeouts = {
-			[0.5] = function (self)
-				print("timeout from state1")
-				self.count = self.count + 1
-				if self.count > 5 then
-					return 'state3'
-				end
-			end
-		}
+		jump = state4,
 	}
 
-	state2 = state {
-		enter = function (self)
+	state1:on{
+		event = events.timeout(0.5),
+		check = function (self)
+			print("timeout from state1")
+			self.count = self.count + 1
+			return self.count > 5
+		end,
+		jump = state3,
+	}
+
+	state2:on{
+		event = events.enter,
+		action = function (self)
 			print("enter state2")
-			return 'fail'
-		end
+		end,
+		jump = fail,
 	}
 
-	state3 = state {
-		update = function (self)
-			return 'state1'
+	state3:on{
+		event = events.up,
+		jump = state1,
+	}
+
+	state3:on{
+		event = events.timeout(1),
+		action = function (self)
+			print("timeout from state3")
+			print("go to state1")
 		end,
-		timeouts = {
-			[1] = function (self)
-				print("timeout from state3")
-				print("go to state1")
-				return 'state1'
-			end,
-		},
-		leave = function (self)
+		jump = state1,
+	}
+
+	state3:on{
+		event = events.leave,
+		action = function (self)
 			print("leave state3")
 			self.mystate = nil
-			return 'state2'
 		end,
+		jump = state2,
 	}
 
-	state4 = state {
-		update = function (self, direction, output)
+	state4:on{
+		event = events.up,
+		action = function (self, direction, output)
 			print(direction, "state4 received:", output)
-			return 'state1'
-		end
+		end,
+		jump = state1,
 	}
 
 	initial(state1)
@@ -93,7 +132,7 @@ haka.rule {
 		end
 
 		if context.cnt < 2 then
-			context.instance:transition('update', context.cnt, string.format("hello from state '%s'", context.instance.current))
+			context.instance:transition('up', context.cnt, string.format("hello from state '%s'", context.instance.current))
 			context.cnt = context.cnt+1
 		end
 	end

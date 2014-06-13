@@ -14,10 +14,15 @@ local module = {}
 module.TransitionCollection = class.class('TransitionCollection')
 
 function module.TransitionCollection.method:__init()
-	self._transitions = {}
+	self._transitions = {
+		timeouts = {}
+	}
 end
 
 function module.TransitionCollection.method:on(transition)
+	assert(transition.event, "transition must have an event")
+	assert(transition.event.name, "transition must be a table")
+
 	if transition.check then
 		assert(type(transition.check) == 'function', "check must be a function")
 	end
@@ -30,7 +35,6 @@ function module.TransitionCollection.method:on(transition)
 		assert(class.isa(transition.jump, module.State), "can only jump on defined state")
 	end
 
-	assert(transition.timeout or transition.event, "transition must have either an event or a timeout")
 	assert(transition.action or transition.jump, "transition must have either an action or a jump")
 
 	-- build another representation of the transition
@@ -43,10 +47,17 @@ function module.TransitionCollection.method:on(transition)
 		t.jump = transition.jump._name
 	end
 
-	if not self._transitions[transition.event] then
-		self._transitions[transition.event] = {}
+	-- register transition
+	if transition.event.name == 'timeouts' then
+		self._transitions.timeouts[transition.event.timeout] = t
+	else
+		if not self._transitions[transition.event.name] then
+			self._transitions[transition.event.name] = {}
+		end
+
+		table.insert(self._transitions[transition.event.name], t)
 	end
-	table.insert(self._transitions[transition.event], t)
+
 end
 
 
@@ -56,21 +67,25 @@ end
 module.State = class.class('State', module.TransitionCollection)
 
 function module.State.method:__init(name)
-	self._transitions = {
-		error = {},
+	class.super(module.State).__init(self)
+	table.merge(self._transitions, {
+		fail = {},
 		enter = {},
 		leave = {},
 		init = {},
 		finish = {},
 		up = {},
 		down = {}
-	}
+	})
 	self._name = name or '<unnamed>'
 end
 
 function module.State.method:on(transition)
-	if not self._transitions[transition.event] then
-		error(string.format("unknown event '%s'", transition.event))
+	assert(transition.event, "transition must have an event")
+	assert(transition.event.name, "transition must be a table")
+
+	if not self._transitions[transition.event.name] then
+		error(string.format("unknown event '%s'", transition.event.name))
 	end
 
 	class.super(module.State).on(self, transition)
@@ -127,6 +142,8 @@ local function transitions_wrapper(state_table, transitions, ...)
 
 				return newstate._compiled_state
 			end
+			-- return anyway since we have done this transition
+			return
 		end
 	end
 end
@@ -145,7 +162,11 @@ function module.CompiledState.method:__init(state_machine, state, name)
 	for n, t in pairs(state._transitions) do
 		local transitions_wrapper = build_transitions_wrapper(state_machine._state_table, t)
 
-		if n == 'fail' then
+		if n == 'timeouts' then
+			for timeout, transition in pairs(t) do
+				self._compiled_state:transition_timeout(timeout, build_transitions_wrapper(state_machine._state_table, { transition }))
+			end
+		elseif n == 'fail' then
 			self._compiled_state:transition_fail(transitions_wrapper)
 		elseif n == 'enter' then
 			self._compiled_state:transition_enter(transitions_wrapper)

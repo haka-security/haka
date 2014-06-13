@@ -28,8 +28,10 @@ end
 
 function TestStateMachine:test_state_machine_run()
 	-- Given
-	local test_foo = false
-	local test_bar = false
+	local ctx = {
+		foo = false,
+		bar = false,
+	}
 	local foobuf = haka.vbuffer_from("foo")
 	local barbuf = haka.vbuffer_from("bar")
 	local g = haka.grammar.new("foobar", function()
@@ -48,31 +50,30 @@ function TestStateMachine:test_state_machine_run()
 		my_foo_state:on{
 			event = events.up,
 			jump = my_bar_state,
-			action = function ()
-				test_foo = true
+			action = function(self)
+				self.foo = true
 			end,
 		}
 
 		my_bar_state:on{
 			event = events.up,
 			jump = finish,
-			action = function ()
-				test_bar = true
+			action = function(self)
+				self.bar = true
 			end,
 		}
 
 		initial(my_foo_state)
-	end)
+	end):instanciate(ctx)
 
 	-- When
-	local sm_instance = state_machine:instanciate(self)
-	sm_instance:update(foobuf, "up", nil)
-	sm_instance:update(barbuf, "up", nil)
+	state_machine:update(foobuf, "up", nil)
+	state_machine:update(barbuf, "up", nil)
 
 	-- Then
-	assertTrue(sm_instance._instance.finished)
-	assertTrue(test_foo)
-	assertTrue(test_bar)
+	assertTrue(state_machine._instance.finished)
+	assertTrue(ctx.foo)
+	assertTrue(ctx.bar)
 end
 
 function TestStateMachine:test_state_machine_fail()
@@ -105,25 +106,27 @@ end
 
 function TestStateMachine:test_state_machine_defaults()
 	-- Given
-	local test = false
+	local ctx = {
+		test = false
+	}
 	local sm = haka.state_machine("smtest", function()
 		my_foo_state = state.basic()
 
 		any:on{
 			event = events.up,
-			action = function ()
-				test = true
+			action = function(self)
+				self.test = true
 			end
 		}
 
 		initial(my_foo_state)
-	end):instanciate(self)
+	end):instanciate(ctx)
 
 	-- When
 	sm:update("up")
 
 	-- Then
-	assertTrue(test)
+	assertTrue(ctx.test)
 end
 
 

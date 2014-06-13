@@ -135,7 +135,12 @@ local function state_machine_env(state_machine)
 	state_machine_int.events = {}
 	setmetatable(state_machine_int.events, {
 		__index = function (self, name)
-			return name
+			if name == "timeout" then
+				return function(timeout)
+					return { name = "timeouts", timeout = timeout }
+				end
+			end
+			return { name = name }
 		end,
 		__newindex = function ()
 			error("events is a read only table")
