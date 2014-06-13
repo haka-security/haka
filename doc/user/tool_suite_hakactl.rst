@@ -54,3 +54,9 @@ Commands
     Put a running daemon in interactive mode
 
     .. seealso:: See :doc:`\debug` for more information about the debugger and the interactive mode.
+
+.. option:: console
+
+    Remotely execute Lua commands on a running daemon.
+
+    .. seealso:: See :doc:`\console` for more information about the possibilities of the console.

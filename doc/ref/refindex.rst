@@ -23,3 +23,4 @@ Welcome to Haka's User Reference Guide!
     context.rst
     dissector.rst
     misc.rst
+    console.rst
