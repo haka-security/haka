@@ -8,40 +8,30 @@ local dg = require('grammar_dg')
 local module = {}
 
 --
--- State
+-- Transition collection
 --
-module.State = class.class('State')
 
-function module.State.method:__init(g)
-	assert(class.isa(g, dg.Entity), "state expect an exported element of a grammar")
-	self._grammar = g
-	self._transitions = {
-		error = {},
-		enter = {},
-		leave = {},
-		init = {},
-		finish = {},
-		up = {},
-		down = {},
-	}
-	self._name = '<unnamed>'
+module.TransitionCollection = class.class('TransitionCollection')
+
+function module.TransitionCollection.method:__init()
+	self._transitions = {}
 end
 
-function module.State.method:on(transition)
-	if not self._transitions[transition.event] then
-		error("Unknown event")
+function module.TransitionCollection.method:on(transition)
+	if transition.check then
+		assert(type(transition.check) == 'function', "check must be a function")
 	end
-
-	-- TODO assert there is either an action or a jump otherwise transition
-	-- is useless
 
 	if transition.action then
 		assert(type(transition.action) == 'function', "action must be a function")
 	end
 
-	if transition.check then
-		assert(type(transition.check) == 'function', "check must be a function")
+	if transition.jump then
+		assert(class.isa(transition.jump, module.State), "can only jump on defined state")
 	end
+
+	assert(transition.timeout or transition.event, "transition must have either an event or a timeout")
+	assert(transition.action or transition.jump, "transition must have either an action or a jump")
 
 	-- build another representation of the transition
 	local t = {
@@ -53,17 +43,66 @@ function module.State.method:on(transition)
 		t.jump = transition.jump._name
 	end
 
+	if not self._transitions[transition.event] then
+		self._transitions[transition.event] = {}
+	end
 	table.insert(self._transitions[transition.event], t)
 end
 
-function module.State.method:_update(state_machine, payload, direction, pkt)
+
+--
+-- State
+--
+module.State = class.class('State', module.TransitionCollection)
+
+function module.State.method:__init(name)
+	self._transitions = {
+		error = {},
+		enter = {},
+		leave = {},
+		init = {},
+		finish = {},
+		up = {},
+		down = {}
+	}
+	self._name = name or '<unnamed>'
+end
+
+function module.State.method:on(transition)
+	if not self._transitions[transition.event] then
+		error(string.format("unknown event '%s'", transition.event))
+	end
+
+	class.super(module.State).on(self, transition)
+end
+
+function module.State.method:setdefaults(defaults)
+	assert(class.classof(defaults) == module.TransitionCollection, "can only set default with a raw TransitionCollection")
+	for name, t in pairs(defaults._transitions) do
+		-- Don't add transition to state that doesn't support it
+		if self._transitions[name] then
+			table.append(self._transitions[name], t)
+		end
+	end
+end
+
+function module.State.method:_update(state_machine, direction)
+	state_machine:transition(direction)
+end
+
+module.GrammarState = class.class('GrammarState', module.State)
+
+function module.GrammarState.method:__init(g, name)
+	class.super(module.GrammarState).__init(self, name)
+	assert(class.isa(g, dg.Entity), "state expect an exported element of a grammar")
+	self._grammar = g
+	self._transitions.parse_error = {}
+end
+
+function module.GrammarState.method:_update(state_machine, payload, direction, pkt)
 	local res, err = self._grammar:parse(payload:pos('begin'))
 	if err then
-		haka.alert{
-			description = string.format("invalid protocol %s", err.rule),
-			severity = 'low'
-		}
-		self.flow:drop(pkt)
+		state_machine:transition("parse_error", pkt, err)
 	else
 		state_machine:transition(direction, payload, direction, pkt)
 	end
@@ -126,8 +165,12 @@ end
 -- Accessors
 --
 
-function module.basic(g)
-	return module.State:new(g)
+function module.basic()
+	return module.State:new()
+end
+
+function module.grammar(g)
+	return module.GrammarState:new(g)
 end
 
 return module

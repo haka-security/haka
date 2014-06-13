@@ -19,7 +19,8 @@ local states = {}
 states.StateMachine = class.class('StateMachine')
 
 function states.StateMachine.method:__init(name)
-	self._states = {}
+	self._states = { }
+	self._default = state.TransitionCollection:new()
 	self.name = name
 end
 
@@ -35,13 +36,13 @@ function states.StateMachine.method:compile()
 		end
 
 		for name, s in pairs(self._states) do
-			if class.isa(s, state.State) then
-				local new_state = state.CompiledState:new(self, s, name)
-				self._state_table[name] = new_state
+			assert(class.isa(s, state.State), "invalid state type")
+			s:setdefaults(self._default)
+			local new_state = state.CompiledState:new(self, s, name)
+			self._state_table[name] = new_state
 
-				if s == self._initial then
-					initial = new_state
-				end
+			if s == self._initial then
+				initial = new_state
 			end
 		end
 
@@ -121,16 +122,14 @@ local function state_machine_env(state_machine)
 	end
 
 	-- Fake special states
-	state_machine_int.finish = {
-		_name = "finish"
-	}
-
-	state_machine_int.fail = {
-		_name = "fail"
-	}
+	state_machine_int.finish = state.State:new("finish")
+	state_machine_int.fail = state.State:new("fail")
 
 	-- Link to state
 	state_machine_int.state = state
+
+	-- Special any transition collection
+	state_machine_int.any = state_machine._default
 
 	-- Events proxying
 	state_machine_int.events = {}

@@ -8,8 +8,8 @@ local ipv4 = require('protocol/ipv4')
 
 local machine = haka.state_machine("test", function ()
 	default_transitions{
-		error = function (self)
-			print("error on", self.instance.current)
+		fail = function (self)
+			print("fail on", self.instance.current)
 		end,
 		finish = function (self)
 			print("finished", self.hello)
@@ -49,7 +49,7 @@ local machine = haka.state_machine("test", function ()
 	state2 = state {
 		enter = function (self)
 			print("enter state2")
-			return 'error'
+			return 'fail'
 		end
 	}
 

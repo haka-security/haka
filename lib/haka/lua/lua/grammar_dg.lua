@@ -257,7 +257,7 @@ dg.Recurs = class.class('DGRecurs', dg.Control)
 dg.Recurs.trace_name = 'recursion'
 
 function dg.Recurs.method:__init(rule, id, recurs)
-	class.super(dg.Recurs):__init(rule, id)
+	class.super(dg.Recurs).__init(self, rule, id)
 	self._recurs = recurs
 end
 

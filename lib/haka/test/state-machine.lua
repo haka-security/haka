@@ -8,30 +8,15 @@ TestStateMachine = {}
 
 function TestStateMachine:test_state_machine_compile()
 	-- Given
-	local buf = haka.vbuffer_from("foobar")
-	local g = haka.grammar.new("foobar", function()
-		foo = field("foo", token("foo")
-			:const("foo"))
-
-		bar = field("bar", token("bar")
-			:const("bar"))
-
-		export(foo, bar)
-	end)
-
+	-- nothing
 	-- When
-	local state_machine = haka.state_machine("tcp", function()
-		my_foo_state = state.basic(g.foo)
-		my_bar_state = state.basic(g.bar)
+	local state_machine = haka.state_machine("smtest", function()
+		my_foo_state = state.basic()
+		my_bar_state = state.basic()
 
 		my_foo_state:on{
-			event = events.up,
-			check = function (self, pkt) return pkt.flags.syn and pkt.flags.ack end,
+			event = events.enter,
 			jump = my_bar_state,
-			action = function (self, pkt)
-				self.stream[self.output]:init(pkt.seq+1)
-				pkt:send()
-			end
 		}
 
 		initial(my_foo_state)
@@ -43,6 +28,8 @@ end
 
 function TestStateMachine:test_state_machine_run()
 	-- Given
+	local test_foo = false
+	local test_bar = false
 	local foobuf = haka.vbuffer_from("foo")
 	local barbuf = haka.vbuffer_from("bar")
 	local g = haka.grammar.new("foobar", function()
@@ -54,15 +41,15 @@ function TestStateMachine:test_state_machine_run()
 
 		export(foo, bar)
 	end)
-	local state_machine = haka.state_machine("tcp", function()
-		my_foo_state = state.basic(g.foo)
-		my_bar_state = state.basic(g.bar)
+	local state_machine = haka.state_machine("smtest", function()
+		my_foo_state = state.grammar(g.foo)
+		my_bar_state = state.grammar(g.bar)
 
 		my_foo_state:on{
 			event = events.up,
 			jump = my_bar_state,
 			action = function ()
-				debug.pprint("woot woot we are in foo state action")
+				test_foo = true
 			end,
 		}
 
@@ -70,7 +57,7 @@ function TestStateMachine:test_state_machine_run()
 			event = events.up,
 			jump = finish,
 			action = function ()
-				debug.pprint("woot woot we are in bar state action")
+				test_bar = true
 			end,
 		}
 
@@ -84,6 +71,8 @@ function TestStateMachine:test_state_machine_run()
 
 	-- Then
 	assertTrue(sm_instance._instance.finished)
+	assertTrue(test_foo)
+	assertTrue(test_bar)
 end
 
 function TestStateMachine:test_state_machine_fail()
@@ -95,15 +84,12 @@ function TestStateMachine:test_state_machine_fail()
 
 		export(foo)
 	end)
-	local state_machine = haka.state_machine("tcp", function()
-		my_foo_state = state.basic(g.foo)
+	local state_machine = haka.state_machine("smtest", function()
+		my_foo_state = state.grammar(g.foo)
 
 		my_foo_state:on{
 			event = events.up,
 			jump = fail,
-			action = function ()
-				debug.pprint("woot woot we are in foo state action")
-			end,
 		}
 
 		initial(my_foo_state)
@@ -116,6 +102,31 @@ function TestStateMachine:test_state_machine_fail()
 	-- Then
 	assertTrue(sm_instance._instance.failed)
 end
+
+function TestStateMachine:test_state_machine_defaults()
+	-- Given
+	local test = false
+	local sm = haka.state_machine("smtest", function()
+		my_foo_state = state.basic()
+
+		any:on{
+			event = events.up,
+			action = function ()
+				test = true
+			end
+		}
+
+		initial(my_foo_state)
+	end):instanciate(self)
+
+	-- When
+	sm:update("up")
+
+	-- Then
+	assertTrue(test)
+end
+
+
 
 LuaUnit:setVerbosity(2)
 assert(LuaUnit:run('TestStateMachine') == 0)
