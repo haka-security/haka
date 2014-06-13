@@ -10,10 +10,10 @@ TCP
 
     :param show_dropped: ``true`` if also the dropped connections should be listed.
     :ptype show_dropped: boolean
-    :return list: Udp connections information.
+    :return list: Tdp connections information.
     :rtype list: :haka:class:`TcpConnList`
 
-    Get information about all Tcp connections currently known in haka (ips, ports,
+    Get information about all tcp connections currently known in haka (ips, ports,
     statistics, state...).
 
     Some extra method are available on this list:

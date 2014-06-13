@@ -13,7 +13,7 @@ UDP
     :return list: Udp connections information.
     :rtype list: :haka:class:`UdpConnList`
 
-    Get information about all Udp connections currently known in haka (ips, ports,
+    Get information about all udp connections currently known in haka (ips, ports,
     statistics, state...).
 
     Some extra method are available on this list:

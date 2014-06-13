@@ -125,7 +125,7 @@ New function
 ------------
 
 Adding a new function can be done by adding functions to the table ``haka.console``. This table
-is the environment provided when inside the console.
+is the environment provided within the console.
 
 Remote execution
 ^^^^^^^^^^^^^^^^

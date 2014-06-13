@@ -32,7 +32,6 @@ named *List* have many features to enable advanced scripting.
 
         :param field: Field to retrieve.
         :ptype field: string
-        :return list: Field value.
         :return value: Value for the field.
 
         Get a field value for the given *field*.
@@ -53,6 +52,10 @@ named *List* have many features to enable advanced scripting.
         :rtype list: :haka:class:`List`
 
         Filter out and only keep some elements of the list.
+
+        The function *f* follows this prototype:
+
+        .. haka:function:: f(elem) -> should_keep
 
     .. haka:method:: List:sort(order, invert=false) -> list
 
@@ -79,7 +82,7 @@ General utilities
     :return list: Threads information.
     :rtype list: :haka:class:`List`
 
-    Get information about the running threads (id, packet statistics, byte statistics...).
+    Get information about the haka threads (id, packet statistics, byte statistics...).
 
 .. haka:function:: rules() -> list
     :module:
