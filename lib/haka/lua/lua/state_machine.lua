@@ -122,8 +122,8 @@ local function state_machine_env(state_machine)
 	end
 
 	-- Fake special states
-	state_machine_int.finish = state.State:new("finish")
-	state_machine_int.fail = state.State:new("fail")
+	state_machine_int.finish = state.State:new({}, "finish")
+	state_machine_int.fail = state.State:new({}, "fail")
 
 	-- Link to state
 	state_machine_int.state = state

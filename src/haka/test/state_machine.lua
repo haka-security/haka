@@ -7,10 +7,10 @@
 local ipv4 = require('protocol/ipv4')
 
 local machine = haka.state_machine("test", function ()
-	state1 = state.basic()
-	state2 = state.basic()
-	state3 = state.basic()
-	state4 = state.basic()
+	state1 = state.basic({ events.start })
+	state2 = state.basic({ events.start })
+	state3 = state.basic({ events.start })
+	state4 = state.basic({ events.start })
 
 	any:on{
 		event = events.fail,
@@ -61,7 +61,7 @@ local machine = haka.state_machine("test", function ()
 	}
 
 	state1:on{
-		event = events.up,
+		event = events.start,
 		action = function (self, direction, input)
 			print(direction, "state1 received:", input)
 		end,
@@ -87,7 +87,7 @@ local machine = haka.state_machine("test", function ()
 	}
 
 	state3:on{
-		event = events.up,
+		event = events.start,
 		jump = state1,
 	}
 
@@ -110,7 +110,7 @@ local machine = haka.state_machine("test", function ()
 	}
 
 	state4:on{
-		event = events.up,
+		event = events.start,
 		action = function (self, direction, output)
 			print(direction, "state4 received:", output)
 		end,
@@ -132,7 +132,7 @@ haka.rule {
 		end
 
 		if context.cnt < 2 then
-			context.instance:transition('up', context.cnt, string.format("hello from state '%s'", context.instance.current))
+			context.instance:transition('start', context.cnt, string.format("hello from state '%s'", context.instance.current))
 			context.cnt = context.cnt+1
 		end
 	end

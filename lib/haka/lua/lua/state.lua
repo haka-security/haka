@@ -13,15 +13,24 @@ local module = {}
 
 module.TransitionCollection = class.class('TransitionCollection')
 
-function module.TransitionCollection.method:__init()
+function module.TransitionCollection.method:__init(events, const)
+	self._const = const or false
 	self._transitions = {
 		timeouts = {}
 	}
+	events = events or {}
+	for _, event in ipairs(events) do
+		self._transitions[event.name] = {}
+	end
 end
 
 function module.TransitionCollection.method:on(transition)
 	assert(transition.event, "transition must have an event")
 	assert(transition.event.name, "transition must be a table")
+
+	if self._const and not self._transitions[transition.event.name] then
+		error(string.format("unknown event '%s'", transition.event.name))
+	end
 
 	if transition.check then
 		assert(type(transition.check) == 'function', "check must be a function")
@@ -66,29 +75,17 @@ end
 --
 module.State = class.class('State', module.TransitionCollection)
 
-function module.State.method:__init(name)
-	class.super(module.State).__init(self)
-	table.merge(self._transitions, {
-		fail = {},
-		enter = {},
-		leave = {},
-		init = {},
-		finish = {},
-		up = {},
-		down = {}
+function module.State.method:__init(events, name)
+	events = events or {}
+	table.append(events, {
+		{ name = "fail" },
+		{ name = "enter" },
+		{ name = "leave" },
+		{ name = "init" },
+		{ name = "finish" },
 	})
+	class.super(module.State).__init(self, events, true)
 	self._name = name or '<unnamed>'
-end
-
-function module.State.method:on(transition)
-	assert(transition.event, "transition must have an event")
-	assert(transition.event.name, "transition must be a table")
-
-	if not self._transitions[transition.event.name] then
-		error(string.format("unknown event '%s'", transition.event.name))
-	end
-
-	class.super(module.State).on(self, transition)
 end
 
 function module.State.method:setdefaults(defaults)
@@ -105,17 +102,31 @@ function module.State.method:_update(state_machine, direction)
 	state_machine:transition(direction)
 end
 
-module.GrammarState = class.class('GrammarState', module.State)
+module.BidirectionnalState = class.class('BidirectionnalState', module.State)
 
-function module.GrammarState.method:__init(g, name)
-	class.super(module.GrammarState).__init(self, name)
-	assert(class.isa(g, dg.Entity), "state expect an exported element of a grammar")
-	self._grammar = g
+function module.BidirectionnalState.method:__init(gup, gdown, events, name)
+	debug.pprint(gup)
+	debug.pprint(gdown)
+	assert(class.isa(gup, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
+	assert(class.isa(gdown, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
+
+	events = events or {}
+	table.append(events, {
+		{ name = "up" },
+		{ name = "down" },
+		{ name = "parse_error" },
+	})
+	class.super(module.BidirectionnalState).__init(self, events, name)
+
+	self._grammar = {
+		up = gup,
+		down = gdown,
+	}
 	self._transitions.parse_error = {}
 end
 
-function module.GrammarState.method:_update(state_machine, payload, direction, pkt)
-	local res, err = self._grammar:parse(payload:pos('begin'))
+function module.BidirectionnalState.method:_update(state_machine, payload, direction, pkt)
+	local res, err = self._grammar[direction]:parse(payload:pos('begin'))
 	if err then
 		state_machine:transition("parse_error", pkt, err)
 	else
@@ -186,12 +197,12 @@ end
 -- Accessors
 --
 
-function module.basic()
-	return module.State:new()
+function module.basic(events)
+	return module.State:new(events)
 end
 
-function module.grammar(g)
-	return module.GrammarState:new(g)
+function module.bidirectionnal(g1, g2, events)
+	return module.BidirectionnalState:new(g1, g2, events)
 end
 
 return module

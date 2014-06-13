@@ -10,7 +10,7 @@ function TestStateMachine:test_state_machine_compile()
 	-- Given
 	-- nothing
 	-- When
-	local state_machine = haka.state_machine("smtest", function()
+	local sm = haka.state_machine("smtest", function()
 		my_foo_state = state.basic()
 		my_bar_state = state.basic()
 
@@ -23,7 +23,7 @@ function TestStateMachine:test_state_machine_compile()
 	end)
 
 	-- Then
-	assert(state_machine)
+	assert(sm)
 end
 
 function TestStateMachine:test_state_machine_run()
@@ -32,23 +32,12 @@ function TestStateMachine:test_state_machine_run()
 		foo = false,
 		bar = false,
 	}
-	local foobuf = haka.vbuffer_from("foo")
-	local barbuf = haka.vbuffer_from("bar")
-	local g = haka.grammar.new("foobar", function()
-		foo = field("foo", token("foo")
-			:const("foo"))
-
-		bar = field("bar", token("bar")
-			:const("bar"))
-
-		export(foo, bar)
-	end)
-	local state_machine = haka.state_machine("smtest", function()
-		my_foo_state = state.grammar(g.foo)
-		my_bar_state = state.grammar(g.bar)
+	local sm = haka.state_machine("smtest", function()
+		my_foo_state = state.basic({ events.test })
+		my_bar_state = state.basic({ events.test })
 
 		my_foo_state:on{
-			event = events.up,
+			event = events.test,
 			jump = my_bar_state,
 			action = function(self)
 				self.foo = true
@@ -56,7 +45,7 @@ function TestStateMachine:test_state_machine_run()
 		}
 
 		my_bar_state:on{
-			event = events.up,
+			event = events.test,
 			jump = finish,
 			action = function(self)
 				self.bar = true
@@ -67,41 +56,40 @@ function TestStateMachine:test_state_machine_run()
 	end):instanciate(ctx)
 
 	-- When
-	state_machine:update(foobuf, "up", nil)
-	state_machine:update(barbuf, "up", nil)
+	sm:update("test")
+	sm:update("test")
 
 	-- Then
-	assertTrue(state_machine._instance.finished)
 	assertTrue(ctx.foo)
 	assertTrue(ctx.bar)
+	assertTrue(sm._instance.finished)
 end
 
 function TestStateMachine:test_state_machine_fail()
 	-- Given
-	local foobuf = haka.vbuffer_from("foo")
-	local g = haka.grammar.new("foobar", function()
-		foo = field("foo", token("foo")
-			:const("foo"))
-
-		export(foo)
-	end)
-	local state_machine = haka.state_machine("smtest", function()
-		my_foo_state = state.grammar(g.foo)
+	local ctx = {
+		test = false
+	}
+	local sm = haka.state_machine("smtest", function()
+		my_foo_state = state.basic({ events.test })
 
 		my_foo_state:on{
-			event = events.up,
+			event = events.test,
+			action = function(self)
+				self.test = true
+			end,
 			jump = fail,
 		}
 
 		initial(my_foo_state)
-	end)
+	end):instanciate(ctx)
 
 	-- When
-	local sm_instance = state_machine:instanciate(self)
-	sm_instance:update(foobuf, "up", nil)
+	sm:update("test")
 
 	-- Then
-	assertTrue(sm_instance._instance.failed)
+	assertTrue(ctx.test)
+	assertTrue(sm._instance.failed)
 end
 
 function TestStateMachine:test_state_machine_defaults()
@@ -110,10 +98,10 @@ function TestStateMachine:test_state_machine_defaults()
 		test = false
 	}
 	local sm = haka.state_machine("smtest", function()
-		my_foo_state = state.basic()
+		my_foo_state = state.basic({ events.test })
 
 		any:on{
-			event = events.up,
+			event = events.test,
 			action = function(self)
 				self.test = true
 			end
@@ -123,13 +111,132 @@ function TestStateMachine:test_state_machine_defaults()
 	end):instanciate(ctx)
 
 	-- When
-	sm:update("up")
+	sm:update("test")
 
 	-- Then
 	assertTrue(ctx.test)
 end
 
+function TestStateMachine:test_state_machine_bidirectionnal_run()
+	-- Given
+	local ctx = {
+		up = false,
+		down = false,
+	}
+	local upbuf = haka.vbuffer_from("up")
+	local downbuf = haka.vbuffer_from("down")
+	local g = haka.grammar.new("bidirectionnal", function()
+		up = field("up", token("up")
+			:const("up"))
 
+		down = field("down", token("down")
+			:const("down"))
+
+		export(up, down)
+	end)
+	local state_machine = haka.state_machine("smtest", function()
+		my_up_state = state.bidirectionnal(g.up, g.down)
+		my_down_state = state.bidirectionnal(g.up, g.down)
+
+		my_up_state:on{
+			event = events.up,
+			jump = my_down_state,
+			action = function(self)
+				self.up = true
+			end,
+		}
+
+		my_up_state:on{
+			event = events.down,
+			jump = fail
+		}
+
+		my_down_state:on{
+			event = events.down,
+			jump = finish,
+			action = function(self)
+				self.down = true
+			end,
+		}
+
+		my_down_state:on{
+			event = events.up,
+			jump = fail
+		}
+
+		initial(my_up_state)
+	end):instanciate(ctx)
+
+	-- When
+	state_machine:update(upbuf, "up", nil)
+	state_machine:update(downbuf, "down", nil)
+
+	-- Then
+	assertTrue(state_machine._instance.finished)
+	assertTrue(ctx.up)
+	assertTrue(ctx.down)
+end
+
+function TestStateMachine:test_state_machine_bidirectionnal_fail()
+	-- Given
+	local ctx = {
+		up = false,
+		down = false,
+	}
+	local upbuf = haka.vbuffer_from("up")
+	local downbuf = haka.vbuffer_from("down")
+	local g = haka.grammar.new("bidirectionnal", function()
+		up = field("up", token("up")
+			:const("up"))
+
+		down = field("down", token("down")
+			:const("down"))
+
+		export(up, down)
+	end)
+	local state_machine = haka.state_machine("smtest", function()
+		my_up_state = state.bidirectionnal(g.up, g.down)
+		my_down_state = state.bidirectionnal(g.up, g.down)
+
+		my_up_state:on{
+			event = events.up,
+			jump = my_down_state,
+			action = function(self)
+				self.up = true
+			end,
+		}
+
+		my_up_state:on{
+			event = events.down,
+			jump = fail
+		}
+
+		my_down_state:on{
+			event = events.down,
+			jump = finish,
+			action = function(self)
+				self.down = true
+			end,
+		}
+
+		my_down_state:on{
+			event = events.up,
+			jump = fail
+		}
+
+		initial(my_up_state)
+	end):instanciate(ctx)
+
+	state_machine:update(upbuf, "up", nil)
+
+	-- When
+	state_machine:update(upbuf, "up", nil)
+
+	-- Then
+	assertTrue(state_machine._instance.failed)
+	assertTrue(ctx.up)
+	assertFalse(ctx.down)
+end
 
 LuaUnit:setVerbosity(2)
 assert(LuaUnit:run('TestStateMachine') == 0)
