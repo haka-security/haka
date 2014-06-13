@@ -238,5 +238,66 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 	assertFalse(ctx.down)
 end
 
+function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
+	-- Given
+	local ctx = {
+		up = false,
+		down = false,
+		parse_error = false,
+	}
+	local upbuf = haka.vbuffer_from("up")
+	local downbuf = haka.vbuffer_from("wrong")
+	local g = haka.grammar.new("bidirectionnal", function()
+		up = field("up", token("up")
+			:const("up"))
+
+		down = field("down", token("down")
+			:const("down"))
+
+		export(up, down)
+	end)
+	local state_machine = haka.state_machine("smtest", function()
+		my_up_state = state.bidirectionnal(g.up, g.down)
+		my_down_state = state.bidirectionnal(g.up, g.down)
+
+		any:on{
+			event = events.parse_error,
+			action = function(self)
+				self.parse_error = true
+			end,
+			jump = fail
+		}
+
+		my_up_state:on{
+			event = events.up,
+			jump = my_down_state,
+			action = function(self)
+				self.up = true
+			end,
+		}
+
+		my_down_state:on{
+			event = events.down,
+			jump = finish,
+			action = function(self)
+				self.down = true
+			end,
+		}
+
+		initial(my_up_state)
+	end):instanciate(ctx)
+
+	state_machine:update(upbuf, "up", nil)
+
+	-- When
+	state_machine:update(downbuf, "down", nil)
+
+	-- Then
+	assertTrue(state_machine._instance.failed)
+	assertTrue(ctx.up)
+	assertFalse(ctx.down)
+	assertTrue(ctx.parse_error)
+end
+
 LuaUnit:setVerbosity(2)
 assert(LuaUnit:run('TestStateMachine') == 0)
