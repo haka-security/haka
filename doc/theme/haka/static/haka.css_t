@@ -325,6 +325,16 @@ dl.method dt + dt, dl.data dt + dt, dl.attribute dt + dt {
 	padding-left: 0;
 }
 
+/* For the SMTP tutorial, we still want the bullet to appear. */
+
+#smtp-protocol-dissection li.toctree-l1 {
+	list-style: disc;
+}
+
+#smtp-protocol-dissection .toctree-wrapper > ul {
+	padding-left: 40px;
+}
+
 /* Toctree already are numbered so we can remove ticks */
 li.toctree-l1 {
 	list-style: none;

@@ -2,8 +2,8 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Writing Haka scripts
-====================
+Tutorials
+=========
 
 .. toctree::
    :maxdepth: 2
@@ -13,4 +13,5 @@ Writing Haka scripts
    tutorial/stats.rst
    tutorial/sqli.rst
    tutorial/ruleset.rst
+   tutorial/smtp_dissector.rst
 
