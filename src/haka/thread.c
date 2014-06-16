@@ -503,21 +503,30 @@ void thread_pool_start(struct thread_pool *pool)
 	}
 }
 
-void thread_pool_stop(struct thread_pool *pool, bool force)
+bool thread_pool_stop(struct thread_pool *pool, int force)
 {
+	int i;
+
 	pool->stop = true;
 
-	if (force && !pool->single) {
-		thread_pool_cancel(pool);
-	}
-	else {
-		int i;
+	switch (force) {
+	case 1:
 		for (i=0; i<pool->count; ++i) {
 			if (pool->threads[i] && pool->threads[i]->engine) {
 				engine_thread_force_unblock(pool->threads[i]->engine);
 			}
 		}
+		break;
+
+	case 2:
+		if (!pool->single) thread_pool_cancel(pool);
+		else return false;
+
+	default:
+		return false;
 	}
+
+	return true;
 }
 
 int thread_pool_count(struct thread_pool *pool)

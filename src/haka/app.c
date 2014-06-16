@@ -60,17 +60,15 @@ static void term_error_signal(int sig, siginfo_t *si, void *uc)
 
 	fatal_error_level = atomic_inc(&fatal_error_count);
 
-	if (fatal_error_level > 2) {
-		fatal_exit(1);
-	}
-
 	if (sig != SIGINT) {
 		static const char *message = "terminate signal received\n";
 		write(STDERR_FILENO, message, strlen(message));
 	}
 
 	if (thread_states) {
-		thread_pool_stop(thread_states, fatal_error_level > 1);
+		if (!thread_pool_stop(thread_states, fatal_error_level)) {
+			fatal_exit(1);
+		}
 	}
 	else {
 		fatal_exit(1);
