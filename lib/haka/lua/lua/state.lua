@@ -25,22 +25,24 @@ function module.TransitionCollection.method:on(transition)
 	assert(transition.event.name, "transition must be a table")
 
 	if self._const and not self._transitions[transition.event.name] then
-		error(string.format("unknown event '%s'", transition.event.name))
+		error(string.format("unknown event '%s'", transition.event.name), 2)
 	end
 
-	if transition.check then
-		assert(type(transition.check) == 'function', "check must be a function")
+	if transition.check and not type(transition.check) == 'function' then
+		error("check must be a function", 2)
 	end
 
-	if transition.action then
-		assert(type(transition.action) == 'function', "action must be a function")
+	if transition.action and not type(transition.action) then
+		error("action must be a function", 2)
 	end
 
-	if transition.jump then
-		assert(class.isa(transition.jump, module.State), "can only jump on defined state")
+	if transition.jump and not class.isa(transition.jump, module.State) then
+		error("can only jump on defined state", 2)
 	end
 
-	assert(transition.action or transition.jump, "transition must have either an action or a jump")
+	if not transition.action and not transition.jump then
+		error("transition must have either an action or a jump", 2)
+	end
 
 	-- build another representation of the transition
 	local t = {
