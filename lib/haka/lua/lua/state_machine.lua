@@ -189,7 +189,12 @@ local function state_machine_env(state_machine)
 	}
 end
 
-function haka.state_machine(name, def)
+haka.state_machine = {}
+
+haka.state_machine.State = state.State
+haka.state_machine.BidirectionnalState = state.BidirectionnalState
+
+function haka.state_machine.new(name, def)
 	assert(type(def) == 'function', "state machine definition must by a function")
 
 	local state_machine = states.StateMachine:new(name)

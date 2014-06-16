@@ -128,7 +128,7 @@ end
 function http_dissector.method:receive(stream, current, direction)
 	return haka.dissector.pcall(self, function ()
 		self.flow:streamed(stream, self.receive_streamed, self, current, direction)
-		
+
 		if self.flow then
 			self.flow:send(direction)
 		end

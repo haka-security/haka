@@ -10,7 +10,7 @@ function TestStateMachine:test_state_machine_compile()
 	-- Given
 	-- nothing
 	-- When
-	local sm = haka.state_machine("smtest", function()
+	local sm = haka.state_machine.new("smtest", function ()
 		state_type(TestState)
 
 		my_foo_state = state()
@@ -34,7 +34,7 @@ function TestStateMachine:test_state_machine_run()
 		foo = false,
 		bar = false,
 	}
-	local sm = haka.state_machine("smtest", function()
+	local sm = haka.state_machine.new("smtest", function ()
 		state_type(TestState)
 
 		my_foo_state = state()
@@ -43,7 +43,7 @@ function TestStateMachine:test_state_machine_run()
 		my_foo_state:on{
 			event = events.test,
 			jump = my_bar_state,
-			action = function(self)
+			action = function (self)
 				self.foo = true
 			end,
 		}
@@ -51,7 +51,7 @@ function TestStateMachine:test_state_machine_run()
 		my_bar_state:on{
 			event = events.test,
 			jump = finish,
-			action = function(self)
+			action = function (self)
 				self.bar = true
 			end,
 		}
@@ -74,14 +74,14 @@ function TestStateMachine:test_state_machine_fail()
 	local ctx = {
 		test = false
 	}
-	local sm = haka.state_machine("smtest", function()
+	local sm = haka.state_machine.new("smtest", function ()
 		state_type(TestState)
 
 		my_foo_state = state()
 
 		my_foo_state:on{
 			event = events.test,
-			action = function(self)
+			action = function (self)
 				self.test = true
 			end,
 			jump = fail,
@@ -103,14 +103,14 @@ function TestStateMachine:test_state_machine_defaults()
 	local ctx = {
 		test = false
 	}
-	local sm = haka.state_machine("smtest", function()
+	local sm = haka.state_machine.new("smtest", function ()
 		state_type(TestState)
 
 		my_foo_state = state()
 
 		any:on{
 			event = events.test,
-			action = function(self)
+			action = function (self)
 				self.test = true
 			end
 		}
@@ -133,7 +133,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 	}
 	local upbuf = haka.vbuffer_from("up")
 	local downbuf = haka.vbuffer_from("down")
-	local g = haka.grammar.new("bidirectionnal", function()
+	local g = haka.grammar.new("bidirectionnal", function ()
 		up = field("up", token("up")
 			:const("up"))
 
@@ -142,7 +142,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 
 		export(up, down)
 	end)
-	local state_machine = haka.state_machine("smtest", function()
+	local state_machine = haka.state_machine.new("smtest", function ()
 		state_type(BidirectionnalState)
 
 		my_up_state = state(g.up, g.down)
@@ -151,7 +151,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 		my_up_state:on{
 			event = events.up,
 			jump = my_down_state,
-			action = function(self)
+			action = function (self)
 				self.up = true
 			end,
 		}
@@ -164,7 +164,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 		my_down_state:on{
 			event = events.down,
 			jump = finish,
-			action = function(self)
+			action = function (self)
 				self.down = true
 			end,
 		}
@@ -195,7 +195,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 	}
 	local upbuf = haka.vbuffer_from("up")
 	local downbuf = haka.vbuffer_from("down")
-	local g = haka.grammar.new("bidirectionnal", function()
+	local g = haka.grammar.new("bidirectionnal", function ()
 		up = field("up", token("up")
 			:const("up"))
 
@@ -204,7 +204,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 
 		export(up, down)
 	end)
-	local state_machine = haka.state_machine("smtest", function()
+	local state_machine = haka.state_machine.new("smtest", function ()
 		state_type(BidirectionnalState)
 
 		my_up_state = state(g.up, g.down)
@@ -213,7 +213,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 		my_up_state:on{
 			event = events.up,
 			jump = my_down_state,
-			action = function(self)
+			action = function (self)
 				self.up = true
 			end,
 		}
@@ -226,7 +226,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 		my_down_state:on{
 			event = events.down,
 			jump = finish,
-			action = function(self)
+			action = function (self)
 				self.down = true
 			end,
 		}
@@ -259,7 +259,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 	}
 	local upbuf = haka.vbuffer_from("up")
 	local downbuf = haka.vbuffer_from("wrong")
-	local g = haka.grammar.new("bidirectionnal", function()
+	local g = haka.grammar.new("bidirectionnal", function ()
 		up = field("up", token("up")
 			:const("up"))
 
@@ -268,7 +268,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 
 		export(up, down)
 	end)
-	local state_machine = haka.state_machine("smtest", function()
+	local state_machine = haka.state_machine.new("smtest", function ()
 		state_type(BidirectionnalState)
 
 		my_up_state = state(g.up, g.down)
@@ -276,7 +276,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 
 		any:on{
 			event = events.parse_error,
-			action = function(self)
+			action = function (self)
 				self.parse_error = true
 			end,
 			jump = fail
@@ -285,7 +285,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 		my_up_state:on{
 			event = events.up,
 			jump = my_down_state,
-			action = function(self)
+			action = function (self)
 				self.up = true
 			end,
 		}
@@ -293,7 +293,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 		my_down_state:on{
 			event = events.down,
 			jump = finish,
-			action = function(self)
+			action = function (self)
 				self.down = true
 			end,
 		}

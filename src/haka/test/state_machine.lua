@@ -6,7 +6,7 @@
 
 local ipv4 = require('protocol/ipv4')
 
-local machine = haka.state_machine("test", function ()
+local machine = haka.state_machine.new("test", function ()
 	state_type(TestState)
 
 	state1 = state()

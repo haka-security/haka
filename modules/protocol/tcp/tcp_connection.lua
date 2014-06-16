@@ -2,7 +2,6 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-local state_module = require("state")
 local class = require("class")
 
 local raw = require("protocol/raw")
@@ -80,7 +79,7 @@ function tcp_connection_dissector:receive(pkt)
 	end
 end
 
-local TcpState = class.class("TcpState", state_module.State)
+local TcpState = class.class("TcpState", haka.state_machine.State)
 
 function TcpState.method:__init()
 	class.super(TcpState).__init(self, name)
@@ -105,7 +104,7 @@ function TcpState.method:_update(state_machine, direction, pkt)
 	end
 end
 
-tcp_connection_dissector.states = haka.state_machine("tcp", function ()
+tcp_connection_dissector.states = haka.state_machine.new("tcp", function ()
 	state_type(TcpState)
 
 	reset        = state()
