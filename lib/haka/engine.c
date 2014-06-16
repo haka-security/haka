@@ -199,8 +199,8 @@ bool engine_thread_remote_launch(struct engine_thread *thread, void (*callback)(
 	list2_insert(list2_end(&thread->remote_launches), &new.list);
 	mutex_unlock(&thread->remote_launch_lock);
 
-	/* Send SIGUSR1 to exit any waiting function (capture function for instance) */
-	thread_signal(thread->thread, SIGUSR1);
+	engine_thread_force_unblock(thread);
+
 	semaphore_wait(&new.sync);
 
 	if (new.error) {
@@ -356,4 +356,10 @@ void engine_thread_check_remote_launch(struct engine_thread *thread)
 		thread_protect(_engine_thread_check_remote_launch, thread,
 				_engine_thread_check_remote_cleanup, thread);
 	}
+}
+
+void engine_thread_force_unblock(struct engine_thread *thread)
+{
+	/* Send SIGUSR1 to exit any waiting function (capture function for instance) */
+	thread_signal(thread->thread, SIGUSR1);
 }

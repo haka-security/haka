@@ -14,6 +14,11 @@
 bool system_register_fatal_cleanup(void (*callback)());
 
 /**
+ * Fatal exit.
+ */
+void fatal_exit(int rc);
+
+/**
  * Get the haka path from default or env variable HAKA_PATH.
  */
 const char *haka_path(void);

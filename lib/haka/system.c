@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <haka/system.h>
 #include <haka/error.h>
@@ -14,10 +15,7 @@
 
 static struct vector fatal_cleanup = VECTOR_INIT(void *, NULL);
 
-/*
- * Signal handler for fatal signals
- */
-static void fatal_error_signal(int sig)
+static void call_fatal_cleanup(void)
 {
 	int i;
 	const int size = vector_count(&fatal_cleanup);
@@ -25,6 +23,14 @@ static void fatal_error_signal(int sig)
 		void (*func)() = vector_getvalue(&fatal_cleanup, void *, i);
 		(*func)();
 	}
+}
+
+/*
+ * Signal handler for fatal signals
+ */
+static void fatal_error_signal(int sig, siginfo_t *si, void *uc)
+{
+	call_fatal_cleanup();
 
 	/* Execute default handler */
 	signal(sig, SIG_DFL);
@@ -33,10 +39,18 @@ static void fatal_error_signal(int sig)
 
 INIT static void system_init()
 {
-	signal(SIGSEGV, fatal_error_signal);
-	signal(SIGILL, fatal_error_signal);
-	signal(SIGFPE, fatal_error_signal);
-	signal(SIGABRT, fatal_error_signal);
+	struct sigaction sa;
+
+	sa.sa_flags = SA_SIGINFO;
+	sa.sa_sigaction = fatal_error_signal;
+
+	if (sigaction(SIGSEGV, &sa, NULL) ||
+	    sigaction(SIGILL, &sa, NULL) ||
+	    sigaction(SIGFPE, &sa, NULL) ||
+	    sigaction(SIGABRT, &sa, NULL)) {
+		messagef(HAKA_LOG_FATAL, L"core", L"%s", errno_error(errno));
+		abort();
+	}
 }
 
 FINI static void system_final()
@@ -55,6 +69,12 @@ bool system_register_fatal_cleanup(void (*callback)())
 	*func = callback;
 
 	return true;
+}
+
+void fatal_exit(int rc)
+{
+	call_fatal_cleanup();
+	_exit(rc);
 }
 
 const char *haka_path()

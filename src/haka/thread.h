@@ -17,6 +17,7 @@ void thread_pool_cleanup(struct thread_pool *pool);
 void thread_pool_wait(struct thread_pool *pool);
 void thread_pool_cancel(struct thread_pool *pool);
 void thread_pool_start(struct thread_pool *pool);
+void thread_pool_stop(struct thread_pool *pool, bool force);
 void thread_pool_attachdebugger(struct thread_pool *pool);
 bool thread_pool_issingle(struct thread_pool *pool);
 struct engine_thread *thread_pool_thread(struct thread_pool *pool, int index);

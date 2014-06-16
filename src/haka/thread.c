@@ -52,6 +52,7 @@ struct thread_state {
 struct thread_pool {
 	int                         count;
 	bool                        single;
+	bool                        stop;
 	int32                       attach_debugger;
 	barrier_t                   thread_start_sync;
 	barrier_t                   thread_sync;
@@ -321,6 +322,10 @@ static void *thread_main_loop(void *_state)
 		}
 
 		engine_thread_update_status(state->engine, THREAD_WAITING);
+
+		if (state->pool->stop) {
+			break;
+		}
 	}
 
 	state->state = STATE_FINISHED;
@@ -357,6 +362,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 
 	pool->count = count;
 	pool->single = count == 1;
+	pool->stop = false;
 
 	if (!barrier_init(&pool->thread_sync, count+1)) {
 		thread_pool_cleanup(pool);
@@ -494,6 +500,23 @@ void thread_pool_start(struct thread_pool *pool)
 	}
 	else {
 		error(L"no thread to run");
+	}
+}
+
+void thread_pool_stop(struct thread_pool *pool, bool force)
+{
+	pool->stop = true;
+
+	if (force && !pool->single) {
+		thread_pool_cancel(pool);
+	}
+	else {
+		int i;
+		for (i=0; i<pool->count; ++i) {
+			if (pool->threads[i] && pool->threads[i]->engine) {
+				engine_thread_force_unblock(pool->threads[i]->engine);
+			}
+		}
 	}
 }
 

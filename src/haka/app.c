@@ -9,9 +9,11 @@
 #include <locale.h>
 #include <signal.h>
 #include <libgen.h>
+#include <unistd.h>
 
 #include <haka/packet_module.h>
 #include <haka/thread.h>
+#include <haka/system.h>
 #include <haka/error.h>
 #include <haka/alert.h>
 #include <haka/luadebug/debugger.h>
@@ -38,14 +40,17 @@ void basic_clean_exit()
 	remove_all_logger();
 }
 
-static void term_error_signal(int sig)
+static void term_error_signal(int sig, siginfo_t *si, void *uc)
 {
-	static volatile sig_atomic_t fatal_error_in_progress = 0;
+	static atomic_t fatal_error_count;
+	int fatal_error_level;
 
 	if (sig == SIGINT) {
-		printf("\n");
+		write(STDERR_FILENO, "\n", 1);
+
 		if (luadebug_debugger_breakall()) {
-			message(HAKA_LOG_FATAL, L"debug", L"break (hit ^C again to kill)");
+			static const char *debugger_message = "break (hit ^C again to kill)\n";
+			write(STDERR_FILENO, debugger_message, strlen(debugger_message));
 			return;
 		}
 		else {
@@ -53,30 +58,22 @@ static void term_error_signal(int sig)
 		}
 	}
 
-	if (fatal_error_in_progress)
-		raise(sig);
-	fatal_error_in_progress = 1;
+	fatal_error_level = atomic_inc(&fatal_error_count);
 
-	if (sig != SIGTERM) {
-		messagef(HAKA_LOG_FATAL, L"core", L"fatal signal received (sig=%d)", sig);
+	if (fatal_error_level > 2) {
+		fatal_exit(1);
 	}
-	else {
-		messagef(HAKA_LOG_INFO, L"core", L"terminate signal received");
+
+	if (sig != SIGINT) {
+		static const char *message = "terminate signal received\n";
+		write(STDERR_FILENO, message, strlen(message));
 	}
 
 	if (thread_states) {
-		if (thread_pool_issingle(thread_states)) {
-			clean_exit();
-			exit(1);
-		}
-		else {
-			thread_pool_cancel(thread_states);
-			ret_rc = 1;
-		}
+		thread_pool_stop(thread_states, fatal_error_level > 1);
 	}
 	else {
-		clean_exit();
-		exit(1);
+		fatal_exit(1);
 	}
 }
 
@@ -87,13 +84,23 @@ static void handle_sighup()
 
 void initialize()
 {
+	struct sigaction sa;
+
 	/* Set locale */
 	setlocale(LC_ALL, "");
 
 	/* Install signal handler */
-	signal(SIGTERM, term_error_signal);
-	signal(SIGINT, term_error_signal);
-	signal(SIGQUIT, term_error_signal);
+	sa.sa_flags = SA_SIGINFO;
+	sa.sa_sigaction = term_error_signal;
+	sigemptyset(&sa.sa_mask);
+	if (sigaction(SIGTERM, &sa, NULL) ||
+	    sigaction(SIGINT, &sa, NULL) ||
+	    sigaction(SIGQUIT, &sa, NULL)) {
+		messagef(HAKA_LOG_FATAL, L"core", L"%s", errno_error(errno));
+		clean_exit();
+		exit(1);
+	}
+
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGHUP, handle_sighup);
 
