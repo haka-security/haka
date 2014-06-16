@@ -351,7 +351,12 @@ static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
 	if (size > 0) {
 		vbuffer_sub_create(&sub, &pkt->data, 0, size);
 		data = vbuffer_sub_flatten(&sub, &len);
-		assert(len >= *data_offset);
+
+		if (len < *data_offset) {
+			messagef(HAKA_LOG_ERROR, L"pcap", L"malformed packet %d", pkt->id);
+			return -1;
+		}
+
 		assert(data);
 	}
 
@@ -397,7 +402,9 @@ static bool packet_build_payload(struct pcap_packet *packet)
 {
 	struct vbuffer_sub sub;
 	size_t data_offset;
-	get_protocol(packet, &data_offset);
+	if (get_protocol(packet, &data_offset) < 0) {
+		return false;
+	}
 
 	vbuffer_sub_create(&sub, &packet->data, data_offset, ALL);
 
@@ -476,6 +483,11 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			}
 			else if (ret == 0) {
 				/* Timeout expired. */
+				return 0;
+			}
+			else if (header->caplen == 0 ||
+			         header->len < header->caplen) {
+				messagef(HAKA_LOG_ERROR, L"pcap", L"skipping malformed packet %d", ++state->packet_id);
 				return 0;
 			}
 			else {
