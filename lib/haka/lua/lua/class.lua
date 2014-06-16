@@ -192,6 +192,10 @@ end
 
 function module.isa(instance, cls)
 	local c = module.classof(instance)
+	return module.isaclass(c, cls)
+end
+
+function module.isaclass(c, cls)
 	while c do
 		if c == cls then return true end
 		c = c.super

@@ -11,8 +11,10 @@ function TestStateMachine:test_state_machine_compile()
 	-- nothing
 	-- When
 	local sm = haka.state_machine("smtest", function()
-		my_foo_state = state.basic()
-		my_bar_state = state.basic()
+		state_type(TestState)
+
+		my_foo_state = state()
+		my_bar_state = state()
 
 		my_foo_state:on{
 			event = events.enter,
@@ -33,8 +35,10 @@ function TestStateMachine:test_state_machine_run()
 		bar = false,
 	}
 	local sm = haka.state_machine("smtest", function()
-		my_foo_state = state.basic({ events.test })
-		my_bar_state = state.basic({ events.test })
+		state_type(TestState)
+
+		my_foo_state = state()
+		my_bar_state = state()
 
 		my_foo_state:on{
 			event = events.test,
@@ -71,7 +75,9 @@ function TestStateMachine:test_state_machine_fail()
 		test = false
 	}
 	local sm = haka.state_machine("smtest", function()
-		my_foo_state = state.basic({ events.test })
+		state_type(TestState)
+
+		my_foo_state = state()
 
 		my_foo_state:on{
 			event = events.test,
@@ -98,7 +104,9 @@ function TestStateMachine:test_state_machine_defaults()
 		test = false
 	}
 	local sm = haka.state_machine("smtest", function()
-		my_foo_state = state.basic({ events.test })
+		state_type(TestState)
+
+		my_foo_state = state()
 
 		any:on{
 			event = events.test,
@@ -135,8 +143,10 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 		export(up, down)
 	end)
 	local state_machine = haka.state_machine("smtest", function()
-		my_up_state = state.bidirectionnal(g.up, g.down)
-		my_down_state = state.bidirectionnal(g.up, g.down)
+		state_type(BidirectionnalState)
+
+		my_up_state = state(g.up, g.down)
+		my_down_state = state(g.up, g.down)
 
 		my_up_state:on{
 			event = events.up,
@@ -195,8 +205,10 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 		export(up, down)
 	end)
 	local state_machine = haka.state_machine("smtest", function()
-		my_up_state = state.bidirectionnal(g.up, g.down)
-		my_down_state = state.bidirectionnal(g.up, g.down)
+		state_type(BidirectionnalState)
+
+		my_up_state = state(g.up, g.down)
+		my_down_state = state(g.up, g.down)
 
 		my_up_state:on{
 			event = events.up,
@@ -257,8 +269,10 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 		export(up, down)
 	end)
 	local state_machine = haka.state_machine("smtest", function()
-		my_up_state = state.bidirectionnal(g.up, g.down)
-		my_down_state = state.bidirectionnal(g.up, g.down)
+		state_type(BidirectionnalState)
+
+		my_up_state = state(g.up, g.down)
+		my_down_state = state(g.up, g.down)
 
 		any:on{
 			event = events.parse_error,

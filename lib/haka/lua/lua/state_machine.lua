@@ -117,16 +117,23 @@ end
 local state_machine_int = {}
 
 local function state_machine_env(state_machine)
+	state_machine_int.state_type = function (state_class)
+		assert(class.isaclass(state_class, state.State), "state type must be of type State")
+		state_machine._state_type = state_class
+	end
+
 	state_machine_int.initial = function (state)
 		state_machine._initial = state
 	end
 
-	-- Fake special states
-	state_machine_int.finish = state.State:new({}, "finish")
-	state_machine_int.fail = state.State:new({}, "fail")
+	state_machine_int.state = function (...)
+		assert(state_machine._state_type, "cannot create state without prior call to state_type()")
+		return state_machine._state_type:new(...)
+	end
 
-	-- Link to state
-	state_machine_int.state = state
+	-- Fake special states
+	state_machine_int.finish = state.State:new("finish")
+	state_machine_int.fail = state.State:new("fail")
 
 	-- Special any transition collection
 	state_machine_int.any = state_machine._default
@@ -151,6 +158,10 @@ local function state_machine_env(state_machine)
 		__index = function (self, name)
 			local ret
 
+			-- Search in the state classes
+			ret = state[name]
+			if ret then return ret end
+
 			-- Search in the state_machine environment
 			ret = state_machine_int[name]
 			if ret then return ret end
@@ -169,7 +180,6 @@ local function state_machine_env(state_machine)
 
 			if class.isa(value, state.State) then
 				-- Add the object in the states
-				assert(class.isa(value, state.State), "declared state must be of type State")
 				value._name = key
 				state_machine._states[key] = value
 			else

@@ -13,15 +13,11 @@ local module = {}
 
 module.TransitionCollection = class.class('TransitionCollection')
 
-function module.TransitionCollection.method:__init(events, const)
+function module.TransitionCollection.method:__init(const)
 	self._const = const or false
 	self._transitions = {
 		timeouts = {}
 	}
-	events = events or {}
-	for _, event in ipairs(events) do
-		self._transitions[event.name] = {}
-	end
 end
 
 function module.TransitionCollection.method:on(transition)
@@ -75,17 +71,16 @@ end
 --
 module.State = class.class('State', module.TransitionCollection)
 
-function module.State.method:__init(events, name)
-	events = events or {}
-	table.append(events, {
-		{ name = "fail" },
-		{ name = "enter" },
-		{ name = "leave" },
-		{ name = "init" },
-		{ name = "finish" },
-	})
-	class.super(module.State).__init(self, events, true)
+function module.State.method:__init(name)
+	class.super(module.State).__init(self, true)
 	self._name = name or '<unnamed>'
+	table.merge(self._transitions, {
+		fail = {},
+		enter = {},
+		leave = {},
+		init = {},
+		finish = {},
+	});
 end
 
 function module.State.method:setdefaults(defaults)
@@ -98,25 +93,31 @@ function module.State.method:setdefaults(defaults)
 	end
 end
 
-function module.State.method:_update(state_machine, direction)
-	state_machine:transition(direction)
+function module.State.method:_update(state_machine, event)
+	state_machine:transition(event)
+end
+
+module.TestState = class.class('TestState', module.State)
+
+function module.TestState.method:__init(name)
+	class.super(module.TestState).__init(self, name)
+	table.merge(self._transitions, {
+		test = {},
+	});
 end
 
 module.BidirectionnalState = class.class('BidirectionnalState', module.State)
 
-function module.BidirectionnalState.method:__init(gup, gdown, events, name)
-	debug.pprint(gup)
-	debug.pprint(gdown)
+function module.BidirectionnalState.method:__init(gup, gdown, name)
 	assert(class.isa(gup, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
 	assert(class.isa(gdown, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
 
-	events = events or {}
-	table.append(events, {
-		{ name = "up" },
-		{ name = "down" },
-		{ name = "parse_error" },
+	class.super(module.BidirectionnalState).__init(self, name)
+	table.merge(self._transitions, {
+		up = {},
+		down = {},
+		parse_error = {},
 	})
-	class.super(module.BidirectionnalState).__init(self, events, name)
 
 	self._grammar = {
 		up = gup,
@@ -148,7 +149,7 @@ local function transitions_wrapper(state_table, transitions, ...)
 			if t.jump then
 				newstate = state_table[t.jump]
 				if not newstate then
-					error(string.format("unknown state '%s'", newstate))
+					error(string.format("unknown state '%s'", t.jump))
 				end
 
 				return newstate._compiled_state
@@ -191,18 +192,6 @@ function module.CompiledState.method:__init(state_machine, state, name)
 			self[n] = transitions_wrapper
 		end
 	end
-end
-
---
--- Accessors
---
-
-function module.basic(events)
-	return module.State:new(events)
-end
-
-function module.bidirectionnal(g1, g2, events)
-	return module.BidirectionnalState:new(g1, g2, events)
 end
 
 return module
