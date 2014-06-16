@@ -19,6 +19,8 @@
 #include <linux/netfilter.h>
 #include <linux/ip.h>
 #include <libnetfilter_queue/libnetfilter_queue.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
 
 #include "iptables.h"
 #include <pcap.h>
@@ -447,6 +449,14 @@ static void cleanup()
 	}
 }
 
+static bool is_iface_valid(struct ifaddrs *ifa, const char *name)
+{
+	for (; ifa; ifa = ifa->ifa_next) {
+		if (strcmp(name, ifa->ifa_name) == 0) return true;
+	}
+	return false;
+}
+
 static int init(struct parameters *args)
 {
 	char *new_iptables_config = NULL;
@@ -474,7 +484,7 @@ static int init(struct parameters *args)
 	{
 		const char *iter;
 		const char *interfaces = parameters_get_string(args, "interfaces", NULL);
-		if (!interfaces) {
+		if (!interfaces || strlen(interfaces) == 0) {
 			message(HAKA_LOG_ERROR, MODULE_NAME, L"no interfaces selected");
 			cleanup();
 			return 1;
@@ -508,12 +518,31 @@ static int init(struct parameters *args)
 	{
 		int index = 0;
 		char *str, *ptr = NULL;
+		struct ifaddrs *ifa;
+
+		if (getifaddrs(&ifa)) {
+			messagef(HAKA_LOG_ERROR, MODULE_NAME, L"%s", errno_error(errno));
+			free(interfaces_buf);
+			cleanup();
+			return 1;
+		}
+
 		for (index = 0, str = interfaces_buf; index < count; index++, str = NULL) {
 			char *token = strtok_r(str, ",", &ptr);
 			assert(token != NULL);
+
+			if (!is_iface_valid(ifa, token)) {
+				messagef(HAKA_LOG_ERROR, MODULE_NAME, L"'%s' is not a valid network interface", token);
+				free(interfaces_buf);
+				cleanup();
+				return 1;
+			}
+
 			ifaces[index] = token;
 		}
 		ifaces[index] = NULL;
+
+		freeifaddrs(ifa);
 	}
 
 	if (!install) {
