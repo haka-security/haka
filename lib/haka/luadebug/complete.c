@@ -117,6 +117,7 @@ bool complete_push_table_context(struct lua_State *L, struct luadebug_complete *
 
 		type = lua_type(L, -1);
 		if (type != LUA_TUSERDATA && type != LUA_TTABLE) {
+			lua_pop(L, 1);
 			return false;
 		}
 	} else {
@@ -246,6 +247,7 @@ char *complete_generator(struct lua_State *L, struct luadebug_complete *context,
 	for (iter = callbacks, i=0; *iter; ++iter, ++i) {
 		if (context->state == i) {
 			match = (*iter)(L, context, text, state);
+			assert(lua_gettop(L) >= context->stack_top);
 			if (!match) {
 				++context->state;
 				state = 0;
@@ -277,12 +279,25 @@ static char *complete_callback_swig(struct lua_State *L, struct luadebug_complet
 		const char *text, int state, const char *table)
 {
 	if (state == 0) {
+		int type;
+
 		if (!complete_push_table_context(L, context, text)) {
 			return NULL;
 		}
 
-		lua_getmetatable(L, -1);
-		lua_getfield(L, -1, table);
+		if (lua_getmetatable(L, -1) == 0) {
+			lua_pop(L, 1);
+			return NULL;
+		}
+
+		lua_pushstring(L, table);
+		lua_rawget(L, -2);
+
+		type = lua_type(L, -1);
+		if (type != LUA_TUSERDATA && type != LUA_TTABLE) {
+			lua_pop(L, 1);
+			return NULL;
+		}
 	}
 
 	return complete_table(L, context, text, state, &complete_underscore_hidden);
@@ -342,6 +357,7 @@ char *complete_callback_fenv(struct lua_State *L, struct luadebug_complete *cont
 			context->operator = 0;
 			context->token = text;
 
+		assert(context->stack_env > 0);
 			lua_pushvalue(L, context->stack_env);
 		}
 
