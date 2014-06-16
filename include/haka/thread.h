@@ -53,6 +53,11 @@ typedef pthread_t thread_t; /**< Opaque thread type. */
 bool     thread_create(thread_t *thread, void *(*main)(void*), void *param);
 
 /**
+ * Get the current thread.
+ */
+thread_t thread_current();
+
+/**
  * Join a thread.
  */
 bool     thread_join(thread_t thread, void **ret);
@@ -77,6 +82,11 @@ void     thread_setid(int id);
  * Set signal mask on a thread.
  */
 bool     thread_sigmask(int how, sigset_t *set, sigset_t *oldset);
+
+/**
+ * Send a signal to the given thread.
+ */
+bool     thread_signal(thread_t thread, int sig);
 
 /**
  * Thread cancel mode.

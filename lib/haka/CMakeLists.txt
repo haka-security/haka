@@ -24,6 +24,8 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/grammar_dg.lua
 	lua/lua/utils.lua
 	lua/lua/dissector.lua
+	lua/lua/list.lua
+	lua/lua/check.lua
 )
 lua_install(TARGET libhakalua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/core)
 
@@ -40,7 +42,6 @@ add_library(libhaka SHARED
 	parameters.c
 	colors.c
 	time.c
-	stat.c
 	timer.c
 	state_machine.c
 	vbuffer.c
@@ -49,12 +50,14 @@ add_library(libhaka SHARED
 	vbuffer_sub_stream.c
 	regexp_module.c
 	system.c
+	engine.c
 	container/list.c
 	container/list2.c
 	container/vector.c
 	lua/state.c
 	lua/ref.c
 	lua/lua.c
+	lua/marshal.c
 	luadebug/interactive.c
 	luadebug/complete.c
 	luadebug/debugger.c
@@ -63,6 +66,7 @@ add_library(libhaka SHARED
 	luadebug/user_readline.c
 	luadebug/user_remote.c
 	${SWIG_libhakaswig_FILES}
+	../../external/lmarshal/lmarshal.c
 )
 
 set_target_properties(libhaka PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)

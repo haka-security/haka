@@ -126,6 +126,8 @@ function udp_connection_dissector.method:init(connection)
 end
 
 function udp_connection_dissector.method:emit(pkt, direction)
+	self.connection:update_stat(direction, pkt.ip.len)
+
 	self.state:transition('update', pkt, direction)
 end
 
@@ -149,6 +151,49 @@ function udp_connection_dissector.method:continue()
 end
 
 udp.select_next_dissector(udp_connection_dissector)
+
+--
+-- Console utilities
+--
+
+haka.console.udp = {}
+
+function haka.console.udp.list_connections(show_dropped)
+	local ret = {}
+	for _, cnx in ipairs(udp_connection_dissector.cnx_table:all(show_dropped)) do
+		if cnx.data then
+			local udp_data = cnx.data:namespace('udp_connection')
+
+			table.insert(ret, {
+				_thread = haka.current_thread(),
+				_id = udp_data.connection.id,
+				id = string.format("%d-%d", haka.current_thread(), udp_data.connection.id),
+				srcip = udp_data.srcip,
+				srcport = udp_data.srcport,
+				dstip = udp_data.dstip,
+				dstport = udp_data.dstport,
+				state = udp_data.state.current,
+				in_pkts = udp_data.connection.in_pkts,
+				in_bytes = udp_data.connection.in_bytes,
+				out_pkts = udp_data.connection.out_pkts,
+				out_bytes = udp_data.connection.out_bytes
+			})
+		end
+	end
+	return ret
+end
+
+function haka.console.udp.drop_connection(id)
+	local udp_conn = udp_connection_dissector.cnx_table:get_byid(id)
+	if not udp_conn then
+		error("unknown udp connection")
+	end
+
+	if udp_conn.data then
+		local udp_data = udp_conn.data:namespace('udp_connection')
+		udp_data:drop()
+	end
+end
 
 return {
 	events = udp_connection_dissector.events

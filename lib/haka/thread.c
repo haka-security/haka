@@ -86,6 +86,21 @@ bool thread_cancel(thread_t thread)
 	return true;
 }
 
+thread_t thread_current()
+{
+	return pthread_self();
+}
+
+bool thread_signal(thread_t thread, int sig)
+{
+	const int err = pthread_kill(thread, sig);
+	if (err) {
+		error(L"thread sigmask error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
 bool thread_sigmask(int how, sigset_t *set, sigset_t *oldset)
 {
 	const int err = pthread_sigmask(how, set, oldset);

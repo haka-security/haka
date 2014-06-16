@@ -85,12 +85,6 @@ static void handle_sighup()
 	enable_stdout_logging(false);
 }
 
-const char *haka_path()
-{
-	const char *haka_path = getenv("HAKA_PATH");
-	return haka_path ? haka_path : HAKA_PREFIX;
-}
-
 void initialize()
 {
 	/* Set locale */
@@ -103,31 +97,10 @@ void initialize()
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGHUP, handle_sighup);
 
-	/* Default module path */
-	{
-		static const char *HAKA_CORE_PATH = "/share/haka/core/*";
-		static const char *HAKA_MODULE_PATH = "/share/haka/modules/*";
-
-		size_t path_len;
-		char *path;
-		const char *haka_path_s = haka_path();
-
-		path_len = 2*strlen(haka_path_s) + strlen(HAKA_CORE_PATH) + 1 +
-				strlen(HAKA_MODULE_PATH) + 1;
-
-		path = malloc(path_len);
-		if (!path) {
-			fprintf(stderr, "memory allocation error\n");
-			clean_exit();
-			exit(1);
-		}
-
-		snprintf(path, path_len, "%s%s;%s%s", haka_path_s, HAKA_CORE_PATH,
-				haka_path_s, HAKA_MODULE_PATH);
-
-		module_set_path(path);
-
-		free(path);
+	if (!module_set_default_path()) {
+		fprintf(stderr, "%ls\n", clear_error());
+		clean_exit();
+		exit(1);
 	}
 }
 
@@ -232,12 +205,7 @@ const char *get_app_directory()
 	return directory;
 }
 
-void dump_stat(FILE *file)
-{
-	thread_pool_dump_stat(thread_states, file);
-}
-
-void setup_loglevel(char *level)
+bool setup_loglevel(char *level)
 {
 	while (true) {
 		char *value;
@@ -257,15 +225,13 @@ void setup_loglevel(char *level)
 
 			module = malloc(sizeof(wchar_t)*(strlen(level)+1));
 			if (!module) {
-				message(HAKA_LOG_FATAL, L"core", L"memory error");
-				clean_exit();
-				exit(1);
+				error(L"memory error");
+				return false;
 			}
 
 			if (mbstowcs(module, level, strlen(level)+1) == -1) {
-				message(HAKA_LOG_FATAL, L"core", L"invalid module string");
-				clean_exit();
-				exit(1);
+				error(L"invalid module string");
+				return false;
 			}
 		}
 		else {
@@ -274,9 +240,7 @@ void setup_loglevel(char *level)
 
 		loglevel = str_to_level(value);
 		if (check_error()) {
-			message(HAKA_LOG_FATAL, L"core", clear_error());
-			clean_exit();
-			exit(1);
+			return false;
 		}
 
 		setlevel(loglevel, module);
@@ -286,4 +250,6 @@ void setup_loglevel(char *level)
 		if (next_level) level = next_level;
 		else break;
 	}
+
+	return true;
 }

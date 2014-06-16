@@ -16,7 +16,7 @@
 #include <haka/packet_module.h>
 #include <haka/error.h>
 #include <haka/thread.h>
-#include <haka/stat.h>
+#include <haka/engine.h>
 #include <haka/timer.h>
 #include <haka/lua/state.h>
 #include <haka/lua/lua.h>
@@ -25,11 +25,6 @@
 #include "thread.h"
 #include "app.h"
 
-
-struct pkt_stats {
-	size_t                      total_packets;
-	size_t                      total_bytes;
-};
 
 enum {
 	STATE_NOTSARTED = 0,
@@ -51,7 +46,7 @@ struct thread_state {
 	bool                        canceled;
 	int32                       attach_debugger;
 	struct thread_pool         *pool;
-	struct pkt_stats            stats;
+	struct engine_thread       *engine;
 };
 
 struct thread_pool {
@@ -111,6 +106,11 @@ static void cleanup_thread_state_lua(struct thread_state *state)
 	assert(state);
 	assert(state->packet_module);
 
+	if (state->engine) {
+		engine_thread_cleanup(state->engine);
+		state->engine = NULL;
+	}
+
 	if (state->lua) {
 		lua_state_close(state->lua);
 		state->lua = NULL;
@@ -147,10 +147,9 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	memset(state, 0, sizeof(struct thread_state));
 
 	state->thread_id = thread_id;
-	state->stats.total_packets = 0;
-	state->stats.total_bytes = 0;
 	state->packet_module = packet_module;
 	state->state = STATE_NOTSARTED;
+	state->engine = NULL;
 
 	messagef(HAKA_LOG_INFO, L"core", L"initializing thread %d", thread_id);
 
@@ -271,12 +270,16 @@ static void *thread_main_loop(void *_state)
 		}
 	}
 
+	state->engine = engine_thread_init(state->lua->L, state->thread_id);
+	engine_thread_update_status(state->engine, THREAD_RUNNING);
+
 	packet_init(state->capture);
 
 	if (!state->pool->single) {
 		if (!barrier_wait(&state->pool->thread_start_sync)) {
 			message(HAKA_LOG_FATAL, L"core", clear_error());
 			state->state = STATE_ERROR;
+			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
 		}
 	}
@@ -285,31 +288,38 @@ static void *thread_main_loop(void *_state)
 		if (!barrier_wait(&state->pool->thread_sync)) {
 			message(HAKA_LOG_FATAL, L"core", clear_error());
 			state->state = STATE_ERROR;
+			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
 		}
 	}
 
 	lua_state_trigger_haka_event(state->lua, "started");
 
+	engine_thread_update_status(state->engine, THREAD_WAITING);
+
 	while (packet_receive(&pkt) == 0) {
+		engine_thread_update_status(state->engine, THREAD_RUNNING);
+
 		/* The packet can be NULL in case of failure in packet receive */
 		if (pkt) {
-			state->stats.total_packets++;
-			state->stats.total_bytes += vbuffer_size(packet_payload(pkt));
-
 			filter_wrapper(state, pkt);
 			pkt = NULL;
 		}
 
 		lua_state_runinterrupt(state->lua);
+		engine_thread_check_remote_launch(state->engine);
 
 		if (state->pool->attach_debugger > state->attach_debugger) {
 			luadebug_debugger_start(state->lua->L, true);
 			state->attach_debugger = state->pool->attach_debugger;
 		}
+
+		engine_thread_update_status(state->engine, THREAD_WAITING);
 	}
 
 	state->state = STATE_FINISHED;
+	engine_thread_update_status(state->engine, THREAD_STOPPED);
+
 	return NULL;
 }
 
@@ -320,6 +330,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 	struct thread_pool *pool;
 
 	assert(count > 0);
+	engine_prepare(count);
 
 	pool = malloc(sizeof(struct thread_pool));
 	if (!pool) {
@@ -492,52 +503,8 @@ void thread_pool_attachdebugger(struct thread_pool *pool)
 	++pool->attach_debugger;
 }
 
-static const size_t columnsize = 20;
-
-void pad_output_stat_bytes(FILE *f, size_t value)
+struct engine_thread *thread_pool_thread(struct thread_pool *pool, int index)
 {
-	const size_t len = stat_print_formated_bytes(f, value);
-	if (len != (size_t)-1) {
-		stat_printf(f, "%*s", columnsize-len, "");
-	}
-}
-
-void pad_output_stat_chars(FILE *f, char *s)
-{
-	const size_t len = stat_printf(f, s);
-	if (len != (size_t)-1) {
-		stat_printf(f, "%*s", columnsize-len, "");
-	}
-}
-
-void thread_pool_dump_stat(struct thread_pool *pool, FILE *f)
-{
-	size_t total_packets = 0, total_bytes = 0;
-	size_t thread_packets, thread_bytes;
-
-	assert(pool);
-
-	pad_output_stat_chars(f, "");
-	pad_output_stat_chars(f, "Packets");
-	pad_output_stat_chars(f, "Bytes");
-	stat_printf(f, "\n");
-	int i;
-	for (i = 0; i < pool->count; i++) {
-		const size_t len = stat_printf(f, "Thread %d", i+1);
-		if (len != (size_t)-1) {
-			stat_printf(f, "%*s", columnsize-len, "");
-		}
-		thread_packets = pool->threads[i]->stats.total_packets;
-		thread_bytes = pool->threads[i]->stats.total_bytes;
-		pad_output_stat_bytes(f, thread_packets);
-		pad_output_stat_bytes(f, thread_bytes);
-		stat_printf(f, "\n");
-
-		total_packets += thread_packets;
-		total_bytes += thread_bytes;
-	}
-	pad_output_stat_chars(f, "All Threads");
-	pad_output_stat_bytes(f, total_packets);
-	pad_output_stat_bytes(f, total_bytes);
-	stat_printf(f, "\n");
+	assert(index >= 0 && index < pool->count);
+	return pool->threads[index]->engine;
 }

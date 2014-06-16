@@ -13,7 +13,7 @@
 
 
 static bool readline_initialized = false;
-
+static mutex_t active_readline_session_mutex = MUTEX_INIT;
 static struct luadebug_user *current = NULL;
 
 static int empty_generator(const char *text, int state)
@@ -34,6 +34,8 @@ static char **complete(const char *text, int start, int end)
 
 static bool start(struct luadebug_user *data, const char *name)
 {
+	mutex_lock(&active_readline_session_mutex);
+
 	if (!readline_initialized) {
 		rl_initialize();
 		readline_initialized = true;
@@ -62,6 +64,7 @@ static void addhistory(struct luadebug_user *data, const char *line)
 
 static bool stop(struct luadebug_user *data)
 {
+	mutex_unlock(&active_readline_session_mutex);
 	current = NULL;
 	return true;
 }

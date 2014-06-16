@@ -9,7 +9,7 @@
 	#include <haka/luadebug/interactive.h>
 	#include "luadebug/debugger.h"
 
-	#define lua_luadebug_interactive_enter(single, multi, msg) luadebug_interactive_enter(L, single, multi, msg)
+	#define lua_luadebug_interactive_enter(single, multi, msg) luadebug_interactive_enter(L, single, multi, msg, 0, NULL)
 
 	#define lua_luadebug_debugger_start(break_immediatly) luadebug_debugger_start(L, break_immediatly)
 	#define lua_luadebug_debugger_stop()                  luadebug_debugger_stop(L)
@@ -164,6 +164,8 @@ void lua_luadebug_debugger_break();
 
 		if depth == 0 then
 			out(title)
+		elseif obj.__pprint then
+			obj:__pprint(indent, out)
 		else
 			out(title, "{")
 

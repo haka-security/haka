@@ -19,11 +19,11 @@ struct command {
 
 extern struct command command_status;
 extern struct command command_stop;
-extern struct command command_stats;
 extern struct command command_logs;
 extern struct command command_loglevel;
 extern struct command command_debug;
 extern struct command command_interactive;
+extern struct command command_console;
 
 extern bool use_colors;
 

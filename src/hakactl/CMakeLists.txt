@@ -11,15 +11,30 @@ configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 add_library(libhakactl STATIC
 	ctl_comm.c)
 
+swig_process(hakactlswig lua
+	lua/hakactl.i
+)
+
 add_executable(hakactl
 	hakactl.c
-	commands.c)
+	commands.c
+	console.c
+	${SWIG_hakactlswig_FILES}
+)
 
+LUA_LINK(hakactl)
 target_link_libraries(hakactl libhaka)
 target_link_libraries(hakactl libhakactl)
 target_link_libraries(hakactl ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS hakactl RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/sbin)
 
-install(FILES hakactl.1 DESTINATION ${HAKA_INSTALL_PREFIX}/share/man/man1)
+lua_compile(NAME hakactl-lua FILES
+	lua/thread.lua
+	lua/event.lua
+	lua/rule.lua
+	lua/misc.lua
+)
+lua_install(TARGET hakactl-lua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/console)
 
+install(FILES hakactl.1 DESTINATION ${HAKA_INSTALL_PREFIX}/share/man/man1)

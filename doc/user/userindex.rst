@@ -15,4 +15,5 @@ Welcome to Haka's User Guide!
     tool_suite.rst
     language.rst
     tutorial.rst
+    console.rst
     debug.rst

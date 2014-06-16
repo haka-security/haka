@@ -264,6 +264,7 @@ end
 
 function module.install_udp_rule(port)
 	haka.rule{
+		name = "install dns dissector",
 		hook = udp_connection.events.new_connection,
 		eval = function (flow, pkt)
 			if pkt.dstport == port then

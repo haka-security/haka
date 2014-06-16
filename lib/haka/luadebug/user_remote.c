@@ -20,6 +20,7 @@
 
 struct luadebug_remote_user {
 	struct luadebug_user   user;
+	mutex_t                active;
 	int                    fd;
 	bool                   error;
 };
@@ -93,6 +94,8 @@ static void report_error(struct luadebug_remote_user *user, int err)
 static bool start(struct luadebug_user *_user, const char *name)
 {
 	struct luadebug_remote_user *user = (struct luadebug_remote_user*)_user;
+
+	mutex_lock(&user->active);
 
 	if (write(user->fd, "s", 1) != 1 ||
 		!write_string(user->fd, name)) {
@@ -198,6 +201,8 @@ static bool stop(struct luadebug_user *_user)
 		return false;
 	}
 
+	mutex_unlock(&user->active);
+
 	return true;
 }
 
@@ -241,6 +246,7 @@ static void destroy(struct luadebug_user *_user)
 {
 	struct luadebug_remote_user *user = (struct luadebug_remote_user*)_user;
 	close(user->fd);
+	mutex_destroy(&user->active);
 	free(user);
 }
 
@@ -262,6 +268,7 @@ struct luadebug_user *luadebug_user_remote(int fd)
 	ret->user.destroy = destroy;
 	ret->fd = fd;
 	ret->error = false;
+	mutex_init(&ret->active, true);
 
 	return &ret->user;
 }

@@ -10,6 +10,6 @@ struct luadebug_user;
 
 void luadebug_interactive_user(struct luadebug_user *user);
 void luadebug_interactive_enter(struct lua_State *L, const char *single, const char *multi,
-		const char *msg);
+		const char *msg, int env, struct luadebug_user *user);
 
 #endif /* _LUADEBUG_INTERACTIVE_H */

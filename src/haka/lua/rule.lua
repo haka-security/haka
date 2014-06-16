@@ -4,6 +4,10 @@
 
 local class = require('class')
 
+local module = {}
+
+module.rules = {}
+
 function haka.rule_summary()
 	local total = 0
 
@@ -11,7 +15,7 @@ function haka.rule_summary()
 		haka.log.info("core", "%d rule(s) on event '%s'", #listeners, event.name)
 		total = total + #listeners
 	end
-	
+
 	if total == 0 then
 		haka.log.warning("core", "no registered rule\n")
 	else
@@ -25,9 +29,30 @@ function haka.rule(r)
 	assert(type(r.eval) == 'function', "rule eval function expected")
 	assert(not r.options or type(r.options) == 'table', "rule options should be table")
 
+	local loc = debug.getinfo(2, 'nSl')
+	r.location = string.format("%s:%d", loc.short_src, loc.currentline)
+	r.type = 'simple'
+
+	table.insert(module.rules, r)
+
 	haka.context.connections:register(r.hook, r.eval, r.options or {})
+end
+
+function haka.console.rules()
+	local ret = {}
+	for _, rule in pairs(module.rules) do
+		table.insert(ret, {
+			name=rule.name,
+			event=rule.hook.name,
+			location=rule.location,
+			type=rule.type
+		})
+	end
+	return ret
 end
 
 -- Load interactive.lua as a different file to allow to compile it
 -- with the debugging information
 require("interactive")
+
+return module

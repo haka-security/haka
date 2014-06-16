@@ -18,6 +18,7 @@
 #include <haka/colors.h>
 #include <haka/log.h>
 #include <haka/error.h>
+#include <haka/module.h>
 #include <haka/luadebug/user.h>
 
 #include "config.h"
@@ -34,11 +35,11 @@ enum {
 static struct command* commands[] = {
 	&command_status,
 	&command_stop,
-	&command_stats,
 	&command_logs,
 	&command_loglevel,
 	&command_debug,
 	&command_interactive,
+	&command_console,
 	NULL
 };
 
@@ -143,6 +144,12 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
+	if (!module_set_default_path()) {
+		fprintf(stderr, "%ls\n", clear_error());
+		clean_exit();
+		exit(1);
+	}
+
 	/* Find commands */
 	{
 		struct command **iter = commands;
@@ -183,15 +190,15 @@ int main(int argc, char *argv[])
 	/* Status command */
 	if (strcasecmp(argv[0], "STATUS") == 0) {
 		fflush(stdout);
-		ctl_send_chars(fd, "STATUS");
+		ctl_send_chars(fd, "STATUS", -1);
 
-		if (ctl_expect_chars(fd, "OK")) {
-			printf(": haka is running");
-			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
-		}
-		else {
+		if (ctl_recv_status(fd) == -1) {
 			printf(": haka not responding");
 			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		}
+		else {
+			printf(": haka is running");
+			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 		}
 
 		return COMMAND_SUCCESS;

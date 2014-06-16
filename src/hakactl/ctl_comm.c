@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <errno.h>
+#include <assert.h>
 #include <string.h>
 #include <wchar.h>
 #include <unistd.h>
@@ -17,9 +18,13 @@
 #define SIZE 1024
 
 
-static bool ctl_check_error(int err, int expected)
+static bool ctl_check_error(int err, int expected, bool forread)
 {
-	if (err < 0) {
+	if (err == 0 && forread) {
+		error(L"end of file");
+		return false;
+	}
+	else if (err <= 0) {
 		error(L"%s", errno_error(errno));
 		return false;
 	}
@@ -30,30 +35,32 @@ static bool ctl_check_error(int err, int expected)
 	return true;
 }
 
-bool ctl_send_chars(int fd, const char *str)
+bool ctl_send_chars(int fd, const char *str, size_t len)
 {
-	const uint32 len = strlen(str);
+	if (len == (size_t)-1) len = strlen(str);
+
 	if (!ctl_send_int(fd, len)) {
 		return false;
 	}
 
-	if (!ctl_check_error(write(fd, str, len), len)) {
+	if (!ctl_check_error(write(fd, str, len), len, false)) {
 		return false;
 	}
 
 	return true;
 }
 
-bool ctl_send_wchars(int fd, const wchar_t *str)
+bool ctl_send_wchars(int fd, const wchar_t *str, size_t len)
 {
-	const uint32 len = wcslen(str);
+	if (len == (size_t)-1) len = wcslen(str);
+
 	if (!ctl_send_int(fd, len)) {
 		return false;
 	}
 
 	while (*str) {
 		const wchar_t c = SWAP_TO_LE(wchar_t, *str++);
-		if (!ctl_check_error(write(fd, &c, sizeof(c)), sizeof(c))) {
+		if (!ctl_check_error(write(fd, &c, sizeof(c)), sizeof(c), false)) {
 			return false;
 		}
 	}
@@ -64,13 +71,47 @@ bool ctl_send_wchars(int fd, const wchar_t *str)
 bool ctl_send_int(int fd, int32 i)
 {
 	const int32 bi = SWAP_TO_LE(int32, i);
-	if (!ctl_check_error(write(fd, &bi, sizeof(bi)), sizeof(bi))) {
+	if (!ctl_check_error(write(fd, &bi, sizeof(bi)), sizeof(bi), false)) {
 		return false;
 	}
 	return true;
 }
 
-char *ctl_recv_chars(int fd)
+bool ctl_send_status(int fd, int ret, const wchar_t *err)
+{
+	if (ret == -1) {
+		if (!err) err = L"";
+
+		if (!ctl_send_int(fd, ret)) return false;
+		return ctl_send_wchars(fd, err, -1);
+	}
+	else {
+		return ctl_send_int(fd, ret);
+	}
+}
+
+int ctl_recv_status(int fd)
+{
+	const int32 ret = ctl_recv_int(fd);
+	if (check_error()) {
+		return -1;
+	}
+
+	if (ret == -1) {
+		wchar_t *err = ctl_recv_wchars(fd, NULL);
+		if (!err) {
+			assert(check_error());
+			return -1;
+		}
+
+		error(err);
+		free(err);
+	}
+
+	return ret;
+}
+
+char *ctl_recv_chars(int fd, size_t *_len)
 {
 	char *str;
 	const int32 len = ctl_recv_int(fd);
@@ -84,15 +125,17 @@ char *ctl_recv_chars(int fd)
 		return NULL;
 	}
 
-	if (!ctl_check_error(read(fd, str, len), len)) {
+	if (!ctl_check_error(read(fd, str, len), len, true)) {
 		return NULL;
 	}
+
+	if (_len) *_len = len;
 
 	str[len] = 0;
 	return str;
 }
 
-wchar_t *ctl_recv_wchars(int fd)
+wchar_t *ctl_recv_wchars(int fd, size_t *_len)
 {
 	wchar_t *str;
 	int i;
@@ -100,6 +143,7 @@ wchar_t *ctl_recv_wchars(int fd)
 	if (check_error()) {
 		return NULL;
 	}
+
 	if (len < 0) {
 		error(L"communication error");
 		return NULL;
@@ -113,7 +157,7 @@ wchar_t *ctl_recv_wchars(int fd)
 
 	for (i=0; i<len; ++i) {
 		wchar_t c;
-		if (!ctl_check_error(read(fd, &c, sizeof(c)), sizeof(c))) {
+		if (!ctl_check_error(read(fd, &c, sizeof(c)), sizeof(c), true)) {
 			return NULL;
 		}
 
@@ -121,13 +165,16 @@ wchar_t *ctl_recv_wchars(int fd)
 	}
 
 	str[len] = 0;
+
+	if (_len) *_len = len;
+
 	return str;
 }
 
 int32 ctl_recv_int(int fd)
 {
 	int32 bi;
-	if (!ctl_check_error(read(fd, &bi, sizeof(bi)), sizeof(bi))) {
+	if (!ctl_check_error(read(fd, &bi, sizeof(bi)), sizeof(bi), true)) {
 		return false;
 	}
 
@@ -149,7 +196,7 @@ bool ctl_expect_chars(int fd, const char *str)
 
 	for (i=0; i<len; ++i) {
 		char c;
-		if (!ctl_check_error(read(fd, &c, sizeof(c)), sizeof(c))) {
+		if (!ctl_check_error(read(fd, &c, sizeof(c)), sizeof(c), true)) {
 			return false;
 		}
 
