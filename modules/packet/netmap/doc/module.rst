@@ -8,7 +8,9 @@ Netmap  `packet/netmap`
 Description
 ^^^^^^^^^^^
 
-The module uses the pcap library to read packets from a pcap file or from a network interface.
+The module uses the netmap kernel module to capture packets from a NIC or host stack of a network interface.
+
+Before starting you have to set up netmap. (see haka+netmap_users_guide)
 
 .. note:
     To be able to capture packets on a real interface, the process need to be launched with
@@ -17,36 +19,20 @@ The module uses the pcap library to read packets from a pcap file or from a netw
 Parameters
 ^^^^^^^^^^
 
-.. describe:: interfaces
+.. describe:: links
 
-    Comma-separated list of interfaces or the `any` keyword.
+    semicolon-separated list of link between netmap ring pairs.
 
     Example of possible values:
 
     .. code-block:: ini
 
-        # Capture loopback traffic
-        interfaces = "lo"
-        # Capture loopback traffic and eth0
-        # interfaces = "lo, eth0"
-        # Capture on all interfaces
-        # interfaces = "any"
+        # Interfaces to plug eth0 NIC to eth0 host stack
+        links = "netmap:eth0=netmap:eth0^"
 
-.. describe:: file
+        # Interfaces to plug eth0 NIC to eth1 NIC
+        links = "netmap:eth0=netmap:eth1"
 
-    Read packets from a pcap file.
-
-.. note::
-
-    Only one of **interfaces** or **file** can be defined.
-
-.. describe:: output=`file`
-
-    Save accepted packets to the specified pcap output file.
-
-    Example of capturing packets from a pcap file and saving accepted ones in a pcap output file:
-
-    .. code-block:: ini
-
-        file = "/tmp/input.pcap"
-        output = "/tmp/output.pcap"
+	# Interfaces to plug eth0 NIC RX to eth0 NIC TX
+        links = "netmap:eth0>netmap:eth0"
+"
