@@ -110,9 +110,9 @@ end
 
 module.BidirectionnalState = class.class('BidirectionnalState', module.State)
 
-function module.BidirectionnalState.method:__init(gup, gdown, name)
-	assert(class.isa(gup, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
-	assert(class.isa(gdown, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
+function module.BidirectionnalState.method:__init(gup, gdown, rup, rdown, name)
+	assert(not gup or class.isa(gup, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
+	assert(not gdown or class.isa(gdown, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
 
 	class.super(module.BidirectionnalState).__init(self, name)
 	table.merge(self._transitions, {
@@ -125,15 +125,26 @@ function module.BidirectionnalState.method:__init(gup, gdown, name)
 		up = gup,
 		down = gdown,
 	}
-	self._transitions.parse_error = {}
+
+	self._result = {
+		up = rup,
+		down = rdown,
+	}
 end
 
-function module.BidirectionnalState.method:_update(state_machine, payload, direction, pkt)
-	local res, err = self._grammar[direction]:parse(payload:pos('begin'))
-	if err then
-		state_machine:transition("parse_error", pkt, err)
+function module.BidirectionnalState.method:_update(state_machine, payload, direction)
+	if not self._grammar[direction] then
+		-- skip data as we don't have grammar to parse it
+		-- having no grammar could also mean drop data
+		payload:advance('all')
+		state_machine:transition(direction, nil)
 	else
-		state_machine:transition(direction, payload, direction, pkt)
+		local res, err = self._grammar[direction]:parse(payload, state_machine._owner)
+		if err then
+			state_machine:transition("parse_error", err)
+		else
+			state_machine:transition(direction, res)
+		end
 	end
 end
 

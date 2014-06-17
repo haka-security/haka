@@ -137,7 +137,7 @@ end
 
 function http_dissector.method:receive_streamed(iter, direction)
 	while iter:wait() do
-		self.state:transition('update', direction, iter)
+		self.state:update(iter, direction)
 		self:continue()
 	end
 end
@@ -421,77 +421,80 @@ end)
 --  HTTP States
 --
 
-http_dissector.states = haka.state_machine("http", function ()
-	default_transitions{
-		error = function (self)
+http_dissector.states = haka.state_machine.new("http", function ()
+	state_type(BidirectionnalState)
+
+	request  = state(http_dissector.grammar.request, nil)
+	response = state(nil, http_dissector.grammar.response)
+	connect  = state()
+
+	any:on{
+		event = events.fail,
+		action = function (self)
 			self:drop()
 		end,
-		update = function (self, direction, iter)
-			return self.state:transition(direction, iter)
-		end
 	}
 
-	request = state{
-		up = function (self, iter)
-			self.request = HttpRequestResult:new()
+	any:on{
+		event = events.parse_error,
+		action = function (self, err)
+			haka.alert{
+				description = string.format("invalid http %s", err.field.rule),
+				severity = 'low'
+			}
+		end,
+		jump = fail,
+	}
+
+	request:on{
+		event = events.up,
+		action = function (self, res)
+			self.request = res
 			self.response = nil
 			self._want_data_modification = false
-
-			local err
-			self.request, err = http_dissector.grammar.request:parse(iter, self.request, self)
-			if err then
-				haka.alert{
-					description = string.format("invalid http %s", err.field.rule),
-					severity = 'low'
-				}
-				return 'error'
-			end
-
-			return 'response'
 		end,
-		down = function (self)
+		jump = response,
+	}
+
+	request:on{
+		event = events.down,
+		action = function (self, res)
 			haka.alert{
 				description = "http: unexpected data from server",
 				severity = 'low'
 			}
-			return 'error'
-		end
+		end,
+		jump = fail,
 	}
 
-	response = state{
-		up = function (self, iter)
+	response:on{
+		event = events.up,
+		action = function (self, res)
 			haka.alert{
 				description = "http: unexpected data from client",
 				severity = 'low'
 			}
-			return 'error'
 		end,
-		down = function (self, iter)
-			self.response = HttpResponseResult:new()
-			self._want_data_modification = false
-
-			local err
-			self.response, err = http_dissector.grammar.response:parse(iter, self.response, self)
-			if err then
-				haka.alert{
-					description = string.format("invalid http %s", err.field.rule),
-					severity = 'low'
-				}
-				return 'error'
-			end
-
-			if self.request.method:lower() == 'connect' then
-				return 'connect'
-			else
-				return 'request'
-			end
-		end,
+		jump = fail,
 	}
 
-	connect = state{
-		update = function (self, direction, iter)
-			iter:advance('all')
-		end
+	response:on{
+		event = events.down,
+		check = function (self, res) return self.request.method:lower() == 'connect' end,
+		action = function (self, res)
+			self.response = res
+			self._want_data_modification = false
+		end,
+		jump = connect,
+	}
+
+	response:on{
+		event = events.down,
+		action = function (self, res)
+			self.response = res
+			self._want_data_modification = false
+		end,
+		jump = request,
 	}
 
 	initial(request)

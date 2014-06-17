@@ -151,7 +151,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 		my_up_state:on{
 			event = events.up,
 			jump = my_down_state,
-			action = function (self)
+			action = function (self, res)
 				self.up = true
 			end,
 		}
@@ -164,7 +164,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 		my_down_state:on{
 			event = events.down,
 			jump = finish,
-			action = function (self)
+			action = function (self, res)
 				self.down = true
 			end,
 		}
@@ -178,8 +178,8 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 	end):instanciate(ctx)
 
 	-- When
-	state_machine:update(upbuf, "up", nil)
-	state_machine:update(downbuf, "down", nil)
+	state_machine:update(upbuf:pos("begin"), "up", nil)
+	state_machine:update(downbuf:pos("begin"), "down", nil)
 
 	-- Then
 	assertTrue(state_machine._instance.finished)
@@ -213,7 +213,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 		my_up_state:on{
 			event = events.up,
 			jump = my_down_state,
-			action = function (self)
+			action = function (self, res)
 				self.up = true
 			end,
 		}
@@ -226,7 +226,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 		my_down_state:on{
 			event = events.down,
 			jump = finish,
-			action = function (self)
+			action = function (self, res)
 				self.down = true
 			end,
 		}
@@ -239,10 +239,10 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 		initial(my_up_state)
 	end):instanciate(ctx)
 
-	state_machine:update(upbuf, "up", nil)
+	state_machine:update(upbuf:pos("begin"), "up", nil)
 
 	-- When
-	state_machine:update(upbuf, "up", nil)
+	state_machine:update(upbuf:pos("begin"), "up", nil)
 
 	-- Then
 	assertTrue(state_machine._instance.failed)
@@ -276,7 +276,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 
 		any:on{
 			event = events.parse_error,
-			action = function (self)
+			action = function (self, err)
 				self.parse_error = true
 			end,
 			jump = fail
@@ -285,7 +285,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 		my_up_state:on{
 			event = events.up,
 			jump = my_down_state,
-			action = function (self)
+			action = function (self, res)
 				self.up = true
 			end,
 		}
@@ -293,7 +293,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 		my_down_state:on{
 			event = events.down,
 			jump = finish,
-			action = function (self)
+			action = function (self, res)
 				self.down = true
 			end,
 		}
@@ -301,10 +301,10 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 		initial(my_up_state)
 	end):instanciate(ctx)
 
-	state_machine:update(upbuf, "up", nil)
+	state_machine:update(upbuf:pos("begin"), "up", nil)
 
 	-- When
-	state_machine:update(downbuf, "down", nil)
+	state_machine:update(downbuf:pos("begin"), "down", nil)
 
 	-- Then
 	assertTrue(state_machine._instance.failed)
