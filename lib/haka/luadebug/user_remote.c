@@ -213,7 +213,8 @@ static void print(struct luadebug_user *_user, const char *format, ...)
 	struct luadebug_remote_user *user = (struct luadebug_remote_user*)_user;
 
 	va_start(args, format);
-	vasprintf(&line, format, args);
+	if ( vasprintf(&line, format, args) < 0 )
+        report_error(user, errno);
 	va_end(args);
 
 	if (!line) {
@@ -354,7 +355,8 @@ static bool luadebug_user_remote_server_session(int fd, struct luadebug_user *us
 			free(line);
 
 			command = '1';
-			write(fd, &command, 1);
+			if ( write(fd, &command, 1) != 1 )
+				messagef(HAKA_LOG_WARNING, MODULE, L"write error: %s", errno_error(errno));
 			write_string(fd, rdline);
 			free(rdline);
 			break;
