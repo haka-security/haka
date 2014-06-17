@@ -65,6 +65,7 @@ struct netmap_packet {
 	struct vbuffer              data;
 	struct vbuffer_iterator     select;
     netmap_link_t *             link;
+    short protocol;
 	enum packet_status status;
 };
 
@@ -282,12 +283,11 @@ static struct packet_module_state *init_state(int thread_id)
 	return state;
 }
 
-
-
 static bool packet_build_payload(struct netmap_packet *packet)
 {
-	struct vbuffer_sub sub;
+    struct vbuffer_sub sub;
 
+    // remove etthernet header from analysis
 	vbuffer_sub_create(&sub, &packet->data, sizeof(struct ethhdr), ALL);
 
 	return vbuffer_select(&sub, &packet->core_packet.payload, &packet->select);
@@ -355,11 +355,10 @@ static int get_buffer_on_link( netmap_link_t * link, struct netmap_packet ** pkt
 
             rxring->head = rxring->cur = idx;
 
-            show_link(nmpkt->link);
-
-            messagef(HAKA_LOG_INFO, L"netmap", L" we can send the packet to haka filtering process ");
+            nmpkt->protocol = ntohs(((struct ethhdr*)rxbuf)->h_proto);
 
 			if (!packet_build_payload(nmpkt)) {
+                messagef(HAKA_LOG_ERROR, L"netmap", L"packet_build_payload fail");
 				vbuffer_release(&nmpkt->data);
 				free(nmpkt);
 				return ENOMEM;
@@ -381,14 +380,14 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
     if ( !state )
         return -1;
-/*
+#ifdef NMDEBUG
     for ( idx = 0 ; idx < links_count ; idx++ )
     {
         messagef(HAKA_LOG_INFO, L"netmap", L"[%d] packet queued {input(tx:%d,rx:%d),output(tx:%d,rx:%d)}", idx,
                  pkt_queued(links[idx].idesc, 1), pkt_queued(links[idx].idesc, 0),
                  pkt_queued(links[idx].odesc, 1), pkt_queued(links[idx].odesc, 0));
     }
-*/
+#endif
     // reset all poll revents
     for ( idx = 0 ; idx < links_count ; idx++ )
     {
@@ -413,10 +412,13 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
     // treat all events
     for ( idx = 0 ; idx < links_count ; idx++ )
     {
+#ifdef NMDEBUG
         messagef(HAKA_LOG_INFO, L"netmap", L"[%d] status = %d - packet queued {input(tx:%d,rx:%d),output(tx:%d,rx:%d)",
                  idx, state->pfds[idx].revents,
                  pkt_queued(links[idx].idesc, 1), pkt_queued(links[idx].idesc, 0),
                  pkt_queued(links[idx].odesc, 1), pkt_queued(links[idx].odesc, 0));
+#endif
+
         if ( state->pfds[idx].revents & POLLIN)
         {
            err = get_buffer_on_link( &links[idx], (struct netmap_packet **) pkt );
@@ -433,17 +435,19 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	struct netmap_packet * pkt = (struct netmap_packet *) orig_pkt;
 
 	if ( !pkt )
-		return;
+        return;
 
-	if (vbuffer_isvalid(&pkt->data)) {
+    if (vbuffer_isvalid(&pkt->data)) {
+
 		vbuffer_restore(&pkt->select, &pkt->core_packet.payload);
 
 		if ( result == FILTER_ACCEPT)
-		{
+        {
+
 			const uint8 *data;
 			size_t len;
 
-			data = vbuffer_flatten( &orig_pkt->payload, &len);
+            data = vbuffer_flatten( &pkt->data, &len);
 			if ( pkt->link->odesc )
 			{
 				nm_inject( pkt->link->odesc, data, len );
@@ -459,13 +463,25 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 		}
 		else
 			messagef(HAKA_LOG_INFO, L"netmap", L"DROP");
-		vbuffer_clear(&pkt->data);
-	}
+        vbuffer_clear(&pkt->data);
+    }
 }
 
 static const char *packet_get_dissector(struct packet *orig_pkt)
 {
-	return "ipv4";
+    char * dissector;
+    struct netmap_packet *pkt = (struct netmap_packet*)orig_pkt;
+
+    switch (pkt->protocol)
+    {
+    case 0x0800:
+        dissector = "ipv4";
+        break;
+    default:
+        dissector = NULL;
+    }
+
+    return dissector;
 }
 
 static uint64 packet_get_id(struct packet *orig_pkt)
