@@ -322,10 +322,9 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 				return la == 0xa or la == 0xd
 			end)
 			:result(HeaderResult)
-			:creation(function (ctx, entity, init)
+			:creation(function (entity, init)
 				local vbuf = haka.vbuffer_from(init.name..': '..init.value..'\r\n')
-				entity:create(vbuf:pos('begin'), ctx, init)
-				return vbuf
+				return vbuf, entity:create(vbuf:pos('begin'), init)
 			end)
 		),
 		CRLF
@@ -398,7 +397,7 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 	request = sequence{
 		request_headers,
 		body
-	}
+	}:result(HttpRequestResult)
 
 	-- http response
 	response_headers = record{
@@ -412,7 +411,7 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 	response = sequence{
 		response_headers,
 		body
-	}
+	}:result(HttpResponseResult)
 
 	export(request, response)
 end)

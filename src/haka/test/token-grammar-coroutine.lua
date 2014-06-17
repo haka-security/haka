@@ -33,12 +33,11 @@ haka.rule{
 	},
 	eval = function (flow, iter, direction)
 		if direction == 'up' then
-			local ctx = class.class('ctx'):new()
 			local mark = iter:copy()
 			mark:mark()
-			grammar.grammar:parse(iter, ctx)
-			print("hello_world= "..ctx.hello_world)
-			for _,header in ipairs(ctx.headers) do
+			local res = grammar.grammar:parse(iter)
+			print("hello_world= "..res.hello_world)
+			for _,header in ipairs(res.headers) do
 				print(header.name..": "..header.value)
 			end
 			mark:unmark()
