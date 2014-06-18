@@ -386,14 +386,6 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 		function (self, ctx) return ctx.mode end
 	)
 
-	message = record{
-		headers,
-		execute(function (self, ctx)
-			ctx.user:trigger_event(ctx.top, ctx.iter, ctx.retain_mark)
-		end),
-		field('body', body)
-	}
-
 	-- http request
 	request_headers = record{
 		request_line,
