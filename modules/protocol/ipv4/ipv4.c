@@ -70,15 +70,10 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	}
 
 	if (!vbuffer_check_size(payload, sizeof(struct ipv4_header), NULL)) {
-		TOWSTR(srcip, ipv4addr, ipv4_get_src(ip));
-		TOWSTR(dstip, ipv4addr, ipv4_get_dst(ip));
 		ALERT(invalid_packet, 1, 1)
-			description: L"invalid ip packet, size is too small",
+			description: L"corrupted ip packet, size is too small",
 			severity: HAKA_ALERT_LOW,
 		ENDALERT
-
-		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
-		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
 
 		alert(&invalid_packet);
 
@@ -101,6 +96,19 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	*(uint8 *)&hdrlen = vbuffer_iterator_getbyte(&hdrleniter);
 
 	header_len = hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET;
+	if (header_len < sizeof(struct ipv4_header)) {
+		ALERT(invalid_packet, 1, 1)
+			description: L"corrupted ip packet",
+			severity: HAKA_ALERT_LOW,
+		ENDALERT
+
+		alert(&invalid_packet);
+
+		packet_drop(packet);
+		packet_release(packet);
+		free(ip);
+		return NULL;
+	}
 
 	if (!ipv4_flatten_header(payload, header_len)) {
 		assert(check_error());

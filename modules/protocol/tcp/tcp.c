@@ -85,7 +85,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	}
 
 	if (!vbuffer_check_size(&packet->payload, sizeof(struct tcp_header), NULL)) {
-		alert_invalid_packet(packet, L"invalid tcp packet, size is too small");
+		alert_invalid_packet(packet, L"corrupted tcp packet, size is too small");
 		ipv4_action_drop(packet);
 		return NULL;
 	}
@@ -105,7 +105,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	*(uint8 *)&hdrlen = vbuffer_iterator_getbyte(&hdrleniter);
 
 	if (hdrlen.hdr_len << TCP_HDR_LEN < sizeof(struct tcp_header)) {
-		alert_invalid_packet(packet, L"invalid tcp packet, header length is too small");
+		alert_invalid_packet(packet, L"corrupted tcp packet, header length is too small");
 		ipv4_action_drop(packet);
 		free(tcp);
 		return NULL;
