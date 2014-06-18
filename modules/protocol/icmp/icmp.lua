@@ -26,12 +26,14 @@ end)
 
 function icmp_dissector.method:parse_payload(pkt, payload)
 	self.ip = pkt
-	icmp_dissector.grammar.packet:parse(payload:pos("begin"), self)
+	local res = icmp_dissector.grammar.packet:parse(payload:pos("begin"))
+	table.merge(self, res)
 end
 
 function icmp_dissector.method:create_payload(pkt, payload, init)
 	self.ip = pkt
-	icmp_dissector.grammar.packet:create(payload:pos("begin"), self, init)
+	local res = icmp_dissector.grammar.packet:create(payload:pos("begin"), init)
+	table.merge(self, res)
 end
 
 function icmp_dissector.method:verify_checksum()
