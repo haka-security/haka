@@ -176,6 +176,7 @@ INIT static void _timer_init()
 {
 	struct sigaction sa;
 
+	memset(&sa, 0, sizeof(sa));
 	sa.sa_flags = SA_SIGINFO;
 	sa.sa_sigaction = timer_handler;
 	sigemptyset(&sa.sa_mask);
