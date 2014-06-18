@@ -26,4 +26,10 @@ function module.types(n, val, types)
 	error(string.format("invalid parameter %d, expected %s", n, table.concat(types, " or ")), 3)
 end
 
+function module.assert(prop, message)
+	if not prop then
+		error(message, 3)
+	end
+end
+
 return module

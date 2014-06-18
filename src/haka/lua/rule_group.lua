@@ -3,17 +3,18 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 local class = require('class')
+local check = require('check')
 local rule = require('rule')
 
 local rule_group = class.class('RuleGroup')
 
 function rule_group.method:__init(args, continue)
-	assert(args.hook, "not hook defined for rule group")
-	assert(class.isa(args.hook, haka.event.Event), "rule hook must be an event")
-	assert(not args.init or type(args.init) == 'function', "rule group init function expected")
-	assert(not args.continue or type(args.continue) == 'function', "rule group continue function expected")
-	assert(not args.final or type(args.final) == 'function', "rule group final function expected")
-	assert(not args.options or type(args.options) == 'table', "rule group options should be table")
+	check.assert(args.hook, "not hook defined for rule group")
+	check.assert(class.isa(args.hook, haka.event.Event), "rule hook must be an event")
+	check.assert(not args.init or type(args.init) == 'function', "rule group init function expected")
+	check.assert(not args.continue or type(args.continue) == 'function', "rule group continue function expected")
+	check.assert(not args.final or type(args.final) == 'function', "rule group final function expected")
+	check.assert(not args.options or type(args.options) == 'table', "rule group options should be table")
 
 	self.hook = args.hook
 	self.name = args.name

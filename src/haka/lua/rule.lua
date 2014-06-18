@@ -3,6 +3,7 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 local class = require('class')
+local check = require('check')
 
 local module = {}
 
@@ -24,10 +25,10 @@ function haka.rule_summary()
 end
 
 function haka.rule(r)
-	assert(r.hook, "not hook defined for rule")
-	assert(class.isa(r.hook, haka.event.Event), "rule hook must be an event")
-	assert(type(r.eval) == 'function', "rule eval function expected")
-	assert(not r.options or type(r.options) == 'table', "rule options should be table")
+	check.assert(r.hook, "not hook defined for rule")
+	check.assert(class.isa(r.hook, haka.event.Event), "rule hook must be an event")
+	check.assert(type(r.eval) == 'function', "rule eval function expected")
+	check.assert(not r.options or type(r.options) == 'table', "rule options should be table")
 
 	local loc = debug.getinfo(2, 'nSl')
 	r.location = string.format("%s:%d", loc.short_src, loc.currentline)
