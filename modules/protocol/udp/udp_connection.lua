@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require("class")
+
 local ipv4 = require("protocol/ipv4")
 local udp = require("protocol/udp")
 
@@ -42,7 +44,7 @@ function udp_connection_dissector:receive(pkt)
 
 	local ret, err = xpcall(function ()
 		haka.context:exec(connection.data, function ()
-			return dissector:emit(pkt, direction)
+			return dissector:emit(direction, pkt)
 		end)
 	end, debug.format_error)
 
@@ -54,43 +56,77 @@ function udp_connection_dissector:receive(pkt)
 	end
 end
 
-udp_connection_dissector.states = haka.state_machine("udp", function ()
-	default_transitions{
-		error = function (self)
-			return 'drop'
-		end,
-		finish = function (self)
+local UdpState = class.class("UdpState", haka.state_machine.State)
+
+function UdpState.method:__init()
+	class.super(UdpState).__init(self, name)
+	table.merge(self._transitions, {
+		receive  = {},
+		drop = {},
+	});
+end
+
+function UdpState.method:_update(state_machine, direction, pkt)
+	state_machine:transition('receive', pkt, direction)
+end
+
+udp_connection_dissector.states = haka.state_machine.new("udp", function ()
+	state_type(UdpState)
+
+	drop = state()
+	established = state()
+
+	any:on{
+		event = events.fail,
+		jump = drop,
+	}
+
+	any:on{
+		event = events.drop,
+		jump = drop,
+	}
+
+	any:on{
+		event = events.finish,
+		action = function (self)
 			self:trigger('end_connection')
 			self.connection:close()
 		end,
-		drop = function (self)
-			return 'drop'
-		end
 	}
 
-	drop = state{
-		enter = function (self)
+	drop:on{
+		event = events.enter,
+		action = function (self)
 			self:trigger('end_connection')
 			self.dropped = true
 			self.connection:drop()
 		end,
-		timeouts = {
-			[60] = function (self)
-				return 'finish'
-			end
-		},
-		update = function (self, pkt, direction)
+	}
+
+	drop:on{
+		event = events.timeout(60),
+		jump = finish,
+	}
+
+	drop:on{
+		event = events.receive,
+		action = function (self, pkt, direction)
 			pkt:drop()
 		end,
-		finish = function (self)
+	}
+
+	drop:on{
+		event = events.finish,
+		action = function (self)
 			self.connection:close()
 		end
 	}
 
-	established = state{
-		update = function (self, pkt, direction)
+	established:on{
+		event = events.receive,
+		action = function (self, pkt, direction)
 			self:trigger('receive_data', pkt, direction)
-	
+
 			local next_dissector = self:next_dissector()
 			if next_dissector then
 				local payload
@@ -102,11 +138,11 @@ udp_connection_dissector.states = haka.state_machine("udp", function ()
 
 			return 'established'
 		end,
-		timeouts = {
-			[60] = function (self)
-				return 'error'
-			end
-		}
+	}
+
+	established:on{
+		event = events.timeout(60),
+		jump = fail,
 	}
 
 	initial(established)
@@ -125,10 +161,10 @@ function udp_connection_dissector.method:init(connection)
 	self.state = udp_connection_dissector.states:instanciate(self)
 end
 
-function udp_connection_dissector.method:emit(pkt, direction)
+function udp_connection_dissector.method:emit(direction, pkt)
 	self.connection:update_stat(direction, pkt.ip.len)
 
-	self.state:transition('update', pkt, direction)
+	self.state:update(direction, pkt)
 end
 
 function udp_connection_dissector.method:send(pkt, payload, clone)
