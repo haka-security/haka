@@ -21,8 +21,13 @@ function module.TransitionCollection.method:__init(const)
 end
 
 function module.TransitionCollection.method:on(transition)
-	assert(transition.event, "transition must have an event")
-	assert(transition.event.name, "transition must be a table")
+	if not transition.event then
+		error("transition must have an event", 2)
+	end
+
+	if not transition.event.name then
+		error("transition must be a table", 2)
+	end
 
 	if self._const and not self._transitions[transition.event.name] then
 		error(string.format("unknown event '%s'", transition.event.name), 2)
@@ -111,8 +116,13 @@ end
 module.BidirectionnalState = class.class('BidirectionnalState', module.State)
 
 function module.BidirectionnalState.method:__init(gup, gdown, rup, rdown, name)
-	assert(not gup or class.isa(gup, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
-	assert(not gdown or class.isa(gdown, dg.Entity), "bidirectionnal state expect an exported element of a grammar")
+	if gup and not class.isa(gup, dg.Entity) then
+		error("bidirectionnal state expect an exported element of a grammar", 3)
+	end
+
+	if gdown and not class.isa(gdown, dg.Entity) then
+		error("bidirectionnal state expect an exported element of a grammar", 3)
+	end
 
 	class.super(module.BidirectionnalState).__init(self, name)
 	table.merge(self._transitions, {
