@@ -73,7 +73,7 @@ end
 
 function SmtpDissector.method:receive_streamed(iter, direction)
 	while iter:wait() do
-		self.state:transition('update', direction, iter)
+		self.state:update(iter, direction)
 		self:continue()
 	end
 end
@@ -167,171 +167,214 @@ end)
 --
 -- State machine
 --
-SmtpDissector.states = haka.state_machine("smtp", function ()
-	session_initiation = state {
-		up = function (self, iter)
-			haka.alert{
-				description = "unexpected client command",
-				severity = 'low'
-			}
-			return 'error'
+
+SmtpDissector.states = haka.state_machine.new("smtp", function ()
+	state_type(BidirectionnalState)
+
+	session_initiation = state(nil, SmtpDissector.grammar.smtp_responses)
+	client_initiation = state(SmtpDissector.grammar.smtp_command, nil)
+	response = state(nil, SmtpDissector.grammar.smtp_responses)
+	command = state(SmtpDissector.grammar.smtp_command, nil)
+	data_transmission = state(SmtpDissector.grammar.smtp_data, nil)
+
+	any:on{
+		event = events.fail,
+		action = function (self)
+			self:drop()
 		end,
-		down = function (self, iter)
-			local err
-			self.response, err = SmtpDissector.grammar.smtp_responses:parse(iter, nil, self)
-			if err then
-				haka.alert{
-					description = string.format("invalid smtp response %s", err),
-					severity = 'high'
-				}
-				return 'error'
-			end
-			local status = self.response.responses[1].code
-			if status == '220' then
-				self:trigger('response', self.response)
-				return 'client_initiation'
+	}
+
+	any:on{
+		event = events.missing_grammar,
+		action = function (self, direction, payload)
+			local description
+			if direction == 'up' then
+				description = "unexpected client command"
 			else
-				haka.alert{
-					description = string.format("unavailable service: %s", status),
-					severity = 'low'
-				}
-				return 'error'
+				description = "unexpected server response"
 			end
-		end
-	}
-
-	client_initiation = state {
-		up = function (self, iter)
-			local err
-			self.command, err = SmtpDissector.grammar.smtp_command:parse(iter, nil, self)
-			if err then
-				haka.alert{
-					description = string.format("invalid smtp command %s", err),
-					severity = 'low'
-				}
-				return 'error'
-			end
-			local command = string.upper(self.command.command)
-			if command == 'EHLO' or command == 'HELO' then
-				self:trigger('command', self.command)
-				return 'response'
-			else
-				haka.alert{
-					description = string.format("invalid client initiation command"),
-					severity = 'low'
-				}
-				return 'error'
-			end
-		end,
-		down = function (self, iter)
 			haka.alert{
-				description = string.format("unexpected server response"),
+				description = description,
 				severity = 'low'
 			}
-			return 'error'
 		end,
+		jump = fail,
 	}
 
-	response = state {
-		up = function (self, iter)
+	session_initiation:on{
+		event = events.parse_error,
+		action = function (self, err)
 			haka.alert{
-				description = "unexpected client command",
+				description = string.format("invalid smtp response %s", err),
+				severity = 'high'
+			}
+		end,
+		jump = fail,
+	}
+
+	session_initiation:on{
+		event = events.down,
+		check = function (self, res) return res.responses[1].code == '220' end,
+		action = function (self, res)
+			self:trigger('response', res)
+		end,
+		jump = client_initiation,
+	}
+
+	session_initiation:on{
+		event = events.down,
+		action = function (self, res)
+			haka.alert{
+				description = string.format("unavailable service: %s", status),
 				severity = 'low'
 			}
-			return 'error'
 		end,
-		down = function (self, iter)
-			local err
-			self.response, err = SmtpDissector.grammar.smtp_responses:parse(iter, nil, self)
-			if err then
-				haka.alert{
-					description = string.format("invalid smtp response %s", err),
-					severity = 'high'
-				}
-				return 'error'
-			end
-			self:trigger('response', self.response)
-			local status = self.response.responses[1].code
-			if status == '354' then
-				return 'data_transmission'
-			elseif status == 221 then
-				return 'finish'
-			else
-				return 'command'
-			end
-		end
+		jump = fail,
 	}
 
-	command = state {
-		up = function (self, iter)
-			local err
-			self.command, err = SmtpDissector.grammar.smtp_command:parse(iter, nil, self)
-			if err then
-				haka.alert{
-					description = string.format("invalid smtp command %s", err),
-					severity = 'low'
-				}
-				return 'error'
-			end
-			self:trigger('command', self.command)
-			return 'response'
-		end,
-		down = function (self, iter)
+	client_initiation:on{
+		event = events.parse_error,
+		action = function (self, err)
 			haka.alert{
-				description = string.format("unexpected server response"),
+				description = string.format("invalid smtp command %s", err),
 				severity = 'low'
 			}
-			return 'error'
 		end,
+		jump = fail,
 	}
 
-	data_transmission = state {
-		enter = function (self)
+	client_initiation:on{
+		event = events.up,
+		check = function (self, res)
+			local command = string.upper(res.command)
+			return command == 'EHLO' or command == 'HELO'
+		end,
+		action = function (self, res)
+			self.command = res
+			self:trigger('command', res)
+		end,
+		jump = response,
+	}
+
+	client_initiation:on{
+		event = events.up,
+		action = function (self, res)
+			haka.alert{
+				description = string.format("invalid client initiation command"),
+				severity = 'low'
+			}
+		end,
+		jump = fail,
+	}
+
+	response:on{
+		event = events.parse_error,
+		action = function (self, err)
+			haka.alert{
+				description = string.format("invalid smtp response %s", err),
+				severity = 'high'
+			}
+		end,
+		jump = fail,
+	}
+
+	response:on{
+		event = events.down,
+		check = function (self, res)
+			return res.responses[1].code == '354'
+		end,
+		action = function (self, res)
+			self.response = res
+			self:trigger('response', res)
+		end,
+		jump = data_transmission,
+	}
+
+	response:on{
+		event = events.down,
+		check = function (self, res)
+			return res.responses[1].code == '221'
+		end,
+		action = function (self, res)
+			self.response = res
+			self:trigger('response', res)
+		end,
+		jump = finish,
+	}
+
+	response:on{
+		event = events.down,
+		action = function (self, res)
+			self.response = res
+			self:trigger('response', res)
+		end,
+		jump = command,
+	}
+
+	command:on{
+		event = events.parse_error,
+		action = function (self, err)
+			haka.alert{
+				description = string.format("invalid smtp command %s", err),
+				severity = 'low'
+			}
+		end,
+		jump = fail,
+	}
+
+	command:on{
+		event = events.up,
+		action = function (self, res)
+			self.command = res
+			self:trigger('command', res)
+		end,
+		jump = response,
+	}
+
+	data_transmission:on{
+		event = events.enter,
+		action = function (self)
 			self.mail = haka.vbuffer_sub_stream()
 		end,
-		up = function (self, iter)
-			local data, err = SmtpDissector.grammar.smtp_data:parse(iter, nil, self)
-			if err then
-				haka.alert{
-					description = string.format("invalid data blob %s", err),
-					severity = 'low'
-				}
-				return 'error'
-			end
-			local end_data = data.data:asstring() == '.\r\n'
-			local mail_iter = nil
-			if end_data then
-				self.mail:finish()
-			else
-				mail_iter = self.mail:push(data.data)
-			end
-			self:trigger('mail_content', self.mail, mail_iter)
-			self.mail:pop()
-			if end_data then
-				return 'response'
-			end
-		end,
-		down = function (self, iter)
+	}
+
+	data_transmission:on{
+		event = events.parse_error,
+		action = function (self, err)
 			haka.alert{
-				description = string.format("unexpected server response"),
+				description = string.format("invalid data blob %s", err),
 				severity = 'low'
 			}
-			return 'error'
 		end,
-		leave = function (self)
+		jump = fail,
+	}
+
+	data_transmission:on{
+		event = events.up,
+		check = function (self, res) return res.data:asstring() == '.\r\n' end,
+		action = function (self, res)
+			self.mail:finish()
+			self:trigger('mail_content', self.mail, nil)
+			self.mail:pop()
+		end,
+		jump = response,
+	}
+
+	data_transmission:on{
+		event = events.up,
+		action = function (self, res)
+			local mail_iter = self.mail:push(res.data)
+			self:trigger('mail_content', self.mail, mail_iter)
+			self.mail:pop()
+		end,
+	}
+
+	data_transmission:on{
+		event = events.leave,
+		action = function (self)
 			self.mail = nil
 		end,
 	}
-
-	default_transitions{
-		error = function (self)
-			self:drop()
-		end,
-		update = function (self, direction, iter)
-			return self.state:transition(direction, iter)
-		end
-	}
-
 
 	initial(session_initiation)
 end)

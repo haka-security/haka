@@ -129,25 +129,18 @@ function module.BidirectionnalState.method:__init(gup, gdown, rup, rdown, name)
 		up = {},
 		down = {},
 		parse_error = {},
+		missing_grammar = {},
 	})
 
 	self._grammar = {
 		up = gup,
 		down = gdown,
 	}
-
-	self._result = {
-		up = rup,
-		down = rdown,
-	}
 end
 
 function module.BidirectionnalState.method:_update(state_machine, payload, direction, ...)
 	if not self._grammar[direction] then
-		-- skip data as we don't have grammar to parse it
-		-- having no grammar could also mean drop data
-		payload:advance('all')
-		state_machine:transition(direction, nil, ...)
+		state_machine:transition("missing_grammar", direction, payload, ...)
 	else
 		local res, err = self._grammar[direction]:parse(payload, state_machine._owner)
 		if err then
