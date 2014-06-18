@@ -171,7 +171,7 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	local function addpath(dst, paths, exts)
 		if not paths then return dst end
 
-		local pathtable = string_split(dst, ';')
+		local pathtable = {}
 
 		for _, path in pairs(string_split(paths, ';')) do
 			for _, ext in pairs(exts) do
@@ -179,6 +179,8 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 				table.insert(pathtable, p)
 			end
 		end
+
+		table.insert(pathtable, dst)
 
 		return table.concat(pathtable, ';')
 	end
