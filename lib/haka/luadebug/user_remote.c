@@ -210,13 +210,14 @@ static void print(struct luadebug_user *_user, const char *format, ...)
 {
 	va_list args;
 	char *line;
+	int err = 0;
 	struct luadebug_remote_user *user = (struct luadebug_remote_user*)_user;
 
 	va_start(args, format);
-	vasprintf(&line, format, args);
+	err = vasprintf(&line, format, args);
 	va_end(args);
 
-	if (!line) {
+	if (!line || err < 0) {
 		return;
 	}
 
@@ -354,7 +355,10 @@ static bool luadebug_user_remote_server_session(int fd, struct luadebug_user *us
 			free(line);
 
 			command = '1';
-			write(fd, &command, 1);
+			if (write(fd, &command, 1) != 1) {
+				messagef(HAKA_LOG_ERROR, MODULE, L"remote communication error: %s", errno_error(errno));
+				return false;
+			}
 			write_string(fd, rdline);
 			free(rdline);
 			break;
