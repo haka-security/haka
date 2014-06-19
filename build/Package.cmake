@@ -32,7 +32,7 @@ set(CPACK_SOURCE_IGNORE_FILES "${CMAKE_BINARY_DIR};\\\\.git/;\\\\.git$;\\\\.giti
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}")
 
 # Common
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Haka runtime is a tool that allows to capture network traffic and filter them based on Lua policy files.")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Haka runtime is a tool that allows capturing and filtering network traffic based on Lua policy files.")
 set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_BINARY_DIR}/CPackEnv.cmake")
 FILE(WRITE "${CPACK_PROJECT_CONFIG_FILE}" "set(ENV{LD_LIBRARY_PATH} \"${CMAKE_CURRENT_BINARY_DIR}/_CPack_Packages/\${CPACK_TOPLEVEL_TAG}/DEB/\${CPACK_PACKAGE_FILE_NAME}/${HAKA_INSTALL_PREFIX}/lib\")\n")
 install(FILES LICENSE.txt DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka)
