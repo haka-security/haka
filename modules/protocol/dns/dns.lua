@@ -307,6 +307,7 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 			self.flow:send(pkt, payload, true)
 			res._data = payload
 		end,
+		jump = message,
 	}
 
 	message:on{
@@ -328,6 +329,7 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 				self.flow:send(pkt, payload)
 			end
 		end,
+		jump = message,
 	}
 
 	initial(message)
