@@ -59,6 +59,21 @@ function states.StateMachine.method:compile()
 	end
 end
 
+function states.StateMachine.method:dump_graph(file)
+	file:write('digraph state_machine {\n')
+	file:write('fail [fillcolor="#ee0000",style="filled"]\n')
+	file:write('finish [fillcolor="#00ee00",style="filled"]\n')
+	file:write(string.format('%s [fillcolor="#00d7ff",style="filled"]\n', self._initial._name))
+
+	for name, state in pairs(self._states) do
+
+		state:_dump_graph(file)
+	end
+
+	file:write("}\n")
+end
+
+
 function states.StateMachine.method:instanciate(owner)
 	return states.StateMachineInstance:new(self, owner)
 end
@@ -189,24 +204,36 @@ local function state_machine_env(state_machine)
 	}
 end
 
-haka.state_machine = {}
+local state_machine = {}
 
-haka.state_machine.State = state.State
-haka.state_machine.BidirectionnalState = state.BidirectionnalState
+state_machine.State = state.State
+state_machine.BidirectionnalState = state.BidirectionnalState
 
-function haka.state_machine.new(name, def)
+function state_machine.new(name, def)
 	assert(type(def) == 'function', "state machine definition must by a function")
 
-	local state_machine = states.StateMachine:new(name)
+	local sm = states.StateMachine:new(name)
 
 	-- Add a metatable to the environment only during the definition
 	-- of the grammar.
 	local env = debug.getfenv(def)
-	setmetatable(env, state_machine_env(state_machine))
+	setmetatable(env, state_machine_env(sm))
 
 	def()
 	setmetatable(env, nil)
 
-	state_machine:compile()
-	return state_machine
+	sm:compile()
+
+	if state_machine.debug then
+		haka.log.warning("state_machine", "dumping '%s' state_machine graph to %s.dot", sm.name, sm.name)
+		f = io.open(string.format("%s.dot", sm.name), "w+")
+		sm:dump_graph(f)
+		f:close()
+	end
+
+	return sm
 end
+
+state_machine.debug = false
+
+haka.state_machine = state_machine

@@ -13,7 +13,8 @@
 void basic_clean_exit();
 void clean_exit();
 void initialize();
-void prepare(int threadcount, bool attach_debugger, bool grammar_debug);
+void prepare(int threadcount, bool attach_debugger, bool grammar_debug,
+		bool state_machine_debug);
 void start();
 struct thread_pool *get_thread_pool();
 

@@ -104,6 +104,21 @@ function module.State.method:_update(state_machine, event)
 	state_machine:transition(event)
 end
 
+function module.State.method:_dump_graph(file)
+	local dest = {}
+	for name, transitions in pairs(self._transitions) do
+		for _, t  in ipairs(transitions) do
+			if t.jump then
+				dest[t.jump] = true
+			end
+		end
+	end
+
+	for jump, _ in pairs(dest) do
+		file:write(string.format('%s -> %s;\n', self._name, jump))
+	end
+end
+
 module.TestState = class.class('TestState', module.State)
 
 function module.TestState.method:__init(name)
