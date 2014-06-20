@@ -119,15 +119,6 @@ function module.State.method:_dump_graph(file)
 	end
 end
 
-module.TestState = class.class('TestState', module.State)
-
-function module.TestState.method:__init(name)
-	class.super(module.TestState).__init(self, name)
-	table.merge(self._transitions, {
-		test = {},
-	});
-end
-
 module.BidirectionnalState = class.class('BidirectionnalState', module.State)
 
 function module.BidirectionnalState.method:__init(gup, gdown)

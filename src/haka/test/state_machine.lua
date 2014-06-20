@@ -4,7 +4,18 @@
 
 -- This test check the state machine transitions.
 
+local class = require('class')
 local ipv4 = require('protocol/ipv4')
+
+local TestState = class.class('TestState', haka.state_machine.State)
+
+function TestState.method:__init()
+	class.super(TestState).__init(self)
+	table.merge(self._transitions, {
+		test = {},
+	});
+end
+
 
 local machine = haka.state_machine.new("test", function ()
 	state_type(TestState)

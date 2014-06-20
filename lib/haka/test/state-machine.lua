@@ -2,9 +2,20 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
 require('luaunit')
 
 TestStateMachine = {}
+
+local TestState = class.class('TestState', haka.state_machine.State)
+
+function TestState.method:__init()
+	class.super(TestState).__init(self)
+	table.merge(self._transitions, {
+		test = {},
+	});
+end
+
 
 function TestStateMachine:test_state_machine_compile()
 	-- Given
