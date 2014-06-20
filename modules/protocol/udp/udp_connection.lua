@@ -59,7 +59,7 @@ end
 local UdpState = class.class("UdpState", haka.state_machine.State)
 
 function UdpState.method:__init()
-	class.super(UdpState).__init(self, name)
+	class.super(UdpState).__init(self)
 	table.merge(self._transitions, {
 		receive  = {},
 		drop = {},

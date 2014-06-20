@@ -82,7 +82,7 @@ end
 local TcpState = class.class("TcpState", haka.state_machine.State)
 
 function TcpState.method:__init()
-	class.super(TcpState).__init(self, name)
+	class.super(TcpState).__init(self)
 	table.merge(self._transitions, {
 		input  = {},
 		output = {},
