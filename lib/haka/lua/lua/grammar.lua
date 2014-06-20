@@ -806,8 +806,8 @@ function grammar.new(name, def)
 	end
 
 	if grammar.debug then
-		haka.log.warning("grammar", "dumping '%s' grammar graph to %s.dot", g._name, g._name)
-		f = io.open(string.format("%s.dot", g._name), "w+")
+		haka.log.warning("grammar", "dumping '%s' grammar graph to %s-grammar.dot", g._name, g._name)
+		f = io.open(string.format("%s-grammar.dot", g._name), "w+")
 		g:dump_graph(f)
 		f:close()
 	end

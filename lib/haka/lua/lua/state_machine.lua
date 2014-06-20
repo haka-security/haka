@@ -223,8 +223,8 @@ function state_machine.new(name, def)
 	sm:compile()
 
 	if state_machine.debug then
-		haka.log.warning("state_machine", "dumping '%s' state_machine graph to %s.dot", sm.name, sm.name)
-		f = io.open(string.format("%s.dot", sm.name), "w+")
+		haka.log.warning("state_machine", "dumping '%s' state_machine graph to %s-state-machine.dot", sm.name, sm.name)
+		f = io.open(string.format("%s-state-machine.dot", sm.name), "w+")
 		sm:dump_graph(f)
 		f:close()
 	end
