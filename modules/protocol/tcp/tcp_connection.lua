@@ -105,7 +105,7 @@ function TcpState.method:_update(state_machine, direction, pkt)
 	end
 end
 
-tcp_connection_dissector.states = haka.state_machine.new("tcp", function ()
+tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function ()
 	state_type(TcpState)
 
 	reset        = state()
@@ -529,7 +529,7 @@ function tcp_connection_dissector.method:init(connection, pkt)
 	self.connection = connection
 	self.stream['up'] = tcp.tcp_stream()
 	self.stream['down'] = tcp.tcp_stream()
-	self.state = tcp_connection_dissector.states:instanciate(self)
+	self.state = tcp_connection_dissector.state_machine:instanciate(self)
 	self.srcip = pkt.ip.src
 	self.dstip = pkt.ip.dst
 	self.srcport = pkt.srcport

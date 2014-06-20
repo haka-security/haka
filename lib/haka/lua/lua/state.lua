@@ -130,7 +130,7 @@ end
 
 module.BidirectionnalState = class.class('BidirectionnalState', module.State)
 
-function module.BidirectionnalState.method:__init(gup, gdown, rup, rdown, name)
+function module.BidirectionnalState.method:__init(gup, gdown, name)
 	if gup and not class.isa(gup, dg.Entity) then
 		error("bidirectionnal state expect an exported element of a grammar", 3)
 	end

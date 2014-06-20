@@ -42,7 +42,7 @@ SmtpDissector.property.connection = {
 function SmtpDissector.method:__init(flow)
 	class.super(SmtpDissector).__init(self)
 	self.flow = flow
-	self.state = SmtpDissector.states:instanciate(self)
+	self.state = SmtpDissector.state_machine:instanciate(self)
 end
 
 function SmtpDissector.method:continue()
@@ -168,7 +168,7 @@ end)
 -- State machine
 --
 
-SmtpDissector.states = haka.state_machine.new("smtp", function ()
+SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 	state_type(BidirectionnalState)
 
 	session_initiation = state(nil, SmtpDissector.grammar.smtp_responses)
@@ -284,7 +284,6 @@ SmtpDissector.states = haka.state_machine.new("smtp", function ()
 			return res.responses[1].code == '354'
 		end,
 		action = function (self, res)
-			self.response = res
 			self:trigger('response', res)
 		end,
 		jump = data_transmission,
@@ -296,7 +295,6 @@ SmtpDissector.states = haka.state_machine.new("smtp", function ()
 			return res.responses[1].code == '221'
 		end,
 		action = function (self, res)
-			self.response = res
 			self:trigger('response', res)
 		end,
 		jump = finish,
@@ -305,7 +303,6 @@ SmtpDissector.states = haka.state_machine.new("smtp", function ()
 	response:on{
 		event = events.down,
 		action = function (self, res)
-			self.response = res
 			self:trigger('response', res)
 		end,
 		jump = command,

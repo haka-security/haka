@@ -70,7 +70,7 @@ function UdpState.method:_update(state_machine, direction, pkt)
 	state_machine:transition('receive', pkt, direction)
 end
 
-udp_connection_dissector.states = haka.state_machine.new("udp", function ()
+udp_connection_dissector.state_machine = haka.state_machine.new("udp", function ()
 	state_type(UdpState)
 
 	drop = state()
@@ -135,8 +135,6 @@ udp_connection_dissector.states = haka.state_machine.new("udp", function ()
 			else
 				pkt:send()
 			end
-
-			return 'established'
 		end,
 	}
 
@@ -158,7 +156,7 @@ end
 
 function udp_connection_dissector.method:init(connection)
 	self.connection = connection
-	self.state = udp_connection_dissector.states:instanciate(self)
+	self.state = udp_connection_dissector.state_machine:instanciate(self)
 end
 
 function udp_connection_dissector.method:emit(direction, pkt)

@@ -150,18 +150,16 @@ local function state_machine_env(state_machine)
 	state_machine_int.finish = state.State:new("finish")
 	state_machine_int.fail = state.State:new("fail")
 
-	-- Special any transition collection
+	-- Special default transition collection
 	state_machine_int.any = state_machine._default
 
 	-- Events proxying
 	state_machine_int.events = {}
+	state_machine_int.events.timeout = function(timeout)
+		return { name = "timeouts", timeout = timeout }
+	end
 	setmetatable(state_machine_int.events, {
 		__index = function (self, name)
-			if name == "timeout" then
-				return function(timeout)
-					return { name = "timeouts", timeout = timeout }
-				end
-			end
 			return { name = name }
 		end,
 		__newindex = function ()

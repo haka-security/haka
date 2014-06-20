@@ -300,6 +300,7 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 	message:on{
 		event = events.up,
 		action = function (self, res, pkt, payload)
+			-- make pkt available to rules. Mainly for dropping
 			res._pkt = pkt
 			res._dissector = self
 			self:trigger("query", res)
@@ -313,6 +314,7 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 	message:on{
 		event = events.down,
 		action = function (self, res, pkt, payload)
+			-- make pkt available to rules. Mainly for dropping
 			res._pkt = pkt
 			res._dissector = self
 			local id = res.id
