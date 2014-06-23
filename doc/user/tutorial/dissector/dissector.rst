@@ -100,12 +100,12 @@ connection) or not.
 
 .. code-block:: lua
 
-    function SmtpDissector.method:receive_streamed(iter, direction)
-    	while iter:wait() do
-	    	self.state:transition('update', direction, iter)
-	    	self:continue()
-    	end
-    end
+	function SmtpDissector.method:receive_streamed(iter, direction)
+		while iter:wait() do
+			self.state:update(iter, direction)
+			self:continue()
+		end
+	end
 
 Adding extras properties and functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
