@@ -26,6 +26,7 @@ function TcpConnInfo.method:drop()
 	for _,r in ipairs(self._data) do
 		local id = r._id
 		hakactl.remote(r._thread, function ()
+			if not haka.console.tcp then error("tcp protocol not available", 0) end
 			haka.console.tcp.drop_connection(id)
 		end)
 	end
@@ -35,6 +36,7 @@ function TcpConnInfo.method:reset()
 	for _,r in ipairs(self._data) do
 		local id = r._id
 		hakactl.remote(r._thread, function ()
+			if not haka.console.tcp then error("tcp protocol not available", 0) end
 			haka.console.tcp.reset_connection(id)
 		end)
 	end
@@ -44,6 +46,7 @@ console.tcp = {}
 
 function console.tcp.connections(show_dropped)
 	local data = hakactl.remote('all', function ()
+		if not haka.console.tcp then error("tcp protocol not available", 0) end
 		return haka.console.tcp.list_connections(show_dropped)
 	end)
 
