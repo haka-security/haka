@@ -319,12 +319,12 @@ START_TEST(test_number)
 	/* Big endian */
 	ck_assert(vbuffer_setnumber(&sub, true, number));
 	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), number);
-	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), SWAP_int32(number));
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), (int)SWAP_int32(number));
 
 	/* Little endian */
 	ck_assert(vbuffer_setnumber(&sub, false, number));
 	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), number);
-	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), SWAP_int32(number));
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), (int)SWAP_int32(number));
 
 	vbuffer_sub_clear(&sub);
 	ck_check_error;
@@ -337,12 +337,12 @@ START_TEST(test_number)
 	/* Big endian */
 	ck_assert(vbuffer_setnumber(&sub, true, number));
 	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), number);
-	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), SWAP_int32(number));
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), (int)SWAP_int32(number));
 
 	/* Little endian */
 	ck_assert(vbuffer_setnumber(&sub, false, number));
 	ck_assert_int_eq((int)vbuffer_asnumber(&sub, false), number);
-	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), SWAP_int32(number));
+	ck_assert_int_eq((int)vbuffer_asnumber(&sub, true), (int)SWAP_int32(number));
 
 	vbuffer_sub_clear(&sub);
 	ck_check_error;

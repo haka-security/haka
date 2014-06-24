@@ -44,13 +44,16 @@ static void term_error_signal(int sig, siginfo_t *si, void *uc)
 {
 	static atomic_t fatal_error_count;
 	int fatal_error_level;
+	UNUSED int err;
 
 	if (sig == SIGINT) {
-		write(STDERR_FILENO, "\n", 1);
+		err = write(STDERR_FILENO, "\n", 1);
+		/* ignore err */
 
 		if (luadebug_debugger_breakall()) {
 			static const char *debugger_message = "break (hit ^C again to kill)\n";
-			write(STDERR_FILENO, debugger_message, strlen(debugger_message));
+			err = write(STDERR_FILENO, debugger_message, strlen(debugger_message));
+			/* ignore err */
 			return;
 		}
 		else {
@@ -62,7 +65,8 @@ static void term_error_signal(int sig, siginfo_t *si, void *uc)
 
 	if (sig != SIGINT) {
 		static const char *message = "terminate signal received\n";
-		write(STDERR_FILENO, message, strlen(message));
+		err = write(STDERR_FILENO, message, strlen(message));
+		/* ignore err */
 	}
 
 	if (thread_states) {
