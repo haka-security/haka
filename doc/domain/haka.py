@@ -52,6 +52,10 @@ def new_visit_desc_parameterlist(self, node):
 
     self.body.append('<big%s>%s</big>' % (param_class, value))
     self.first_param = 1
+    self.optional_param_level = 0
+    # How many required parameters are left.
+    self.required_params_left = sum([isinstance(c, addnodes.desc_parameter)
+                                     for c in node.children])
     self.param_separator = node.child_text_separator
 
 def new_depart_desc_parameterlist(self, node):
