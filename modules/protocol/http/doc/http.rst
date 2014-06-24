@@ -205,7 +205,7 @@ Events
 
     Event triggered when some data are available on a request.
 
-.. haka:function:: http.events.response(http, stream, current)
+.. haka:function:: http.events.response_data(http, stream, current)
     :module:
     :objtype: event
 
