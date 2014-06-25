@@ -35,6 +35,11 @@ function states.StateMachine.method:compile()
 			error("state machine must have an initial state")
 		end
 
+		local unused = {}
+		for name, s in pairs(self._states) do
+			unused[name] = s
+		end
+
 		for name, s in pairs(self._states) do
 			assert(class.isa(s, state.State), "invalid state type")
 			s:setdefaults(self._default)
@@ -43,11 +48,25 @@ function states.StateMachine.method:compile()
 
 			if s == self._initial then
 				initial = new_state
+				unused[name] = nil
+			end
+
+			-- Mark states as used
+			for _, event in pairs(s._transitions) do
+				for _, t in ipairs(event) do
+					if t.jump then
+						unused[t.jump] = nil
+					end
+				end
 			end
 		end
 
 		if not initial then
 			error("state machine has an unknown initial state")
+		end
+
+		for name, _ in pairs(unused) do
+			haka.log.warning("state_machine", "state machine %s never jump on state: %s", self.name, name)
 		end
 
 		self._state_machine.initial = initial._compiled_state
