@@ -92,15 +92,15 @@ end
 
 function TcpState.method:_update(state_machine, direction, pkt)
 	if pkt.flags.rst then
-		state_machine._owner:_sendpkt(pkt, direction)
+		state_machine.owner:_sendpkt(pkt, direction)
 		state_machine:transition('reset', pkt)
 		return
 	end
 
-	if direction == state_machine._owner.input then
+	if direction == state_machine.owner.input then
 		state_machine:transition('input', pkt)
 	else
-		assert(direction == state_machine._owner.output)
+		assert(direction == state_machine.owner.output)
 		state_machine:transition('output', pkt)
 	end
 end

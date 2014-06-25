@@ -94,7 +94,7 @@ function states.StateMachineInstance.method:__init(state_machine, owner)
 	self.states = state_machine._state_table
 	self._instance = state_machine._state_machine:instanciate(owner)
 	self._instance:init()
-	self._owner = owner
+	self.owner = owner
 end
 
 function states.StateMachineInstance.method:update(...)
@@ -117,7 +117,7 @@ function states.StateMachineInstance.method:transition(name, ...)
 		error(string.format("no transition named '%s' on state '%s'", name, current._name))
 	end
 
-	local newstate = trans(self._owner, ...)
+	local newstate = trans(self.owner, ...)
 
 	if newstate then
 		self._instance:update(newstate)

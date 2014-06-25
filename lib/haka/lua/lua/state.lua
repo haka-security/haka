@@ -148,7 +148,7 @@ function module.BidirectionnalState.method:_update(state_machine, payload, direc
 	if not self._grammar[direction] then
 		state_machine:transition("missing_grammar", direction, payload, ...)
 	else
-		local res, err = self._grammar[direction]:parse(payload, state_machine._owner)
+		local res, err = self._grammar[direction]:parse(payload, state_machine.owner)
 		if err then
 			state_machine:transition("parse_error", err, ...)
 		else
