@@ -213,6 +213,15 @@ Utilities
 
         Network mask.
 
+    .. haka:method:: network:contains(addr) -> bool
+
+        :param addr: An IP address
+        :ptype addr: :haka:class:`addr`
+        :return bool: true if IP address belong to the network, false otherwise.
+        :rtype bool: boolean
+
+        Check if the IP address belong to the network.
+
     .. haka:operator:: tostring(network) -> str
 
         :return str: String representation of the network.
