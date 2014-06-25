@@ -122,9 +122,7 @@
 		if thread == 'all' then thread = -1
 		elseif thread == 'any' then thread = -2 end
 
-		return this._remote_launch(thread, function ()
-			return func()
-		end)
+		return this._remote_launch(thread, func)
 	end
 
 	haka.mode = 'console'
