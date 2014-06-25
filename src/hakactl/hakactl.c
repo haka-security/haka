@@ -57,6 +57,7 @@ static void help(const char *program)
 	fprintf(stdout, "Options:\n");
 	fprintf(stdout, "\t-h,--help:          Display this information\n");
 	fprintf(stdout, "\t--version:          Display version information\n");
+	fprintf(stdout, "\t-d,--debug:         Display debug output\n");
 
 	fprintf(stdout, "\nCommands:\n");
 	while (*iter) {
@@ -72,10 +73,11 @@ static int parse_cmdline(int *argc, char ***argv)
 	static struct option long_options[] = {
 		{ "version",      no_argument,       0, 'v' },
 		{ "help",         no_argument,       0, 'h' },
+		{ "debug",        no_argument,       0, 'd' },
 		{ 0,              0,                 0, 0 }
 	};
 
-	while ((c = getopt_long(*argc, *argv, "h", long_options, &index)) != -1) {
+	while ((c = getopt_long(*argc, *argv, "hd", long_options, &index)) != -1) {
 		switch (c) {
 		case 'h':
 			help((*argv)[0]);
@@ -85,6 +87,10 @@ static int parse_cmdline(int *argc, char ***argv)
 			printf("version %s, arch %s, %s\n", HAKA_VERSION, HAKA_ARCH, HAKA_LUA);
 			printf("API version %d\n", HAKA_API_VERSION);
 			return 0;
+
+		case 'd':
+			setlevel(HAKA_LOG_DEBUG, NULL);
+			break;
 
 		default:
 			usage(stderr, (*argv)[0]);
