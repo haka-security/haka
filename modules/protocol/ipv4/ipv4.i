@@ -60,7 +60,14 @@
 struct ipv4_addr {
 	%extend {
 		ipv4_addr(const char *str) {
-			struct ipv4_addr *ret = malloc(sizeof(struct ipv4_addr));
+			struct ipv4_addr *ret;
+
+			if (!str) {
+				error(L"invalid parameter");
+				return NULL;
+			}
+
+			ret = malloc(sizeof(struct ipv4_addr));
 			if (!ret) {
 				return NULL;
 			}
@@ -180,7 +187,14 @@ STRUCT_UNKNOWN_KEY_ERROR(ipv4_addr);
 struct ipv4_network {
 	%extend {
 		ipv4_network(const char *str) {
-			struct ipv4_network *ret = malloc(sizeof(struct ipv4_network));
+			struct ipv4_network *ret;
+
+			if (!str) {
+				error(L"invalid parameter");
+				return NULL;
+			}
+
+			ret = malloc(sizeof(struct ipv4_network));
 			if (!ret) {
 				return NULL;
 			}
