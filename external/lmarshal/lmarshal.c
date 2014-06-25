@@ -222,8 +222,24 @@ static void mar_encode_value(lua_State *L, mar_Buffer *buf, int val, size_t *idx
             lua_pop(L, 1);
 
             lua_newtable(L);
+
+            lua_pushnumber(L, ar.nups);
+            lua_setfield(L, -2, "_CNT");
+
             for (i=1; i <= ar.nups; i++) {
+#if LUA_VERSION_NUM >= 502
+                const char *name = lua_getupvalue(L, -2, i);
+                /* Special case for the _ENV upvalue */
+                if (strcmp(name, "_ENV") == 0) {
+                    lua_pushnumber(L, i);
+                    lua_setfield(L, -3, "_ENV");
+                    lua_pop(L, 1);
+                    continue;
+                }
+#else
                 lua_getupvalue(L, -2, i);
+#endif
+
                 lua_rawseti(L, -2, i);
             }
 
@@ -363,7 +379,7 @@ static void mar_decode_value
     }
     case LUA_TFUNCTION: {
         size_t nups;
-        int i;
+        int i, env_idx=-1;
         mar_Buffer dec_buf;
         char tag = *(char*)*p;
         mar_incr_ptr(1);
@@ -391,10 +407,29 @@ static void mar_decode_value
             mar_next_len(l, uint32_t);
             lua_newtable(L);
             mar_decode_table(L, *p, l, idx);
-            nups = lua_objlen(L, -1);
+
+            lua_getfield(L, -1, "_CNT");
+            nups = lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+#if LUA_VERSION_NUM >= 502
+            /* Special case for the _ENV upvalue */
+            lua_getfield(L, -1, "_ENV");
+            if (lua_isnumber(L, -1)) env_idx = lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            if (env_idx >= 0) {
+                lua_pushnumber(L, LUA_RIDX_GLOBALS);
+                lua_gettable(L, LUA_REGISTRYINDEX);
+                lua_setupvalue(L, -3, env_idx);
+            }
+#endif
+
             for (i=1; i <= nups; i++) {
-                lua_rawgeti(L, -1, i);
-                lua_setupvalue(L, -3, i);
+                if (i != env_idx) {
+                    lua_rawgeti(L, -1, i);
+                    lua_setupvalue(L, -3, i);
+                }
             }
             lua_pop(L, 1);
             mar_incr_ptr(l);
