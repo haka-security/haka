@@ -382,12 +382,11 @@ int lua_inet_checksum(struct vbuffer *buf);
 %luacode {
 	local this = unpack({...})
 
-	persist.ipv4 = this
-
 	swig.getclassmetatable('addr').__persist = function (self)
 		local data = self.packed
 		return function ()
-			return persist.ipv4.addr(data)
+			local ipv4 = require('protocol/ipv4')
+			return ipv4.addr(data)
 		end
 	end
 
