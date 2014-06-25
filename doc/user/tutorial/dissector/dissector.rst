@@ -82,13 +82,13 @@ us to catch errors and correctly handle them. A method error is called in this c
 .. code-block:: lua
 
     function SmtpDissector.method:receive(stream, current, direction)
-	    return haka.dissector.pcall(self, function ()
-		    self.flow:streamed(stream, self.receive_streamed, self, current, direction)
+        return haka.dissector.pcall(self, function ()
+            self.flow:streamed(stream, self.receive_streamed, self, current, direction)
 
-    		if self.flow then
-	    		self.flow:send(direction)
-		    end
-    	end)
+            if self.flow then
+                self.flow:send(direction)
+            end
+        end)
     end
 
 .. _SmtpDissector:
@@ -100,12 +100,12 @@ connection) or not.
 
 .. code-block:: lua
 
-	function SmtpDissector.method:receive_streamed(iter, direction)
-		while iter:wait() do
-			self.state:update(iter, direction)
-			self:continue()
-		end
-	end
+    function SmtpDissector.method:receive_streamed(iter, direction)
+        while iter:wait() do
+            self.state:update(iter, direction)
+            self:continue()
+        end
+    end
 
 Adding extras properties and functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
