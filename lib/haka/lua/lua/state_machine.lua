@@ -85,7 +85,6 @@ function states.StateMachine.method:dump_graph(file)
 	file:write(string.format('%s [fillcolor="#00d7ff",style="filled"]\n', self._initial._name))
 
 	for name, state in pairs(self._states) do
-
 		state:_dump_graph(file)
 	end
 

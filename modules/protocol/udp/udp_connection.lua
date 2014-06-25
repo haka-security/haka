@@ -136,6 +136,7 @@ udp_connection_dissector.state_machine = haka.state_machine.new("udp", function 
 				pkt:send()
 			end
 		end,
+		jump = events.receive,
 	}
 
 	established:on{
