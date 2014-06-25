@@ -683,9 +683,9 @@ tcp.select_next_dissector(tcp_connection_dissector)
 -- Console utilities
 --
 
-haka.console.tcp = {}
+local console = {}
 
-function haka.console.tcp.list_connections(show_dropped)
+function console.list_connections(show_dropped)
 	local ret = {}
 	for _, cnx in ipairs(tcp_connection_dissector.cnx_table:all(show_dropped)) do
 		if cnx.data then
@@ -710,7 +710,7 @@ function haka.console.tcp.list_connections(show_dropped)
 	return ret
 end
 
-function haka.console.tcp.drop_connection(id)
+function console.drop_connection(id)
 	local tcp_conn = tcp_connection_dissector.cnx_table:get_byid(id)
 	if not tcp_conn then
 		error("unknown tcp connection")
@@ -722,7 +722,7 @@ function haka.console.tcp.drop_connection(id)
 	end
 end
 
-function haka.console.tcp.reset_connection(id)
+function console.reset_connection(id)
 	local tcp_conn = tcp_connection_dissector.cnx_table:get_byid(id)
 	if not tcp_conn then
 		error("unknown tcp connection")
@@ -735,5 +735,6 @@ function haka.console.tcp.reset_connection(id)
 end
 
 return {
-	events = tcp_connection_dissector.events
+	events = tcp_connection_dissector.events,
+	console = console
 }

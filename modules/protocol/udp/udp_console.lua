@@ -26,8 +26,9 @@ function UdpConnInfo.method:drop()
 	for _,r in ipairs(self._data) do
 		local id = r._id
 		hakactl.remote(r._thread, function ()
-			if not haka.console.udp then error("udp protocol not available", 0) end
-			haka.console.udp.drop_connection(id)
+			local udp = package.loaded['protocol/udp_connection']
+			if not udp then error("udp protocol not available", 0) end
+			udp.console.drop_connection(id)
 		end)
 	end
 end
@@ -36,8 +37,9 @@ console.udp = {}
 
 function console.udp.connections(show_dropped)
 	local data = hakactl.remote('all', function ()
-		if not haka.console.udp then error("udp protocol not available", 0) end
-		return haka.console.udp.list_connections(show_dropped)
+		local udp = package.loaded['protocol/udp_connection']
+		if not udp then error("udp protocol not available", 0) end
+		return udp.console.list_connections(show_dropped)
 	end)
 
 	local conn = UdpConnInfo:new()

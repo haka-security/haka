@@ -185,9 +185,9 @@ udp.select_next_dissector(udp_connection_dissector)
 -- Console utilities
 --
 
-haka.console.udp = {}
+local console = {}
 
-function haka.console.udp.list_connections(show_dropped)
+function console.list_connections(show_dropped)
 	local ret = {}
 	for _, cnx in ipairs(udp_connection_dissector.cnx_table:all(show_dropped)) do
 		if cnx.data then
@@ -212,7 +212,7 @@ function haka.console.udp.list_connections(show_dropped)
 	return ret
 end
 
-function haka.console.udp.drop_connection(id)
+function console.drop_connection(id)
 	local udp_conn = udp_connection_dissector.cnx_table:get_byid(id)
 	if not udp_conn then
 		error("unknown udp connection")
@@ -225,5 +225,6 @@ function haka.console.udp.drop_connection(id)
 end
 
 return {
-	events = udp_connection_dissector.events
+	events = udp_connection_dissector.events,
+	console = console
 }
