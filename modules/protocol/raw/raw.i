@@ -23,7 +23,7 @@ const char *packet_dissector(struct packet *pkt);
 	local this = unpack({...})
 
 	local raw_dissector = haka.dissector.new{
-		type = haka.dissector.PacketDissector,
+		type = haka.helper.PacketDissector,
 		name = 'raw'
 	}
 

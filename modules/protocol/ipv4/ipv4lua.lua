@@ -5,7 +5,7 @@
 --local ipv4 = require('protocol/ipv4')
 
 local ipv4_dissector = haka.dissector.new{
-	type = haka.dissector.EncapsulatedPacketDissector,
+	type = haka.helper.EncapsulatedPacketDissector,
 	name = 'ipv4'
 }
 

@@ -9,14 +9,14 @@ local ipv4 = require("protocol/ipv4")
 local tcp = require("protocol/tcp")
 
 local tcp_connection_dissector = haka.dissector.new{
-	type = haka.dissector.FlowDissector,
+	type = haka.helper.FlowDissector,
 	name = 'tcp_connection'
 }
 
 tcp_connection_dissector.cnx_table = ipv4.cnx_table()
 
 tcp_connection_dissector:register_event('new_connection')
-tcp_connection_dissector:register_event('receive_data', nil, haka.dissector.FlowDissector.stream_wrapper)
+tcp_connection_dissector:register_streamed_event('receive_data')
 tcp_connection_dissector:register_event('end_connection')
 
 local function tcp_get_key(pkt)

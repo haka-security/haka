@@ -224,7 +224,7 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 	local this = unpack({...})
 
 	local tcp_dissector = haka.dissector.new{
-		type = haka.dissector.PacketDissector,
+		type = haka.helper.PacketDissector,
 		name = 'tcp'
 	}
 

@@ -28,7 +28,7 @@ local CMD = {
 -- Dissector
 --
 local SmtpDissector = haka.dissector.new{
-	type = haka.dissector.FlowDissector,
+	type = haka.helper.FlowDissector,
 	name = 'smtp'
 }
 
@@ -100,7 +100,7 @@ end
 --
 SmtpDissector:register_event('command')
 SmtpDissector:register_event('response')
-SmtpDissector:register_event('mail_content', nil, haka.dissector.FlowDissector.stream_wrapper)
+SmtpDissector:register_streamed_event('mail_content')
 
 --
 --	Grammar

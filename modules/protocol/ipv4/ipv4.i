@@ -401,7 +401,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 	end
 
 	local ipv4_dissector = haka.dissector.new{
-		type = haka.dissector.PacketDissector,
+		type = haka.helper.PacketDissector,
 		name = 'ipv4'
 	}
 

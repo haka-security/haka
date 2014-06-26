@@ -17,15 +17,15 @@ table.merge(module, utils)
 --
 
 local http_dissector = haka.dissector.new{
-	type = haka.dissector.FlowDissector,
+	type = haka.helper.FlowDissector,
 	name = 'http'
 }
 
 http_dissector:register_event('request')
 http_dissector:register_event('response')
-http_dissector:register_event('request_data', nil, haka.dissector.FlowDissector.stream_wrapper)
-http_dissector:register_event('response_data', nil, haka.dissector.FlowDissector.stream_wrapper)
-http_dissector:register_event('receive_data', nil, haka.dissector.FlowDissector.stream_wrapper)
+http_dissector:register_streamed_event('request_data')
+http_dissector:register_streamed_event('response_data')
+http_dissector:register_streamed_event('receive_data')
 
 http_dissector.property.connection = {
 	get = function (self)

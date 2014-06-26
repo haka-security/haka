@@ -80,7 +80,7 @@ end
 --
 
 local dns_dissector = haka.dissector.new{
-	type = haka.dissector.FlowDissector,
+	type = haka.helper.FlowDissector,
 	name = 'dns'
 }
 

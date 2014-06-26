@@ -8,7 +8,7 @@ local ipv4 = require("protocol/ipv4")
 local udp = require("protocol/udp")
 
 local udp_connection_dissector = haka.dissector.new{
-	type = haka.dissector.FlowDissector,
+	type = haka.helper.FlowDissector,
 	name = 'udp_connection'
 }
 

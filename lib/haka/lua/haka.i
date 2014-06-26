@@ -138,6 +138,8 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	haka.events.exiting = haka.event.Event:new("exiting")
 	haka.events.started = haka.event.Event:new("started")
 
+	haka.helper = {}
+
 	function haka.abort()
 		error(nil)
 	end
