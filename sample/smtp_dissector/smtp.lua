@@ -214,7 +214,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	session_initiation:on{
 		event = events.down,
-		check = function (self, res) return res.responses[1].code == '220' end,
+		when = function (self, res) return res.responses[1].code == '220' end,
 		action = function (self, res)
 			self:trigger('response', res)
 		end,
@@ -245,7 +245,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	client_initiation:on{
 		event = events.up,
-		check = function (self, res)
+		when = function (self, res)
 			local command = string.upper(res.command)
 			return command == 'EHLO' or command == 'HELO'
 		end,
@@ -280,7 +280,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	response:on{
 		event = events.down,
-		check = function (self, res)
+		when = function (self, res)
 			return res.responses[1].code == '354'
 		end,
 		action = function (self, res)
@@ -291,7 +291,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	response:on{
 		event = events.down,
-		check = function (self, res)
+		when = function (self, res)
 			return res.responses[1].code == '221'
 		end,
 		action = function (self, res)
@@ -348,7 +348,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	data_transmission:on{
 		event = events.up,
-		check = function (self, res) return res.data:asstring() == '.\r\n' end,
+		when = function (self, res) return res.data:asstring() == '.\r\n' end,
 		action = function (self, res)
 			self.mail:finish()
 			self:trigger('mail_content', self.mail, nil)

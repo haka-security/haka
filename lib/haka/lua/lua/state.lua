@@ -33,8 +33,8 @@ function module.TransitionCollection.method:on(transition)
 		error(string.format("unknown event '%s'", transition.event.name), 2)
 	end
 
-	if transition.check and not type(transition.check) == 'function' then
-		error("check must be a function", 2)
+	if transition.when and not type(transition.when) == 'function' then
+		error("when must be a function", 2)
 	end
 
 	if transition.action and not type(transition.action) then
@@ -51,7 +51,7 @@ function module.TransitionCollection.method:on(transition)
 
 	-- build another representation of the transition
 	local t = {
-		check = transition.check,
+		when = transition.when,
 		action = transition.action,
 	}
 
@@ -164,7 +164,7 @@ module.CompiledState = class.class('CompiledState')
 
 local function transitions_wrapper(state_table, transitions, ...)
 	for _, t in ipairs(transitions) do
-		if not t.check or t.check(...) then
+		if not t.when or t.when(...) then
 			if t.action then
 				t.action(...)
 			end

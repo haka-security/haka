@@ -83,7 +83,7 @@ local machine = haka.state_machine.new("test", function ()
 
 	state1:on{
 		event = events.timeout(0.5),
-		check = function (self)
+		when = function (self)
 			print("timeout from state1")
 			self.count = self.count + 1
 			return self.count > 5

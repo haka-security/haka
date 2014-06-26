@@ -476,7 +476,7 @@ http_dissector.states = haka.state_machine.new("http", function ()
 
 	response:on{
 		event = events.down,
-		check = function (self, res) return self.request.method:lower() == 'connect' end,
+		when = function (self, res) return self.request.method:lower() == 'connect' end,
 		action = function (self, res)
 			self.response = res
 			self._want_data_modification = false
