@@ -17,7 +17,7 @@ table.merge(module, utils)
 --
 
 local http_dissector = haka.dissector.new{
-	type = haka.helper.FlowDissector,
+	type = tcp_connection.helper.TcpFlowDissector,
 	name = 'http'
 }
 
@@ -27,38 +27,13 @@ http_dissector:register_streamed_event('request_data')
 http_dissector:register_streamed_event('response_data')
 http_dissector:register_streamed_event('receive_data')
 
-http_dissector.property.connection = {
-	get = function (self)
-		self.connection = self.flow.connection
-		return self.connection
-	end
-}
-
 function http_dissector.method:__init(flow)
-	class.super(http_dissector).__init(self)
-	self.flow = flow
-	self.state = http_dissector.states:instanciate(self)
+	class.super(http_dissector).__init(self, flow)
 	self._want_data_modification = false
 end
 
 function http_dissector.method:enable_data_modification()
 	self._want_data_modification = true
-end
-
-function http_dissector.method:continue()
-	if not self.flow then
-		haka.abort()
-	end
-end
-
-function http_dissector.method:drop()
-	self.flow:drop()
-	self.flow = nil
-end
-
-function http_dissector.method:reset()
-	self.flow:reset()
-	self.flow = nil
 end
 
 function http_dissector.method:push_data(current, data, iter, last, state, chunk)
@@ -125,39 +100,8 @@ function http_dissector.method:trigger_event(res, iter, mark)
 	end
 end
 
-function http_dissector.method:receive(stream, current, direction)
-	return haka.dissector.pcall(self, function ()
-		self.flow:streamed(stream, self.receive_streamed, self, current, direction)
-
-		if self.flow then
-			self.flow:send(direction)
-		end
-	end)
-end
-
-function http_dissector.method:receive_streamed(iter, direction)
-	while iter:wait() do
-		self.state:update(iter, direction)
-		self:continue()
-	end
-end
-
-function module.dissect(flow)
-	flow:select_next_dissector(http_dissector:new(flow))
-end
-
-function module.install_tcp_rule(port)
-	haka.rule{
-		name = "install http dissector",
-		hook = tcp_connection.events.new_connection,
-		eval = function (flow, pkt)
-			if pkt.dstport == port then
-				haka.log.debug('http', "selecting http dissector on flow")
-				module.dissect(flow)
-			end
-		end
-	}
-end
+module.dissect = http_dissector:dissect()
+module.install_tcp_rule = http_dissector:install_tcp_rule()
 
 
 --
@@ -421,7 +365,7 @@ end)
 --  HTTP States
 --
 
-http_dissector.states = haka.state_machine.new("http", function ()
+http_dissector.state_machine = haka.state_machine.new("http", function ()
 	state_type(BidirectionnalState)
 
 	request  = state(http_dissector.grammar.request, nil)

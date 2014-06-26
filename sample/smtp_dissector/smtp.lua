@@ -28,72 +28,12 @@ local CMD = {
 -- Dissector
 --
 local SmtpDissector = haka.dissector.new{
-	type = haka.helper.FlowDissector,
+	type = tcp_connection.helper.TcpFlowDissector,
 	name = 'smtp'
 }
 
-SmtpDissector.property.connection = {
-	get = function (self)
-		self.connection = self.flow.connection
-		return self.connection
-	end
-}
-
-function SmtpDissector.method:__init(flow)
-	class.super(SmtpDissector).__init(self)
-	self.flow = flow
-	self.state = SmtpDissector.state_machine:instanciate(self)
-end
-
-function SmtpDissector.method:continue()
-	if not self.flow then
-		haka.abort()
-	end
-end
-
-function SmtpDissector.method:drop()
-	self.flow:drop()
-	self.flow = nil
-end
-
-function SmtpDissector.method:reset()
-	self.flow:reset()
-	self.flow = nil
-end
-
-function SmtpDissector.method:receive(stream, current, direction)
-	return haka.dissector.pcall(self, function ()
-		self.flow:streamed(stream, self.receive_streamed, self, current, direction)
-
-		if self.flow then
-			self.flow:send(direction)
-		end
-	end)
-end
-
-function SmtpDissector.method:receive_streamed(iter, direction)
-	while iter:wait() do
-		self.state:update(iter, direction)
-		self:continue()
-	end
-end
-
-
-function module.install_tcp_rule(port)
-	haka.rule{
-		hook = tcp_connection.events.new_connection,
-		eval = function (flow, pkt)
-			if pkt.dstport == port then
-				haka.log.debug('smtp', "selecting smtp dissector on flow")
-				module.dissect(flow)
-			end
-		end
-	}
-end
-
-function module.dissect(flow)
-	flow:select_next_dissector(SmtpDissector:new(flow))
-end
+module.dissect = SmtpDissector:dissect()
+module.install_tcp_rule = SmtpDissector:install_tcp_rule()
 
 --
 -- Events

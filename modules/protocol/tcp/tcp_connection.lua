@@ -3,10 +3,13 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 local class = require("class")
+local check = require("check")
 
 local raw = require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 local tcp = require("protocol/tcp")
+
+local module = {}
 
 local tcp_connection_dissector = haka.dissector.new{
 	type = haka.helper.FlowDissector,
@@ -513,7 +516,10 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	initial(syn)
 end)
 
+tcp_connection_dissector.auto_state_machine = false
+
 function tcp_connection_dissector.method:__init()
+	class.super(tcp_connection_dissector).__init(self)
 	self.stream = {}
 	self._restart = false
 end
@@ -679,13 +685,94 @@ end
 
 tcp.select_next_dissector(tcp_connection_dissector)
 
+module.events = tcp_connection_dissector.events
+
+--
+-- Helpers
+--
+
+module.helper = {}
+
+module.helper.TcpFlowDissector = class.class('TcpFlowDissector', haka.helper.FlowDissector)
+
+function module.helper.TcpFlowDissector.dissect(cls)
+	return function (flow)
+		flow:select_next_dissector(cls:new(flow))
+	end
+end
+
+function module.helper.TcpFlowDissector.install_tcp_rule(cls)
+	return function (port)
+		haka.rule{
+			name = string.format("install %s dissector", cls.name),
+			hook = tcp_connection_dissector.events.new_connection,
+			eval = function (flow, pkt)
+				if pkt.dstport == port then
+					haka.log.debug(cls.name, string.format("selecting %s dissector on flow", cls.name))
+					flow:select_next_dissector(cls:new(flow))
+				end
+			end
+		}
+	end
+end
+
+module.helper.TcpFlowDissector.property.connection = {
+	get = function (self)
+		self.connection = self.flow.connection
+		return self.connection
+	end
+}
+
+function module.helper.TcpFlowDissector.method:__init(flow)
+	check.assert(class.isa(flow, tcp_connection_dissector), "invalid flow parameter")
+
+	class.super(module.helper.TcpFlowDissector).__init(self)
+	self.flow = flow
+end
+
+function module.helper.TcpFlowDissector.method:continue()
+	if not self.flow then
+		haka.abort()
+	end
+end
+
+function module.helper.TcpFlowDissector.method:drop()
+	self.flow:drop()
+	self.flow = nil
+end
+
+function module.helper.TcpFlowDissector.method:reset()
+	self.flow:reset()
+	self.flow = nil
+end
+
+function module.helper.TcpFlowDissector.method:receive(stream, current, direction)
+	return haka.dissector.pcall(self, function ()
+		self.flow:streamed(stream, self.receive_streamed, self, current, direction)
+
+		if self.flow then
+			self.flow:send(direction)
+		end
+	end)
+end
+
+function module.helper.TcpFlowDissector.method:receive_streamed(iter, direction)
+	assert(self.state, "no state machine defined")
+
+	while iter:wait() do
+		self.state:update(iter, direction)
+		self:continue()
+	end
+end
+
+
 --
 -- Console utilities
 --
 
-local console = {}
+module.console = {}
 
-function console.list_connections(show_dropped)
+function module.console.list_connections(show_dropped)
 	local ret = {}
 	for _, cnx in ipairs(tcp_connection_dissector.cnx_table:all(show_dropped)) do
 		if cnx.data then
@@ -710,7 +797,7 @@ function console.list_connections(show_dropped)
 	return ret
 end
 
-function console.drop_connection(id)
+function module.console.drop_connection(id)
 	local tcp_conn = tcp_connection_dissector.cnx_table:get_byid(id)
 	if not tcp_conn then
 		error("unknown tcp connection")
@@ -722,7 +809,7 @@ function console.drop_connection(id)
 	end
 end
 
-function console.reset_connection(id)
+function module.console.reset_connection(id)
 	local tcp_conn = tcp_connection_dissector.cnx_table:get_byid(id)
 	if not tcp_conn then
 		error("unknown tcp connection")
@@ -734,7 +821,4 @@ function console.reset_connection(id)
 	end
 end
 
-return {
-	events = tcp_connection_dissector.events,
-	console = console
-}
+return module

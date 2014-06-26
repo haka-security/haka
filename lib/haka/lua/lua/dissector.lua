@@ -38,7 +38,13 @@ function type.Dissector.inherit_events(cls)
 	end
 end
 
+type.Dissector.auto_state_machine = true
+
 function type.Dissector.method:__init()
+	local cls = class.classof(self)
+	if cls.state_machine and cls.auto_state_machine then
+		self.state = cls.state_machine:instanciate(self)
+	end
 end
 
 type.Dissector.property.name = {
