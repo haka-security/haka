@@ -117,10 +117,73 @@ Events
     Event triggered when some data are available on a TCP stream.
 
 
+Helper
+------
+
+.. haka:module:: tcp_connection.helper
+
+.. haka:class:: TcpFlowDissector
+    :objtype: dissector
+
+    .. haka:function:: TcpFlowDissector.dissect(cls) -> f
+
+        :param cls: Current dissector class.
+        :return f: Helper function.
+
+        Create an helper function to enable the dissector on a given
+        flow.
+
+        .. haka:function:: f(flow)
+            :noindex:
+            :module:
+
+            :param flow: Parent Tcp flow.
+            :ptype flow: :haka:class:`TcpConnectionDissector`
+
+    .. haka:function:: TcpFlowDissector.install_tcp_rule(cls) -> f
+
+        :param cls: Current dissector class.
+        :return f: Helper function.
+
+        Create an helper function to create a security rule to enable the
+        dissector on a given flow.
+
+        .. haka:function:: f(port)
+            :noindex:
+            :module:
+
+            :param port: Tcp port to select.
+            :ptype port: number
+
+    .. haka:attribute:: TcpFlowDissector:__init(flow)
+
+        :param flow: Parent Tcp flow.
+        :ptype flow: :haka:class:`TcpConnectionDissector`
+
+    .. haka:attribute:: TcpFlowDissector:flow
+
+        :type: :haka:class:`TcpConnectionDissector` |nbsp|
+
+        Underlying Tcp stream.
+
+    .. haka:method:: TcpFlowDissector:reset()
+
+        Reset the underlying Tcp connection.
+
+    .. haka:method:: TcpFlowDissector:receive_streamed(iter, direction)
+
+        :param iter: Current position in the stream.
+        :paramtype iter: :haka:class:`vbuffer_iterator`
+        :param direction: Data direction (``'up'`` or ``'down'``).
+        :paramtype direction: string
+
+        Function called in streamed mode that by default update the state machine
+        instance. It can be overridden if needed.
+
+
 Example
 -------
 
 .. literalinclude:: ../../../../sample/ruleset/tcp/rules.lua
     :language: lua
     :tab-width: 4
-

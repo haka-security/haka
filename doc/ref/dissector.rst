@@ -7,6 +7,9 @@
 Dissector
 =========
 
+Utilities
+---------
+
 .. haka:module:: haka.dissector
 
 .. haka:function:: new{...} -> dissector
@@ -21,10 +24,40 @@ Dissector
 
     Create a new dissector.
 
+.. haka:function:: pcall(dissector, f)
+
+    :param dissector: Dissector to protect.
+    :paramtype dissector: :haka:class:`Dissector`
+    :param f: Function to call.
+    :paramtype f: function
+
+    Protected call for a function inside a dissector context.
+
+.. haka:function:: other_direction(dir) -> other_dir
+
+    :param dir: Direction ``'up'`` or ``'down'``.
+    :paramtype dir: string
+    :return other_dir: Other direction.
+    :rtype other_dir: string
+
+    Utility function to get the other direction.
+
+
+Dissector types
+---------------
+
+.. haka:module:: haka.helper
+
 .. haka:class:: Dissector
     :module:
 
     Dissector object.
+
+    .. haka:attribute:: Dissector:state
+
+        Instance of the state machine. This field is only present if the dissector sub-class
+        has a field named `state_machine` and another one named `auto_state_machine` which
+        evaluate to `true`.
 
     .. haka:function:: Dissector:register_event(name, continue[, signal [, options]])
 
@@ -93,39 +126,6 @@ Dissector
         :abstract:
 
         Get the next dissector to use.
-
-
-Utilities
----------
-
-.. haka:function:: get(name) -> dissector
-
-    :param name: Dissector name.
-    :paramtype name: string
-
-    Get a registered dissector by name.
-
-.. haka:function:: pcall(dissector, f)
-
-    :param dissector: Dissector to protect.
-    :paramtype dissector: :haka:class:`Dissector`
-    :param f: Function to call.
-    :paramtype f: function
-
-    Protected call for a function inside a dissector context.
-
-.. haka:function:: other_direction(dir) -> other_dir
-
-    :param dir: Direction ``'up'`` or ``'down'``.
-    :paramtype dir: string
-    :return other_dir: Other direction.
-    :rtype other_dir: string
-
-    Utility function to get the other direction.
-
-
-Dissector types
----------------
 
 Packet
 ^^^^^^
@@ -228,6 +228,20 @@ Flow
 
     Dissector for a flow (multiple packets). An example is HTTP for instance.
 
+    .. haka:function:: Dissector:register_streamed_event(name, continue[, options])
+
+        :param name: Name of the event.
+        :paramtype name: string
+        :param continue: Continuation function.
+        :paramtype continue: function
+        :param signal: Signaling function.
+        :paramtype signal: function
+        :param options: List of options.
+        :paramtype options: table
+
+        Register a new event for the dissector. This event will support the *streamed*
+        option (see :haka:func:`FlowDissector.stream_wrapper()`).
+
     .. haka:data:: FlowDissector.connections
 
         :type: table
@@ -287,6 +301,6 @@ Flow
         Enable a dissector on the current flow.
 
 Examples
-^^^^^^^^
+--------
 
 For dissector examples, check the supported :doc:`hakadissector`.

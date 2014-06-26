@@ -10,7 +10,7 @@ Events are created by invoking `register_event` method wich takes as first argum
 
     SmtpDissector:register_event('command')
     SmtpDissector:register_event('response')
-    SmtpDissector:register_event('mail_content', nil, haka.dissector.FlowDissector.stream_wrapper)
+    SmtpDissector:register_streamed_event('mail_content')
 
 Note that the last one (`mail_content`) is a stream-based event that takes a signaling function as extra argument to cope with data availability.
 

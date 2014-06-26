@@ -272,12 +272,11 @@ A action is defined with :
     :module: state_machine
 
     :param event: One of the event defined by state machine state type.
-    :param when: An optionnal function to decide wether this action should be taken or
-    not.
+    :param when: An optional function to decide whether this action should be taken or not.
     :ptype when: function
-    :param execute: An optionnal function to make some specific actions.
+    :param execute: An optional function to make some specific actions.
     :ptype execute: function
-    :param jump: An optionnal state to go to after executing the action.
+    :param jump: An optional state to go to after executing the action.
     :ptype jump: :haka:class:`State`
 
     Define a new action. The parameters passed to action and when function
@@ -294,12 +293,11 @@ Haka allow to define default actions :
     :module: state_machine
 
     :param event: One of the event defined by state machine state type.
-    :param when: An optionnal function to decide wether this action should be taken or
-    not.
+    :param when: An optional function to decide whether this action should be taken or not.
     :ptype when: function
-    :param execute: An optionnal function to make some specific actions.
+    :param execute: An optional function to make some specific actions.
     :ptype execute: function
-    :param jump: An optionnal state to go to after executing the action.
+    :param jump: An optional state to go to after executing the action.
     :ptype jump: :haka:class:`State`
 
     Sets default actions for the state machine. The parameter should be a

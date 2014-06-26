@@ -84,3 +84,53 @@ Events
     :paramtype direction: string
 
     Event triggered when some data are available on a UDP connection.
+
+
+Helper
+------
+
+.. haka:module:: udp_connection.helper
+
+.. haka:class:: UdpFlowDissector
+    :objtype: dissector
+
+    .. haka:function:: UdpFlowDissector.dissect(cls) -> f
+
+        :param cls: Current dissector class.
+        :return f: Helper function.
+
+        Create an helper function to enable the dissector on a given
+        flow.
+
+        .. haka:function:: f(flow)
+            :noindex:
+            :module:
+
+            :param flow: Parent Udp flow.
+            :ptype flow: :haka:class:`UdpConnectionDissector`
+
+    .. haka:function:: UdpFlowDissector.install_udp_rule(cls) -> f
+
+        :param cls: Current dissector class.
+        :return f: Helper function.
+
+        Create an helper function to create a security rule to enable the
+        dissector on a given flow.
+
+        .. haka:function:: f(port)
+            :noindex:
+            :module:
+
+            :param port: Udp port to select.
+            :ptype port: number
+
+    .. haka:attribute:: UdpFlowDissector:__init(flow)
+
+        :param flow: Parent Udp flow.
+        :ptype flow: :haka:class:`UdpConnectionDissector`
+
+    .. haka:attribute:: UdpFlowDissector:flow
+
+        :type: :haka:class:`UdpConnectionDissector` |nbsp|
+
+        Underlying Udp stream.
