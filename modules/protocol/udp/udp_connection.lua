@@ -3,9 +3,12 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 local class = require("class")
+local check = require("check")
 
 local ipv4 = require("protocol/ipv4")
 local udp = require("protocol/udp")
+
+local module = {}
 
 local udp_connection_dissector = haka.dissector.new{
 	type = haka.helper.FlowDissector,
@@ -141,6 +144,8 @@ udp_connection_dissector.state_machine = haka.state_machine.new("udp", function 
 	initial(established)
 end)
 
+udp_connection_dissector.auto_state_machine = false
+
 function udp_connection_dissector.method:__init(pkt)
 	self.dropped = false
 	self.srcip = pkt.ip.src
@@ -181,13 +186,68 @@ end
 
 udp.select_next_dissector(udp_connection_dissector)
 
+module.events = udp_connection_dissector.events
+
+--
+-- Helpers
+--
+
+module.helper = {}
+
+module.helper.UdpFlowDissector =  class.class('UdpFlowDissector', haka.helper.FlowDissector)
+
+function module.helper.UdpFlowDissector.dissect(cls)
+	return function (flow)
+		flow:select_next_dissector(cls:new(flow))
+	end
+end
+
+function module.helper.UdpFlowDissector.install_udp_rule(cls)
+	return function (port)
+		haka.rule{
+			name = string.format("install %s dissector", cls.name),
+			hook = udp_connection_dissector.events.new_connection,
+			eval = function (flow, pkt)
+				if pkt.dstport == port then
+					haka.log.debug(cls.name, string.format("selecting %s dissector on flow", cls.name))
+					flow:select_next_dissector(cls:new(flow))
+				end
+			end
+		}
+	end
+end
+
+module.helper.UdpFlowDissector.property.connection = {
+	get = function (self)
+		self.connection = self.flow.connection
+		return self.connection
+	end
+}
+
+function module.helper.UdpFlowDissector.method:__init(flow)
+	check.assert(class.isa(flow, udp_connection_dissector), "invalid flow parameter")
+
+	class.super(module.helper.UdpFlowDissector).__init(self)
+	self.flow = flow
+end
+
+function module.helper.UdpFlowDissector.method:continue()
+	self.flow:continue()
+end
+
+function module.helper.UdpFlowDissector.method:receive(pkt, payload, direction)
+	assert(self.state, "no state machine defined")
+
+	self.state:update(payload:pos('begin'), direction, pkt, payload)
+end
+
 --
 -- Console utilities
 --
 
-local console = {}
+module.console = {}
 
-function console.list_connections(show_dropped)
+function module.console.list_connections(show_dropped)
 	local ret = {}
 	for _, cnx in ipairs(udp_connection_dissector.cnx_table:all(show_dropped)) do
 		if cnx.data then
@@ -212,7 +272,7 @@ function console.list_connections(show_dropped)
 	return ret
 end
 
-function console.drop_connection(id)
+function module.console.drop_connection(id)
 	local udp_conn = udp_connection_dissector.cnx_table:get_byid(id)
 	if not udp_conn then
 		error("unknown udp connection")
@@ -224,7 +284,4 @@ function console.drop_connection(id)
 	end
 end
 
-return {
-	events = udp_connection_dissector.events,
-	console = console
-}
+return module

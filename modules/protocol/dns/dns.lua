@@ -80,7 +80,7 @@ end
 --
 
 local dns_dissector = haka.dissector.new{
-	type = haka.helper.FlowDissector,
+	type = udp_connection.helper.UdpFlowDissector,
 	name = 'dns'
 }
 
@@ -92,17 +92,8 @@ dns_dissector:register_event('query', continue)
 dns_dissector:register_event('response', continue)
 
 function dns_dissector.method:__init(flow)
-	self.flow = flow
-	self.state_machine = dns_dissector.state_machine:instanciate(self)
+	class.super(dns_dissector).__init(self, flow)
 	self.dns_pending_queries = {}
-end
-
-function dns_dissector.method:receive(pkt, payload, direction)
-	self.state_machine:update(payload:pos('begin'), direction, pkt, payload)
-end
-
-function dns_dissector.method:continue()
-	self.flow:continue()
 end
 
 dns_dissector.grammar = haka.grammar.new("dns", function ()
@@ -264,22 +255,8 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 	export(message)
 end)
 
-function module.dissect(flow)
-	flow:select_next_dissector(dns_dissector:new(flow))
-end
-
-function module.install_udp_rule(port)
-	haka.rule{
-		name = "install dns dissector",
-		hook = udp_connection.events.new_connection,
-		eval = function (flow, pkt)
-			if pkt.dstport == port then
-				haka.log.debug('dns', "selecting dns dissector on flow")
-				module.dissect(flow)
-			end
-		end
-	}
-end
+module.dissect = dns_dissector:dissect()
+module.install_udp_rule = dns_dissector:install_udp_rule()
 
 --
 -- DNS States
