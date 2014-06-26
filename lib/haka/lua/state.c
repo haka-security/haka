@@ -298,6 +298,7 @@ static void lua_interrupt_data_destroy(void *_data)
 	}
 }
 
+extern int luaopen_hakainit(lua_State *L);
 extern int luaopen_haka(lua_State *L);
 extern int luaopen_swig(lua_State *L);
 extern int luaopen_luadebug(lua_State *L);
@@ -389,8 +390,9 @@ struct lua_state *lua_state_init()
 	lua_setfield(L, -2, "format_error");
 
 	load_module(L, luaopen_swig, "swig");
-	load_module(L, luaopen_haka, "haka");
+	load_module(L, luaopen_hakainit, "hakainit");
 	load_module(L, luaopen_luadebug, NULL);
+	load_module(L, luaopen_haka, "haka");
 
 	lua_object_initialize(L);
 

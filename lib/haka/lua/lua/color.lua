@@ -4,7 +4,7 @@
 
 local color = {}
 
-if haka.stdout_support_colors() then
+if hakainit.stdout_support_colors() then
 	color.clear = string.char(0x1b) .. "[0m"
 	color.bold = string.char(0x1b) .. "[1m"
 	color.black = string.char(0x1b) .. "[30m"

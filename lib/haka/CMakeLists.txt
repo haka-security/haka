@@ -9,6 +9,7 @@ include_directories(${EDITLINE_INCLUDE_DIR})
 # Haka library shared between runtime and modules
 
 swig_process(libhakaswig lua
+	lua/hakainit.i
 	lua/haka.i
 	lua/swig.i
 	luadebug/luadebug.i)
