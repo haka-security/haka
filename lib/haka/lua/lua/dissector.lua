@@ -285,12 +285,8 @@ function dissector.new(args)
 	end
 
 	local d = class.class(args.name, args.type or dissector.Dissector)
-	dissectors[args.name] = d
+	table.insert(dissectors, d)
 	return d
-end
-
-function dissector.get(name)
-	return dissectors[name]
 end
 
 local other_direction = {
@@ -305,7 +301,7 @@ end
 function haka.console.events()
 	local ret = {}
 	local event = {}
-	for disname, dissector in pairs(dissectors) do
+	for _, dissector in pairs(dissectors) do
 		for _, event in pairs(dissector.events) do
 			local er = { event=event.name, listener=0 }
 			table.insert(ret, er)

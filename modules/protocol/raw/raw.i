@@ -27,6 +27,12 @@ const char *packet_dissector(struct packet *pkt);
 		name = 'raw'
 	}
 
+	local dissectors = {}
+
+	function this.register(name, dissector)
+		dissectors[name] = dissector
+	end
+
 	raw_dissector.options.drop_unknown_dissector = false
 
 	function raw_dissector.method:receive()
@@ -34,7 +40,7 @@ const char *packet_dissector(struct packet *pkt);
 
 		local dissector = this.packet_dissector(self)
 		if dissector then
-			local next_dissector = haka.dissector.get(dissector)
+			local next_dissector = dissectors[dissector]
 			if next_dissector then
 				return next_dissector:receive(self)
 			else
