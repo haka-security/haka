@@ -64,7 +64,7 @@ local function revalidate(self)
 	end
 end
 
-function parse.Context.method:__init(iter, topresult, init)
+function parse.Context.method:__init(iter, init)
 	self.iter = iter
 	self._bitoffset = 0
 	self._marks = {}
@@ -74,13 +74,10 @@ function parse.Context.method:__init(iter, topresult, init)
 	self._retain_mark = {}
 	self._recurs = {}
 	self._level = 0
-	self:push(topresult)
 
 	if init then
 		self._initresults = { init }
 	end
-
-	self:result(1).validate = revalidate
 
 	self.iter.meter = 0
 end
@@ -145,6 +142,13 @@ end
 function parse.Context.method:_traverse(entity, f, all)
 	local iter = entity
 	local err
+
+	if entity.resultclass then
+		self:push(entity.resultclass:new())
+	else
+		self:push(parseResult.Result:new())
+	end
+	self:result(1).validate = revalidate
 
 	if all then self._level = 1
 	else self._level = 0 end

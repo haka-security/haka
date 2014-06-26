@@ -23,7 +23,7 @@
 
 enum transition_type {
 	TRANSITION_NONE = 0,
-	TRANSITION_ERROR,
+	TRANSITION_FAIL,
 	TRANSITION_TIMEOUT,
 	TRANSITION_ENTER,
 	TRANSITION_LEAVE,
@@ -40,7 +40,7 @@ struct transition {
 struct state {
 	struct list             list;
 	char                   *name;
-	struct transition       error;
+	struct transition       fail;
 	struct transition       enter;
 	struct transition       leave;
 	struct transition       init;
@@ -63,8 +63,8 @@ struct state_machine_instance {
 	int                           used_timer;
 	bool                          in_transition:1;
 	bool                          finished:1;
-	bool                          error:1;
-	bool                          in_error:1;
+	bool                          failed:1;
+	bool                          in_failure:1;
 };
 
 struct timeout_data {
@@ -89,7 +89,7 @@ static void transition_destroy(void *_transition)
 static void state_destroy(struct state *state)
 {
 	vector_destroy(&state->timeouts);
-	transition_destroy(&state->error);
+	transition_destroy(&state->fail);
 	transition_destroy(&state->enter);
 	transition_destroy(&state->leave);
 	transition_destroy(&state->init);
@@ -129,8 +129,8 @@ struct state *state_machine_create_state(struct state_machine *state_machine, co
 		state->name = NULL;
 	}
 
-	state->error.type = TRANSITION_NONE;
-	state->error.callback = NULL;
+	state->fail.type = TRANSITION_NONE;
+	state->fail.callback = NULL;
 	state->enter.type = TRANSITION_NONE;
 	state->enter.callback = NULL;
 	state->leave.type = TRANSITION_NONE;
@@ -156,10 +156,10 @@ bool state_add_timeout_transition(struct state *state, struct time *timeout, str
 	return true;
 }
 
-bool state_set_error_transition(struct state *state, struct transition_data *data)
+bool state_set_fail_transition(struct state *state, struct transition_data *data)
 {
-	state->error.type = TRANSITION_ERROR;
-	state->error.callback = data;
+	state->fail.type = TRANSITION_FAIL;
+	state->fail.callback = data;
 	assert(data->callback);
 	return true;
 }
@@ -196,20 +196,20 @@ bool state_set_finish_transition(struct state *state, struct transition_data *da
 	return true;
 }
 
-static struct state _state_machine_error_state = {
-	name: "ERROR",
-	error: {0},
+static struct state _state_machine_fail_state = {
+	name: "FAIL",
+	fail: {0},
 	enter: {0},
 	leave: {0},
 	init: {0},
 	finish: {0},
 	timeouts: VECTOR_INIT(struct transition, transition_destroy)
 };
-struct state * const state_machine_error_state = &_state_machine_error_state;
+struct state * const state_machine_fail_state = &_state_machine_fail_state;
 
 static struct state _state_machine_finish_state = {
 	name: "FINISH",
-	error: {0},
+	fail: {0},
 	enter: {0},
 	leave: {0},
 	init: {0},
@@ -464,8 +464,8 @@ struct state_machine_instance *state_machine_instance(struct state_machine *stat
 	instance->used_timer = 0;
 	instance->in_transition = false;
 	instance->finished = false;
-	instance->error = false;
-	instance->in_error = false;
+	instance->failed = false;
+	instance->in_failure = false;
 
 	messagef(HAKA_LOG_DEBUG, MODULE, L"%s: initial state '%s'",
 			instance->state_machine->name, state_machine->initial->name);
@@ -479,8 +479,8 @@ void state_machine_instance_init(struct state_machine_instance *instance)
 
 	state_machine_enter_state(instance, instance->state_machine->initial);
 	instance->finished = false;
-	instance->error = false;
-	instance->in_error = false;
+	instance->failed = false;
+	instance->in_failure = false;
 
 	if (have_transition(instance, &instance->current->init)) {
 		messagef(HAKA_LOG_DEBUG, MODULE, L"%s: init transition on state '%s'",
@@ -539,8 +539,8 @@ void state_machine_instance_update(struct state_machine_instance *instance, stru
 		return;
 	}
 
-	if (newstate == state_machine_error_state) {
-		state_machine_instance_error(instance);
+	if (newstate == state_machine_fail_state) {
+		state_machine_instance_fail(instance);
 	}
 	else if (newstate == state_machine_finish_state) {
 		state_machine_instance_finish(instance);
@@ -579,9 +579,9 @@ static void _state_machine_instance_transition(struct state_machine_instance *in
 	}
 }
 
-void state_machine_instance_error(struct state_machine_instance *instance)
+void state_machine_instance_fail(struct state_machine_instance *instance)
 {
-	if (instance->in_error) {
+	if (instance->in_failure) {
 		return;
 	}
 
@@ -590,13 +590,13 @@ void state_machine_instance_error(struct state_machine_instance *instance)
 		return;
 	}
 
-	instance->error = true;
-	instance->in_error = true;
+	instance->failed = true;
+	instance->in_failure = true;
 
-	_state_machine_instance_transition(instance, &instance->current->error, "error", false);
+	_state_machine_instance_transition(instance, &instance->current->fail, "fail", false);
 	state_machine_instance_finish(instance);
 
-	instance->in_error = false;
+	instance->in_failure = false;
 }
 
 struct state_machine *state_machine_instance_get(struct state_machine_instance *instance)
@@ -619,7 +619,7 @@ bool state_machine_instance_isfinished(struct state_machine_instance *instance)
 	return instance->finished;
 }
 
-bool state_machine_instance_iserror(struct state_machine_instance *instance)
+bool state_machine_instance_isfailed(struct state_machine_instance *instance)
 {
-	return instance->error;
+	return instance->failed;
 }

@@ -69,6 +69,12 @@ local dn_converter = {
 	set = nil
 }
 
+local DnsResult = class.class('DnsResult')
+
+function DnsResult.method:drop()
+	self._dissector.flow:drop(self._pkt)
+end
+
 --
 -- DNS dissector
 --
@@ -87,12 +93,12 @@ dns_dissector:register_event('response', continue)
 
 function dns_dissector.method:__init(flow)
 	self.flow = flow
-	self.state = dns_dissector.states:instanciate(self)
+	self.state_machine = dns_dissector.state_machine:instanciate(self)
 	self.dns_pending_queries = {}
 end
 
 function dns_dissector.method:receive(pkt, payload, direction)
-	self.state:transition('update', payload, direction, pkt)
+	self.state_machine:update(payload:pos('begin'), direction, pkt, payload)
 end
 
 function dns_dissector.method:continue()
@@ -253,7 +259,7 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 		field('authority',  authority),
 		field('additional', additional),
 		execute(pointer_resolution),
-	}
+	}:result(DnsResult)
 
 	export(message)
 end)
@@ -279,44 +285,37 @@ end
 -- DNS States
 --
 
-local DnsResult = class.class('DnsResult')
+dns_dissector.state_machine = haka.state_machine.new("dns", function ()
+	state_type(BidirectionnalState)
 
-function DnsResult.method:__init(dissector, pkt)
-	self._dissector = dissector
-	self._pkt = pkt
-end
+	message = state(dns_dissector.grammar.message, dns_dissector.grammar.message)
 
-function DnsResult.method:drop()
-	self._dissector.flow:drop(self._pkt)
-end
-
-dns_dissector.states = haka.state_machine("dns", function ()
-	default_transitions{
-		error = function (self)
+	any:on{
+		event = events.error,
+		execute = function (self)
 			self.flow:drop()
 		end,
-		update = function (self, payload, direction, pkt)
-			local res, err = dns_dissector.grammar.message:parse(payload:pos('begin'), DnsResult:new(self, pkt))
-			if err then
-				haka.alert{
-					description = string.format("invalid dns %s", err.rule),
-					severity = 'low'
-				}
-				self.flow:drop(pkt)
-			else
-				return self.state:transition(direction, res, payload, pkt)
-			end
-		end
 	}
 
-	message = state{
-		up = function (self, res, payload, pkt)
+	message:on{
+		event = events.up,
+		execute = function (self, res, pkt, payload)
+			-- make pkt available to rules. Mainly for dropping
+			res._pkt = pkt
+			res._dissector = self
 			self:trigger("query", res)
 			self.dns_pending_queries[res.id] = res
 			self.flow:send(pkt, payload, true)
 			res._data = payload
 		end,
-		down = function (self, res, payload, pkt)
+	}
+
+	message:on{
+		event = events.down,
+		execute = function (self, res, pkt, payload)
+			-- make pkt available to rules. Mainly for dropping
+			res._pkt = pkt
+			res._dissector = self
 			local id = res.id
 			local query = self.dns_pending_queries[id]
 			if not query then

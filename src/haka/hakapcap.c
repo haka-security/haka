@@ -44,6 +44,7 @@ static void help(const char *program)
 	fprintf(stdout, "\t-a,--alert-to <file>:  Redirect alerts to given file\n");
 	fprintf(stdout, "\t--debug-lua:           Activate lua debugging\n");
 	fprintf(stdout, "\t--debug-grammar:       Activate grammar internal graph dump (saved in file <name>.dot)\n");
+	fprintf(stdout, "\t--debug-state-machine: Activate state machine graph dump (saved in file <name>.dot)\n");
 	fprintf(stdout, "\t--no-pass-through, --pass-through:\n");
 	fprintf(stdout, "\t                       Select pass-through mode (default: true)\n");
 	fprintf(stdout, "\t-o <output>:           Save result in a pcap file\n");
@@ -53,6 +54,7 @@ static char *output = NULL, *alert_to = NULL;
 static bool pass_through = true;
 static bool lua_debugger = false;
 static bool grammar_debug = false;
+static bool state_machine_debug = false;
 
 static int parse_cmdline(int *argc, char ***argv)
 {
@@ -60,16 +62,17 @@ static int parse_cmdline(int *argc, char ***argv)
 	int index = 0;
 
 	static struct option long_options[] = {
-		{ "version",         no_argument,       0, 'v' },
-		{ "help",            no_argument,       0, 'h' },
-		{ "debug",           no_argument,       0, 'd' },
-		{ "loglevel",        required_argument, 0, 'l' },
-		{ "alert-to",        required_argument, 0, 'a' },
-		{ "debug-lua",       no_argument,       0, 'L' },
-		{ "debug-grammar",   no_argument,       0, 'G' },
-		{ "no-pass-through", no_argument,       0, 'p' },
-		{ "pass-through",    no_argument,       0, 'P' },
-		{ 0,                 0,                 0, 0 }
+		{ "version",             no_argument,       0, 'v' },
+		{ "help",                no_argument,       0, 'h' },
+		{ "debug",               no_argument,       0, 'd' },
+		{ "loglevel",            required_argument, 0, 'l' },
+		{ "alert-to",            required_argument, 0, 'a' },
+		{ "debug-lua",           no_argument,       0, 'L' },
+		{ "debug-grammar",       no_argument,       0, 'G' },
+		{ "debug-state-machine", no_argument,       0, 'S' },
+		{ "no-pass-through",     no_argument,       0, 'p' },
+		{ "pass-through",        no_argument,       0, 'P' },
+		{ 0,                     0,                 0, 0 }
 	};
 
 	while ((c = getopt_long(*argc, *argv, "dl:a:ho:", long_options, &index)) != -1) {
@@ -117,6 +120,10 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'G':
 			grammar_debug = true;
+			break;
+
+		case 'S':
+			state_machine_debug = true;
 			break;
 
 		default:
@@ -237,7 +244,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Main loop */
-	prepare(1, lua_debugger, grammar_debug);
+	prepare(1, lua_debugger, grammar_debug, state_machine_debug);
 	start();
 
 	clean_exit();

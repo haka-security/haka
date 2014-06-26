@@ -38,11 +38,10 @@ function result.ArrayResult.method:remove(el)
 end
 
 function result.ArrayResult.method:append(init)
-	local result = result.Result:new()
 	if not self._create then
 		error("missing create function in array options")
 	end
-	local vbuf = self._create(result, self._entity, init)
+	local vbuf, result = self._create(self._entity, init)
 	if #self > 0 then
 		local sub = rawget(self, #self)._sub
 		rawset(result, '_sub', sub:pos('end'):insert(vbuf))

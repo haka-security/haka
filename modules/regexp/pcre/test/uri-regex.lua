@@ -35,7 +35,7 @@ local re = rem.re:compile(modsec_regex)
 haka.rule {
 	hook = http.events.request,
 	eval = function (http, request)
-		local uri = http.request.uri
+		local uri = request.uri
 		if re:match(uri) then
 			haka.alert{
 				severity = 'medium',

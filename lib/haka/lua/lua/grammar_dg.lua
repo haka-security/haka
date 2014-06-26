@@ -147,14 +147,14 @@ function dg.Entity.method:genproperty(obj, name, get, set)
 	obj:addproperty(name, fget, fset)
 end
 
-function dg.Entity.method:parse(input, result, context)
-	local ctx = parse.Context:new(input, result)
+function dg.Entity.method:parse(input, context)
+	local ctx = parse.Context:new(input)
 	ctx.user = context
 	return ctx:parse(self)
 end
 
-function dg.Entity.method:create(input, ctx, init)
-	local ctx = parse.Context:new(input, ctx, init)
+function dg.Entity.method:create(input, init)
+	local ctx = parse.Context:new(input, init)
 	return ctx:create(self)
 end
 
@@ -240,15 +240,20 @@ function dg.Control.method:_dump_graph_options()
 	return ',fillcolor="#dddddd",style="filled"'
 end
 
-dg.Compound = class.class('DGCompound', dg.Control)
+dg.CompoundStart = class.class('DGCompoundStart', dg.Control)
 
-function dg.Compound.method:_apply(ctx)
+function dg.CompoundStart.method:__init(rule, id, resultclass)
+	class.super(dg.CompoundStart).__init(self, rule, id)
+	self.resultclass = resultclass or parseResult.Result
+end
+
+function dg.CompoundStart.method:_apply(ctx)
 	ctx:pushlevel()
 end
 
-dg.CompoundEnd = class.class('DGCompoundEnd', dg.Control)
+dg.CompoundFinish = class.class('DGCompoundFinish', dg.Control)
 
-function dg.CompoundEnd.method:_apply(ctx)
+function dg.CompoundFinish.method:_apply(ctx)
 	ctx:poplevel()
 end
 
@@ -257,7 +262,7 @@ dg.Recurs = class.class('DGRecurs', dg.Control)
 dg.Recurs.trace_name = 'recursion'
 
 function dg.Recurs.method:__init(rule, id, recurs)
-	class.super(dg.Recurs):__init(rule, id)
+	class.super(dg.Recurs).__init(self, rule, id)
 	self._recurs = recurs
 end
 
@@ -291,19 +296,19 @@ function dg.ResultPop.method:_apply(ctx)
 	ctx:pop()
 end
 
-dg.RecordStart = class.class('DGRecordStart', dg.Control)
+dg.RecordStart = class.class('DGRecordStart', dg.CompoundStart)
 
 dg.RecordStart.trace_name = 'record'
 
-function dg.RecordStart.method:__init(rule, id, name)
-	class.super(dg.RecordStart).__init(self, rule, id)
+function dg.RecordStart.method:__init(rule, id, name, resultclass)
+	class.super(dg.RecordStart).__init(self, rule, id, resultclass)
 	self.name = name
 end
 
 function dg.RecordStart.method:_apply(ctx)
 	if self.name then
 		local res = ctx:result()
-		local new = ctx:push(nil, self.name)
+		local new = ctx:push(self.resultclass:new(), self.name)
 
 		if self.converter then
 			res:addproperty(self.name,
@@ -318,7 +323,7 @@ function dg.RecordStart.method:_apply(ctx)
 	end
 end
 
-dg.RecordFinish = class.class('DGRecordFinish', dg.Control)
+dg.RecordFinish = class.class('DGRecordFinish', dg.CompoundFinish)
 
 function dg.RecordFinish.method:__init(pop)
 	class.super(dg.RecordFinish).__init(self)
@@ -344,19 +349,19 @@ function dg.RecordFinish.method:_apply(ctx)
 	self:do_apply(res, ctx)
 end
 
-dg.UnionStart = class.class('DGUnionStart', dg.Control)
+dg.UnionStart = class.class('DGUnionStart', dg.CompoundStart)
 
 dg.UnionStart.trace_name = 'union'
 
-function dg.UnionStart.method:__init(rule, id, name)
-	class.super(dg.UnionStart).__init(self, rule, id)
+function dg.UnionStart.method:__init(rule, id, name, resultclass)
+	class.super(dg.UnionStart).__init(self, rule, id, resultclass)
 	self.name = name
 end
 
 function dg.UnionStart.method:_apply(ctx)
 	if self.name then
 		local res = ctx:result()
-		local new = ctx:push(nil, self.name)
+		local new = ctx:push(self.resultclass:new(), self.name)
 	end
 
 	ctx:mark(false)
@@ -369,7 +374,7 @@ function dg.UnionRestart.method:_apply(ctx)
 	ctx:seekmark()
 end
 
-dg.UnionFinish = class.class('DGUnionFinish', dg.Control)
+dg.UnionFinish = class.class('DGUnionFinish', dg.CompoundFinish)
 
 function dg.UnionFinish.method:__init(pop)
 	class.super(dg.UnionFinish).__init(self)
@@ -389,33 +394,33 @@ function dg.UnionFinish.method:_apply(ctx)
 	ctx:unmark()
 end
 
-dg.Try = class.class('DGTry', dg.Control)
+dg.TryStart = class.class('DGTryStart', dg.CompoundStart)
 
-function dg.Try.method:__init(rule, id, name)
-	class.super(dg.Try).__init(self, rule, id)
+function dg.TryStart.method:__init(rule, id, name, resultclass)
+	class.super(dg.TryStart).__init(self, rule, id, resultclass)
 	self.name = name
 	self._catch = nil
 end
 
-function dg.Try.method:catch(catch)
+function dg.TryStart.method:catch(catch)
 	self._catch = catch
 end
 
-function dg.Try.method:_dump_graph_edges(file, ref)
+function dg.TryStart.method:_dump_graph_edges(file, ref)
 	self._next:_dump_graph(file, ref)
 	file:write(string.format('%s -> %s;\n', ref[self], ref[self._next]))
 	self._catch:_dump_graph(file, ref)
 	file:write(string.format('%s -> %s [label="catch"];\n', ref[self], ref[self._catch]))
 end
 
-function dg.Try.method:_apply(ctx)
+function dg.TryStart.method:_apply(ctx)
 	-- Create a result ctx even if self.name is null
 	-- in order to be able to delete it if case fail
-	ctx:push(nil, self.name)
+	ctx:push(self.resultclass:new(), self.name)
 	ctx:pushcatch(self._catch)
 end
 
-dg.TryFinish = class.class('DGTryFinish', dg.Control)
+dg.TryFinish = class.class('DGTryFinish', dg.CompoundFinish)
 
 function dg.TryFinish.method:__init(rule, id, name)
 	class.super(dg.TryFinish).__init(self, rule, id)
@@ -447,15 +452,14 @@ function dg.TryFinish.method:_apply(ctx)
 	ctx:popcatch()
 end
 
-dg.ArrayStart = class.class('DGArrayStart', dg.Control)
+dg.ArrayStart = class.class('DGArrayStart', dg.CompoundStart)
 
 dg.ArrayStart.trace_name = 'array'
 
 function dg.ArrayStart.method:__init(rule, id, name, create, resultclass)
-	class.super(dg.ArrayStart).__init(self, rule, id)
+	class.super(dg.ArrayStart).__init(self, rule, id, resultclass or parseResult.ArrayResult)
 	self.name = name
 	self.create = create
-	self.resultclass = resultclass or parseResult.ArrayResult
 end
 
 function dg.ArrayStart.method:set_entity(entity)
@@ -481,7 +485,7 @@ function dg.ArrayStart.method:_apply(ctx)
 	end
 end
 
-dg.ArrayFinish = class.class('DGArrayFinish', dg.Control)
+dg.ArrayFinish = class.class('DGArrayFinish', dg.CompoundFinish)
 
 function dg.ArrayFinish.method:__init()
 	class.super(dg.ArrayFinish).__init(self)

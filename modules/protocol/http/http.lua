@@ -128,7 +128,7 @@ end
 function http_dissector.method:receive(stream, current, direction)
 	return haka.dissector.pcall(self, function ()
 		self.flow:streamed(stream, self.receive_streamed, self, current, direction)
-		
+
 		if self.flow then
 			self.flow:send(direction)
 		end
@@ -137,7 +137,7 @@ end
 
 function http_dissector.method:receive_streamed(iter, direction)
 	while iter:wait() do
-		self.state:transition('update', direction, iter)
+		self.state:update(iter, direction)
 		self:continue()
 	end
 end
@@ -322,10 +322,9 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 				return la == 0xa or la == 0xd
 			end)
 			:result(HeaderResult)
-			:creation(function (ctx, entity, init)
+			:creation(function (entity, init)
 				local vbuf = haka.vbuffer_from(init.name..': '..init.value..'\r\n')
-				entity:create(vbuf:pos('begin'), ctx, init)
-				return vbuf
+				return vbuf, entity:create(vbuf:pos('begin'), init)
 			end)
 		),
 		CRLF
@@ -398,7 +397,7 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 	request = sequence{
 		request_headers,
 		body
-	}
+	}:result(HttpRequestResult)
 
 	-- http response
 	response_headers = record{
@@ -412,7 +411,7 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 	response = sequence{
 		response_headers,
 		body
-	}
+	}:result(HttpResponseResult)
 
 	export(request, response)
 end)
@@ -422,77 +421,83 @@ end)
 --  HTTP States
 --
 
-http_dissector.states = haka.state_machine("http", function ()
-	default_transitions{
-		error = function (self)
+http_dissector.states = haka.state_machine.new("http", function ()
+	state_type(BidirectionnalState)
+
+	request  = state(http_dissector.grammar.request, nil)
+	response = state(nil, http_dissector.grammar.response)
+	connect  = state(nil, nil)
+
+	any:on{
+		event = events.fail,
+		execute = function (self)
 			self:drop()
 		end,
-		update = function (self, direction, iter)
-			return self.state:transition(direction, iter)
-		end
 	}
 
-	request = state{
-		up = function (self, iter)
-			self.request = HttpRequestResult:new()
+	any:on{
+		event = events.parse_error,
+		execute = function (self, err)
+			haka.alert{
+				description = string.format("invalid http %s", err.field.rule),
+				severity = 'low'
+			}
+		end,
+		jump = fail,
+	}
+
+	any:on{
+		event = events.missing_grammar,
+		execute = function (self, direction, payload)
+			local description
+			if direction == 'up' then
+				description = "http: unexpected data from client"
+			else
+				assert(direction == 'down')
+				description = "http: unexpected data from server"
+			end
+			haka.alert{
+				description = description,
+				severity = 'low'
+			}
+		end,
+		jump = fail,
+	}
+
+	request:on{
+		event = events.up,
+		execute = function (self, res)
+			self.request = res
 			self.response = nil
 			self._want_data_modification = false
-
-			local err
-			self.request, err = http_dissector.grammar.request:parse(iter, self.request, self)
-			if err then
-				haka.alert{
-					description = string.format("invalid http %s", err.field.rule),
-					severity = 'low'
-				}
-				return 'error'
-			end
-
-			return 'response'
 		end,
-		down = function (self)
-			haka.alert{
-				description = "http: unexpected data from server",
-				severity = 'low'
-			}
-			return 'error'
-		end
+		jump = response,
 	}
 
-	response = state{
-		up = function (self, iter)
-			haka.alert{
-				description = "http: unexpected data from client",
-				severity = 'low'
-			}
-			return 'error'
-		end,
-		down = function (self, iter)
-			self.response = HttpResponseResult:new()
+	response:on{
+		event = events.down,
+		when = function (self, res) return self.request.method:lower() == 'connect' end,
+		execute = function (self, res)
+			self.response = res
 			self._want_data_modification = false
-
-			local err
-			self.response, err = http_dissector.grammar.response:parse(iter, self.response, self)
-			if err then
-				haka.alert{
-					description = string.format("invalid http %s", err.field.rule),
-					severity = 'low'
-				}
-				return 'error'
-			end
-
-			if self.request.method:lower() == 'connect' then
-				return 'connect'
-			else
-				return 'request'
-			end
 		end,
+		jump = connect,
 	}
 
-	connect = state{
-		update = function (self, direction, iter)
-			iter:advance('all')
-		end
+	response:on{
+		event = events.down,
+		execute = function (self, res)
+			self.response = res
+			self._want_data_modification = false
+		end,
+		jump = request,
+	}
+
+	connect:on{
+		event = events.missing_grammar,
+		execute = function (self, direction, payload)
+			payload:advance('all')
+		end,
 	}
 
 	initial(request)

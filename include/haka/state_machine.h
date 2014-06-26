@@ -29,12 +29,12 @@ struct state_machine *state_machine_create(const char *name);
 void                  state_machine_destroy(struct state_machine *machine);
 bool                  state_machine_compile(struct state_machine *machine);
 struct state         *state_machine_create_state(struct state_machine *state_machine, const char *name);
-extern struct state * const state_machine_error_state;
+extern struct state * const state_machine_fail_state;
 extern struct state * const state_machine_finish_state;
 bool                  state_machine_set_initial(struct state_machine *machine, struct state *initial);
 
 bool                  state_add_timeout_transition(struct state *state, struct time *timeout, struct transition_data *data);
-bool                  state_set_error_transition(struct state *state, struct transition_data *data);
+bool                  state_set_fail_transition(struct state *state, struct transition_data *data);
 bool                  state_set_enter_transition(struct state *state, struct transition_data *data);
 bool                  state_set_leave_transition(struct state *state, struct transition_data *data);
 bool                  state_set_init_transition(struct state *state, struct transition_data *data);
@@ -48,9 +48,9 @@ void                  state_machine_instance_init(struct state_machine_instance 
 void                  state_machine_instance_finish(struct state_machine_instance *instance);
 void                  state_machine_instance_destroy(struct state_machine_instance *instance);
 void                  state_machine_instance_update(struct state_machine_instance *instance, struct state *newstate);
-void                  state_machine_instance_error(struct state_machine_instance *instance);
+void                  state_machine_instance_fail(struct state_machine_instance *instance);
 struct state         *state_machine_instance_state(struct state_machine_instance *instance);
 bool                  state_machine_instance_isfinished(struct state_machine_instance *instance);
-bool                  state_machine_instance_iserror(struct state_machine_instance *instance);
+bool                  state_machine_instance_isfailed(struct state_machine_instance *instance);
 
 #endif /* _STATE_MACHINE_H */

@@ -11,7 +11,7 @@
 struct thread_pool;
 
 struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module,
-		bool attach_debugger, bool grammar_debug);
+		bool attach_debugger, bool grammar_debug, bool state_machine_debug);
 int  thread_pool_count(struct thread_pool *pool);
 void thread_pool_cleanup(struct thread_pool *pool);
 void thread_pool_wait(struct thread_pool *pool);

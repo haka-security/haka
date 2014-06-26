@@ -161,6 +161,12 @@ end
 
 grammar_int.Compound = class.class('Compound', grammar_int.Entity)
 
+function grammar_int.Compound.method:result(resultclass)
+	local clone = self:clone()
+	clone.resultclass = resultclass
+	return clone
+end
+
 function grammar_int.Compound.method:compile(env, rule, id)
 	local compiled = env:get(self)
 	if compiled then
@@ -168,12 +174,12 @@ function grammar_int.Compound.method:compile(env, rule, id)
 	end
 
 	-- Create a DGCompound in order to use it for recursive case
-	local compound = grammar_dg.Compound:new(rule, id)
+	local compound = grammar_dg.CompoundStart:new(rule, id, self.resultclass)
 	env:register(self, compound)
 	local ret = self:do_compile(env, rule, id)
 	env:unregister(self)
 	compound:add(ret)
-	compound:add(grammar_dg.CompoundEnd:new(rule, id))
+	compound:add(grammar_dg.CompoundFinish:new(rule, id))
 	return compound
 end
 
@@ -202,7 +208,7 @@ function grammar_int.Record.method:do_compile(env, rule, id)
 
 	ret = grammar_dg.Retain:new(haka.packet_mode() == 'passthrough')
 
-	iter = grammar_dg.RecordStart:new(rule, id, self.named)
+	iter = grammar_dg.RecordStart:new(rule, id, self.named, self.resultclass)
 	self:property_setup(iter)
 	ret:add(iter)
 
@@ -239,7 +245,7 @@ end
 function grammar_int.Sequence.method:do_compile(env, rule, id)
 	local iter, ret
 
-	ret = grammar_dg.RecordStart:new(rule, id, self.named)
+	ret = grammar_dg.RecordStart:new(rule, id, self.named, self.resultclass)
 	self:property_setup(ret)
 	iter = ret
 
@@ -273,7 +279,7 @@ function grammar_int.Union.method:__init(entities)
 end
 
 function grammar_int.Union.method:do_compile(env, rule, id)
-	local ret = grammar_dg.UnionStart:new(rule, id, self.named)
+	local ret = grammar_dg.UnionStart:new(rule, id, self.named, self.resultclass)
 
 	for i, entity in ipairs(self.entities) do
 		local next = entity:compile(env, self.rule or rule, i)
@@ -301,7 +307,7 @@ function grammar_int.Try.method:do_compile(env, rule, id)
 	for i, entity in ipairs(self.cases) do
 		local next = entity:compile(env, self.rule or rule, i)
 
-		local try = grammar_dg.Try:new(self.rule or rule, id, self.named)
+		local try = grammar_dg.TryStart:new(self.rule or rule, id, self.named, self.resultclass)
 		try:add(next)
 		try:add(finish)
 		if previous_try then
@@ -427,13 +433,6 @@ function grammar_int.Array.method:creation(f)
 	clone.create = f
 	return clone
 end
-
-function grammar_int.Array.method:result(resultclass)
-	local clone = self:clone()
-	clone.resultclass = resultclass
-	return clone
-end
-
 
 grammar_int.Number = class.class('Number', grammar_int.Entity)
 
@@ -807,8 +806,8 @@ function grammar.new(name, def)
 	end
 
 	if grammar.debug then
-		haka.log.warning("grammar", "dumping '%s' grammar graph to %s.dot", g._name, g._name)
-		f = io.open(string.format("%s.dot", g._name), "w+")
+		haka.log.warning("grammar", "dumping '%s' grammar graph to %s-grammar.dot", g._name, g._name)
+		f = io.open(string.format("%s-grammar.dot", g._name), "w+")
 		g:dump_graph(f)
 		f:close()
 	end
