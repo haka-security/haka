@@ -267,35 +267,35 @@ An action is composed of the following :
 
 A action is defined with :
 
-.. haka:method:: <state>:on{event, check, execute, jump}
+.. haka:method:: <state>:on{event, when, execute, jump}
     :module: state_machine
 
     :param event: One of the event defined by state machine state type.
-    :param check: An optionnal function to decide wether this action should be taken or
+    :param when: An optionnal function to decide wether this action should be taken or
     not.
-    :ptype check: function
+    :ptype when: function
     :param execute: An optionnal function to make some specific actions.
     :ptype execute: function
     :param jump: An optionnal state to go to after executing the action.
     :ptype jump: :haka:class:`State`
 
-    Define a new action. The parameters passed to action and check function
+    Define a new action. The parameters passed to action and when function
     depends on state machine state type.
 
     Only event is a required parameter. But an action must have one of action
     or jump otherwise it is useless.
 
-    Both action and check function are always passed the same parameters.
+    Both action and when function are always passed the same parameters.
 
 Haka allow to define default actions :
 
-.. haka:function:: any:on{event, check, execute, jump}
+.. haka:function:: any:on{event, when, execute, jump}
     :module: state_machine
 
     :param event: One of the event defined by state machine state type.
-    :param check: An optionnal function to decide wether this action should be taken or
+    :param when: An optionnal function to decide wether this action should be taken or
     not.
-    :ptype check: function
+    :ptype when: function
     :param execute: An optionnal function to make some specific actions.
     :ptype execute: function
     :param jump: An optionnal state to go to after executing the action.
