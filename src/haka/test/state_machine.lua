@@ -27,21 +27,21 @@ local machine = haka.state_machine.new("test", function ()
 
 	any:on{
 		event = events.fail,
-		action = function (self)
+		execute = function (self)
 			print("fail on", self.instance.current)
 		end,
 	}
 
 	any:on{
 		event = events.finish,
-		action = function (self)
+		execute = function (self)
 			print("finished", self.hello)
 		end,
 	}
 
 	any:on{
 		event = events.enter,
-		action = function (self)
+		execute = function (self)
 			if self.instance then
 				print("enter", self.instance.current)
 			else
@@ -52,21 +52,21 @@ local machine = haka.state_machine.new("test", function ()
 
 	any:on{
 		event = events.leave,
-		action = function (self)
+		execute = function (self)
 			print("leave", self.instance.current)
 		end,
 	}
 
 	state1:on{
 		event = events.init,
-		action = function (self)
+		execute = function (self)
 			print("initialize state1")
 		end,
 	}
 
 	state1:on{
 		event = events.enter,
-		action = function (self)
+		execute = function (self)
 			self.mystate = "state1"
 			self.count = 0
 			print("enter state1")
@@ -75,7 +75,7 @@ local machine = haka.state_machine.new("test", function ()
 
 	state1:on{
 		event = events.test,
-		action = function (self, direction, input)
+		execute = function (self, direction, input)
 			print(direction, "state1 received:", input)
 		end,
 		jump = state4,
@@ -93,7 +93,7 @@ local machine = haka.state_machine.new("test", function ()
 
 	state2:on{
 		event = events.enter,
-		action = function (self)
+		execute = function (self)
 			print("enter state2")
 		end,
 		jump = fail,
@@ -106,7 +106,7 @@ local machine = haka.state_machine.new("test", function ()
 
 	state3:on{
 		event = events.timeout(1),
-		action = function (self)
+		execute = function (self)
 			print("timeout from state3")
 			print("go to state1")
 		end,
@@ -115,7 +115,7 @@ local machine = haka.state_machine.new("test", function ()
 
 	state3:on{
 		event = events.leave,
-		action = function (self)
+		execute = function (self)
 			print("leave state3")
 			self.mystate = nil
 		end,
@@ -124,7 +124,7 @@ local machine = haka.state_machine.new("test", function ()
 
 	state4:on{
 		event = events.test,
-		action = function (self, direction, output)
+		execute = function (self, direction, output)
 			print(direction, "state4 received:", output)
 		end,
 		jump = state1,

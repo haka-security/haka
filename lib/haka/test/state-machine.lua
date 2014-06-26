@@ -54,7 +54,7 @@ function TestStateMachine:test_state_machine_run()
 		my_foo_state:on{
 			event = events.test,
 			jump = my_bar_state,
-			action = function (self)
+			execute = function (self)
 				self.foo = true
 			end,
 		}
@@ -62,7 +62,7 @@ function TestStateMachine:test_state_machine_run()
 		my_bar_state:on{
 			event = events.test,
 			jump = finish,
-			action = function (self)
+			execute = function (self)
 				self.bar = true
 			end,
 		}
@@ -92,7 +92,7 @@ function TestStateMachine:test_state_machine_fail()
 
 		my_foo_state:on{
 			event = events.test,
-			action = function (self)
+			execute = function (self)
 				self.test = true
 			end,
 			jump = fail,
@@ -121,7 +121,7 @@ function TestStateMachine:test_state_machine_defaults()
 
 		any:on{
 			event = events.test,
-			action = function (self)
+			execute = function (self)
 				self.test = true
 			end
 		}
@@ -162,7 +162,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 		my_up_state:on{
 			event = events.up,
 			jump = my_down_state,
-			action = function (self, res)
+			execute = function (self, res)
 				self.up = true
 			end,
 		}
@@ -175,7 +175,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_run()
 		my_down_state:on{
 			event = events.down,
 			jump = finish,
-			action = function (self, res)
+			execute = function (self, res)
 				self.down = true
 			end,
 		}
@@ -224,7 +224,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 		my_up_state:on{
 			event = events.up,
 			jump = my_down_state,
-			action = function (self, res)
+			execute = function (self, res)
 				self.up = true
 			end,
 		}
@@ -237,7 +237,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_fail()
 		my_down_state:on{
 			event = events.down,
 			jump = finish,
-			action = function (self, res)
+			execute = function (self, res)
 				self.down = true
 			end,
 		}
@@ -287,7 +287,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 
 		any:on{
 			event = events.parse_error,
-			action = function (self, err)
+			execute = function (self, err)
 				self.parse_error = true
 			end,
 			jump = fail
@@ -296,7 +296,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 		my_up_state:on{
 			event = events.up,
 			jump = my_down_state,
-			action = function (self, res)
+			execute = function (self, res)
 				self.up = true
 			end,
 		}
@@ -304,7 +304,7 @@ function TestStateMachine:test_state_machine_bidirectionnal_parse_fail()
 		my_down_state:on{
 			event = events.down,
 			jump = finish,
-			action = function (self, res)
+			execute = function (self, res)
 				self.down = true
 			end,
 		}

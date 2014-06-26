@@ -37,22 +37,22 @@ function module.TransitionCollection.method:on(transition)
 		error("when must be a function", 2)
 	end
 
-	if transition.action and not type(transition.action) then
-		error("action must be a function", 2)
+	if transition.execute and not type(transition.execute) then
+		error("execute must be a function", 2)
 	end
 
 	if transition.jump and not class.isa(transition.jump, module.State) then
 		error("can only jump on defined state", 2)
 	end
 
-	if not transition.action and not transition.jump then
-		error("transition must have either an action or a jump", 2)
+	if not transition.execute and not transition.jump then
+		error("transition must have either an execute or a jump", 2)
 	end
 
 	-- build another representation of the transition
 	local t = {
 		when = transition.when,
-		action = transition.action,
+		execute = transition.execute,
 	}
 
 	if transition.jump then
@@ -165,8 +165,8 @@ module.CompiledState = class.class('CompiledState')
 local function transitions_wrapper(state_table, transitions, ...)
 	for _, t in ipairs(transitions) do
 		if not t.when or t.when(...) then
-			if t.action then
-				t.action(...)
+			if t.execute then
+				t.execute(...)
 			end
 			if t.jump then
 				newstate = state_table[t.jump]

@@ -88,7 +88,7 @@ udp_connection_dissector.state_machine = haka.state_machine.new("udp", function 
 
 	any:on{
 		event = events.finish,
-		action = function (self)
+		execute = function (self)
 			self:trigger('end_connection')
 			self.connection:close()
 		end,
@@ -96,7 +96,7 @@ udp_connection_dissector.state_machine = haka.state_machine.new("udp", function 
 
 	drop:on{
 		event = events.enter,
-		action = function (self)
+		execute = function (self)
 			self:trigger('end_connection')
 			self.dropped = true
 			self.connection:drop()
@@ -110,21 +110,21 @@ udp_connection_dissector.state_machine = haka.state_machine.new("udp", function 
 
 	drop:on{
 		event = events.receive,
-		action = function (self, pkt, direction)
+		execute = function (self, pkt, direction)
 			pkt:drop()
 		end,
 	}
 
 	drop:on{
 		event = events.finish,
-		action = function (self)
+		execute = function (self)
 			self.connection:close()
 		end
 	}
 
 	established:on{
 		event = events.receive,
-		action = function (self, pkt, direction)
+		execute = function (self, pkt, direction)
 			self:trigger('receive_data', pkt, direction)
 
 			local next_dissector = self:next_dissector()

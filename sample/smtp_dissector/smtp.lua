@@ -179,14 +179,14 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	any:on{
 		event = events.fail,
-		action = function (self)
+		execute = function (self)
 			self:drop()
 		end,
 	}
 
 	any:on{
 		event = events.missing_grammar,
-		action = function (self, direction, payload)
+		execute = function (self, direction, payload)
 			local description
 			if direction == 'up' then
 				description = "unexpected client command"
@@ -203,7 +203,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	session_initiation:on{
 		event = events.parse_error,
-		action = function (self, err)
+		execute = function (self, err)
 			haka.alert{
 				description = string.format("invalid smtp response %s", err),
 				severity = 'high'
@@ -215,7 +215,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 	session_initiation:on{
 		event = events.down,
 		when = function (self, res) return res.responses[1].code == '220' end,
-		action = function (self, res)
+		execute = function (self, res)
 			self:trigger('response', res)
 		end,
 		jump = client_initiation,
@@ -223,7 +223,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	session_initiation:on{
 		event = events.down,
-		action = function (self, res)
+		execute = function (self, res)
 			haka.alert{
 				description = string.format("unavailable service: %s", status),
 				severity = 'low'
@@ -234,7 +234,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	client_initiation:on{
 		event = events.parse_error,
-		action = function (self, err)
+		execute = function (self, err)
 			haka.alert{
 				description = string.format("invalid smtp command %s", err),
 				severity = 'low'
@@ -249,7 +249,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 			local command = string.upper(res.command)
 			return command == 'EHLO' or command == 'HELO'
 		end,
-		action = function (self, res)
+		execute = function (self, res)
 			self.command = res
 			self:trigger('command', res)
 		end,
@@ -258,7 +258,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	client_initiation:on{
 		event = events.up,
-		action = function (self, res)
+		execute = function (self, res)
 			haka.alert{
 				description = string.format("invalid client initiation command"),
 				severity = 'low'
@@ -269,7 +269,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	response:on{
 		event = events.parse_error,
-		action = function (self, err)
+		execute = function (self, err)
 			haka.alert{
 				description = string.format("invalid smtp response %s", err),
 				severity = 'high'
@@ -283,7 +283,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 		when = function (self, res)
 			return res.responses[1].code == '354'
 		end,
-		action = function (self, res)
+		execute = function (self, res)
 			self:trigger('response', res)
 		end,
 		jump = data_transmission,
@@ -294,7 +294,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 		when = function (self, res)
 			return res.responses[1].code == '221'
 		end,
-		action = function (self, res)
+		execute = function (self, res)
 			self:trigger('response', res)
 		end,
 		jump = finish,
@@ -302,7 +302,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	response:on{
 		event = events.down,
-		action = function (self, res)
+		execute = function (self, res)
 			self:trigger('response', res)
 		end,
 		jump = command,
@@ -310,7 +310,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	command:on{
 		event = events.parse_error,
-		action = function (self, err)
+		execute = function (self, err)
 			haka.alert{
 				description = string.format("invalid smtp command %s", err),
 				severity = 'low'
@@ -321,7 +321,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	command:on{
 		event = events.up,
-		action = function (self, res)
+		execute = function (self, res)
 			self.command = res
 			self:trigger('command', res)
 		end,
@@ -330,14 +330,14 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	data_transmission:on{
 		event = events.enter,
-		action = function (self)
+		execute = function (self)
 			self.mail = haka.vbuffer_sub_stream()
 		end,
 	}
 
 	data_transmission:on{
 		event = events.parse_error,
-		action = function (self, err)
+		execute = function (self, err)
 			haka.alert{
 				description = string.format("invalid data blob %s", err),
 				severity = 'low'
@@ -349,7 +349,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 	data_transmission:on{
 		event = events.up,
 		when = function (self, res) return res.data:asstring() == '.\r\n' end,
-		action = function (self, res)
+		execute = function (self, res)
 			self.mail:finish()
 			self:trigger('mail_content', self.mail, nil)
 			self.mail:pop()
@@ -359,7 +359,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	data_transmission:on{
 		event = events.up,
-		action = function (self, res)
+		execute = function (self, res)
 			local mail_iter = self.mail:push(res.data)
 			self:trigger('mail_content', self.mail, mail_iter)
 			self.mail:pop()
@@ -368,7 +368,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	data_transmission:on{
 		event = events.leave,
-		action = function (self)
+		execute = function (self)
 			self.mail = nil
 		end,
 	}

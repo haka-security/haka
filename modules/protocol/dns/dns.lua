@@ -292,14 +292,14 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 
 	any:on{
 		event = events.error,
-		action = function (self)
+		execute = function (self)
 			self.flow:drop()
 		end,
 	}
 
 	message:on{
 		event = events.up,
-		action = function (self, res, pkt, payload)
+		execute = function (self, res, pkt, payload)
 			-- make pkt available to rules. Mainly for dropping
 			res._pkt = pkt
 			res._dissector = self
@@ -312,7 +312,7 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 
 	message:on{
 		event = events.down,
-		action = function (self, res, pkt, payload)
+		execute = function (self, res, pkt, payload)
 			-- make pkt available to rules. Mainly for dropping
 			res._pkt = pkt
 			res._dissector = self

@@ -430,14 +430,14 @@ http_dissector.states = haka.state_machine.new("http", function ()
 
 	any:on{
 		event = events.fail,
-		action = function (self)
+		execute = function (self)
 			self:drop()
 		end,
 	}
 
 	any:on{
 		event = events.parse_error,
-		action = function (self, err)
+		execute = function (self, err)
 			haka.alert{
 				description = string.format("invalid http %s", err.field.rule),
 				severity = 'low'
@@ -448,7 +448,7 @@ http_dissector.states = haka.state_machine.new("http", function ()
 
 	any:on{
 		event = events.missing_grammar,
-		action = function (self, direction, payload)
+		execute = function (self, direction, payload)
 			local description
 			if direction == 'up' then
 				description = "http: unexpected data from client"
@@ -466,7 +466,7 @@ http_dissector.states = haka.state_machine.new("http", function ()
 
 	request:on{
 		event = events.up,
-		action = function (self, res)
+		execute = function (self, res)
 			self.request = res
 			self.response = nil
 			self._want_data_modification = false
@@ -477,7 +477,7 @@ http_dissector.states = haka.state_machine.new("http", function ()
 	response:on{
 		event = events.down,
 		when = function (self, res) return self.request.method:lower() == 'connect' end,
-		action = function (self, res)
+		execute = function (self, res)
 			self.response = res
 			self._want_data_modification = false
 		end,
@@ -486,7 +486,7 @@ http_dissector.states = haka.state_machine.new("http", function ()
 
 	response:on{
 		event = events.down,
-		action = function (self, res)
+		execute = function (self, res)
 			self.response = res
 			self._want_data_modification = false
 		end,
@@ -495,7 +495,7 @@ http_dissector.states = haka.state_machine.new("http", function ()
 
 	connect:on{
 		event = events.missing_grammar,
-		action = function (self, direction, payload)
+		execute = function (self, direction, payload)
 			payload:advance('all')
 		end,
 	}
