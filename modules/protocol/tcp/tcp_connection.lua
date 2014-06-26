@@ -81,14 +81,7 @@ end
 
 local TcpState = class.class("TcpState", haka.state_machine.State)
 
-function TcpState.method:__init()
-	class.super(TcpState).__init(self)
-	table.merge(self._actions, {
-		input  = {},
-		output = {},
-		reset  = {},
-	});
-end
+TcpState._events = { 'input', 'output', 'reset' }
 
 function TcpState.method:_update(state_machine, direction, pkt)
 	if pkt.flags.rst then

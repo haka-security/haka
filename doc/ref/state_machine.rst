@@ -84,7 +84,13 @@ Haka provides two kind of states type :
 .. haka:class:: State
 
     Simplest state. It won't do anything except defining some default events that
-    will be available from every another state types :
+    will be available from every another state types.
+
+    .. haka:data:: State._events
+
+        This table contains a list of the events added by this type of state.
+        If you create a class inheriting from :haka:class:`State` you can set
+        this table to add some events.
 
     .. haka:data:: init
         :module:
@@ -243,12 +249,7 @@ events.
 
     local MyState = class.class("MyState", haka.state_machine.State)
 
-    function MyState.method:__init()
-        class.super(MyState).__init(self, name)
-        table.merge(self._actions, {
-            myevent = {},
-        });
-    end
+    MyState._events = { 'myevent' }
 
     function MyState.method:_update(state_machine, myarg)
             state_machine:trigger('myevent', myarg)

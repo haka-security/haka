@@ -9,13 +9,7 @@ local ipv4 = require('protocol/ipv4')
 
 local TestState = class.class('TestState', haka.state_machine.State)
 
-function TestState.method:__init()
-	class.super(TestState).__init(self)
-	table.merge(self._actions, {
-		test = {},
-	});
-end
-
+TestState._events = { 'test' }
 
 local machine = haka.state_machine.new("test", function ()
 	state_type(TestState)

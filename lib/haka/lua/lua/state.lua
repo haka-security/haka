@@ -72,22 +72,37 @@ function module.ActionCollection.method:on(action)
 
 end
 
+function module.ActionCollection.method:_register_events(events)
+	if not events then
+		return
+	end
+
+	for _, event in pairs(events) do
+		if self._actions[event] then
+			haka.log.warning("state_machine", "cannot redefine event: %s", event)
+		else
+			self._actions[event] = {}
+		end
+	end
+end
+
 
 --
 -- State
 --
 module.State = class.class('State', module.ActionCollection)
 
+module.State._events = { 'fail', 'enter', 'leave', 'init', 'finish' }
+
 function module.State.method:__init(name)
 	class.super(module.State).__init(self, true)
 	self._name = name or '<unnamed>'
-	table.merge(self._actions, {
-		fail = {},
-		enter = {},
-		leave = {},
-		init = {},
-		finish = {},
-	});
+	local c = class.classof(self)
+	while c do
+		if c == module.ActionCollection then return end
+		self:_register_events(c._events)
+		c = c.super
+	end
 end
 
 function module.State.method:setdefaults(defaults)
@@ -121,6 +136,8 @@ end
 
 module.BidirectionnalState = class.class('BidirectionnalState', module.State)
 
+module.BidirectionnalState._events = { 'up', 'down', 'parse_error', 'missing_grammar' }
+
 function module.BidirectionnalState.method:__init(gup, gdown)
 	if gup and not class.isa(gup, dg.Entity) then
 		error("bidirectionnal state expect an exported element of a grammar", 3)
@@ -131,12 +148,6 @@ function module.BidirectionnalState.method:__init(gup, gdown)
 	end
 
 	class.super(module.BidirectionnalState).__init(self)
-	table.merge(self._actions, {
-		up = {},
-		down = {},
-		parse_error = {},
-		missing_grammar = {},
-	})
 
 	self._grammar = {
 		up = gup,

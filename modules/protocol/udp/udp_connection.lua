@@ -58,13 +58,7 @@ end
 
 local UdpState = class.class("UdpState", haka.state_machine.State)
 
-function UdpState.method:__init()
-	class.super(UdpState).__init(self)
-	table.merge(self._actions, {
-		receive  = {},
-		drop = {},
-	});
-end
+UdpState._events = { 'receive', 'drop' }
 
 function UdpState.method:_update(state_machine, direction, pkt)
 	state_machine:trigger('receive', pkt, direction)

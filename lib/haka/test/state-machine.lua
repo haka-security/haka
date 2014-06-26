@@ -9,13 +9,7 @@ TestStateMachine = {}
 
 local TestState = class.class('TestState', haka.state_machine.State)
 
-function TestState.method:__init()
-	class.super(TestState).__init(self)
-	table.merge(self._actions, {
-		test = {},
-	});
-end
-
+TestState._events = { 'test' }
 
 function TestStateMachine:test_state_machine_compile()
 	-- Given
