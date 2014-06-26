@@ -196,25 +196,21 @@ module.helper = {}
 
 module.helper.UdpFlowDissector =  class.class('UdpFlowDissector', haka.helper.FlowDissector)
 
-function module.helper.UdpFlowDissector.dissect(cls)
-	return function (flow)
-		flow:select_next_dissector(cls:new(flow))
-	end
+function module.helper.UdpFlowDissector.dissect(cls, flow)
+	flow:select_next_dissector(cls:new(flow))
 end
 
-function module.helper.UdpFlowDissector.install_udp_rule(cls)
-	return function (port)
-		haka.rule{
-			name = string.format("install %s dissector", cls.name),
-			hook = udp_connection_dissector.events.new_connection,
-			eval = function (flow, pkt)
-				if pkt.dstport == port then
-					haka.log.debug(cls.name, string.format("selecting %s dissector on flow", cls.name))
-					flow:select_next_dissector(cls:new(flow))
-				end
+function module.helper.UdpFlowDissector.install_udp_rule(cls, port)
+	haka.rule{
+		name = string.format("install %s dissector", cls.name),
+		hook = udp_connection_dissector.events.new_connection,
+		eval = function (flow, pkt)
+			if pkt.dstport == port then
+				haka.log.debug(cls.name, string.format("selecting %s dissector on flow", cls.name))
+				flow:select_next_dissector(cls:new(flow))
 			end
-		}
-	end
+		end
+	}
 end
 
 module.helper.UdpFlowDissector.property.connection = {

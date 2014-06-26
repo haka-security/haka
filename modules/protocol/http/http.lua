@@ -100,8 +100,13 @@ function http_dissector.method:trigger_event(res, iter, mark)
 	end
 end
 
-module.dissect = http_dissector:dissect()
-module.install_tcp_rule = http_dissector:install_tcp_rule()
+function module.dissect(flow)
+	http_dissector:dissect(flow)
+end
+
+function module.install_tcp_rule(port)
+	http_dissector:install_tcp_rule(port)
+end
 
 
 --

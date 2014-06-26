@@ -32,8 +32,13 @@ local SmtpDissector = haka.dissector.new{
 	name = 'smtp'
 }
 
-module.dissect = SmtpDissector:dissect()
-module.install_tcp_rule = SmtpDissector:install_tcp_rule()
+function module.dissect(flow)
+	SmtpDissector:dissect(flow)
+end
+
+function module.install_tcp_rule(port)
+	SmtpDissector:install_tcp_rule(port)
+end
 
 --
 -- Events

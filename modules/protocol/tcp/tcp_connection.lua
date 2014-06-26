@@ -695,25 +695,21 @@ module.helper = {}
 
 module.helper.TcpFlowDissector = class.class('TcpFlowDissector', haka.helper.FlowDissector)
 
-function module.helper.TcpFlowDissector.dissect(cls)
-	return function (flow)
-		flow:select_next_dissector(cls:new(flow))
-	end
+function module.helper.TcpFlowDissector.dissect(cls, flow)
+	flow:select_next_dissector(cls:new(flow))
 end
 
-function module.helper.TcpFlowDissector.install_tcp_rule(cls)
-	return function (port)
-		haka.rule{
-			name = string.format("install %s dissector", cls.name),
-			hook = tcp_connection_dissector.events.new_connection,
-			eval = function (flow, pkt)
-				if pkt.dstport == port then
-					haka.log.debug(cls.name, string.format("selecting %s dissector on flow", cls.name))
-					flow:select_next_dissector(cls:new(flow))
-				end
+function module.helper.TcpFlowDissector.install_tcp_rule(cls, port)
+	haka.rule{
+		name = string.format("install %s dissector", cls.name),
+		hook = tcp_connection_dissector.events.new_connection,
+		eval = function (flow, pkt)
+			if pkt.dstport == port then
+				haka.log.debug(cls.name, string.format("selecting %s dissector on flow", cls.name))
+				flow:select_next_dissector(cls:new(flow))
 			end
-		}
-	end
+		end
+	}
 end
 
 module.helper.TcpFlowDissector.property.connection = {

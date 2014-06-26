@@ -255,8 +255,13 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 	export(message)
 end)
 
-module.dissect = dns_dissector:dissect()
-module.install_udp_rule = dns_dissector:install_udp_rule()
+function module.dissect(flow)
+	dns_dissector:dissect(flow)
+end
+
+function module.install_udp_rule(port)
+	dns_dissector:install_udp_rule(port)
+end
 
 --
 -- DNS States

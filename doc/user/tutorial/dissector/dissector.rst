@@ -59,8 +59,13 @@ dissector to use. The latter, allow a user rule to activate our dissector.
 
 .. code-block:: lua
 
-    module.install_tcp_rule = SmtpDissector:install_tcp_rule()
-    module.dissect = SmtpDissector:dissect()
+    function module.install_tcp_rule(port)
+        SmtpDissector:install_tcp_rule(port)
+    end
+
+    function module.dissect(flow)
+        SmtpDissector:dissect(flow)
+    end
 
 .. _SmtpDissector:
 

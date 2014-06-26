@@ -125,35 +125,21 @@ Helper
 .. haka:class:: TcpFlowDissector
     :objtype: dissector
 
-    .. haka:function:: TcpFlowDissector.dissect(cls) -> f
+    .. haka:function:: TcpFlowDissector.dissect(cls, flow)
 
         :param cls: Current dissector class.
-        :return f: Helper function.
+        :param flow: Parent Tcp flow.
+        :ptype flow: :haka:class:`TcpConnectionDissector`
 
-        Create an helper function to enable the dissector on a given
-        flow.
+        Enable the dissector on a given flow.
 
-        .. haka:function:: f(flow)
-            :noindex:
-            :module:
-
-            :param flow: Parent Tcp flow.
-            :ptype flow: :haka:class:`TcpConnectionDissector`
-
-    .. haka:function:: TcpFlowDissector.install_tcp_rule(cls) -> f
+    .. haka:function:: TcpFlowDissector.install_udp_rule(cls, port)
 
         :param cls: Current dissector class.
-        :return f: Helper function.
+        :param port: Tcp port to select.
+        :ptype port: number
 
-        Create an helper function to create a security rule to enable the
-        dissector on a given flow.
-
-        .. haka:function:: f(port)
-            :noindex:
-            :module:
-
-            :param port: Tcp port to select.
-            :ptype port: number
+        Create a security rule to enable the dissector on a given flow.
 
     .. haka:attribute:: TcpFlowDissector:__init(flow)
 

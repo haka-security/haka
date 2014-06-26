@@ -94,35 +94,21 @@ Helper
 .. haka:class:: UdpFlowDissector
     :objtype: dissector
 
-    .. haka:function:: UdpFlowDissector.dissect(cls) -> f
+    .. haka:function:: UdpFlowDissector.dissect(cls, flow)
 
         :param cls: Current dissector class.
-        :return f: Helper function.
+        :param flow: Parent Udp flow.
+        :ptype flow: :haka:class:`UdpConnectionDissector`
 
-        Create an helper function to enable the dissector on a given
-        flow.
+        Enable the dissector on a given flow.
 
-        .. haka:function:: f(flow)
-            :noindex:
-            :module:
-
-            :param flow: Parent Udp flow.
-            :ptype flow: :haka:class:`UdpConnectionDissector`
-
-    .. haka:function:: UdpFlowDissector.install_udp_rule(cls) -> f
+    .. haka:function:: UdpFlowDissector.install_udp_rule(cls, port)
 
         :param cls: Current dissector class.
-        :return f: Helper function.
+        :param port: Udp port to select.
+        :ptype port: number
 
-        Create an helper function to create a security rule to enable the
-        dissector on a given flow.
-
-        .. haka:function:: f(port)
-            :noindex:
-            :module:
-
-            :param port: Udp port to select.
-            :ptype port: number
+        Create a security rule to enable the dissector on a given flow.
 
     .. haka:attribute:: UdpFlowDissector:__init(flow)
 
