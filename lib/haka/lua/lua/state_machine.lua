@@ -20,7 +20,7 @@ states.StateMachine = class.class('StateMachine')
 
 function states.StateMachine.method:__init(name)
 	self._states = { }
-	self._default = state.TransitionCollection:new()
+	self._default = state.ActionCollection:new()
 	self.name = name
 end
 

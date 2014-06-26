@@ -8,19 +8,19 @@ local dg = require('grammar_dg')
 local module = {}
 
 --
--- Transition collection
+-- Actions collection
 --
 
-module.TransitionCollection = class.class('TransitionCollection')
+module.ActionCollection = class.class('ActionCollection')
 
-function module.TransitionCollection.method:__init(const)
+function module.ActionCollection.method:__init(const)
 	self._const = const or false
 	self._actions = {
 		timeouts = {}
 	}
 end
 
-function module.TransitionCollection.method:on(action)
+function module.ActionCollection.method:on(action)
 	if not action.event then
 		error("action must have an event", 2)
 	end
@@ -76,7 +76,7 @@ end
 --
 -- State
 --
-module.State = class.class('State', module.TransitionCollection)
+module.State = class.class('State', module.ActionCollection)
 
 function module.State.method:__init(name)
 	class.super(module.State).__init(self, true)
@@ -91,7 +91,7 @@ function module.State.method:__init(name)
 end
 
 function module.State.method:setdefaults(defaults)
-	assert(class.classof(defaults) == module.TransitionCollection, "can only set default with a raw TransitionCollection")
+	assert(class.classof(defaults) == module.ActionCollection, "can only set default with a raw ActionCollection")
 	for name, a in pairs(defaults._actions) do
 		-- Don't add action to state that doesn't support it
 		if self._actions[name] then
