@@ -308,7 +308,7 @@ local other_direction = {
 	down = 'up'
 };
 
-function dissector.other_direction(dir)
+function dissector.opposite_direction(dir)
 	return other_direction[dir]
 end
 

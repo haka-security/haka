@@ -599,14 +599,14 @@ function tcp_connection_dissector.method:_sendpkt(pkt, direction)
 	self:send(direction)
 
 	self.stream[direction]:seq(pkt)
-	self.stream[haka.dissector.other_direction(direction)]:ack(pkt)
+	self.stream[haka.dissector.opposite_direction(direction)]:ack(pkt)
 	pkt:send()
 end
 
 function tcp_connection_dissector.method:_send(direction)
 	if self.stream then
 		local stream = self.stream[direction]
-		local other_stream = self.stream[haka.dissector.other_direction(direction)]
+		local other_stream = self.stream[haka.dissector.opposite_direction(direction)]
 
 		local pkt = stream:pop()
 		while pkt do

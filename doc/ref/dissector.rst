@@ -33,7 +33,7 @@ Utilities
 
     Protected call for a function inside a dissector context.
 
-.. haka:function:: other_direction(dir) -> other_dir
+.. haka:function:: opposite_direction(dir) -> other_dir
 
     :param dir: Direction ``'up'`` or ``'down'``.
     :paramtype dir: string
