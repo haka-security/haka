@@ -11,7 +11,7 @@ local TestState = class.class('TestState', haka.state_machine.State)
 
 function TestState.method:__init()
 	class.super(TestState).__init(self)
-	table.merge(self._transitions, {
+	table.merge(self._actions, {
 		test = {},
 	});
 end
@@ -145,7 +145,7 @@ haka.rule {
 		end
 
 		if context.cnt < 2 then
-			context.instance:transition('test', context.cnt, string.format("hello from state '%s'", context.instance.current))
+			context.instance:trigger('test', context.cnt, string.format("hello from state '%s'", context.instance.current))
 			context.cnt = context.cnt+1
 		end
 	end

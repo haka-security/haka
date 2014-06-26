@@ -83,7 +83,7 @@ local TcpState = class.class("TcpState", haka.state_machine.State)
 
 function TcpState.method:__init()
 	class.super(TcpState).__init(self)
-	table.merge(self._transitions, {
+	table.merge(self._actions, {
 		input  = {},
 		output = {},
 		reset  = {},
@@ -93,15 +93,15 @@ end
 function TcpState.method:_update(state_machine, direction, pkt)
 	if pkt.flags.rst then
 		state_machine.owner:_sendpkt(pkt, direction)
-		state_machine:transition('reset', pkt)
+		state_machine:trigger('reset', pkt)
 		return
 	end
 
 	if direction == state_machine.owner.input then
-		state_machine:transition('input', pkt)
+		state_machine:trigger('input', pkt)
 	else
 		assert(direction == state_machine.owner.output)
-		state_machine:transition('output', pkt)
+		state_machine:trigger('output', pkt)
 	end
 end
 
@@ -629,7 +629,7 @@ function tcp_connection_dissector.method:send(direction)
 end
 
 function tcp_connection_dissector.method:drop()
-	self.state:transition('reset')
+	self.state:trigger('reset')
 end
 
 function tcp_connection_dissector.method:_forgereset(direction)

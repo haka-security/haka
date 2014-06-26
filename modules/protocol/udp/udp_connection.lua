@@ -60,14 +60,14 @@ local UdpState = class.class("UdpState", haka.state_machine.State)
 
 function UdpState.method:__init()
 	class.super(UdpState).__init(self)
-	table.merge(self._transitions, {
+	table.merge(self._actions, {
 		receive  = {},
 		drop = {},
 	});
 end
 
 function UdpState.method:_update(state_machine, direction, pkt)
-	state_machine:transition('receive', pkt, direction)
+	state_machine:trigger('receive', pkt, direction)
 end
 
 udp_connection_dissector.state_machine = haka.state_machine.new("udp", function ()
@@ -157,13 +157,13 @@ end
 
 function udp_connection_dissector.method:init(connection)
 	self.connection = connection
-	self.state = udp_connection_dissector.state_machine:instanciate(self)
+	self.state_machine = udp_connection_dissector.state_machine:instanciate(self)
 end
 
 function udp_connection_dissector.method:emit(direction, pkt)
 	self.connection:update_stat(direction, pkt.ip.len)
 
-	self.state:update(direction, pkt)
+	self.state_machine:update(direction, pkt)
 end
 
 function udp_connection_dissector.method:send(pkt, payload, clone)
@@ -175,7 +175,7 @@ function udp_connection_dissector.method:drop(pkt)
 	if pkt then
 		return pkt:drop()
 	else
-		return self.state:transition('drop')
+		return self.state_machine:trigger('drop')
 	end
 end
 

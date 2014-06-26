@@ -52,10 +52,10 @@ function states.StateMachine.method:compile()
 			end
 
 			-- Mark states as used
-			for _, event in pairs(s._transitions) do
-				for _, t in ipairs(event) do
-					if t.jump then
-						unused[t.jump] = nil
+			for _, event in pairs(s._actions) do
+				for _, a in ipairs(event) do
+					if a.jump then
+						unused[a.jump] = nil
 					end
 				end
 			end
@@ -124,7 +124,7 @@ function states.StateMachineInstance.method:update(...)
 	current._state:_update(self, ...)
 end
 
-function states.StateMachineInstance.method:transition(name, ...)
+function states.StateMachineInstance.method:trigger(name, ...)
 	local current = self.states[self._instance.state]
 	if not current then
 		error("state machine instance has finished")
@@ -132,7 +132,7 @@ function states.StateMachineInstance.method:transition(name, ...)
 
 	local trans = current[name]
 	if not trans then
-		error(string.format("no transition named '%s' on state '%s'", name, current._name))
+		error(string.format("no event named '%s' on state '%s'", name, current._name))
 	end
 
 	local newstate = trans(self.owner, ...)
@@ -168,7 +168,7 @@ local function state_machine_env(state_machine)
 	state_machine_int.finish = state.State:new("finish")
 	state_machine_int.fail = state.State:new("fail")
 
-	-- Special default transition collection
+	-- Special default actions collection
 	state_machine_int.any = state_machine._default
 
 	-- Events proxying

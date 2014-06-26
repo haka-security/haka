@@ -11,7 +11,7 @@ local TestState = class.class('TestState', haka.state_machine.State)
 
 function TestState.method:__init()
 	class.super(TestState).__init(self)
-	table.merge(self._transitions, {
+	table.merge(self._actions, {
 		test = {},
 	});
 end
