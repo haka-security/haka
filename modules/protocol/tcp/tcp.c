@@ -76,7 +76,8 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 #else
 	uint8    hdr_len:4, res:4;
 #endif
-	} hdrlen;
+	} _hdrlen;
+	size_t hdrlen;
 
 	/* Not a TCP packet */
 	if (ipv4_get_proto(packet) != TCP_PROTO) {
@@ -102,22 +103,23 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 
 	/* extract header len (at offset 12, see struct tcp_header) */
 	vbuffer_position(&packet->payload, &hdrleniter, 12);
-	*(uint8 *)&hdrlen = vbuffer_iterator_getbyte(&hdrleniter);
+	*(uint8 *)&_hdrlen = vbuffer_iterator_getbyte(&hdrleniter);
+	hdrlen = _hdrlen.hdr_len << TCP_HDR_LEN;
 
-	if (hdrlen.hdr_len << TCP_HDR_LEN < sizeof(struct tcp_header)) {
+	if (hdrlen < sizeof(struct tcp_header) || !vbuffer_check_size(&packet->payload, hdrlen, NULL)) {
 		alert_invalid_packet(packet, L"corrupted tcp packet, header length is too small");
 		ipv4_action_drop(packet);
 		free(tcp);
 		return NULL;
 	}
 
-	if (!tcp_flatten_header(&packet->payload, hdrlen.hdr_len << TCP_HDR_LEN)) {
+	if (!tcp_flatten_header(&packet->payload, hdrlen)) {
 		assert(check_error());
 		free(tcp);
 		return NULL;
 	}
 
-	if (!tcp_extract_payload(tcp, hdrlen.hdr_len << TCP_HDR_LEN, ALL)) {
+	if (!tcp_extract_payload(tcp, hdrlen, ALL)) {
 		assert(check_error());
 		free(tcp);
 		return NULL;
