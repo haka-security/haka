@@ -156,13 +156,13 @@ end
 
 function udp_connection_dissector.method:init(connection)
 	self.connection = connection
-	self.state_machine = udp_connection_dissector.state_machine:instanciate(self)
+	self.state = udp_connection_dissector.state_machine:instanciate(self)
 end
 
 function udp_connection_dissector.method:emit(direction, pkt)
 	self.connection:update_stat(direction, pkt.ip.len)
 
-	self.state_machine:update(direction, pkt)
+	self.state:update(direction, pkt)
 end
 
 function udp_connection_dissector.method:send(pkt, payload, clone)
@@ -174,7 +174,7 @@ function udp_connection_dissector.method:drop(pkt)
 	if pkt then
 		return pkt:drop()
 	else
-		return self.state_machine:trigger('drop')
+		return self.state:trigger('drop')
 	end
 end
 
