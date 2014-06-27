@@ -10,6 +10,9 @@ end
 
 function console.stop()
 	hakactl.remote('any', function ()
+		haka.log("core", "request to stop haka received")
 		return haka.exit()
 	end)
+
+	haka.exit()
 end

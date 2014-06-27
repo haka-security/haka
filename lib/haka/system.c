@@ -87,6 +87,5 @@ const char *haka_path()
 
 void haka_exit()
 {
-	messagef(HAKA_LOG_INFO, L"core", L"request to stop haka received");
 	kill(getpid(), SIGTERM);
 }
