@@ -557,6 +557,8 @@ int main(int argc, char *argv[])
 
 	start();
 
+	message(HAKA_LOG_INFO, L"core", L"stopping haka");
+
 	clean_exit();
 	return 0;
 }
