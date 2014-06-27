@@ -513,7 +513,9 @@ bool thread_pool_stop(struct thread_pool *pool, int force)
 	case 1:
 		for (i=0; i<pool->count; ++i) {
 			if (pool->threads[i] && pool->threads[i]->engine) {
-				engine_thread_force_unblock(pool->threads[i]->engine);
+				engine_thread_interrupt_begin(pool->threads[i]->engine);
+
+				/* We will never call end in this case as haka should stop */
 			}
 		}
 		break;

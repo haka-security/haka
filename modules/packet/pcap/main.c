@@ -8,6 +8,7 @@
 #include <haka/parameters.h>
 #include <haka/thread.h>
 #include <haka/error.h>
+#include <haka/engine.h>
 #include <haka/container/list.h>
 
 #include <stdio.h>
@@ -444,6 +445,9 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			}
 		}
 
+		FD_SET(engine_thread_interrupt_fd(), &read_set);
+		if (engine_thread_interrupt_fd() > max_fd) max_fd = engine_thread_interrupt_fd();
+
 		ret = select(max_fd+1, &read_set, NULL, NULL, NULL);
 		if (ret < 0) {
 			if (errno == EINTR) {
@@ -470,7 +474,10 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				}
 			}
 
-			assert(pd);
+			if (!pd) {
+				/* interruption */
+				return 0;
+			}
 
 			ret = pcap_next_ex(pd->pd, &header, &p);
 			if (ret == -1) {

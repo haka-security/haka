@@ -43,6 +43,8 @@ bool                           engine_thread_remote_launch(struct engine_thread 
 int                            engine_thread_lua_remote_launch(struct engine_thread *thread, struct lua_State *L, int index);
 char*                          engine_thread_raw_lua_remote_launch(struct engine_thread *thread, const char *code, size_t *size);
 void                           engine_thread_check_remote_launch(struct engine_thread *thread);
-void                           engine_thread_force_unblock(struct engine_thread *thread);
+void                           engine_thread_interrupt_begin(struct engine_thread *thread);
+void                           engine_thread_interrupt_end(struct engine_thread *thread);
+int                            engine_thread_interrupt_fd();
 
 #endif /* _HAKA_ENGINE_H */

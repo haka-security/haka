@@ -6,6 +6,7 @@
 #include <haka/log.h>
 #include <haka/error.h>
 #include <haka/system.h>
+#include <haka/engine.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -631,41 +632,66 @@ static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt,
 
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
-	const int rv = recv(state->fd, state->receive_buffer,
-			sizeof(state->receive_buffer), 0);
-	if (rv < 0) {
-		if (errno != EINTR) {
+	int rv;
+	fd_set read_set;
+	int max_fd = -1;
+	const int interrupt_fd = engine_thread_interrupt_fd();
+
+	FD_ZERO(&read_set);
+
+	FD_SET(state->fd, &read_set);
+	max_fd = state->fd;
+
+	FD_SET(interrupt_fd, &read_set);
+	if (interrupt_fd > max_fd) max_fd = interrupt_fd;
+
+	rv = select(max_fd+1, &read_set, NULL, NULL, NULL);
+	if (rv <= 0) {
+		if (rv == -1 && errno != EINTR) {
 			messagef(HAKA_LOG_ERROR, MODULE_NAME, L"packet reception failed, %s", errno_error(errno));
 		}
 		return 0;
 	}
 
-	if (nfq_handle_packet(state->handle, state->receive_buffer, rv) == 0) {
-		if (state->current_packet) {
-			state->current_packet->state = state;
-			*pkt = (struct packet*)state->current_packet;
-
-			if (pcap) {
-				const uint8 *data;
-				size_t len;
-				assert(vbuffer_isflat(&(*pkt)->payload));
-				data = vbuffer_flatten(&(*pkt)->payload, &len);
-				assert(data);
-
-				dump_pcap(&pcap->in, state->current_packet, data, len);
+	if (FD_ISSET(state->fd, &read_set)) {
+		rv = recv(state->fd, state->receive_buffer, sizeof(state->receive_buffer), 0);
+		if (rv < 0) {
+			if (errno != EINTR) {
+				messagef(HAKA_LOG_ERROR, MODULE_NAME, L"packet reception failed, %s", errno_error(errno));
 			}
-
-			state->current_packet = NULL;
 			return 0;
 		}
+
+		if (nfq_handle_packet(state->handle, state->receive_buffer, rv) == 0) {
+			if (state->current_packet) {
+				state->current_packet->state = state;
+				*pkt = (struct packet*)state->current_packet;
+
+				if (pcap) {
+					const uint8 *data;
+					size_t len;
+					assert(vbuffer_isflat(&(*pkt)->payload));
+					data = vbuffer_flatten(&(*pkt)->payload, &len);
+					assert(data);
+
+					dump_pcap(&pcap->in, state->current_packet, data, len);
+				}
+
+				state->current_packet = NULL;
+				return 0;
+			}
+			else {
+				return state->error;
+			}
+		}
 		else {
-			return state->error;
+			message(HAKA_LOG_ERROR, MODULE_NAME, L"packet processing failed");
+			return 0;
 		}
 	}
-	else {
-		message(HAKA_LOG_ERROR, MODULE_NAME, L"packet processing failed");
-		return 0;
-	}
+
+	/* Interruption */
+	return 0;
 }
 
 static void packet_verdict(struct packet *orig_pkt, filter_result result)

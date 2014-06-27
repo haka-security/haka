@@ -15,6 +15,8 @@
 #include <string.h>
 #include <assert.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 
 struct remote_launch {
@@ -33,6 +35,8 @@ struct engine_thread {
 	mutex_t                        remote_launch_lock;
 	thread_t                       thread;
 	int                            id;
+	atomic_t                       interrupt_count;
+	int                            interrupt_fd[2];
 	struct lua_State              *lua_state;
 	struct list2                   remote_launches;
 };
@@ -41,23 +45,8 @@ static local_storage_t engine_thread_localstorage;
 static struct engine_thread **engine_threads = NULL;
 static size_t engine_threads_count = 0;
 
-static void _handler(int sig, siginfo_t *si, void *uc)
-{
-	/* Nothing to do */
-}
-
 INIT static void engine_init()
 {
-	struct sigaction sa;
-
-	sa.sa_flags = SA_SIGINFO;
-	sa.sa_sigaction = _handler;
-	sigemptyset(&sa.sa_mask);
-	if (sigaction(SIGUSR1, &sa, NULL) == -1) {
-		messagef(HAKA_LOG_FATAL, L"engine", L"%s", errno_error(errno));
-		abort();
-	}
-
 	local_storage_init(&engine_thread_localstorage, NULL);
 }
 
@@ -83,7 +72,7 @@ bool engine_prepare(int thread_count)
 
 struct engine_thread *engine_thread_init(struct lua_State *state, int id)
 {
-	sigset_t mask;
+	int err;
 
 	struct engine_thread *new = malloc(sizeof(struct engine_thread));
 	if (!new) {
@@ -97,12 +86,13 @@ struct engine_thread *engine_thread_init(struct lua_State *state, int id)
 	new->thread = thread_current();
 	new->lua_state = state;
 	new->id = id;
+	atomic_set(&new->interrupt_count, 0);
 	list2_init(&new->remote_launches);
 	thread_setid(id);
 
-	sigfillset(&mask);
-	sigaddset(&mask, SIGUSR1);
-	if (!thread_sigmask(SIG_UNBLOCK, &mask, NULL)) {
+	err = pipe2(new->interrupt_fd, O_NONBLOCK);
+	if (err) {
+		error(L"%s", errno_error(errno));
 		free(new);
 		return NULL;
 	}
@@ -199,9 +189,11 @@ bool engine_thread_remote_launch(struct engine_thread *thread, void (*callback)(
 	list2_insert(list2_end(&thread->remote_launches), &new.list);
 	mutex_unlock(&thread->remote_launch_lock);
 
-	engine_thread_force_unblock(thread);
+	engine_thread_interrupt_begin(thread);
 
 	semaphore_wait(&new.sync);
+
+	engine_thread_interrupt_end(thread);
 
 	if (new.error) {
 		error(new.error);
@@ -358,8 +350,41 @@ void engine_thread_check_remote_launch(struct engine_thread *thread)
 	}
 }
 
-void engine_thread_force_unblock(struct engine_thread *thread)
+static const char interrupt_magic = 0xaa;
+
+void engine_thread_interrupt_begin(struct engine_thread *thread)
 {
-	/* Send SIGUSR1 to exit any waiting function (capture function for instance) */
-	thread_signal(thread->thread, SIGUSR1);
+	if (atomic_inc(&thread->interrupt_count) == 1) {
+		const int err = write(thread->interrupt_fd[1], &interrupt_magic, 1);
+		if (err != 1) {
+			if (err == -1) {
+				messagef(HAKA_LOG_ERROR, L"engine", L"engine interrupt error: %s", errno_error(errno));
+			}
+			else {
+				message(HAKA_LOG_ERROR, L"engine", L"engine interrupt error");
+			}
+		}
+	}
+}
+
+void engine_thread_interrupt_end(struct engine_thread *thread)
+{
+	if (atomic_dec(&thread->interrupt_count) == 0) {
+		char byte;
+		const int err = read(thread->interrupt_fd[0], &byte, 1);
+		if (err != 1 || byte != interrupt_magic) {
+			if (err == -1) {
+				messagef(HAKA_LOG_ERROR, L"engine", L"engine interrupt error: %s", errno_error(errno));
+			}
+			else {
+				message(HAKA_LOG_ERROR, L"engine", L"engine interrupt error");
+			}
+		}
+	}
+}
+
+int engine_thread_interrupt_fd()
+{
+	struct engine_thread *thread = engine_thread_current();
+	return thread->interrupt_fd[0];
 }
