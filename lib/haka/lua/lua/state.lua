@@ -134,11 +134,11 @@ function module.State.method:_dump_graph(file)
 	end
 end
 
-module.BidirectionnalState = class.class('BidirectionnalState', module.State)
+module.BidirectionalState = class.class('BidirectionalState', module.State)
 
-module.BidirectionnalState._events = { 'up', 'down', 'parse_error', 'missing_grammar' }
+module.BidirectionalState._events = { 'up', 'down', 'parse_error', 'missing_grammar' }
 
-function module.BidirectionnalState.method:__init(gup, gdown)
+function module.BidirectionalState.method:__init(gup, gdown)
 	if gup and not class.isa(gup, dg.Entity) then
 		error("bidirectionnal state expect an exported element of a grammar", 3)
 	end
@@ -147,7 +147,7 @@ function module.BidirectionnalState.method:__init(gup, gdown)
 		error("bidirectionnal state expect an exported element of a grammar", 3)
 	end
 
-	class.super(module.BidirectionnalState).__init(self)
+	class.super(module.BidirectionalState).__init(self)
 
 	self._grammar = {
 		up = gup,
@@ -155,7 +155,7 @@ function module.BidirectionnalState.method:__init(gup, gdown)
 	}
 end
 
-function module.BidirectionnalState.method:_update(state_machine, payload, direction, ...)
+function module.BidirectionalState.method:_update(state_machine, payload, direction, ...)
 	if not self._grammar[direction] then
 		state_machine:trigger("missing_grammar", direction, payload, ...)
 	else

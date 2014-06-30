@@ -371,7 +371,7 @@ end)
 --
 
 http_dissector.state_machine = haka.state_machine.new("http", function ()
-	state_type(BidirectionnalState)
+	state_type(BidirectionalState)
 
 	request  = state(http_dissector.grammar.request, nil)
 	response = state(nil, http_dissector.grammar.response)

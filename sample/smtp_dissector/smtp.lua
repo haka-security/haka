@@ -114,7 +114,7 @@ end)
 --
 
 SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
-	state_type(BidirectionnalState)
+	state_type(BidirectionalState)
 
 	session_initiation = state(nil, SmtpDissector.grammar.smtp_responses)
 	client_initiation = state(SmtpDissector.grammar.smtp_command, nil)

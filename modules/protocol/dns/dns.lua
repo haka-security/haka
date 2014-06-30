@@ -268,7 +268,7 @@ end
 --
 
 dns_dissector.state_machine = haka.state_machine.new("dns", function ()
-	state_type(BidirectionnalState)
+	state_type(BidirectionalState)
 
 	message = state(dns_dissector.grammar.message, dns_dissector.grammar.message)
 
