@@ -43,27 +43,25 @@ static void help(const char *program)
 	usage(stdout, program);
 
 	fprintf(stdout, "Options:\n");
-	fprintf(stdout, "\t-h,--help:             Display this information\n");
-	fprintf(stdout, "\t--version:             Display version information\n");
-	fprintf(stdout, "\t-c,--config <conf>:    Load a specific configuration file\n"
-					"\t                         (default: %s/etc/haka/haka.conf)\n", haka_path());
-	fprintf(stdout, "\t-r,--rule <rule>:      Override the rule configuration file\n");
-	fprintf(stdout, "\t-d,--debug:            Display debug output\n");
+	fprintf(stdout, "\t-h,--help:              Display this information\n");
+	fprintf(stdout, "\t--version:              Display version information\n");
+	fprintf(stdout, "\t-c,--config <conf>:     Load a specific configuration file\n"
+					"\t                          (default: %s/etc/haka/haka.conf)\n", haka_path());
+	fprintf(stdout, "\t-r,--rule <rule>:       Override the rule configuration file\n");
+	fprintf(stdout, "\t-d,--debug:             Display debug output\n");
 	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
-	fprintf(stdout, "\t                       Override configuration parameter\n");
-	fprintf(stdout, "\t-l,--loglevel <level>: Set the log level\n");
-	fprintf(stdout, "\t                         (debug, info, warning, error or fatal)\n");
-	fprintf(stdout, "\t--debug-lua:           Activate lua debugging (and keep haka in foreground)\n");
-	fprintf(stdout, "\t--debug-grammar:       Activate grammar internal graph dump (saved in file <name>.dot)\n");
-	fprintf(stdout, "\t--debug-state-machine: Activate state machine graph dump (saved in file <name>.dot)\n");
-	fprintf(stdout, "\t--no-daemon:           Do no run in the background\n");
+	fprintf(stdout, "\t                        Override configuration parameter\n");
+	fprintf(stdout, "\t-l,--loglevel <level>:  Set the log level\n");
+	fprintf(stdout, "\t                          (debug, info, warning, error or fatal)\n");
+	fprintf(stdout, "\t--debug-lua:            Activate lua debugging (and keep haka in foreground)\n");
+	fprintf(stdout, "\t--dump-dissector-graph: Dump dissector internals (grammar and state machine) in file <name>.dot\n");
+	fprintf(stdout, "\t--no-daemon:            Do no run in the background\n");
 }
 
 static bool daemonize = true;
 static char *config = NULL;
 static bool lua_debugger = false;
-static bool grammar_debug = false;
-static bool state_machine_debug = false;
+static bool dissector_graph = false;
 
 struct config_override {
 	char *key;
@@ -101,18 +99,17 @@ static int parse_cmdline(int *argc, char ***argv)
 	int index = 0;
 
 	static struct option long_options[] = {
-		{ "version",             no_argument,       0, 'v' },
-		{ "help",                no_argument,       0, 'h' },
-		{ "config",              required_argument, 0, 'c' },
-		{ "debug",               no_argument,       0, 'd' },
-		{ "loglevel",            required_argument, 0, 'l' },
-		{ "debug-lua",           no_argument,       0, 'L' },
-		{ "debug-grammar",       no_argument,       0, 'G' },
-		{ "debug-state-machine", no_argument,       0, 'S' },
-		{ "no-daemon",           no_argument,       0, 'D' },
-		{ "opt",                 required_argument, 0, 'o' },
-		{ "rule",                required_argument, 0, 'r' },
-		{ 0,                     0,                 0, 0 }
+		{ "version",              no_argument,       0, 'v' },
+		{ "help",                 no_argument,       0, 'h' },
+		{ "config",               required_argument, 0, 'c' },
+		{ "debug",                no_argument,       0, 'd' },
+		{ "loglevel",             required_argument, 0, 'l' },
+		{ "debug-lua",            no_argument,       0, 'L' },
+		{ "dump-dissector-graph", no_argument,       0, 'G' },
+		{ "no-daemon",            no_argument,       0, 'D' },
+		{ "opt",                  required_argument, 0, 'o' },
+		{ "rule",                 required_argument, 0, 'r' },
+		{ 0,                      0,                 0, 0 }
 	};
 
 	while ((c = getopt_long(*argc, *argv, "dl:hc:r:", long_options, &index)) != -1) {
@@ -157,11 +154,7 @@ static int parse_cmdline(int *argc, char ***argv)
 			break;
 
 		case 'G':
-			grammar_debug = true;
-			break;
-
-		case 'S':
-			state_machine_debug = true;
+			dissector_graph = true;
 			break;
 
 		case 'o':
@@ -509,7 +502,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	prepare(-1, lua_debugger, grammar_debug, state_machine_debug);
+	prepare(-1, lua_debugger, dissector_graph);
 
 	pid_file = fopen(HAKA_PID_FILE, "w");
 	if (!pid_file) {

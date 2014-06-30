@@ -134,7 +134,7 @@ static void cleanup_thread_state(struct thread_state *state)
 }
 
 static struct thread_state *init_thread_state(struct packet_module *packet_module,
-		int thread_id, bool grammar_debug, bool state_machine_debug)
+		int thread_id, bool dissector_graph)
 {
 	struct thread_state *state;
 
@@ -164,13 +164,13 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	/* Set grammar debugging */
 	lua_getglobal(state->lua->L, "haka");
 	lua_getfield(state->lua->L, -1, "grammar");
-	lua_pushboolean(state->lua->L, grammar_debug);
+	lua_pushboolean(state->lua->L, dissector_graph);
 	lua_setfield(state->lua->L, -2, "debug");
 
 	/* Set state machine debugging */
 	lua_getglobal(state->lua->L, "haka");
 	lua_getfield(state->lua->L, -1, "state_machine");
-	lua_pushboolean(state->lua->L, state_machine_debug);
+	lua_pushboolean(state->lua->L, dissector_graph);
 	lua_setfield(state->lua->L, -2, "debug");
 
 	/* Load Lua sources */
@@ -335,7 +335,7 @@ static void *thread_main_loop(void *_state)
 }
 
 struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module,
-		bool attach_debugger, bool grammar_debug, bool state_machine_debug)
+		bool attach_debugger, bool dissector_graph)
 {
 	int i;
 	struct thread_pool *pool;
@@ -379,7 +379,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 	}
 
 	for (i=0; i<count; ++i) {
-		pool->threads[i] = init_thread_state(packet_module, i, grammar_debug, state_machine_debug);
+		pool->threads[i] = init_thread_state(packet_module, i, dissector_graph);
 		if (!pool->threads[i]) {
 			error(L"thread initialization error");
 			thread_pool_cleanup(pool);
