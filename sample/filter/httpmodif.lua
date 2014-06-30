@@ -41,7 +41,7 @@ safe_update = haka.rule_group{
 	end
 }
 
--- Traffic to all websites in the whitelist is unconditionnally allowed
+-- Traffic to all websites in the whitelist is unconditionally allowed
 safe_update:rule(
 	function (http, response)
 		local host = http.request.headers['Host'] or ''
