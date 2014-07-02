@@ -90,7 +90,7 @@ Events
 
     Event triggered whenever a new TCP connection is being closed.
 
-.. haka:function:: tcp_connection.events.receive_data(flow, stream, current, direction)
+.. haka:function:: tcp_connection.events.receive_data(flow, current, direction)
     :module:
     :objtype: event
 
@@ -107,10 +107,11 @@ Events
 
     :param flow: TCP flow.
     :paramtype flow: :haka:class:`TcpConnectionDissector`
-    :param stream: TCP data stream.
-    :paramtype stream: :haka:class:`vbuffer_stream`
-    :param current: Current position in the stream.
-    :paramtype current: :haka:class:`vbuffer_iterator`
+    :param current: Current position in the stream. Will be a
+        :haka:class:`vbuffer_iterator` if streamed option is on,
+        :haka:class:`vbuffer_sub` otherwise.
+    :paramtype current: :haka:class:`vbuffer_iterator` or
+        :haka:class:`vbuffer_sub`
     :param direction: Data direction (``'up'`` or ``'down'``).
     :paramtype direction: string
 
