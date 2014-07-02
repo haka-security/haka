@@ -117,6 +117,17 @@ Events
 
     Event triggered when some data are available on a TCP stream.
 
+    **Usage:**
+
+    ::
+
+        haka.rule{
+            hook = tcp.events.receive_data,
+            options = { streamed = true },
+            eval = function(flow, current, direction)
+                -- do some check and reaction
+            end
+        }
 
 Helper
 ------
