@@ -186,14 +186,11 @@ bool engine_thread_remote_launch(struct engine_thread *thread, void (*callback)(
 	semaphore_init(&new.sync, 0);
 
 	mutex_lock(&thread->remote_launch_lock);
+	engine_thread_interrupt_begin(thread);
 	list2_insert(list2_end(&thread->remote_launches), &new.list);
 	mutex_unlock(&thread->remote_launch_lock);
 
-	engine_thread_interrupt_begin(thread);
-
 	semaphore_wait(&new.sync);
-
-	engine_thread_interrupt_end(thread);
 
 	if (new.error) {
 		error(new.error);
@@ -330,6 +327,9 @@ static void _engine_thread_check_remote_launch(void *_thread)
 		else {
 			current->state = 0;
 		}
+
+		/* This end match the begin done in the function engine_thread_remote_launch() */
+		engine_thread_interrupt_end(thread);
 
 		iter = list2_erase(iter);
 		remote_launch_release(thread, current);
