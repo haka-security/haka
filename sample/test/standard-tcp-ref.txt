@@ -1,3 +1,4 @@
+debug cnx: opening connection 192.168.10.1:52110 -> 192.168.20.1:443
 debug filter: entering packet filtering rules : 52110 --> 443
 alert: id = = <>
 	description = Packet dropped : drop by default
@@ -7,6 +8,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1, 443
 	}
+debug cnx: dropping connection 192.168.10.1:52110 -> 192.168.20.1:443
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -98,9 +100,10 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug cnx: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 50706 --> 80
 warn filter: authorizing http traffic
-debug cnx: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug filter: entering packet filtering rules : 51584 --> 80
 alert: id = = <>
 	description = Packet dropped : drop by default
@@ -110,6 +113,8 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.255, 80
 	}
+debug cnx: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
+debug cnx: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug filter: entering packet filtering rules : 51584 --> 80
 alert: id = = <>
 	description = Packet dropped : drop by default
@@ -119,10 +124,12 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.255, 80
 	}
+debug cnx: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
+debug cnx: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
 debug filter: entering packet filtering rules : 37017 --> 22
 warn filter: authorizing ssh traffic
 warn filter: no available dissector for ssh
-debug cnx: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
+debug cnx: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug filter: entering packet filtering rules : 34191 --> 22
 alert: id = = <>
 	description = Packet dropped : drop by default
@@ -132,6 +139,8 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.255, 22
 	}
+debug cnx: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
+debug cnx: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug filter: entering packet filtering rules : 34191 --> 22
 alert: id = = <>
 	description = Packet dropped : drop by default
@@ -141,9 +150,10 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.255, 22
 	}
+debug cnx: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
+debug cnx: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
 debug filter: entering packet filtering rules : 50710 --> 80
 warn filter: authorizing http traffic
-debug cnx: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
 alert: id = = <>
 	description = /bin/sh shellcode detected
 	sources = {
@@ -154,5 +164,8 @@ alert: id = = <>
 	}
 debug cnx: dropping connection 192.168.10.1:50710 -> 192.168.20.1:80
 debug cnx: closing connection 192.168.10.1:50710 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug cnx: closing connection 192.168.10.1:37017 -> 192.168.20.1:22
+debug cnx: closing connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug cnx: closing connection 192.168.10.1:50706 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:52110 -> 192.168.20.1:443

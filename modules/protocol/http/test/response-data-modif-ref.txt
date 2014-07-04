@@ -1,5 +1,5 @@
-debug http: selecting http dissector on flow
 debug cnx: opening connection 10.2.96.127:57838 -> 10.2.104.129:80
+debug http: selecting http dissector on flow
 == RESPONSE DATA == /twiki/bin/view/
 == RESPONSE DATA == /robots.txt
 == RESPONSE DATA == /twiki/pub/TWiki/TWikiLogos/twikiRobot46x50.gif

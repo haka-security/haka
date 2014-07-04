@@ -1,5 +1,5 @@
-debug http: selecting http dissector on flow
 debug cnx: opening connection 127.0.0.1:42075 -> 127.0.0.1:80
+debug http: selecting http dissector on flow
 HTTP REQUEST
 class HttpRequestResult {
   headers : class HeaderResult {

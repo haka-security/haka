@@ -1,12 +1,12 @@
-debug http: selecting http dissector on flow
 debug cnx: opening connection 10.2.96.128:51520 -> 10.2.104.130:80
-debug filter: /
 debug http: selecting http dissector on flow
+debug filter: /
 debug cnx: opening connection 10.2.96.128:51521 -> 10.2.104.130:80
+debug http: selecting http dissector on flow
 debug filter: /404notfoud.html
 debug cnx: dropping connection 10.2.96.128:51521 -> 10.2.104.130:80
-debug http: selecting http dissector on flow
 debug cnx: opening connection 10.2.96.128:51522 -> 10.2.104.130:80
+debug http: selecting http dissector on flow
 debug filter: /404notfoud.html
 debug cnx: dropping connection 10.2.96.128:51522 -> 10.2.104.130:80
 debug cnx: closing connection 10.2.96.128:51522 -> 10.2.104.130:80

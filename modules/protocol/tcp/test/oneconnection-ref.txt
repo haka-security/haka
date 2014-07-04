@@ -1,14 +1,14 @@
-info test: new tcp connection 192.168.10.1:32872 -> 192.168.20.1:80
 debug cnx: opening connection 192.168.10.1:32872 -> 192.168.20.1:80
+info test: new tcp connection 192.168.10.1:32872 -> 192.168.20.1:80
 info test: end tcp connection 192.168.10.1:32872 -> 192.168.20.1:80
-info test: new tcp connection 192.168.10.1:32873 -> 192.168.20.1:80
 debug cnx: opening connection 192.168.10.1:32873 -> 192.168.20.1:80
+info test: new tcp connection 192.168.10.1:32873 -> 192.168.20.1:80
 info test: end tcp connection 192.168.10.1:32873 -> 192.168.20.1:80
-info test: new tcp connection 192.168.10.1:32874 -> 192.168.20.1:80
 debug cnx: opening connection 192.168.10.1:32874 -> 192.168.20.1:80
+info test: new tcp connection 192.168.10.1:32874 -> 192.168.20.1:80
 info test: end tcp connection 192.168.10.1:32874 -> 192.168.20.1:80
-info test: new tcp connection 192.168.10.1:32875 -> 192.168.20.1:80
 debug cnx: opening connection 192.168.10.1:32875 -> 192.168.20.1:80
+info test: new tcp connection 192.168.10.1:32875 -> 192.168.20.1:80
 info test: end tcp connection 192.168.10.1:32875 -> 192.168.20.1:80
 debug cnx: closing connection 192.168.10.1:32875 -> 192.168.20.1:80
 debug cnx: closing connection 192.168.10.1:32874 -> 192.168.20.1:80

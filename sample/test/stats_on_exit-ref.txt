@@ -1,18 +1,18 @@
-debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
-warn tcp_connection: retransmit packet (ignored)
-warn tcp_connection: retransmit packet (ignored)
-warn tcp_connection: retransmit packet (ignored)
 debug http: selecting http dissector on flow
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
 debug cnx: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
-warn tcp_connection: retransmit packet (ignored)
-warn tcp_connection: retransmit packet (ignored)
 debug http: selecting http dissector on flow
+warn tcp_connection: retransmit packet (ignored)
+warn tcp_connection: retransmit packet (ignored)
 debug cnx: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
 debug http: selecting http dissector on flow
 debug cnx: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
 warn tcp_connection: retransmit packet (ignored)
 warn tcp_connection: retransmit packet (ignored)
 warn tcp_connection: retransmit packet (ignored)

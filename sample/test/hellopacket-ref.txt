@@ -1,9 +1,9 @@
 info Hello: packet from 192.168.10.1 to 192.168.10.99
+debug cnx: opening connection 192.168.10.1:47161 -> 192.168.10.99:3000
 info Hello: TCP connection from 192.168.10.1:47161 to 192.168.10.99:3000
 alert: id = = <>
 	severity = low
 	description = A simple alert
-debug cnx: opening connection 192.168.10.1:47161 -> 192.168.10.99:3000
 info Hello: packet from 192.168.10.99 to 192.168.10.1
 info Hello: packet from 192.168.10.1 to 192.168.10.99
 info Hello: packet from 192.168.10.1 to 192.168.10.99
