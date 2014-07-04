@@ -30,14 +30,14 @@ This script can be ran with a pcap file provided in the sample directory.
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/filter/
-    $ hakapcap ipfilter.pcap ipfilter.lua
+    $ hakapcap ipfilter.lua ipfilter.pcap
 
 To create a pcap file containing all packets that were not dropped, run the following command:
 
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/filter/
-    $ hakapcap trace.pcap ipfilter.lua -o output.pcap
+    $ hakapcap ipfilter.lua trace.pcap -o output.pcap
 
 
 The resulting pcap file can be opened with wireshark to check that Haka correctly filtered the packets according to their IP source address.
@@ -58,7 +58,7 @@ To run this example, use the following commands:
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/filter/
-    $ hakapcap tcpfilter.pcap tcfilter.lua
+    $ hakapcap tcfilter.lua tcpfilter.pcap
 
 When running this script, Haka will output a high number of errors, complaining that the field ``destport`` doesn't exist. We will use Haka's debug facilities to find out precisely where the error occurs.
 
@@ -69,7 +69,7 @@ To start Haka in debugging mode, add ``--debug-lua`` at the end of the command l
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/filter/
-    $ hakapcap tcpfilter.pcap tcpfilter.lua --debug-lua
+    $ hakapcap tcpfilter.lua tcpfilter.pcap --debug-lua
 
 When a Lua error code occurs, the debugger breaks and outputs the error and a backtrace.
 

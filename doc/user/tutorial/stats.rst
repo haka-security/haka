@@ -16,7 +16,7 @@ This tutorial introduces two Haka script files: ``stats_on_exit`` and ``stats_in
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/stats
-    $ hakapcap <pcap_file> <script_stat_file>
+    $ hakapcap <script_stat_file> <pcap_file>
 
 .. note::
 

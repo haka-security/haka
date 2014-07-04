@@ -13,7 +13,7 @@ This tutorial introduces a set of Haka script files located at ``<haka_install_p
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/ruleset
-    $ hakapcap capture.pcap config.lua
+    $ hakapcap config.lua capture.pcap
 
 This rule set can also be used for live analysis of traffic with ``haka`` tool,
 but it's preferable to adjust some rules or config first.

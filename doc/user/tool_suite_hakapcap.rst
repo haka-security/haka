@@ -12,7 +12,7 @@ see the resulting decisions.
 
 .. code-block:: console
 
-     $ hakapcap [options] <pcapfile> <hakafile>
+     $ hakapcap [options] <hakafile> <pcapfile>
 
 Options
 -------
@@ -41,10 +41,10 @@ Options
 
     Start hakapcap and automatically attach the Haka debugger.
 
-.. option:: pcapfile
-
-    A pcap file containing the packets to filter.
-
 .. option:: hakafile
 
     A Haka policy file.
+
+.. option:: pcapfile
+
+    A pcap file containing the packets to filter.

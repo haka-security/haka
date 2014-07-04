@@ -20,7 +20,7 @@ Launch ``hakapcap`` with a pcap file and a lua script file as arguments.
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/hellopacket
-    $ hakapcap hellopacket.pcap hellopacket.lua
+    $ hakapcap hellopacket.lua hellopacket.pcap
 
 Hakapcap will first dump infos about registered dissectors and
 rules and then process the pcap file, outputing information on each packet (packet source

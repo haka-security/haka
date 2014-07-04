@@ -28,7 +28,7 @@
 
 static void usage(FILE *output, const char *program)
 {
-	fprintf(stdout, "Usage: %s [options] <pcapfile> <config>\n", program);
+	fprintf(stdout, "Usage: %s [options] <config> <pcapfile>\n", program);
 }
 
 static void help(const char *program)
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 		struct module *pcap = NULL;
 		struct parameters *args = parameters_create();
 
-		parameters_set_string(args, "file", argv[0]);
+		parameters_set_string(args, "file", argv[1]);
 		if (output) {
 			parameters_set_string(args, "output", output);
 		}
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Select configuration */
-	set_configuration_script(argv[1]);
+	set_configuration_script(argv[0]);
 
 	{
 		struct luadebug_user *user = luadebug_user_readline();

@@ -18,7 +18,7 @@ This tutorial introduces a set of Haka script files located at <haka_install_pat
 .. code-block:: console
 
     $ cd <haka_install_path>/share/haka/sample/qli
-    $ hakapcap sqli.pcap sqli-sample.lua
+    $ hakapcap sqli-sample.lua sqli.pcap
 
 All the samples are self-documented.
 
