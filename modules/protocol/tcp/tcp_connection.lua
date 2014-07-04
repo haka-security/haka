@@ -30,22 +30,34 @@ function tcp_connection_dissector:receive(pkt)
 	local connection, direction, dropped = tcp_connection_dissector.cnx_table:get(tcp_get_key(pkt))
 	if not connection then
 		if pkt.flags.syn and not pkt.flags.ack then
-			local data = haka.context.newscope()
-			local self = tcp_connection_dissector:new()
+			connection = tcp_connection_dissector.cnx_table:create(tcp_get_key(pkt))
+			connection.data = haka.context.newscope()
+			local self = tcp_connection_dissector:new(connection, pkt)
 
-			haka.context:exec(data, function ()
-				self:trigger('new_connection', pkt)
-			end)
+			local ret, err = xpcall(function ()
+					haka.context:exec(connection.data, function ()
+						self:trigger('new_connection', pkt)
+					end)
+				end, debug.format_error)
+
+			if err then
+				haka.log.error(self.name, "%s", err)
+				pkt:drop()
+				self:error()
+				haka.abort()
+			end
 
 			if not pkt:can_continue() then
 				self:drop()
 				haka.abort()
 			end
 
-			connection = tcp_connection_dissector.cnx_table:create(tcp_get_key(pkt))
-			connection.data = data
-			self:init(connection, pkt)
-			data:createnamespace('tcp_connection', self)
+			if not self.stream then
+				pkt:drop()
+				haka.abort()
+			end
+
+			connection.data:createnamespace('tcp_connection', self)
 		else
 			if not dropped then
 				haka.alert{
@@ -279,6 +291,13 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 			pkt:drop()
 		end,
 		jump = fail,
+	}
+
+	established:on{
+		event = events.enter,
+		execute = function (self, pkt)
+			self._established = true
+		end
 	}
 
 	established:on{
@@ -521,21 +540,20 @@ end)
 
 tcp_connection_dissector.auto_state_machine = false
 
-function tcp_connection_dissector.method:__init()
+function tcp_connection_dissector.method:__init(connection, pkt)
 	class.super(tcp_connection_dissector).__init(self)
 	self.stream = {}
 	self._restart = false
-end
 
-function tcp_connection_dissector.method:init(connection, pkt)
-	self.connection = connection
-	self.stream['up'] = tcp.tcp_stream()
-	self.stream['down'] = tcp.tcp_stream()
-	self.state = tcp_connection_dissector.state_machine:instanciate(self)
 	self.srcip = pkt.ip.src
 	self.dstip = pkt.ip.dst
 	self.srcport = pkt.srcport
 	self.dstport = pkt.dstport
+
+	self.connection = connection
+	self.stream['up'] = tcp.tcp_stream()
+	self.stream['down'] = tcp.tcp_stream()
+	self.state = tcp_connection_dissector.state_machine:instanciate(self)
 end
 
 function tcp_connection_dissector.method:clearstream()
@@ -629,6 +647,8 @@ function tcp_connection_dissector.method:send(direction)
 end
 
 function tcp_connection_dissector.method:drop()
+	check.assert(self.state, "connection already dropped")
+
 	self.state:trigger('reset')
 end
 
@@ -664,6 +684,8 @@ function tcp_connection_dissector.method:_forgereset(direction)
 end
 
 function tcp_connection_dissector.method:reset()
+	check.assert(self._established, "cannot reset a non-established connection")
+
 	local rst
 
 	rst = self:_forgereset('down')
@@ -676,6 +698,8 @@ function tcp_connection_dissector.method:reset()
 end
 
 function tcp_connection_dissector.method:halfreset()
+	check.assert(self._established, "cannot reset a non-established connection")
+
 	local rst
 
 	rst = self:_forgereset('down')
