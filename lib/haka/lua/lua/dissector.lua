@@ -63,6 +63,16 @@ function type.Dissector.method:drop()
 	error("not implemented")
 end
 
+function type.Dissector.method:can_continue()
+	error("not implemented")
+end
+
+function type.Dissector.method:continue()
+	if not self:can_continue() then
+		haka.abort()
+	end
+end
+
 function type.Dissector.method:error()
 	self:drop()
 end
@@ -101,10 +111,6 @@ function type.PacketDissector:receive(pkt)
 end
 
 function type.PacketDissector.method:receive()
-	error("not implemented")
-end
-
-function type.PacketDissector.method:continue()
 	error("not implemented")
 end
 
@@ -162,8 +168,8 @@ function type.EncapsulatedPacketDissector.method:forge_payload(pkt, payload)
 	error("not implemented")
 end
 
-function type.EncapsulatedPacketDissector.method:continue()
-	return self._parent:continue()
+function type.EncapsulatedPacketDissector.method:can_continue()
+	return self._parent:can_continue()
 end
 
 function type.EncapsulatedPacketDissector.method:drop()
@@ -237,10 +243,6 @@ end
 
 function type.FlowDissector.method:send(pkt)
 	pkt:send()
-end
-
-function type.FlowDissector.method:continue()
-	error("not implemented")
 end
 
 function type.FlowDissector.method:streamed(stream, f, this, current, ...)

@@ -178,10 +178,8 @@ function udp_connection_dissector.method:drop(pkt)
 	end
 end
 
-function udp_connection_dissector.method:continue()
-	if self.dropped then
-		haka.abort()
-	end
+function udp_connection_dissector.method:can_continue()
+	return not self.dropped
 end
 
 udp.select_next_dissector(udp_connection_dissector)
@@ -227,8 +225,8 @@ function module.helper.UdpFlowDissector.method:__init(flow)
 	self.flow = flow
 end
 
-function module.helper.UdpFlowDissector.method:continue()
-	self.flow:continue()
+function module.helper.UdpFlowDissector.method:can_continue()
+	return self.flow:can_continue()
 end
 
 function module.helper.UdpFlowDissector.method:receive(pkt, payload, direction)

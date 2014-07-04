@@ -71,15 +71,14 @@ const char *packet_dissector(struct packet *pkt);
 		return packet_send(self)
 	end
 
-	function raw_dissector.method:continue()
-		if self:issent() then
-			haka.abort()
-		end
+	function raw_dissector.method:can_continue()
+		return self:issent()
 	end
 
 	swig.getclassmetatable('packet')['.fn'].send = raw_dissector.method.send
 	swig.getclassmetatable('packet')['.fn'].receive = raw_dissector.method.receive
-	swig.getclassmetatable('packet')['.fn'].continue = raw_dissector.method.continue
+	swig.getclassmetatable('packet')['.fn'].continue = haka.helper.Dissector.method.continue
+	swig.getclassmetatable('packet')['.fn'].can_continue = raw_dissector.method.can_continue
 	swig.getclassmetatable('packet')['.fn'].error = swig.getclassmetatable('packet')['.fn'].drop
 
 	function haka.filter(pkt)

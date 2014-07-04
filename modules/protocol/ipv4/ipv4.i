@@ -307,7 +307,7 @@ struct ipv4 {
 		void compute_checksum();
 		void drop() { ipv4_action_drop($self); }
 
-		bool _continue()
+		bool can_continue()
 		{
 			assert($self);
 			return $self->packet != NULL;
@@ -436,16 +436,10 @@ int lua_inet_checksum(struct vbuffer *buf);
 		return pkt:inject()
 	end
 
-	function ipv4_dissector.method:continue()
-		if not self:_continue() then
-			return haka.abort()
-		end
-	end
-
 	swig.getclassmetatable('ipv4')['.fn'].receive = ipv4_dissector.method.receive
 	swig.getclassmetatable('ipv4')['.fn'].send = ipv4_dissector.method.send
 	swig.getclassmetatable('ipv4')['.fn'].inject = ipv4_dissector.method.inject
-	swig.getclassmetatable('ipv4')['.fn'].continue = ipv4_dissector.method.continue
+	swig.getclassmetatable('ipv4')['.fn'].continue = haka.helper.Dissector.method.continue
 	swig.getclassmetatable('ipv4')['.fn'].error = swig.getclassmetatable('ipv4')['.fn'].drop
 
 	this.events = ipv4_dissector.events

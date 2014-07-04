@@ -37,7 +37,10 @@ function tcp_connection_dissector:receive(pkt)
 				self:trigger('new_connection', pkt)
 			end)
 
-			pkt:continue()
+			if not pkt:can_continue() then
+				self:drop()
+				haka.abort()
+			end
 
 			connection = tcp_connection_dissector.cnx_table:create(tcp_get_key(pkt))
 			connection.data = data
@@ -589,10 +592,8 @@ function tcp_connection_dissector.method:finish(direction)
 	self:_trigger_receive(direction, stream, nil)
 end
 
-function tcp_connection_dissector.method:continue()
-	if not self.stream then
-		haka.abort()
-	end
+function tcp_connection_dissector.method:can_continue()
+	return self.stream ~= nil
 end
 
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
@@ -726,10 +727,8 @@ function module.helper.TcpFlowDissector.method:__init(flow)
 	self.flow = flow
 end
 
-function module.helper.TcpFlowDissector.method:continue()
-	if not self.flow then
-		haka.abort()
-	end
+function module.helper.TcpFlowDissector.method:can_continue()
+	return self.flow ~= nil
 end
 
 function module.helper.TcpFlowDissector.method:drop()

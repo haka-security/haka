@@ -164,7 +164,7 @@ struct tcp {
 			tcp_action_drop($self);
 		}
 
-		bool _continue()
+		bool can_continue()
 		{
 			assert($self);
 			return $self->packet != NULL;
@@ -265,16 +265,10 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 		end
 	end
 
-	function tcp_dissector.method:continue()
-		if not self:_continue() then
-			return haka.abort()
-		end
-	end
-
 	swig.getclassmetatable('tcp')['.fn'].send = tcp_dissector.method.send
 	swig.getclassmetatable('tcp')['.fn'].receive = tcp_dissector.method.receive
 	swig.getclassmetatable('tcp')['.fn'].inject = tcp_dissector.method.inject
-	swig.getclassmetatable('tcp')['.fn'].continue = tcp_dissector.method.continue
+	swig.getclassmetatable('tcp')['.fn'].continue = haka.helper.Dissector.method.continue
 	swig.getclassmetatable('tcp')['.fn'].error = swig.getclassmetatable('tcp')['.fn'].drop
 
 	local ipv4 = require("protocol/ipv4")

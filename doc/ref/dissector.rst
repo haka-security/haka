@@ -122,6 +122,18 @@ Dissector types
         Called whenever an error is raised when inside the context of this dissector. The default
         implementation will do a :haka:func:`<Dissector>.drop()`.
 
+    .. haka:method:: Dissector:continue()
+
+        Function that abort if the dissector no longer requires processing.
+
+    .. haka:method:: Dissector:can_continue() -> continue
+        :abstract:
+
+        :return continue: ``false`` is the dissector no longer requires processing.
+        :rtype continue: boolean
+
+        Function that check if the dissector no longer requires processing.
+
     .. haka:method:: Dissector:next_dissector()
         :abstract:
 
@@ -161,11 +173,6 @@ Packet
         :paramtype prev: :haka:class:`Dissector`
 
         Function called to dissect a packet from data comming from another dissector.
-
-    .. haka:method:: PacketDissector:continue()
-        :abstract:
-
-        Function that abort if the packet should no longer be processed.
 
     .. haka:method:: PacketDissector:send()
         :abstract:
