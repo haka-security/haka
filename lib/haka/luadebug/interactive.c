@@ -119,7 +119,7 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 	LUA_STACK_MARK(L);
 
 	if (msg) {
-		session.user->print(session.user, "%s\n", msg);
+		session.user->print(session.user, "%s\nHit ^D to end the interactive session\n", msg);
 	}
 
 	session.L = L;
