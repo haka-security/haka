@@ -42,20 +42,20 @@ local my_group = haka.rule_group{
 -- Security rules for my_group
 ------------------------------------
 
-my_group:rule(
-	function (flow, pkt)
+my_group:rule{
+	eval = function (flow, pkt)
 		if pkt.dstport == 80 then
 			haka.log("Filter", "Authorizing traffic on port 80")
 			return true
 		end
 	end
-)
+}
 
-my_group:rule(
-	function (flow, pkt)
+my_group:rule{
+	eval = function (flow, pkt)
 		if pkt.dstport == 22 then
 			haka.log("Filter", "Authorizing traffic on port 22")
 			return true
 		end
 	end
-)
+}

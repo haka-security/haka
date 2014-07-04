@@ -67,8 +67,8 @@ sqli = haka.rule_group{
 -- SQLi White List Rule
 ------------------------------------
 
-sqli:rule(
-	function (http, request)
+sqli:rule{
+	eval = function (http, request)
 		-- Split uri into subparts and normalize it
 		local splitted_uri = request.split_uri:normalize()
 		for	_, res in ipairs(safe_resources) do
@@ -80,15 +80,15 @@ sqli:rule(
 			end
 		end
 	end
-)
+}
 
 ------------------------------------
 -- SQLi Rules
 ------------------------------------
 
 local function check_sqli(patterns, score, trans)
-	sqli:rule(
-		function (http, request)
+	sqli:rule{
+		eval = function (http, request)
 			for k, v in pairs(http.sqli) do
 				if v.value then
 					for _, val in pairs(v.value) do
@@ -125,7 +125,7 @@ local function check_sqli(patterns, score, trans)
 				end
 			end
 		end
-	)
+	}
 end
 
 check_sqli(sql_comments, 4, { decode, lower })

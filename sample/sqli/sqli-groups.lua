@@ -48,8 +48,8 @@ sqli = haka.rule_group{
 }
 
 local function check_sqli(patterns, score, trans)
-	sqli:rule(
-		function (http, request)
+	sqli:rule{
+		eval = function (http, request)
 			for k, v in pairs(http.sqli) do
 				if v.value then
 					for _, val in pairs(v.value) do
@@ -82,7 +82,7 @@ local function check_sqli(patterns, score, trans)
 				end
 			end
 		end
-	)
+	}
 end
 
 -- Generate a security rule for each malicious pattern class

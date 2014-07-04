@@ -42,8 +42,8 @@ safe_update = haka.rule_group{
 }
 
 -- Traffic to all websites in the whitelist is unconditionally allowed
-safe_update:rule(
-	function (http, response)
+safe_update:rule{
+	eval = function (http, response)
 		local host = http.request.headers['Host'] or ''
 		for _, dom in ipairs(update_domains) do
 			if string.find(host, dom) then
@@ -52,12 +52,12 @@ safe_update:rule(
 			end
 		end
 	end
-)
+}
 
 -- If the User-Agent contains firefox and the version is outdated,
 -- then redirect the traffic to firefox_web_site
-safe_update:rule(
-	function (http, response)
+safe_update:rule{
+	eval = function (http, response)
 		-- Uncomment the following line to see the the content of the request
 		-- debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
 
@@ -86,4 +86,4 @@ safe_update:rule(
 			haka.log("Filter", "Unknown or missing User-Agent")
 		end
 	end
-)
+}

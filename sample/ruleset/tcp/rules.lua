@@ -25,8 +25,8 @@ local group = haka.rule_group {
 }
 
 
-group:rule(
-	function (flow, tcp)
+group:rule{
+	eval = function (flow, tcp)
 		if client_network:contains(tcp.ip.src) and
 		    server_network:contains(tcp.ip.dst) and
 		    tcp.dstport == 80 then
@@ -35,10 +35,10 @@ group:rule(
 			return true
 		end
 	end
-)
+}
 
-group:rule(
-	function (flow, tcp)
+group:rule{
+	eval = function (flow, tcp)
 		if client_network:contains(tcp.ip.src) and
 		    server_network:contains(tcp.ip.dst) and
 		    tcp.dstport == 22 then
@@ -47,4 +47,4 @@ group:rule(
 			return true
 		end
 	end
-)
+}

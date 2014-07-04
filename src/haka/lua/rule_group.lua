@@ -27,8 +27,11 @@ function rule_group.method:__init(args, continue)
 	self.type = 'group'
 end
 
-function rule_group.method:rule(eval)
-	table.insert(self.rules, eval)
+function rule_group.method:rule(r)
+	check.assert(type(r) == 'table', "rule parameter must be a table")
+	check.assert(type(r.eval) == 'function', "rule eval function expected")
+
+	table.insert(self.rules, r.eval)
 end
 
 function rule_group.method:eval(...)
