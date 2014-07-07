@@ -151,9 +151,9 @@ struct tcp {
 		unsigned int urgent_pointer;
 
 		%immutable;
-		struct tcp_flags *flags { return (struct tcp_flags *)$self; }
-		struct vbuffer *payload { return &$self->payload; }
-		struct ipv4 *ip { return $self->packet; }
+		struct tcp_flags *flags { TCP_CHECK($self, NULL); return (struct tcp_flags *)$self; }
+		struct vbuffer *payload { TCP_CHECK($self, NULL); return &$self->payload; }
+		struct ipv4 *ip { TCP_CHECK($self, NULL); return $self->packet; }
 		const char *name { return "tcp"; }
 
 		bool verify_checksum();

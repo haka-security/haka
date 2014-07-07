@@ -298,10 +298,10 @@ struct ipv4 {
 		struct ipv4_addr *dst;
 
 		%immutable;
-		const char *name;
-		struct packet *raw;
-		struct ipv4_flags *flags;
-		struct vbuffer *payload;
+		const char *name { return "ipv4"; }
+		struct packet *raw { IPV4_CHECK($self, NULL); return $self->packet; }
+		struct ipv4_flags *flags { IPV4_CHECK($self, NULL); return (struct ipv4_flags *)$self; }
+		struct vbuffer *payload { IPV4_CHECK($self, NULL); return &$self->payload;}
 
 		bool verify_checksum();
 		void compute_checksum();
@@ -350,18 +350,10 @@ int lua_inet_checksum(struct vbuffer *buf);
 	IPV4_INT_GETSET(proto);
 	IPV4_INT_GETSET(checksum);
 
-	struct packet *ipv4_raw_get(struct ipv4 *ip) { return ip->packet; }
-
 	struct ipv4_addr *ipv4_src_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_src(ip)); }
 	void ipv4_src_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_src(ip, v->addr); }
 	struct ipv4_addr *ipv4_dst_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_dst(ip)); }
 	void ipv4_dst_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_dst(ip, v->addr); }
-
-	const char *ipv4_name_get(struct ipv4 *ip) { return "ipv4"; }
-
-	struct vbuffer *ipv4_payload_get(struct ipv4 *ip) { return &ip->payload; }
-
-	struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
 
 	#define IPV4_FLAGS_GETSET(field) \
 		bool ipv4_flags_##field##_get(struct ipv4_flags *flags) { return ipv4_get_flags_##field((struct ipv4 *)flags); } \
