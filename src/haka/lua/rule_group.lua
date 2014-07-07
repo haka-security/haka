@@ -8,21 +8,14 @@ local rule = require('rule')
 
 local rule_group = class.class('RuleGroup')
 
-function rule_group.method:__init(args, continue)
-	check.assert(args.hook, "not hook defined for rule group")
-	check.assert(class.isa(args.hook, haka.event.Event), "rule hook must be an event")
-	check.assert(not args.init or type(args.init) == 'function', "rule group init function expected")
-	check.assert(not args.continue or type(args.continue) == 'function', "rule group continue function expected")
-	check.assert(not args.final or type(args.final) == 'function', "rule group final function expected")
-	check.assert(not args.options or type(args.options) == 'table', "rule group options should be table")
-
+function rule_group.method:__init(args)
 	self.hook = args.hook
 	self.name = args.name
 	self.rules = {}
 	self.init = args.init or function () end
 	self.continue = args.continue or function () return true end
 	self.final = args.final or function () end
-	self.event_continue = continue
+	self.event_continue = args.hook.continue
 	self.options = args.options or {}
 	self.type = 'group'
 end
@@ -56,7 +49,15 @@ end
 
 
 function haka.rule_group(args)
-	local group = rule_group:new(args, args.hook.continue)
+	check.assert(type(args) == 'table', "rule parameter must be a table")
+	check.assert(args.hook, "not hook defined for rule group")
+	check.assert(class.isa(args.hook, haka.event.Event), "rule hook must be an event")
+	check.assert(not args.init or type(args.init) == 'function', "rule group init function expected")
+	check.assert(not args.continue or type(args.continue) == 'function', "rule group continue function expected")
+	check.assert(not args.final or type(args.final) == 'function', "rule group final function expected")
+	check.assert(not args.options or type(args.options) == 'table', "rule group options should be table")
+
+	local group = rule_group:new(args)
 
 	haka.context.connections:register(args.hook,
 		function (...) group:eval(...) end,
