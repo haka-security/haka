@@ -270,6 +270,13 @@ const struct time *packet_timestamp(struct packet *pkt)
 	return packet_module->get_timestamp(pkt);
 }
 
+uint64 packet_id(struct packet *pkt)
+{
+	assert(packet_module);
+	assert(pkt);
+	return packet_module->get_id(pkt);
+}
+
 void packet_set_mode(enum packet_mode mode)
 {
 	global_packet_mode = mode;

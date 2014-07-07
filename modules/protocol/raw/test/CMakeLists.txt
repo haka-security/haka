@@ -4,3 +4,5 @@
 
 # Tests
 include(TestPcap)
+
+TEST_PCAP(raw basic)

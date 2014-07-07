@@ -27,6 +27,7 @@ struct packet {
 		%immutable;
 		const struct time *timestamp { return packet_timestamp($self); }
 		struct vbuffer *payload { return packet_payload($self); }
+		int id { return packet_id($self); }
 
 		packet(int size = 0)
 		{

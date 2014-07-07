@@ -65,6 +65,11 @@ struct packet     *packet_new(size_t size);
 const struct time *packet_timestamp(struct packet *pkt);
 
 /**
+ * Get the id of the packet.
+ */
+uint64             packet_id(struct packet *pkt);
+
+/**
  * Get the packet payload.
  */
 struct vbuffer    *packet_payload(struct packet *pkt);
