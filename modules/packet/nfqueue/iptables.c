@@ -119,8 +119,10 @@ int apply_iptables(const char *table, const char *conf, bool noflush)
 		}
 
 		while ((line_size = getline(&buffer, &buffer_size, output)) >= 0) {
-			buffer[line_size-1] = '\0';
-			messagef(HAKA_LOG_DEBUG, MODULE_NAME, L"iptables-restore: %s", buffer);
+			if (line_size > 1) {
+				buffer[line_size-1] = '\0';
+				messagef(HAKA_LOG_INFO, MODULE_NAME, L"iptables-restore: %s", buffer);
+			}
 		}
 
 		free(buffer);
@@ -255,9 +257,9 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 
 			if (FD_ISSET(pipefd_err[1], &curfds)) {
 				line_size = getline(&buffer, &buffer_size, err);
-				if (line_size > 0) {
+				if (line_size > 1) {
 					buffer[line_size-1] = '\0';
-					messagef(HAKA_LOG_DEBUG, MODULE_NAME, L"iptables-save: %s", buffer);
+					messagef(HAKA_LOG_INFO, MODULE_NAME, L"iptables-save: %s", buffer);
 				}
 				else {
 					FD_CLR(pipefd_err[1], &fds);
