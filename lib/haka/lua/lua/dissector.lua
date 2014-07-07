@@ -15,9 +15,16 @@ local dissector = {}
 
 type.Dissector = class.class('Dissector')
 
+local event_mt = {
+	__index = function (self, name)
+		check.error(string.format("unkown event '%s'", name))
+	end
+}
+
 function type.Dissector.__class_init(self, cls)
 	self.super:__class_init(cls)
 	cls.events = {}
+	setmetatable(cls.events, event_mt)
 	self.inherit_events(cls)
 	cls.options = {}
 end
