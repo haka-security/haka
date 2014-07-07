@@ -4,17 +4,19 @@
 
 local module = {}
 
-function module.error(msg)
-	error(msg, 3)
+function module.error(msg, level)
+	level = level or 0
+	error(msg, level+3)
 end
 
-function module.type(n, val, t)
+function module.type(n, val, t, level)
 	if type(val) ~= t then
-		error(string.format("invalid parameter %d, expected %s", n, t), 3)
+		level = level or 0
+		error(string.format("invalid parameter %d, expected %s", n, t), level+3)
 	end
 end
 
-function module.types(n, val, types)
+function module.types(n, val, types, level)
 	local current_type = type(val)
 
 	for _,t in ipairs(types) do
@@ -23,12 +25,14 @@ function module.types(n, val, types)
 		end
 	end
 
-	error(string.format("invalid parameter %d, expected %s", n, table.concat(types, " or ")), 3)
+	level = level or 0
+	error(string.format("invalid parameter %d, expected %s", n, table.concat(types, " or ")), level+3)
 end
 
-function module.assert(prop, message)
+function module.assert(prop, message, level)
 	if not prop then
-		error(message, 3)
+		level = level or 0
+		error(message, level+3)
 	end
 end
 
