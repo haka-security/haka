@@ -11,6 +11,7 @@ _doc() {
 		### Copy to destination
 		_run mkdir -p "$DROPDIR/"
 		_run cp -r doc/doc "$DROPDIR/"
+		_run cd doc/doc && tar -cz -f "$DROPDIR/haka-doc.tgz" *
 	fi
 }
 
