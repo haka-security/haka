@@ -92,8 +92,8 @@ function http_dissector.method:trigger_event(res, iter, mark)
 	self:trigger(state, res)
 
 	if self._want_data_modification then
-		res.headers['Content-Length'] = nil
 		res.headers['Transfer-Encoding'] = 'chunked'
+		res.headers['Content-Length'] = nil
 		self._enable_data_modification = true
 	else
 		self._enable_data_modification = false
