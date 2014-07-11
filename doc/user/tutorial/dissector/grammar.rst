@@ -4,7 +4,12 @@
 
 Grammar building blocks
 ^^^^^^^^^^^^^^^^^^^^^^^
-Haka grammar is made of basic blocks and coumpound blocks. The former enable parsing of basic elements such as booleans (:haka:func:`haka.grammar.flag`), bytes (:haka:func:`haka.grammar.bytes`), number (:haka:func:`haka.grammar.number`), regular expression (:haka:func:`haka.grammar.token`), etc. The latter allow to form complex blocks by combining basic and compound blocks. For instance, the `record` block (:haka:func:`haka.grammar.record`) is used to define a structure of elements.
+Haka grammar is made of basic blocks and coumpound blocks. The former enable
+parsing of basic elements such as booleans (:haka:func:`flag`), bytes
+(:haka:func:`bytes`), number (:haka:func:`number`), regular expression
+(:haka:func:`token`), etc. The latter allow to form complex blocks by combining
+basic and compound blocks. For instance, the `record` block (:haka:func:`record`)
+is used to define a structure of elements.
 
 Creating the grammar
 ^^^^^^^^^^^^^^^^^^^^

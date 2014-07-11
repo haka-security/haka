@@ -79,7 +79,7 @@ Rule Group
     .. haka:function:: rule_group{...} -> group
 
         :param hook: Event to listen to.
-        :paramtype hook: :haka:class:`Event`
+        :paramtype hook: event
         :param init: Function that is called whenever the event is triggered and before any rule evaluation.
         :paramtype init: function
         :param continue: After each rule evaluation, the function is called to know if the evaluation

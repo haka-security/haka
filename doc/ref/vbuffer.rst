@@ -538,7 +538,7 @@ Stream coroutine manager
 
 .. warning:: This section introduces advanced feature of Haka.
 
-.. haka:class:: vbuffer_stream_comanage_
+.. haka:class:: vbuffer_stream_comanager
     :module:
 
     This class allow to execute function inside a coroutine and to be able to block transparently

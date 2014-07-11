@@ -25,7 +25,7 @@ Dissector
     :objtype: dissector
 
     :Name: ``'icmp'``
-    :Extend: :haka:class:`haka.dissector.PacketDissector` |nbsp|
+    :Extend: :haka:class:`haka.helper.PacketDissector` |nbsp|
 
     ICMP packet dissector.
 

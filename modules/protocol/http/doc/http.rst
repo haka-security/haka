@@ -25,7 +25,7 @@ Dissector
     :objtype: dissector
 
     :Name: ``'http'``
-    :Extend: :haka:class:`haka.dissector.FlowDissector` |nbsp|
+    :Extend: :haka:class:`haka.helper.FlowDissector` |nbsp|
 
     HTTP protocol dissector supporting the following features:
 
@@ -45,7 +45,7 @@ Dissector
     .. haka:function:: dissect(flow)
 
         :param flow: Upper flow dissector.
-        :paramtype flow: :haka:class:`haka.dissector.FlowDissector`
+        :paramtype flow: :haka:class:`haka.helper.FlowDissector`
 
         Activate HTTP dissection on the given flow.
 

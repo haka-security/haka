@@ -212,7 +212,7 @@ Haka provides two kind of states type :
         :param self: state machine context.
         :ptype self: object
         :param res: Parse result.
-        :ptype res: :haka:class:`ParseResult`
+        :ptype res: abstract table
         :param ...: Any another parameters as passed to update function.
 
     State machine defined with this type will have the following update function.
@@ -222,7 +222,7 @@ Haka provides two kind of states type :
         :objtype: state_machine_instance
 
         :param payload: Payload of the incoming data.
-        :ptype payload: :haka:class:`Iter`
+        :ptype payload: :haka:class:`vbuffer_iterator`
         :param direction: Direction of the event.
         :ptype direction: String ``'up'`` or ``'down'``
         :param ...: Any another parameters that will be passed to actions.

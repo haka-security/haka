@@ -25,7 +25,7 @@ Dissector
     :objtype: dissector
 
     :Name: ``'udp_connection'``
-    :Extend: :haka:class:`haka.dissector.FlowDissector` |nbsp|
+    :Extend: :haka:class:`haka.helper.FlowDissector` |nbsp|
 
     State-full dissector for UDP. It will associate each UDP packet with its matching connection.
 

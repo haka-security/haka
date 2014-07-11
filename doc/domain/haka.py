@@ -743,6 +743,9 @@ class HakaDomain(Domain):
         if not name:
             return []
 
+        name = name.replace("<", "&lt;")
+        name = name.replace(">", "&gt;")
+
         objects = self.data['objects']
         matches = []
 
@@ -801,9 +804,13 @@ class HakaDomain(Domain):
                                 type, searchmode)
 
         if not matches:
-            #env.warn_node(
-            #    'no target found for cross-reference '
-            #    '%r' % (target), node)
+            # If type is 'obj', we don't want to display any WARNING.
+            # Otherwise, we have too many due to unknown type used
+            # as parameter type in function description (number, string...).
+            if type != "obj":
+                env.warn_node(
+                    'no target found for cross-reference '
+                    '%r' % (target), node)
             return None
         elif len(matches) > 1:
             env.warn_node(

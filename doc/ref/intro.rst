@@ -23,7 +23,7 @@ Module
 .. haka:module:: test
     :noindex:
 
-A module :haka:mod:`test` is used in this example to show how various elements
+A module :obj:`test` is used in this example to show how various elements
 of a module can be used.
 
 Every functions and variables will be prefixed by the module name, in our case:
@@ -109,7 +109,7 @@ An object in Lua is basically a table containing functions and properties. Every
 
         This function is available on a module. However, it is described in this
         object because it is related to it. For instance, the function could
-        create an instance of :haka:class:`Obj`.
+        create an instance of :obj:`Obj`.
 
 Event
 -----

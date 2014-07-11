@@ -25,7 +25,7 @@ Dissector
     :objtype: dissector
 
     :Name: ``'tcp'``
-    :Extend: :haka:class:`haka.dissector.PacketDissector` |nbsp|
+    :Extend: :haka:class:`haka.helper.PacketDissector` |nbsp|
 
     Dissector data for a TCP packet. This dissector is state-less. It will only parse the
     packet headers.

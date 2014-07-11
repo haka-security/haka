@@ -25,7 +25,7 @@ Dissector
     :objtype: dissector
 
     :Name: ``'dns'``
-    :Extend: :haka:class:`haka.dissector.FlowDissector` |nbsp|
+    :Extend: :haka:class:`haka.helper.FlowDissector` |nbsp|
 
     Dissector for the DNS protocol.
 

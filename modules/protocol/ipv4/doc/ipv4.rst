@@ -25,7 +25,7 @@ Dissector
     :objtype: dissector
 
     :Name: ``'ipv4'``
-    :Extend: :haka:class:`haka.dissector.PacketDissector` |nbsp|
+    :Extend: :haka:class:`haka.helper.PacketDissector` |nbsp|
 
     IP version 4 packet dissector.
 
