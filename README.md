@@ -21,7 +21,7 @@ Dependencies
 * rsync
 * libpcap
 * gawk
-* libedit
+* libeditline
 * libpcre
 
 ### Optional
