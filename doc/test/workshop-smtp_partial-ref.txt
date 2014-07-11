@@ -1,0 +1,143 @@
+debug cnx: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
+debug smtp: selecting smtp dissector on flow
+debug grammar: parse error at byte 0 for field <unknown> in <unknown>: incomplete grammar
+debug grammar: parse error context: 220 metasploitable.localdomain ESMTP Postfix (Ubuntu)\x0d\x0a...
+alert: id = = <>
+	severity = high
+	description = invalid smtp response parse error at byte 0 for field <unknown> in <unknown>: incomplete grammar
+debug cnx: dropping connection 192.168.10.10:41155 -> 192.168.20.1:25
+debug cnx: closing connection 192.168.10.10:56704 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.10:41155 -> 192.168.20.1:25
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+	targets = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+	targets = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+	targets = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+	targets = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+	targets = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.20.1
+		service: tcp/25
+	}
+	targets = {
+		address: 192.168.10.10
+		service: tcp/41155
+	}
