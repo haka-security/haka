@@ -2,16 +2,16 @@
 .\" License, v. 2.0. If a copy of the MPL was not distributed with this"
 .\" file, You can obtain one at http://mozilla.org/MPL/2.0/."
 .\""
-.TH HAKA 1 "2013" "Haka" Commands
+.TH HAKA 1 "2014" "Haka" Commands
 .SH NAME
 haka \- Launch haka daemon
 .SH SYNOPSIS
 \fBhaka\fP [\fIoptions\fP]
 .SH DESCRIPTION
 .PP 
-Launch haka daemon
+Launch haka daemon.
 .SH OPTIONS
-Following options are supported
+Following options are supported.
 .TP
 \fB\-h\fP, \fB\-\-help\fP
 Display help.
@@ -21,7 +21,7 @@ Display version.
 .TP
 \fB\-c\fP, \fB\-\-config <conf>\fP
 Load a specific configuration file (default:
-\fB/opt/haka/etc/haka/haka.conf\fP)
+\fB/opt/haka/etc/haka/haka.conf\fP).
 .TP
 \fB\-d\fP, \fB\-\-debug\fP
 Display debug output.
@@ -33,11 +33,11 @@ Dump dissector internals (grammar and state machine) in file <name>.dot.
 Change haka logging level. <level> is a comma separated list of
 <module>=<level>. If no module is given level will be applied globally.
 .TP
-\fB\-\-luadebug\fP
+\fB\-\-debug-lua\fP
 Attach lua debugger (and keep haka in foreground).
 .TP
 \fB\-\-no\-daemon\fP
-Do no run in the background
+Do no run in the background.
 .TP
 \fB\-r\fP, \fB\-\-rule <file>\fP
 Override the rule configuration file.
