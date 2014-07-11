@@ -35,6 +35,9 @@ The user guide contains two sections to enable you to quickly start with Haka:
 * :doc:`user/install`
 * :doc:`user/gettingstarted`
 
+If you want more, check our :doc:`workshop <user/workshop>` which is a good way
+to see, in action, what Haka can do.
+
 .. _how_to_contribute_to_haka:
 
 How to contribute to Haka?
