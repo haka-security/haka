@@ -451,7 +451,10 @@ end
 grammar_int.Bytes = class.class('Bytes', grammar_int.Entity)
 
 function grammar_int.Bytes.method:do_compile(env, rule, id)
-	local ret = grammar_dg.Bytes:new(rule, id, self._count, self.named, self._chunked)
+	if self._untiltoken and not self._untilre then
+		self._untilre = rem.re:compile("(?:"..self._untiltoken..")")
+	end
+	local ret = grammar_dg.Bytes:new(rule, id, self._count, self._untilre, self.named, self._chunked)
 	self:compile_setup(ret)
 	return ret
 end
@@ -464,6 +467,9 @@ end
 
 function grammar_int.Bytes.method:count(count)
 	local clone = self:clone()
+	if clone._untiltoken ~= nil then
+		error("bytes can't have both count and untiltoken")
+	end
 
 	if type(count) ~= 'function' then
 		clone._count = function (self) return count end
@@ -474,6 +480,16 @@ function grammar_int.Bytes.method:count(count)
 	return clone
 end
 
+function grammar_int.Bytes.method:untiltoken(token)
+	local clone = self:clone()
+	if clone._count ~= nil then
+		error("bytes can't have both count and untiltoken")
+	end
+
+	clone._untiltoken = token
+
+	return clone
+end
 
 grammar_int.Bits = class.class('Bits', grammar_int.Entity)
 

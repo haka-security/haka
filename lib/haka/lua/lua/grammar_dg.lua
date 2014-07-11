@@ -742,10 +742,11 @@ end
 
 dg.Bytes = class.class('DGBytes', dg.Primitive)
 
-function dg.Bytes.method:__init(rule, id, size, name, chunked_callback)
+function dg.Bytes.method:__init(rule, id, size, untilre, name, chunked_callback)
 	class.super(dg.Bytes).__init(self, rule, id)
 	self.size = size
 	self.name = name
+	self.untilre = untilre
 	self.chunked_callback = chunked_callback
 end
 
@@ -765,42 +766,99 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 		size = 'all'
 	end
 
-	if self.chunked_callback then
-		if size == 0 then
-			-- Call the callback to notify for the stream end
-			self.chunked_callback(res, nil, true, ctx)
-		else
-			while (size == 'all' or size > 0) and iter:wait() do
-				if size ~= 'all' then
-					local ret, subsize = iter:check_available(size, true)
-					if ret then
-						sub = iter:sub(size, true)
-					else
-						sub = iter:sub('available')
-					end
-
-					size = size - subsize
-				else
-					sub = iter:sub('available')
-				end
-
-				self.chunked_callback(res, sub, size == 0 or iter.iseof, ctx)
-				if not sub then break end
-			end
-		end
-	else
-		sub = iter:sub(size)
-
+	function create_property(sub)
 		if self.name then
 			if self.converter then
 				res:addproperty(self.name,
-					function (this) return self.converter.get(sub) end,
-					function (this, newvalue) sub = self.converter.set(newvalue) end
+				function (this) return self.converter.get(sub) end,
+				function (this, newvalue) sub = self.converter.set(newvalue) end
 				)
 			else
 				res[self.name] = sub
 			end
 		end
+	end
+
+	function chunked_callback(sub)
+		if self.chunked_callback then
+			self.chunked_callback(res, sub, size == 0 or iter.iseof, ctx)
+		end
+	end
+
+	-- Easiest case
+	if not self.chunked_callback and not self.untilre then
+		create_property(iter:sub(size))
+		return
+	end
+
+	-- Complexe case
+	-- We have to go all over the bytes to
+	--   - pass it to chunked_callback
+	--   - check it against untilre
+
+	-- called with size == 0 we just need to notify for stream end
+	if self.chunked_callback and size == 0 then
+		-- Call the callback to notify for the stream end
+		self.chunked_callback(res, nil, true, ctx)
+		return
+	end
+
+	local begin = iter:copy()
+	local last_chunked
+	local sink
+	if self.untilre then
+		sink = self.untilre:create_sink()
+		begin:mark(haka.packet_mode() == 'passthrough')
+	end
+
+	while size == 'all' or size > 0 do
+		iter:wait()
+		if size ~= 'all' then
+			local ret, subsize = iter:check_available(size, true)
+			if ret then
+				sub = iter:sub(size, true)
+			else
+				sub = iter:sub('available')
+			end
+
+			size = size - subsize
+		else
+			sub = iter:sub('available')
+		end
+
+
+		if self.untilre then
+			local match, mbegin, mend = sink:feed(sub, sub == nil)
+
+			if mbegin then
+				last_chunked = last_chunked or sub:pos('begin')
+				chunked_callback(haka.vbuffer_sub(last_chunked, mbegin))
+				last_chunked = mbegin
+			end
+
+			if not last_chunked and sub then
+				-- no (partial) match ever
+				-- pass full buffer to chunked_callback
+				chunked_callback(sub)
+			end
+
+			if match then
+				iter:move_to(last_chunked)
+				break
+			end
+		else
+			chunked_callback(sub)
+		end
+
+		if not sub then break end
+	end
+
+	if begin and self.untilre then
+		begin:unmark()
+	end
+
+	if not self.chunked_callback then
+		create_property(haka.vbuffer_sub(begin, iter))
 	end
 end
 
