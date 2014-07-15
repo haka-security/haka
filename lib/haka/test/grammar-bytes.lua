@@ -84,7 +84,7 @@ function TestGrammarBytes:test_byte_until_chunked()
 	assertEquals(table.concat(chunks), "averylongfoo")
 end
 
-function TestGrammarBytes:test_byte_until_partial_but_no()
+function TestGrammarBytes:test_byte_until_partial_twice()
 	-- Given
 	local chunks = {}
 	local grammar = haka.grammar.new("test", function ()
@@ -108,6 +108,30 @@ function TestGrammarBytes:test_byte_until_partial_but_no()
 
 	assertEquals(result.bar:asstring(), "bar")
 	assertEquals(table.concat(chunks), "is it a full ba? no just a ")
+end
+
+function TestGrammarBytes:test_byte_until_partial_but_no_match()
+	-- Given
+	local chunks = {}
+	local grammar = haka.grammar.new("test", function ()
+		elem = record{
+			bytes():untiltoken("bar")
+				:chunked(function (result, sub, islast, context)
+					if sub then
+						table.insert(chunks, sub:asstring())
+					end
+				end),
+		}
+		export(elem)
+	end)
+
+	-- When
+	local result
+	self:gen_stream({ "is it a full ba", "? no just a foo" }, function (iter)
+		result = grammar.elem:parse(iter)
+	end)
+
+	assertEquals(table.concat(chunks), "is it a full ba? no just a foo")
 end
 
 addTestSuite('TestGrammarBytes')

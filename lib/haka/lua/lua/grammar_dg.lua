@@ -835,6 +835,12 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 				last_chunked = mbegin
 			end
 
+			-- No more partial match update chunked_callback
+			if not match and not sink:ispartial() and last_chunked then
+				chunked_callback(haka.vbuffer_sub(last_chunked, sub:pos('begin')))
+				last_chunked = nil
+			end
+
 			if not last_chunked and sub then
 				-- no (partial) match ever
 				-- pass full buffer to chunked_callback
