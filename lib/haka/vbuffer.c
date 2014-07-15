@@ -727,6 +727,26 @@ bool vbuffer_iterator_insert(struct vbuffer_iterator *position, struct vbuffer *
 	return true;
 }
 
+void vbuffer_iterator_skip_empty(struct vbuffer_iterator *position)
+{
+	struct vbuffer_chunk *iter;
+	size_t offset;
+
+	if (!_vbuffer_iterator_check(position)) return;
+
+	offset = _vbuffer_iterator_fix(position, &iter);
+	assert(iter);
+
+	while (!iter->flags.end) {
+		if (offset == iter->size) offset = 0;
+		else break;
+
+		iter = vbuffer_chunk_next(iter);
+	}
+
+	vbuffer_iterator_update(position, iter, offset);
+}
+
 size_t vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len)
 {
 	size_t clen = len;
