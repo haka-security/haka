@@ -121,7 +121,7 @@ function states.StateMachineInstance.method:update(...)
 		error("state machine instance has finished")
 	end
 
-	current._state:_update(self, ...)
+	current._state:update(self, ...)
 end
 
 function states.StateMachineInstance.method:trigger(name, ...)
@@ -224,6 +224,7 @@ local state_machine = {}
 
 state_machine.State = state.State
 state_machine.BidirectionnalState = state.BidirectionnalState
+state_machine.new_state_type = state.new
 
 function state_machine.new(name, def)
 	assert(type(def) == 'function', "state machine definition must by a function")

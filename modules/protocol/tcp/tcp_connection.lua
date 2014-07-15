@@ -97,11 +97,9 @@ function tcp_connection_dissector:receive(pkt)
 	end
 end
 
-local TcpState = class.class("TcpState", haka.state_machine.State)
+local TcpState = haka.state_machine.new_state_type({ 'input', 'output', 'reset' })
 
-TcpState._events = { 'input', 'output', 'reset' }
-
-function TcpState.method:_update(state_machine, direction, pkt)
+function TcpState.method:update(state_machine, direction, pkt)
 	if pkt.flags.rst then
 		state_machine.owner:_sendpkt(pkt, direction)
 		state_machine:trigger('reset', pkt)

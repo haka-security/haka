@@ -115,7 +115,7 @@ function module.State.method:setdefaults(defaults)
 	end
 end
 
-function module.State.method:_update(state_machine, event)
+function module.State.method:update(state_machine, event)
 	state_machine:trigger(event)
 end
 
@@ -155,7 +155,7 @@ function module.BidirectionalState.method:__init(gup, gdown)
 	}
 end
 
-function module.BidirectionalState.method:_update(state_machine, payload, direction, ...)
+function module.BidirectionalState.method:update(state_machine, payload, direction, ...)
 	if not self._grammar[direction] then
 		state_machine:trigger("missing_grammar", direction, payload, ...)
 	else
@@ -225,6 +225,16 @@ function module.CompiledState.method:__init(state_machine, state, name)
 			self[n] = transitions_wrapper
 		end
 	end
+end
+
+module.new = function(events, name, parent)
+	name = name or "AnonymousState"
+	parent = parent or module.State
+
+	local state = class.class(name, parent)
+	state._events = events
+
+	return state
 end
 
 return module
