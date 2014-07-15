@@ -17,6 +17,7 @@ TEST_PCAP(ipv4 setfields)
 TEST_PCAP(ipv4 getfields-passthrough OPTIONS --pass-through)
 TEST_PCAP(ipv4 setfields-passthrough OPTIONS --pass-through)
 TEST_PCAP(ipv4 create)
+TEST_PCAP(ipv4 fragment)
 # TEST_PCAP(ipv4 options)
 
 TEST_UNIT(MODULE ipv4 NAME unit FILES unit.c)
