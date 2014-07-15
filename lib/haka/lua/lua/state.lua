@@ -21,18 +21,6 @@ function module.ActionCollection.method:__init(const)
 end
 
 function module.ActionCollection.method:on(action)
-	if not action.event then
-		error("action must have an event", 2)
-	end
-
-	if not action.event.name then
-		error("action must be a table", 2)
-	end
-
-	if self._const and not self._actions[action.event.name] then
-		error(string.format("unknown event '%s'", action.event.name), 2)
-	end
-
 	if action.when and not type(action.when) == 'function' then
 		error("when must be a function", 2)
 	end
@@ -49,25 +37,45 @@ function module.ActionCollection.method:on(action)
 		error("action must have either an execute or a jump", 2)
 	end
 
-	-- build another representation of the action
-	local a = {
-		when = action.when,
-		execute = action.execute,
-	}
+	action.events = action.events or { action.event }
 
-	if action.jump then
-		a.jump = action.jump._name
+	if type(action.events) ~= 'table' then
+		error("events must be a table of event", 2)
 	end
 
-	-- register action
-	if action.event.name == 'timeouts' then
-		self._actions.timeouts[action.event.timeout] = a
-	else
-		if not self._actions[action.event.name] then
-			self._actions[action.event.name] = {}
+	for _, event in ipairs(action.events) do
+		if not event then
+			error("action must have an event", 2)
 		end
 
-		table.insert(self._actions[action.event.name], a)
+		if not event.name then
+			error("action must be a table", 2)
+		end
+
+		if self._const and not self._actions[event.name] then
+			error(string.format("unknown event '%s'", event.name), 2)
+		end
+
+		-- build another representation of the action
+		local a = {
+			when = action.when,
+			execute = action.execute,
+		}
+
+		if action.jump then
+			a.jump = action.jump._name
+		end
+
+		-- register action
+		if event.name == 'timeouts' then
+			self._actions.timeouts[event.timeout] = a
+		else
+			if not self._actions[event.name] then
+				self._actions[event.name] = {}
+			end
+
+			table.insert(self._actions[event.name], a)
+		end
 	end
 
 end
