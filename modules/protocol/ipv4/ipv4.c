@@ -522,6 +522,11 @@ struct packet *ipv4_forge(struct ipv4 *ip)
 		retpkt = ipv4_forge_one(pkt, &buffer, offset, more);
 		vbuffer_clear(&buffer);
 
+		if (pkt != ip) {
+			ipv4_release(pkt);
+			pkt = NULL;
+		}
+
 		assert(retpkt);
 		return retpkt;
 	}
