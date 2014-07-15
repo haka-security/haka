@@ -19,7 +19,8 @@
 struct ipv4_frag_key {
 	ipv4addr src;
 	ipv4addr dst;
-	uint32   id;
+	uint16   id;
+	uint16   proto;
 };
 
 struct ipv4_frag_elem {
@@ -167,6 +168,7 @@ static struct ipv4_frag_elem *ipv4_frag_table_insert(struct ipv4_frag_table *tab
 	key.src = header->src;
 	key.dst = header->dst;
 	key.id = header->id;
+	key.proto = header->proto;
 
 	mutex_lock(&table->mutex);
 
