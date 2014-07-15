@@ -85,11 +85,6 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 				packet_drop(pkt);
 			}
 		}
-
-		if (packet_mode() == MODE_PASSTHROUGH &&
-			packet_state(pkt) == STATUS_NORMAL) {
-			message(HAKA_LOG_WARNING, L"core", L"pass-through error: packet has been blocked");
-		}
 	}
 	else {
 		lua_pop(state->lua->L, 1);
