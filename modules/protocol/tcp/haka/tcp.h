@@ -79,10 +79,7 @@ struct tcp_header *tcp_header(struct tcp *packet, bool write);
 void tcp_release(struct tcp *packet);
 void tcp_compute_checksum(struct tcp *packet);
 bool tcp_verify_checksum(struct tcp *packet);
-const uint8 *tcp_get_payload(struct tcp *packet);
-uint8 *tcp_get_payload_modifiable(struct tcp *packet);
 size_t tcp_get_payload_length(struct tcp *packet);
-uint8 *tcp_resize_payload(struct tcp *packet, size_t size);
 void tcp_action_drop(struct tcp *packet);
 
 

@@ -380,51 +380,10 @@ void tcp_compute_checksum(struct tcp *tcp)
 	}
 }
 
-const uint8 *tcp_get_payload(struct tcp *tcp)
-{
-	TCP_CHECK(tcp, NULL);
-	size_t size;
-	return vbuffer_flatten(&tcp->payload, &size);
-}
-
-uint8 *tcp_get_payload_modifiable(struct tcp *tcp)
-{
-	TCP_CHECK(tcp, NULL);
-	size_t size;
-	return (uint8 *)vbuffer_flatten(&tcp->payload, &size);
-}
-
 size_t tcp_get_payload_length(struct tcp *tcp)
 {
 	TCP_CHECK(tcp, 0);
 	return vbuffer_size(&tcp->payload);
-}
-
-uint8 *tcp_resize_payload(struct tcp *tcp, size_t size)
-{
-	size_t cursize;
-	TCP_CHECK(tcp, NULL);
-
-	cursize = vbuffer_size(&tcp->payload);
-	if (size > cursize) {
-		struct vbuffer extra;
-		if (!vbuffer_create_new(&extra, size-cursize, true)) {
-			assert(check_error());
-			return NULL;
-		}
-
-		vbuffer_append(&tcp->payload, &extra);
-		vbuffer_release(&extra);
-	}
-	else {
-		struct vbuffer_sub sub;
-		vbuffer_sub_create(&sub, &tcp->payload, size, ALL);
-		vbuffer_erase(&sub);
-	}
-
-	tcp->modified = true;
-	tcp->invalid_checksum = true;
-	return (uint8 *)tcp_get_payload(tcp);
 }
 
 void tcp_action_drop(struct tcp *tcp)
