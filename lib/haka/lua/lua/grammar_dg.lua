@@ -770,8 +770,8 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 		if self.name then
 			if self.converter then
 				res:addproperty(self.name,
-				function (this) return self.converter.get(sub) end,
-				function (this, newvalue) sub = self.converter.set(newvalue) end
+					function (this) return self.converter.get(sub) end,
+					function (this, newvalue) sub = self.converter.set(newvalue) end
 				)
 			else
 				res[self.name] = sub
@@ -825,7 +825,6 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 		else
 			sub = iter:sub('available')
 		end
-
 
 		if self.untilre then
 			local match, mbegin, mend = sink:feed(sub, sub == nil)
