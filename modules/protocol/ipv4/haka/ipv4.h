@@ -14,7 +14,9 @@
 #include <haka/types.h>
 #include <haka/compiler.h>
 #include <haka/error.h>
+#include <haka/vbuffer_stream.h>
 #include <haka/lua/object.h>
+#include <haka/container/list2.h>
 
 #include "haka/ipv4-addr.h"
 #include "haka/ipv4-network.h"
@@ -64,13 +66,19 @@ struct ipv4_header {
 struct ipv4 {
 	struct packet          *packet;
 	struct lua_object       lua_object;
-	struct vbuffer          payload;
+	struct list2_elem       frag_list;
 	struct vbuffer_iterator select;
+	struct vbuffer         *payload;
+	struct vbuffer          packet_payload;
+	struct vbuffer_stream   reassembled_payload;
+	size_t                  reassembled_offset;
 	bool                    invalid_checksum:1;
+	bool                    reassembled:1;
 };
 
 /** \cond */
 struct ipv4 *ipv4_dissect(struct packet *packet);
+struct ipv4 *ipv4_reassemble(struct ipv4 *ip);
 struct ipv4 *ipv4_create(struct packet *packet);
 struct packet *ipv4_forge(struct ipv4 *ip);
 struct ipv4_header *ipv4_header(struct ipv4 *ip, bool write);

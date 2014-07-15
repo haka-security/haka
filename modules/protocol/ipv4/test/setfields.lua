@@ -7,6 +7,8 @@
 
 local ipv4 = require("protocol/ipv4")
 
+ipv4.options.enable_reassembly = false
+
 haka.rule {
 	hook = ipv4.events.receive_packet,
 	eval = function (pkt)

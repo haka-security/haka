@@ -46,6 +46,12 @@ static bool tcp_flatten_header(struct vbuffer *payload, size_t hdrlen)
 
 	vbuffer_sub_create(&header_part, payload, 0, hdrlen);
 
+	/* Skip empty chunk to avoid issue if the buffer begin with
+	 * a control node (which could be the case when receiving fragmented
+	 * ip packets).
+	 */
+	vbuffer_iterator_skip_empty(&header_part.begin);
+
 	ptr = vbuffer_sub_flatten(&header_part, &len);
 	assert(len >= hdrlen);
 	return ptr != NULL;
@@ -55,7 +61,7 @@ static bool tcp_extract_payload(struct tcp *tcp, size_t hdrlen, size_t size)
 {
 	struct vbuffer_sub header;
 
-	vbuffer_sub_create(&header, &tcp->packet->payload, hdrlen, ALL);
+	vbuffer_sub_create(&header, tcp->packet->payload, hdrlen, ALL);
 
 	if (!vbuffer_select(&header, &tcp->payload, &tcp->select)) {
 		assert(check_error());
@@ -85,7 +91,9 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 		return NULL;
 	}
 
-	if (!vbuffer_check_size(&packet->payload, sizeof(struct tcp_header), NULL)) {
+	assert(packet->payload);
+
+	if (!vbuffer_check_size(packet->payload, sizeof(struct tcp_header), NULL)) {
 		alert_invalid_packet(packet, L"corrupted tcp packet, size is too small");
 		ipv4_action_drop(packet);
 		return NULL;
@@ -102,18 +110,18 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	tcp->invalid_checksum = false;
 
 	/* extract header len (at offset 12, see struct tcp_header) */
-	vbuffer_position(&packet->payload, &hdrleniter, 12);
+	vbuffer_position(packet->payload, &hdrleniter, 12);
 	*(uint8 *)&_hdrlen = vbuffer_iterator_getbyte(&hdrleniter);
 	hdrlen = _hdrlen.hdr_len << TCP_HDR_LEN;
 
-	if (hdrlen < sizeof(struct tcp_header) || !vbuffer_check_size(&packet->payload, hdrlen, NULL)) {
+	if (hdrlen < sizeof(struct tcp_header) || !vbuffer_check_size(packet->payload, hdrlen, NULL)) {
 		alert_invalid_packet(packet, L"corrupted tcp packet, header length is too small");
 		ipv4_action_drop(packet);
 		free(tcp);
 		return NULL;
 	}
 
-	if (!tcp_flatten_header(&packet->payload, hdrlen)) {
+	if (!tcp_flatten_header(packet->payload, hdrlen)) {
 		assert(check_error());
 		free(tcp);
 		return NULL;
@@ -157,8 +165,10 @@ struct tcp *tcp_create(struct ipv4 *packet)
 		return NULL;
 	}
 
+	assert(packet->payload);
+
 	hdrlen = sizeof(struct tcp_header);
-	if (!tcp_add_header(&packet->payload)) {
+	if (!tcp_add_header(packet->payload)) {
 		assert(check_error());
 		free(tcp);
 		return NULL;
@@ -225,7 +235,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 
 			if (!vbuffer_iterator_isvalid(&tcp->select)) {
 				struct vbuffer_iterator insert;
-				vbuffer_position(&tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
+				vbuffer_position(tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
 				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
 			}
 			else {
@@ -250,7 +260,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 				return NULL;
 			}
 
-			if (!tcp_add_header(&rem_ip->payload)) {
+			if (!tcp_add_header(rem_ip->payload)) {
 				assert(check_error());
 				ipv4_release(rem_ip);
 				return NULL;
@@ -275,7 +285,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 
 			if (!vbuffer_iterator_isvalid(&tcp->select)) {
 				struct vbuffer_iterator insert;
-				vbuffer_position(&tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
+				vbuffer_position(tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
 				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
 			}
 			else {
@@ -302,7 +312,7 @@ struct tcp_header *tcp_header(struct tcp *tcp, bool write)
 	struct tcp_header *header;
 	size_t len;
 
-	vbuffer_begin(&tcp->packet->payload, &begin);
+	vbuffer_begin(tcp->packet->payload, &begin);
 
 	header = (struct tcp_header *)vbuffer_iterator_mmap(&begin, ALL, &len, write);
 	if (!header) {
@@ -354,7 +364,7 @@ int16 tcp_checksum(struct tcp *tcp)
 	/* compute checksum */
 	inet_checksum_partial(&csum, (uint8 *)&tcp_pseudo_h, sizeof(struct tcp_pseudo_header));
 
-	vbuffer_sub_create(&sub, &tcp->packet->payload, 0, ALL);
+	vbuffer_sub_create(&sub, tcp->packet->payload, 0, ALL);
 	inet_checksum_vbuffer_partial(&csum, &sub);
 
 	vbuffer_sub_create(&sub, &tcp->payload, 0, ALL);
