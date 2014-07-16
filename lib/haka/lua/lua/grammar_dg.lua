@@ -766,7 +766,7 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 		size = 'all'
 	end
 
-	function create_property(sub)
+	local function create_property(sub)
 		if self.name then
 			if self.converter then
 				res:addproperty(self.name,
@@ -779,9 +779,9 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 		end
 	end
 
-	function chunked_callback(sub)
+	local function chunked_callback(sub, isend)
 		if self.chunked_callback then
-			self.chunked_callback(res, sub, size == 0 or iter.iseof, ctx)
+			self.chunked_callback(res, sub, isend, ctx)
 		end
 	end
 
@@ -831,28 +831,33 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 
 			if mbegin then
 				last_chunked = last_chunked or sub:pos('begin')
-				chunked_callback(haka.vbuffer_sub(last_chunked, mbegin))
+				chunked_callback(haka.vbuffer_sub(last_chunked, mbegin), match or iter.iseof)
 				last_chunked = mbegin
 			end
 
 			-- No more partial match update chunked_callback
 			if not match and not sink:ispartial() and last_chunked then
-				chunked_callback(haka.vbuffer_sub(last_chunked, sub:pos('begin')))
+				chunked_callback(haka.vbuffer_sub(last_chunked, sub:pos('begin')), iter.iseof)
 				last_chunked = nil
 			end
 
 			if not last_chunked and sub then
 				-- no (partial) match ever
 				-- pass full buffer to chunked_callback
-				chunked_callback(sub)
+				chunked_callback(sub, iter.iseof)
 			end
 
 			if match then
 				iter:move_to(last_chunked)
+
+				if not mbegin then
+					chunked_callback(nil, true)
+				end
+
 				break
 			end
 		else
-			chunked_callback(sub)
+			chunked_callback(sub, size == 0 or iter.iseof)
 		end
 
 		if not sub then break end
