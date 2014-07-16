@@ -39,7 +39,7 @@ A smtp response message is defined as:
             CRLF
         }
 
-    Test you coninguration. We provide a sample security file
+    Test your configuration. We provide a sample security file
     :download:`smtp_test.lua` that loads the partial configuration script and
     activates the dissector on port 25:
 
