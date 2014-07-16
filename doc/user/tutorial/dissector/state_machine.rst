@@ -70,17 +70,19 @@ A transition is created through the following skeleton:
 
     some_state:on{
         event = ...,
-        check = function (...) ... end,
-        action = function (...) ... end,
+        when = function (...) ... end,
+        execute = function (...) ... end,
         jump = another_state,
     }
 
 A transition consists of:
- * event: an event to attach to. Do not confuse with user defined event. They
+ * *event*: an event to attach to. Do not confuse with user defined event. They
    are built-in events specific to the state machine type.
- * check: a checking function that takes the decision if we should switch to another state and/or to perform a specific action. By default (i.e. missing check function), the `action` is taken and the `jump` is followed.
- * action: an action to perform.
- * jump: a state tois case.
+ * *when*: a checking function that takes the decision if we should switch to another state
+   and/or to perform a specific action. By default (i.e. missing check function), the `execute`
+   is taken and the `jump` is followed.
+ * *execute*: an action to perform.
+ * *jump*: the state to switch to.
 
 Managing initiation phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -97,8 +99,8 @@ alert and switch to a built-in failure state.
 
     session_initiation:on{
         event = events.down,
-        check = function (self, res) return res.responses[1].code == '220' end,
-        action = function (self, res)
+        when = function (self, res) return res.responses[1].code == '220' end,
+        execute = function (self, res)
             self:trigger('response', res)
         end,
         jump = client_initiation,
@@ -106,7 +108,7 @@ alert and switch to a built-in failure state.
 
     session_initiation:on{
         event = events.down,
-        action = function (self, res)
+        execute = function (self, res)
             haka.alert{
                 description = string.format("unavailable service: %s", status),
                 severity = 'low'
@@ -121,7 +123,7 @@ We define also a transition on `parse_error` event to report error when smtp res
 
     session_initiation:on{
         event = events.parse_error,
-        action = function (self, err)
+        execute = function (self, err)
             haka.alert{
                 description = string.format("invalid smtp response %s", err),
                 severity = 'high'
@@ -143,11 +145,11 @@ Otherwise, we jump to a failure state.
 
     client_initiation:on{
         event = events.up,
-        check = function (self, res)
+        when = function (self, res)
             local command = string.upper(res.command)
             return command == 'EHLO' or command == 'HELO'
         end,
-        action = function (self, res)
+        execute = function (self, res)
             self.command = res
             self:trigger('command', res)
         end,
@@ -156,7 +158,7 @@ Otherwise, we jump to a failure state.
 
     client_initiation:on{
         event = events.up,
-        action = function (self, res)
+        execute = function (self, res)
             haka.alert{
                 description = string.format("invalid client initiation command"),
                 severity = 'low'
@@ -171,7 +173,7 @@ Simillarly, we attach a transition on `parse_error` event that will report an er
 
     client_initiation:on{
         event = events.parse_error,
-        action = function (self, err)
+        execute = function (self, err)
             haka.alert{
                 description = string.format("invalid smtp command %s", err),
                 severity = 'low'
@@ -192,10 +194,10 @@ approriate state by checking the status code.
 
     response:on{
         event = events.down,
-        check = function (self, res)
+        when = function (self, res)
             return res.responses[1].code == '354'
         end,
-        action = function (self, res)
+        execute = function (self, res)
             self.response = res
             self:trigger('response', res)
         end,
@@ -204,10 +206,10 @@ approriate state by checking the status code.
 
     response:on{
         event = events.down,
-        check = function (self, res)
+        when = function (self, res)
             return res.responses[1].code == '221'
         end,
-        action = function (self, res)
+        execute = function (self, res)
             self.response = res
             self:trigger('response', res)
         end,
@@ -216,7 +218,7 @@ approriate state by checking the status code.
 
     response:on{
         event = events.down,
-        action = function (self, res)
+        execute = function (self, res)
             self.response = res
             self:trigger('response', res)
         end,
@@ -230,7 +232,7 @@ And as usual, we move to a failure state in case of parsing errors:
 
     response:on{
         event = events.parse_error,
-        action = function (self, err)
+        execute = function (self, err)
             haka.alert{
                 description = string.format("invalid smtp response %s", err),
                 severity = 'low'
