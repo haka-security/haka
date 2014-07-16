@@ -87,19 +87,7 @@ SmtpDissector.grammar = haka.grammar.new("smtp", function ()
 	}
 
 	-- smtp response
-	smtp_response = record{
-		CODE,
-		SEP,
-		MESSAGE,
-		CRLF
-	}
-
-	smtp_responses = field('responses',
-		array(smtp_response)
-			:untilcond(function (elem, ctx)
-				return elem and elem.sep == ' '
-			end)
-		)
+	smtp_responses = fail("incomplete grammar")
 
 	-- smtp data
 	smtp_data = record{
@@ -118,7 +106,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	session_initiation = state(nil, SmtpDissector.grammar.smtp_responses)
 	client_initiation = state(SmtpDissector.grammar.smtp_command, nil)
-	response = state(nil, SmtpDissector.grammar.smtp_responses)
+	response = state() -- state placeholder
 	command = state(SmtpDissector.grammar.smtp_command, nil)
 	data_transmission = state(SmtpDissector.grammar.smtp_data, nil)
 
@@ -161,7 +149,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 		event = events.down,
 		when = function (self, res) return res.responses[1].code == '220' end,
 		execute = function (self, res)
-			self:trigger('response', res)
+			debug.pprint(res, nil, nil, { debug.hide_underscore, debug.hide_function })
 		end,
 		jump = client_initiation,
 	}
@@ -210,47 +198,6 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 			}
 		end,
 		jump = fail,
-	}
-
-	response:on{
-		event = events.parse_error,
-		execute = function (self, err)
-			haka.alert{
-				description = string.format("invalid smtp response %s", err),
-				severity = 'high'
-			}
-		end,
-		jump = fail,
-	}
-
-	response:on{
-		event = events.down,
-		when = function (self, res)
-			return res.responses[1].code == '354'
-		end,
-		execute = function (self, res)
-			self:trigger('response', res)
-		end,
-		jump = data_transmission,
-	}
-
-	response:on{
-		event = events.down,
-		when = function (self, res)
-			return res.responses[1].code == '221'
-		end,
-		execute = function (self, res)
-			self:trigger('response', res)
-		end,
-		jump = finish,
-	}
-
-	response:on{
-		event = events.down,
-		execute = function (self, res)
-			self:trigger('response', res)
-		end,
-		jump = command,
 	}
 
 	command:on{

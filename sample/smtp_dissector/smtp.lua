@@ -324,4 +324,3 @@ end)
 module.events = SmtpDissector.events
 
 return module
-

@@ -5,7 +5,7 @@ This tutorial covers the specification of smtp protocol using Haka. For those wh
 familiar with this protocol, please refer to :ref:`smtp_appendix`.
 
 In smtp protcol, we distinguish three smtp messages: *commands*, *responses* and *data* (mail
-content). We provide here a partial specification :download:`smtp_partial.lua` that manages
+content). We provide here a partial specification :download:`smtp.lua` that manages
 only smtp commands and mail data. Your overall goal is to complete this specification by
 managing also smtp responses.
 
@@ -126,7 +126,7 @@ transitions between states. Finally, we select the initial state.
         initial(<first state>)
     end)
 
-The partial specification :download:`smtp_partial.lua` defines
+The partial specification :download:`smtp.lua` defines
 four steps to handle *session initiation*, *client_initiation*, *commands*, and
 *data transmission*. Your goal is to complete this specification by adding a new
 state *response* along with his transitions.
@@ -269,7 +269,7 @@ We provide the full code of the above script here :download:`mail_content.lua`.
 Full dissector
 --------------
 
-The full dissector code can be downloaded here: :download:`smtp.lua`
+The full dissector code can be downloaded here: :download:`smtp_final.lua`
 
 It is possible to generate the graph related to the state-machine and the
 grammar (you need graphviz for this):
