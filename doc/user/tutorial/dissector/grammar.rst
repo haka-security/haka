@@ -48,15 +48,14 @@ smtp messages structure:
     WS = token('[[:blank:]]+')
     CRLF = token('[%r]?[%n]')
 
-    SEP = field('sep', token('[- ]'))
-    COMMAND = field('command', token('[[:alpha:]]+'))
-    MESSAGE = field('parameter', token('[^%r%n]*'))
-    CODE = field('code', token('[0-9]{3}'))
-    DATA = field('data', raw_token("[^%r%n]*%r%n"))
+    SEP = token('[- ]'))
+    COMMAND = token('[[:alpha:]]+'))
+    MESSAGE = token('[^%r%n]*'))
+    CODE = token('[0-9]{3}'))
 
     PARAM = record{
         WS,
-        MESSAGE
+        field('parameter', MESSAGE)
     }
 
 The first ones are self explanatory. Except for `PARAM`, the rest of entities are encapsulated in a `field` element which means that the parsed content will be available for read/write through the provided field name. Finally, `PARAM` is defined using the `record` keyword wich represents consecutive elements.
@@ -124,9 +123,9 @@ A smtp response message is defined as a status code followed by a separator, a c
 .. code-block:: lua
 
     smtp_response = record {
-        CODE,
-        SEP,
-        MESSAGE,
+        field('code', CODE),
+        field('sep', SEP),
+        field('parameter', MESSAGE),
         CRLF
     }
 
@@ -151,5 +150,7 @@ Finally, data content is defined as following:
 .. code-block:: lua
 
     smtp_data = record {
-        DATA
+        field('data', bytes()
+            :untiltoken("%r?%n%.%r?%n")),
+        token("%r?%n%.%r?%n")
     }

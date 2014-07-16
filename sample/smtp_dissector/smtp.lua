@@ -40,6 +40,18 @@ function module.install_tcp_rule(port)
 	SmtpDissector:install_tcp_rule(port)
 end
 
+function SmtpDissector.method:push_data(sub, last)
+	assert(self.mail)
+
+	local mail_iter
+
+	if sub then mail_iter = self.mail:push(sub) end
+	if last then self.mail:finish() end
+
+	self:trigger('mail_content', self.mail, mail_iter)
+	self.mail:pop()
+end
+
 --
 -- Events
 --
@@ -54,15 +66,14 @@ SmtpDissector.grammar = haka.grammar.new("smtp", function ()
 	-- terminal tokens
 	WS = token('[[:blank:]]+')
 	CRLF = token('[%r]?[%n]')
-	SEP = field('sep', token('[- ]'))
-	COMMAND = field('command', token('[[:alpha:]]+'))
-	MESSAGE = field('parameter', token('[^%r%n]*'))
-	CODE = field('code', token('[0-9]{3}'))
-	DATA = field('data', raw_token("[^%r%n]*%r%n"))
+	SEP = token('[- ]')
+	COMMAND = token('[[:alpha:]]+')
+	MESSAGE = token('[^%r%n]*')
+	CODE = token('[0-9]{3}')
 
 	PARAM = record{
 		WS,
-		MESSAGE
+		field('parameter', MESSAGE)
 	}
 
 	-- smtp command
@@ -88,9 +99,9 @@ SmtpDissector.grammar = haka.grammar.new("smtp", function ()
 
 	-- smtp response
 	smtp_response = record{
-		CODE,
-		SEP,
-		MESSAGE,
+		field('code', CODE),
+		field('sep', SEP),
+		field('parameter', MESSAGE),
 		CRLF
 	}
 
@@ -103,7 +114,12 @@ SmtpDissector.grammar = haka.grammar.new("smtp", function ()
 
 	-- smtp data
 	smtp_data = record{
-		DATA
+		field('data', bytes()
+			:untiltoken("%r?%n%.%r?%n")
+			:chunked(function (self, sub, last, ctx)
+				ctx.user:push_data(sub, last)
+			end)),
+		token("%r?%n%.%r?%n")
 	}
 
 	export(smtp_command, smtp_responses, smtp_data)
@@ -293,22 +309,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	data_transmission:on{
 		event = events.up,
-		when = function (self, res) return res.data:asstring() == '.\r\n' end,
-		execute = function (self, res)
-			self.mail:finish()
-			self:trigger('mail_content', self.mail, nil)
-			self.mail:pop()
-		end,
 		jump = response,
-	}
-
-	data_transmission:on{
-		event = events.up,
-		execute = function (self, res)
-			local mail_iter = self.mail:push(res.data)
-			self:trigger('mail_content', self.mail, mail_iter)
-			self.mail:pop()
-		end,
 	}
 
 	data_transmission:on{

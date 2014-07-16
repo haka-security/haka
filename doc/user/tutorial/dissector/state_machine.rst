@@ -258,32 +258,31 @@ First of all, we define a transition attached to `enter` event to build stream i
         end,
     }
 
-Next, we define two transitions on `up` event. In the former, we check end of
-mail transfert (line made of a single '.' followed by a traling CRLF). If this
-condition is met, then we mark that we reached the end of the stream and switch
-again to the `command` state where the client can issue a new transaction mail.
-In the latter, data are simply pushed on the stream.
+Next, we want to send the mail data pieces by pieces as soon as available to the
+security rules. To do this we add a callback on the grammar for the data:
+
+.. code-block:: lua
+
+    smtp_data = record{
+            field('data', bytes()
+                :untiltoken("%r?%n%.%r?%n")
+                :chunked(function (self, sub, last, ctx)
+                    ctx.user:push_data(sub, last)
+                end)),
+            token("%r?%n%.%r?%n")
+        }
+
+The ``chunked`` callback allow to push into a streamed view. The code of this function
+is available in the full smtp code.
+
+We just have to add a simple transition to go back to the ``response`` state when the
+data transfer is over.
 
 .. code-block:: lua
 
     data_transmission:on{
         event = events.up,
-        check = function (self, res) return res.data:asstring() == '.\r\n' end,
-        action = function (self, res)
-            self.mail:finish()
-            self:trigger('mail_content', self.mail, nil)
-            self.mail:pop()
-        end,
         jump = response,
-    }
-
-    data_transmission:on{
-        event = events.up,
-        action = function (self, res)
-            local mail_iter = self.mail:push(res.data)
-            self:trigger('mail_content', self.mail, mail_iter)
-            self.mail:pop()
-        end,
     }
 
 Finally, we destroy the stream while leaving the `data_transmission` state:

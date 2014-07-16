@@ -8,10 +8,14 @@ haka.rule{
 		streamed = true,
 	},
 	eval = function (flow, iter)
-		print("== Mail Content ==")
+		local mail_content = {}
+
 		for sub in iter:foreach_available() do
-			io.write(sub:asstring())
+			table.insert(mail_content, sub:asstring())
 		end
+
+		print("== Mail Content ==")
+		print(table.concat(mail_content))
 		print("== End Mail Content ==")
 	end
 }
