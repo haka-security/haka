@@ -21,6 +21,7 @@ TEST_PCAP(ipv4 fragment)
 TEST_PCAP(ipv4 fragment_overlap_1)
 TEST_PCAP(ipv4 fragment_overlap_2)
 TEST_PCAP(ipv4 fragment_overrun)
+TEST_PCAP(ipv4 fragment_incomplete)
 # TEST_PCAP(ipv4 options)
 
 TEST_UNIT(MODULE ipv4 NAME unit FILES unit.c)
