@@ -8,6 +8,7 @@ include(TestUnitLua)
 
 TEST_PCAP(doc doc-alert CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/../ref/alert-test.lua)
 TEST_UNIT_LUA(MODULE core NAME doc-regexp FILES ../ref/regexp.lua)
+TEST_UNIT_LUA(MODULE core NAME doc-state-machine FILES ../ref/state_machine.lua)
 
 # Workshop
 TEST_PCAP(doc workshop-hellopacket)
