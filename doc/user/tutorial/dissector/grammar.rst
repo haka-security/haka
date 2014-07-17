@@ -4,10 +4,10 @@
 
 Grammar building blocks
 ^^^^^^^^^^^^^^^^^^^^^^^
-Haka grammar is made of basic blocks and coumpound blocks. The former enable
+Haka grammar is made of basic blocks and coumpound blocks. The former enables
 parsing of basic elements such as booleans (:haka:func:`flag`), bytes
 (:haka:func:`bytes`), number (:haka:func:`number`), regular expression
-(:haka:func:`token`), etc. The latter allow to form complex blocks by combining
+(:haka:func:`token`), etc. The latter allows to form complex blocks by combining
 basic and compound blocks. For instance, the `record` block (:haka:func:`record`)
 is used to define a structure of elements.
 
@@ -58,7 +58,8 @@ smtp messages structure:
         field('parameter', MESSAGE)
     }
 
-The first ones are self explanatory. Except for `PARAM`, the rest of entities are encapsulated in a `field` element which means that the parsed content will be available for read/write through the provided field name. Finally, `PARAM` is defined using the `record` keyword wich represents consecutive elements.
+The first ones are self explanatory. `PARAM` is defined using the `record`
+keyword wich represents consecutive elements.
 
 Specifying protocol message syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -140,7 +141,7 @@ Smtp server may respond by a sequence of response messages which are captured in
 			end)
 		)
 
-.. note:: `untilcond` is an array option that returns true that indicate that we have reached the end of the array. See :doc:`\../../../ref/grammar` to get the list of available options.
+.. note:: `untilcond` is an array option that returns true to indicate that we have reached the end of the array. See :doc:`\../../../ref/grammar` to get the list of available options.
 
 SMTP data
 ~~~~~~~~~

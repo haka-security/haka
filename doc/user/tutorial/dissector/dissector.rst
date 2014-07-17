@@ -31,8 +31,9 @@ Next, we create the dissector by specifying its name and its type:
         name = 'smtp'
     }
 
-We select a :haka:class:`tcp_connection.helper.TcpFlowDissector` type since smtp communications are over
-Tcp and flow-based (i.e. multiple packets are exchanged during a smtp session).
+We select a :haka:class:`tcp_connection.helper.TcpFlowDissector` type since smtp
+communications are flow-based (i.e. multiple packets are exchanged
+during a smtp session).
 
 Initializing the dissector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -47,8 +48,8 @@ Before instanciating it, we could define a constructor if needed:
         [...]
     end
 
-This constructor function pass its input flow to the dissector type. It will
-also automatically instanciate our state machine.
+This constructor function passes its input flow to the dissector type. It will
+also automatically instanciates our state machine.
 
 Selecting SMTP dissector
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -22,7 +22,7 @@ binary-based protocols (e.g. dns). Thanks to this grammar, we successfully built
 several protocol dissectors: ipv4 (with option support), icmp, udp (stateless
 and stateful), tcp (stateless and stateful), http (with chunked mode support),
 dns. These dissectors are available under ``modules/protocol`` folder in the
-source tree
+source tree.
 
 In this tutorial we will cover the specification of smtp protocol using the Haka
 grammar. Note that for a sake of convenience, we do not cover all features of
@@ -35,7 +35,7 @@ reliabily. It is a command/reponses protocol that starts with a session initiati
 during which the server sends first a welcoming message together with a status
 code indicating if the transaction (220) has succeed or not (554). Then, the
 client identifies himself using the commands EHLO ot HELO and awaits for server
-response server response to proceed::
+response to proceed::
 
     S: 220 foo.com Simple Mail Transfer Service Ready
     C: EHLO bar.com

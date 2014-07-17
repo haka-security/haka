@@ -49,7 +49,7 @@ Creating new states
 ^^^^^^^^^^^^^^^^^^^
 In a bidiretionnal setting, we create a new state by passing the expected
 compiled grammar for each direction. In the following, we create five states to
-manage intiation phase, command/response and data transfert:
+manage initiation phase, command/response and data transfert:
 
 .. code-block:: lua
 
@@ -80,7 +80,7 @@ A transition consists of:
    are built-in events specific to the state machine type.
  * *when*: a checking function that takes the decision if we should switch to another state
    and/or to perform a specific action. By default (i.e. missing check function), the `execute`
-   is taken and the `jump` is followed.
+   is performed and the `jump` is followed.
  * *execute*: an action to perform.
  * *jump*: the state to switch to.
 
@@ -135,7 +135,7 @@ We define also a transition on `parse_error` event to report error when smtp res
 In the same way, we define `client_initiation` transitions attaching this time to the `up` event since we are expecting only messages from the client.
 
 In the first transition, we check that the `command` value (this value is
-avalable in the parsing result `res`; remember that we defined a `field` named
+available in the parsing result `res`; remember that we defined a `field` named
 command in our grammar) is equal to 'HELO' or 'EHLO'. If this condition is
 satisfied, we store the parsing result and made it available to security rules
 attached to the triggered event `command` and then jump to `response` state.
@@ -253,7 +253,7 @@ First of all, we define a transition attached to `enter` event to build stream i
 
     data_transmission:on{
         event = events.enter,
-        action = function (self)
+        execute = function (self)
             self.mail = haka.vbuffer_sub_stream()
         end,
     }
@@ -264,15 +264,15 @@ security rules. To do this we add a callback on the grammar for the data:
 .. code-block:: lua
 
     smtp_data = record{
-            field('data', bytes()
-                :untiltoken("%r?%n%.%r?%n")
-                :chunked(function (self, sub, last, ctx)
-                    ctx.user:push_data(sub, last)
-                end)),
-            token("%r?%n%.%r?%n")
-        }
+        field('data', bytes()
+            :untiltoken("%r?%n%.%r?%n")
+            :chunked(function (self, sub, last, ctx)
+                ctx.user:push_data(sub, last)
+            end)),
+        token("%r?%n%.%r?%n")
+    }
 
-The ``chunked`` callback allow to push into a streamed view. The code of this function
+The ``chunked`` callback allow to push data into a streamed view. The code of this function
 is available in the full smtp code.
 
 We just have to add a simple transition to go back to the ``response`` state when the
@@ -291,7 +291,7 @@ Finally, we destroy the stream while leaving the `data_transmission` state:
 
     data_transmission:on{
         event = events.leave,
-        action = function (self)
+        execute = function (self)
             self.mail = nil
         end,
     }
@@ -302,7 +302,7 @@ Additionnaly, a transition is defined to handle parsing errors:
 
     data_transmission:on{
         event = events.parse_error,
-        action = function (self, err)
+        execute = function (self, err)
             haka.alert{
                 description = string.format("invalid data blob %s", err),
                 severity = 'low'
@@ -313,9 +313,8 @@ Additionnaly, a transition is defined to handle parsing errors:
 
 Setting default transitions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We define two transitions thatt are common to all states. The first one is used
-to handle errors which we manage by dropping the connection (remember that we
-defined a drop connection in our dissector):
+We define two transitions that are common to all states. The first one is used
+to handle errors which we manage by dropping the connection:
 
 .. code-block:: lua
 
@@ -332,7 +331,7 @@ The second transition allows to handle the cases where messages are not expected
 
     any:on{
         event = events.missing_grammar,
-        action = function (self, direction, payload)
+        execute = function (self, direction, payload)
             local description
             if direction == 'up' then
                 description = "unexpected client command"
