@@ -151,7 +151,10 @@ local state_machine_int = {}
 
 local function state_machine_env(state_machine)
 	state_machine_int.state_type = function (state_class)
-		assert(class.isaclass(state_class, state.State), "state type must be of type State")
+		assert(type(state_class) == 'table', "state type must be either a table or an existing state type")
+		if not class.isaclass(state_class, state.State) then
+			state_class = state.new(state_class)
+		end
 		state_machine._state_type = state_class
 	end
 

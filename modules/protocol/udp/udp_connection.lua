@@ -59,14 +59,13 @@ function udp_connection_dissector:receive(pkt)
 	end
 end
 
-local UdpState = haka.state_machine.new_state_type({ 'receive', 'drop' })
-
-function UdpState.method:update(state_machine, direction, pkt)
-	state_machine:trigger('receive', pkt, direction)
-end
-
 udp_connection_dissector.state_machine = haka.state_machine.new("udp", function ()
-	state_type(UdpState)
+	state_type{
+		events = { 'receive', 'drop' },
+		update = function (self, state_machine, direction, pkt)
+			state_machine:trigger('receive', pkt, direction)
+		end,
+	}
 
 	drop = state()
 	established = state()

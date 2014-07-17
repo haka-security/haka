@@ -97,25 +97,24 @@ function tcp_connection_dissector:receive(pkt)
 	end
 end
 
-local TcpState = haka.state_machine.new_state_type({ 'input', 'output', 'reset' })
-
-function TcpState.method:update(state_machine, direction, pkt)
-	if pkt.flags.rst then
-		state_machine.owner:_sendpkt(pkt, direction)
-		state_machine:trigger('reset', pkt)
-		return
-	end
-
-	if direction == state_machine.owner.input then
-		state_machine:trigger('input', pkt)
-	else
-		assert(direction == state_machine.owner.output)
-		state_machine:trigger('output', pkt)
-	end
-end
-
 tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function ()
-	state_type(TcpState)
+	state_type{
+		events = { 'input', 'output', 'reset' },
+		update = function (self, state_machine, direction, pkt)
+			if pkt.flags.rst then
+				state_machine.owner:_sendpkt(pkt, direction)
+				state_machine:trigger('reset', pkt)
+				return
+			end
+
+			if direction == state_machine.owner.input then
+				state_machine:trigger('input', pkt)
+			else
+				assert(direction == state_machine.owner.output)
+				state_machine:trigger('output', pkt)
+			end
+		end
+	}
 
 	reset        = state()
 	syn          = state()

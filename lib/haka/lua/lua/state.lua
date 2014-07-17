@@ -235,14 +235,18 @@ function module.CompiledState.method:__init(state_machine, state, name)
 	end
 end
 
-module.new = function(events, name, parent)
-	name = name or "AnonymousState"
-	parent = parent or module.State
+module.new = function(state)
+	state.name = state.name or "AnonymousState"
+	state.parent = state.parent or module.State
 
-	local state = class.class(name, parent)
-	state._events = events
+	local State = class.class(state.name, state.parent)
+	State._events = state.events
 
-	return state
+	if state.update then
+		State.method.update = state.update
+	end
+
+	return State
 end
 
 return module
