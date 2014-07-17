@@ -167,7 +167,7 @@ Otherwise, we jump to a failure state.
         jump = fail,
     }
 
-Simillarly, we attach a transition on `parse_error` event that will report an error in case of unexpected smtp command.
+Similarly, we attach a transition on `parse_error` event that will report an error in case of unexpected smtp command.
 
 .. code-block:: lua
 

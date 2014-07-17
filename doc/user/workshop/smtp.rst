@@ -24,7 +24,7 @@ A smtp response message is defined as:
 
 .. admonition:: Exercise
 
-    Given the following skeleton you can write the missing grammar to complete our
+    Given the following skeleton, write the missing grammar to complete our
     dissector.
 
     .. code-block:: lua
@@ -103,17 +103,18 @@ events will be evaluated. Non stream-based events are created by invoking
 
 .. admonition:: Exercise
 
-    Update the partial specification by creating an event  named ``response``.
+    Update the partial specification by creating an event named ``response``.
 
 We are going to trigger this event later inside the state machine code.
 
 State machine
 -------------
-Smtp `state machine <../manual/doc/ref/state_machine.html>`_ is created through the following skeleton. The first step is
-to set the type of the states. In our case, we select a bidirectional type in
-order to handle data parsing in both direction: *up* (from client to server) and
-*down* (from server to client).  Then, we create the required states and
-transitions between states. Finally, we select the initial state.
+Smtp `state machine <../manual/doc/ref/state_machine.html>`_ is created through
+the following skeleton. The first step is to set the type of the states. In our
+case, we select a bidirectional type in order to handle data parsing in both
+direction: *up* (from client to server) and *down* (from server to client).
+Then, we create the required states and transitions between states. Finally, we
+select the initial state.
 
 .. code-block:: lua
 
@@ -126,10 +127,10 @@ transitions between states. Finally, we select the initial state.
         initial(<first state>)
     end)
 
-The partial specification :download:`smtp.lua` defines
-four steps to handle *session initiation*, *client_initiation*, *commands*, and
-*data transmission*. Your goal is to complete this specification by adding a new
-state *response* along with his transitions.
+The partial specification :download:`smtp.lua` defines four steps to handle
+*session initiation*, *client_initiation*, *commands*, and *data transmission*.
+Your goal is to complete this specification by adding a new state *response*
+along with his transitions.
 
 In a bidirectional setting, we create a new state by passing the expected
 compiled grammar for each direction (``'up'`` and ``'down'``):
