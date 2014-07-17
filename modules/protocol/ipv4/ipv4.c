@@ -49,7 +49,10 @@ static struct ipv4_frag_table *ipv4_frag_table_new()
 	 * running in single thread mode.
 	 */
 	UNUSED bool ret = mutex_init(&table->mutex, true);
-	assert(ret);
+	if (!ret) {
+		assert(check_error());
+		return NULL;
+	}
 
 	table->head = NULL;
 	return table;
