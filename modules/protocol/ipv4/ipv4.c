@@ -58,6 +58,24 @@ static struct ipv4_frag_table *ipv4_frag_table_new()
 	return table;
 }
 
+static void raise_alert(struct ipv4 *ip, wchar_t *message)
+{
+	ALERT(invalid_packet, 1, 1)
+		description: message,
+		severity: HAKA_ALERT_LOW,
+	ENDALERT
+
+	if (ip) {
+		TOWSTR(srcip, ipv4addr, ipv4_get_src(ip));
+		TOWSTR(dstip, ipv4addr, ipv4_get_dst(ip));
+
+		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
+		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
+	}
+
+	alert(&invalid_packet);
+}
+
 static void ipv4_frag_table_release(struct ipv4_frag_table *table)
 {
 	struct ipv4_frag_elem *elem, *tmp;
@@ -79,83 +97,92 @@ static void ipv4_frag_table_release(struct ipv4_frag_table *table)
 	free(table);
 }
 
+static bool ipv4_frag_check_missing_fragments(struct ipv4_frag_elem *elem)
+{
+	list2_iter iter;
+	const list2_iter end = list2_end(&elem->list);
+	struct ipv4 *last;
+	size_t last_offset = 0;
+
+	for (iter = list2_begin(&elem->list); iter != end; iter = list2_next(iter)) {
+		struct ipv4 *cur = list2_get(iter, struct ipv4, frag_list);
+
+		size_t curoffset = ipv4_get_frag_offset(cur);
+		const ssize_t curlen = ipv4_get_len(cur) - ipv4_get_hdr_len(cur);
+		assert(curlen >= 0);
+
+		if (curoffset > last_offset) {
+			return false;
+		}
+
+		last_offset = curoffset + curlen;
+
+		if (!ipv4_get_flags_mf(cur)) return true;
+	}
+
+	/* check for last mf flag */
+	last = list2_get(list2_prev(end), struct ipv4, frag_list);
+	if (ipv4_get_flags_mf(last)) return false;
+
+	return true;
+}
+
 static bool ipv4_frag_insert(struct ipv4_frag_elem *elem, struct ipv4 *pkt)
 {
-	list2_iter iter = list2_begin(&elem->list);
+	list2_iter iter;
 	const list2_iter end = list2_end(&elem->list);
-	size_t last_offset = 0;
-	bool complete = true, added = false;
+	bool added = false;
 
 	if (list2_empty(&elem->list)) {
 		list2_insert(end, &pkt->frag_list);
 		return false;
 	}
 
-	for (; iter != end; iter = list2_next(iter)) {
+	/* Insert our new packet in the list */
+	for (iter = list2_begin(&elem->list); iter != end; iter = list2_next(iter)) {
 		struct ipv4 *cur = list2_get(iter, struct ipv4, frag_list);
 
 		size_t curoffset = ipv4_get_frag_offset(cur);
-		ssize_t curlen;
 
 		assert(ipv4_get_src(cur) == ipv4_get_src(pkt));
 		assert(ipv4_get_dst(cur) == ipv4_get_dst(pkt));
 		assert(ipv4_get_id(cur) == ipv4_get_id(pkt));
 
-		if (!added && curoffset >= ipv4_get_frag_offset(pkt)) {
-			if (!ipv4_get_flags_mf(cur)) {
-				assert(list2_next(iter) == end);
-				/* an alert will be raised bellow */
-				break;
+		if (curoffset >= ipv4_get_frag_offset(pkt)) {
+			list2_insert(iter, &pkt->frag_list);
+			added = true;
+
+			if (!ipv4_get_flags_mf(pkt)) {
+				/* All packets after this one are incorrect */
+				while (iter != end) {
+					cur = list2_get(iter, struct ipv4, frag_list);
+					iter = list2_erase(iter);
+
+					raise_alert(cur, L"invalid ipv4 fragment");
+					ipv4_action_drop(cur);
+					ipv4_release(cur);
+				}
 			}
 
-			iter = list2_insert(iter, &pkt->frag_list);
-
-			if (!complete) return false;
-
-			added = true;
-			iter = list2_prev(iter);
-			continue;
+			break;
 		}
-
-		curlen = ipv4_get_len(cur) - ipv4_get_hdr_len(cur);
-		assert(curlen >= 0);
-
-		if (curoffset > last_offset) {
-			if (added) return false;
-
-			complete = false;
-		}
-
-		last_offset = curoffset + curlen;
 	}
 
 	if (!added) {
-		/* insert the packet at the end */
-		struct ipv4 *cur = list2_get(list2_prev(end), struct ipv4, frag_list);
-		if (!ipv4_get_flags_mf(cur)) {
-			/* invalid packet */
-			ALERT(invalid_packet, 1, 1)
-				description: L"invalid ipv4 fragment",
-				severity: HAKA_ALERT_LOW,
-			ENDALERT
-
-			alert(&invalid_packet);
+		/* Insert the packet at the end, but check first that the last
+		 * packet does have the mf flag set. */
+		struct ipv4 *last = list2_get(list2_prev(end), struct ipv4, frag_list);
+		if (!ipv4_get_flags_mf(last)) {
+			raise_alert(pkt, L"invalid ipv4 fragment");
+			ipv4_action_drop(pkt);
+			ipv4_release(pkt);
 			return false;
 		}
 
 		list2_insert(end, &pkt->frag_list);
-
-		if (!complete) return false;
 	}
 
-	/* check for last mf flag */
-	iter = list2_prev(end);
-	{
-		struct ipv4 *cur = list2_get(iter, struct ipv4, frag_list);
-		if (ipv4_get_flags_mf(cur)) return false;
-	}
-
-	return true;
+	return ipv4_frag_check_missing_fragments(elem);
 }
 
 static struct ipv4_frag_elem *ipv4_frag_table_insert(struct ipv4_frag_table *table, struct ipv4 *pkt)
@@ -203,9 +230,7 @@ static struct ipv4_frag_elem *ipv4_frag_table_insert(struct ipv4_frag_table *tab
 INIT void ipv4_init()
 {
 	ipv4_frag_global = ipv4_frag_table_new();
-	if (!ipv4_frag_global) {
-		error(L"memory error");
-	}
+	assert(ipv4_frag_global);
 }
 
 FINI void ipv4_final()
@@ -271,12 +296,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	}
 
 	if (!vbuffer_check_size(payload, sizeof(struct ipv4_header), NULL)) {
-		ALERT(invalid_packet, 1, 1)
-			description: L"corrupted ip packet, size is too small",
-			severity: HAKA_ALERT_LOW,
-		ENDALERT
-
-		alert(&invalid_packet);
+		raise_alert(NULL, L"corrupted ip packet, size is too small");
 
 		packet_drop(packet);
 		packet_release(packet);
@@ -300,12 +320,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 
 	header_len = hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET;
 	if (header_len < sizeof(struct ipv4_header)) {
-		ALERT(invalid_packet, 1, 1)
-			description: L"corrupted ip packet",
-			severity: HAKA_ALERT_LOW,
-		ENDALERT
-
-		alert(&invalid_packet);
+		raise_alert(NULL, L"corrupted ip packet");
 
 		packet_drop(packet);
 		packet_release(packet);
@@ -323,17 +338,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	 * as the packet might contains some padding.
 	 */
 	if (vbuffer_size(payload) < ipv4_get_len(ip)) {
-		TOWSTR(srcip, ipv4addr, ipv4_get_src(ip));
-		TOWSTR(dstip, ipv4addr, ipv4_get_dst(ip));
-		ALERT(invalid_packet, 1, 1)
-			description: L"invalid ip packet, invalid size is too small",
-			severity: HAKA_ALERT_LOW,
-		ENDALERT
-
-		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
-		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
-
-		alert(&invalid_packet);
+		raise_alert(ip, L"invalid ip packet, invalid size is too small");
 
 		packet_drop(packet);
 		packet_release(packet);
@@ -354,69 +359,70 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 
 struct ipv4 *ipv4_reassemble(struct ipv4 *ip)
 {
-	if (ipv4_get_flags_mf(ip) || ipv4_get_frag_offset(ip) > 0) {
-		struct ipv4_frag_elem *elem = ipv4_frag_table_insert(ipv4_frag_global, ip);
-		struct ipv4 *first;
-		list2_iter iter, end;
-		size_t offset = 0;
-
-		if (!elem) return NULL;
-
-		first = list2_first(&elem->list, struct ipv4, frag_list);
-		assert(first);
-		assert(!first->reassembled);
-
-		first->reassembled = true;
-		first->reassembled_offset = 0;
-		vbuffer_stream_init(&first->reassembled_payload, NULL);
-
-		end = list2_end(&elem->list);
-
-		/* build ipv4 reassembled payload */
-		for (iter = list2_begin(&elem->list); iter != end; ) {
-			struct ipv4 *cur = list2_get(iter, struct ipv4, frag_list);
-			const ssize_t curoff = ipv4_get_frag_offset(cur);
-			const size_t curlen = vbuffer_size(&cur->packet_payload);
-
-			assert(curoff <= offset);
-
-			if (curoff != offset) {
-				/* overlaps */
-				if (curoff + curlen <= offset) {
-					/* No data usefull in this packet */
-					ipv4_action_drop(cur);
-					iter = list2_erase(iter);
-					ipv4_release(cur);
-					continue;
-				}
-				else {
-					/* Only a sub part of the data should be used, erase
-					 * the rest */
-					struct vbuffer_sub erased;
-					vbuffer_sub_create(&erased, &cur->packet_payload, 0, offset - curoff);
-					vbuffer_erase(&erased);
-					vbuffer_sub_clear(&erased);
-				}
-			}
-
-			vbuffer_stream_push(&first->reassembled_payload, &cur->packet_payload, cur, NULL);
-
-			offset += curlen;
-			iter = list2_erase(iter);
-		}
-
-		vbuffer_stream_finish(&first->reassembled_payload);
-
-		first->payload = vbuffer_stream_data(&first->reassembled_payload);
-
-		HASH_DEL(ipv4_frag_global->head, elem);
-		free(elem);
-
-		return first;
-	}
-	else {
+	if (!ipv4_get_flags_mf(ip) && ipv4_get_frag_offset(ip) == 0) {
 		return ip;
 	}
+
+	/* Fragmented case */
+	struct ipv4_frag_elem *elem = ipv4_frag_table_insert(ipv4_frag_global, ip);
+	struct ipv4 *first;
+	list2_iter iter, end;
+	size_t offset = 0;
+
+	/* More packet are needed */
+	if (!elem) return NULL;
+
+	first = list2_first(&elem->list, struct ipv4, frag_list);
+	assert(first);
+	assert(!first->reassembled);
+
+	first->reassembled = true;
+	first->reassembled_offset = 0;
+	vbuffer_stream_init(&first->reassembled_payload, NULL);
+
+	end = list2_end(&elem->list);
+
+	/* build ipv4 reassembled payload */
+	for (iter = list2_begin(&elem->list); iter != end; ) {
+		struct ipv4 *cur = list2_get(iter, struct ipv4, frag_list);
+		const ssize_t curoff = ipv4_get_frag_offset(cur);
+		const size_t curlen = vbuffer_size(&cur->packet_payload);
+
+		assert(curoff <= offset);
+
+		if (curoff != offset) {
+			/* overlaps */
+			if (curoff + curlen <= offset) {
+				/* No data usefull in this packet */
+				ipv4_action_drop(cur);
+				iter = list2_erase(iter);
+				ipv4_release(cur);
+				continue;
+			}
+			else {
+				/* Only a sub part of the data should be used, erase
+				 * the rest */
+				struct vbuffer_sub erased;
+				vbuffer_sub_create(&erased, &cur->packet_payload, 0, offset - curoff);
+				vbuffer_erase(&erased);
+				vbuffer_sub_clear(&erased);
+			}
+		}
+
+		vbuffer_stream_push(&first->reassembled_payload, &cur->packet_payload, cur, NULL);
+
+		offset += curlen;
+		iter = list2_erase(iter);
+	}
+
+	vbuffer_stream_finish(&first->reassembled_payload);
+
+	first->payload = vbuffer_stream_data(&first->reassembled_payload);
+
+	HASH_DEL(ipv4_frag_global->head, elem);
+	free(elem);
+
+	return first;
 }
 
 struct ipv4 *ipv4_create(struct packet *packet)
@@ -481,10 +487,9 @@ static struct packet *ipv4_forge_one(struct ipv4 *ip, struct vbuffer *payload, s
 			if (more != ipv4_get_flags_mf(ip)) ipv4_set_flags_mf(ip, more);
 		}
 
-		if (ip->invalid_checksum) {
-			ipv4_compute_checksum(ip);
-		}
+		if (ip->invalid_checksum) ipv4_compute_checksum(ip);
 
+		/* The packet payload is extracted when dissecting the ipv4 packet. */
 		vbuffer_restore(&ip->select, payload, false);
 
 		ip->packet = NULL;

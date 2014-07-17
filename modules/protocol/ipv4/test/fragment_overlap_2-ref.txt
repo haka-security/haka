@@ -1,3 +1,13 @@
 info test: received ip packet data=8
 info test: received ip packet data=8
 info test: received ip packet data=24
+alert: id = = <>
+	severity = low
+	description = invalid ipv4 fragment
+	sources = {
+		address: 127.0.0.1
+	}
+	targets = {
+		address: 127.0.0.1
+	}
+info test: received icmp packet data=28
