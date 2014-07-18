@@ -78,7 +78,7 @@ static bool write_to_file(struct file_alerter *alerter, uint64 id, const struct 
 
 	flockfile(alerter->output);
 	fprintf(alerter->output, "%salert%s: %s%ls\n", color, clear,
-            update ? "update " : "", alert_tostring(id, time, alert, "", indent, alerter->color));
+	        update ? "update " : "", alert_tostring(id, time, alert, "", indent, alerter->color));
 	funlockfile(alerter->output);
 
 	return true;
@@ -159,4 +159,3 @@ struct alert_module HAKA_MODULE = {
 	init_alerter:    init_alerter,
 	cleanup_alerter: cleanup_alerter
 };
-
