@@ -60,20 +60,28 @@ static struct ipv4_frag_table *ipv4_frag_table_new()
 
 static void raise_alert(struct ipv4 *ip, wchar_t *message)
 {
-	ALERT(invalid_packet, 1, 1)
-		description: message,
-		severity: HAKA_ALERT_LOW,
-	ENDALERT
-
 	if (ip) {
+		ALERT(invalid_packet, 1, 1)
+			description: message,
+			severity: HAKA_ALERT_LOW,
+		ENDALERT
+
 		TOWSTR(srcip, ipv4addr, ipv4_get_src(ip));
 		TOWSTR(dstip, ipv4addr, ipv4_get_dst(ip));
 
 		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
 		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
-	}
 
-	alert(&invalid_packet);
+		alert(&invalid_packet);
+	}
+	else {
+		ALERT(invalid_packet, 0, 0)
+			description: message,
+			severity: HAKA_ALERT_LOW,
+		ENDALERT
+
+		alert(&invalid_packet);
+	}
 }
 
 static void ipv4_frag_table_release(struct ipv4_frag_table *table)
