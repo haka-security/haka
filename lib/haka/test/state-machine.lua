@@ -7,9 +7,12 @@ require('luaunit')
 
 TestStateMachine = {}
 
-local TestState = class.class('TestState', haka.state_machine.State)
-
-TestState._events = { 'test' }
+local TestState = haka.state_machine.new_state_type{
+	events = { 'test' },
+	update = function (self, state_machine)
+		state_machine:trigger('test')
+	end
+}
 
 function TestStateMachine:test_state_machine_compile()
 	-- Given
@@ -65,8 +68,8 @@ function TestStateMachine:test_state_machine_run()
 	end):instanciate(ctx)
 
 	-- When
-	sm:update("test")
-	sm:update("test")
+	sm:update()
+	sm:update()
 
 	-- Then
 	assertTrue(ctx.foo)
@@ -96,7 +99,7 @@ function TestStateMachine:test_state_machine_fail()
 	end):instanciate(ctx)
 
 	-- When
-	sm:update("test")
+	sm:update()
 
 	-- Then
 	assertTrue(ctx.test)
@@ -124,7 +127,7 @@ function TestStateMachine:test_state_machine_defaults()
 	end):instanciate(ctx)
 
 	-- When
-	sm:update("test")
+	sm:update()
 
 	-- Then
 	assertTrue(ctx.test)

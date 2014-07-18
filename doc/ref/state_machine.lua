@@ -5,6 +5,9 @@
 local my_state_machine = haka.state_machine("test", function ()
 	state_type{
 		events = { 'test' },
+		update = function (self, state_machine)
+			state_machine:trigger('test')
+		end
 	}
 
 	foo = state()
@@ -31,4 +34,4 @@ end)
 local context = {}
 local instance = my_state_machine:instanciate(context)
 
-instance:update('test') -- trigger the event test
+instance:update() -- trigger the event test

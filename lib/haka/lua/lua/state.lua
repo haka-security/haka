@@ -103,7 +103,7 @@ function module.State.method:setdefaults(defaults)
 end
 
 function module.State.method:update(state_machine, event)
-	state_machine:trigger(event)
+	error("unimplemented update function")
 end
 
 function module.State.method:_dump_graph(file)
