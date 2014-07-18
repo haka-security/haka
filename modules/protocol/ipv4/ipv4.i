@@ -276,6 +276,8 @@ STRUCT_UNKNOWN_KEY_ERROR(ipv4_flags);
 LUA_OBJECT(struct ipv4);
 %newobject ipv4::src;
 %newobject ipv4::dst;
+%newobject ipv4::reassemble;
+%delobject ipv4::reassemble;
 
 struct ipv4 {
 	%extend {
@@ -301,7 +303,9 @@ struct ipv4 {
 		const char *name { return "ipv4"; }
 		struct packet *raw { IPV4_CHECK($self, NULL); return $self->packet; }
 		struct ipv4_flags *flags { IPV4_CHECK($self, NULL); return (struct ipv4_flags *)$self; }
-		struct vbuffer *payload { IPV4_CHECK($self, NULL); return &$self->payload;}
+		struct vbuffer *payload { IPV4_CHECK($self, NULL); return $self->payload;}
+
+		struct ipv4 *reassemble();
 
 		bool verify_checksum();
 		void compute_checksum();
@@ -397,6 +401,8 @@ int lua_inet_checksum(struct vbuffer *buf);
 		name = 'ipv4'
 	}
 
+	ipv4_dissector.options.enable_reassembly = true
+
 	function ipv4_dissector:new(pkt)
 		return this._dissect(pkt)
 	end
@@ -406,13 +412,20 @@ int lua_inet_checksum(struct vbuffer *buf);
 	end
 
 	function ipv4_dissector.method:receive()
+		local pkt
+
 		haka.context:signal(self, ipv4_dissector.events['receive_packet'])
 
-		local next_dissector = ipv4_protocol_dissectors[self.proto]
-		if next_dissector then
-			return next_dissector:receive(self)
-		else
-			return self:send()
+		if ipv4_dissector.options.enable_reassembly then pkt = self:reassemble()
+		else pkt = self end
+
+		if pkt then
+			local next_dissector = ipv4_protocol_dissectors[pkt.proto]
+			if next_dissector then
+				return next_dissector:receive(pkt)
+			else
+				return pkt:send()
+			end
 		end
 	end
 
@@ -420,12 +433,18 @@ int lua_inet_checksum(struct vbuffer *buf);
 		haka.context:signal(self, ipv4_dissector.events['send_packet'])
 
 		local pkt = this._forge(self)
-		return pkt:send()
+		while pkt do
+			pkt:send()
+			pkt = this._forge(self)
+		end
 	end
 
 	function ipv4_dissector.method:inject()
 		local pkt = this._forge(self)
-		return pkt:inject()
+		while pkt do
+			pkt:inject()
+			pkt = this._forge(self)
+		end
 	end
 
 	swig.getclassmetatable('ipv4')['.fn'].receive = ipv4_dissector.method.receive
@@ -435,6 +454,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 	swig.getclassmetatable('ipv4')['.fn'].error = swig.getclassmetatable('ipv4')['.fn'].drop
 
 	this.events = ipv4_dissector.events
+	this.options = ipv4_dissector.options
 
 	function this.create(pkt)
 		return ipv4_dissector:create(pkt)

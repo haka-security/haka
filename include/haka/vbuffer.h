@@ -276,9 +276,14 @@ bool          vbuffer_iterator_insert(struct vbuffer_iterator *position, struct 
 /**
  * Advance the iterator on the data.
  * \returns The number of bytes advanced. This value might be lower than the given length
- * if the buffer does not have enought data.
+ * if the buffer does not have enough data.
  */
 size_t        vbuffer_iterator_advance(struct vbuffer_iterator *position, size_t len);
+
+/**
+ * Skip empty vbuffer chunk at the iterator position.
+ */
+void          vbuffer_iterator_skip_empty(struct vbuffer_iterator *position);
 
 /**
  * Check if the iterator is at the end of the buffer.
