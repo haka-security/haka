@@ -1,5 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 # Configure variables
 HAKA_PATH ?= /opt/haka
+INSTALL ?= install -o root -g bin
 
 MODULE_NAME = mymodule
 
@@ -15,23 +20,26 @@ BIN = $(OBJ_DIR)/$(MODULE_NAME).ho
 
 SWIG = swig
 CFLAGS = -Wall -I$(HAKA_PATH)/include/ -I$(SRC_DIR) -fPIC -c -g
-LDFLAGS = -L$(HAKA_PATH)/lib/ -lhaka -shared -Wl,-soname,$(MODULE_NAME).ho -Wl,--defsym=luaopen_$(MODULE_NAME)/$(MODULE_NAME)=luaopen_$(MODULE_NAME)
+LDFLAGS = -L$(HAKA_PATH)/lib/ -lhaka -shared -Wl,-soname,$(MODULE_NAME).ho -Wl,--defsym=luaopen_external/$(MODULE_NAME)=luaopen_$(MODULE_NAME)
 SWIGFLAGS = -I$(HAKA_PATH)/include/ -lua -module $(MODULE_NAME)
 
 $(BIN): $(OBJS)
 	$(CC) $(LDFLAGS) -o $(BIN) $(OBJS)
 
 install: $(BIN)
-	install -g bin -m 555 -o root $(BIN) -D $(HAKA_PATH)/share/haka/modules/$(MODULE_NAME)/$(MODULE_NAME).ho
+	$(INSTALL) -m 555 $(BIN) -D $(HAKA_PATH)/share/haka/modules/external/$(MODULE_NAME).ho
 
 clean:
 	rm -f $(BIN) $(OBJS)
 
+$(OBJ_DIR):
+	mkdir $(OBJ_DIR)
+
 # Haka rules
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(OBJ_DIR)
 	$(CC) $(CFLAGS) -o $@ $<
 
-$(OBJ_DIR)/%_lua.c: $(SRC_DIR)/%.i
+$(OBJ_DIR)/%_lua.c: $(SRC_DIR)/%.i $(OBJ_DIR)
 	$(SWIG) $(SWIGFLAGS) -o $@ $<
 
 .SECONDARY:

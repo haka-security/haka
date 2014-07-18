@@ -40,19 +40,19 @@ will be called when the module loads and unloads, respectively.
 
     static int init(struct parameters args)//
     {
-        messagef(HAKA_LOG_DEBUG, L"mymodule", L"init my module");
+        messagef(HAKA_LOG_INFO, L"mymodule", L"init my module");
         return 0;
     }
 
     static void cleanup()
     {
-        messagef(HAKA_LOG_DEBUG, L"mymodule", L"cleanup my module");
+        messagef(HAKA_LOG_INFO, L"mymodule", L"cleanup my module");
     }
 
-Here is the :download:`full code<mymodule.c>` which defines also the ``myfunc``
-function that we want to export.
+Here is the :download:`mymodule.c <../../sample/mymodule/src/mymodule.c>` which defines
+also the ``myfunc`` function that we want to export.
 
-Then, we have created a single header file :download:`mymodule.h<mymodule.h>`
+Then, we have created a single header file :download:`mymodule.h <../../sample/mymodule/src/mymodule.h>`
 That simply defines the prototype of the function ``myfunc``.
 
 Finally, in Haka we use `SWIG <http://www.swig.org/Doc1.3/Lua.html>`_ to bind C
@@ -62,9 +62,9 @@ methods. Here is the content of our swig file that binds the ``myfunc`` function
     Haka source tree.
 
 The last step is to compile (``make``) our newly created module using the following
-Makefile that must be created in the main module folder.
+:download:`Makefile <../../sample/mymodule/Makefile>` that must be created in the main module folder.
 
-.. literalinclude:: Makefile
+.. literalinclude:: ../../sample/mymodule/Makefile
     :tab-width: 4
     :language: makefile
 
@@ -73,8 +73,6 @@ Makefile that must be created in the main module folder.
 Now, we are ready to use the module in haka script files. Here is a sample file
 that simply calls the ``myfunc`` function:
 
-.. code-block:: lua
-
-    local mymodule = require("mymodule")
-    mymodule.myfunc()
-
+.. literalinclude:: ../../sample/mymodule/rule.lua
+    :tab-width: 4
+    :language: lua
