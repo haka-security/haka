@@ -5,18 +5,32 @@
 Writing Haka extensions
 =======================
 
-Haka has a modular architecture and you can extend it by adding your own
-module like a new packet capture module.
+Haka has a modular architecture and you can extend it by adding your favorite
+module.
 
-There is multiple way to embed your favorite module in Haka. We provide here a
-Makefile to compile your source files, link your module against haka libraries
-and have it installed on haka target path.
+We provide here a Makefile to compile your source files, link your module
+against haka libraries and have it installed on haka target path.
 
-In the following, we will create a sample module ``mymodule`` that exports a
+.. note:: You are free to use your own compilation toolchain.
+
+Writing C modules
+=================
+
+In the following, we will create a sample C module ``mymodule`` that exports a
 single function ``myfunc``.
 
 First, create a directory ``mymodule`` and two sub folders ``src`` and ``obj``.
-In the former, create your source and header files.
+In the former, create your source and header files:
+
+.. code-block:: c
+
+    mymodule
+    \--obj
+    \--src
+       \--mymodule.c
+       \--mymodule.h
+       \--mymodule.i
+    \--Makefile
 
 The source file ``mymodule.c`` must include a module structure that sets the
 type of the module to ``MODULE EXTENSION`` along with other information such as
@@ -56,13 +70,14 @@ Then, we have created a single header file :download:`mymodule.h <../../sample/m
 That simply defines the prototype of the function ``myfunc``.
 
 Finally, in Haka we use `SWIG <http://www.swig.org/Doc1.3/Lua.html>`_ to bind C
-methods. Here is the content of our swig file that binds the ``myfunc`` function.
+functions to Lua objects. Here is the content of our swig file :download:`mymodule.i<../../sample/mymodule/src/mymodule.i>` that binds the ``myfunc`` function.
 
 .. note:: for more complex binding, you can have a look at C protocol modules in
     Haka source tree.
 
-The last step is to compile (``make``) our newly created module using the following
-:download:`Makefile <../../sample/mymodule/Makefile>` that must be created in the main module folder.
+The last step is to compile (``make``) our newly created module using the
+following :download:`Makefile <../../sample/mymodule/Makefile>` that must be created in the main
+module folder.
 
 .. literalinclude:: ../../sample/mymodule/Makefile
     :tab-width: 4
