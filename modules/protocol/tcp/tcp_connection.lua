@@ -131,9 +131,11 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 		pkt:drop()
 	end
 
-	local function invalid_handshake(self, pkt)
-		haka.log.error('tcp_connection', "invalid tcp establishment handshake")
-		pkt:drop()
+	local function invalid_handshake(type)
+		return function (self, pkt)
+			haka.log.error('tcp_connection', string.format("invalid tcp %s handshake", type))
+			pkt:drop()
+		end
 	end
 
 	local function send(dir)
@@ -200,7 +202,7 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 
 	syn:on{
 		event = events.input,
-		execute = invalid_handshake,
+		execute = invalid_handshake('establishement'),
 		jump = fail,
 	}
 
@@ -212,17 +214,17 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	}
 
 	syn_sent:on{
-		events = { events.output, events.input },
-		execute = invalid_handshake,
-		jump = fail,
-	}
-
-	syn_sent:on{
 		event = events.input,
 		when = function (self, pkt) return pkt.flags.syn end,
 		execute = function (self, pkt)
 			pkt:send()
 		end,
+	}
+
+	syn_sent:on{
+		events = { events.output, events.input },
+		execute = invalid_handshake('establishement'),
+		jump = fail,
 	}
 
 	local function push(dir, finish)
@@ -246,20 +248,14 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	}
 
 	syn_received:on{
-		event = events.input,
-		execute = invalid_handshake,
-		jump = fail,
-	}
-
-	syn_received:on{
 		event = events.output,
 		when = function (self, pkt) return pkt.flags.syn and pkt.flags.ack end,
 		execute = push('output'),
 	}
 
 	syn_received:on{
-		event = events.output,
-		execute = invalid_handshake,
+		events = { events.input, events.output },
+		execute = invalid_handshake('establishement'),
 		jump = fail,
 	}
 
@@ -297,9 +293,15 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 		execute = push('output'),
 	}
 
-	local dofinish = function (self, pkt)
+	local function dofinish(self, pkt)
 			self:finish(self.output)
 			self:_sendpkt(pkt, self.output)
+	end
+
+	local function sendpkt(dir)
+		return function (self, pkt)
+			self:_sendpkt(pkt, self[dir])
+		end
 	end
 
 	fin_wait_1:on{
@@ -325,15 +327,9 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 
 	fin_wait_1:on{
 		event = events.output,
-		execute = invalid_handshake,
+		execute = invalid_handshake('termination'),
 		jump = fail,
 	}
-
-	local sendpkt = function(dir)
-		return function (self, pkt)
-			self:_sendpkt(pkt, self[dir])
-		end
-	end
 
 	fin_wait_1:on{
 		event = events.input,
@@ -361,20 +357,14 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	}
 
 	fin_wait_2:on{
-		event = events.output,
-		execute = invalid_handshake,
-		jump = fail,
-	}
-
-	fin_wait_2:on{
 		event = events.input,
 		when = function (self, pkt) return pkt.flags.ack end,
 		execute = sendpkt('input'),
 	}
 
 	fin_wait_2:on{
-		event = events.input,
-		execute = invalid_handshake,
+		events = { events.output, events.input },
+		execute = invalid_handshake('termination'),
 		jump = fail,
 	}
 
@@ -388,7 +378,7 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	closing:on{
 		event = events.input,
 		when = function (self, pkt) return not pkt.flags.fin end,
-		execute = invalid_handshake,
+		execute = invalid_handshake('termination'),
 		jump = fail,
 	}
 
@@ -400,7 +390,7 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	closing:on{
 		event = events.output,
 		when = function (self, pkt) return not pkt.flags.ack end,
-		execute = invalid_handshake,
+		execute = invalid_handshake('termination'),
 		jump = fail,
 	}
 
@@ -426,22 +416,15 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	}
 
 	timed_wait:on{
-		event = events.input,
+		events = { events.input, events.output },
 		when = function (self, pkt) return not pkt.flags.ack end,
-		execute = invalid_handshake,
+		execute = invalid_handshake('termination'),
 		jump = fail,
 	}
 
 	timed_wait:on{
 		event = events.input,
 		execute = sendpkt('input'),
-	}
-
-	timed_wait:on{
-		event = events.output,
-		when = function (self, pkt) return not pkt.flags.ack end,
-		execute = invalid_handshake,
-		jump = fail,
 	}
 
 	timed_wait:on{
