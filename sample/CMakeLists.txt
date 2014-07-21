@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 install(FILES empty.lua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/sample)
-install(DIRECTORY filter gettingstarted hellopacket ruleset sqli stats smtp_dissector DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/sample)
+install(DIRECTORY filter gettingstarted hellopacket ruleset sqli stats smtp_dissector mymodule DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/sample)
 
 add_subdirectory(test)

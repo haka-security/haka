@@ -1,0 +1,14 @@
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc
+info mymodule: myfunc

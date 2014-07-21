@@ -25,3 +25,13 @@ TEST_PCAP(sample pdns CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sa
 TEST_PCAP(sample smtp_spam_filter CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/smtp_dissector/smtp_spam_filter.lua)
 TEST_PCAP(sample smtp_mail_content CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/smtp_dissector/smtp_mail_content.lua)
 TEST_PCAP(sample smtp_command_response CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/smtp_dissector/smtp_command_response.lua)
+
+# Module tutorial
+add_test(NAME sample-mymodule-build COMMAND ${CMAKE_COMMAND}
+	-DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+	-DTEST_RUNDIR=${TEST_RUNDIR}
+	-DHAKA_INSTALL_PREFIX=${HAKA_INSTALL_PREFIX}
+	-P ${CMAKE_CURRENT_SOURCE_DIR}/mymodule-build.cmake
+)
+TEST_PCAP(sample mymodule-run CONFIG ${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/share/haka/sample/mymodule/rule.lua)
+SET_TESTS_PROPERTIES(sample-mymodule-run-pcap PROPERTIES DEPENDS sample-mymodule-build)
