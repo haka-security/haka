@@ -1,2 +1,0 @@
-# Setup Haka paths
-export PATH="$PATH:@CMAKE_HAKA_INSTALL_PREFIX@/bin:@CMAKE_HAKA_INSTALL_PREFIX@/sbin"

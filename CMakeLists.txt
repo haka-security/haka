@@ -135,7 +135,7 @@ else()
 	set(CMAKE_INSTALL_PREFIX ${PREFIX})
 endif()
 
-set(HAKA_INSTALL_PREFIX "opt/haka")
+set(HAKA_INSTALL_PREFIX "usr")
 
 if("${CMAKE_INSTALL_PREFIX}" STREQUAL "/")
 	set(CMAKE_INSTALL_PREFIX "")

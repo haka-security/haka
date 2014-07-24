@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Configure variables
-HAKA_PATH ?= /opt/haka
+HAKA_PATH ?= /usr
 INSTALL ?= install -o root -g bin
 
 MODULE_NAME = mymodule

@@ -7,9 +7,6 @@ if(DISTRIB_NAME STREQUAL "Debian")
 	configure_file(init-debian.in ${CMAKE_CURRENT_BINARY_DIR}/init)
 	install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/init DESTINATION etc/init.d RENAME haka)
 
-	configure_file(profile.sh.in ${CMAKE_CURRENT_BINARY_DIR}/profile.sh @ONLY)
-	install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/profile.sh DESTINATION etc/profile.d RENAME haka.sh)
-
 	configure_file(conffiles.in ${CMAKE_CURRENT_BINARY_DIR}/conffiles)
 	configure_file(preinst-debian.in ${CMAKE_CURRENT_BINARY_DIR}/preinst)
 	configure_file(postinst-debian.in ${CMAKE_CURRENT_BINARY_DIR}/postinst)
