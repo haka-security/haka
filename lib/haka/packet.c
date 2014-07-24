@@ -119,6 +119,7 @@ int packet_receive(struct packet **pkt)
 
 	if (!ret && *pkt) {
 		(*pkt)->lua_object = lua_object_init;
+		lua_ref_init(&(*pkt)->userdata);
 		atomic_set(&(*pkt)->ref, 1);
 		assert(vbuffer_isvalid(&(*pkt)->payload));
 		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%lli",
@@ -188,6 +189,7 @@ bool packet_release(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 	if (atomic_dec(&pkt->ref) == 0) {
+		lua_ref_clear(&pkt->userdata);
 		lua_object_release(pkt, &pkt->lua_object);
 		packet_module->release_packet(pkt);
 		return true;
@@ -210,6 +212,7 @@ struct packet *packet_new(size_t size)
 	}
 
 	pkt->lua_object = lua_object_init;
+	lua_ref_init(&pkt->userdata);
 	atomic_set(&pkt->ref, 1);
 	assert(vbuffer_isvalid(&pkt->payload));
 

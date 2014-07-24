@@ -17,6 +17,7 @@
 #include <haka/thread.h>
 #include <haka/vbuffer.h>
 #include <haka/lua/object.h>
+#include <haka/lua/ref.h>
 
 
 /** Opaque packet structure. */
@@ -24,6 +25,7 @@ struct packet {
 	struct lua_object        lua_object; /**< \private */
 	atomic_t                 ref;        /**< \private */
 	struct vbuffer           payload;    /**< \private */
+	struct lua_ref           userdata;
 };
 
 /** \cond */

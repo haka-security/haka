@@ -17,6 +17,8 @@ bool lua_pushppacket(lua_State *L, struct packet *pkt)
 }
 %}
 
+%include "haka/lua/ref.si"
+
 %nodefaultctor;
 %nodefaultdtor;
 
@@ -25,6 +27,7 @@ bool lua_pushppacket(lua_State *L, struct packet *pkt)
 struct packet {
 	%extend {
 		%immutable;
+		struct lua_ref data;
 		const struct time *timestamp { return packet_timestamp($self); }
 		struct vbuffer *payload { return packet_payload($self); }
 		int id { return packet_id($self); }
@@ -104,6 +107,23 @@ struct packet {
 		void drop();
 	}
 };
+
+%{
+
+#define packet_data_get(pkt) _packet_data_get(L, pkt)
+
+struct lua_ref _packet_data_get(lua_State *L, struct packet *packet)
+{
+	if (!lua_ref_isvalid(&packet->userdata)) {
+		lua_newtable(L);
+		lua_ref_get(L, &packet->userdata, -1);
+		lua_pop(L, 1);
+	}
+
+	return packet->userdata;
+}
+
+%}
 
 %rename(packet_mode) _packet_mode;
 const char *_packet_mode();
