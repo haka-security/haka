@@ -128,6 +128,21 @@ bool time_tostring(const struct time *t, char *buffer, size_t len)
 	return true;
 }
 
+bool time_tofstring(const struct time *t, const char *format, char *buffer, size_t len)
+{
+	size_t size;
+	struct tm tm;
+	if (!gmtime_r(&t->secs, &tm)) {
+		error(L"time error: %s", errno_error(errno));
+		return false;
+	}
+
+	size = strftime(buffer, len, format, &tm);
+	buffer[size] = '\0';
+
+	return true;
+}
+
 bool time_isvalid(const struct time *t)
 {
 	return t->secs != 0 || t->nsecs != 0;
