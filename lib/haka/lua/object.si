@@ -9,7 +9,7 @@
 #include <haka/compiler.h>
 #include <haka/lua/object.h>
 #include <haka/lua/state.h>
-#include <haka/lua/lua.h>
+#include <haka/lua/luautils.h>
 
 #include <assert.h>
 #include <stdio.h>

@@ -8,7 +8,7 @@
 #include <haka/log.h>
 #include <haka/container/list2.h>
 #include <haka/lua/state.h>
-#include <haka/lua/lua.h>
+#include <haka/lua/luautils.h>
 #include <haka/lua/marshal.h>
 
 #include <lua.h>
