@@ -26,8 +26,8 @@ struct vector {
 #define vector_get(v, type, index)              ((type*)_vector_get((v), sizeof(type), (index)))
 #define vector_set(v, type, index, value)       (*(type*)_vector_get((v), sizeof(type), (index)) = (value))
 #define vector_push(v, type)                    ((type*)_vector_push((v), sizeof(type)))
-#define vector_last(v, type)                    vector_get((v), (type), vector_count(v)-1)
-#define vector_first(v, type)                   vector_get((v), (type), 0)
+#define vector_last(v, type)                    ((type*)_vector_get((v), sizeof(type), vector_count(v)-))
+#define vector_first(v, type)                   ((type*)_vector_get((v), sizeof(type), 0))
 
 INLINE size_t vector_count(struct vector *v) { return v->count; }
 INLINE bool   vector_isempty(struct vector *v) { return v->count == 0; }
