@@ -22,7 +22,6 @@ add_executable(hakactl
 	${SWIG_hakactlswig_FILES}
 )
 
-LUA_LINK(hakactl)
 target_link_libraries(hakactl libhaka)
 target_link_libraries(hakactl libhakactl)
 target_link_libraries(hakactl ${CMAKE_THREAD_LIBS_INIT})

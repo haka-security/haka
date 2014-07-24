@@ -19,7 +19,7 @@ SRCS := ${addprefix $(SRC_DIR)/, $(SRCS)}
 BIN = $(OBJ_DIR)/$(MODULE_NAME).ho
 
 SWIG = swig
-CFLAGS = -Wall -I$(HAKA_PATH)/include/ -I$(SRC_DIR) -fPIC -c -g
+CFLAGS = -Wall -I$(HAKA_PATH)/include/ -I$(HAKA_PATH)/include/haka/lua -I$(SRC_DIR) -fPIC -c -g
 LDFLAGS = -L$(HAKA_PATH)/lib/ -lhaka -shared -Wl,-soname,$(MODULE_NAME).ho -Wl,--defsym=luaopen_external/$(MODULE_NAME)=luaopen_$(MODULE_NAME)
 SWIGFLAGS = -I$(HAKA_PATH)/include/ -lua -module $(MODULE_NAME)
 

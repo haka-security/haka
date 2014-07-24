@@ -80,13 +80,17 @@ set_target_properties(libhaka PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VE
 find_package(DL REQUIRED)
 find_package(Editline REQUIRED)
 
-LUA_LINK(libhaka)
 target_link_libraries(libhaka ${DL_LIBRARIES})
 target_link_libraries(libhaka ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(libhaka libiniparser)
 target_link_libraries(libhaka rt)
 target_link_libraries(libhaka m)
 target_link_libraries(libhaka ${EDITLINE_LIBRARY})
+
+target_link_libraries(libhaka ${LUA_LIBRARIES})
+add_dependencies(libhaka ${LUA_DEPENDENCY})
+include_directories(${LUA_INCLUDE_DIR})
+link_directories(${LUA_LIBRARY_DIR})
 
 set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 

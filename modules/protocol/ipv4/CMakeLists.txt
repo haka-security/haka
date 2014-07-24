@@ -14,9 +14,6 @@ SWIG_FIX_ENTRYPOINT(ipv4 protocol)
 
 include_directories(.)
 
-# Lua dependency
-LUA_LINK(ipv4)
-
 INSTALL_MODULE(ipv4 protocol)
 
 lua_compile(NAME ipv4lua FILES ipv4lua.lua)

@@ -9,9 +9,6 @@ SWIG_FIX_ENTRYPOINT(raw protocol)
 
 include_directories(.)
 
-# Lua dependency
-LUA_LINK(raw)
-
 INSTALL_MODULE(raw protocol)
 
 # Tests

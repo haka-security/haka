@@ -20,7 +20,6 @@ add_library(haka-common STATIC
 	${SWIG_hakalua_FILES}
 )
 
-LUA_DEPENDS(haka-common)
 target_link_libraries(haka-common libhaka)
 
 # Build haka program
@@ -33,7 +32,6 @@ add_executable(haka
 target_link_libraries(haka haka-common)
 target_link_libraries(haka libhakactl)
 target_link_libraries(haka ${CMAKE_THREAD_LIBS_INIT})
-LUA_LINK(haka)
 
 install(TARGETS haka RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/sbin)
 
@@ -48,7 +46,6 @@ add_executable(hakapcap
 
 target_link_libraries(hakapcap haka-common)
 target_link_libraries(hakapcap ${CMAKE_THREAD_LIBS_INIT})
-LUA_LINK(hakapcap)
 
 install(TARGETS hakapcap RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
 
