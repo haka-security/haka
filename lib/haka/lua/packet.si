@@ -130,7 +130,7 @@ struct lua_ref _packet_data_get(lua_State *L, struct packet *packet)
 const char *_packet_mode();
 
 %{
-	const char *_packet_mode()
+	static const char *_packet_mode()
 	{
 		enum packet_mode mode = packet_mode();
 		switch (mode) {
