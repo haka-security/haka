@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 #include <haka/error.h>
+#include <haka/module.h>
 #include <haka/regexp_module.h>
 #include <haka/vbuffer.h>
 
@@ -18,28 +19,7 @@ static char MODULE[MODULE_NAME_LEN];
 
 static void haka_initialized_with_good_path(void)
 {
-	const char *haka_path_s = getenv("HAKA_PATH");
-	static const char *HAKA_CORE_PATH = "/share/haka/core/*";
-	static const char *HAKA_MODULE_PATH = "/share/haka/modules/*";
-
-	size_t path_len;
-	char *path;
-
-	path_len = 2*strlen(haka_path_s) + strlen(HAKA_CORE_PATH) + 1 +
-		strlen(HAKA_MODULE_PATH) + 1;
-
-	path = malloc(path_len);
-	if (!path) {
-		fprintf(stderr, "memory allocation error\n");
-		exit(1);
-	}
-
-	snprintf(path, path_len, "%s%s;%s%s", haka_path_s, HAKA_CORE_PATH,
-			haka_path_s, HAKA_MODULE_PATH);
-
-	module_set_path(path);
-
-	free(path);
+	module_set_default_path();
 }
 
 START_TEST(regexp_module_load_should_be_successful)

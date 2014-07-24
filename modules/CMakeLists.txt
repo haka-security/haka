@@ -16,6 +16,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "${HAKA_MODULE_PREFIX}")
 set(CMAKE_SHARED_LIBRARY_SUFFIX "${HAKA_MODULE_SUFFIX}")
 
 set(MODULE_INSTALL_PATH ${HAKA_INSTALL_PREFIX}/share/haka/modules)
+set(MODULE_INSTALL_CPATH ${HAKA_INSTALL_PREFIX}/lib/haka/modules)
 
 macro(INCLUDE_MODULE name type)
 	include_directories(${MODULE_SOURCE_DIR}/${type}/${name})
@@ -31,7 +32,7 @@ macro(INSTALL_MODULE target type)
 	set_property(GLOBAL APPEND PROPERTY module-${type} ${target})
 	include_directories(.)
 	target_link_libraries(${target} libhaka)
-	install(TARGETS ${target} LIBRARY DESTINATION ${MODULE_INSTALL_PATH}/${type})
+	install(TARGETS ${target} LIBRARY DESTINATION ${MODULE_INSTALL_CPATH}/${type})
 endmacro(INSTALL_MODULE)
 
 # Find all modules. We need a separated loop in case one of the sub make adds

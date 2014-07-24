@@ -34,7 +34,7 @@ static bool stdout_support_colors()
 %nodefaultdtor;
 
 %rename(module_path) module_get_path;
-const char *module_get_path();
+const char *module_get_path(bool c);
 
 %immutable;
 char *module_prefix;
@@ -84,6 +84,6 @@ bool stdout_support_colors();
 		return table.concat(pathtable, ';')
 	end
 
-	package.cpath = addpath(package.cpath, hakainit.module_path(), { hakainit.module_prefix .. '?' .. hakainit.module_suffix })
-	package.path = addpath(package.path, hakainit.module_path(), { '?.bc', '?.lua' })
+	package.cpath = addpath(package.cpath, hakainit.module_path(true), { hakainit.module_prefix .. '?' .. hakainit.module_suffix })
+	package.path = addpath(package.path, hakainit.module_path(false), { '?.bc', '?.lua' })
 }
