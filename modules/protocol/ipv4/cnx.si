@@ -14,6 +14,7 @@
 %}
 
 %include "haka/lua/cnx.si"
+%include "haka/lua/ref.si"
 
 struct cnx_table {
 	%extend {

@@ -23,7 +23,7 @@ struct lua_ref {
 
 void lua_ref_init(struct lua_ref *ref);
 bool lua_ref_isvalid(struct lua_ref *ref);
-void lua_ref_get(struct lua_State *state, struct lua_ref *ref);
+void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index);
 bool lua_ref_clear(struct lua_ref *ref);
 void lua_ref_push(struct lua_State *state, struct lua_ref *ref);
 
