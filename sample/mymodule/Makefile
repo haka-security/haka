@@ -12,28 +12,30 @@ SRCS = mymodule.c mymodule.i
 
 # Haka specifics
 OBJ_DIR = obj
+OUT_DIR = out
 SRC_DIR = src
 OBJS := ${SRCS:%.i=%_lua.c}
 OBJS := ${OBJS:%.c=$(OBJ_DIR)/%.o}
 SRCS := ${addprefix $(SRC_DIR)/, $(SRCS)}
-BIN = $(OBJ_DIR)/$(MODULE_NAME).ho
+OUT = $(MODULE_NAME).ho
+BIN = $(OUT_DIR)/$(OUT)
 
 SWIG = swig
 CFLAGS = -Wall -I$(HAKA_PATH)/include/ -I$(HAKA_PATH)/include/haka/lua -I$(SRC_DIR) -fPIC -c -g
-LDFLAGS = -L$(HAKA_PATH)/lib/ -lhaka -shared -Wl,-soname,$(MODULE_NAME).ho -Wl,--defsym=luaopen_external/$(MODULE_NAME)=luaopen_$(MODULE_NAME)
+LDFLAGS = -L$(HAKA_PATH)/lib/ -lhaka -shared -Wl,-soname,$(OUT) -Wl,--defsym=luaopen_external/$(MODULE_NAME)=luaopen_$(MODULE_NAME)
 SWIGFLAGS = -I$(HAKA_PATH)/include/ -lua -module $(MODULE_NAME)
 
 $(BIN): $(OBJS)
 	$(CC) $(LDFLAGS) -o $(BIN) $(OBJS)
 
 install: $(BIN)
-	$(INSTALL) -m 555 $(BIN) -D $(HAKA_PATH)/share/haka/modules/external/$(MODULE_NAME).ho
+	$(INSTALL) -m 555 $(BIN) -D $(HAKA_PATH)/lib/haka/modules/external/$(OUT)
 
 clean:
 	rm -f $(BIN) $(OBJS)
 
 $(OBJ_DIR):
-	mkdir $(OBJ_DIR)
+	mkdir $(OBJ_DIR) $(OUT_DIR)
 
 # Haka rules
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(OBJ_DIR)
