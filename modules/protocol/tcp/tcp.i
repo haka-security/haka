@@ -15,7 +15,6 @@ struct tcp_stream;
 
 %}
 
-%include "haka/lua/ipv4-addr.si"
 %include "haka/lua/swig.si"
 %include "haka/lua/ref.si"
 %include "haka/lua/ipv4.si"

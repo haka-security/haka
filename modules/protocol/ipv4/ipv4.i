@@ -4,16 +4,19 @@
 
 %module ipv4
 
+%include "haka/lua/swig.si"
+%include "haka/lua/object.si"
+%include "haka/lua/packet.si"
+%include "haka/lua/ref.si"
+%include "haka/lua/ipv4.si"
+%include "haka/lua/ipv4-addr.si"
+
 %{
 	#include "haka/ipv4.h"
 	#include "haka/lua/state.h"
 
 	struct ipv4_flags;
 	struct ipv4_payload;
-
-	struct ipv4_addr {
-		ipv4addr   addr;
-	};
 
 	struct ipv4_network {
 		ipv4network  net;
@@ -47,13 +50,6 @@
 		return lua_inet_checksum_sub(&sub);
 	}
 %}
-
-%include "haka/lua/swig.si"
-%include "haka/lua/object.si"
-%include "haka/lua/packet.si"
-%include "haka/lua/ref.si"
-%include "haka/lua/ipv4.si"
-%include "haka/lua/ipv4-addr.si"
 
 %rename(addr) ipv4_addr;
 
