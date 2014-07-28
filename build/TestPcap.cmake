@@ -48,7 +48,7 @@ macro(TEST_PCAP module name)
 		-DCONF=${TEST_PCAP_CONFIG}
 		-DSRC=${CMAKE_CURRENT_SOURCE_DIR}/${name}.pcap
 		-DREF=${CMAKE_CURRENT_SOURCE_DIR}/${name}-ref
-		-DREFVER=${LUA}
+		-DREFVER=${CMAKE_LUA}
 		-DDST=${name}-out
 		-DDIFF=${DIFF_COMMAND}
 		-DTSHARK=${TSHARK_COMMAND}

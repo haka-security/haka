@@ -52,12 +52,14 @@ endif()
 
 message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}${HAKA_VERSION_BUILD}")
 
-# Distribution
-find_package(Distrib REQUIRED)
-
 # Build type
 set(BUILD "Release" CACHE STRING "Selected build type")
-set(CMAKE_BUILD_TYPE ${BUILD})
+
+if(NOT ("$ENV{BUILD}" STREQUAL ""))
+	set(CMAKE_BUILD_TYPE $ENV{BUILD})
+else()
+	set(CMAKE_BUILD_TYPE ${BUILD})
+endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
 
@@ -167,7 +169,14 @@ add_custom_target(localinstall
 
 # Lua
 set(LUA "luajit" CACHE STRING "Lua version")
-message(STATUS "Lua version (LUA): ${LUA}")
+
+if(NOT ("$ENV{LUA}" STREQUAL ""))
+	set(CMAKE_LUA $ENV{LUA})
+else()
+	set(CMAKE_LUA ${LUA})
+endif()
+
+message(STATUS "Lua version (LUA): ${CMAKE_LUA}")
 include(UseLua)
 
 find_package(Threads REQUIRED)
