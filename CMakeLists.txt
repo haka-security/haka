@@ -69,7 +69,7 @@ set(CMAKE_C_FLAGS_MEMCHECK ${CMAKE_C_FLAGS_DEBUG})
 set(CMAKE_CXX_FLAGS_MEMCHECK ${CMAKE_CXX_FLAGS_DEBUG})
 
 set(CMAKE_C_FLAGS_COVERAGE "${CMAKE_C_FLAGS_DEBUG} --coverage")
-set(CMAKE_LD_FLAGS_COVERAGE "${CMAKE_LD_FLAGS_DEBUG} --coverage")
+set(CMAKE_LINK_FLAGS_COVERAGE "${CMAKE_LINK_FLAGS_COVERAGE} --coverage")
 set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
 
 # The RelWithDebInfo options should be the same as Release
@@ -117,7 +117,7 @@ if(LCOV_FOUND)
 endif(LCOV_FOUND)
 
 # Force the RUNPATH to be set to the RPATH to improve library search order
-SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--enable-new-dtags")
 
 # Default SWIG behavior to not create global module
 find_package(SWIG 2 REQUIRED)
