@@ -20,7 +20,7 @@ if(LIBGEOIP_FOUND)
 
 	SWIG_FIX_ENTRYPOINT(geoip misc)
 
-	DEPENDS_MODULE(geoip ipv4 protocol)
+	INCLUDE_MODULE(geoip ipv4 protocol)
 
 	INSTALL_MODULE(geoip misc)
 endif()
