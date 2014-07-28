@@ -49,5 +49,4 @@ target_link_libraries(hakapcap ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS hakapcap RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/bin)
 
-add_subdirectory(init)
 add_subdirectory(test)
