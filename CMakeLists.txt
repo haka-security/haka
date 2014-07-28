@@ -173,7 +173,7 @@ include(UseLua)
 find_package(Threads REQUIRED)
 
 set(HAKA_MODULE_PREFIX "" CACHE STRING "Haka module prefix")
-set(HAKA_MODULE_SUFFIX ".ho" CACHE STRING "Haka module suffix")
+set(HAKA_MODULE_SUFFIX ".so" CACHE STRING "Haka module suffix")
 
 TEST_BIG_ENDIAN(BIGENDIAN)
 set(HAKA_BIGENDIAN ${BIGENDIAN})
