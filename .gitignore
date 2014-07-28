@@ -2,6 +2,7 @@
 /workspace
 /buildtag.cmake
 /doc/genimages
+/sample/mymodule/Makefile
 *.swp
 .project
 .externalToolBuilders

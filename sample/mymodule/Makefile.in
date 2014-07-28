@@ -17,7 +17,7 @@ SRC_DIR = src
 OBJS := ${SRCS:%.i=%_lua.c}
 OBJS := ${OBJS:%.c=$(OBJ_DIR)/%.o}
 SRCS := ${addprefix $(SRC_DIR)/, $(SRCS)}
-OUT = $(MODULE_NAME).ho
+OUT = @HAKA_MODULE_PREFIX@$(MODULE_NAME)@HAKA_MODULE_SUFFIX@
 BIN = $(OUT_DIR)/$(OUT)
 
 SWIG = swig
