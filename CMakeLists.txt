@@ -50,7 +50,8 @@ else()
 	include(buildtag.cmake OPTIONAL)
 endif()
 
-message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}${HAKA_VERSION_BUILD}")
+set(HAKA_VERSION "${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}${HAKA_VERSION_BUILD}")
+message(STATUS "Build version: ${HAKA_VERSION}")
 
 # Build type
 set(BUILD "Release" CACHE STRING "Selected build type")
