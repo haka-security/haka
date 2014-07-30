@@ -5,12 +5,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #}
 
 {% if pagename != 'search' %}
-	<div id="searchbox" style="display: none">
-		<form class="search" action="{{ pathto('search') }}" method="get">
-			<input type="hidden" name="area" value="default" />
-			<input type="hidden" name="check_keywords" value="yes" />
-			<input type="text" name="q" placeholder="Search" />
-		</form>
-	</div>
+	<form class="search" action="{{ pathto('search') }}" method="get" id="searchbox" style="display: none">
+		<input type="hidden" name="area" value="default" />
+		<input type="hidden" name="check_keywords" value="yes" />
+		<input type="text" name="q" placeholder="Search" />
+	</form>
 	<script type="text/javascript">$('#searchbox').show(0);</script>
 {% endif %}
