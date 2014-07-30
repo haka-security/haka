@@ -89,6 +89,7 @@ if(SPHINX_FOUND AND DOXYGEN_FOUND)
 	# Configure files
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/theme/haka/track.html.in ${CMAKE_CURRENT_SOURCE_DIR}/theme/haka/track.html @ONLY)
 
 	# Images
 	generate_images(TARGET doc-images TOOL Inkscape FILES
