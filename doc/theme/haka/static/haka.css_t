@@ -186,23 +186,15 @@ ul.nav-menu li:hover > ul,
 	font-style: italic;
 }
 
-input[type=text]
-{
-	border: 1px solid #aaaaaa;
-	border-radius: 5px;
-	padding: 3px;
-	margin-left: 20px;
-}
-
 .highlight-link {
-	float: right;
-	background: transparent url(cross.png) no-repeat center center;
-	width: 20px;
-	height: 20px;
+	background: transparent url(img/cross.png) no-repeat center center;
+	width: 30px;
+	height: 45px;
+	display: block;
 }
 
 .highlight-link:hover {
-	background: transparent url(cross-highlight.png) no-repeat center center !important;
+	background: transparent url(img/cross-highlight.png) no-repeat center center !important;
 }
 
 table.field-list td, table.field-list th {

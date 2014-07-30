@@ -8,7 +8,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 	<form class="search" action="{{ pathto('search') }}" method="get" id="searchbox" style="display: none">
 		<input type="hidden" name="area" value="default" />
 		<input type="hidden" name="check_keywords" value="yes" />
-		<input type="text" name="q" placeholder="Search" />
+		<div class="row collapse">
+			<div class="medium-11 columns">
+				<input type="text" name="q" placeholder="Search" />
+			</div>
+			<div class="medium-1 columns" id="clean-search-highlight">
+			</div>
+		</div>
 	</form>
 	<script type="text/javascript">$('#searchbox').show(0);</script>
 {% endif %}

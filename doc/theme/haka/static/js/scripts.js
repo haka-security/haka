@@ -16,6 +16,6 @@ Documentation.highlightSearchWords = function() {
 		}, 10);
 		$('<a class="highlight-link" href="javascript:Documentation.' +
 				'hideSearchWords()" title="' + _('Hide Search Matches') + '"/>')
-			.appendTo($('#searchbox'));
+			.appendTo($('#clean-search-highlight'));
 	}
 }
