@@ -37,7 +37,8 @@ choose this type :
     :objtype: state_machine
 
     :param state_type: State type.
-    :ptype state_type: :haka:class:`class` extending :haka:class:`State`
+    :ptype state_type: :haka:class:`class` extending :haka:class:`State` or a
+        lua table.
 
     Define the type of state that this state machine will work with. It will determine :
 
@@ -45,11 +46,21 @@ choose this type :
         * the parameters passed to actions.
         * the parameters passed to state machine update function (see :haka:class:`state_machine_instance`).
 
+    State type can be one of the provided state or one locally defined (see
+    :haka:class:`state_machine`)
+
     **Usage:**
 
     ::
 
         state_type(BidirectionnalState)
+
+        state_type{
+            events = { 'receive', 'drop' },
+            update = function (self, state_machine, direction, pkt)
+                state_machine:trigger('receive', pkt, direction)
+            end,
+        }
 
 Then it is required to declare all the states :
 
@@ -243,17 +254,36 @@ Naturally it is possible to define specific state types by extending
 :haka:class:`State`. It will allow to redefine update function and available
 events.
 
+.. haka:function:: new_state_type{events, name, parent, update} -> state_class
+
+    :param events: State machine events.
+    :ptype events: table
+    :param name: State type name.
+    :ptype name: string
+    :param parent: State type parent.
+    :ptype parent: :haka:class:`class` extending :haka:class:`State`
+    :param update: State type update function.
+    :ptype update: function
+    :return state_class: New state type class
+    :rtype state_class: :haka:class:`class` extending :haka:class:`State`
+
+
+    Create a new state type.
+
+    .. note:: None of the paramaters are required.
+
 **Usage:**
 
 ::
 
-    local MyState = class.class("MyState", haka.state_machine.State)
-
-    MyState._events = { 'myevent' }
-
-    function MyState.method:_update(state_machine, myarg)
+    local MyState = haka.state_machine.new_state_type{
+        name = "MyState",
+        parent = haka.state_machine.State,
+        events = { 'myevent' },
+        update = function (state_machine, myarg)
             state_machine:trigger('myevent', myarg)
-    end
+        end
+    }
 
 Actions
 ^^^^^^^
@@ -268,10 +298,12 @@ An action is composed of the following :
 
 A action is defined with :
 
-.. haka:method:: <state>:on{event, when, execute, jump}
+.. haka:method:: <state>:on{event, events, when, execute, jump}
     :module: state_machine
 
     :param event: One of the event defined by state machine state type.
+    :param events: A list of event to attach to.
+    :ptype events: table
     :param when: An optional function to decide whether this action should be taken or not.
     :ptype when: function
     :param execute: An optional function to make some specific actions.
@@ -282,7 +314,7 @@ A action is defined with :
     Define a new action. The parameters passed to action and when function
     depends on state machine state type.
 
-    Only event is a required parameter. But an action must have one of action
+    Only event or events is a required parameter. But an action must have one of action
     or jump otherwise it is useless.
 
     Both action and when function are always passed the same parameters.
@@ -293,6 +325,8 @@ Haka allow to define default actions :
     :module: state_machine
 
     :param event: One of the event defined by state machine state type.
+    :param events: A list of event to attach to.
+    :ptype events: table
     :param when: An optional function to decide whether this action should be taken or not.
     :ptype when: function
     :param execute: An optional function to make some specific actions.
@@ -368,42 +402,6 @@ Instance
 Example
 -------
 
-    ::
-
-        local TestState = class.class('TestState', haka.state_machine.State)
-
-        function TestState.method:__init(name)
-            class.super(TestState).__init(self, name)
-            table.merge(self._actions, {
-                test = {},
-            });
-        end
-
-        local my_state_machine = haka.state_machine("test", function ()
-            state_type(TestState)
-
-            foo = state()
-            bar = state()
-
-            foo:on{
-                event = events.test,
-                execute  = function (self)
-                    print("update")
-                end,
-                jump = bar -- jump to the state bar
-            }
-
-            bar:on{
-                event = events.enter,
-                execute  = function (self)
-                    print("finish")
-                end
-            }
-
-            initial(foo) -- start on state foo
-        end)
-
-        local context = {}
-        local instance = my_state_machine:instanciate(context)
-
-        instance:update('test') -- trigger the event test
+.. literalinclude:: state_machine.lua
+    :language: lua
+    :tab-width: 4

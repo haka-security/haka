@@ -423,22 +423,21 @@ http_dissector.state_machine = haka.state_machine.new("http", function ()
 		jump = response,
 	}
 
+	local function setresponse(self, res)
+		self.response = res
+		self._want_data_modification = false
+	end
+
 	response:on{
 		event = events.down,
 		when = function (self, res) return self.request.method:lower() == 'connect' end,
-		execute = function (self, res)
-			self.response = res
-			self._want_data_modification = false
-		end,
+		execute = setresponse,
 		jump = connect,
 	}
 
 	response:on{
 		event = events.down,
-		execute = function (self, res)
-			self.response = res
-			self._want_data_modification = false
-		end,
+		execute = setresponse,
 		jump = request,
 	}
 

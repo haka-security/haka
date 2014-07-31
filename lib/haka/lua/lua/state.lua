@@ -4,6 +4,7 @@
 
 local class = require('class')
 local dg = require('grammar_dg')
+local check = require('check')
 
 local module = {}
 
@@ -21,53 +22,39 @@ function module.ActionCollection.method:__init(const)
 end
 
 function module.ActionCollection.method:on(action)
-	if not action.event then
-		error("action must have an event", 2)
-	end
+	check.assert(not action.when or type(action.when) == 'function', "when must be a function")
+	check.assert(not action.execute or type(action.execute) == 'function', "execute must be a function")
+	check.assert(not action.jump or class.isa(action.jump, module.State), "can only jump on defined state")
+	check.assert(action.execute or action.jump, "action must have either an execute or a jump")
 
-	if not action.event.name then
-		error("action must be a table", 2)
-	end
+	action.events = action.events or { action.event }
+	check.assert(type(action.events) == 'table', "events must be a table of event")
 
-	if self._const and not self._actions[action.event.name] then
-		error(string.format("unknown event '%s'", action.event.name), 2)
-	end
+	for _, event in ipairs(action.events) do
+		check.assert(event, "action must have an event")
+		check.assert(event.name, "action must be a table")
+		check.assert(not self._const or self._actions[event.name], string.format("unknown event '%s'", event.name))
 
-	if action.when and not type(action.when) == 'function' then
-		error("when must be a function", 2)
-	end
+		-- build another representation of the action
+		local a = {
+			when = action.when,
+			execute = action.execute,
+		}
 
-	if action.execute and not type(action.execute) then
-		error("execute must be a function", 2)
-	end
-
-	if action.jump and not class.isa(action.jump, module.State) then
-		error("can only jump on defined state", 2)
-	end
-
-	if not action.execute and not action.jump then
-		error("action must have either an execute or a jump", 2)
-	end
-
-	-- build another representation of the action
-	local a = {
-		when = action.when,
-		execute = action.execute,
-	}
-
-	if action.jump then
-		a.jump = action.jump._name
-	end
-
-	-- register action
-	if action.event.name == 'timeouts' then
-		self._actions.timeouts[action.event.timeout] = a
-	else
-		if not self._actions[action.event.name] then
-			self._actions[action.event.name] = {}
+		if action.jump then
+			a.jump = action.jump._name
 		end
 
-		table.insert(self._actions[action.event.name], a)
+		-- register action
+		if event.name == 'timeouts' then
+			self._actions.timeouts[event.timeout] = a
+		else
+			if not self._actions[event.name] then
+				self._actions[event.name] = {}
+			end
+
+			table.insert(self._actions[event.name], a)
+		end
 	end
 
 end
@@ -106,7 +93,7 @@ function module.State.method:__init(name)
 end
 
 function module.State.method:setdefaults(defaults)
-	assert(class.classof(defaults) == module.ActionCollection, "can only set default with a raw ActionCollection")
+	check.assert(class.classof(defaults) == module.ActionCollection, "can only set default with a raw ActionCollection")
 	for name, a in pairs(defaults._actions) do
 		-- Don't add action to state that doesn't support it
 		if self._actions[name] then
@@ -115,8 +102,8 @@ function module.State.method:setdefaults(defaults)
 	end
 end
 
-function module.State.method:_update(state_machine, event)
-	state_machine:trigger(event)
+function module.State.method:update(state_machine, event)
+	error("unimplemented update function")
 end
 
 function module.State.method:_dump_graph(file)
@@ -139,13 +126,8 @@ module.BidirectionalState = class.class('BidirectionalState', module.State)
 module.BidirectionalState._events = { 'up', 'down', 'parse_error', 'missing_grammar' }
 
 function module.BidirectionalState.method:__init(gup, gdown)
-	if gup and not class.isa(gup, dg.Entity) then
-		error("bidirectionnal state expect an exported element of a grammar", 3)
-	end
-
-	if gdown and not class.isa(gdown, dg.Entity) then
-		error("bidirectionnal state expect an exported element of a grammar", 3)
-	end
+	check.assert(not gup or class.isa(gup, dg.Entity), "bidirectionnal state expect an exported element of a grammar", 1)
+	check.assert(not gdown or class.isa(gdown, dg.Entity), "bidirectionnal state expect an exported element of a grammar", 1)
 
 	class.super(module.BidirectionalState).__init(self)
 
@@ -155,7 +137,7 @@ function module.BidirectionalState.method:__init(gup, gdown)
 	}
 end
 
-function module.BidirectionalState.method:_update(state_machine, payload, direction, ...)
+function module.BidirectionalState.method:update(state_machine, payload, direction, ...)
 	if not self._grammar[direction] then
 		state_machine:trigger("missing_grammar", direction, payload, ...)
 	else
@@ -181,9 +163,7 @@ local function transitions_wrapper(state_table, actions, ...)
 			end
 			if a.jump then
 				newstate = state_table[a.jump]
-				if not newstate then
-					error(string.format("unknown state '%s'", a.jump))
-				end
+				check.assert(newstate, string.format("unknown state '%s'", a.jump))
 
 				return newstate._compiled_state
 			end
@@ -225,6 +205,20 @@ function module.CompiledState.method:__init(state_machine, state, name)
 			self[n] = transitions_wrapper
 		end
 	end
+end
+
+module.new = function(state)
+	state.name = state.name or "AnonymousState"
+	state.parent = state.parent or module.State
+
+	local State = class.class(state.name, state.parent)
+	State._events = state.events
+
+	if state.update then
+		State.method.update = state.update
+	end
+
+	return State
 end
 
 return module
