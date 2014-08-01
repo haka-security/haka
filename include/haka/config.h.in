@@ -27,7 +27,6 @@
 #cmakedefine HAKA_LUA52       @HAKA_LUA52@
 
 #define PREFIX                "@CMAKE_INSTALL_PREFIX@"
-#define HAKA_PREFIX           "@CMAKE_HAKA_INSTALL_PREFIX@"
 
 #cmakedefine HAKA_DEBUG
 #cmakedefine HAKA_NDEBUG

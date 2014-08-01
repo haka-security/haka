@@ -82,7 +82,7 @@ void fatal_exit(int rc)
 const char *haka_path()
 {
 	const char *haka_path = getenv("HAKA_PATH");
-	return haka_path ? haka_path : HAKA_PREFIX;
+	return haka_path ? haka_path : PREFIX;
 }
 
 void haka_exit()

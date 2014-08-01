@@ -30,7 +30,7 @@
 #include "config.h"
 
 
-#define HAKA_CONFIG PREFIX "/etc/haka/haka.conf"
+#define HAKA_CONFIG "/etc/haka/haka.conf"
 
 
 static void usage(FILE *output, const char *program)
