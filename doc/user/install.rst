@@ -8,7 +8,7 @@ Installation
 Download the package
 ====================
 
-First, download a Debian package from the `Haka website <http://www.haka-security.org>`_ in
+First, download the Debian packages from the `Haka website <http://www.haka-security.org>`_ in
 the *Download* section.
 
 .. seealso::
@@ -19,8 +19,8 @@ the *Download* section.
 Install
 =======
 
-Then to install it, type the following command:
+For each package that you want to install, type the following command:
 
 .. code-block:: console
 
-    $ sudo dpkg -i haka.deb
+    $ sudo dpkg -i <package name>.deb

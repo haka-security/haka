@@ -211,4 +211,4 @@ command ``make pretests``.
 Packaging
 ^^^^^^^^^
 
-Run ``make package`` to build an installable package.
+Run ``make package`` to build a tgz package.
