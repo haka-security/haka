@@ -45,7 +45,7 @@ set(LUA_LIB_SRC
 
 add_definitions(-DLUA_USE_POSIX=1)
 add_definitions(-DLUA_USE_DLOPEN=1)
-add_definitions(-DLUA_ROOT="${CMAKE_HAKA_INSTALL_PREFIX}/share/haka/lua")
+add_definitions(-DLUA_ROOT="${CMAKE_INSTALL_PREFIX}/share/haka/lua")
 
 add_library(liblua STATIC ${LUA_CORE_SRC} ${LUA_LIB_SRC})
 set_target_properties(liblua PROPERTIES OUTPUT_NAME lua)
@@ -56,7 +56,7 @@ install(FILES
 	${LUA_SRC_DIR}/src/luaconf.h
 	${LUA_SRC_DIR}/src/lualib.h
 	${LUA_SRC_DIR}/src/lauxlib.h
-	DESTINATION ${HAKA_INSTALL_PREFIX}/include/haka/lua)
+	DESTINATION include/haka/lua)
 
 add_executable(luac ${LUA_CORE_SRC} ${LUA_LIB_SRC} ${LUA_SRC_DIR}/src/luac.c)
 target_link_libraries(luac m ${DL_LIBRARIES})

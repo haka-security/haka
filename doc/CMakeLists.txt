@@ -136,7 +136,7 @@ if(SPHINX_FOUND AND DOXYGEN_FOUND)
 		DEPENDS doc-doxygen doc-images
 	)
 
-	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION ${HAKA_INSTALL_PREFIX}/share/doc/haka/manual OPTIONAL)
+	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/ DESTINATION share/doc/haka/manual OPTIONAL)
 else()
 	message("Skipping documentation target (Sphinx and Doxygen not found)")
 endif()

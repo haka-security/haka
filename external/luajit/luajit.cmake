@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-set(INSTALL_DIR ${HAKA_INSTALL_PREFIX})
-set(INSTALL_FULLDIR ${CMAKE_HAKA_INSTALL_PREFIX}/share/haka/lua)
+set(INSTALL_FULLDIR ${CMAKE_INSTALL_PREFIX}/share/haka/lua)
 set(LUAJIT_DIR "external/luajit/src")
 
 set(LUAJIT_CFLAGS -fPIC -DLUAJIT_ENABLE_LUA52COMPAT)
@@ -71,9 +70,9 @@ set(LUA_FLAGS_RELEASE "-s")
 set(LUA_FLAGS_RELWITHDEBINFO "-g")
 set(LUA_FLAGS_MINSIZEREL "-s")
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/share/lua DESTINATION ${INSTALL_DIR}/share/haka/lua/share)
-install(DIRECTORY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/share/luajit-2.0.3 DESTINATION ${INSTALL_DIR}/share/haka/lua/share)
-install(DIRECTORY ${LUA_INCLUDE_DIR}/ DESTINATION ${INSTALL_DIR}/include/haka/lua)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/share/lua DESTINATION share/haka/lua/share)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/share/luajit-2.0.3 DESTINATION /share/haka/lua/share)
+install(DIRECTORY ${LUA_INCLUDE_DIR}/ DESTINATION include/haka/lua)
 
 set(HAKA_LUAJIT 1)
 set(HAKA_LUA51 1)

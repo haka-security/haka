@@ -8,7 +8,7 @@ Console
 This section describe the API to add new console utilities available through
 *hakactl*.
 
-The console utilities need to be installed in the folder ``/opt/haka/share/haka/console``.
+The console utilities need to be installed in the folder ``<install path>/share/haka/console``.
 Those files will automatically be loaded when ``hakactl console`` is started.
 
 List

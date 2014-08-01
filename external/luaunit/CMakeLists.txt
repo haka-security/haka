@@ -3,4 +3,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 lua_compile(NAME luaunit FILES src/luaunit.lua)
-lua_install(TARGET luaunit DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/core)
+lua_install(TARGET luaunit DESTINATION share/haka/core)

@@ -30,7 +30,7 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/list.lua
 	lua/lua/check.lua
 )
-lua_install(TARGET libhakalua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/core)
+lua_install(TARGET libhakalua DESTINATION share/haka/core)
 
 add_library(libhaka SHARED
 	packet.c
@@ -95,6 +95,6 @@ link_directories(${LUA_LIBRARY_DIR})
 set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 
 # Install
-install(TARGETS libhaka LIBRARY DESTINATION ${HAKA_INSTALL_PREFIX}/lib)
+install(TARGETS libhaka LIBRARY DESTINATION lib)
 
 add_subdirectory(test)

@@ -6,7 +6,7 @@ lua_compile(NAME udp FILES udp.lua)
 lua_install(TARGET udp DESTINATION ${MODULE_INSTALL_PATH}/protocol)
 
 lua_compile(NAME udp-console FILES udp_console.lua)
-lua_install(TARGET udp-console DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/console)
+lua_install(TARGET udp-console DESTINATION share/haka/console)
 
 lua_compile(NAME udp_connection FILES udp_connection.lua)
 lua_install(TARGET udp_connection DESTINATION ${MODULE_INSTALL_PATH}/protocol)

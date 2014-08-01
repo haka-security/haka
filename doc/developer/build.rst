@@ -139,7 +139,7 @@ The configuration with cmake supports the following options:
 
     Choose the Lua version to use (default: *luajit*)
 
-.. option:: PREFIX=PATH
+.. option:: CMAKE_INSTALL_PREFIX=PATH
 
     Installation prefix (default: */*)
 
@@ -161,7 +161,7 @@ To install Haka on your system, type this command:
 
     $ sudo make install
 
-By default, Haka will be installed in ``/opt/haka``. You might want to update your ``PATH``
+By default, Haka will be installed in ``/usr/local``. You might want to update your ``PATH``
 environment variable to be able to easily launch the various tools from the command line.
 
 Local install
