@@ -9,7 +9,7 @@ if (NOT GAWK_COMMAND)
 	message(FATAL_ERROR "Cannot find gawk command")
 endif(NOT GAWK_COMMAND)
 
-if(VALGRIND_COMMAND AND NOT "$ENV{QUICK}" STREQUAL "yes")
+if(VALGRIND_COMMAND AND NOT "$ENV{VALGRIND}" STREQUAL "0")
 	set(DO_VALGRIND 1)
 endif()
 
