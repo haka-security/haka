@@ -218,7 +218,10 @@ void module_set_path(const char *path, bool c)
 	*old_path = NULL;
 
 	*old_path = strdup(path);
-	assert(*old_path);
+	if (!*old_path) {
+		error(L"memory error");
+		return;
+	}
 }
 
 void module_add_path(const char *path, bool c)
@@ -234,7 +237,10 @@ void module_add_path(const char *path, bool c)
 
 	if (modules_path_len > 0) {
 		new_modules_path = malloc(modules_path_len + strlen(path) + 2);
-		assert(new_modules_path);
+		if (!new_modules_path) {
+			error(L"memory error");
+			return;
+		}
 
 		strcpy(new_modules_path, *old_path);
 		strcat(new_modules_path, ";");
