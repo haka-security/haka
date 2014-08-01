@@ -5,79 +5,35 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #}
 
 {% extends "basic/layout.html" %}
-{% set script_files = script_files + ['_static/scripts.js', '_static/navbar.js'] %}
+{% set script_files = script_files + ['_static/js/scripts.js', '_static/js/vendor/modernizr.js', '_static/js/foundation/foundation.js', '_static/js/foundation/foundation.topbar.js'] %}
 
 {% block relbar1 %}{% endblock %}
-
-{% block header %}
-<header id="header" role="banner">
-  <div class="home-link">
-    <div id="version" class="description">Version {{ release }}</div>
-    <h1 class="title"><a rel="home" title="Haka" href="http://www.haka-security.org">Haka</a></h1>
-    <h2 class="description">Software Defined Security</h2>
-  </div>
-</header>
-{% endblock %}
-
 {% block relbar2 %}{% endblock %}
 
-{% block footer %}
-<div id="footer">
-  {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}
-</div>
+{% block header %}
+{% include "header.html" %}
 {% endblock %}
 
 {% block content %}
-  <div id="navbar" class="navbar">
-    <nav id="site-navigation" class="navigation main-navigation" role="navigation">
-      <ul class="nav-menu">
-        <li class="{% if pagename == 'doc/user/userindex' %}current{% endif %} {% for parent in parents %}{% if parent.link == pathto("doc/user/userindex") %}current{% endif %}{% endfor %}">
-          <a href="{{ pathto("doc/user/userindex") }}">Users</a>
-        </li>
-        <li class="{% if pagename == 'doc/ref/refindex' %}current{% endif %} {% for parent in parents %}{% if parent.link == pathto("doc/ref/refindex") %}current{% endif %}{% endfor %}">
-          <a href="{{ pathto("doc/ref/refindex") }}" class="{{ pathto("doc/ref/refindex") }}">References</a>
-        </li>
-        <li class="{% if pagename == 'doc/developer/devindex' %}current{% endif %} {% for parent in parents %}{% if parent.link == pathto("doc/developer/devindex") %}current{% endif %}{% endfor %}">
-          <a href="{{ pathto("doc/developer/devindex") }}" class="">Developers</a>
-        </li>
-        <li class="{% if pagename == 'doc/faq' %}current{% endif %} {% for parent in parents %}{% if parent.link == pathto("doc/developer/faq") %}current{% endif %}{% endfor %}">
-          <a href="{{ pathto("doc/faq") }}" class="">Faq</a>
-        </li>
-        <li>{%- include "searchbox.html" %}</li>
+<div class="contain-to-grid sticky">
+	{% include "navbar.html" %}
+</div>
+<div id="content">
+	<div class="row">
+		<div id="breadcrumb" class="breadcrumb medium-12 columns">
+			{% for parent in parents %}
+			&raquo; <a href="{{ parent.link }}">{{ parent.title|safe }}</a>
+			{% endfor %}
+		</div>
+	</div>
+	<div class="row">
+		<div class="medium-12 columns">
+			{% block body %}{% endblock %}
+		</div>
+	</div>
+</div>
+{% endblock %}
 
-        {%- if next %}
-          <li class="right"><a href="{{ next.link|e }}" title="{{ next.title }}">Next &rarr;</a></li>
-        {%- else %}
-          <li class="right"><span class="disabled">Next &rarr;</span></li>
-        {%- endif %}
-
-        {%- if prev %}
-          <li class="right"><a href="{{ prev.link|e }}" title="{{ prev.title }}">&larr; Prev</a></li>
-        {%- else %}
-          <li class="right"><span class="disabled">&larr; Prev</span></li>
-        {%- endif %}
-
-        {%- if parents[-1] %}
-          <li class="right"><a href="{{ parents[-1].link|e }}" title="{{ parents[-1].title }}">Up &uarr;</a></li>
-        {%- elif pagename != master_doc %}
-          <li class="right"><a href="{{ pathto(master_doc) }}" title="{{ shorttitle|e }}">Up &uarr;</a></li>
-        {%- else %}
-          <li class="right"><span class="disabled">Up &uarr;</span></li>
-        {%- endif %}
-
-         <li class="{% if pagename == 'genindex' %}current{% endif %} right"><a href="{{ pathto("genindex.html", 1) }}">Index</a></li>
-         <li class="{% if pagename == 'haka-modindex' %}current{% endif %} right"><a href="{{ pathto("haka-modindex.html", 1) }}">Modules</a></li>
-      </ul>
-    </nav>
-  </div>
-  <div id="content" class="body">
-    <div id="breadcrumb" class="breadcrumb">
-      {% for parent in parents %}
-        &raquo; <a href="{{ parent.link }}">{{ parent.title|safe }}</a>
-      {% endfor %}
-    </div>
-    <div id="contentwrapper">
-      {% block body %}{% endblock %}
-    </div>
-  </div>
+{% block footer %}
+{% include "footer.html" %}
 {% endblock %}

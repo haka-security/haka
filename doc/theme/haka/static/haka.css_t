@@ -3,50 +3,74 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import url("default.css");
-@import url("ansi.css");
-@import url("fonts.css");
+@import url("css/breathe.css");
+@import url("css/foundation.css");
+@import url("css/haka.css");
 
-* {
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-}
-
-pre {
-	background: #f0f0f0;
-	border: 1px solid #aaaaaa;
-	border-radius: 5px;
-}
-
+/**
+ * Override haka.css
+ */
 body, html, button, input, select, textarea {
-	font-family: "Source Sans Pro",Helvetica,sans-serif;
+	font-size: 100%;
 }
 
-div.body h1, div.body h2, div.body h3,
-div.body h4, div.body h5, div.body h6 {
-	clear: both;
-	font-family: Bitter,Georgia,serif;
-	line-height: 1.3;
-	background-color: transparent;
-	font-weight: bold;
-	color: #000000;
-	border: 0;
+h1 {
+	font-size: 32px;
 }
 
-h1, h2, h3, h4, h5, h6 {
-	clear: both;
-	font-family: Bitter,Georgia,serif;
-	line-height: 1.3;
+h2 {
+	font-size: 25.6px;
 }
 
-a {
-	color: #99CC66;
+header#header #version {
+	font: italic 300 24px "Source Sans Pro",Helvetica,sans-serif;
+	margin: 0;
+	text-align: right;
+	color: #fff;
 }
 
 a:visited {
+	color: #99cc66;
+}
+
+pre {
+	background: none repeat scroll 0 0 #f0f0f0;
+	border: 1px solid #aaaaaa;
+}
+
+/* Don't ask me why... */
+dl {
+	font-size: 100%;
+}
+
+dd {
+	margin-left: 30px;
+}
+
+ul {
+	list-style-type: disc;
+}
+
+dd table tbody tr th, dd table tbody tr td {
+	font-size: 100%;
+	line-height: 130%;
+}
+
+dd table tbody tr:nth-of-type(n) { /* Add nth-of-type to force override */
+	background: none;
+}
+
+/**
+ * Doc
+ */
+a.headerlink {
 	color: #99CC66;
 }
 
+a.headerlink:hover {
+	color: #ffffff;
+	background-color: #FFCC33;
+}
 a.headerlink {
 	color: #99CC66;
 }
@@ -64,88 +88,6 @@ a.headerlink:hover {
 .toctree-wrapper a:visited,
 .indextable a:visited {
 	color: #34373F;
-}
-
-#header {
-	background: none repeat scroll 0 0 #99CC66;
-	position: relative;
-}
-
-#header a {
-	color: #FFFFFF;
-}
-
-#header .home-link {
-	color: #141412;
-	display: block;
-	margin: 0 auto;
-	max-width: 1080px;
-	min-height: 180px;
-	padding: 0 20px;
-	width: 100%;
-	position: relative;
-}
-
-#version {
-	color: #FFFFFF;
-	display: block;
-	position: absolute;
-	right: 0;
-	padding: 10px 20px;
-}
-
-#navbar {
-	background-color: #515151;
-	position: static;
-	width: 100%;
-}
-
-#site-navigation {
-	display: block;
-	margin: 0 auto;
-	max-width: 1080px;
-	min-height: 45px;
-	text-decoration: none;
-	width: 100%;
-}
-
-#footer {
-	color: #ffffff;
-	display: block;
-	margin: 30px auto;
-	max-width: 1080px;
-	text-align: center;
-}
-
-#content {
-	background-color: #ffffff;
-}
-
-div.body {
-	padding: 0;
-}
-
-#contentwrapper {
-	max-width: 1080px;
-	margin: auto;
-	padding: 20px 20px;
-}
-
-.description {
-	font: italic 300 24px "Source Sans Pro",Helvetica,sans-serif;
-	margin: 0;
-}
-
-.title {
-	font-size: 60px;
-	font-weight: 700;
-	line-height: 1;
-	margin: 0;
-	padding: 38px 0 10px;
-}
-
-.title, .description {
-	color: #FFFFFF;
 }
 
 th {
@@ -244,31 +186,15 @@ ul.nav-menu li:hover > ul,
 	font-style: italic;
 }
 
-.menu-toggle {
-	display: none;
-}
-
-.right {
-	float: right;
-}
-
-input[type=text]
-{
-	border: 1px solid #aaaaaa;
-	border-radius: 5px;
-	padding: 3px;
-	margin-left: 20px;
-}
-
 .highlight-link {
-	float: right;
-	background: transparent url(cross.png) no-repeat center center;
-	width: 20px;
-	height: 20px;
+	background: transparent url(img/cross.png) no-repeat center center;
+	width: 30px;
+	height: 45px;
+	display: block;
 }
 
 .highlight-link:hover {
-	background: transparent url(cross-highlight.png) no-repeat center center !important;
+	background: transparent url(img/cross-highlight.png) no-repeat center center !important;
 }
 
 table.field-list td, table.field-list th {
@@ -288,6 +214,10 @@ em.modproperty {
 	display: inline;
 }
 
+dl {
+	line-height: 1;
+}
+
 dl.class dt:target, dl.function dt:target, dl.operator dt:target, dl.method
 dt:target, dl.data dt:target, dl.attribute dt:target, .highlighted {
 	background-color: #FFCC33;
@@ -301,6 +231,11 @@ dl.attribute dt {
 	border-style: solid;
 	border-width: 3px 1px 1px;
 	padding: 0.5em;
+	font-weight: normal;
+}
+
+dl dt tt {
+	font-family: monospace;
 }
 
 dl.class dt + dt, dl.function dt + dt, dl.operator dt + dt,
@@ -346,13 +281,6 @@ li.toctree-l2 {
 
 .toctree-wrapper > ul {
 	padding-left: 20px;
-}
-
-/* Breadcrumb */
-#breadcrumb {
-	max-width: 1080px;
-	margin: auto;
-	padding: 20px 20px 0px;
 }
 
 /* Exercise */
