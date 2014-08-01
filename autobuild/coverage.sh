@@ -10,7 +10,7 @@ _coverage() {
 	_run cmake -DBUILD=Coverage -DLUA=$1 "$ROOT"
 	_run make all
 	_run make coverage_clean
-	QUICK=yes make tests
+	VALGRIND=0 make tests
 	_run make coverage
 
 	if [ -n "$DROPDIR" ]; then
