@@ -30,7 +30,7 @@
 #include "config.h"
 
 
-#define HAKA_CONFIG "/etc/haka/haka.conf"
+#define HAKA_CONFIG PREFIX "/etc/haka/haka.conf"
 
 
 static void usage(FILE *output, const char *program)
@@ -46,7 +46,7 @@ static void help(const char *program)
 	fprintf(stdout, "\t-h,--help:              Display this information\n");
 	fprintf(stdout, "\t--version:              Display version information\n");
 	fprintf(stdout, "\t-c,--config <conf>:     Load a specific configuration file\n"
-					"\t                          (default: %s/etc/haka/haka.conf)\n", haka_path());
+					"\t                          (default: " HAKA_CONFIG ")\n");
 	fprintf(stdout, "\t-r,--rule <rule>:       Override the rule configuration file\n");
 	fprintf(stdout, "\t-d,--debug:             Display debug output\n");
 	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
@@ -180,12 +180,12 @@ static int parse_cmdline(int *argc, char ***argv)
 	}
 
 	if (!config) {
-		const char *haka_path_s = haka_path();
-
-		config = malloc(strlen(haka_path_s) + strlen(HAKA_CONFIG) + 1);
-		assert(config);
-		strcpy(config, haka_path_s);
-		strcat(config, HAKA_CONFIG);
+		config = strdup(HAKA_CONFIG);
+		if (!config) {
+			message(HAKA_LOG_FATAL, L"core", L"memory error");
+			clean_exit();
+			exit(2);
+		}
 	}
 
 	*argc -= optind;

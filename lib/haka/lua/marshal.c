@@ -12,7 +12,7 @@
 #include <haka/error.h>
 #include <haka/types.h>
 #include <haka/lua/marshal.h>
-#include <haka/lua/lua.h>
+#include <haka/lua/luautils.h>
 #include <haka/lua/state.h>
 
 int mar_encode(lua_State* L);

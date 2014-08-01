@@ -173,11 +173,11 @@ When a Lua error code occurs, the debugger breaks and outputs the error and a ba
           #1    \x1b[36m[C]\x1b[0m: in function '\x1b[35m(null)\x1b[0m'
           #2    \x1b[36m[C]\x1b[0m: in function '\x1b[35m__index\x1b[0m'
           #3    \x1b[36merroneousrule.lua:18\x1b[0m: in function '\x1b[35msignal\x1b[0m'
-          #4    \x1b[36m/opt/haka/share/haka/core/events.bc:0\x1b[0m: in the main chunk
-          #5    \x1b[36m/opt/haka/share/haka/core/events.bc:0\x1b[0m: in the main chunk
-          #6    \x1b[36m/opt/haka/share/haka/core/context.bc:0\x1b[0m: in the main chunk
+          #4    \x1b[36m/usr/share/haka/core/events.bc:0\x1b[0m: in the main chunk
+          #5    \x1b[36m/usr/share/haka/core/events.bc:0\x1b[0m: in the main chunk
+          #6    \x1b[36m/usr/share/haka/core/context.bc:0\x1b[0m: in the main chunk
           #7    \x1b[36m[string "tcp"]:14\x1b[0m: in function '\x1b[35mreceive\x1b[0m'
-          #8    \x1b[36m/opt/haka/share/haka/core/dissector.bc:0\x1b[0m: in the main chunk
+          #8    \x1b[36m/usr/share/haka/core/dissector.bc:0\x1b[0m: in the main chunk
           #9    \x1b[36m[C]\x1b[0m: in function '\x1b[35mxpcall\x1b[0m'
          ...
 

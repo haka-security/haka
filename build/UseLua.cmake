@@ -2,26 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if(LUA STREQUAL "luajit")
+if(CMAKE_LUA STREQUAL "luajit")
 	include(external/luajit/luajit.cmake)
-elseif(LUA STREQUAL "lua")
+elseif(CMAKE_LUA STREQUAL "lua")
 	include(external/lua/lua.cmake)
 else()
 	message(FATAL_ERROR "Invalid Lua version")
 endif()
 
-macro(LUA_DEPENDS target)
-	if (LUA_DEPENDENCY)
-		add_dependencies(${target} ${LUA_DEPENDENCY})
-	endif(LUA_DEPENDENCY)
-endmacro(LUA_DEPENDS)
-
-macro(LUA_LINK target)
-	LUA_DEPENDS(${target})
-	include_directories(${LUA_INCLUDE_DIR})
-	link_directories(${LUA_LIBRARY_DIR})
-	target_link_libraries(${target} ${LUA_LIBRARIES})
-endmacro(LUA_LINK)
+include_directories(${LUA_INCLUDE_DIR})
 
 macro(LUA_COMPILE)
 	set(oneValueArgs NAME)

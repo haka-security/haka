@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <haka/lua/lua.h>
+#include <haka/lua/luautils.h>
 #include <haka/error.h>
 
 

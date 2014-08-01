@@ -22,12 +22,11 @@ add_executable(hakactl
 	${SWIG_hakactlswig_FILES}
 )
 
-LUA_LINK(hakactl)
 target_link_libraries(hakactl libhaka)
 target_link_libraries(hakactl libhakactl)
 target_link_libraries(hakactl ${CMAKE_THREAD_LIBS_INIT})
 
-install(TARGETS hakactl RUNTIME DESTINATION ${HAKA_INSTALL_PREFIX}/sbin)
+install(TARGETS hakactl RUNTIME DESTINATION sbin)
 
 lua_compile(NAME hakactl-lua FILES
 	lua/thread.lua
@@ -35,6 +34,6 @@ lua_compile(NAME hakactl-lua FILES
 	lua/rule.lua
 	lua/misc.lua
 )
-lua_install(TARGET hakactl-lua DESTINATION ${HAKA_INSTALL_PREFIX}/share/haka/console)
+lua_install(TARGET hakactl-lua DESTINATION share/haka/console)
 
-install(FILES hakactl.1 DESTINATION ${HAKA_INSTALL_PREFIX}/share/man/man1)
+install(FILES hakactl.1 DESTINATION share/man/man1)

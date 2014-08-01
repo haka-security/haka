@@ -20,10 +20,12 @@
 
 
 static char *modules_path = NULL;
+static char *modules_cpath = NULL;
 
 FINI static void _module_cleanup()
 {
 	free(modules_path);
+	free(modules_cpath);
 }
 
 struct module *module_load(const char *module_name, struct parameters *args)
@@ -45,7 +47,7 @@ struct module *module_load(const char *module_name, struct parameters *args)
 	assert(strlen(full_module_name)+1 == module_name_len);
 
 	{
-		char *current_path = modules_path, *iter;
+		char *current_path = modules_cpath, *iter;
 		char *full_path;
 
 		while ((iter = strchr(current_path, '*')) != NULL) {
@@ -150,51 +152,83 @@ bool module_set_default_path()
 {
 	static const char *HAKA_CORE_PATH = "/share/haka/core/*";
 	static const char *HAKA_MODULE_PATH = "/share/haka/modules/*";
+	static const char *HAKA_MODULE_CPATH = "/lib/haka/modules/*";
 
 	size_t path_len;
 	char *path;
 	const char *haka_path_s = haka_path();
 
-	/* format <haka_path_s><HAKA_CORE_PATH>;<haka_path_s><HAKA_MODULE_PATH>\0
-	 * in a string.
-	 */
+	/* Lua module path */
+	{
+		/* format <haka_path_s><HAKA_CORE_PATH>;<haka_path_s><HAKA_MODULE_PATH>\0
+		 * in a string.
+		 */
 
-	path_len = 2*strlen(haka_path_s) + strlen(HAKA_CORE_PATH) + 1 +
-			strlen(HAKA_MODULE_PATH) + 1;
+		path_len = 2*strlen(haka_path_s) + strlen(HAKA_CORE_PATH) + 1 +
+				strlen(HAKA_MODULE_PATH) + 1;
 
-	path = malloc(path_len);
-	if (!path) {
-		error(L"memory error");
-		return false;
+		path = malloc(path_len);
+		if (!path) {
+			error(L"memory error");
+			return false;
+		}
+
+		snprintf(path, path_len, "%s%s;%s%s", haka_path_s, HAKA_CORE_PATH,
+				haka_path_s, HAKA_MODULE_PATH);
+
+		module_set_path(path, false);
+
+		free(path);
 	}
 
-	snprintf(path, path_len, "%s%s;%s%s", haka_path_s, HAKA_CORE_PATH,
-			haka_path_s, HAKA_MODULE_PATH);
+	/* C module path */
+	{
+		/* format <haka_path_s><HAKA_MODULE_CPATH>\0
+		 * in a string.
+		 */
 
-	module_set_path(path);
+		path_len = strlen(haka_path_s) + strlen(HAKA_MODULE_CPATH) + 1;
 
-	free(path);
+		path = malloc(path_len);
+		if (!path) {
+			error(L"memory error");
+			return false;
+		}
+
+		snprintf(path, path_len, "%s%s", haka_path_s, HAKA_MODULE_CPATH);
+
+		module_set_path(path, true);
+
+		free(path);
+	}
+
 	return true;
 }
 
-void module_set_path(const char *path)
+void module_set_path(const char *path, bool c)
 {
+	char **old_path = c ? &modules_cpath : &modules_path;
+
 	if (!strchr(path, '*')) {
 		error(L"invalid module path");
 		return;
 	}
 
-	free(modules_path);
-	modules_path = NULL;
+	free(*old_path);
+	*old_path = NULL;
 
-	modules_path = strdup(path);
-	assert(modules_path);
+	*old_path = strdup(path);
+	if (!*old_path) {
+		error(L"memory error");
+		return;
+	}
 }
 
-void module_add_path(const char *path)
+void module_add_path(const char *path, bool c)
 {
+	char **old_path = c ? &modules_cpath : &modules_path;
 	char *new_modules_path = NULL;
-	const int modules_path_len = modules_path ? strlen(modules_path) : 0;
+	const int modules_path_len = *old_path ? strlen(*old_path) : 0;
 
 	if (!strchr(path, '*')) {
 		error(L"invalid module path");
@@ -203,9 +237,12 @@ void module_add_path(const char *path)
 
 	if (modules_path_len > 0) {
 		new_modules_path = malloc(modules_path_len + strlen(path) + 2);
-		assert(new_modules_path);
+		if (!new_modules_path) {
+			error(L"memory error");
+			return;
+		}
 
-		strcpy(new_modules_path, modules_path);
+		strcpy(new_modules_path, *old_path);
 		strcat(new_modules_path, ";");
 		strcat(new_modules_path, path);
 	}
@@ -216,11 +253,11 @@ void module_add_path(const char *path)
 		strcpy(new_modules_path, path);
 	}
 
-	free(modules_path);
-	modules_path = new_modules_path;
+	free(*old_path);
+	*old_path = new_modules_path;
 }
 
-const char *module_get_path()
+const char *module_get_path(bool c)
 {
-	return modules_path;
+	return c ? modules_cpath : modules_path;
 }

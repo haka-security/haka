@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h DESTINATION ${HAKA_INSTALL_PREFIX}/include/haka)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h DESTINATION include/haka)
 
 configure_file(lua/config.si.in ${CMAKE_CURRENT_BINARY_DIR}/lua/config.si)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lua/config.si DESTINATION ${HAKA_INSTALL_PREFIX}/include/haka/lua)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lua/config.si DESTINATION include/haka/lua)
 
-install(DIRECTORY . DESTINATION ${HAKA_INSTALL_PREFIX}/include/haka FILES_MATCHING PATTERN "*.h" PATTERN "*.si")
+install(DIRECTORY . DESTINATION include/haka FILES_MATCHING PATTERN "*.h" PATTERN "*.si")

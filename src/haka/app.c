@@ -143,7 +143,7 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 		dirname(module_path);
 		strcat(module_path, "/*");
 
-		module_add_path(module_path);
+		module_add_path(module_path, false);
 		if (check_error()) {
 			message(HAKA_LOG_FATAL, L"core", clear_error());
 			free(module_path);

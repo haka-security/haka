@@ -33,7 +33,7 @@ In the former, create your source and header files:
     \--Makefile
 
 The source file ``mymodule.c`` must include a module structure that sets the
-type of the module to ``MODULE EXTENSION`` along with other information such as
+type of the module to ``MODULE_EXTENSION`` along with other information such as
 the name and the author of the module:
 
 .. code-block:: c
@@ -70,7 +70,8 @@ Then, we have created a single header file :download:`mymodule.h <../../sample/m
 That simply defines the prototype of the function ``myfunc``.
 
 Finally, in Haka we use `SWIG <http://www.swig.org/Doc1.3/Lua.html>`_ to bind C
-functions to Lua objects. Here is the content of our swig file :download:`mymodule.i<../../sample/mymodule/src/mymodule.i>` that binds the ``myfunc`` function.
+functions to Lua objects. Here is the content of our swig file
+:download:`mymodule.i<../../sample/mymodule/src/mymodule.i>` that binds the ``myfunc`` function.
 
 .. note:: for more complex binding, you can have a look at C protocol modules in
     Haka source tree.

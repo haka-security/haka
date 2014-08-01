@@ -4,7 +4,7 @@
 
 add_definitions(-DLUA_COMPAT_ALL=1)
 
-add_subdirectory(external/lua/src)
+add_subdirectory(external/lua)
 
 set(HAKA_LUAJIT 0)
 set(HAKA_LUA52 1)

@@ -81,7 +81,7 @@ void           module_release(struct module *module);
  * Set the path used to load haka modules. This path must be in the form:
  * `path/to/modules/\star;another/path/\star`
  */
-void           module_set_path(const char *path);
+void           module_set_path(const char *path, bool c);
 
 /**
  * Set the module path using the env variable HAKA_PATH.
@@ -89,13 +89,13 @@ void           module_set_path(const char *path);
 bool           module_set_default_path();
 
 /**
- * Add a path to the module search path.
+ * Add a path to the Lua module search path.
  */
-void           module_add_path(const char *path);
+void           module_add_path(const char *path, bool c);
 
 /**
  * Get the modules search path.
  */
-const char    *module_get_path();
+const char    *module_get_path(bool c);
 
 #endif /* _HAKA_MODULE_H */

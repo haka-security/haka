@@ -18,7 +18,7 @@
 #include <haka/compiler.h>
 #include <haka/error.h>
 #include <haka/timer.h>
-#include <haka/lua/lua.h>
+#include <haka/lua/luautils.h>
 #include <haka/container/vector.h>
 #include <haka/luadebug/debugger.h>
 

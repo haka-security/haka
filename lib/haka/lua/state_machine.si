@@ -7,7 +7,7 @@
 #include <haka/time.h>
 #include <haka/error.h>
 #include <haka/log.h>
-#include <haka/lua/lua.h>
+#include <haka/lua/luautils.h>
 #include <haka/lua/ref.h>
 #include <haka/lua/state.h>
 

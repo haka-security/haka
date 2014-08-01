@@ -50,14 +50,17 @@ else()
 	include(buildtag.cmake OPTIONAL)
 endif()
 
-message(STATUS "Build version: ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}${HAKA_VERSION_BUILD}")
-
-# Distribution
-find_package(Distrib REQUIRED)
+set(HAKA_VERSION "${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}${HAKA_VERSION_BUILD}")
+message(STATUS "Build version: ${HAKA_VERSION}")
 
 # Build type
 set(BUILD "Release" CACHE STRING "Selected build type")
-set(CMAKE_BUILD_TYPE ${BUILD})
+
+if(NOT ("$ENV{BUILD}" STREQUAL ""))
+	set(CMAKE_BUILD_TYPE $ENV{BUILD})
+else()
+	set(CMAKE_BUILD_TYPE ${BUILD})
+endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
 
@@ -69,12 +72,21 @@ set(CMAKE_C_FLAGS_MEMCHECK ${CMAKE_C_FLAGS_DEBUG})
 set(CMAKE_CXX_FLAGS_MEMCHECK ${CMAKE_CXX_FLAGS_DEBUG})
 
 set(CMAKE_C_FLAGS_COVERAGE "${CMAKE_C_FLAGS_DEBUG} --coverage")
-set(CMAKE_LD_FLAGS_COVERAGE "${CMAKE_LD_FLAGS_DEBUG} --coverage")
+set(CMAKE_LINK_FLAGS_COVERAGE "${CMAKE_LINK_FLAGS_COVERAGE} --coverage")
 set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
+
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -D_FORTIFY_SOURCE=2 -fstack-protector --param ssp-buffer-size=4")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -D_FORTIFY_SOURCE=2 -fstack-protector --param ssp-buffer-size=4")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,-z,relro -Wl,-z,now")
+set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-z,relro -Wl,-z,now")
+set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-z,relro -Wl,-z,now")
 
 # The RelWithDebInfo options should be the same as Release
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE} -g")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFOK "${CMAKE_CXX_FLAGS_RELEASE} -g")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -g")
+set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+set(CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_MODULE_LINKER_FLAGS_RELEASE}")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(HAKA_DEBUG 1)
@@ -117,7 +129,7 @@ if(LCOV_FOUND)
 endif(LCOV_FOUND)
 
 # Force the RUNPATH to be set to the RPATH to improve library search order
-SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--enable-new-dtags")
 
 # Default SWIG behavior to not create global module
 find_package(SWIG 2 REQUIRED)
@@ -126,27 +138,15 @@ include(UseSWIG)
 set(CMAKE_SWIG_FLAGS "-nomoduleglobal")
 
 # Install prefix
-set(PREFIX "/" CACHE STRING "Installation prefix")
-message(STATUS "Installation prefix (PREFIX): ${PREFIX}")
+message(STATUS "Installation prefix (CMAKE_INSTALL_PREFIX): ${CMAKE_INSTALL_PREFIX}")
 
-if(NOT IS_ABSOLUTE ${PREFIX})
-	set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/${PREFIX})
-else()
-	set(CMAKE_INSTALL_PREFIX ${PREFIX})
-endif()
-
-set(HAKA_INSTALL_PREFIX "opt/haka")
-
-if("${CMAKE_INSTALL_PREFIX}" STREQUAL "/")
-	set(CMAKE_INSTALL_PREFIX "")
-	set(CMAKE_HAKA_INSTALL_PREFIX "/${HAKA_INSTALL_PREFIX}")
-else()
-	set(CMAKE_HAKA_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/${HAKA_INSTALL_PREFIX}")
-endif()
+set(ENV_SH ${CMAKE_CURRENT_BINARY_DIR}/out/env.sh)
 
 add_custom_target(localinstall
 	COMMAND $(MAKE) install DESTDIR=${CMAKE_BINARY_DIR}/out
-	COMMAND echo "export LD_LIBRARY_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/lib:${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/share/haka/modules/protocol\"; export HAKA_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka\"; export PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/bin\":\"${CMAKE_CURRENT_BINARY_DIR}/out/opt/haka/sbin\":$PATH" > ${CMAKE_CURRENT_BINARY_DIR}/out/env.sh
+	COMMAND echo "export LD_LIBRARY_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}/lib/haka/modules/protocol\"" > ${ENV_SH}
+	COMMAND echo "export HAKA_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}\"" >> ${ENV_SH}
+	COMMAND echo "export PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}/bin\":\"${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}/sbin\":$PATH" >> ${ENV_SH}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Install locally..." VERBATIM
 	VERBATIM
@@ -154,13 +154,20 @@ add_custom_target(localinstall
 
 # Lua
 set(LUA "luajit" CACHE STRING "Lua version")
-message(STATUS "Lua version (LUA): ${LUA}")
+
+if(NOT ("$ENV{LUA}" STREQUAL ""))
+	set(CMAKE_LUA $ENV{LUA})
+else()
+	set(CMAKE_LUA ${LUA})
+endif()
+
+message(STATUS "Lua version (LUA): ${CMAKE_LUA}")
 include(UseLua)
 
 find_package(Threads REQUIRED)
 
 set(HAKA_MODULE_PREFIX "" CACHE STRING "Haka module prefix")
-set(HAKA_MODULE_SUFFIX ".ho" CACHE STRING "Haka module suffix")
+set(HAKA_MODULE_SUFFIX ".so" CACHE STRING "Haka module suffix")
 
 TEST_BIG_ENDIAN(BIGENDIAN)
 set(HAKA_BIGENDIAN ${BIGENDIAN})

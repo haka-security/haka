@@ -8,7 +8,7 @@ configuration = "@CMAKE_HAKA_INSTALL_PREFIX@/share/haka/sample/empty.lua"
 
 [packet]
 #Select the capture model, nfqueue or pcap
-module = "packet/nfqueue"
+module = "packet/pcap"
 
 # Select the interfaces to listen to
 #interfaces = "eth0,eth1"

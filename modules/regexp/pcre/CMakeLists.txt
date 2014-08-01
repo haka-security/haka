@@ -13,8 +13,6 @@ if(PCRE_FOUND)
 	include_directories(${PCRE_INCLUDE_DIR})
 	target_link_libraries(pcre ${PCRE_LIBRARY})
 
-	LUA_LINK(pcre)
-
 	INSTALL_MODULE(pcre regexp)
 
 	# Tests
