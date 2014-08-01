@@ -2,7 +2,7 @@
 
 export PATH=/bin:/usr/bin:/usr/local/bin
 export ROOT=$(pwd)
-export MAKEDIR="$ROOT/make/"
+export MAKEDIR="$ROOT/workspace/"
 
 echo $HAKA_LUA $HAKA_BUILD
 
