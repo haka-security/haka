@@ -30,13 +30,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 			{%- if next %}
 				<li class="right"><a href="{{ next.link|e }}" title="{{ next.title }}">Next &rarr;</a></li>
 			{%- else %}
-				<li class="right"><span class="disabled">Next &rarr;</span></li>
+				<li class="right"><a href="#" class="disabled">Next &rarr;</a></li>
 			{%- endif %}
 
 			{%- if prev %}
 				<li class="right"><a href="{{ prev.link|e }}" title="{{ prev.title }}">&larr; Prev</a></li>
 			{%- else %}
-				<li class="right"><span class="disabled">&larr; Prev</span></li>
+				<li class="right"><a href="#" class="disabled">&larr; Prev</a></li>
 			{%- endif %}
 
 			{%- if parents[-1] %}
@@ -44,7 +44,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 			{%- elif pagename != master_doc %}
 				<li class="right"><a href="{{ pathto(master_doc) }}" title="{{ shorttitle|e }}">Up &uarr;</a></li>
 			{%- else %}
-				<li class="right"><span class="disabled">Up &uarr;</span></li>
+				<li class="right"><a href="#" class="disabled">Up &uarr;</a></li>
 			{%- endif %}
 
 			<li class="{% if pagename == 'genindex' %}active{% endif %} right"><a href="{{ pathto("genindex.html", 1) }}">Index</a></li>

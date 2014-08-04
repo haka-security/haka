@@ -90,6 +90,10 @@ a.headerlink:hover {
 	color: #34373F;
 }
 
+#navbar li a.disabled {
+	color: #888888;
+}
+
 th {
 	background-color: #FFFFFF;
 }
