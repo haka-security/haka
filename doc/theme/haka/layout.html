@@ -20,11 +20,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 </div>
 <div id="content">
 	<div class="row">
-		<div id="breadcrumb" class="breadcrumb medium-12 columns">
+		<ul id="breadcrumb" class="breadcrumbs medium-12 columns">
 			{% for parent in parents %}
-			&raquo; <a href="{{ parent.link }}">{{ parent.title|safe }}</a>
+			<li><a href="{{ parent.link }}">{{ parent.title|safe }}</a></li>
 			{% endfor %}
-		</div>
+			<li class="current"><a href="#">{{ title|safe }}</a></li>
+		</ul>
 	</div>
 	<div class="row">
 		<div class="medium-12 columns">

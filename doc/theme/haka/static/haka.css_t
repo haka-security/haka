@@ -94,6 +94,16 @@ th {
 	background-color: #FFFFFF;
 }
 
+.breadcrumbs {
+    background: none;
+    border-style: none;
+	margin-bottom: 0;
+}
+
+.breadcrumbs > * {
+    text-transform: none;
+}
+
 div.seealso, div.note {
 	background: #f0f0f0;
 	border: 1px solid #aaaaaa;
