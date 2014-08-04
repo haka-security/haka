@@ -10,10 +10,6 @@
 /**
  * Override haka.css
  */
-body, html, button, input, select, textarea {
-	font-size: 100%;
-}
-
 h1 {
 	font-size: 32px;
 }
@@ -36,6 +32,11 @@ a:visited {
 pre {
 	background: none repeat scroll 0 0 #f0f0f0;
 	border: 1px solid #aaaaaa;
+	font-weight: 100;
+}
+
+#content {
+	padding: 0;
 }
 
 /* Don't ask me why... */
@@ -58,6 +59,10 @@ dd table tbody tr th, dd table tbody tr td {
 
 dd table tbody tr:nth-of-type(n) { /* Add nth-of-type to force override */
 	background: none;
+}
+
+ul, ol, dl {
+	line-height: 1.4;
 }
 
 /**
