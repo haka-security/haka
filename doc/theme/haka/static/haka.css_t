@@ -260,3 +260,16 @@ div#going-further > img + p {
     line-height: 64px;
     margin-left: 80px;
 }
+
+blockquote {
+	margin: 0;
+	padding: 0;
+	padding-left: 1em;
+	margin-top: 1em;
+}
+
+blockquote, blockquote p {
+	border: none;
+	line-height: 1;
+	color: #515151;
+}
