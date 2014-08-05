@@ -47,7 +47,7 @@ choose this type :
         * the parameters passed to state machine update function (see :haka:class:`state_machine_instance`).
 
     State type can be one of the provided state or one locally defined (see
-    :haka:class:`state_machine`)
+    :haka:class:`StateMachine`)
 
     **Usage:**
 
