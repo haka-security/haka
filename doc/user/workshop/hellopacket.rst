@@ -66,7 +66,7 @@ Each dissector will trigger its own events. The event you hook to determines the
 arguments passed to the ``eval`` function. You can find a full list of the available
 events and their arguments in the documentation.
 
-.. seealso:: `Ipv4 <../manual/modules/protocol/ipv4/doc/ipv4.html>`_ where
+.. seealso:: `Ipv4 <../../../modules/protocol/ipv4/doc/ipv4.html>`_ where
     you will find the event list of ipv4 dissector.
 
 Logs

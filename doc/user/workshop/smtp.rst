@@ -15,7 +15,7 @@ managing also smtp responses.
 Grammar
 -------
 
-Haka features a `grammar <../manual/doc/ref/grammar.html>`_ allowing to specify
+Haka features a `grammar <../../ref/grammar.html>`_ allowing to specify
 protocol message synatx. Use this grammar to complete the partial specification
 with smtp responses support:
 
@@ -89,7 +89,7 @@ Smtp server may respond with a sequence of response messages. You can rely on th
 
     Test you new grammar.
 
-.. seealso:: `Grammar <../manual/doc/ref/grammar.html>`_ full documentation.
+.. seealso:: `Grammar <../../ref/grammar.html>`_ full documentation.
 
 .. _smtp_events:
 
@@ -112,7 +112,7 @@ We are going to trigger this event later inside the state machine code.
 
 State machine
 -------------
-Smtp `state machine <../manual/doc/ref/state_machine.html>`_ is created through
+Smtp `state machine <../../ref/state_machine.html>`_ is created through
 the following skeleton. The first step is to set the type of the states. In our
 case, we select a bidirectional type in order to handle data parsing in both
 direction: *up* (from client to server) and *down* (from server to client).

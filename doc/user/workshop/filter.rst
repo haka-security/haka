@@ -153,7 +153,7 @@ When running this script, Haka will output a high number of errors, complaining
 that the field ``destport`` doesn't exist. We will use Haka's debug facilities
 to find out precisely where the error occurs.
 
-.. seealso:: `Debugging <../manual/doc/user/debug.html>`_ contains documentation on Haka's debugging facilities.
+.. seealso:: `Debugging <../debug.html>`_ contains documentation on Haka's debugging facilities.
 
 To start Haka in debugging mode, add ``--debug-lua`` at the end of the command line:
 
