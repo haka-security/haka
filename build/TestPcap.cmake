@@ -30,7 +30,7 @@ endif(NOT GAWK_COMMAND)
 macro(TEST_PCAP module name)
 	set(oneValueArgs OPTIONS CONFIG)
 	cmake_parse_arguments(TEST_PCAP "" "${oneValueArgs}" "" ${ARGN})
-	
+
 	if(TEST_PCAP_CONFIG)
 	else()
 		set(TEST_PCAP_CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/${name}.lua)

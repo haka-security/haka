@@ -115,7 +115,7 @@ if(LCOV_FOUND)
 		COMMAND rm -f coverage/coverage.info
 		COMMENT "Clean coverage data" VERBATIM
 	)
-	
+
 	add_custom_target(coverage
 		COMMAND mkdir -p coverage
 		COMMAND lcov --capture --directory ${CMAKE_CURRENT_BINARY_DIR} --output-file coverage/coverage_full.info
