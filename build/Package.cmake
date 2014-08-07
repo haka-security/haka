@@ -22,10 +22,21 @@ endif()
 
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FULLNAME}_${CPACK_PACKAGE_VERSION}")
 
-
 # Sources
 set(CPACK_SOURCE_GENERATOR "TGZ")
 set(CPACK_SOURCE_IGNORE_FILES "${CMAKE_BINARY_DIR};\\\\.git/;\\\\.git$;\\\\.gitignore$;\\\\.gitmodules$;.*\\\\.swp;.*\\\\.pyc;__pycache__/;/make/;/workspace/")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_source")
 
 include(CPack)
+
+find_program(SHA1SUM_COMMAND sha1sum)
+if(NOT SHA1SUM_COMMAND)
+	message(WARNING "Cannot find sha1sum command")
+else()
+	add_custom_target(package_source_sha
+		COMMAND $(MAKE) package_source
+		COMMAND sha1sum ${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_source.tar.gz > ${CMAKE_BINARY_DIR}/${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_source.tar.gz.sha1.txt
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		COMMENT "Build source package" VERBATIM
+	)
+endif()
