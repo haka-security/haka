@@ -71,7 +71,7 @@ set(LUA_FLAGS_RELWITHDEBINFO "-g")
 set(LUA_FLAGS_MINSIZEREL "-s")
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/share/lua DESTINATION share/haka/lua/share)
-install(DIRECTORY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/share/luajit-2.0.3 DESTINATION /share/haka/lua/share)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/share/luajit-2.0.3 DESTINATION share/haka/lua/share)
 install(DIRECTORY ${LUA_INCLUDE_DIR}/ DESTINATION include/haka/lua)
 
 set(HAKA_LUAJIT 1)
