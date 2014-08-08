@@ -11,22 +11,12 @@ Workshop media
 A media is provided which contains all you need to do the Haka workshop.
 You can download it from our web-site in the section *Resources*.
 
-This media contains:
-
-* Haka Debian packages for various architecture (located in `/haka`).
-* Haka full documentation (in `haka/manual`) containing the workshop.
-* A full bootable live system contains all dependencies of Haka (usable
-  in a virtual machine (VirtualBox for instance) or directly as a bootable
-  USB or CD.
+This media contains a full bootable live system contains all dependencies
+of Haka (usable in a virtual machine (VirtualBox for instance) or directly
+as a bootable USB or CD.
 
 Tips
 ^^^^
-
-Accessing media in the live system
-""""""""""""""""""""""""""""""""""
-
-When booting on the live system, the media is mounted at `/lib/live/mount/medium`.
-A link on the desktop is provided pointing to the workshop page.
 
 Default user/password
 """""""""""""""""""""
