@@ -13,9 +13,6 @@ against haka libraries and have it installed on haka target path.
 
 .. note:: You are free to use your own compilation toolchain.
 
-Writing C modules
-=================
-
 In the following, we will create a sample C module ``mymodule`` that exports a
 single function ``myfunc``.
 
