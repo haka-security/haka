@@ -7,53 +7,307 @@
 Dissector
 =========
 
-.. lua:currentmodule:: haka
+Utilities
+---------
 
-.. lua:class:: dissector_data
+.. haka:module:: haka.dissector
 
-    Communicate the dissector data to rules or other dissectors.
+.. haka:function:: new{...} -> dissector
 
-    .. lua:data:: dissector
+    :param name: Dissector name.
+    :paramtype name: string
+    :param type: Dissector type
+    :paramtype type: :haka:class:`Dissector`
+    :return dissector: Created dissector. This object is a class that can be extended to implements the needed
+        functions and properties.
+    :rtype dissector: :haka:class:`Class`
 
-        Read-only current dissector name.
+    Create a new dissector.
 
-    .. lua:data:: next_dissector
+.. haka:function:: pcall(dissector, f)
 
-        Name of the next dissector to call. This value can be read-only or writable depending
-        of the dissector.
+    :param dissector: Dissector to protect.
+    :paramtype dissector: :haka:class:`Dissector`
+    :param f: Function to call.
+    :paramtype f: function
 
-    .. lua:method:: valid(self)
+    Protected call for a function inside a dissector context.
 
-        :returns: `false` if the data are invalid and should not be processed anymore. This could happens if a packet is dropped.
+.. haka:function:: opposite_direction(dir) -> other_dir
 
-    .. lua:method:: drop(self)
+    :param dir: Direction ``'up'`` or ``'down'``.
+    :paramtype dir: string
+    :return other_dir: Other direction.
+    :rtype other_dir: string
 
-        This is a generic function that is called to drop the packet, data or stream.
+    Utility function to get the other direction.
 
-    .. lua:method:: forge(self)
 
-        This function will be called in a loop to enable for instance a dissector to create multiple packets.
+Dissector types
+---------------
 
-        :returns: Previous dissector data. When no more data is available, the function should return `nil`.
+.. haka:module:: haka.helper
 
-.. lua:function:: dissector(d)
+.. haka:class:: Dissector
+    :module:
 
-    Declare a dissector. The table parameter `d` should contains the following
-    fields:
+    Dissector object.
 
-    * `name`: The name of the dissector. This name should be unique.
-    * `dissect`: A function that take one parameter. This function is the core of
-      the dissector. It will be called with the previous :lua:class:`dissector_data`
-      and should return a :lua:class:`dissector_data`.
-    * `hooks`: A table containing a list of custom hooks. 
+    .. haka:attribute:: Dissector:state
 
-Hooks
-=====
+        Instance of the state machine. This field is only present if the dissector sub-class
+        has a field named `state_machine` and another one named `auto_state_machine` which
+        evaluate to `true`.
 
-Haka has up/down built-in hooks associated with protocol modules such as ipv4 (`ipv4-up`, `ipv4-down`) or tcp (`tcp-up`, `tcp-down`). Custom hooks such as those defined for http module (`http-request`, `http-response`) could be used thanks to the following function:
+    .. haka:function:: Dissector:register_event(name, continue[, signal [, options]])
 
-.. lua:function:: rule_hook(hook-name, dissector-name)
+        :param name: Name of the event.
+        :paramtype name: string
+        :param continue: Continuation function.
+        :paramtype continue: function
+        :param signal: Signaling function.
+        :paramtype signal: function
+        :param options: List of options.
+        :paramtype options: table
 
-    Trigger the evaluation of rules attached to the given `hook-name`.
-    
-    :returns: `false` if the evaluation should be stopped. This could happens if a packet is dropped.
+        Register a new event for the dissector.
+
+        .. haka:function:: continue(self) -> valid
+            :module:
+            :noindex:
+
+            :param self: Current dissecteur.
+            :paramtype self: :haka:class:`Dissector`
+            :return valid: Should the event trigger continue.
+            :rtype valid: boolean
+
+            This function tests if the other listener on this events should be
+            evaluated.
+
+        .. haka:function:: signal(f, options, ...)
+            :module:
+            :noindex:
+
+            :param f: Listener function.
+            :paramtype f: function
+            :param options: List of options from the event.
+            :paramtype options: table
+            :param ...: Extra parameters that should be passed to the listener.
+
+            Signaling function used when a listener need to be called.
+
+    .. haka:attribute:: Dissector.name
+
+        :type: string
+
+        Name of the dissector.
+
+    .. haka:method:: Dissector:trigger(event, ...)
+
+        :param event: Event name to trigger.
+        :paramtype event: string
+        :param ...: Parameters to pass to the event.
+
+        Trigger an event.
+
+    .. haka:method:: Dissector:drop()
+        :abstract:
+
+        Drop the dissector instance. It can be a packet or an flow depending on the
+        dissector type.
+
+    .. haka:method:: Dissector:error()
+        :abstract:
+
+        Called whenever an error is raised when inside the context of this dissector. The default
+        implementation will do a :haka:func:`<Dissector>.drop()`.
+
+    .. haka:method:: Dissector:continue()
+
+        Function that abort if the dissector no longer requires processing.
+
+    .. haka:method:: Dissector:can_continue() -> continue
+        :abstract:
+
+        :return continue: ``false`` is the dissector no longer requires processing.
+        :rtype continue: boolean
+
+        Function that check if the dissector no longer requires processing.
+
+    .. haka:method:: Dissector:next_dissector()
+        :abstract:
+
+        Get the next dissector to use.
+
+Packet
+^^^^^^
+
+.. haka:class:: PacketDissector
+    :objtype: dissector
+
+    :extend: :haka:class:`Dissector` |nbsp|
+
+    Basic packet dissector.
+
+    .. haka:function:: PacketDissector.receive_packet(pkt)
+        :module:
+        :objtype: event
+
+        :param pkt: Packet representation.
+        :paramtype pkt: :haka:class:`PacketDissector`
+
+        Event that is triggered whenever a new packet is received.
+
+    .. haka:function:: PacketDissector.send_packet(pkt)
+        :module:
+        :objtype: event
+
+        :param pkt: Packet representation.
+        :paramtype pkt: :haka:class:`PacketDissector`
+
+        Event that is triggered just before sending the packet to the upper layer.
+
+    .. haka:function:: PacketDissector.receive(prev)
+
+        :param prev: Previous dissector object.
+        :paramtype prev: :haka:class:`Dissector`
+
+        Function called to dissect a packet from data comming from another dissector.
+
+    .. haka:method:: PacketDissector:send()
+        :abstract:
+
+        Send the packet.
+
+    .. haka:method:: PacketDissector:inject()
+        :abstract:
+
+        Inject the packet.
+
+Encapsulated packet
+^^^^^^^^^^^^^^^^^^^
+
+.. haka:class:: EncapsulatedPacketDissector
+    :objtype: dissector
+
+    :extend: :haka:class:`PacketDissector` |nbsp|
+
+    Packet dissector that is build above another packet payload (ICMP over IP for instance).
+
+    .. haka:method:: EncapsulatedPacketDissector:parse_payload(pkt, payload)
+        :abstract:
+
+        :param pkt: Parent dissector packet.
+        :paramtype pkt: :haka:class:`Dissector`
+        :param payload: Payload to be parsed by this dissector.
+        :paramtype payload: :haka:class:`vbuffer`
+
+        Parse the payload coming from the previous dissector packet.
+
+    .. haka:method:: EncapsulatedPacketDissector:create_payload(pkt, payload, init)
+        :abstract:
+
+        :param pkt: Parent dissector packet.
+        :paramtype pkt: :haka:class:`Dissector`
+        :param payload: Payload to be parsed by this dissector.
+        :paramtype payload: :haka:class:`vbuffer`
+        :param init: Initialization field for the packet.
+
+        Build a new payload.
+
+    .. haka:method:: EncapsulatedPacketDissector:forge_payload(pkt, payload)
+        :abstract:
+
+        :param pkt: Parent dissector packet.
+        :paramtype pkt: :haka:class:`Dissector`
+        :param payload: Payload to be parsed by this dissector.
+        :paramtype payload: :haka:class:`vbuffer`
+
+        Called when the packet is about to be send.
+
+Flow
+^^^^
+
+.. haka:class:: FlowDissector
+    :objtype: dissector
+
+    :extend: :haka:class:`Dissector` |nbsp|
+
+    Dissector for a flow (multiple packets). An example is HTTP for instance.
+
+    .. haka:function:: Dissector:register_streamed_event(name, continue[, options])
+
+        :param name: Name of the event.
+        :paramtype name: string
+        :param continue: Continuation function.
+        :paramtype continue: function
+        :param signal: Signaling function.
+        :paramtype signal: function
+        :param options: List of options.
+        :paramtype options: table
+
+        Register a new event for the dissector. This event will support the *streamed*
+        option (see :haka:func:`FlowDissector.stream_wrapper()`).
+
+    .. haka:data:: FlowDissector.connections
+
+        :type: table
+
+        Table of connections to instanciate when the dissector is created.
+
+    .. haka:method:: FlowDissector:streamed(f, stream, current, ...)
+
+        :param f: Function to execute.
+        :paramtype f: function
+        :param stream: Stream.
+        :paramtype stream: :haka:class:`vbuffer_stream`
+        :param current: Current position in the stream.
+        :paramtype current: :haka:class:`vbuffer_iterator`
+        :param ...: Parameters that are given to *f*.
+
+        Execute a function in streamed mode. In this mode, Haka will use coroutine to
+        execute it in a thread like environement. It allows the function to block waiting
+        for available data on the stream.
+
+        This function is mainly used as the signal function for event based on stream.
+
+    .. haka:function:: FlowDissector.stream_wrapper(f, options, self, stream, current, ...)
+
+        :param f: Listener function.
+        :paramtype f: function
+        :param options: List of options from the event.
+        :paramtype options: table
+        :param self: Current dissector
+        :paramtype self: :haka:class:`FlowDissector`
+        :param stream: Stream.
+        :paramtype stream: :haka:class:`vbuffer_stream`
+        :param current: Current position in the stream.
+        :paramtype current: :haka:class:`vbuffer_iterator`
+        :param ...: Parameters that are given to *f*.
+
+        **Usage:**
+
+        ::
+
+            HttpDissector:register_event('request_data', nil, haka.dissector.FlowDissector.stream_wrapper)
+
+    .. haka:method:: FlowDissector:get_comanager(stream) -> manager
+
+        :param stream: Stream used as the key.
+        :paramtype stream: :haka:class:`vbuffer_stream`
+        :return manager: Coroutine manager.
+        :rtype manager: :haka:class:`vbuffer_stream_comanager`
+
+        Retreived the stream coroutine manager for a given stream.
+
+    .. haka:method:: FlowDissector:select_next_dissector(dissector)
+
+        :param dissector: Dissector to install.
+        :paramtype dissector: :haka:class:`FlowDissector`
+
+        Enable a dissector on the current flow.
+
+Examples
+--------
+
+For dissector examples, check the supported :doc:`hakadissector`.

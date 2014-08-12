@@ -2,648 +2,455 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require('class')
+
+local tcp_connection = require("protocol/tcp_connection")
+
 local module = {}
 
-local str = string.char
+local utils = require("protocol/http_utils")
+table.merge(module, utils)
 
-local function contains(table, elem)
-	return table[elem] ~= nil
+
+--
+-- HTTP dissector
+--
+
+local http_dissector = haka.dissector.new{
+	type = tcp_connection.helper.TcpFlowDissector,
+	name = 'http'
+}
+
+http_dissector:register_event('request')
+http_dissector:register_event('response')
+http_dissector:register_streamed_event('request_data')
+http_dissector:register_streamed_event('response_data')
+http_dissector:register_streamed_event('receive_data')
+
+function http_dissector.method:__init(flow)
+	class.super(http_dissector).__init(self, flow)
+	self._want_data_modification = false
 end
 
-local function dict(table)
-	local ret = {}
-	for _, v in pairs(table) do
-		ret[v] = true
+function http_dissector.method:enable_data_modification()
+	self._want_data_modification = true
+end
+
+function http_dissector.method:push_data(current, data, iter, last, state, chunk)
+	if not current.data then
+		current.data = haka.vbuffer_sub_stream()
 	end
-	return ret
-end
 
-local function getchar(stream)
-	local char
+	local currentiter = nil
+	if data then
+		currentiter = current.data:push(data)
+	end
 
-	while true do
-		char = stream:getchar()
-		if char == -1 then
-			coroutine.yield()
+	if last then current.data:finish() end
+
+	if data or last then
+		if state == 'request' then
+			self:trigger('receive_data', current.data, currentiter, 'up')
 		else
-			break
+			self:trigger('receive_data', current.data, currentiter, 'down')
 		end
+
+		self:trigger(state..'_data', current.data, currentiter)
 	end
 
-	return char
-end
+	local sub
+	if data then
+		sub = current.data:pop()
+	end
 
-local function read_line(stream)
-	local line = ""
-	local char, c
-	local read = 0
+	if self._enable_data_modification then
+		if sub then
+			if #sub > 0 then
+				-- create a chunk
+				sub:pos('begin'):insert(haka.vbuffer_from(string.format("%x\r\n", #sub)))
+				sub:pos('end'):insert(haka.vbuffer_from("\r\n"))
+			end
+		end
 
-	while true do
-		c = getchar(stream)
-		read = read+1
-		char = str(c)
-
-		if c == 0xd then
-			c = getchar(stream)
-			read = read+1
-
-			if c == 0xa then
-				return line, read
+		if last then
+			if chunk then
+				iter:insert(haka.vbuffer_from("0\r\n"))
 			else
-				line = line .. char
-				char = str(c)
+				iter:insert(haka.vbuffer_from("0\r\n\r\n"))
 			end
-		elseif c == 0xa then
-			return line, read
 		end
+	end
 
-		line = line .. char
+	if last then
+		current.data = nil
 	end
 end
 
--- The comparison is broken in Lua 5.1, so we need to reimplement the
--- string comparison
-local function string_compare(a, b)
-	if type(a) == "string" and type(b) == "string" then
-		local i = 1
-		local sa = #a
-		local sb = #b
+function http_dissector.method:trigger_event(res, iter, mark)
+	local state = self.state.current
 
-		while true do
-			if i > sa then
-				return false
-			elseif i > sb then
-				return true
-			end
+	self:trigger(state, res)
 
-			if a:byte(i) < b:byte(i) then
-				return true
-			elseif a:byte(i) > b:byte(i) then
-				return false
-			end
-
-			i = i+1
-		end
-
-		return false
+	if self._want_data_modification then
+		res.headers['Transfer-Encoding'] = 'chunked'
+		res.headers['Content-Length'] = nil
+		self._enable_data_modification = true
 	else
-		return a < b
+		self._enable_data_modification = false
 	end
 end
 
-local function sorted_pairs(t)
-	local a = {}
-	for n in pairs(t) do
-		table.insert(a, n)
+function module.dissect(flow)
+	http_dissector:dissect(flow)
+end
+
+function module.install_tcp_rule(port)
+	http_dissector:install_tcp_rule(port)
+end
+
+
+--
+-- HTTP parse results
+--
+
+local HeaderResult = class.class("HeaderResult", haka.grammar.result.ArrayResult)
+
+function HeaderResult.method:__init()
+	rawset(self, '_cache', {})
+end
+
+function HeaderResult.method:__index(key)
+	local key = key:lower()
+
+	local cache = self._cache[key]
+	if cache and cache.name == key then
+		return cache.value
 	end
 
-	table.sort(a, string_compare)
+	for i, header in ipairs(self) do
+		if header.name and header.name:lower() == key then
+			self._cache[key] = header
+			return header.value
+		end
+	end
+end
+
+function HeaderResult:__pairs()
 	local i = 0
-	return function ()   -- iterator function
+	local function headernext(headerresult, index)
 		i = i + 1
-		if a[i] == nil then return nil
-		else return a[i], t[a[i]]
-		end
-	end
-end
-
-local function dump(t, indent)
-	if not indent then indent = "" end
-
-	for n, v in sorted_pairs(t) do
-		if type(v) == "table" then
-			print(indent, n)
-			dump(v, indent .. "  ")
-		elseif type(v) ~= "thread" and
-			type(v) ~= "userdata" and
-			type(v) ~= "function" then
-			print(indent, n, "=", v)
-		end
-	end
-end
-
-local function safe_string(str)
-	local len = #str
-	local sstr = {}
-
-	for i=1,len do
-		local b = str:byte(i)
-
-		if b >= 0x20 and b <= 0x7e then
-			sstr[i] = string.char(b)
+		local result = rawget(headerresult, i)
+		if result then
+			return result.name, result.value
 		else
-			sstr[i] = string.format('\\x%x', b)
-		end
-	end
-
-	return table.concat(sstr)
-end
-
-local function parse_header(stream, http)
-	local total_len = 0
-
-	http.headers = {}
-	http._headers_order = {}
-	line, len = read_line(stream)
-	total_len = total_len + len
-	while #line > 0 do
-		local name, value = line:match("([^%s]+):%s*(.+)")
-		if not name then
-			http._invalid = string.format("invalid http header '%s'", safe_string(line))
-			return
-		end
-
-		http.headers[name] = value
-		table.insert(http._headers_order, name)
-		line, len = read_line(stream)
-		total_len = total_len + len
-	end
-
-	return total_len
-end
-
-local function parse_request(stream, http)
-	local len, total_len
-
-	local line, len = read_line(stream)
-	total_len = len
-
-	http.method, http.uri, http.version = line:match("([^%s]+) ([^%s]+) (.+)")
-	if not http.method then
-		http._invalid = string.format("invalid http request '%s'", safe_string(line))
-		return
-	end
-
-	total_len = total_len + parse_header(stream, http)
-
-	http.data = stream
-	http._length = total_len
-
-	http.dump = dump
-
-	return true
-end
-
-local function parse_response(stream, http)
-	local len, total_len
-
-	local line, len = read_line(stream)
-	total_len = len
-
-	http.version, http.status, http.reason = line:match("([^%s]+) ([^%s]+) (.+)")
-	if not http.version then
-		http._invalid = string.format("invalid http response '%s'", safe_string(line))
-		return
-	end
-
-	total_len = total_len + parse_header(stream, http)
-
-	http.data = stream
-	http._length = total_len
-
-	http.dump = dump
-
-	return true
-end
-
-local function build_headers(stream, headers, headers_order)
-
-	for _, name in pairs(headers_order) do
-		local value = headers[name]
-		if value then
-			stream:insert(name)
-			stream:insert(": ")
-			stream:insert(value)
-			stream:insert("\r\n")
-		end
-	end
-	local headers_copy = dict(headers_order)
-	for name, value in pairs(headers) do
-		if value and not contains(headers_copy, name) then
-			stream:insert(name)
-			stream:insert(": ")
-			stream:insert(value)
-			stream:insert("\r\n")
-		end
-	end
-end
-
-local _unreserved = dict({45, 46, 95, 126})
-
-local function uri_safe_decode(uri)
-	local uri = string.gsub(uri, '%%(%x%x)',
-		function(p)
-			local val = tonumber(p, 16)
-			if (val > 47 and val < 58) or
-			   (val > 64 and val < 91) or
-			   (val > 96 and val < 123) or
-			   (contains(_unreserved, val)) then
-				return str(val)
-			else
-				return '%' .. string.upper(p)
-			end
-		end)
-	return uri
-end
-
-local function uri_safe_decode_split(tab)
-	for k, v in pairs(tab) do
-		if type(v) == 'table' then
-			uri_safe_decode_split(v)
-		else
-			tab[k] = uri_safe_decode(v)
-		end
-	end
-end
-
-local _prefixes = {{'^%.%./', ''}, {'^%./', ''}, {'^/%.%./', '/'}, {'^/%.%.$', '/'}, {'^/%./', '/'}, {'^/%.$', '/'}}
-
-local function remove_dot_segments(path)
-	local output = {}
-	local slash = ''
-	local nb = 0
-	if path:sub(1,1) == '/' then slash = '/' end
-	while path ~= '' do
-		local index = 0
-		for _, prefix in ipairs(_prefixes) do
-			path, nb = path:gsub(prefix[1], prefix[2])
-			if nb > 0 then
-				if index == 2 or index == 3 then
-					table.remove(output, #output)
-				end
-				break
-			end
-			index = index + 1
-		end
-		if nb == 0 then
-			if path:sub(1,1) == '/' then path = path:sub(2) end
-			local left, right = path:match('([^/]*)([/]?.*)')
-			table.insert(output, left)
-			path = right
-		end
-	end
-	return slash .. table.concat(output, '/')
-end
-
--- register methods on splitted uri object
-local mt_uri = {}
-mt_uri.__index = mt_uri
-
-function mt_uri:__tostring()
-	local uri = {}
-
-	-- authority components
-	local auth = {}
-
-	-- host
-	if self.host then
-		-- userinfo
-		if self.user and self.pass then
-			table.insert(auth, self.user)
-			table.insert(auth, ':')
-			table.insert(auth, self.pass)
-			table.insert(auth, '@')
-		end
-
-		table.insert(auth, self.host)
-
-		--port
-		if self.port then
-			table.insert(auth, ':')
-			table.insert(auth, self.port)
-		end
-	end
-
-	-- scheme and authority
-	if #auth > 0 then
-		if self.scheme then
-			table.insert(uri, self.scheme)
-			table.insert(uri, '://')
-			table.insert(uri, table.concat(auth))
-		else
-			table.insert(uri, table.concat(auth))
-		end
-	end
-
-	-- path
-	if self.path then
-		table.insert(uri, self.path)
-	end
-
-	-- query
-	if self.query then
-		local query = {}
-		for k, v in pairs(self.args) do
-			local q = {}
-			table.insert(q, k)
-			table.insert(q, v)
-			table.insert(query, table.concat(q, '='))
-		end
-
-		if #query > 0 then
-			table.insert(uri, '?')
-			table.insert(uri, table.concat(query, '&'))
-		end
-	end
-
-	-- fragment
-	if self.fragment then
-		table.insert(uri, '#')
-		table.insert(uri, self.fragment)
-	end
-
-	return table.concat(uri)
-end
-
-
-function mt_uri:normalize()
-	assert(self)
-	-- decode percent-encoded octets of unresserved chars
-	-- capitalize letters in escape sequences
-	uri_safe_decode_split(self)
-
-	-- use http as default scheme
-	if not self.scheme and self.authority then
-		self.scheme = 'http'
-	end
-
-	-- scheme and host are not case sensitive
-	if self.scheme then self.scheme = string.lower(self.scheme) end
-	if self.host then self.host = string.lower(self.host) end
-
-	-- remove default port
-	if self.port and self.port == '80' then
-		self.port = nil
-	end
-
-	-- add '/' to path
-	if self.scheme == 'http' and (not self.path or self.path == '') then
-		self.path = '/'
-	end
-
-	-- normalize path according to rfc 3986
-	if self.path then self.path = remove_dot_segments(self.path) end
-
-	return self
-
-end
-
-
-local function uri_split(uri)
-	if not uri then return nil end
-
-	local splitted_uri = {}
-	local core_uri
-	local query, fragment, path, authority
-
-	setmetatable(splitted_uri, mt_uri)
-
-	-- uri = core_uri [ ?query ] [ #fragment ]
-	core_uri, query, fragment =
-	    string.match(uri, '([^#?]*)[%?]*([^#]*)[#]*(.*)')
-
-	-- query (+ split params)
-	if query and query ~= '' then
-		splitted_uri.query = query
-		local args = {}
-		string.gsub(splitted_uri.query, '([^=&]+)=([^&?]*)&?',
-		    function(p, q) args[p] = q return '' end)
-		splitted_uri.args = args
-	end
-
-	-- fragment
-	if fragment and fragment ~= '' then
-		splitted_uri.fragment = fragment
-	end
-
-	-- scheme
-	local temp = string.gsub(core_uri, '^(%a*)://',
-	    function(p) if p ~= '' then splitted_uri.scheme = p end return '' end)
-
-	-- authority and path
-	authority, path = string.match(temp, '([^/]*)([/]*.*)$')
-
-	if (path and path ~= '') then
-		splitted_uri.path = path
-	end
-
-	-- authority = [ userinfo @ ] host [ : port ]
-	if authority and authority ~= '' then
-		splitted_uri.authority = authority
-		-- userinfo
-		authority = string.gsub(authority, "^([^@]*)@",
-		    function(p) if p ~= '' then splitted_uri.userinfo = p end return '' end)
-		-- port
-		authority = string.gsub(authority, ":([^:][%d]+)$",
-		    function(p) if p ~= '' then splitted_uri.port = p end return '' end)
-		-- host
-		if authority ~= '' then splitted_uri.host = authority end
-		-- userinfo = user : password (deprecated usage)
-		if not splitted_uri.userinfo then return splitted_uri end
-
-		local user, pass = string.match(splitted_uri.userinfo, '(.*):(.*)')
-		if user and user ~= '' then
-			splitted_uri.user = user
-			splitted_uri.pass = pass
-		end
-	end
-	return splitted_uri
-end
-
-local function uri_normalize(uri)
-	local splitted_uri = uri_split(uri)
-	splitted_uri:normalize()
-	return tostring(splitted_uri)
-end
-
-
--- register methods on splitted cookie list
-local mt_cookie = {}
-mt_cookie.__index = mt_cookie
-
-function mt_cookie:__tostring()
-	assert(self)
-	local cookie = {}
-	for k, v in pairs(self) do
-		local ck = {}
-		table.insert(ck, k)
-		table.insert(ck, v)
-		table.insert(cookie, table.concat(ck, '='))
-	end
-	return table.concat(cookie, ';')
-end
-
-local function cookies_split(cookie_line)
-	local cookies = {}
-	if cookie_line then
-		string.gsub(cookie_line, '([^=;]+)=([^;?]*);?',
-		    function(p, q) cookies[p] = q return '' end)
-	end
-	setmetatable(cookies, mt_cookie)
-	return cookies
-end
-
-module.uri = {}
-module.cookies = {}
-module.uri.split = uri_split
-module.uri.normalize = uri_normalize
-module.cookies.split = cookies_split
-
-local function forge(http)
-	local tcp = http._tcp_stream
-	if tcp then
-		if http._state == 2 and tcp.direction then
-			http._state = 3
-
-			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-				tcp.stream:seek(http.request._mark, true)
-				http.request._mark = nil
-
-				tcp.stream:erase(http.request._length)
-				tcp.stream:insert(http.request.method)
-				tcp.stream:insert(" ")
-				tcp.stream:insert(http.request.uri)
-				tcp.stream:insert(" ")
-				tcp.stream:insert(http.request.version)
-				tcp.stream:insert("\r\n")
-				build_headers(tcp.stream, http.request.headers, http.request._headers_order)
-				tcp.stream:insert("\r\n")
-			end
-
-		elseif http._state == 5 and not tcp.direction then
-			if http.request.method == 'CONNECT' then
-				http._state = 6 -- We should not expect a request nor response anymore
-			else
-				http._state = 0
-			end
-
-			if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-				tcp.stream:seek(http.response._mark, true)
-				http.response._mark = nil
-
-				tcp.stream:erase(http.response._length)
-				tcp.stream:insert(http.response.version)
-				tcp.stream:insert(" ")
-				tcp.stream:insert(http.response.status)
-				tcp.stream:insert(" ")
-				tcp.stream:insert(http.response.reason)
-				tcp.stream:insert("\r\n")
-				build_headers(tcp.stream, http.response.headers, http.response._headers_order)
-				tcp.stream:insert("\r\n")
-			end
-		end
-
-		http._tcp_stream = nil
-	end
-	return tcp
-
-end
-
-local function parse(http, context, f, name, next_state)
-	if not context._co then
-		if haka.packet.mode() ~= haka.packet.PASSTHROUGH then
-			context._mark = http._tcp_stream.stream:mark()
-		end
-		context._co = coroutine.create(function () f(http._tcp_stream.stream, context) end)
-	end
-
-	coroutine.resume(context._co)
-
-	if coroutine.status(context._co) == "dead" then
-		if not context._invalid then
-			http._state = next_state
-			if not haka.rule_hook("http-".. name, http) then
-				return nil
-			end
-
-			context.next_dissector = http.next_dissector
-		else
-			haka.alert{
-				description = context._invalid,
-				severity = 'low'
-			}
-			http._tcp_stream:drop()
 			return nil
 		end
 	end
+	return headernext, self, nil
 end
 
-haka.dissector {
-	name = "http",
-	hooks = { "http-request", "http-response" },
-	dissect = function (stream)
+function HeaderResult.method:__newindex(key, value)
+	local lowerkey = key
+	if type(lowerkey) == 'string' then
+		lowerkey = lowerkey:lower()
+	end
 
-		if not stream.connection.data._http then
-			local http = {}
-			http.dissector = "http"
-			http.next_dissector = nil
-			http.valid = function (self)
-				return self._tcp_stream:valid()
+	-- Try to update existing header
+	for i, header in ipairs(self) do
+		if header.name and header.name:lower() == lowerkey then
+			if value then
+				header.value = value
+			else
+				self:remove(i)
+				self._cache[lowerkey] = nil
 			end
-			http.drop = function (self)
-				return self._tcp_stream:drop()
-			end
-			http.reset = function (self)
-				return self._tcp_stream:reset()
-			end
-			http.forge = forge
-			http._state = 0
-			http.connection = stream.connection
 
-			stream.connection.data._http = http
+			return
 		end
+	end
 
-		local http = stream.connection.data._http
-		http._tcp_stream = stream
+	-- Finally insert new header
+	if value then
+		self:append({ name = key, value = value })
+	end
+end
 
-		if stream.direction then
-			if http._state == 0 or http._state == 1 then
-				if stream.stream:available() > 0 then
-					if http._state == 0 then
-						http.request = {}
-						http.request.split_uri = function (self)
-							if self._splitted_uri then
-								return self._splitted_uri
-							else
-								self._splitted_uri = uri_split(self.uri)
-								return self._splitted_uri
-							end
-						end
 
-						http.request.split_cookies = function (self)
-							if self._cookies then
-								return self._cookies
-							else
-								self._cookies = cookies_split(self.headers['Cookie'])
-								return self._cookies
-							end
-						end
+local HttpRequestResult = class.class("HttpRequestResult", haka.grammar.Result)
 
-						http.response = nil
-						http._state = 1
-					end
-					parse(http, http.request, parse_request, "request", 2)
-				end
-			elseif http.request then
-				http.next_dissector = http.request.next_dissector
-			end
-		else
-			if http._state == 3 or http._state == 4 then
-				if stream.stream:available() > 0 then
-					if http._state == 3 then
-						http.response = {}
-						http._state = 4
-					end
-
-					parse(http, http.response, parse_response, "response", 5)
-				end
-			elseif http.response then
-				http.next_dissector = http.response.next_dissector
-			end
-		end
-
-		return http
+HttpRequestResult.property.split_uri = {
+	get = function (self)
+		local split_uri = utils.uri.split(self.uri)
+		self.split_uri = split_uri
+		return split_uri
 	end
 }
+
+HttpRequestResult.property.split_cookies = {
+	get = function (self)
+		local split_cookies = utils.cookies.split(self.headers['Cookie'])
+		self.split_cookies = split_cookies
+		return split_cookies
+	end
+}
+
+local HttpResponseResult = class.class("HttpResponseResult", haka.grammar.Result)
+
+HttpResponseResult.property.split_cookies = {
+	get = function (self)
+		local split_cookies = utils.cookies.split(self.headers['Set-Cookie'])
+		self.split_cookies = split_cookies
+		return split_cookies
+	end
+}
+
+
+--
+-- HTTP Grammar
+--
+
+http_dissector.grammar = haka.grammar.new("http", function ()
+	-- http separator tokens
+	WS = token('[[:blank:]]+')
+	optional_WS = token('[[:blank:]]*')
+	CRLF = token('[%r]?%n')
+
+	-- http request/response version
+	version = record{
+		token('HTTP/'),
+		field('version', token('[0-9]+%.[0-9]+'))
+	}
+
+	-- http response status code
+	status = record{
+		field('status', token('[0-9]{3}'))
+	}
+
+	-- http request line
+	request_line = record{
+		field('method', token('[^()<>@,;:%\\"/%[%]?={}[:blank:]]+')),
+		WS,
+		field('uri', token('[[:alnum:][:punct:]]+')),
+		WS,
+		version,
+		CRLF
+	}
+
+	-- http reply line
+	response_line = record{
+		version,
+		WS,
+		status,
+		WS,
+		field('reason', token('[^%r%n]+')),
+		CRLF
+	}
+
+	-- headers list
+	header = record{
+		field('name', token('[^:[:blank:]]+')),
+		token(':'),
+		WS,
+		field('value', token('[^%r%n]+')),
+		CRLF
+	}:apply(function (self, res, ctx)
+		local lower_name =  self.name:lower()
+		if lower_name == 'content-length' then
+			ctx.content_length = tonumber(self.value)
+			ctx.mode = 'content'
+		elseif lower_name == 'transfer-encoding' and
+		       self.value:lower() == 'chunked' then
+			ctx.mode = 'chunked'
+		end
+	end)
+
+	headers = record{
+		field('headers', array(header)
+			:untilcond(function (elem, ctx)
+				local la = ctx:lookahead()
+				return la == 0xa or la == 0xd
+			end)
+			:result(HeaderResult)
+			:creation(function (entity, init)
+				local vbuf = haka.vbuffer_from(init.name..': '..init.value..'\r\n')
+				return vbuf, entity:create(vbuf:pos('begin'), init)
+			end)
+		),
+		CRLF
+	}
+
+	-- http chunk
+	local erase_since_retain = execute(function (self, ctx)
+		if ctx.user._enable_data_modification then
+			local sub = haka.vbuffer_sub(ctx.retain_mark, ctx.iter)
+			ctx.iter:split()
+			sub:erase()
+		end
+	end)
+
+	chunk_end_crlf = record{
+		CRLF,
+		erase_since_retain
+	}
+
+	chunk_line = record{
+		field('chunk_size', token('[0-9a-fA-F]+')
+			:convert(converter.tonumber("%x", 16))),
+		execute(function (self, ctx) ctx.chunk_size = self.chunk_size end),
+		optional_WS,
+		CRLF,
+		erase_since_retain
+	}
+
+	chunk = sequence{
+		chunk_line,
+		bytes()
+			:count(function (self, ctx) return ctx.chunk_size end)
+			:chunked(function (self, sub, last, ctx)
+				ctx.user:push_data(ctx:result(1), sub, ctx.iter, ctx.chunk_size == 0,
+					ctx.user.state.current, true)
+			end),
+		optional(chunk_end_crlf,
+			function (self, context) return self.chunk_size > 0 end)
+	}
+
+	chunks = sequence{
+		array(chunk)
+			:untilcond(function (elem) return elem and elem.chunk_size == 0 end),
+		headers
+	}
+
+	body = branch(
+		{
+			content = bytes()
+				:count(function (self, ctx) return ctx.content_length or 0 end)
+				:chunked(function (self, sub, last, ctx)
+					ctx.user:push_data(ctx:result(1), sub, ctx.iter, last,
+						ctx.user.state.current)
+				end),
+			chunked = chunks,
+			default = 'continue'
+		},
+		function (self, ctx) return ctx.mode end
+	)
+
+	-- http request
+	request_headers = record{
+		request_line,
+		headers,
+		execute(function (self, ctx)
+			ctx.user:trigger_event(ctx:result(1), ctx.iter, ctx.retain_mark)
+		end)
+	}
+
+	request = sequence{
+		request_headers,
+		body
+	}:result(HttpRequestResult)
+
+	-- http response
+	response_headers = record{
+		response_line,
+		headers,
+		execute(function (self, ctx)
+			ctx.user:trigger_event(ctx:result(1), ctx.iter, ctx.retain_mark)
+		end)
+	}
+
+	response = sequence{
+		response_headers,
+		body
+	}:result(HttpResponseResult)
+
+	export(request, response)
+end)
+
+
+--
+--  HTTP States
+--
+
+http_dissector.state_machine = haka.state_machine.new("http", function ()
+	state_type(BidirectionalState)
+
+	request  = state(http_dissector.grammar.request, nil)
+	response = state(nil, http_dissector.grammar.response)
+	connect  = state(nil, nil)
+
+	any:on{
+		event = events.fail,
+		execute = function (self)
+			self:drop()
+		end,
+	}
+
+	any:on{
+		event = events.parse_error,
+		execute = function (self, err)
+			haka.alert{
+				description = string.format("invalid http %s", err.field.rule),
+				severity = 'low'
+			}
+		end,
+		jump = fail,
+	}
+
+	any:on{
+		event = events.missing_grammar,
+		execute = function (self, direction, payload)
+			local description
+			if direction == 'up' then
+				description = "http: unexpected data from client"
+			else
+				assert(direction == 'down')
+				description = "http: unexpected data from server"
+			end
+			haka.alert{
+				description = description,
+				severity = 'low'
+			}
+		end,
+		jump = fail,
+	}
+
+	request:on{
+		event = events.up,
+		execute = function (self, res)
+			self.request = res
+			self.response = nil
+			self._want_data_modification = false
+		end,
+		jump = response,
+	}
+
+	local function setresponse(self, res)
+		self.response = res
+		self._want_data_modification = false
+	end
+
+	response:on{
+		event = events.down,
+		when = function (self, res) return self.request.method:lower() == 'connect' end,
+		execute = setresponse,
+		jump = connect,
+	}
+
+	response:on{
+		event = events.down,
+		execute = setresponse,
+		jump = request,
+	}
+
+	connect:on{
+		event = events.missing_grammar,
+		execute = function (self, direction, payload)
+			payload:advance('all')
+		end,
+	}
+
+	initial(request)
+end)
+
+module.events = http_dissector.events
 
 return module

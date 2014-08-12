@@ -1,4 +1,4 @@
-debug tcp-connection: opening connection 127.0.0.1:44393 -> 127.0.0.1:4444
-debug tcp-connection: opening connection 127.0.0.1:44403 -> 127.0.0.1:4454
-debug tcp-connection: closing connection 127.0.0.1:44393 -> 127.0.0.1:4444
-debug tcp-connection: closing connection 127.0.0.1:44403 -> 127.0.0.1:4454
+debug cnx: opening connection 127.0.0.1:44393 -> 127.0.0.1:4444
+debug cnx: opening connection 127.0.0.1:44403 -> 127.0.0.1:4454
+debug cnx: closing connection 127.0.0.1:44403 -> 127.0.0.1:4454
+debug cnx: closing connection 127.0.0.1:44393 -> 127.0.0.1:4444

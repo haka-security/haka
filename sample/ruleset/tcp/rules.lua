@@ -5,48 +5,40 @@
 local client_network = ipv4.network("192.168.10.0/25");
 local server_network = ipv4.network("192.168.20.0/25");
 
-local group = haka.rule_group{
-	name = "group",
-	init = function (self, pkt)
+local group = haka.rule_group {
+	hook = tcp_connection.events.new_connection,
+	init = function (flow, pkt)
 		haka.log.debug("filter", "entering packet filtering rules : %d --> %d",
-			pkt.tcp.srcport, pkt.tcp.dstport)
+			pkt.srcport, pkt.dstport)
 	end,
-	fini = function (self, pkt)
+	final = function (flow, pkt)
 		haka.alert{
 			description = "Packet dropped : drop by default",
-			sources = haka.alert.address(pkt.tcp.ip.src, pkt.tcp.srcport),
-			targets = haka.alert.address(pkt.tcp.ip.dst, pkt.tcp.dstport)
+			sources = haka.alert.address(pkt.ip.src, pkt.srcport),
+			targets = haka.alert.address(pkt.ip.dst, pkt.dstport)
 		}
 		pkt:drop()
 	end,
-	continue = function (self, pkt, ret)
+	continue = function (ret, flow, pkt)
 		return not ret
 	end
 }
 
 
 group:rule{
-	hooks = { 'tcp-connection-new' },
-	eval = function (self, pkt)
-
-		local tcp = pkt.tcp
-
+	eval = function (flow, tcp)
 		if client_network:contains(tcp.ip.src) and
 		    server_network:contains(tcp.ip.dst) and
 		    tcp.dstport == 80 then
 			haka.log.warning("filter", "authorizing http traffic")
-			pkt.next_dissector = "http"
+			http.dissect(flow)
 			return true
 		end
 	end
 }
 
 group:rule{
-	hooks = { 'tcp-connection-new' },
-	eval = function (self, pkt)
-
-		local tcp = pkt.tcp
-
+	eval = function (flow, tcp)
 		if client_network:contains(tcp.ip.src) and
 		    server_network:contains(tcp.ip.dst) and
 		    tcp.dstport == 22 then

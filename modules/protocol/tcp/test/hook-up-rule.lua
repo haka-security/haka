@@ -6,11 +6,12 @@
 -- is functional. See rule-down test too.
 
 require("protocol/ipv4")
-require("protocol/tcp")
+local tcp = require("protocol/tcp")
+require("protocol/tcp_connection")
 
 haka.rule {
-	hooks = {"tcp-up"},
-	eval = function (self,pkt)
+	hook = tcp.events.receive_packet,
+	eval = function (pkt)
 		print(string.format("srcport:%s - dstport:%s", pkt.srcport, pkt.dstport))
 	end
 }

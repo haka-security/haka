@@ -6,19 +6,21 @@
 #define _THREAD_H
 
 #include <haka/packet_module.h>
-#include "lua/state.h"
 
 
 struct thread_pool;
 
-struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module, bool attach_debugger);
+struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module,
+		bool attach_debugger, bool dissector_graph);
+int  thread_pool_count(struct thread_pool *pool);
 void thread_pool_cleanup(struct thread_pool *pool);
 void thread_pool_wait(struct thread_pool *pool);
 void thread_pool_cancel(struct thread_pool *pool);
 void thread_pool_start(struct thread_pool *pool);
+bool thread_pool_stop(struct thread_pool *pool, int force);
 void thread_pool_attachdebugger(struct thread_pool *pool);
 bool thread_pool_issingle(struct thread_pool *pool);
-void thread_pool_dump_stat(struct thread_pool *pool, FILE *file);
+struct engine_thread *thread_pool_thread(struct thread_pool *pool, int index);
 
 #endif /* _THREAD_H */
 

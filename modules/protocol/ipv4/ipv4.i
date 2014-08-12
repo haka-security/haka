@@ -29,19 +29,45 @@
 		ret->addr = a;
 		return ret;
 	}
+
+	struct inet_checksum {
+		bool    odd;
+		int32   value;
+	};
+
+	static int lua_inet_checksum_sub(struct vbuffer_sub *buf)
+	{
+		return SWAP_FROM_IPV4(int16, inet_checksum_vbuffer(buf));
+	}
+
+	static int lua_inet_checksum(struct vbuffer *buf)
+	{
+		struct vbuffer_sub sub;
+		vbuffer_sub_create(&sub, buf, 0, ALL);
+		return lua_inet_checksum_sub(&sub);
+	}
 %}
 
 %include "haka/lua/swig.si"
 %include "haka/lua/object.si"
 %include "haka/lua/packet.si"
+%include "haka/lua/ref.si"
 %include "haka/lua/ipv4.si"
 %include "haka/lua/ipv4-addr.si"
 
 %rename(addr) ipv4_addr;
+
 struct ipv4_addr {
 	%extend {
 		ipv4_addr(const char *str) {
-			struct ipv4_addr *ret = malloc(sizeof(struct ipv4_addr));
+			struct ipv4_addr *ret;
+
+			if (!str) {
+				error(L"invalid parameter");
+				return NULL;
+			}
+
+			ret = malloc(sizeof(struct ipv4_addr));
 			if (!ret) {
 				return NULL;
 			}
@@ -55,11 +81,16 @@ struct ipv4_addr {
 			return ret;
 		}
 
-		ipv4_addr(unsigned int addr) {
+		ipv4_addr(int addr) {
 			return ipv4_addr_new(addr);
 		}
 
 		ipv4_addr(unsigned int a, unsigned int b, unsigned int c, unsigned int d) {
+			if (a > 255 || b > 255 || c > 255 || d > 255) {
+				error(L"invalid IPv4 address format");
+				return NULL;
+			}
+
 			struct ipv4_addr *ret = malloc(sizeof(struct ipv4_addr));
 			if (!ret) {
 				return NULL;
@@ -94,18 +125,59 @@ struct ipv4_addr {
 			return $self->addr <= addr->addr;
 		}
 
-		temporary_string __tostring()
+		void __tostring(char **TEMP_OUTPUT)
 		{
-			char *buffer = malloc(IPV4_ADDR_STRING_MAXLEN + 1);
-			if (!buffer) {
+			*TEMP_OUTPUT = malloc(IPV4_ADDR_STRING_MAXLEN + 1);
+			if (!*TEMP_OUTPUT) {
+				error(L"memory error");
+				return;
+			}
+
+			ipv4_addr_to_string($self->addr, *TEMP_OUTPUT, IPV4_ADDR_STRING_MAXLEN + 1);
+		}
+
+		int packed;
+	}
+};
+
+%rename(inet_checksum) checksum_partial;
+struct checksum_partial {
+	%extend {
+		checksum_partial() {
+			struct checksum_partial *ret = malloc(sizeof(struct checksum_partial));
+			if (!ret) {
 				error(L"memory error");
 				return NULL;
 			}
-			ipv4_addr_to_string($self->addr, buffer, IPV4_ADDR_STRING_MAXLEN + 1);
-			return buffer;
+			*ret = checksum_partial_init;
+			return ret;
+		}
+
+		~checksum_partial() {
+			free($self);
+		}
+
+		void process(struct vbuffer_sub *sub) {
+			inet_checksum_vbuffer_partial($self, sub);
+		}
+
+		void process(struct vbuffer *buf) {
+			struct vbuffer_sub sub;
+			vbuffer_sub_create(&sub, buf, 0, ALL);
+			inet_checksum_vbuffer_partial($self, &sub);
+		}
+
+		%rename(reduce) _reduce;
+		int _reduce() {
+			return SWAP_FROM_IPV4(int16, inet_checksum_reduce($self));
 		}
 	}
 };
+
+%{
+	int ipv4_addr_packed_get(struct ipv4_addr *addr) { return addr->addr; }
+	void ipv4_addr_packed_set(struct ipv4_addr *addr, int packed) { addr->addr = packed; }
+%}
 
 STRUCT_UNKNOWN_KEY_ERROR(ipv4_addr);
 
@@ -115,7 +187,14 @@ STRUCT_UNKNOWN_KEY_ERROR(ipv4_addr);
 struct ipv4_network {
 	%extend {
 		ipv4_network(const char *str) {
-			struct ipv4_network *ret = malloc(sizeof(struct ipv4_network));
+			struct ipv4_network *ret;
+
+			if (!str) {
+				error(L"invalid parameter");
+				return NULL;
+			}
+
+			ret = malloc(sizeof(struct ipv4_network));
 			if (!ret) {
 				return NULL;
 			}
@@ -149,17 +228,16 @@ struct ipv4_network {
 				free($self);
 		}
 
-		temporary_string __tostring()
+		void __tostring(char **TEMP_OUTPUT)
 		{
-			char *buffer = malloc(IPV4_NETWORK_STRING_MAXLEN + 1);
-			if (!buffer) {
+			*TEMP_OUTPUT = malloc(IPV4_NETWORK_STRING_MAXLEN + 1);
+			if (!*TEMP_OUTPUT) {
 				error(L"memory error");
-				return NULL;
+				return;
 			}
-			ipv4_network_to_string($self->net, buffer,
-					IPV4_NETWORK_STRING_MAXLEN + 1);
 
-			return buffer;
+			ipv4_network_to_string($self->net, *TEMP_OUTPUT,
+					IPV4_NETWORK_STRING_MAXLEN + 1);
 		}
 
 		%rename(contains) _contains;
@@ -195,52 +273,11 @@ struct ipv4_flags {
 
 STRUCT_UNKNOWN_KEY_ERROR(ipv4_flags);
 
-LUA_OBJECT_CAST(struct ipv4_payload, struct ipv4);
-
-struct ipv4_payload {
-	%extend {
-		size_t __len(void *dummy)
-		{
-			return ipv4_get_payload_length((struct ipv4 *)$self);
-		}
-
-		int __getitem(int index)
-		{
-			const size_t size = ipv4_get_payload_length((struct ipv4 *)$self);
-
-			--index;
-			if (index < 0 || index >= size) {
-				error(L"out-of-bound index");
-				return 0;
-			}
-			return ipv4_get_payload((struct ipv4 *)$self)[index];
-		}
-
-		void __setitem(int index, int value)
-		{
-			const size_t size = ipv4_get_payload_length((struct ipv4 *)$self);
-
-			--index;
-			if (index < 0 || index >= size) {
-				error(L"out-of-bound index");
-				return;
-			}
-			ipv4_get_payload_modifiable((struct ipv4 *)$self)[index] = value;
-		}
-
-		void resize(int size)
-		{
-			ipv4_resize_payload((struct ipv4 *)$self, size);
-		}
-	}
-};
-
-STRUCT_UNKNOWN_KEY_ERROR(ipv4_payload);
-
 LUA_OBJECT(struct ipv4);
-%newobject ipv4::forge;
 %newobject ipv4::src;
 %newobject ipv4::dst;
+%newobject ipv4::reassemble;
+%delobject ipv4::reassemble;
 
 struct ipv4 {
 	%extend {
@@ -263,45 +300,46 @@ struct ipv4 {
 		struct ipv4_addr *dst;
 
 		%immutable;
-		struct packet *raw;
-		struct ipv4_flags *flags;
-		struct ipv4_payload *payload;
-		const char *dissector;
-		const char *next_dissector;
+		const char *name { return "ipv4"; }
+		struct packet *raw { IPV4_CHECK($self, NULL); return $self->packet; }
+		struct ipv4_flags *flags { IPV4_CHECK($self, NULL); return (struct ipv4_flags *)$self; }
+		struct vbuffer *payload { IPV4_CHECK($self, NULL); return $self->payload;}
+
+		struct ipv4 *reassemble();
 
 		bool verify_checksum();
 		void compute_checksum();
+		void drop() { ipv4_action_drop($self); }
 
-		void drop()
+		bool can_continue()
 		{
-			ipv4_action_drop($self);
+			assert($self);
+			return $self->packet != NULL;
 		}
-
-		void send()
-		{
-			ipv4_action_send($self);
-		}
-
-		bool valid();
-		struct packet *forge();
 	}
 };
 
 STRUCT_UNKNOWN_KEY_ERROR(ipv4);
 
-%rename(dissect) ipv4_dissect;
+%rename(_dissect) ipv4_dissect;
 %newobject ipv4_dissect;
 struct ipv4 *ipv4_dissect(struct packet *DISOWN_SUCCESS_ONLY);
 
-%rename(create) ipv4_create;
+%rename(_create) ipv4_create;
 %newobject ipv4_create;
 struct ipv4 *ipv4_create(struct packet *DISOWN_SUCCESS_ONLY);
 
-%rename(register_proto) ipv4_register_proto_dissector;
-void ipv4_register_proto_dissector(int proto, const char *dissector);
+%rename(_forge) ipv4_forge;
+%newobject ipv4_forge;
+struct packet *ipv4_forge(struct ipv4 *pkt);
+
+%rename(inet_checksum_compute) lua_inet_checksum_sub;
+int lua_inet_checksum_sub(struct vbuffer_sub *sub);
+
+%rename(inet_checksum_compute) lua_inet_checksum;
+int lua_inet_checksum(struct vbuffer *buf);
 
 %{
-
 	#define IPV4_INT_GETSET(field) \
 		unsigned int ipv4_##field##_get(struct ipv4 *ip) { return ipv4_get_##field(ip); } \
 		void ipv4_##field##_set(struct ipv4 *ip, unsigned int v) { ipv4_set_##field(ip, v); }
@@ -316,20 +354,10 @@ void ipv4_register_proto_dissector(int proto, const char *dissector);
 	IPV4_INT_GETSET(proto);
 	IPV4_INT_GETSET(checksum);
 
-	struct packet *ipv4_raw_get(struct ipv4 *ip) { return ip->packet; }
-
 	struct ipv4_addr *ipv4_src_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_src(ip)); }
 	void ipv4_src_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_src(ip, v->addr); }
 	struct ipv4_addr *ipv4_dst_get(struct ipv4 *ip) { return ipv4_addr_new(ipv4_get_dst(ip)); }
 	void ipv4_dst_set(struct ipv4 *ip, struct ipv4_addr *v) { ipv4_set_dst(ip, v->addr); }
-
-	struct ipv4_payload *ipv4_payload_get(struct ipv4 *ip) { return (struct ipv4_payload *)ip; }
-
-	const char *ipv4_dissector_get(struct ipv4 *ip) { return "ipv4"; }
-
-	const char *ipv4_next_dissector_get(struct ipv4 *ip) { return ipv4_get_proto_dissector(ip); }
-
-	struct ipv4_flags *ipv4_flags_get(struct ipv4 *ip) { return (struct ipv4_flags *)ip; }
 
 	#define IPV4_FLAGS_GETSET(field) \
 		bool ipv4_flags_##field##_get(struct ipv4_flags *flags) { return ipv4_get_flags_##field((struct ipv4 *)flags); } \
@@ -342,18 +370,103 @@ void ipv4_register_proto_dissector(int proto, const char *dissector);
 	unsigned int ipv4_flags_all_get(struct ipv4_flags *flags) { return ipv4_get_flags((struct ipv4 *)flags); }
 	void ipv4_flags_all_set(struct ipv4_flags *flags, unsigned int v) { return ipv4_set_flags((struct ipv4 *)flags, v); }
 
-
 	struct ipv4_addr *ipv4_network_net_get(struct ipv4_network *network) { return ipv4_addr_new(network->net.net); }
 
 	unsigned char ipv4_network_mask_get(struct ipv4_network *network) { return network->net.mask; }
-
 %}
 
 %luacode {
 	local this = unpack({...})
 
-	haka.dissector {
-		name = "ipv4",
-		dissect = this.dissect
+	swig.getclassmetatable('addr').__persist = function (self)
+		local data = self.packed
+		return function ()
+			local ipv4 = require('protocol/ipv4')
+			return ipv4.addr(data)
+		end
+	end
+
+	local ipv4_protocol_dissectors = {}
+
+	function this.register_protocol(proto, dissector)
+		if ipv4_protocol_dissectors[proto] then
+			error("IPv4 protocol %d dissector already registered", proto);
+		end
+
+		ipv4_protocol_dissectors[proto] = dissector
+	end
+
+	local ipv4_dissector = haka.dissector.new{
+		type = haka.helper.PacketDissector,
+		name = 'ipv4'
 	}
+
+	ipv4_dissector.options.enable_reassembly = true
+
+	function ipv4_dissector:new(pkt)
+		return this._dissect(pkt)
+	end
+
+	function ipv4_dissector:create(pkt)
+		return this._create(pkt)
+	end
+
+	function ipv4_dissector.method:receive()
+		local pkt
+
+		haka.context:signal(self, ipv4_dissector.events['receive_packet'])
+
+		if ipv4_dissector.options.enable_reassembly then pkt = self:reassemble()
+		else pkt = self end
+
+		if pkt then
+			local next_dissector = ipv4_protocol_dissectors[pkt.proto]
+			if next_dissector then
+				return next_dissector:receive(pkt)
+			else
+				return pkt:send()
+			end
+		end
+	end
+
+	function ipv4_dissector.method:send()
+		haka.context:signal(self, ipv4_dissector.events['send_packet'])
+
+		local pkt = this._forge(self)
+		while pkt do
+			pkt:send()
+			pkt = this._forge(self)
+		end
+	end
+
+	function ipv4_dissector.method:inject()
+		local pkt = this._forge(self)
+		while pkt do
+			pkt:inject()
+			pkt = this._forge(self)
+		end
+	end
+
+	swig.getclassmetatable('ipv4')['.fn'].receive = ipv4_dissector.method.receive
+	swig.getclassmetatable('ipv4')['.fn'].send = ipv4_dissector.method.send
+	swig.getclassmetatable('ipv4')['.fn'].inject = ipv4_dissector.method.inject
+	swig.getclassmetatable('ipv4')['.fn'].continue = haka.helper.Dissector.method.continue
+	swig.getclassmetatable('ipv4')['.fn'].error = swig.getclassmetatable('ipv4')['.fn'].drop
+
+	this.events = ipv4_dissector.events
+	this.options = ipv4_dissector.options
+
+	function this.create(pkt)
+		return ipv4_dissector:create(pkt)
+	end
+
+	local raw = require('protocol/raw')
+	raw.register('ipv4', ipv4_dissector)
+
+	-- ipv4 Lua full dissector, uncomment to enable
+	--[[ipv4 = this
+	ipv4.ipv4_protocol_dissectors = ipv4_protocol_dissectors
+	require('protocol/ipv4lua')]]
 }
+
+%include "cnx.si"

@@ -1,0 +1,6 @@
+info test: received icmp packet size=5304
+info test: received icmp packet size=5304
+info test: received icmp packet size=60
+info test: received icmp packet size=60
+info test: received icmp packet size=1604
+info test: received icmp packet size=1604

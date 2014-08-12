@@ -187,6 +187,7 @@ static const char *str_level[HAKA_LOG_LEVEL_LAST] = {
 	"warn",
 	"info",
 	"debug",
+	"default",
 };
 
 const char *level_to_str(log_level level)
@@ -201,6 +202,11 @@ log_level str_to_level(const char *str)
 	while ((level < HAKA_LOG_LEVEL_LAST) && (strcmp(str_level[level], str) != 0)) {
 		level++;
 	}
+
+	if (level == HAKA_LOG_LEVEL_LAST) {
+		error(L"invalid logging level: %s", str);
+	}
+
 	return level;
 }
 
@@ -343,17 +349,43 @@ static struct module_level *get_module_level(const wchar_t *module, bool create)
 	return iter;
 }
 
+static void reset_module_level(const wchar_t *module)
+{
+	struct module_level *iter = module_level, *prev = NULL;
+	while (iter) {
+		if (wcscmp(module, iter->module) == 0) {
+			if (prev) {
+				prev->next = iter->next;
+			} else {
+				module_level = iter->next;
+			}
+			free(iter);
+			break;
+		}
+		prev = iter;
+		iter = iter->next;
+	}
+}
+
 void setlevel(log_level level, const wchar_t *module)
 {
 	rwlock_writelock(&log_level_lock);
 
 	if (!module) {
-		default_level = level;
+		if (level == HAKA_LOG_DEFAULT) {
+			message(HAKA_LOG_WARNING, L"core", L"cannot set log level default for global level");
+		} else {
+			default_level = level;
+		}
 	}
 	else {
-		struct module_level *module_level = get_module_level(module, true);
-		if (module_level) {
-			module_level->level = level;
+		if (level == HAKA_LOG_DEFAULT) {
+			reset_module_level(module);
+		} else {
+			struct module_level *module_level = get_module_level(module, true);
+			if (module_level) {
+				module_level->level = level;
+			}
 		}
 	}
 

@@ -1,0 +1,24 @@
+alert: id = = <>
+	start time = Mon Jan 20 17:44:43 2014
+	severity = medium
+	confidence = high
+	completion = failed
+	description = packet received
+	method = {
+		description = Packet sent on the network
+		ref = { cve:2O13-XXX, http://intranet/vulnid?id=115, cwe:809 }
+	}
+	sources = {
+		address: 192.168.20.99, evil.host.fqdn
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/22, ssh
+	}
+alert: id = = <>
+	severity = low
+	sources = {
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	completion = failed

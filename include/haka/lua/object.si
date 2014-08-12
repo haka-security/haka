@@ -9,27 +9,23 @@
 extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swig_type_info *type_info, int owner);
 %}
 
-%define LUA_OBJECT_CAST(typeptr, casttype)
-
-%typemap(check) typeptr* {
-	/* check that the object is still valid */
-	if(!$1) {
-		lua_pushstring(L,"$symname: object has been destroyed");
-		SWIG_fail;
-	}
-}
+%define _LUA_OBJECT(typeptr, casttype, name)
 
 %typemap(in, checkfn="SWIG_isptrtype") typeptr* %{
-#ifdef HAKA_DEBUG
-	if ($disown) {
-		if (!lua_isnil(L, $input)) {
-			swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, $input);
-			if (usr) {
-				assert(!$disown || usr->own == 1);
-			}
+	if (!lua_isnil(L, $input)) {
+		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, $input);
+		/* check that the object is still valid */
+		if (!usr) {
+			lua_pushstring(L,"$symname: object has been destroyed");
+			SWIG_fail;
 		}
-	}
+
+#ifdef HAKA_DEBUG
+		if ($disown) {
+			assert(!$disown || usr->own == 1);
+		}
 #endif
+	}
 
 	if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, $disown))){
 		SWIG_fail_ptr("$symname", $argnum, $descriptor);
@@ -37,14 +33,20 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 %}
 
 %typemap(in, checkfn="SWIG_isptrtype") typeptr* DISOWN %{
-#ifdef HAKA_DEBUG
 	if (!lua_isnil(L, $input)) {
 		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, $input);
-		if (usr) {
-			assert(usr->own == 1);
+		/* check that the object is still valid */
+		if (!usr) {
+			lua_pushstring(L,"$symname: object has been destroyed");
+			SWIG_fail;
 		}
-	}
+
+#ifdef HAKA_DEBUG
+		if ($disown) {
+			assert(!$disown || usr->own == 1);
+		}
 #endif
+	}
 
 	if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, SWIG_POINTER_DISOWN))){
 		SWIG_fail_ptr("$symname", $argnum, $descriptor);
@@ -54,7 +56,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 %apply typeptr* DISOWN { typeptr* DISOWN_SUCCESS_ONLY };
 
 %typemap(out) typeptr* {
-	if (!lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, $owner)) {
+	if (!lua_object_push(L, $1, &((casttype*)$1)->name, $descriptor, $owner)) {
 		SWIG_execfail;
 	}
 	else {
@@ -64,7 +66,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(freearg) typeptr* DISOWN {
 	if (SWIG_arg == -1 && $1) {
-		if (lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, 1)) {
+		if (lua_object_push(L, $1, &((casttype*)$1)->name, $descriptor, 1)) {
 			lua_pop(L, 1);
 		}
 	}
@@ -72,14 +74,59 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(freearg) typeptr* DISOWN_SUCCESS_ONLY {
 	if (SWIG_arg == -2 && $1) {
-		if (lua_object_push(L, $1, &((casttype*)$1)->lua_object, $descriptor, 1)) {
+		if (lua_object_push(L, $1, &((casttype*)$1)->name, $descriptor, 1)) {
 			lua_pop(L, 1);
 		}
 	}
 }
 
+%typemap(in,numinputs=0) typeptr** OUTPUT_DISOWN ($*ltype temp)
+%{ temp = ($*ltype)0; $1 = &temp; %}
+
+%typemap(argout) typeptr** OUTPUT_DISOWN {
+	if ($1) {
+		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->name, $*descriptor, 0)) {
+			SWIG_execfail;
+		}
+		else {
+			SWIG_arg++;
+		}
+	}
+	else {
+		lua_pushnil(L);
+		SWIG_arg++;
+	}
+}
+
+%typemap(in,numinputs=0) typeptr** OUTPUT ($*ltype temp)
+%{ temp = ($*ltype)0; $1 = &temp; %}
+
+%typemap(argout) typeptr** OUTPUT {
+	if ($1) {
+		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->name, $*descriptor, 1)) {
+			SWIG_execfail;
+		}
+		else {
+			SWIG_arg++;
+		}
+	}
+	else {
+		lua_pushnil(L);
+		SWIG_arg++;
+	}
+}
+
+%enddef
+
+
+%define LUA_OBJECT_CAST(typeptr, casttype)
+	_LUA_OBJECT(typeptr, casttype, lua_object)
 %enddef
 
 %define LUA_OBJECT(typeptr)
-	LUA_OBJECT_CAST(typeptr, typeptr)
+	_LUA_OBJECT(typeptr, typeptr, lua_object)
+%enddef
+
+%define LUA_OBJECT_EX(typeptr, name)
+	_LUA_OBJECT(typeptr, typeptr, name)
 %enddef

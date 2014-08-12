@@ -4,33 +4,27 @@
 
 require("protocol/ipv4")
 require("protocol/tcp")
-require("protocol/http")
+local http = require("protocol/http")
+
+http.install_tcp_rule(80)
+
 
 haka.rule {
-	hooks = { "tcp-connection-new" },
-	eval = function (self, pkt)
-		if pkt.tcp.dstport == 80 then
-			pkt.next_dissector = "http"
-		end
-	end
-}
-
-haka.rule {
-	hooks = { 'http-request' },
-	eval = function (self, pkt)
-		local uri = pkt.request.uri
+	hook = http.events.request,
+	eval = function (http, request)
+		local uri = request.uri
 		print('--> splitting uri')
-		splitted = pkt.request:split_uri()
+		splitted = request.split_uri
 		print(splitted)
 	end
 }
 
 haka.rule {
-	hooks = { 'http-request' },
-	eval = function (self, pkt)
-		local uri = pkt.request.uri
+	hook = http.events.request,
+	eval = function (http, request)
+		local uri = request.uri
 		print('--> splitting uri')
-		splitted2 = pkt.request:split_uri()
+		local splitted2 = request.split_uri
 		print(splitted2)
 		--Check that tables are the same
 		--Same in the way that this is the same memory, not only the same content 

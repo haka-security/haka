@@ -1,0 +1,29 @@
+debug cnx: opening connection 192.168.10.1:50683 -> 192.168.20.1:80
+debug filter: Traffic on HTTP port from 192.168.10.1
+alert: id = = <>
+	description = Bad TCP checksum
+alert: id = = <>
+	description = Bad TCP checksum
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.10.1
+		service: tcp/1363
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/0
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 192.168.10.1
+		service: tcp/1364
+	}
+	targets = {
+		address: 192.168.20.1
+		service: tcp/0
+	}
+debug cnx: closing connection 192.168.10.1:50683 -> 192.168.20.1:80

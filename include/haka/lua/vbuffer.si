@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%{
+#include <haka/vbuffer.h>
+#include <haka/vbuffer_stream.h>
+#include <haka/vbuffer_sub_stream.h>
+%}
+
+%include "haka/lua/object.si"
+
+LUA_OBJECT(struct vbuffer);
+LUA_OBJECT(struct vbuffer_stream);
+LUA_OBJECT_EX(struct vbuffer_sub_stream, stream.lua_object);
+
+%{
+
+struct vbuffer_iterator_blocking {
+	struct vbuffer_iterator super;
+};
+
+struct vbuffer_iterator *vbuffer_iterator_lua_allocate(struct vbuffer_iterator *iter);
+
+%}

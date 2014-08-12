@@ -11,24 +11,17 @@ httplib = require('protocol/http')
 -- Setting next dissector
 ------------------------------------
 
-haka.rule{
-	hooks = { 'tcp-connection-new' },
-	eval = function (self, pkt)
-		if pkt.tcp.dstport == 80 then
-			pkt.next_dissector = 'http'
-		end
-	end
-}
+httplib.install_tcp_rule(80)
 
 -----------------------------------
 -- Dumping request info
 -----------------------------------
 
-function dump_request(http)
+function dump_request(request)
 	haka.log("sqli", "receiving http request")
-	local uri = http.request.uri
+	local uri = request.uri
 	haka.log("sqli", "    uri: %s", uri)
-	local cookies = http.request.headers['Cookie']
+	local cookies = request.headers['Cookie']
 	if cookies then
 		haka.log("sqli", "    cookies: %s", cookies)
 	end

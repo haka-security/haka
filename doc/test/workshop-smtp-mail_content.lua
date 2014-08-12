@@ -1,0 +1,1 @@
+../user/workshop/mail_content.lua

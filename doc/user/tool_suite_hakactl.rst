@@ -7,7 +7,7 @@ hakactl
 
 .. program:: hakactl
 
-``hakactl`` allows to control a running `haka` daemon.
+``hakactl`` allows to control a running ``haka`` daemon.
 
 .. code-block:: console
 
@@ -35,10 +35,6 @@ Commands
 
     Stop haka daemon.
 
-.. option:: stats
-
-    Show statistics on packet/bytes captured by haka.
-
 .. option:: logs
 
     Show haka logs in realtime.
@@ -47,7 +43,7 @@ Commands
 
     Set the logging level (fatal, error, warn, info, debug).
 
-    .. seealso:: See :lua:mod:`haka.log` for more information about logging levels.
+    .. seealso:: See :haka:mod:`haka.log` for more information about logging levels.
 
 .. option:: debug
 
@@ -58,3 +54,9 @@ Commands
     Put a running daemon in interactive mode
 
     .. seealso:: See :doc:`\debug` for more information about the debugger and the interactive mode.
+
+.. option:: console
+
+    Remotely execute Lua commands on a running daemon.
+
+    .. seealso:: See :doc:`\console` for more information about the possibilities of the console.

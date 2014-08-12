@@ -9,12 +9,14 @@
 #include <locale.h>
 #include <signal.h>
 #include <libgen.h>
+#include <unistd.h>
 
 #include <haka/packet_module.h>
 #include <haka/thread.h>
+#include <haka/system.h>
 #include <haka/error.h>
 #include <haka/alert.h>
-#include <luadebug/debugger.h>
+#include <haka/luadebug/debugger.h>
 
 #include "app.h"
 
@@ -22,6 +24,7 @@
 static struct thread_pool *thread_states;
 static char *configuration_file;
 static int ret_rc = 0;
+extern void packet_set_mode(enum packet_mode mode);
 
 
 void basic_clean_exit()
@@ -37,15 +40,20 @@ void basic_clean_exit()
 	remove_all_logger();
 }
 
-static void fatal_error_signal(int sig)
+static void term_error_signal(int sig, siginfo_t *si, void *uc)
 {
-	static volatile sig_atomic_t fatal_error_in_progress = 0;
-
-	printf("\n");
+	static atomic_t fatal_error_count;
+	int fatal_error_level;
+	UNUSED int err;
 
 	if (sig == SIGINT) {
+		err = write(STDERR_FILENO, "\n", 1);
+		/* ignore err */
+
 		if (luadebug_debugger_breakall()) {
-			message(HAKA_LOG_FATAL, L"debug", L"break (hit ^C again to kill)");
+			static const char *debugger_message = "break (hit ^C again to kill)\n";
+			err = write(STDERR_FILENO, debugger_message, strlen(debugger_message));
+			/* ignore err */
 			return;
 		}
 		else {
@@ -53,86 +61,60 @@ static void fatal_error_signal(int sig)
 		}
 	}
 
-	if (fatal_error_in_progress)
-		raise(sig);
-	fatal_error_in_progress = 1;
+	fatal_error_level = atomic_inc(&fatal_error_count);
 
-	if (sig != SIGTERM) {
-		messagef(HAKA_LOG_FATAL, L"core", L"fatal signal received (sig=%d)", sig);
-	}
-	else {
-		messagef(HAKA_LOG_INFO, L"core", L"terminate signal received");
+	if (sig != SIGINT) {
+		static const char *message = "terminate signal received\n";
+		err = write(STDERR_FILENO, message, strlen(message));
+		/* ignore err */
 	}
 
 	if (thread_states) {
-		if (thread_pool_issingle(thread_states)) {
-			clean_exit();
-			exit(1);
-		}
-		else {
-			thread_pool_cancel(thread_states);
-			ret_rc = 1;
+		if (!thread_pool_stop(thread_states, fatal_error_level)) {
+			fatal_exit(1);
 		}
 	}
 	else {
-		clean_exit();
-		exit(1);
+		fatal_exit(1);
 	}
 }
 
 static void handle_sighup()
 {
 	enable_stdout_logging(false);
-	enable_stdout_alert(false);
-}
-
-const char *haka_path()
-{
-	const char *haka_path = getenv("HAKA_PATH");
-	return haka_path ? haka_path : HAKA_PREFIX;
 }
 
 void initialize()
 {
+	struct sigaction sa;
+
 	/* Set locale */
 	setlocale(LC_ALL, "");
 
 	/* Install signal handler */
-	signal(SIGTERM, fatal_error_signal);
-	signal(SIGINT, fatal_error_signal);
-	signal(SIGQUIT, fatal_error_signal);
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_flags = SA_SIGINFO;
+	sa.sa_sigaction = term_error_signal;
+	sigemptyset(&sa.sa_mask);
+	if (sigaction(SIGTERM, &sa, NULL) ||
+	    sigaction(SIGINT, &sa, NULL) ||
+	    sigaction(SIGQUIT, &sa, NULL)) {
+		messagef(HAKA_LOG_FATAL, L"core", L"%s", errno_error(errno));
+		clean_exit();
+		exit(1);
+	}
+
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGHUP, handle_sighup);
 
-	/* Default module path */
-	{
-		static const char *HAKA_CORE_PATH = "/share/haka/core/*";
-		static const char *HAKA_MODULE_PATH = "/share/haka/modules/*";
-
-		size_t path_len;
-		char *path;
-		const char *haka_path_s = haka_path();
-
-		path_len = 2*strlen(haka_path_s) + strlen(HAKA_CORE_PATH) + 1 +
-				strlen(HAKA_MODULE_PATH) + 1;
-
-		path = malloc(path_len);
-		if (!path) {
-			fprintf(stderr, "memory allocation error\n");
-			clean_exit();
-			exit(1);
-		}
-
-		snprintf(path, path_len, "%s%s;%s%s", haka_path_s, HAKA_CORE_PATH,
-				haka_path_s, HAKA_MODULE_PATH);
-
-		module_set_path(path);
-
-		free(path);
+	if (!module_set_default_path()) {
+		fprintf(stderr, "%ls\n", clear_error());
+		clean_exit();
+		exit(1);
 	}
 }
 
-void prepare(int threadcount, bool attach_debugger)
+void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 {
 	struct packet_module *packet_module = get_packet_module();
 	assert(packet_module);
@@ -142,6 +124,11 @@ void prepare(int threadcount, bool attach_debugger)
 		if (!packet_module->multi_threaded()) {
 			threadcount = 1;
 		}
+	}
+
+	if (packet_module->pass_through()) {
+		messagef(HAKA_LOG_INFO, L"core", L"setting packet mode to pass-through\n");
+		packet_set_mode(MODE_PASSTHROUGH);
 	}
 
 	messagef(HAKA_LOG_INFO, L"core", L"loading rule file '%s'", configuration_file);
@@ -156,7 +143,7 @@ void prepare(int threadcount, bool attach_debugger)
 		dirname(module_path);
 		strcat(module_path, "/*");
 
-		module_add_path(module_path);
+		module_add_path(module_path, false);
 		if (check_error()) {
 			message(HAKA_LOG_FATAL, L"core", clear_error());
 			free(module_path);
@@ -168,8 +155,10 @@ void prepare(int threadcount, bool attach_debugger)
 		module_path = NULL;
 	}
 
-	thread_states = thread_pool_create(threadcount, packet_module, attach_debugger);
-	if (check_error()) {
+	thread_states = thread_pool_create(threadcount, packet_module,
+			attach_debugger, dissector_graph);
+	if (!thread_states) {
+		assert(check_error());
 		message(HAKA_LOG_FATAL, L"core", clear_error());
 		clean_exit();
 		exit(1);
@@ -227,7 +216,51 @@ const char *get_app_directory()
 	return directory;
 }
 
-void dump_stat(FILE *file)
+bool setup_loglevel(char *level)
 {
-	thread_pool_dump_stat(thread_states, file);
+	while (true) {
+		char *value;
+		wchar_t *module=NULL;
+		log_level loglevel;
+
+		char *next_level = strchr(level, ',');
+		if (next_level) {
+			*next_level = '\0';
+			++next_level;
+		}
+
+		value = strchr(level, '=');
+		if (value) {
+			*value = '\0';
+			++value;
+
+			module = malloc(sizeof(wchar_t)*(strlen(level)+1));
+			if (!module) {
+				error(L"memory error");
+				return false;
+			}
+
+			if (mbstowcs(module, level, strlen(level)+1) == -1) {
+				error(L"invalid module string");
+				return false;
+			}
+		}
+		else {
+			value = level;
+		}
+
+		loglevel = str_to_level(value);
+		if (check_error()) {
+			return false;
+		}
+
+		setlevel(loglevel, module);
+
+		if (module) free(module);
+
+		if (next_level) level = next_level;
+		else break;
+	}
+
+	return true;
 }

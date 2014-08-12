@@ -2,18 +2,25 @@
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
 .. file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Welcome to Haka's Reference Guide!
-==================================
+Welcome to Haka's User Reference Guide!
+=======================================
 
 .. toctree::
     :maxdepth: 2
     :numbered: 3
 
-    rule.rst
-    dissector.rst
-    log_alert.rst
-    misc.rst
+    intro.rst
     packet.rst
-    ../../../modules/protocol/ipv4/doc/lua.rst
-    ../../../modules/protocol/tcp/doc/lua.rst
-    ../../../modules/protocol/http/doc/lua.rst
+    vbuffer.rst
+    log.rst
+    alert.rst
+    regexp.rst
+    hakadissector.rst
+    rule.rst
+    grammar.rst
+    state_machine.rst
+    class.rst
+    context.rst
+    dissector.rst
+    misc.rst
+    console.rst

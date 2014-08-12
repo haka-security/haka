@@ -1,0 +1,345 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("ansi.css");
+@import url("fonts.css");
+@import url("genericons.css");
+
+body, html, button, input, select, textarea {
+	font-family: "Source Sans Pro",Helvetica,sans-serif;
+}
+
+p {
+	line-height: 1.2;
+	text-align: justify;
+}
+
+p a {
+	font-weight: bold;
+}
+
+body {
+	color: #515151;
+	background-color: #515151;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	clear: both;
+	font-family: Bitter, Georgia, serif;
+	font-weight: bold;
+	line-height: 1.3;
+	color: #141412;
+}
+
+h1 {
+	font-size: 48px;
+	margin: 33px 0;
+}
+
+h2 {
+	font-size: 30px;
+	margin: 25px 0;
+}
+
+h3 {
+	font-size: 22px;
+	margin: 22px 0;
+}
+
+h4 {
+	font-size: 20px;
+	margin: 25px 0;
+}
+
+h5 {
+	font-size: 18px;
+	margin: 30px 0;
+}
+
+h6 {
+	font-size: 16px;
+	margin: 36px 0;
+}
+
+ul {
+	list-style-type: square;
+}
+
+ol, ul {
+	padding: 0 0 0 40px;
+}
+
+blockquote, blockquote cite {
+	color: #515151;
+}
+
+.button {
+	font-weight: bold;
+}
+
+/**
+ * Header
+ */
+header#header {
+	padding: 38px 0px;
+	background: none repeat scroll 0 0 #99cc66;
+}
+
+header#header h1 {
+	font-size: 60px;
+	font-weight: 700;
+	line-height: 1;
+	margin: 0;
+	padding: 0px 0 10px;
+}
+
+header#header h1 a:hover {
+	text-decoration: underline;
+}
+
+header#header h2 {
+	font: italic 300 24px "Source Sans Pro",Helvetica,sans-serif;
+	margin: 0;
+}
+
+header#header h1, header#header h2 {
+	color: #fff;
+}
+
+header#header a, header#header a:visited {
+	color: #fff;
+}
+
+/**
+ * Top Bar (nav bar)
+ */
+#navbar ul {
+	padding: 0;
+}
+
+#navbar ul li > a {
+	font: normal 700 15px/45px "Source Sans Pro",Helvetica,sans-serif;
+}
+
+#navbar ul li.toggle-topbar > a {
+	font: normal 700 15px/33px "Source Sans Pro",Helvetica,sans-serif;
+}
+
+#navbar ul li > a.button, #navbar ul li.has-form input {
+	height: 32px;
+	line-height: normal;
+}
+
+#navbar ul li.active > a:not(.button) {
+	background: #515151;
+	color: #ffcc33;
+	font-style: italic;
+}
+
+#navbar ul li.active > a:hover:not(.button) {
+	background: #272727;
+}
+
+/**
+ * Content
+ */
+#content {
+	background: none repeat scroll 0 0 #fff;
+	padding: 40px 0;
+}
+
+/**
+ * Footer
+ */
+footer#want-more {
+	padding: 20px 0px;
+	color: #fff;
+	background-color: #99cc66;
+}
+
+footer#want-more #interesting {
+	display: block;
+	font: 300 italic 24px "Source Sans Pro", Helvetica, sans-serif;
+	padding-top: 10px;
+	margin: 0px;
+}
+
+footer#want-more #download, footer#want-more #download .button {
+	font: 700 normal 30px Bitter, Georgia, serif;
+}
+
+footer#want-more #download {
+	display: block;
+	line-height: 39px;
+	margin: 25px 0px 0px;
+}
+
+footer#want-more #download .button {
+	background-color: #515151;
+	color: #fff;
+	border: 1px solid #303030;
+}
+
+footer#want-more #download .button:hover {
+	background-color: #404040;
+	border-color: #515151;
+}
+
+footer#footer {
+	background: none repeat scroll 0 0 #515151;
+	color: #fff;
+	padding: 30px 0;
+	text-align: center;
+}
+
+/**
+ * Community
+ */
+div#community > div.row > div.columns:last-child p {
+	line-height: 64px;
+	vertical-align: center;
+}
+
+/**
+ * Download page
+ */
+table#downloads {
+	width: 100%;
+	border: none;
+}
+
+table#downloads tr {
+	background: none;
+}
+
+table#downloads .button {
+	margin: 0 1em 0 0;
+}
+
+/**
+ * Blog
+ */
+#content article:not(:first-child) {
+	padding-top: 4em;
+}
+
+#content article header + .entry-content > h2 {
+	margin-top: 0;
+}
+
+.news-image {
+	float: left;
+	margin: -1em 1em 0 0;
+}
+
+.read-more a, .read-more a:hover {
+	color: #bc360a;
+}
+
+.read-more a:hover {
+	text-decoration: underline;
+}
+
+.read-more > a:after {
+	content: "\2192"; /* Right arrow */
+}
+
+
+.entry-content > h2 a, .entry-content > h2 a:visited {
+	color: #141412;
+}
+
+.entry-content > h2 a:hover, .entry-meta a:hover {
+	text-decoration: underline;
+}
+
+.entry-meta {
+	clear: both;
+	font-size: 14px;
+}
+
+.entry-meta a {
+	color: #bc360a;
+}
+
+.entry-meta a:hover {
+	color: #bc360a;
+}
+
+.entry-meta .date a:before {
+	content: "\f303"; /* Watch */
+}
+
+.categories-links a:first-child:before {
+	content: "\f301"; /* Folder */
+	position: relative;
+	top: -1px;
+}
+
+.entry-meta .date a:before, .categories-links a:first-child:before {
+	-webkit-font-smoothing: antialiased;
+	display: inline-block;
+	font: normal 16px/1 Genericons;
+	vertical-align: text-bottom;
+}
+
+.post-navigation {
+	margin: 50px 0;
+	clear: both;
+}
+
+.post-navigation a {
+	color: #ac360a;
+	font: italic 300 20px "Source Sans Pro",Helvetica,sans-serif;
+}
+
+.post-navigation a[rel="next"] {
+	float: right;
+	text-align: right;
+}
+
+.post-navigation a[rel="prev"] {
+	float: left;
+	text-align: left;
+}
+
+/**
+ * Code highlight
+ */
+code {
+	color: #ccc;
+}
+
+pre {
+	-moz-box-sizing: border-box;
+	background: none repeat scroll 0 0 #515151;
+	border: 2px solid rgba(0, 0, 0, 0);
+	border-radius: 5px 5px 5px 5px;
+	font-family: monospace;
+	font-size: 14px;
+	font-style: normal;
+	font-weight: 700;
+	line-height: 18px;
+	padding: 10px;
+	max-width: 65em;
+	margin: 22px auto;
+	text-rendering: optimizelegibility;
+	vertical-align: middle;
+	word-wrap: break-word;
+}
+
+/**
+ * Utils
+ */
+.float-right {
+	float: right;
+}
+
+.float-left {
+	float: left;
+}
+
+.clear-both {
+	clear: both;
+}

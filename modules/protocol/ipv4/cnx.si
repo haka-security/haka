@@ -1,0 +1,165 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%{
+#include <haka/cnx.h>
+
+#define MAP_KEY(key) do {\
+	key.srcip = srcip->addr;\
+	key.dstip = dstip->addr;\
+	key.srcport = srcport;\
+	key.dstport = dstport;\
+} while (0)
+%}
+
+%include "haka/lua/cnx.si"
+
+struct cnx_table {
+	%extend {
+		cnx_table() {
+			return cnx_table_new(NULL);
+		}
+
+		~cnx_table() {
+			cnx_table_release($self);
+		}
+
+		struct cnx *create(struct ipv4_addr *srcip, struct ipv4_addr *dstip, int srcport, int dstport) {
+			struct cnx_key key;
+			MAP_KEY(key);
+			return cnx_new($self, &key);
+		}
+
+		struct cnx *get(struct ipv4_addr *srcip, struct ipv4_addr *dstip, int srcport, int dstport,
+			const char **OUTPUT1, bool *OUTPUT2) {
+			struct cnx *cnx;
+			struct cnx_key key;
+			int direction;
+
+			MAP_KEY(key);
+			cnx = cnx_get($self, &key, &direction, OUTPUT2);
+			*OUTPUT1 = direction == CNX_DIR_IN ? "up" : "down";
+
+			return cnx;
+		}
+
+		struct cnx *get_byid(int id) {
+			return cnx_get_byid($self, id);
+		}
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(cnx_table);
+
+%native(_cnx_table_dump_all) int cnx_table_dump_all(lua_State *L);
+
+%{
+
+	static bool pushpcnx(void *_L, struct cnx *ptr, int index)
+	{
+		lua_State *L = (lua_State *)_L;
+
+		lua_pushnumber(L, index+1);
+
+		if (!lua_object_push(L, ptr, &ptr->lua_object, SWIGTYPE_p_cnx, 0)) {
+			lua_pop(L, 1);
+			return false;
+		}
+
+		lua_settable(L, -3);
+		return true;
+	}
+
+	int cnx_table_dump_all(lua_State *L)
+	{
+		struct cnx_table *table = NULL;
+		bool show_dropped = false;
+		int SWIG_arg = 0;
+		int n = lua_gettop(L);
+
+		SWIG_check_num_args("cnx_table::all", 1, 2)
+
+		if (!SWIG_IsOK(SWIG_ConvertPtr(L, 1, (void**)&table, SWIGTYPE_p_cnx_table, 0)) || !table){
+			SWIG_fail_ptr("cnx_table::all", 1, SWIGTYPE_p_cnx_table);
+		}
+
+		if (n == 2) {
+			show_dropped = lua_toboolean(L, 2);
+		}
+
+		lua_newtable(L);
+		SWIG_arg++;
+		cnx_foreach(table, show_dropped, pushpcnx, L);
+		return SWIG_arg;
+
+	fail:
+		return lua_error(L);
+	}
+%}
+
+%luacode{
+	local this = unpack({...})
+
+	swig.getclassmetatable('cnx_table')['.fn'].all = this._cnx_table_dump_all
+	this._cnx_table_dump_all = nil
+}
+
+struct cnx {
+	%extend {
+		struct lua_ref data;
+
+		~cnx()
+		{
+			if ($self)
+				cnx_drop($self);
+		}
+
+		%rename(close) _close;
+		void _close()
+		{
+			if ($self)
+				cnx_close($self);
+		}
+
+		%rename(drop) _drop;
+		void _drop()
+		{
+			if ($self)
+				cnx_drop($self);
+		}
+
+		%rename(update_stat) _update_stat;
+		void _update_stat(const char *direction, int size)
+		{
+			if ($self) {
+				const int dir = strcmp(direction, "up") == 0 ? CNX_DIR_IN : CNX_DIR_OUT;
+				cnx_update_stat($self, dir, size);
+			}
+		}
+
+		%immutable;
+		int id { return $self->id; }
+		int in_bytes { return $self->stats[CNX_DIR_IN].bytes; }
+		int out_bytes { return $self->stats[CNX_DIR_OUT].bytes; }
+		int in_pkts { return $self->stats[CNX_DIR_IN].packets; }
+		int out_pkts { return $self->stats[CNX_DIR_OUT].packets; }
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(cnx);
+
+%{
+
+struct lua_ref cnx_data_get(struct cnx *cnx)
+{
+	return cnx->lua_priv;
+}
+
+void cnx_data_set(struct cnx *cnx, struct lua_ref ref)
+{
+	lua_ref_clear(&cnx->lua_priv);
+	cnx->lua_priv = ref;
+}
+
+%}

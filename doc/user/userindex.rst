@@ -13,5 +13,8 @@ Welcome to Haka's User Guide!
     install.rst
     gettingstarted.rst
     tool_suite.rst
+    language.rst
     tutorial.rst
+    workshop.rst
+    console.rst
     debug.rst

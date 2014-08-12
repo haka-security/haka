@@ -4,6 +4,7 @@
 
 #include <haka/error.h>
 #include <haka/thread.h>
+#include <haka/debug.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -80,6 +81,8 @@ void error(const wchar_t *error, ...)
 			va_end(ap);
 
 			context->is_error = true;
+
+			BREAKPOINT;
 		}
 	}
 }
@@ -88,10 +91,15 @@ const char *errno_error(int err)
 {
 	if (error_is_valid) {
 		struct local_error *context = error_context();
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
 		if (strerror_r(err, context->errno_message, HAKA_ERROR_SIZE) == 0) {
 			context->error_message[HAKA_ERROR_SIZE-1] = 0;
 			return context->errno_message;
 		}
+#else
+		const char *res = strerror_r(err, context->errno_message, HAKA_ERROR_SIZE);
+		if (res) return res;
+#endif
 	}
 
 	return "Unknown error";

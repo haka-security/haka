@@ -7,12 +7,13 @@
 
 require("protocol/ipv4")
 require("protocol/tcp")
+local tcp_connection = require("protocol/tcp_connection")
 
 haka.rule {
-	hooks = { "tcp-connexion-new" },
-	eval = function (self, pkt)
-		if pkt.tcp.dstport ~= 80 then
-			pkt.tcp:drop()
+	hook = tcp_connection.events.new_connection,
+	eval = function (flow, pkt)
+		if pkt.dstport ~= 80 then
+			pkt:drop()
 		end
 	end
 }

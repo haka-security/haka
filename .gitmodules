@@ -1,12 +1,15 @@
-[submodule "external/luajit"]
-	path = external/luajit
-	url = git://repo.or.cz/luajit-2.0.git
-[submodule "external/sphinx-lua"]
-	path = external/sphinx-lua
-	url = git://github.com/redjack/sphinx-lua
-[submodule "external/iniparser"]
-	path = external/iniparser
-	url = git://github.com/ndevilla/iniparser.git
-[submodule "external/lua"]
-	path = external/lua
-	url = git://github.com/haka-security/lua.git
+[submodule "external/iniparser/src"]
+	path = external/iniparser/src
+	url = https://github.com/haka-security/iniparser.git
+[submodule "external/lua/src"]
+	path = external/lua/src
+	url = https://github.com/haka-security/lua.git
+[submodule "external/luajit/src"]
+	path = external/luajit/src
+	url = http://luajit.org/git/luajit-2.0.git
+[submodule "external/luaunit/src"]
+	path = external/luaunit/src
+	url = https://github.com/haka-security/luaunit.git
+[submodule "external/breathe"]
+	path = external/breathe
+	url = https://github.com/haka-security/breathe.git

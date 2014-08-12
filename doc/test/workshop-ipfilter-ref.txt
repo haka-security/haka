@@ -1,0 +1,6 @@
+alert: id = = <>
+	severity = low
+	description = Filtering IP 192.168.10.30
+alert: id = = <>
+	severity = low
+	description = Filtering IP 192.168.10.30

@@ -5,22 +5,21 @@
 %module tcp
 
 %{
-#include <haka/stream.h>
 #include <haka/tcp.h>
-#include <haka/tcp-connection.h>
 #include <haka/tcp-stream.h>
 #include <haka/log.h>
 
 struct tcp_payload;
 struct tcp_flags;
+struct tcp_stream;
 
 %}
 
 %include "haka/lua/ipv4-addr.si"
 %include "haka/lua/swig.si"
-%include "haka/lua/stream.si"
 %include "haka/lua/ref.si"
 %include "haka/lua/ipv4.si"
+%include "haka/lua/vbuffer.si"
 %include "typemaps.i"
 
 %nodefaultctor;
@@ -44,88 +43,93 @@ struct tcp_flags {
 
 STRUCT_UNKNOWN_KEY_ERROR(tcp_flags);
 
-LUA_OBJECT_CAST(struct tcp_payload, struct tcp);
-
-struct tcp_payload {
-	%extend {
-		size_t __len(void *dummy)
-		{
-			return tcp_get_payload_length((struct tcp *)$self);
-		}
-
-		int __getitem(int index)
-		{
-			const size_t size = tcp_get_payload_length((struct tcp *)$self);
-
-			--index;
-			if (index < 0 || index >= size) {
-				error(L"out-of-bound index");
-				return 0;
-			}
-			return tcp_get_payload((struct tcp *)$self)[index];
-		}
-
-		void __setitem(int index, int value)
-		{
-			const size_t size = tcp_get_payload_length((struct tcp *)$self);
-
-			--index;
-			if (index < 0 || index >= size) {
-				error(L"out-of-bound index");
-				return;
-			}
-			tcp_get_payload_modifiable((struct tcp *)$self)[index] = value;
-		}
-
-		void resize(int size)
-		{
-			tcp_resize_payload((struct tcp *)$self, size);
-		}
-	}
-};
-
-STRUCT_UNKNOWN_KEY_ERROR(tcp_payload);
-
 LUA_OBJECT(struct tcp);
-LUA_OBJECT(struct tcp_connection);
-LUA_OBJECT(struct stream);
+LUA_OBJECT(struct tcp_stream);
 
-%newobject stream::pop;
+%newobject tcp_stream::_push;
+%newobject tcp_stream::_pop;
 
-struct stream
+struct tcp_stream
 {
 	%extend {
-		%immutable;
-		unsigned int lastseq;
+		tcp_stream()
+		{
+			struct tcp_stream *stream = malloc(sizeof(struct tcp_stream));
+			if (!stream) {
+				error(L"memory error");
+				return NULL;
+			}
 
-		void init(unsigned int seq)
+			tcp_stream_create(stream);
+
+			return stream;
+		}
+
+		~tcp_stream()
+		{
+			if ($self) {
+				tcp_stream_clear($self);
+				free($self);
+			}
+		}
+
+		%immutable;
+		unsigned int lastseq { return tcp_stream_lastseq($self); };
+		struct vbuffer_stream *stream { return &$self->stream; };
+
+		%rename(init) _init;
+		void _init(unsigned int seq)
 		{
 			tcp_stream_init($self, seq);
 		}
 
-		void push(struct tcp *DISOWN_SUCCESS_ONLY)
+		%rename(push) _push;
+		struct vbuffer_iterator *_push(struct tcp *DISOWN_SUCCESS_ONLY)
 		{
-			tcp_stream_push($self, DISOWN_SUCCESS_ONLY);
+			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
+			if (!iter) {
+				free(iter);
+				error(L"memory error");
+				return NULL;
+			}
+
+			if (!tcp_stream_push($self, DISOWN_SUCCESS_ONLY, iter)) {
+				free(iter);
+				return NULL;
+			}
+
+			vbuffer_iterator_register(iter);
+			iter->meter = 0;
+
+			return iter;
 		}
 
-		struct tcp *pop()
+		%rename(pop) _pop;
+		struct tcp *_pop()
 		{
 			return tcp_stream_pop($self);
 		}
 
-		void seq(struct tcp *tcp)
+		%rename(seq) _seq;
+		void _seq(struct tcp *tcp)
 		{
 			tcp_stream_seq($self, tcp);
 		}
 
-		void ack(struct tcp *tcp)
+		%rename(ack) _ack;
+		void _ack(struct tcp *tcp)
 		{
 			tcp_stream_ack($self, tcp);
 		}
+
+		%rename(clear) _clear;
+		void _clear()
+		{
+			tcp_stream_clear($self);
+			free($self);
+		}
 	}
 };
-
-BASIC_STREAM(stream)
 
 %newobject tcp::forge;
 
@@ -147,103 +151,42 @@ struct tcp {
 		unsigned int urgent_pointer;
 
 		%immutable;
-		struct tcp_flags *flags;
-		struct tcp_payload *payload;
-		struct ipv4 *ip;
-		const char *dissector;
-		const char *next_dissector;
+		struct tcp_flags *flags { TCP_CHECK($self, NULL); return (struct tcp_flags *)$self; }
+		struct vbuffer *payload { TCP_CHECK($self, NULL); return &$self->payload; }
+		struct ipv4 *ip { TCP_CHECK($self, NULL); return $self->packet; }
+		const char *name { return "tcp"; }
 
 		bool verify_checksum();
 		void compute_checksum();
-
-		struct tcp_connection *newconnection()
-		{
-			return tcp_connection_new($self);
-		}
-
-		struct tcp_connection *getconnection(bool *OUTPUT1, bool *OUTPUT2)
-		{
-			return tcp_connection_get($self, OUTPUT1, OUTPUT2);
-		}
-
-		struct ipv4 *forge();
 
 		void drop()
 		{
 			tcp_action_drop($self);
 		}
 
-		void send()
+		bool can_continue()
 		{
-			tcp_action_send($self);
+			assert($self);
+			return $self->packet != NULL;
 		}
-
-		bool valid();
 	}
 };
 
 STRUCT_UNKNOWN_KEY_ERROR(tcp);
 
-%newobject tcp_connection::srcip;
-%newobject tcp_connection::dstip;
-
-struct tcp_connection {
-	%extend {
-		struct lua_ref data;
-
-		%immutable;
-		struct ipv4_addr *srcip;
-		struct ipv4_addr *dstip;
-		unsigned int srcport;
-		unsigned int dstport;
-
-		~tcp_connection()
-		{
-			if ($self)
-				tcp_connection_drop($self);
-		}
-
-		void close();
-		void drop();
-
-		struct stream *stream(bool direction_in)
-		{
-			return tcp_connection_get_stream($self, direction_in);
-		}
-	}
-};
-
-STRUCT_UNKNOWN_KEY_ERROR(tcp_connection);
-
-%rename(dissect) tcp_dissect;
+%rename(_dissect) tcp_dissect;
 %newobject tcp_dissect;
 struct tcp *tcp_dissect(struct ipv4 *DISOWN_SUCCESS_ONLY);
 
-%rename(create) tcp_create;
+%rename(_create) tcp_create;
 %newobject tcp_create;
 struct tcp *tcp_create(struct ipv4 *DISOWN_SUCCESS_ONLY);
 
+%rename(_forge) tcp_forge;
+%newobject tcp_forge;
+struct ipv4 *tcp_forge(struct tcp *pkt);
+
 %{
-
-struct ipv4_addr *tcp_connection_srcip_get(struct tcp_connection *tcp_conn) { return ipv4_addr_new(tcp_conn->srcip); }
-struct ipv4_addr *tcp_connection_dstip_get(struct tcp_connection *tcp_conn) { return ipv4_addr_new(tcp_conn->dstip); }
-
-#define TCP_CONN_INT_GET(field) \
-	unsigned int tcp_connection_##field##_get(struct tcp_connection *tcp_conn) { return tcp_connection_get_##field(tcp_conn); }
-
-TCP_CONN_INT_GET(srcport);
-TCP_CONN_INT_GET(dstport);
-
-struct lua_ref tcp_connection_data_get(struct tcp_connection *tcp_conn)
-{
-	return tcp_conn->lua_table;
-}
-
-void tcp_connection_data_set(struct tcp_connection *tcp_conn, struct lua_ref ref)
-{
-	lua_ref_clear(&tcp_conn->lua_table);
-	tcp_conn->lua_table = ref;
-}
 
 #define TCP_INT_GETSET(field) \
 	unsigned int tcp_##field##_get(struct tcp *tcp) { return tcp_get_##field(tcp); } \
@@ -258,16 +201,6 @@ TCP_INT_GETSET(res);
 TCP_INT_GETSET(window_size);
 TCP_INT_GETSET(checksum);
 TCP_INT_GETSET(urgent_pointer);
-
-struct tcp_payload *tcp_payload_get(struct tcp *tcp) { return (struct tcp_payload *)tcp; }
-
-struct tcp_flags *tcp_flags_get(struct tcp *tcp) { return (struct tcp_flags *)tcp; }
-
-const char *tcp_dissector_get(struct tcp *tcp) { return "tcp"; }
-
-const char *tcp_next_dissector_get(struct tcp *tcp) { return "tcp-connection"; }
-
-struct ipv4 *tcp_ip_get(struct tcp *tcp) { return tcp->packet; }
 
 #define TCP_FLAGS_GETSET(field) \
 	bool tcp_flags_##field##_get(struct tcp_flags *flags) { return tcp_get_flags_##field((struct tcp *)flags); } \
@@ -285,22 +218,69 @@ TCP_FLAGS_GETSET(cwr);
 unsigned int tcp_flags_all_get(struct tcp_flags *flags) { return tcp_get_flags((struct tcp *)flags); }
 void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set_flags((struct tcp *)flags, v); }
 
-unsigned int stream_lastseq_get(struct stream *s) { return tcp_stream_lastseq(s); }
-
 %}
 
 %luacode {
 	local this = unpack({...})
 
-	haka.dissector {
-		name = "tcp",
-		dissect = this.dissect
+	local tcp_dissector = haka.dissector.new{
+		type = haka.helper.PacketDissector,
+		name = 'tcp'
 	}
 
-	tcp = this
-	require("protocol/tcp-connection")
-	tcp = nil
+	function tcp_dissector:new(pkt)
+		return this._dissect(pkt)
+	end
+
+	function tcp_dissector.method:receive()
+		haka.context:signal(self, tcp_dissector.events['receive_packet'])
+
+		local next_dissector = tcp_dissector.next_dissector
+		if next_dissector then
+			return next_dissector:receive(self)
+		else
+			return self:send()
+		end
+	end
+
+	function tcp_dissector:create(pkt)
+		return this._create(pkt)
+	end
+
+	function tcp_dissector.method:send()
+		haka.context:signal(self, tcp_dissector.events['send_packet'])
+
+		local pkt = this._forge(self)
+		while pkt do
+			pkt:send()
+			pkt = this._forge(self)
+		end
+	end
+
+	function tcp_dissector.method:inject()
+		local pkt = this._forge(self)
+		while pkt do
+			pkt:inject()
+			pkt = this._forge(self)
+		end
+	end
+
+	swig.getclassmetatable('tcp')['.fn'].send = tcp_dissector.method.send
+	swig.getclassmetatable('tcp')['.fn'].receive = tcp_dissector.method.receive
+	swig.getclassmetatable('tcp')['.fn'].inject = tcp_dissector.method.inject
+	swig.getclassmetatable('tcp')['.fn'].continue = haka.helper.Dissector.method.continue
+	swig.getclassmetatable('tcp')['.fn'].error = swig.getclassmetatable('tcp')['.fn'].drop
 
 	local ipv4 = require("protocol/ipv4")
-	ipv4.register_proto(6, "tcp")
+	ipv4.register_protocol(6, tcp_dissector)
+
+	this.events = tcp_dissector.events
+
+	function this.create(ip)
+		return tcp_dissector:create(ip)
+	end
+
+	function this.select_next_dissector(dissector)
+		tcp_dissector.next_dissector = dissector
+	end
 }

@@ -1,0 +1,121 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include "haka/lua/swig.si"
+%include "haka/lua/packet.si"
+%include "haka/lua/object.si"
+
+%{
+#include <haka/packet.h>
+#include <haka/packet_module.h>
+#include <haka/error.h>
+
+bool lua_pushppacket(lua_State *L, struct packet *pkt)
+{
+	return lua_object_push(L, pkt, &pkt->lua_object, SWIGTYPE_p_packet, 1);
+}
+%}
+
+%nodefaultctor;
+%nodefaultdtor;
+
+%newobject packet::packet;
+
+struct packet {
+	%extend {
+		%immutable;
+		const struct time *timestamp { return packet_timestamp($self); }
+		struct vbuffer *payload { return packet_payload($self); }
+		int id { return packet_id($self); }
+
+		packet(int size = 0)
+		{
+			return packet_new(size);
+		}
+
+		~packet()
+		{
+			if ($self) {
+				packet_release($self);
+			}
+		}
+
+		%rename(send) _send;
+		void _send()
+		{
+			assert($self);
+
+			switch (packet_state($self)) {
+			case STATUS_FORGED:
+			case STATUS_NORMAL:
+				packet_accept($self);
+				break;
+
+			case STATUS_SENT:
+				error(L"operation not supported");
+				return;
+
+			default:
+				assert(0);
+				return;
+			}
+		}
+
+		%rename(inject) _inject;
+		void _inject()
+		{
+			assert($self);
+
+			switch (packet_state($self)) {
+			case STATUS_FORGED:
+				packet_send($self);
+				break;
+
+			case STATUS_NORMAL:
+			case STATUS_SENT:
+				error(L"operation not supported");
+				return;
+
+			default:
+				assert(0);
+				return;
+			}
+		}
+
+		%rename(state) _state;
+		const char *_state()
+		{
+			assert($self);
+
+			switch (packet_state($self)) {
+			case STATUS_FORGED: return "forged";
+			case STATUS_NORMAL: return "normal";
+			case STATUS_SENT:   return "sent";
+			default:            assert(0);
+			}
+		}
+
+		bool issent()
+		{
+			return packet_state($self) != STATUS_SENT;
+		}
+
+		void drop();
+	}
+};
+
+%rename(packet_mode) _packet_mode;
+const char *_packet_mode();
+
+%{
+	const char *_packet_mode()
+	{
+		enum packet_mode mode = packet_mode();
+		switch (mode) {
+		case MODE_NORMAL:      return "normal";
+		case MODE_PASSTHROUGH: return "passthrough";
+		default:               assert(0);
+		}
+	}
+%}

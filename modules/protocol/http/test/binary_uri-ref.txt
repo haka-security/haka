@@ -1,14 +1,9 @@
-debug tcp-connection: opening connection 127.0.0.1:42072 -> 127.0.0.1:80
-HTTP REQUEST
- _headers_order
-   1 = Host
- _length = 46
- headers
-   Host = 127.0.0.1
- method = GET
- uri = /Ž™ÿ
- version = HTTP/1.1
-info alert: id = <>
+debug cnx: opening connection 127.0.0.1:42072 -> 127.0.0.1:80
+debug http: selecting http dissector on flow
+debug grammar: parse error at byte 5 for field 4 in request_line: token /[[:blank:]]+/ doesn't match
+debug grammar: parse error context: \x04\x8e\x99\xff\x00\x11\xed\xde\xad\xbe\xef HTTP/1.1\x0d\x0aHost: 127.0.0.1\x0d\x0a\x0d\x0a...
+alert: id = = <>
 	severity = low
-	description = invalid http header '<html><head>'
-debug tcp-connection: dropping connection 127.0.0.1:42072 -> 127.0.0.1:80
+	description = invalid http request_line
+debug cnx: dropping connection 127.0.0.1:42072 -> 127.0.0.1:80
+debug cnx: closing connection 127.0.0.1:42072 -> 127.0.0.1:80

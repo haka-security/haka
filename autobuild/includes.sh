@@ -19,3 +19,8 @@ _runeach() {
 	done
 }
 
+_runeachoptions() {
+	for lua in $(echo "$HAKA_LUA" | sed s/,/\\n/g); do
+		$* $lua
+	done
+}

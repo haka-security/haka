@@ -1,9 +1,12 @@
-debug tcp-connection: opening connection 10.2.96.127:57861 -> 10.2.104.129:80
-info alert: id = <>
+debug cnx: opening connection 10.2.96.127:57861 -> 10.2.104.129:80
+debug http: selecting http dissector on flow
+debug grammar: parse error at byte 14 for field 4 in request_line: token /[[:blank:]]+/ doesn't match
+debug grammar: parse error context: \x0aHost: --\x0a\x0a...
+alert: id = = <>
 	severity = low
-	description = invalid http request 'GET /_HTTP/1.1'
-debug tcp-connection: dropping connection 10.2.96.127:57861 -> 10.2.104.129:80
-info alert: id = <>
+	description = invalid http request_line
+debug cnx: dropping connection 10.2.96.127:57861 -> 10.2.104.129:80
+alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -14,7 +17,7 @@ info alert: id = <>
 		address: 10.2.96.127
 		service: tcp/57859
 	}
-info alert: id = <>
+alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
 	sources = {
@@ -25,3 +28,4 @@ info alert: id = <>
 		address: 10.2.104.129
 		service: tcp/80
 	}
+debug cnx: closing connection 10.2.96.127:57861 -> 10.2.104.129:80

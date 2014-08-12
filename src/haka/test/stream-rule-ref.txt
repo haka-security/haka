@@ -1,0 +1,98 @@
+debug cnx: opening connection 192.168.20.99:55040 -> 192.168.20.1:80
+info test: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data received len=15 
+info test: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data received len=15 
+info test: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data received len=2 
+info test: connection=192.168.20.99:55040->192.168.20.1:80, dir down, data received len=1086 
+info test: connection=192.168.20.99:55040->192.168.20.1:80, dir down, data: HTTP/1.1 200 OK
+Date: Mon, 20 Jan 2014 16:33:20 GMT
+Server: Apache/2.2.8 (Ubuntu) DAV/2
+X-Powered-By: PHP/5.2.4-2ubuntu5.10
+Content-Length: 891
+Connection: close
+Content-Type: text/html
+
+<html><head><title>Metasploitable2 - Linux</title></head><body>
+<pre>
+
+                _                  _       _ _        _     _      ____  
+ _ __ ___   ___| |_ __ _ ___ _ __ | | ___ (_) |_ __ _| |__ | | ___|___ \ 
+| '_ ` _ \ / _ \ __/ _` / __| '_ \| |/ _ \| | __/ _` | '_ \| |/ _ \ __) |
+| | | | | |  __/ || (_| \__ \ |_) | | (_) | | || (_| | |_) | |  __// __/ 
+|_| |_| |_|\___|\__\__,_|___/ .__/|_|\___/|_|\__\__,_|_.__/|_|\___|_____|
+                            |_|                                          
+
+
+Warning: Never expose this VM to an untrusted network!
+
+Contact: msfdev[at]metasploit.com
+
+Login with msfadmin/msfadmin to get started
+
+
+</pre>
+<ul>
+<li><a href="/twiki/">TWiki</a></li>
+<li><a href="/phpMyAdmin/">phpMyAdmin</a></li>
+<li><a href="/mutillidae/">Mutillidae</a></li>
+<li><a href="/dvwa/">DVWA</a></li>
+<li><a href="/dav/">WebDAV</a></li>
+</ul>
+</body>
+</html>
+
+
+info test: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data: oo / HTTP/1.0
+Host: serveur
+
+
+debug cnx: opening connection 192.168.20.99:55041 -> 192.168.20.1:80
+info test: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=16 
+info test: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=14 
+info test: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=19 
+info test: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=2 
+info test: connection=192.168.20.99:55041->192.168.20.1:80, dir down, data received len=1086 
+info test: connection=192.168.20.99:55041->192.168.20.1:80, dir down, data: HTTP/1.1 200 OK
+Date: Mon, 20 Jan 2014 16:33:28 GMT
+Server: Apache/2.2.8 (Ubuntu) DAV/2
+X-Powered-By: PHP/5.2.4-2ubuntu5.10
+Content-Length: 891
+Connection: close
+Content-Type: text/html
+
+<html><head><title>Metasploitable2 - Linux</title></head><body>
+<pre>
+
+                _                  _       _ _        _     _      ____  
+ _ __ ___   ___| |_ __ _ ___ _ __ | | ___ (_) |_ __ _| |__ | | ___|___ \ 
+| '_ ` _ \ / _ \ __/ _` / __| '_ \| |/ _ \| | __/ _` | '_ \| |/ _ \ __) |
+| | | | | |  __/ || (_| \__ \ |_) | | (_) | | || (_| | |_) | |  __// __/ 
+|_| |_| |_|\___|\__\__,_|___/ .__/|_|\___/|_|\__\__,_|_.__/|_|\___|_____|
+                            |_|                                          
+
+
+Warning: Never expose this VM to an untrusted network!
+
+Contact: msfdev[at]metasploit.com
+
+Login with msfadmin/msfadmin to get started
+
+
+</pre>
+<ul>
+<li><a href="/twiki/">TWiki</a></li>
+<li><a href="/phpMyAdmin/">phpMyAdmin</a></li>
+<li><a href="/mutillidae/">Mutillidae</a></li>
+<li><a href="/dvwa/">DVWA</a></li>
+<li><a href="/dav/">WebDAV</a></li>
+</ul>
+</body>
+</html>
+
+
+info test: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data: GET / HTTP/1.1
+Host:serveur
+Connection: Close
+
+
+debug cnx: closing connection 192.168.20.99:55041 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.20.99:55040 -> 192.168.20.1:80

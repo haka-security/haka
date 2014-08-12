@@ -25,7 +25,6 @@ struct list {
 #define list_insert_after(a, i, h, t)  _list_insert_after(&(a)->list, (i) ? &(((typeof(a))(i))->list) : NULL, offsetof(typeof(*a), list), (void**)(h), (void**)(t))
 #define list_insert_before(a, i, h, t) _list_insert_before(&(a)->list, (i) ? &(((typeof(a))(i))->list) : NULL, offsetof(typeof(*a), list), (void**)(h), (void**)(t))
 
-
 void _list_init(struct list *l);
 void _list_remove(struct list *l, int offset, void **head, void **tail);
 void _list_insert_after(struct list *elem, struct list *l, int offset,
@@ -33,4 +32,4 @@ void _list_insert_after(struct list *elem, struct list *l, int offset,
 void _list_insert_before(struct list *elem, struct list *l, int offset,
 		void **head, void **tail);
 
-#endif /*/ _HAKA_CONTAINER_LIST_H */
+#endif /* _HAKA_CONTAINER_LIST_H */

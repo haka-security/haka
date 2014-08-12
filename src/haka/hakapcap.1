@@ -2,11 +2,11 @@
 .\" License, v. 2.0. If a copy of the MPL was not distributed with this"
 .\" file, You can obtain one at http://mozilla.org/MPL/2.0/."
 .\""
-.TH HAKAPCAP 1 "2013" "Haka" Commands
+.TH HAKAPCAP 1 "2014" "Haka" Commands
 .SH NAME
 hakapcap \- Use an haka config file on a pcap.
 .SH SYNOPSIS
-\fBhakapcap\fP [\fIoptions\fP] <\fIpcapfile\fP> <\fIconfig\fP>
+\fBhakapcap\fP [\fIoptions\fP] <\fIconfig\fP> <\fIpcapfile\fP>
 .SH DESCRIPTION
 .PP 
 hakapcap can read a haka config file and apply it on a pcap.
@@ -14,22 +14,32 @@ hakapcap can read a haka config file and apply it on a pcap.
 Following options are supported.
 .TP
 \fB\-h\fP, \fB\-\-help\fP
-Display help
+Display help.
 .TP
 \fB\-\-version\fP
-Display version
+Display version.
 .TP
 \fB\-d\fP, \fB\-\-debug\fP
-Display debug output
+Display debug output.
 .TP
-\fB\-\-luadebug\fP
-Attach lua debugger
+\fB\-\-dump-dissector-graph\fP
+Dump dissector internals (grammar and state machine) in file <name>.dot.
 .TP
-\fB\-\-pass\-through\fP
-Run in pass-through mode
+\fB\-l\fP, \fB\-\-loglevel [<module>=]<level>[,<module>=<level>[,...]]\fP
+Change haka logging level. <level> is a comma separated list of
+<module>=<level>. If no module is given level will be applied globally.
+.TP
+\fB\-a\fP, \fB\-\-alert-to <file>\fP
+Redirect alert to <file>.
+.TP
+\fB\-\-debug-lua\fP
+Attach lua debugger.
+.TP
+\fB\-\-no\-pass\-through\fP
+Do not run in pass-through mode.
 .TP
 \fB\-o <output>\fP
-Save result in a pcap file
+Save result in a pcap file.
 .SH AUTHORS
 Team HAKA - Arkoon
 .SH COPYRIGHT

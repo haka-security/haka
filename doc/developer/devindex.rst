@@ -10,5 +10,7 @@ Welcome to Haka's Developer Guide!
     :numbered: 3
 
     build.rst
-    rulearch.rst
-    c.rst
+    arch.rst
+    devref.rst
+    tutorials.rst
+    contribute.rst

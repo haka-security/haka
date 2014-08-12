@@ -20,4 +20,3 @@ _package() {
 _runeach _package
 
 exit 0
-

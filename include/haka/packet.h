@@ -2,52 +2,127 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * \file
+ * Packet manipulation utilities.
+ */
+
 #ifndef _HAKA_PACKET_H
 #define _HAKA_PACKET_H
 
 #include <stddef.h>
 #include <haka/types.h>
 #include <haka/time.h>
+#include <haka/time.h>
 #include <haka/thread.h>
+#include <haka/vbuffer.h>
 #include <haka/lua/object.h>
 
 
-/* Opaque packet structure. */
+/** Opaque packet structure. */
 struct packet {
-	struct lua_object lua_object;
-	atomic_t          ref;
+	struct lua_object        lua_object; /**< \private */
+	atomic_t                 ref;        /**< \private */
+	struct vbuffer           payload;    /**< \private */
 };
 
+/** \cond */
 struct packet_module_state;
+/** \endcond */
 
+/**
+ * Packet status.
+ */
 enum packet_status {
-	STATUS_NORMAL,
-	STATUS_FORGED,
-	STATUS_SENT,
+	STATUS_NORMAL, /**< Packet captured by Haka. */
+	STATUS_FORGED, /**< Packet forged. */
+	STATUS_SENT,   /**< Packet already sent on the network. */
 };
 
+/**
+ * Initialize packet internals for a given thread.
+ */
 bool               packet_init(struct packet_module_state *state);
+
+/**
+ * Increment packet ref count.
+ */
 void               packet_addref(struct packet *pkt);
+
+/**
+ * Decrement packet ref count and release it if needed.
+ */
 bool               packet_release(struct packet *pkt);
+
+/**
+ * Create a new packet.
+ */
 struct packet     *packet_new(size_t size);
-size_t             packet_length(struct packet *pkt);
-time_us            packet_timestamp(struct packet *pkt);
-const uint8       *packet_data(struct packet *pkt);
+
+/**
+ * Get the timestamp of the packet.
+ */
+const struct time *packet_timestamp(struct packet *pkt);
+
+/**
+ * Get the id of the packet.
+ */
+uint64             packet_id(struct packet *pkt);
+
+/**
+ * Get the packet payload.
+ */
+struct vbuffer    *packet_payload(struct packet *pkt);
+
+/**
+ * Get the packet dissector to use.
+ */
 const char        *packet_dissector(struct packet *pkt);
-uint8             *packet_data_modifiable(struct packet *pkt);
-int                packet_resize(struct packet *pkt, size_t size);
+
+/**
+ * Drop the packet.
+ */
 void               packet_drop(struct packet *pkt);
+
+/**
+ * Accept a packet and send it on the network.
+ */
 void               packet_accept(struct packet *pkt);
+
+/**
+ * Send a packet. The packet will re-enter Haka to be filtered
+ * like a new packet.
+ */
 bool               packet_send(struct packet *pkt);
+
+/**
+ * Wait for some packet to be availabe.
+ */
 int                packet_receive(struct packet **pkt);
+
+/**
+ * Get the packet mtu.
+ */
 size_t             packet_mtu(struct packet *pkt);
+
+/**
+ * Get the packet state.
+ */
 enum packet_status packet_state(struct packet *pkt);
 
+/**
+ * Packet capture mode.
+ */
 enum packet_mode {
-	MODE_NORMAL,
-	MODE_PASSTHROUGH,
+	MODE_NORMAL,      /**< Normal mode (read/write). */
+	MODE_PASSTHROUGH, /**< Listen mode (read-only). */
 };
 
+/**
+ * Current packet capture mode.
+ */
 enum packet_mode   packet_mode();
+
+extern struct time_realm network_time;
 
 #endif /* _HAKA_PACKET_H */

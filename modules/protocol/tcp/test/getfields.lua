@@ -24,11 +24,11 @@ function checks(proto)
 end
 
 require("protocol/ipv4")
-require("protocol/tcp")
+local tcp = require("protocol/tcp")
 
 haka.rule {
-	hooks = { "tcp-up" },
-	eval = function (self, pkt)
+	hook = tcp.events.receive_packet,
+	eval = function (pkt)
 		local good, bad = checks(pkt)
 		print(string.format( "----------TCP HEADER ---------"))
 		print(string.format( "TCP Source Port: %d", pkt.srcport))
@@ -52,8 +52,5 @@ haka.rule {
 		print(string.format( "    %s", bad))
 		print(string.format( "TCP Urgent Pointer: 0x%04x", pkt.urgent_pointer))
 		print()
-
-		-- We should drop it to avoid error detected by tcp-connection
-		pkt:drop()
 	end
 }

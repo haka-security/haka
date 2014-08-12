@@ -27,12 +27,10 @@ if (NOT GAWK_COMMAND)
 	message(FATAL_ERROR "Cannot find gawk command")
 endif(NOT GAWK_COMMAND)
 
-find_program(VALGRIND_COMMAND valgrind)
-
 macro(TEST_PCAP module name)
 	set(oneValueArgs OPTIONS CONFIG)
 	cmake_parse_arguments(TEST_PCAP "" "${oneValueArgs}" "" ${ARGN})
-	
+
 	if(TEST_PCAP_CONFIG)
 	else()
 		set(TEST_PCAP_CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/${name}.lua)
@@ -41,19 +39,16 @@ macro(TEST_PCAP module name)
 	add_test(NAME ${module}-${name}-pcap
 		COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
-		-DCTEST_MODULE_BINARY_DIR=${CTEST_MODULE_BINARY_DIR}
 		-DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
-		-DEXE=${TEST_RUNDIR}/${HAKA_INSTALL_PREFIX}/bin/hakapcap
+		-DEXE=${TEST_RUNDIR}/bin/hakapcap
 		-DEXE_OPTIONS=${TEST_PCAP_OPTIONS}
-		-DTEST_RUNDIR=${TEST_RUNDIR}
-		-DHAKA_INSTALL_PREFIX=${HAKA_INSTALL_PREFIX}
+		-DHAKA_PATH=${TEST_RUNDIR}
 		-DCONF=${TEST_PCAP_CONFIG}
 		-DSRC=${CMAKE_CURRENT_SOURCE_DIR}/${name}.pcap
 		-DREF=${CMAKE_CURRENT_SOURCE_DIR}/${name}-ref
-		-DREFVER=${LUA}
+		-DREFVER=${CMAKE_LUA}
 		-DDST=${name}-out
 		-DDIFF=${DIFF_COMMAND}
 		-DTSHARK=${TSHARK_COMMAND}
-		-DVALGRIND=${VALGRIND_COMMAND}
 		-P ${CTEST_MODULE_DIR}/TestPcapRun.cmake)
 endmacro(TEST_PCAP)

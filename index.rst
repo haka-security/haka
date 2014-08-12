@@ -5,29 +5,37 @@
 Welcome to Haka's Documentation!
 ================================
 
-Users
-^^^^^
+.. The style of the toctree is customized to avoid showing the top level entry.
+.. Check theme/haka/static/haka.css_t.
+
+:doc:`User Guide <doc/user/userindex>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
-    :titlesonly:
     :maxdepth: 2
 
     doc/user/userindex.rst
 
-References
-^^^^^^^^^^
+:doc:`User Reference Guide <doc/ref/refindex>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
-    :titlesonly:
     :maxdepth: 2
 
     doc/ref/refindex.rst
 
-Developers
-^^^^^^^^^^
+:doc:`Developer Guide <doc/developer/devindex>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
-    :titlesonly:
     :maxdepth: 2
 
     doc/developer/devindex.rst
+
+:doc:`doc/faq`
+^^^^^^^^^^^^^^
+
+.. toctree::
+    :hidden:
+
+    doc/faq

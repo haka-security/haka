@@ -1,0 +1,10 @@
+debug cnx: opening connection 127.0.0.1:53318 -> 127.0.0.1:2888
+word1= hello
+word2= word
+word1= two
+word2= word
+word1= of
+word2= course
+word1= it
+word2= works
+debug cnx: closing connection 127.0.0.1:53318 -> 127.0.0.1:2888

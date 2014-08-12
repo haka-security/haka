@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <wchar.h>
 
 #include <haka/log.h>
 #include <haka/alert.h>
@@ -22,9 +23,67 @@ struct tcp_pseudo_header {
 	uint16         len;
 };
 
+static void alert_invalid_packet(struct ipv4 *packet, wchar_t *desc)
+{
+	TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
+	TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
+	ALERT(invalid_packet, 1, 1)
+		description: desc,
+		severity: HAKA_ALERT_LOW,
+	ENDALERT
+
+	ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
+	ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
+
+	alert(&invalid_packet);
+}
+
+static bool tcp_flatten_header(struct vbuffer *payload, size_t hdrlen)
+{
+	struct vbuffer_sub header_part;
+	size_t len;
+	const uint8 *ptr;
+
+	vbuffer_sub_create(&header_part, payload, 0, hdrlen);
+
+	/* Skip empty chunk to avoid issue if the buffer begin with
+	 * a control node (which could be the case when receiving fragmented
+	 * ip packets).
+	 */
+	vbuffer_iterator_skip_empty(&header_part.begin);
+
+	ptr = vbuffer_sub_flatten(&header_part, &len);
+	assert(len >= hdrlen);
+	return ptr != NULL;
+}
+
+static bool tcp_extract_payload(struct tcp *tcp, size_t hdrlen, size_t size)
+{
+	struct vbuffer_sub header;
+
+	vbuffer_sub_create(&header, tcp->packet->payload, hdrlen, ALL);
+
+	if (!vbuffer_select(&header, &tcp->payload, &tcp->select)) {
+		assert(check_error());
+		free(tcp);
+		return false;
+	}
+
+	return true;
+}
+
 struct tcp *tcp_dissect(struct ipv4 *packet)
 {
 	struct tcp *tcp = NULL;
+	struct vbuffer_iterator hdrleniter;
+	struct {
+#ifdef HAKA_LITTLEENDIAN
+	uint8    res:4, hdr_len:4;
+#else
+	uint8    hdr_len:4, res:4;
+#endif
+	} _hdrlen;
+	size_t hdrlen;
 
 	/* Not a TCP packet */
 	if (ipv4_get_proto(packet) != TCP_PROTO) {
@@ -32,19 +91,10 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 		return NULL;
 	}
 
-	if (ipv4_get_payload_length(packet) < sizeof(struct tcp_header)) {
-		TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
-		TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
-		ALERT(invalid_packet, 1, 1)
-			description: L"invalid tcp packet, size is too small",
-			severity: HAKA_ALERT_LOW,
-		ENDALERT
+	assert(packet->payload);
 
-		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
-		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
-
-		alert(&invalid_packet);
-
+	if (!vbuffer_check_size(packet->payload, sizeof(struct tcp_header), NULL)) {
+		alert_invalid_packet(packet, L"corrupted tcp packet, size is too small");
 		ipv4_action_drop(packet);
 		return NULL;
 	}
@@ -55,36 +105,86 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 		return NULL;
 	}
 
-	lua_object_init(&tcp->lua_object);
 	tcp->packet = packet;
-	tcp->header = (struct tcp_header*)(ipv4_get_payload(packet));
 	tcp->modified = false;
 	tcp->invalid_checksum = false;
 
+	/* extract header len (at offset 12, see struct tcp_header) */
+	vbuffer_position(packet->payload, &hdrleniter, 12);
+	*(uint8 *)&_hdrlen = vbuffer_iterator_getbyte(&hdrleniter);
+	hdrlen = _hdrlen.hdr_len << TCP_HDR_LEN;
+
+	if (hdrlen < sizeof(struct tcp_header) || !vbuffer_check_size(packet->payload, hdrlen, NULL)) {
+		alert_invalid_packet(packet, L"corrupted tcp packet, header length is too small");
+		ipv4_action_drop(packet);
+		free(tcp);
+		return NULL;
+	}
+
+	if (!tcp_flatten_header(packet->payload, hdrlen)) {
+		assert(check_error());
+		free(tcp);
+		return NULL;
+	}
+
+	if (!tcp_extract_payload(tcp, hdrlen, ALL)) {
+		assert(check_error());
+		free(tcp);
+		return NULL;
+	}
+
+	tcp->lua_object = lua_object_init;
 	return tcp;
+}
+
+static bool tcp_add_header(struct vbuffer *payload)
+{
+	bool ret;
+	const size_t hdrlen = sizeof(struct tcp_header);
+	struct vbuffer header_buffer;
+	struct vbuffer_iterator begin;
+	if (!vbuffer_create_new(&header_buffer, hdrlen, true)) {
+		assert(check_error());
+		return false;
+	}
+
+	vbuffer_begin(payload, &begin);
+	ret = vbuffer_iterator_insert(&begin, &header_buffer, NULL);
+	vbuffer_release(&header_buffer);
+
+	return ret;
 }
 
 struct tcp *tcp_create(struct ipv4 *packet)
 {
+	size_t hdrlen;
+
 	struct tcp *tcp = malloc(sizeof(struct tcp));
 	if (!tcp) {
 		error(L"Failed to allocate memory");
 		return NULL;
 	}
 
-	lua_object_init(&tcp->lua_object);
-	tcp->packet = packet;
+	assert(packet->payload);
 
-	ipv4_resize_payload(packet, sizeof(struct tcp_header));
-	tcp->header = (struct tcp_header*)(ipv4_get_payload_modifiable(packet));
-	if (!tcp->header) {
+	hdrlen = sizeof(struct tcp_header);
+	if (!tcp_add_header(packet->payload)) {
 		assert(check_error());
 		free(tcp);
 		return NULL;
 	}
 
+	tcp->packet = packet;
 	tcp->modified = true;
 	tcp->invalid_checksum = true;
+
+	if (!tcp_extract_payload(tcp, hdrlen, ALL)) {
+		assert(check_error());
+		free(tcp);
+		return NULL;
+	}
+
+	tcp->lua_object = lua_object_init;
 
 	ipv4_set_proto(packet, TCP_PROTO);
 	tcp_set_checksum(tcp, 0);
@@ -93,18 +193,59 @@ struct tcp *tcp_create(struct ipv4 *packet)
 	return tcp;
 }
 
-struct ipv4 *tcp_forge(struct tcp *tcp)
+static void tcp_recompute_checksum(struct tcp *tcp)
+{
+	if (tcp->invalid_checksum || tcp->packet->invalid_checksum ||
+		vbuffer_ismodified(&tcp->payload)) {
+		tcp_compute_checksum(tcp);
+	}
+}
+
+struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 {
 	struct ipv4 *packet = tcp->packet;
 	if (packet) {
-		const size_t mtu = packet_mtu(packet->packet);
+		const size_t mtu = packet_mtu(packet->packet) - ipv4_get_hdr_len(packet) - tcp_get_hdr_len(tcp);
 
-		if (packet_mode() != MODE_PASSTHROUGH && packet_length(packet->packet) > mtu) {
-			size_t size, rem_size;
-			uint8 *payload;
+		if (split && packet_mode() != MODE_PASSTHROUGH && vbuffer_check_size(&tcp->payload, mtu+1, NULL)) {
+			struct vbuffer rem_payload;
 			struct packet *rem_pkt;
 			struct ipv4 *rem_ip;
-			struct tcp *rem_tcp;
+			struct ipv4_header ipheader;
+			struct tcp_header tcpheader;
+			struct tcp_header *header;
+
+			{
+				struct vbuffer_sub sub;
+				vbuffer_sub_create(&sub, &tcp->payload, mtu, ALL);
+
+				if (!vbuffer_extract(&sub, &rem_payload)) {
+					assert(check_error());
+					return NULL;
+				}
+			}
+
+			ipheader = *ipv4_header(tcp->packet, false);
+			tcpheader = *tcp_header(tcp, false);
+
+			tcp_set_flags_fin(tcp, false);
+			tcp_set_flags_psh(tcp, false);
+
+			tcp_recompute_checksum(tcp);
+
+			if (!vbuffer_iterator_isvalid(&tcp->select)) {
+				struct vbuffer_iterator insert;
+				vbuffer_position(tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
+				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
+			}
+			else {
+				vbuffer_restore(&tcp->select, &tcp->payload, false);
+			}
+
+			/* 'packet' is ready to be sent, prepare the next tcp packet
+			 * before returning */
+			vbuffer_swap(&tcp->payload, &rem_payload);
+			vbuffer_release(&rem_payload);
 
 			rem_pkt = packet_new(0);
 			if (!rem_pkt) {
@@ -119,58 +260,39 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 				return NULL;
 			}
 
-			ipv4_set_tos(rem_ip, ipv4_get_tos(packet));
-			ipv4_set_ttl(rem_ip, ipv4_get_ttl(packet));
-			ipv4_set_flags(rem_ip, ipv4_get_flags(packet));
-			ipv4_set_src(rem_ip, ipv4_get_src(packet));
-			ipv4_set_dst(rem_ip, ipv4_get_dst(packet));
-
-			rem_tcp = tcp_create(rem_ip);
-			if (!rem_tcp) {
+			if (!tcp_add_header(rem_ip->payload)) {
 				assert(check_error());
 				ipv4_release(rem_ip);
 				return NULL;
 			}
 
-			size = mtu - ipv4_get_hdr_len(packet) - tcp_get_hdr_len(tcp);
-			rem_size = tcp_get_payload_length(tcp) - size;
-
-			tcp_set_srcport(rem_tcp, tcp_get_srcport(tcp));
-			tcp_set_dstport(rem_tcp, tcp_get_dstport(tcp));
-			tcp_set_window_size(rem_tcp, tcp_get_window_size(tcp));
-			tcp_set_urgent_pointer(rem_tcp, tcp_get_urgent_pointer(tcp));
-			tcp_set_flags(rem_tcp, tcp_get_flags(tcp));
-			tcp_set_seq(rem_tcp, tcp_get_seq(tcp) + size);
-			tcp_set_ack_seq(rem_tcp, tcp_get_ack_seq(tcp));
-
-			tcp_set_flags_psh(tcp, false);
-
-			payload = tcp_resize_payload(rem_tcp, rem_size);
-			if (!payload) {
-				assert(check_error());
-				tcp_release(rem_tcp);
-				return NULL;
-			}
-
-			memcpy(payload, tcp_get_payload(tcp) + size, rem_size);
-
-			tcp_resize_payload(tcp, size);
-			tcp_compute_checksum(tcp);
+			*ipv4_header(rem_ip, true) = ipheader;
+			ipv4_set_id(rem_ip, 0);
 
 			tcp->packet = rem_ip;
-			tcp->header = rem_tcp->header;
-			rem_tcp->packet = NULL;
-			rem_tcp->header = NULL;
-			tcp_release(rem_tcp);
+
+			header = tcp_header(tcp, true);
+			assert(header);
+			*header = tcpheader;
+
+			tcp_set_seq(tcp, SWAP_FROM_TCP(uint32, tcpheader.seq) + mtu);
+			tcp_set_hdr_len(tcp, sizeof(struct tcp_header));
 
 			return packet;
 		}
 		else {
-			if (tcp->invalid_checksum || packet->invalid_checksum)
-				tcp_compute_checksum(tcp);
+			tcp_recompute_checksum(tcp);
+
+			if (!vbuffer_iterator_isvalid(&tcp->select)) {
+				struct vbuffer_iterator insert;
+				vbuffer_position(tcp->packet->payload, &insert, tcp_get_hdr_len(tcp));
+				vbuffer_iterator_insert(&insert, &tcp->payload, NULL);
+			}
+			else {
+				vbuffer_restore(&tcp->select, &tcp->payload, false);
+			}
 
 			tcp->packet = NULL;
-			tcp->header = NULL;
 			return packet;
 		}
 	}
@@ -179,11 +301,39 @@ struct ipv4 *tcp_forge(struct tcp *tcp)
 	}
 }
 
+struct ipv4 *tcp_forge(struct tcp *tcp)
+{
+	return _tcp_forge(tcp, true);
+}
+
+struct tcp_header *tcp_header(struct tcp *tcp, bool write)
+{
+	struct vbuffer_iterator begin;
+	struct tcp_header *header;
+	size_t len;
+
+	vbuffer_begin(tcp->packet->payload, &begin);
+
+	header = (struct tcp_header *)vbuffer_iterator_mmap(&begin, ALL, &len, write);
+	if (!header) {
+		assert(write); /* should always work in read mode */
+		assert(check_error());
+		return NULL;
+	}
+
+	if (write) {
+		tcp->invalid_checksum = true;
+	}
+
+	assert(len >= sizeof(struct tcp_header));
+	return header;
+}
+
 static void tcp_flush(struct tcp *tcp)
 {
-	struct ipv4 *packet;
-	while ((packet = tcp_forge(tcp))) {
-		ipv4_release(packet);
+	if (tcp->packet) {
+		ipv4_release(tcp->packet);
+		tcp->packet = NULL;
 	}
 }
 
@@ -191,58 +341,39 @@ void tcp_release(struct tcp *tcp)
 {
 	lua_object_release(tcp, &tcp->lua_object);
 	tcp_flush(tcp);
+	vbuffer_release(&tcp->payload);
 	free(tcp);
 }
 
-int tcp_pre_modify(struct tcp *tcp)
-{
-	if (!tcp->modified) {
-		struct tcp_header *header = (struct tcp_header *)(ipv4_get_payload_modifiable(tcp->packet));
-		if (!header) {
-			assert(check_error());
-			return -1;
-		}
-
-		tcp->header = header;
-	}
-
-	tcp->modified = true;
-	tcp->invalid_checksum = true;
-	return 0;
-}
-
-int16 tcp_checksum(const struct tcp *tcp)
+int16 tcp_checksum(struct tcp *tcp)
 {
 	TCP_CHECK(tcp, 0);
 
 	struct tcp_pseudo_header tcp_pseudo_h;
+	struct vbuffer_sub sub;
+	struct checksum_partial csum = checksum_partial_init;
 
 	/* fill tcp pseudo header */
-	tcp_pseudo_h.src = tcp->packet->header->src;
-	tcp_pseudo_h.dst = tcp->packet->header->dst;
+	struct ipv4_header *ipheader = ipv4_header(tcp->packet, false);
+	tcp_pseudo_h.src = ipheader->src;
+	tcp_pseudo_h.dst = ipheader->dst;
 	tcp_pseudo_h.reserved = 0;
-	tcp_pseudo_h.proto = tcp->packet->header->proto;
-	tcp_pseudo_h.len = SWAP_TO_BE(uint16, ipv4_get_payload_length(tcp->packet));
+	tcp_pseudo_h.proto = ipheader->proto;
+	tcp_pseudo_h.len = SWAP_TO_IPV4(uint16, ipv4_get_payload_length(tcp->packet) + tcp_get_payload_length(tcp));
 
 	/* compute checksum */
-	long sum;
-	uint16 sum1, sum2;
+	inet_checksum_partial(&csum, (uint8 *)&tcp_pseudo_h, sizeof(struct tcp_pseudo_header));
 
-	sum1 = ~inet_checksum((uint16 *)&tcp_pseudo_h, sizeof(struct tcp_pseudo_header));
-	sum2 = ~inet_checksum((uint16 *)tcp->header, ipv4_get_payload_length(tcp->packet));
+	vbuffer_sub_create(&sub, tcp->packet->payload, 0, ALL);
+	inet_checksum_vbuffer_partial(&csum, &sub);
 
-	sum = sum1 + sum2;
+	vbuffer_sub_create(&sub, &tcp->payload, 0, ALL);
+	inet_checksum_vbuffer_partial(&csum, &sub);
 
-	while (sum >> 16)
-		sum = (sum & 0xffff) + (sum >> 16);
-
-	sum = ~sum;
-
-	return sum;
+	return inet_checksum_reduce(&csum);
 }
 
-
-bool tcp_verify_checksum(const struct tcp *tcp)
+bool tcp_verify_checksum(struct tcp *tcp)
 {
 	TCP_CHECK(tcp, false);
 	return tcp_checksum(tcp) == 0;
@@ -251,71 +382,22 @@ bool tcp_verify_checksum(const struct tcp *tcp)
 void tcp_compute_checksum(struct tcp *tcp)
 {
 	TCP_CHECK(tcp);
-	if (!tcp_pre_modify(tcp)) {
-		tcp->header->checksum = 0;
-		tcp->header->checksum = tcp_checksum(tcp);
+	struct tcp_header *header = tcp_header(tcp, true);
+	if (header) {
+		header->checksum = 0;
+		header->checksum = tcp_checksum(tcp);
 		tcp->invalid_checksum = false;
 	}
 }
 
-const uint8 *tcp_get_payload(const struct tcp *tcp)
-{
-	TCP_CHECK(tcp, NULL);
-	return ((const uint8 *)tcp->header) + tcp_get_hdr_len(tcp);
-}
-
-uint8 *tcp_get_payload_modifiable(struct tcp *tcp)
-{
-	TCP_CHECK(tcp, NULL);
-	if (!tcp_pre_modify(tcp))
-		return (uint8 *)tcp_get_payload(tcp);
-	else
-		return NULL;
-}
-
-size_t tcp_get_payload_length(const struct tcp *tcp)
+size_t tcp_get_payload_length(struct tcp *tcp)
 {
 	TCP_CHECK(tcp, 0);
-	return ipv4_get_payload_length(tcp->packet) - tcp_get_hdr_len(tcp);
-}
-
-uint8 *tcp_resize_payload(struct tcp *tcp, size_t size)
-{
-	struct tcp_header *header;
-	TCP_CHECK(tcp, NULL);
-
-	header = (struct tcp_header *)(ipv4_resize_payload(tcp->packet, size + tcp_get_hdr_len(tcp)));
-	if (!header) {
-		assert(check_error());
-		return NULL;
-	}
-
-	tcp->header = header;
-	tcp->modified = true;
-	tcp->invalid_checksum = true;
-	return (uint8 *)tcp_get_payload(tcp);
+	return vbuffer_size(&tcp->payload);
 }
 
 void tcp_action_drop(struct tcp *tcp)
 {
 	TCP_CHECK(tcp);
-	ipv4_action_drop(tcp->packet);
-}
-
-void tcp_action_send(struct tcp *tcp)
-{
-	struct ipv4 *packet;
-
-	TCP_CHECK(tcp);
-
-	while ((packet = tcp_forge(tcp))) {
-		ipv4_action_send(packet);
-		ipv4_release(packet);
-	}
-}
-
-bool tcp_valid(struct tcp *tcp)
-{
-	TCP_CHECK(tcp, false);
-	return ipv4_valid(tcp->packet);
+	tcp_flush(tcp);
 }

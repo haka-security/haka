@@ -4,14 +4,15 @@
 
 require("protocol/ipv4")
 require("protocol/tcp")
+local tcp_connection = require("protocol/tcp_connection")
 
 haka.rule {
-	hooks = { "tcp-connection-up" },
-	eval = function (self, pkt)
-		haka.log.debug("filter", "received stream len=%d", pkt.stream:available())
+	hook = tcp_connection.events.receive_data,
+	eval = function (flow, data)
+		haka.log.debug("filter", "received stream len=%d", #data)
 
-		if pkt.stream:available() > 10 then
-			pkt:reset()
+		if #data > 10 then
+			flow:reset()
 		end
 	end
 }

@@ -1,5 +1,5 @@
 srcport:33901 - dstport:80
-debug tcp-connection: opening connection 192.168.10.1:33901 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.1:33901 -> 192.168.20.1:80
 srcport:80 - dstport:33901
 srcport:33901 - dstport:80
 srcport:33901 - dstport:80
@@ -9,9 +9,8 @@ srcport:33901 - dstport:80
 srcport:33901 - dstport:80
 srcport:80 - dstport:33901
 srcport:33901 - dstport:80
-debug tcp-connection: closing connection 192.168.10.1:33901 -> 192.168.20.1:80
 srcport:41811 - dstport:22
-debug tcp-connection: opening connection 192.168.10.1:41811 -> 192.168.20.1:22
+debug cnx: opening connection 192.168.10.1:41811 -> 192.168.20.1:22
 srcport:22 - dstport:41811
 srcport:41811 - dstport:22
 srcport:22 - dstport:41811
@@ -36,4 +35,5 @@ srcport:41811 - dstport:22
 srcport:41811 - dstport:22
 srcport:22 - dstport:41811
 srcport:41811 - dstport:22
-debug tcp-connection: closing connection 192.168.10.1:41811 -> 192.168.20.1:22
+debug cnx: closing connection 192.168.10.1:41811 -> 192.168.20.1:22
+debug cnx: closing connection 192.168.10.1:33901 -> 192.168.20.1:80

@@ -1,0 +1,67 @@
+Packet from 127.0.0.1 to 127.0.0.1 with 8 IP options
+
+    Version: 0
+    Class:   0
+    Number:  1
+
+    Version: 0
+    Class:   0
+    Number:  1
+
+    Version: 0
+    Class:   0
+    Number:  1
+
+    Version: 0
+    Class:   0
+    Number:  1
+
+    Version: 0
+    Class:   0
+    Number:  1
+
+    Version: 0
+    Class:   0
+    Number:  1
+
+    Version: 0
+    Class:   0
+    Number:  1
+
+    Version: 0
+    Class:   0
+    Number:  0
+
+
+Packet from 127.0.0.1 to 127.0.0.1 with 1 IP options
+
+    Version: 0
+    Class:   2
+    Number:  4
+    Length:  40
+
+
+Packet from 127.0.0.1 to 127.0.0.1 with 2 IP options
+
+    Version: 0
+    Class:   0
+    Number:  1
+
+    Version: 0
+    Class:   0
+    Number:  7
+    Length:  39
+
+
+Packet from 127.0.0.1 to 127.0.0.1 with 2 IP options
+
+    Version: 0
+    Class:   0
+    Number:  7
+    Length:  39
+
+    Version: 0
+    Class:   0
+    Number:  0
+
+

@@ -12,4 +12,3 @@ _tests() {
 _runeach _tests
 
 exit 0
-

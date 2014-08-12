@@ -3,50 +3,79 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import url("default.css");
-@import url("ansi.css");
-@import url("fonts.css");
+@import url("css/breathe.css");
+@import url("css/foundation.css");
+@import url("css/haka.css");
 
-* {
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
+/**
+ * Override haka.css
+ */
+h1 {
+	font-size: 32px;
 }
 
-pre {
-	background: #f0f0f0;
-	border: 1px solid #aaaaaa;
-	border-radius: 5px;
+h2 {
+	font-size: 25.6px;
 }
 
-body, html, button, input, select, textarea {
-	font-family: "Source Sans Pro",Helvetica,sans-serif;
-}
-
-div.body h1, div.body h2, div.body h3,
-div.body h4, div.body h5, div.body h6 {
-	clear: both;
-	font-family: Bitter,Georgia,serif;
-	line-height: 1.3;
-	background-color: transparent;
-	font-weight: bold;
-	color: #000000;
-	border: 0;
-}
-
-h1, h2, h3, h4, h5, h6 {
-	clear: both;
-	font-family: Bitter,Georgia,serif;
-	line-height: 1.3;
-}
-
-a {
-	color: #99CC66;
+header#header #version {
+	font: italic 300 24px "Source Sans Pro",Helvetica,sans-serif;
+	margin: 0;
+	text-align: right;
+	color: #fff;
 }
 
 a:visited {
+	color: #99cc66;
+}
+
+pre {
+	background: none repeat scroll 0 0 #f0f0f0;
+	border: 1px solid #aaaaaa;
+	font-weight: 100;
+}
+
+#content {
+	padding: 0;
+}
+
+/* Don't ask me why... */
+dl {
+	font-size: 100%;
+}
+
+dd {
+	margin-left: 30px;
+}
+
+ul {
+	list-style-type: disc;
+}
+
+dd table tbody tr th, dd table tbody tr td {
+	font-size: 100%;
+	line-height: 130%;
+}
+
+dd table tbody tr:nth-of-type(n) { /* Add nth-of-type to force override */
+	background: none;
+}
+
+ul, ol, dl {
+	line-height: 1.4;
+}
+
+/**
+ * Doc
+ */
+a.headerlink {
 	color: #99CC66;
 }
 
+a.headerlink:hover {
+	color: #ffffff;
+	background-color: #FFCC33;
+}
 a.headerlink {
 	color: #99CC66;
 }
@@ -66,88 +95,22 @@ a.headerlink:hover {
 	color: #34373F;
 }
 
-#header {
-	background: none repeat scroll 0 0 #99CC66;
-	position: relative;
-}
-
-#header a {
-	color: #FFFFFF;
-}
-
-#header .home-link {
-	color: #141412;
-	display: block;
-	margin: 0 auto;
-	max-width: 1080px;
-	min-height: 180px;
-	padding: 0 20px;
-	width: 100%;
-	position: relative;
-}
-
-#version {
-	color: #FFFFFF;
-	display: block;
-	position: absolute;
-	right: 0;
-	padding: 10px 20px;
-}
-
-#navwrapper {
-	background-color: #515151;
-}
-
-#site-navigation {
-	display: block;
-	margin: 0 auto;
-	max-width: 1080px;
-	min-height: 45px;
-	text-decoration: none;
-	width: 100%;
-}
-
-#footer {
-	color: #ffffff;
-	display: block;
-	margin: 30px auto;
-	max-width: 1080px;
-	text-align: center;
-}
-
-#content {
-	background-color: #ffffff;
-}
-
-div.body {
-	padding: 0;
-}
-
-#contentwrapper {
-	max-width: 1080px;
-	margin: auto;
-	padding: 20px 20px;
-}
-
-.description {
-	font: italic 300 24px "Source Sans Pro",Helvetica,sans-serif;
-	margin: 0;
-}
-
-.title {
-	font-size: 60px;
-	font-weight: 700;
-	line-height: 1;
-	margin: 0;
-	padding: 38px 0 10px;
-}
-
-.title, .description {
-	color: #FFFFFF;
+#navbar li a.disabled {
+	color: #888888;
 }
 
 th {
 	background-color: #FFFFFF;
+}
+
+.breadcrumbs {
+    background: none;
+    border-style: none;
+	margin-bottom: 0;
+}
+
+.breadcrumbs > * {
+    text-transform: none;
 }
 
 div.seealso, div.note {
@@ -160,107 +123,153 @@ dt:target, .highlighted {
 	background-color: #FFCC33;
 }
 
-ul.nav-menu,
-div.nav-menu > ul {
-	margin: 0;
-	padding: 0 40px 0 0;
-}
-
-.nav-menu li {
-	display: inline-block;
-	position: relative;
-}
-
-.nav-menu .current > a {
-	color: #FFCC33;
-	font-style: italic;
-}
-
-.nav-menu li a {
-	color: #ffffff;
-	display: block;
-	font-size: 15px;
-	line-height: 1;
-	padding: 15px 20px;
-	text-decoration: none;
-	font-weight: bold;
-}
-
-.nav-menu li:hover > a,
-.nav-menu li a:hover {
-	background-color: #363434;
-	font-weight: bold;
-	color: #fff;
-}
-
-.nav-menu .sub-menu,
-.nav-menu .children {
-	font-weight: bold;
-	background-color: #ffcc33;
-	border: 2px solid #515151;
-	border-top: 0;
-	display: none;
-	padding: 0;
-	position: absolute;
-	left: -2px;
-	z-index: 99999;
-}
-
-.nav-menu .sub-menu ul,
-.nav-menu .children ul {
-	border-left: 0;
-	left: 100%;
-	top: 0;
-}
-
-ul.nav-menu ul a,
-.nav-menu ul ul a {
-	color: #fff;
-	margin: 0;
-	width: 200px;
-}
-
-ul.nav-menu ul a:hover,
-.nav-menu ul ul a:hover {
-	background-color: #db572f;
-}
-
-ul.nav-menu li:hover > ul,
-.nav-menu ul li:hover > ul {
-	display: block;
-}
-
-.nav-menu .current_page_item > a,
-.nav-menu .current_page_ancestor > a,
-.nav-menu .current-menu-item > a,
-.nav-menu .current-menu-ancestor > a {
-	color: #ffcc33;
-	font-style: italic;
-}
-
-.menu-toggle {
-	display: none;
-}
-
-.right {
-	float: right;
-}
-
-input[type=text]
-{
-	border: 1px solid #aaaaaa;
-	border-radius: 5px;
-	padding: 3px;
-	margin-left: 20px;
-}
-
 .highlight-link {
-	float: right;
-	background: transparent url(cross.png) no-repeat center center;
-	width: 20px;
-	height: 20px;
+	background: transparent url(img/cross.png) no-repeat center center;
+	width: 30px;
+	height: 45px;
+	display: block;
 }
 
 .highlight-link:hover {
-	background: transparent url(cross-highlight.png) no-repeat center center !important;
+	background: transparent url(img/cross-highlight.png) no-repeat center center !important;
+}
+
+table.field-list td, table.field-list th {
+	padding-left: 0;
+}
+
+table.field-list {
+	border-collapse: separate;
+	border-spacing: 0 0.5em;
+}
+
+em.modproperty {
+	font-size: 75%;
+}
+
+.field-list .field-body p {
+	display: inline;
+}
+
+dl {
+	line-height: 1;
+}
+
+dl.class dt:target, dl.function dt:target, dl.operator dt:target, dl.method
+dt:target, dl.data dt:target, dl.attribute dt:target, .highlighted {
+	background-color: #FFCC33;
+	border-color: #515151;
+}
+
+dl.class dt, dl.function dt, dl.operator dt, dl.method dt, dl.data dt,
+dl.attribute dt {
+	background-color: #FAFAFA;
+	border-color: #99CC66;
+	border-style: solid;
+	border-width: 3px 1px 1px;
+	padding: 0.5em;
+	font-weight: normal;
+}
+
+dl dt tt {
+	font-family: monospace;
+}
+
+dl.class dt + dt, dl.function dt + dt, dl.operator dt + dt,
+dl.method dt + dt, dl.data dt + dt, dl.attribute dt + dt {
+	border-top: 0px;
+	margin-top: -1em;
+}
+
+/* Special toctree formating for the top-level page: we want to hide the
+ * first level of the toctree in this page
+ */
+
+#welcome-to-haka-s-documentation li.toctree-l1 {
+	list-style: none;
+}
+
+#welcome-to-haka-s-documentation li.toctree-l1 > a {
+	display: none;
+}
+
+#welcome-to-haka-s-documentation li.toctree-l1 > ul {
+	padding-left: 0;
+}
+
+/* For the SMTP tutorial, we still want the bullet to appear. */
+
+#smtp-protocol-dissection li.toctree-l1 {
+	list-style: disc;
+}
+
+#smtp-protocol-dissection .toctree-wrapper > ul {
+	padding-left: 40px;
+}
+
+/* Toctree already are numbered so we can remove ticks */
+li.toctree-l1 {
+	list-style: none;
+}
+
+li.toctree-l2 {
+	list-style: none;
+}
+
+.toctree-wrapper > ul {
+	padding-left: 20px;
+}
+
+/* Exercise */
+div.admonition-exercise {
+	background: none repeat scroll 0 0 #f2f8ec;
+    border: 1px solid #99CC66;
+    border-radius: 5px 5px 5px 5px;
+}
+
+div.admonition-exercise > p,
+div.admonition-exercise > div,
+div.admonition-exercise > p.admonition-title + p {
+	margin-left: 1em;
+	margin-right: 1em;
+	display: block;
+}
+
+div.admonition-exercise > p.admonition-title {
+	position: relative;
+	margin-left: 0px;
+	margin-bottom: 0px;
+}
+
+div.admonition-exercise > p.admonition-title:before {
+    content: "\0270E\0a0";
+	font-size: 150%;
+	position: relative;
+	top: 5px;
+}
+
+div.admonition-exercise > p.admonition-title:after {
+    content: "";
+}
+
+div#going-further > img {
+    float: left;
+}
+
+div#going-further > img + p {
+    line-height: 64px;
+    margin-left: 80px;
+}
+
+blockquote {
+	margin: 0;
+	padding: 0;
+	padding-left: 1em;
+	margin-top: 1em;
+}
+
+blockquote, blockquote p {
+	border: none;
+	line-height: 1;
+	color: #515151;
 }

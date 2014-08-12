@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -16,21 +19,19 @@
 #include <haka/alert_module.h>
 #include <haka/version.h>
 #include <haka/lua/state.h>
-#include <luadebug/debugger.h>
-#include <luadebug/interactive.h>
-#include <luadebug/user.h>
+#include <haka/luadebug/debugger.h>
+#include <haka/luadebug/interactive.h>
+#include <haka/luadebug/user.h>
+#include <haka/container/vector.h>
 
 #include "app.h"
 #include "thread.h"
 #include "ctl.h"
-#include "lua/state.h"
 #include "config.h"
 
 
 #define HAKA_CONFIG "/etc/haka/haka.conf"
 
-
-extern void packet_set_mode(enum packet_mode mode);
 
 static void usage(FILE *output, const char *program)
 {
@@ -42,18 +43,55 @@ static void help(const char *program)
 	usage(stdout, program);
 
 	fprintf(stdout, "Options:\n");
-	fprintf(stdout, "\t-h,--help:          Display this information\n");
-	fprintf(stdout, "\t--version:          Display version information\n");
-	fprintf(stdout, "\t-c,--config <conf>: Load a specific configuration file\n"
-					"\t                      (default: %s/etc/haka/haka.conf)\n", haka_path());
-	fprintf(stdout, "\t-d,--debug:         Display debug output\n");
-	fprintf(stdout, "\t--luadebug:         Attach lua debugger (and keep haka in foreground)\n");
-	fprintf(stdout, "\t--no-daemon:        Do no run in the background\n");
+	fprintf(stdout, "\t-h,--help:              Display this information\n");
+	fprintf(stdout, "\t--version:              Display version information\n");
+	fprintf(stdout, "\t-c,--config <conf>:     Load a specific configuration file\n"
+					"\t                          (default: " HAKA_CONFIG ")\n");
+	fprintf(stdout, "\t-r,--rule <rule>:       Override the rule configuration file\n");
+	fprintf(stdout, "\t-d,--debug:             Display debug output\n");
+	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
+	fprintf(stdout, "\t                        Override configuration parameter\n");
+	fprintf(stdout, "\t-l,--loglevel <level>:  Set the log level\n");
+	fprintf(stdout, "\t                          (debug, info, warning, error or fatal)\n");
+	fprintf(stdout, "\t--debug-lua:            Activate lua debugging (and keep haka in foreground)\n");
+	fprintf(stdout, "\t--dump-dissector-graph: Dump dissector internals (grammar and state machine) in file <name>.dot\n");
+	fprintf(stdout, "\t--no-daemon:            Do no run in the background\n");
 }
 
 static bool daemonize = true;
 static char *config = NULL;
 static bool lua_debugger = false;
+static bool dissector_graph = false;
+
+struct config_override {
+	char *key;
+	char *value;
+};
+
+void free_config_override(void *_elem) {
+	struct config_override *elem = (struct config_override *)_elem;
+	free(elem->key);
+	free(elem->value);
+}
+
+static struct vector config_overrides = VECTOR_INIT(struct config_override, free_config_override);
+
+static void add_override(const char *key, const char *value)
+{
+	struct config_override *override = vector_push(&config_overrides, struct config_override);
+	if (!override) {
+		message(HAKA_LOG_FATAL, L"core", L"memory error");
+		exit(2);
+	}
+
+	override->key = strdup(key);
+	override->value = strdup(value);
+	if (!override->key || !override->value) {
+		message(HAKA_LOG_FATAL, L"core", L"memory error");
+		clean_exit();
+		exit(2);
+	}
+}
 
 static int parse_cmdline(int *argc, char ***argv)
 {
@@ -61,19 +99,27 @@ static int parse_cmdline(int *argc, char ***argv)
 	int index = 0;
 
 	static struct option long_options[] = {
-		{ "version",      no_argument,       0, 'v' },
-		{ "help",         no_argument,       0, 'h' },
-		{ "config",       required_argument, 0, 'c' },
-		{ "debug",        no_argument,       0, 'd' },
-		{ "luadebug",     no_argument,       0, 'L' },
-		{ "no-daemon",    no_argument,       0, 'D' },
-		{ 0,              0,                 0, 0 }
+		{ "version",              no_argument,       0, 'v' },
+		{ "help",                 no_argument,       0, 'h' },
+		{ "config",               required_argument, 0, 'c' },
+		{ "debug",                no_argument,       0, 'd' },
+		{ "loglevel",             required_argument, 0, 'l' },
+		{ "debug-lua",            no_argument,       0, 'L' },
+		{ "dump-dissector-graph", no_argument,       0, 'G' },
+		{ "no-daemon",            no_argument,       0, 'D' },
+		{ "opt",                  required_argument, 0, 'o' },
+		{ "rule",                 required_argument, 0, 'r' },
+		{ 0,                      0,                 0, 0 }
 	};
 
-	while ((c = getopt_long(*argc, *argv, "dhc:", long_options, &index)) != -1) {
+	while ((c = getopt_long(*argc, *argv, "dl:hc:r:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
-			setlevel(HAKA_LOG_DEBUG, NULL);
+			add_override("log:level", "debug");
+			break;
+
+		case 'l':
+			add_override("log:level", optarg);
 			break;
 
 		case 'h':
@@ -91,11 +137,35 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'c':
 			config = strdup(optarg);
+			if (!config) {
+				message(HAKA_LOG_FATAL, L"core", L"memory error");
+				clean_exit();
+				exit(2);
+			}
+			break;
+
+		case 'r':
+			add_override("general:configuration", optarg);
 			break;
 
 		case 'L':
 			lua_debugger = true;
 			daemonize = false;
+			break;
+
+		case 'G':
+			dissector_graph = true;
+			break;
+
+		case 'o':
+			{
+				char *value = strchr(optarg, '=');
+				if (value) {
+					*value = '\0';
+					++value;
+				}
+				add_override(optarg, value);
+			}
 			break;
 
 		default:
@@ -110,12 +180,12 @@ static int parse_cmdline(int *argc, char ***argv)
 	}
 
 	if (!config) {
-		const char *haka_path_s = haka_path();
-
-		config = malloc(strlen(haka_path_s) + strlen(HAKA_CONFIG) + 1);
-		assert(config);
-		strcpy(config, haka_path_s);
-		strcat(config, HAKA_CONFIG);
+		config = strdup(HAKA_CONFIG);
+		if (!config) {
+			message(HAKA_LOG_FATAL, L"core", L"memory error");
+			clean_exit();
+			exit(2);
+		}
 	}
 
 	*argc -= optind;
@@ -131,12 +201,51 @@ int read_configuration(const char *file)
 		return 2;
 	}
 
+	/* Apply configuration overrides */
+	{
+		int i;
+		const int size = vector_count(&config_overrides);
+		for (i=0; i<size; ++i) {
+			struct config_override *override = vector_get(&config_overrides, struct config_override, i);
+			if (override->value) {
+				parameters_set_string(config, override->key, override->value);
+			}
+			else {
+				parameters_set_boolean(config, override->key, true);
+			}
+		}
+
+		vector_destroy(&config_overrides);
+	}
+
 	/* Thread count */
 	{
 		const int thread_count = parameters_get_integer(config, "general:thread", -1);
 		if (thread_count > 0) {
 			thread_set_packet_capture_cpu_count(thread_count);
 		}
+	}
+
+	/* Log level */
+	{
+		const char *_level = parameters_get_string(config, "log:level", "info");
+		if (_level) {
+			char *level = strdup(_level);
+			if (!level) {
+				message(HAKA_LOG_FATAL, L"core", L"memory error");
+				clean_exit();
+				exit(1);
+			}
+
+			if (!setup_loglevel(level)) {
+				message(HAKA_LOG_FATAL, L"core", clear_error());
+				clean_exit();
+				exit(1);
+			}
+
+			free(level);
+		}
+
 	}
 
 	/* Logging module */
@@ -209,6 +318,27 @@ int read_configuration(const char *file)
 
 			module_release(alerter_module);
 		}
+
+		if (!daemonize && parameters_get_boolean(config, "alert_on_stdout", true)) {
+			/* Also print alert to stdout */
+			/* Load file alerter */
+			struct module *module = NULL;
+			struct alerter *alerter = NULL;
+			struct parameters *args = parameters_create();
+
+			parameters_set_string(args, "format", "pretty");
+
+			module = module_load("alert/file", NULL);
+			if (!module) {
+				messagef(HAKA_LOG_FATAL, L"core", L"cannot load default alert module: %ls", clear_error());
+				clean_exit();
+				return 1;
+			}
+
+			alerter = alert_module_alerter(module, args);
+			add_alerter(alerter);
+			module_release(module);
+		}
 	}
 
 	/* Packet module */
@@ -238,11 +368,6 @@ int read_configuration(const char *file)
 	/* Other options */
 	parameters_open_section(config, "general");
 
-	if (parameters_get_boolean(config, "pass-through", false)) {
-		messagef(HAKA_LOG_INFO, L"core", L"setting packet mode to pass-through\n");
-		packet_set_mode(MODE_PASSTHROUGH);
-	}
-
 	{
 		const char *configuration = parameters_get_string(config, "configuration", NULL);
 		if (!configuration) {
@@ -254,6 +379,8 @@ int read_configuration(const char *file)
 			set_configuration_script(configuration);
 		}
 	}
+
+	parameters_free(config);
 
 	return -1;
 }
@@ -267,6 +394,8 @@ void clean_exit()
 	if (haka_started) {
 		unlink(HAKA_PID_FILE);
 	}
+
+	vector_destroy(&config_overrides);
 
 	basic_clean_exit();
 }
@@ -292,10 +421,21 @@ bool check_running_haka()
 	return true;
 }
 
+static void terminate()
+{
+	_exit(2);
+}
+
+static void terminate_ok()
+{
+	_exit(0);
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;
 	FILE *pid_file = NULL;
+	pid_t parent = getpid();
 
 	initialize();
 
@@ -338,27 +478,37 @@ int main(int argc, char *argv[])
 		luadebug_user_release(&user);
 	}
 
-	prepare(-1, lua_debugger);
-
-	pid_file = fopen(HAKA_PID_FILE, "w");
-	if (!pid_file) {
-		message(HAKA_LOG_FATAL, L"core", L"cannot create pid file");
-		clean_exit();
-		return 1;
-	}
-
 	if (daemonize) {
-		message(HAKA_LOG_INFO, L"core", L"switch to background");
+		pid_t child;
 
-		if (daemon(1, 0)) {
+		child = fork();
+		if (child == -1) {
 			message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
 			fclose(pid_file);
 			clean_exit();
 			return 1;
 		}
 
-		luadebug_debugger_user(NULL);
-		luadebug_interactive_user(NULL);
+		if (child != 0) {
+			int status;
+
+			signal(SIGTERM, terminate);
+			signal(SIGINT, terminate);
+			signal(SIGQUIT, terminate);
+			signal(SIGHUP, terminate_ok);
+
+			wait(&status);
+			_exit(2);
+		}
+	}
+
+	prepare(-1, lua_debugger, dissector_graph);
+
+	pid_file = fopen(HAKA_PID_FILE, "w");
+	if (!pid_file) {
+		message(HAKA_LOG_FATAL, L"core", L"cannot create pid file");
+		clean_exit();
+		return 1;
 	}
 
 	if (!start_ctl_server()) {
@@ -373,7 +523,34 @@ int main(int argc, char *argv[])
 		pid_file = NULL;
 	}
 
+	if (daemonize) {
+		luadebug_debugger_user(NULL);
+		luadebug_interactive_user(NULL);
+
+		message(HAKA_LOG_INFO, L"core", L"switch to background");
+
+		{
+			const int nullfd = open("/dev/null", O_RDWR);
+			if (nullfd == -1) {
+				message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
+				fclose(pid_file);
+				clean_exit();
+				return 1;
+			}
+
+			dup2(nullfd, STDOUT_FILENO);
+			dup2(nullfd, STDERR_FILENO);
+			dup2(nullfd, STDIN_FILENO);
+
+			enable_stdout_logging(false);
+		}
+
+		kill(parent, SIGHUP);
+	}
+
 	start();
+
+	message(HAKA_LOG_INFO, L"core", L"stopping haka");
 
 	clean_exit();
 	return 0;

@@ -4,16 +4,23 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #include <haka/packet.h>
+#include <haka/vbuffer.h>
 #include <haka/error.h>
 #include <haka/log.h>
+#include <haka/timer.h>
 #include <haka/packet_module.h>
+#include <haka/engine.h>
 
 
 static struct packet_module *packet_module = NULL;
 static enum packet_mode global_packet_mode = MODE_NORMAL;
 static local_storage_t capture_state;
+struct time_realm network_time;
+static bool network_time_inited = false;
 
 INIT static void __init()
 {
@@ -23,8 +30,13 @@ INIT static void __init()
 
 FINI static void __fini()
 {
-	UNUSED const bool ret = local_storage_destroy(&capture_state);
+	UNUSED bool ret = local_storage_destroy(&capture_state);
 	assert(ret);
+
+	if (network_time_inited) {
+		ret = time_realm_destroy(&network_time);
+		assert(ret);
+	}
 }
 
 int set_packet_module(struct module *module)
@@ -46,6 +58,17 @@ int set_packet_module(struct module *module)
 
 	if (prev_packet_module) {
 		module_release(&prev_packet_module->module);
+	}
+
+	if (network_time_inited) {
+		time_realm_destroy(&network_time);
+		network_time_inited = false;
+	}
+
+	if (packet_module) {
+		time_realm_initialize(&network_time,
+				packet_module->is_realtime() ? TIME_REALM_REALTIME : TIME_REALM_STATIC);
+		network_time_inited = true;
 	}
 
 	return 0;
@@ -74,20 +97,6 @@ static struct packet_module_state *get_capture_state()
 	return state;
 }
 
-size_t packet_length(struct packet *pkt)
-{
-	assert(packet_module);
-	assert(pkt);
-	return packet_module->get_length(pkt);
-}
-
-const uint8 *packet_data(struct packet *pkt)
-{
-	assert(packet_module);
-	assert(pkt);
-	return packet_module->get_data(pkt);
-}
-
 const char *packet_dissector(struct packet *pkt)
 {
 	assert(packet_module);
@@ -95,57 +104,10 @@ const char *packet_dissector(struct packet *pkt)
 	return packet_module->get_dissector(pkt);
 }
 
-static bool packet_is_modifiable(struct packet *pkt)
+struct vbuffer *packet_payload(struct packet *pkt)
 {
-	switch (global_packet_mode) {
-	case MODE_NORMAL:
-		break;
-
-	case MODE_PASSTHROUGH:
-		error(L"operation not supported (pass-through mode)");
-		return false;
-
-	default:
-		assert(0);
-		return false;
-	}
-
-	switch (packet_state(pkt)) {
-	case STATUS_NORMAL:
-	case STATUS_FORGED:
-		break;
-
-	case STATUS_SENT:
-		error(L"operation not supported (packet already sent)");
-		return false;
-
-	default:
-		assert(0);
-		return false;
-	}
-
-	return true;
-}
-
-uint8 *packet_data_modifiable(struct packet *pkt)
-{
-	assert(packet_module);
-	assert(pkt);
-
-	if (packet_is_modifiable(pkt))
-		return packet_module->make_modifiable(pkt);
-	else
-		return NULL;
-}
-
-int packet_resize(struct packet *pkt, size_t size)
-{
-	assert(packet_module);
-
-	if (packet_is_modifiable(pkt))
-		return packet_module->resize(pkt, size);
-	else
-		return -1;
+	assert(vbuffer_isvalid(&pkt->payload));
+	return &pkt->payload;
 }
 
 int packet_receive(struct packet **pkt)
@@ -154,12 +116,29 @@ int packet_receive(struct packet **pkt)
 	assert(packet_module);
 
 	ret = packet_module->receive(get_capture_state(), pkt);
+
 	if (!ret && *pkt) {
-		lua_object_init(&(*pkt)->lua_object);
+		(*pkt)->lua_object = lua_object_init;
 		atomic_set(&(*pkt)->ref, 1);
-		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%llu, len=%zu",
-				packet_module->get_id(*pkt), packet_length(*pkt));
+		assert(vbuffer_isvalid(&(*pkt)->payload));
+		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%lli",
+				packet_module->get_id(*pkt));
+
+		if (!packet_module->is_realtime()) {
+			time_realm_update(&network_time,
+					packet_module->get_timestamp(*pkt));
+		}
+
+		{
+			volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+			if (stats) {
+				++stats->recv_packets;
+				stats->recv_bytes += vbuffer_size(packet_payload(*pkt));
+			}
+		}
 	}
+
+	time_realm_check(&network_time);
 
 	return ret;
 }
@@ -168,17 +147,33 @@ void packet_drop(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	messagef(HAKA_LOG_DEBUG, L"packet", L"dropping packet id=%llu, len=%zu",
-			packet_module->get_id(pkt), packet_length(pkt));
+	messagef(HAKA_LOG_DEBUG, L"packet", L"dropping packet id=%lli",
+			packet_module->get_id(pkt));
+
 	packet_module->verdict(pkt, FILTER_DROP);
+
+	{
+		volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+		if (stats) ++stats->drop_packets;
+	}
 }
 
 void packet_accept(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%llu, len=%zu",
-			packet_module->get_id(pkt), packet_length(pkt));
+
+	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%lli",
+			packet_module->get_id(pkt));
+
+	{
+		volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+		if (stats) {
+			++stats->trans_packets;
+			stats->trans_bytes += vbuffer_size(packet_payload(pkt));
+		}
+	}
+
 	packet_module->verdict(pkt, FILTER_ACCEPT);
 }
 
@@ -214,8 +209,9 @@ struct packet *packet_new(size_t size)
 		return NULL;
 	}
 
-	lua_object_init(&pkt->lua_object);
+	pkt->lua_object = lua_object_init;
 	atomic_set(&pkt->ref, 1);
+	assert(vbuffer_isvalid(&pkt->payload));
 
 	return pkt;
 }
@@ -239,8 +235,16 @@ bool packet_send(struct packet *pkt)
 		return false;
 	}
 
-	messagef(HAKA_LOG_DEBUG, L"packet", L"sending packet id=%d, len=%zu",
-		packet_module->get_id(pkt), packet_length(pkt));
+	messagef(HAKA_LOG_DEBUG, L"packet", L"sending packet id=%lli",
+		packet_module->get_id(pkt));
+
+	{
+		volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+		if (stats) {
+			++stats->trans_packets;
+			stats->trans_bytes += vbuffer_size(packet_payload(pkt));
+		}
+	}
 
 	return packet_module->send_packet(pkt);
 }
@@ -259,11 +263,18 @@ size_t packet_mtu(struct packet *pkt)
 	return packet_module->get_mtu(pkt);
 }
 
-time_us packet_timestamp(struct packet *pkt)
+const struct time *packet_timestamp(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
 	return packet_module->get_timestamp(pkt);
+}
+
+uint64 packet_id(struct packet *pkt)
+{
+	assert(packet_module);
+	assert(pkt);
+	return packet_module->get_id(pkt);
 }
 
 void packet_set_mode(enum packet_mode mode)

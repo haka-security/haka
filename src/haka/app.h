@@ -7,14 +7,13 @@
 
 #include <haka/packet_module.h>
 #include <haka/log_module.h>
-#include "lua/state.h"
 #include "thread.h"
 
 
 void basic_clean_exit();
 void clean_exit();
 void initialize();
-void prepare(int threadcount, bool attach_debugger);
+void prepare(int threadcount, bool attach_debugger, bool dissector_graph);
 void start();
 struct thread_pool *get_thread_pool();
 
@@ -35,6 +34,8 @@ extern char directory[1024];
 const char *get_app_directory();
 
 void dump_stat(FILE *file);
+
+bool setup_loglevel(char *level);
 
 #endif /* _APP_H */
 

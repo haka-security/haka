@@ -1,0 +1,663 @@
+debug dns: selecting dns dissector on flow
+debug cnx: opening connection 172.16.3.38:38360 -> 172.16.13.5:53
+DNS QUERY
+class DnsResult {
+  additional : class ArrayResult {
+  }
+  answer : class ArrayResult {
+  }
+  authority : class ArrayResult {
+  }
+  aa : false
+  ancount : 0
+  arcount : 0
+  id : 23936
+  nscount : 0
+  opcode : 0
+  qdcount : 1
+  qr : false
+  question : class Result {
+    class : 1
+    name : "haka-security.org."
+    type : "A"
+  }
+  ra : false
+  rcode : 0
+  rd : true
+  tc : false
+}
+DNS RESPONSE
+class DnsResult {
+  additional : class ArrayResult {
+    1 : class Result {
+      class : 1
+      ip : userdata addr 199.19.56.1
+      length : 4
+      name : "a0.org.afilias-nst.info."
+      ttl : 5856
+      type : "A"
+    }
+    10 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "b2.org.afilias-nst.org."
+      ttl : 5856
+      type : "AAAA"
+    }
+    11 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "c0.org.afilias-nst.info."
+      ttl : 5856
+      type : "AAAA"
+    }
+    2 : class Result {
+      class : 1
+      ip : userdata addr 199.249.112.1
+      length : 4
+      name : "a2.org.afilias-nst.info."
+      ttl : 5856
+      type : "A"
+    }
+    3 : class Result {
+      class : 1
+      ip : userdata addr 199.19.54.1
+      length : 4
+      name : "b0.org.afilias-nst.org."
+      ttl : 5856
+      type : "A"
+    }
+    4 : class Result {
+      class : 1
+      ip : userdata addr 199.249.120.1
+      length : 4
+      name : "b2.org.afilias-nst.org."
+      ttl : 5856
+      type : "A"
+    }
+    5 : class Result {
+      class : 1
+      ip : userdata addr 199.19.53.1
+      length : 4
+      name : "c0.org.afilias-nst.info."
+      ttl : 5856
+      type : "A"
+    }
+    6 : class Result {
+      class : 1
+      ip : userdata addr 199.19.57.1
+      length : 4
+      name : "d0.org.afilias-nst.org."
+      ttl : 5856
+      type : "A"
+    }
+    7 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "a0.org.afilias-nst.info."
+      ttl : 5856
+      type : "AAAA"
+    }
+    8 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "a2.org.afilias-nst.info."
+      ttl : 5856
+      type : "AAAA"
+    }
+    9 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "b0.org.afilias-nst.org."
+      ttl : 5856
+      type : "AAAA"
+    }
+  }
+  answer : class ArrayResult {
+    1 : class Result {
+      class : 1
+      ip : userdata addr 66.155.11.238
+      length : 4
+      name : "haka-security.org."
+      ttl : 44
+      type : "A"
+    }
+    2 : class Result {
+      class : 1
+      ip : userdata addr 76.74.254.123
+      length : 4
+      name : "haka-security.org."
+      ttl : 44
+      type : "A"
+    }
+    3 : class Result {
+      class : 1
+      ip : userdata addr 66.155.9.238
+      length : 4
+      name : "haka-security.org."
+      ttl : 44
+      type : "A"
+    }
+    4 : class Result {
+      class : 1
+      ip : userdata addr 192.0.80.250
+      length : 4
+      name : "haka-security.org."
+      ttl : 44
+      type : "A"
+    }
+    5 : class Result {
+      class : 1
+      ip : userdata addr 76.74.254.120
+      length : 4
+      name : "haka-security.org."
+      ttl : 44
+      type : "A"
+    }
+    6 : class Result {
+      class : 1
+      ip : userdata addr 192.0.81.250
+      length : 4
+      name : "haka-security.org."
+      ttl : 44
+      type : "A"
+    }
+  }
+  authority : class ArrayResult {
+    1 : class Result {
+      class : 1
+      length : 25
+      name : "a0.org.afilias-nst.info."
+      ttl : 113281
+      type : "NS"
+    }
+    2 : class Result {
+      class : 1
+      length : 5
+      name : "a2.org.afilias-nst.info."
+      ttl : 113281
+      type : "NS"
+    }
+    3 : class Result {
+      class : 1
+      length : 21
+      name : "b0.org.afilias-nst.org."
+      ttl : 113281
+      type : "NS"
+    }
+    4 : class Result {
+      class : 1
+      length : 5
+      name : "b2.org.afilias-nst.org."
+      ttl : 113281
+      type : "NS"
+    }
+    5 : class Result {
+      class : 1
+      length : 5
+      name : "c0.org.afilias-nst.info."
+      ttl : 113281
+      type : "NS"
+    }
+    6 : class Result {
+      class : 1
+      length : 5
+      name : "d0.org.afilias-nst.org."
+      ttl : 113281
+      type : "NS"
+    }
+  }
+  aa : false
+  ancount : 6
+  arcount : 11
+  id : 23936
+  nscount : 6
+  opcode : 0
+  qdcount : 1
+  qr : true
+  question : class Result {
+    class : 1
+    name : "haka-security.org."
+    type : "A"
+  }
+  ra : true
+  rcode : 0
+  rd : true
+  tc : false
+}
+debug dns: selecting dns dissector on flow
+debug cnx: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
+DNS QUERY
+class DnsResult {
+  additional : class ArrayResult {
+  }
+  answer : class ArrayResult {
+  }
+  authority : class ArrayResult {
+  }
+  aa : false
+  ancount : 0
+  arcount : 0
+  id : 60714
+  nscount : 0
+  opcode : 0
+  qdcount : 1
+  qr : false
+  question : class Result {
+    class : 1
+    name : "haka-security.org."
+    type : "SOA"
+  }
+  ra : false
+  rcode : 0
+  rd : true
+  tc : false
+}
+DNS RESPONSE
+class DnsResult {
+  additional : class ArrayResult {
+    1 : class Result {
+      class : 1
+      ip : userdata addr 199.19.56.1
+      length : 4
+      name : "a0.org.afilias-nst.info."
+      ttl : 5846
+      type : "A"
+    }
+    10 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "b2.org.afilias-nst.org."
+      ttl : 5846
+      type : "AAAA"
+    }
+    11 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "c0.org.afilias-nst.info."
+      ttl : 5846
+      type : "AAAA"
+    }
+    2 : class Result {
+      class : 1
+      ip : userdata addr 199.249.112.1
+      length : 4
+      name : "a2.org.afilias-nst.info."
+      ttl : 5846
+      type : "A"
+    }
+    3 : class Result {
+      class : 1
+      ip : userdata addr 199.19.54.1
+      length : 4
+      name : "b0.org.afilias-nst.org."
+      ttl : 5846
+      type : "A"
+    }
+    4 : class Result {
+      class : 1
+      ip : userdata addr 199.249.120.1
+      length : 4
+      name : "b2.org.afilias-nst.org."
+      ttl : 5846
+      type : "A"
+    }
+    5 : class Result {
+      class : 1
+      ip : userdata addr 199.19.53.1
+      length : 4
+      name : "c0.org.afilias-nst.info."
+      ttl : 5846
+      type : "A"
+    }
+    6 : class Result {
+      class : 1
+      ip : userdata addr 199.19.57.1
+      length : 4
+      name : "d0.org.afilias-nst.org."
+      ttl : 5846
+      type : "A"
+    }
+    7 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "a0.org.afilias-nst.info."
+      ttl : 5846
+      type : "AAAA"
+    }
+    8 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "a2.org.afilias-nst.info."
+      ttl : 5846
+      type : "AAAA"
+    }
+    9 : class Result {
+      unknown : userdata vbuffer_sub
+      class : 1
+      length : 16
+      name : "b0.org.afilias-nst.org."
+      ttl : 5846
+      type : "AAAA"
+    }
+  }
+  answer : class ArrayResult {
+    1 : class Result {
+      class : 1
+      expire : 604800
+      length : 52
+      minimum : 300
+      mname : "ns1.wordpress.com."
+      name : "haka-security.org."
+      refresh : 14400
+      retry : 7200
+      rname : "hostmaster.wordpress.com."
+      serial : 2005071858
+      ttl : 0
+      type : "SOA"
+    }
+  }
+  authority : class ArrayResult {
+    1 : class Result {
+      class : 1
+      length : 25
+      name : "a0.org.afilias-nst.info."
+      ttl : 113271
+      type : "NS"
+    }
+    2 : class Result {
+      class : 1
+      length : 5
+      name : "a2.org.afilias-nst.info."
+      ttl : 113271
+      type : "NS"
+    }
+    3 : class Result {
+      class : 1
+      length : 21
+      name : "b0.org.afilias-nst.org."
+      ttl : 113271
+      type : "NS"
+    }
+    4 : class Result {
+      class : 1
+      length : 5
+      name : "b2.org.afilias-nst.org."
+      ttl : 113271
+      type : "NS"
+    }
+    5 : class Result {
+      class : 1
+      length : 5
+      name : "c0.org.afilias-nst.info."
+      ttl : 113271
+      type : "NS"
+    }
+    6 : class Result {
+      class : 1
+      length : 5
+      name : "d0.org.afilias-nst.org."
+      ttl : 113271
+      type : "NS"
+    }
+  }
+  aa : false
+  ancount : 1
+  arcount : 11
+  id : 60714
+  nscount : 6
+  opcode : 0
+  qdcount : 1
+  qr : true
+  question : class Result {
+    class : 1
+    name : "haka-security.org."
+    type : "SOA"
+  }
+  ra : true
+  rcode : 0
+  rd : true
+  tc : false
+}
+debug dns: selecting dns dissector on flow
+debug cnx: opening connection 172.16.3.38:51292 -> 172.16.13.5:53
+DNS QUERY
+class DnsResult {
+  additional : class ArrayResult {
+  }
+  answer : class ArrayResult {
+  }
+  authority : class ArrayResult {
+  }
+  aa : false
+  ancount : 0
+  arcount : 0
+  id : 32893
+  nscount : 0
+  opcode : 0
+  qdcount : 1
+  qr : false
+  question : class Result {
+    class : 1
+    name : "arkoon.net."
+    type : "MX"
+  }
+  ra : false
+  rcode : 0
+  rd : true
+  tc : false
+}
+DNS RESPONSE
+class DnsResult {
+  additional : class ArrayResult {
+    1 : class Result {
+      class : 1
+      ip : userdata addr 62.161.237.194
+      length : 4
+      name : "ns01.arkoon.net."
+      ttl : 88704
+      type : "A"
+    }
+    2 : class Result {
+      class : 1
+      ip : userdata addr 91.238.220.7
+      length : 4
+      name : "ns04.arkoon.net."
+      ttl : 88704
+      type : "A"
+    }
+  }
+  answer : class ArrayResult {
+    1 : class Result {
+      class : 1
+      length : 15
+      name : "arkoon-mail."
+      pref : 10
+      ttl : 1881
+      type : "MX"
+    }
+  }
+  authority : class ArrayResult {
+    1 : class Result {
+      class : 1
+      length : 7
+      name : "ns01.arkoon.net."
+      ttl : 45074
+      type : "NS"
+    }
+    2 : class Result {
+      class : 1
+      length : 7
+      name : "ns04.arkoon.net."
+      ttl : 45074
+      type : "NS"
+    }
+  }
+  aa : false
+  ancount : 1
+  arcount : 2
+  id : 32893
+  nscount : 2
+  opcode : 0
+  qdcount : 1
+  qr : true
+  question : class Result {
+    class : 1
+    name : "arkoon.net."
+    type : "MX"
+  }
+  ra : true
+  rcode : 0
+  rd : true
+  tc : false
+}
+debug dns: selecting dns dissector on flow
+debug cnx: opening connection 172.16.3.38:37869 -> 172.16.13.5:53
+DNS QUERY
+class DnsResult {
+  additional : class ArrayResult {
+  }
+  answer : class ArrayResult {
+  }
+  authority : class ArrayResult {
+  }
+  aa : false
+  ancount : 0
+  arcount : 0
+  id : 47997
+  nscount : 0
+  opcode : 0
+  qdcount : 1
+  qr : false
+  question : class Result {
+    class : 1
+    name : "paulfariello.fr."
+    type : "TXT"
+  }
+  ra : false
+  rcode : 0
+  rd : true
+  tc : false
+}
+DNS RESPONSE
+class DnsResult {
+  additional : class ArrayResult {
+    1 : class Result {
+      class : 1
+      ip : userdata addr 192.5.4.2
+      length : 4
+      name : "d.ext.nic.fr."
+      ttl : 163772
+      type : "A"
+    }
+    2 : class Result {
+      class : 1
+      ip : userdata addr 194.0.9.1
+      length : 4
+      name : "d.nic.fr."
+      ttl : 163772
+      type : "A"
+    }
+    3 : class Result {
+      class : 1
+      ip : userdata addr 193.176.144.22
+      length : 4
+      name : "e.ext.nic.fr."
+      ttl : 163772
+      type : "A"
+    }
+    4 : class Result {
+      class : 1
+      ip : userdata addr 194.146.106.46
+      length : 4
+      name : "f.ext.nic.fr."
+      ttl : 163772
+      type : "A"
+    }
+    5 : class Result {
+      class : 1
+      ip : userdata addr 194.0.36.1
+      length : 4
+      name : "g.ext.nic.fr."
+      ttl : 163772
+      type : "A"
+    }
+  }
+  answer : class ArrayResult {
+    1 : class Result {
+      class : 1
+      data : "v=spf1 a mx -all"
+      length : 17
+      name : "paulfariello.fr."
+      ttl : 10643
+      type : "TXT"
+    }
+  }
+  authority : class ArrayResult {
+    1 : class Result {
+      class : 1
+      length : 12
+      name : "d.ext.nic.fr."
+      ttl : 113241
+      type : "NS"
+    }
+    2 : class Result {
+      class : 1
+      length : 4
+      name : "d.nic.fr."
+      ttl : 113241
+      type : "NS"
+    }
+    3 : class Result {
+      class : 1
+      length : 4
+      name : "e.ext.nic.fr."
+      ttl : 113241
+      type : "NS"
+    }
+    4 : class Result {
+      class : 1
+      length : 4
+      name : "f.ext.nic.fr."
+      ttl : 113241
+      type : "NS"
+    }
+    5 : class Result {
+      class : 1
+      length : 4
+      name : "g.ext.nic.fr."
+      ttl : 113241
+      type : "NS"
+    }
+  }
+  aa : false
+  ancount : 1
+  arcount : 5
+  id : 47997
+  nscount : 5
+  opcode : 0
+  qdcount : 1
+  qr : true
+  question : class Result {
+    class : 1
+    name : "paulfariello.fr."
+    type : "TXT"
+  }
+  ra : true
+  rcode : 0
+  rd : true
+  tc : false
+}
+debug cnx: closing connection 172.16.3.38:37869 -> 172.16.13.5:53
+debug cnx: closing connection 172.16.3.38:51292 -> 172.16.13.5:53
+debug cnx: closing connection 172.16.3.38:50391 -> 172.16.13.5:53
+debug cnx: closing connection 172.16.3.38:38360 -> 172.16.13.5:53

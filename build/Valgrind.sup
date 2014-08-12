@@ -1,0 +1,40 @@
+# luajit
+{
+   <luajit_str_new>
+   Memcheck:Cond
+   fun:lj_str_new
+   ...
+}
+{
+   <luajit_str_new>
+   Memcheck:Addr4
+   fun:lj_str_new
+   ...
+}
+{
+   <luajit_release_str_new>
+   Memcheck:Cond
+   obj:*/libluajit-5.1.so.2.0.*
+}
+{
+   <luajit_release_str_new>
+   Memcheck:Addr4
+   obj:*/libluajit-5.1.so.2.0.*
+}
+
+# haka
+{
+   <strlen_release>
+   Memcheck:Addr4
+   fun:module_load
+   ...
+}
+{
+   <dlopen_unreleased>
+   Memcheck:Leak
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlopen*
+   fun:module_load
+   ...
+}

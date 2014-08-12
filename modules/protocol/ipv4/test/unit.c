@@ -13,6 +13,14 @@ START_TEST(ipv4_addr_check_from_string)
 }
 END_TEST
 
+START_TEST(ipv4_addr_check_from_badstring)
+{
+	ck_assert_int_eq(ipv4_addr_from_string(".192.12.1.9"), 0);
+	ck_assert(check_error());
+	clear_error();
+}
+END_TEST
+
 START_TEST(ipv4_addr_check_from_bytes)
 {
 	ck_assert_int_eq(ipv4_addr_from_bytes(192, 12, 1, 9), 0xC00C0109);
@@ -24,6 +32,59 @@ START_TEST(ipv4_addr_check_to_string)
 	char str[IPV4_ADDR_STRING_MAXLEN+1];
 	ipv4_addr_to_string(0xC00C0109, str, IPV4_ADDR_STRING_MAXLEN+1);
 	ck_assert_str_eq(str, "192.12.1.9");
+}
+END_TEST
+
+START_TEST(ipv4_badnetwork1_check)
+{
+	ipv4network network;
+	network = ipv4_network_from_string("192.168.1.24/33");
+	ck_assert_int_eq(network.net, 0);
+	ck_assert_int_eq(network.mask, 0);
+	ck_assert(check_error());
+	clear_error();
+}
+END_TEST
+
+START_TEST(ipv4_badnetwork2_check)
+{
+	ipv4network network;
+	network = ipv4_network_from_string("1.9.2.168.1.0/24");
+	ck_assert_int_eq(network.net, 0);
+	ck_assert_int_eq(network.mask, 0);
+	ck_assert(check_error());
+	clear_error();
+}
+END_TEST
+
+START_TEST(ipv4_badnetwork3_check)
+{
+	ipv4network network;
+	network = ipv4_network_from_string("192.168.1.24");
+	ck_assert_int_eq(network.net, 0);
+	ck_assert_int_eq(network.mask, 0);
+	ck_assert(check_error());
+	clear_error();
+}
+END_TEST
+
+START_TEST(ipv4_badnetwork4_check)
+{
+	ipv4network network;
+	network = ipv4_network_from_string("192.168.192.2400/12");
+	ck_assert_int_eq(network.net, 0);
+	ck_assert_int_eq(network.mask, 0);
+	ck_assert(check_error());
+	clear_error();
+}
+END_TEST
+
+START_TEST(ipv4_recover_badnetwork_check)
+{
+	ipv4network network;
+	network = ipv4_network_from_string("192.168.1.2/24");
+	ck_assert_int_eq(network.net, 0xC0A80100);
+	ck_assert_int_eq(network.mask, 24);
 }
 END_TEST
 
@@ -41,25 +102,29 @@ START_TEST(ipv4_network_check)
 }
 END_TEST
 
-Suite* ipv4_suite(void)
-{
-	Suite *suite = suite_create("ipv4_suite");
-
-	TCase *tcase = tcase_create("case");
-	tcase_add_test(tcase, ipv4_addr_check_from_string);
-	tcase_add_test(tcase, ipv4_addr_check_from_bytes);
-	tcase_add_test(tcase, ipv4_addr_check_to_string);
-	tcase_add_test(tcase, ipv4_network_check);
-	suite_add_tcase(suite, tcase);
-	return suite;
-}
-
 int main (int argc, char *argv[])
 {
 	int number_failed;
-	Suite *suite = ipv4_suite();
+
+	Suite *suite = suite_create("ipv4_suite");
+	TCase *tcase = tcase_create("case");
+	tcase_add_test(tcase, ipv4_addr_check_from_string);
+	tcase_add_test(tcase, ipv4_addr_check_from_badstring);
+	tcase_add_test(tcase, ipv4_addr_check_from_bytes);
+	tcase_add_test(tcase, ipv4_addr_check_to_string);
+	tcase_add_test(tcase, ipv4_network_check);
+	tcase_add_test(tcase, ipv4_badnetwork1_check);
+	tcase_add_test(tcase, ipv4_badnetwork2_check);
+	tcase_add_test(tcase, ipv4_badnetwork3_check);
+	tcase_add_test(tcase, ipv4_badnetwork4_check);
+	tcase_add_test(tcase, ipv4_recover_badnetwork_check);
+	suite_add_tcase(suite, tcase);
+
 	SRunner *runner = srunner_create(suite);
-	srunner_run_all(runner, CK_NORMAL);
+#ifdef HAKA_DEBUG
+	srunner_set_fork_status(runner, CK_NOFORK);
+#endif
+	srunner_run_all(runner, CK_VERBOSE);
 	number_failed = srunner_ntests_failed(runner);
 	srunner_free(runner);
 	return number_failed;

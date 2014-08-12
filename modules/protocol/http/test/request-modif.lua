@@ -2,37 +2,36 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-require("protocol/ipv4")
-require("protocol/tcp")
-require("protocol/http")
+local http = require("protocol/http")
+
+http.install_tcp_rule(80)
 
 haka.rule {
-	hooks = { "tcp-connection-new" },
-	eval = function (self, pkt)
-		if pkt.tcp.dstport == 80 then
-			pkt.next_dissector = "http"
-		end
-	end
-}
-
-haka.rule {
-	hooks = { "http-request" },
-	eval = function (self, http)
+	hook = http.events.request,
+	eval = function (http, request)
 		print("HTTP REQUEST")
-		http.request:dump()
-
-		http.request.headers["User-Agent"] = "Haka"
-		http.request.headers["Haka"] = "Done"
+		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
+		-- We change a part of the request
+		request.version = "2.0"
+		-- We change an existing header
+		request.headers["Host"] = "haka.powered.tld"
+		-- We destroy one
+		request.headers["User-Agent"] = nil
+		-- We create a new one
+		request.headers["Haka"] = "Done"
+		-- We create a new one and we remove it
+		request.headers["Haka2"] = "Done"
+		request.headers["Haka2"] = nil
 
 		print("HTTP MODIFIED REQUEST")
-		http.request:dump()
+		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
 	end
 }
 
 haka.rule {
-	hooks = { "http-response" },
-	eval = function (self, http)
+	hook = http.events.response,
+	eval = function (http, response)
 		print("HTTP RESPONSE")
-		http.response:dump()
+		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
 	end
 }

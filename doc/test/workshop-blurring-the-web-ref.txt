@@ -1,0 +1,9 @@
+debug cnx: opening connection 192.168.10.10:56748 -> 192.168.20.1:80
+debug http: selecting http dissector on flow
+info bluring: received request for / on server
+info bluring: bluring:       bluring response
+info bluring: received request for /twiki/ on server
+info bluring: bluring:       bluring response
+info bluring: received request for /twiki/TWikiDocumentation.html on server
+info bluring: bluring:       bluring response
+debug cnx: closing connection 192.168.10.10:56748 -> 192.168.20.1:80

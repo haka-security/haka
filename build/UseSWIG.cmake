@@ -72,14 +72,14 @@ MACRO(SWIG_MODULE_INITIALIZE name language)
   SET(SWIG_MODULE_${name}_SWIG_LANGUAGE_FLAG "${swig_lowercase_language}")
 
   SET(SWIG_MODULE_${name}_REAL_NAME "${name}")
-  IF("${SWIG_MODULE_${name}_LANGUAGE}" STREQUAL "UNKNOWN")
+  IF("${swig_lowercase_language}" STREQUAL "unknown")
     MESSAGE(FATAL_ERROR "SWIG Error: Language \"${language}\" not found")
-  ELSEIF("${SWIG_MODULE_${name}_LANGUAGE}" STREQUAL "PYTHON")
+  ELSEIF("${swig_lowercase_language}" STREQUAL "python")
     # when swig is used without the -interface it will produce in the module.py
     # a 'import _modulename' statement, which implies having a corresponding 
     # _modulename.so (*NIX), _modulename.pyd (Win32).
     SET(SWIG_MODULE_${name}_REAL_NAME "_${name}")
-  ELSEIF("${SWIG_MODULE_${name}_LANGUAGE}" STREQUAL "PERL")
+  ELSEIF("${swig_lowercase_language}" STREQUAL "perl")
     SET(SWIG_MODULE_${name}_EXTRA_FLAGS "-shadow")
   ENDIF()
 ENDMACRO(SWIG_MODULE_INITIALIZE)

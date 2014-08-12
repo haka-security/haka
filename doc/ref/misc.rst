@@ -7,19 +7,89 @@
 Misc
 ====
 
+This section documents various functions that do not fit in any other sections.
+
 Threads
 -------
 
-.. lua:module:: haka
+.. haka:module:: haka
 
-.. lua:function:: current_thread()
+.. haka:function:: current_thread() -> id
 
-    Returns the thread current unique index.
+    :return id: The current thread's index.
+    :rtype id: number
+
+    Allows to check what thread is currently running.
+
+.. haka:function:: abort()
+
+    Abort current execution. This function will throw an error that will
+    unwind the stack up to the topmost protected call.
 
 
 Exit
 ----
 
-.. lua:function:: on_exit(exit_func)
+.. haka:function:: on_exit(exit_func)
 
-	Runs ``exit_func`` code at haka exit.
+    :param exit_func: Function to run at exit time.
+    :paramtype exit_func: function
+
+    Registers a callback that will be called when Haka exits.
+
+Time
+----
+
+.. haka:class:: time
+    :module:
+
+    Time object.
+
+    .. haka:function:: time(secs) -> t
+
+        :param secs: Number of seconds since the epoch (1970-01-01T00:00:00Z ISO 8601).
+        :paramtype secs: number
+        :return t: New time representation.
+        :rtype t: :haka:class:`time`
+
+        Build a new time object.
+
+    .. haka:attribute:: time:secs
+                        time:nsecs
+
+        :type: number
+
+        Seconds and nano-seconds as integer value.
+
+    .. haka:attribute:: time:seconds
+        :readonly:
+
+        :type: number
+
+        Seconds as floating point value.
+
+    .. haka:operator:: tostring(time) -> str
+
+        :return str: Human readable representation of the time.
+        :rtype str: string
+
+        Convert the time to human readable form.
+
+General Events
+--------------
+
+Haka also uses global events to notify for interesting messages. Those events
+can be used by a regular rule as usual.
+
+.. haka:function:: haka.events.started()
+    :module:
+    :objtype: event
+
+    Event triggered when the Haka configuration is loaded and Haka is ready
+    to process packets.
+
+.. haka:function:: haka.events.exiting()
+    :module:
+    :objtype: event
+
+    Event triggered when Haka is exiting.

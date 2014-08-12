@@ -4,14 +4,24 @@
 
 -- Test that will duplicate a tcp connection
 
+local raw = require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 local tcp = require("protocol/tcp")
+require("protocol/tcp_connection")
+
+-- just to be safe, to avoid the test to run in an infinite loop
+local counter = 10
 
 haka.rule {
-	hooks = { "tcp-up" },
-	eval = function (self, pkt)
+	hook = tcp.events.receive_packet,
+	eval = function (pkt)
 		if pkt.dstport == 4444 or pkt.srcport == 4444 then
-			local npkt = haka.packet.new()
+			if counter == 0 then
+				error("loop detected")
+			end
+			counter = counter-1
+
+			local npkt = raw.create()
 			npkt = ipv4.create(npkt)
 			npkt.ttl = pkt.ip.ttl
 			npkt.dst = pkt.ip.dst
@@ -25,11 +35,11 @@ haka.rule {
 			npkt.flags.all = pkt.flags.all
 			npkt.dstport = pkt.dstport+10
 			npkt.srcport = pkt.srcport+10
-			npkt.payload:resize(#pkt.payload)
-			for i=1,#pkt.payload do
-				npkt.payload[i] = pkt.payload[i]
-			end
-			npkt:send()
+
+			local payload = pkt.payload:clone()
+			npkt.payload:append(payload)
+
+			npkt:inject()
 		end
 	end
 }

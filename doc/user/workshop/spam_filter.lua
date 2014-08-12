@@ -1,0 +1,1 @@
+../../../sample/smtp_dissector/smtp_spam_filter.lua

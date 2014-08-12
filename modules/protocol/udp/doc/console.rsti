@@ -1,0 +1,29 @@
+.. This Source Code Form is subject to the terms of the Mozilla Public
+.. License, v. 2.0. If a copy of the MPL was not distributed with this
+.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UDP
+^^^
+
+.. haka:function:: udp.connections(show_dropped=false) -> list
+    :module:
+
+    :param show_dropped: ``true`` if also the dropped connections should be listed.
+    :ptype show_dropped: boolean
+    :return list: Udp connections information.
+    :rtype list: :haka:class:`UdpConnList`
+
+    Get information about all udp connections currently known in haka (ips, ports,
+    statistics, state...).
+
+    Some extra method are available on this list:
+
+    .. haka:class:: UdpConnList
+        :module:
+        
+        :extend: :haka:class:`List` |nbsp|
+
+        .. haka:method:: UdpConnList:drop()
+
+            Drop all connections that are part of the list. This can be used to drop
+            one connection or more.

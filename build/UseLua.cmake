@@ -2,26 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if(LUA STREQUAL "luajit")
-	include(external/luajit.cmake)
-elseif(LUA STREQUAL "lua51")
-	include(external/lua.cmake)
+if(CMAKE_LUA STREQUAL "luajit")
+	include(external/luajit/luajit.cmake)
+elseif(CMAKE_LUA STREQUAL "lua")
+	include(external/lua/lua.cmake)
 else()
 	message(FATAL_ERROR "Invalid Lua version")
 endif()
 
-macro(LUA_DEPENDS target)
-	if (LUA_DEPENDENCY)
-		add_dependencies(${target} ${LUA_DEPENDENCY})
-	endif(LUA_DEPENDENCY)
-endmacro(LUA_DEPENDS)
-
-macro(LUA_LINK target)
-	LUA_DEPENDS(${target})
-	include_directories(${LUA_INCLUDE_DIR})
-	link_directories(${LUA_LIBRARY_DIR})
-	target_link_libraries(${target} ${LUA_LIBRARIES})
-endmacro(LUA_LINK)
+include_directories(${LUA_INCLUDE_DIR})
 
 macro(LUA_COMPILE)
 	set(oneValueArgs NAME)
@@ -37,6 +26,8 @@ macro(LUA_COMPILE)
 	else()
 		set(LUA_FLAGS "${LUA_COMPILE_FLAGS}")
 	endif()
+
+	set(LUA_COMPILE_COMPILED_FILES)
 
 	foreach(it ${LUA_COMPILE_FILES})
 		get_filename_component(lua_source_file_path "${it}" ABSOLUTE)
@@ -60,7 +51,8 @@ macro(LUA_COMPILE)
 
 	if(TARGET ${LUA_COMPILE_NAME})
 		get_target_property(ID ${LUA_COMPILE_NAME} LUA_ID)
-		set_target_properties(${LUA_COMPILE_NAME} PROPERTIES LUA_ID ${LUA_ID}+1)
+		MATH(EXPR ID "${ID}+1")
+		set_target_properties(${LUA_COMPILE_NAME} PROPERTIES LUA_ID ${ID})
 
 		add_custom_target(${LUA_COMPILE_NAME}-${ID} ALL DEPENDS ${LUA_COMPILE_COMPILED_FILES} ${LUA_DEPENDS})
 

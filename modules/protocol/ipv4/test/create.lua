@@ -4,13 +4,24 @@
 
 -- Basic test that will create a new packet for scratch
 
+local raw = require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 
+ipv4.options.enable_reassembly = false
+
+-- just to be safe, to avoid the test to run in an infinite loop
+local counter = 10
+
 haka.rule {
-	hooks = { "ipv4-up" },
-	eval = function (self, pkt)
+	hook = ipv4.events.receive_packet,
+	eval = function (pkt)
 		if pkt.proto ~= 20 then
-			local npkt = haka.packet.new()
+			if counter == 0 then
+				error("loop detected")
+			end
+			counter = counter-1
+
+			local npkt = raw.create()
 			npkt = ipv4.create(npkt)
 			npkt.version = 4
 			npkt.id = 0xbeef
@@ -22,7 +33,7 @@ haka.rule {
 			npkt.proto = 20
 			npkt.src = ipv4.addr(192, 168, 0, 1)
 			npkt.dst = ipv4.addr("192.168.0.2")
-			npkt:send()
+			npkt:inject()
 		end
 	end
 }

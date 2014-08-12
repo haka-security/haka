@@ -14,7 +14,7 @@ _configure() {
 	_run mkdir -p "$MAKEDIR/$1-$2"
 	cd "$MAKEDIR/$1-$2"
 
-	_run cmake -DBUILD=$1 -DLUA=$2 "$ROOT"
+	_run cmake -DBUILD=$1 -DLUA=$2 -DCMAKE_INSTALL_PREFIX=/usr "$ROOT"
 }
 
 _runeach _configure

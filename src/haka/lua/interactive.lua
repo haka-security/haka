@@ -4,12 +4,16 @@
 
 local color = require("color")
 
-function haka.interactive_rule(self, input)
-	local dump = "interactive rule\ninput = "
-	local function out(...)
-		dump = table.concat({dump, ...})
-	end
+function haka.interactive_rule(name)
+	return function (...)
+		local inputs = {...}
 
-	haka.debug.pprint(input, "", 1, haka.debug.hide_underscore, out)
-	haka.debug.interactive.enter(self.hook .. ">  ", self.hook .. ">> ", dump)
+		local dump = color.green .. "interactive rule:" .. color.clear .. "\ninputs = "
+		local function out(...)
+			dump = dump .. table.concat({...}, " ") .. "\n"
+		end
+
+		debug.pprint(inputs, "", 2, debug.hide_underscore, out)
+		debug.interactive.enter(name .. ">  ", name .. ">> ", dump)
+	end
 end

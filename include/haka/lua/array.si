@@ -1,0 +1,61 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%define APPLY_NULLTERM_ARRAY(type)
+
+%{
+
+static struct type **_get_##type##_array(lua_State* L, int input, swig_type_info *swigtype, int disown)
+{
+	struct type **array, **iter;
+	int i, size = lua_rawlen(L, input);
+	array = malloc(sizeof(struct type*)*(size+1));
+	if (!array) {
+		error(L"memory error");
+		return NULL;
+	}
+	for (i = 0, iter = array; i < size; ++iter, ++i) {
+		lua_rawgeti(L, input, i+1);
+		if (!lua_isuserdata(L, -1) || SWIG_ConvertPtr(L, -1, (void**)iter, swigtype, disown) == -1){
+			lua_pop(L,1);
+			free(iter);
+			return NULL;
+		}
+		lua_pop(L,1);
+	}
+	*iter = NULL;
+	return array;
+}
+
+%}
+
+%typemap(in) struct type ** {
+	$1 = _get_##type##_array(L, $input, $*1_descriptor, $disown);
+	if (!$1) SWIG_fail;
+}
+
+%typemap(in) struct type **DISOWN {
+	$1 = _get_##type##_array(L, $input, $*1_descriptor, 1);
+	if (!$1) SWIG_fail;
+}
+
+%typemap(typecheck) struct type ** {
+	$1 = lua_istable(L, $input);
+}
+
+%typemap(memberin) struct type ** {
+	$1 = $input;
+	$input = NULL;
+}
+
+%typemap(freearg) struct type ** {
+	if ($1) {
+		free($1);
+	}
+}
+
+%typemap(freearg) struct type **DISOWN {
+}
+
+%enddef

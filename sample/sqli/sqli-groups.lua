@@ -8,7 +8,7 @@ require('httpdecode')
 
 local sql_comments = { '%-%-', '#', '%z', '/%*.-%*/' }
 
--- Common pattern used in intial attack stage to ckeck for SQLi vulnerabilites
+-- Common patterns used in initial attack stage to check for SQLi vulnerabilities
 local probing = { "^[\"'`´’‘;]", "[\"'`´’‘;]$" }
 
 local sql_keywords = {
@@ -27,19 +27,20 @@ local sql_functions = {
 
 -- Define a security rule group related to SQLi attacks
 sqli = haka.rule_group{
+	hook = httplib.events.request,
 	name = 'sqli',
 	-- Initialize some values before evaluating any security rule
-	init = function (self, http)
-		dump_request(http)
+	init = function (http, request)
+		dump_request(request)
 
 		-- Another way to split cookie header value and query's arguments
 		http.sqli = {
 			cookies = {
-				value = http.request:split_cookies(),
+				value = request.split_cookies,
 				score = 0
 			},
 			args = {
-				value = http.request:split_uri().args,
+				value = request.split_uri.args,
 				score = 0
 			}
 		}
@@ -48,8 +49,7 @@ sqli = haka.rule_group{
 
 local function check_sqli(patterns, score, trans)
 	sqli:rule{
-		hooks = { 'http-request' },
-		eval = function (self, http)
+		eval = function (http, request)
 			for k, v in pairs(http.sqli) do
 				if v.value then
 					for _, val in pairs(v.value) do
@@ -65,15 +65,14 @@ local function check_sqli(patterns, score, trans)
 					end
 
 					if v.score >= 8 then
-						local conn = http.connection
 						haka.alert{
 							description = string.format("SQLi attack detected in %s with score %d", k, v.score),
 							severity = 'high',
 							confidence = 'medium',
-							sources = haka.alert.address(conn.srcip),
+							sources = haka.alert.address(http.flow.srcip),
 							targets = {
-								haka.alert.address(conn.dstip),
-								haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
+								haka.alert.address(http.flow.dstip),
+								haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
 							},
 						}
 

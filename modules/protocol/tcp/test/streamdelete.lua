@@ -4,26 +4,17 @@
 
 require("protocol/ipv4")
 require("protocol/tcp")
-
-local function buffer_to_string(buf)
-	local r = ""
-	for i = 1,#buf do
-		r = r .. string.format("%c", buf[i])
-	end
-	return r
-end
+local tcp_connection = require("protocol/tcp_connection")
 
 haka.rule {
-	hooks = { "tcp-connection-up" },
-	eval = function (self, pkt)
-		haka.log.debug("filter", "received stream len=%d", pkt.stream:available())
+	hook = tcp_connection.events.receive_data,
+	eval = function (flow, data)
+		haka.log.debug("filter", "received stream len=%d", #data)
 
-		while pkt.stream:available() > 0 do
-			pkt.stream:erase(10)
-			local buf = pkt.stream:read(10)
-			if buf then
-				print(buffer_to_string(buf))
-			end
+		local current = data:pos('begin')
+		while current:available() > 0 do
+			current:sub(10, true):erase()
+			print(current:sub(10):asstring())
 		end
 	end
 }

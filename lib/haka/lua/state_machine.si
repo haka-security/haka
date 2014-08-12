@@ -1,0 +1,290 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%{
+#include <haka/state_machine.h>
+#include <haka/time.h>
+#include <haka/error.h>
+#include <haka/log.h>
+#include <haka/lua/luautils.h>
+#include <haka/lua/ref.h>
+#include <haka/lua/state.h>
+
+
+struct lua_transition_data {
+	struct transition_data   data;
+	struct lua_ref           function;
+};
+
+struct lua_state_machine_context {
+	struct state_machine_context   super;
+	struct lua_ref                 states;
+};
+
+void lua_state_machine_context_destroy(struct state_machine_context *_context)
+{
+	struct lua_state_machine_context *context = (struct lua_state_machine_context *)_context;
+	lua_ref_clear(&context->states);
+	free(context);
+}
+
+struct state *lua_transition_callback(struct state_machine_instance *state_machine, struct transition_data *_data)
+{
+	int h;
+	struct lua_transition_data *data = (struct lua_transition_data *)_data;
+	struct lua_state_machine_context *context = (struct lua_state_machine_context *)state_machine_instance_context(state_machine);
+	struct state *newstate = NULL;
+	lua_State *L = data->function.state->L;
+	LUA_STACK_MARK(L);
+
+	assert(lua_ref_isvalid(&context->states));
+	assert(lua_ref_isvalid(&data->function));
+
+	lua_pushcfunction(L, lua_state_error_formater);
+	h = lua_gettop(L);
+
+	lua_ref_push(L, &data->function);
+	lua_ref_push(L, &context->states);
+	if (lua_pcall(L, 1, 1, h)) {
+		/* If the value on the stack is nil, we are in case of an abort,
+		 * otherwise it is an error. */
+		if (lua_isnil(L, -1)) {
+			lua_pop(L, 1);
+			newstate = state_machine_finish_state;
+		}
+		else {
+			lua_state_print_error(L, L"state machine");
+			newstate = state_machine_fail_state;
+		}
+	}
+	else {
+		if (!lua_isnil(L, -1)) {
+			if (SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
+				lua_pop(L, 1);
+			}
+			else {
+				if (!lua_istable(L, -1)) {
+					message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
+				}
+				else {
+					lua_getfield(L, -1, "_state");
+					assert(!lua_isnil(L, -1));
+
+					if (!SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
+						message(HAKA_LOG_ERROR, L"state machine", L"transition failed, invalid state");
+					}
+
+					lua_pop(L, 2);
+				}
+			}
+		}
+		else {
+			lua_pop(L, 1);
+		}
+	}
+
+	lua_pop(L, 1);
+	LUA_STACK_CHECK(L, 0);
+	return newstate;
+}
+
+static void lua_transition_data_destroy(struct transition_data *_data)
+{
+	struct lua_transition_data *data = (struct lua_transition_data *)_data;
+	lua_ref_clear(&data->function);
+	free(_data);
+}
+
+static struct transition_data *lua_transition_data_new(struct lua_ref *func)
+{
+	struct lua_transition_data *ret = malloc(sizeof(struct lua_transition_data));
+	if (!ret) {
+		error(L"memory error");
+		return NULL;
+	}
+
+	memset(ret, 0, sizeof(struct lua_transition_data));
+	ret->data.callback = lua_transition_callback;
+	ret->data.destroy = lua_transition_data_destroy;
+	ret->function = *func;
+
+	return &ret->data;
+}
+
+%}
+
+%include "haka/lua/swig.si"
+%include "haka/lua/object.si"
+%include "haka/lua/ref.si"
+
+
+%nodefaultctor;
+%nodefaultdtor;
+
+struct state {
+	%extend {
+		void transition_timeout(double secs, struct lua_ref func)
+		{
+			struct time timeout;
+			struct transition_data *trans = lua_transition_data_new(&func);
+			if (!trans) return;
+
+			time_build(&timeout, secs);
+			state_add_timeout_transition($self, &timeout, trans);
+		}
+
+		void transition_fail(struct lua_ref func)
+		{
+			struct transition_data *trans = lua_transition_data_new(&func);
+			if (!trans) return;
+
+			state_set_fail_transition($self, trans);
+		}
+
+		void transition_leave(struct lua_ref func)
+		{
+			struct transition_data *trans = lua_transition_data_new(&func);
+			if (!trans) return;
+
+			state_set_leave_transition($self, trans);
+		}
+
+		void transition_enter(struct lua_ref func)
+		{
+			struct transition_data *trans = lua_transition_data_new(&func);
+			if (!trans) return;
+
+			state_set_enter_transition($self, trans);
+		}
+
+		void transition_init(struct lua_ref func)
+		{
+			struct transition_data *trans = lua_transition_data_new(&func);
+			if (!trans) return;
+
+			state_set_init_transition($self, trans);
+		}
+
+		void transition_finish(struct lua_ref func)
+		{
+			struct transition_data *trans = lua_transition_data_new(&func);
+			if (!trans) return;
+
+			state_set_finish_transition($self, trans);
+		}
+
+		%immutable;
+		const char *name { return state_name($self); }
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(state);
+
+
+%newobject state_machine::instanciate;
+
+struct state_machine {
+	%extend {
+		state_machine(const char *name)
+		{
+			if (!name) {
+				error(L"missing name parameter");
+				return NULL;
+			}
+
+			return state_machine_create(name);
+		}
+
+		~state_machine()
+		{
+			state_machine_destroy($self);
+		}
+
+		%rename(create_state) _create_state;
+		struct state *_create_state(const char *name)
+		{
+			return state_machine_create_state($self, name);
+		}
+
+		%rename(compile) _compile;
+		void _compile()
+		{
+			state_machine_compile($self);
+		}
+
+		struct state_machine_instance *instanciate(struct lua_ref states)
+		{
+			struct lua_state_machine_context *context = malloc(sizeof(struct lua_state_machine_context));
+			if (!context) {
+				error(L"memory error");
+				return NULL;
+			}
+
+			context->super.destroy = lua_state_machine_context_destroy;
+			context->states = states;
+
+			return state_machine_instance($self, &context->super);
+		}
+
+		struct state *initial;
+
+		%immutable;
+		struct state *fail_state { return state_machine_fail_state; }
+		struct state *finish_state { return state_machine_finish_state; }
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(state_machine);
+
+
+struct state_machine_instance {
+	%extend {
+		~state_machine_instance()
+		{
+			state_machine_instance_destroy($self);
+		}
+
+		%rename(init) _init;
+		void _init()
+		{
+			state_machine_instance_init($self);
+		}
+
+		%rename(update) _update;
+		void _update(struct state *state)
+		{
+			state_machine_instance_update($self, state);
+		}
+
+		%rename(finish) _finish;
+		void _finish()
+		{
+			state_machine_instance_finish($self);
+		}
+
+		%immutable;
+		const char *state {
+			struct state *current = state_machine_instance_state($self);
+			return current ? state_name(current) : NULL;
+		}
+
+		bool finished { return state_machine_instance_isfinished($self); }
+		bool failed { return state_machine_instance_isfailed($self); }
+	}
+};
+
+STRUCT_UNKNOWN_KEY_ERROR(state_machine_instance);
+
+
+%{
+struct state *state_machine_initial_get(struct state_machine *machine)
+	{ return NULL; }
+
+void state_machine_initial_set(struct state_machine *machine, struct state *initial)
+	{ state_machine_set_initial(machine, initial); }
+%}
+
+%luacode {
+	require('state_machine')
+}

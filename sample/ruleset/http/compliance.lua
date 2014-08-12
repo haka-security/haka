@@ -1,20 +1,30 @@
+
+------------------------------------
+-- Loading regex engine
+------------------------------------
+
+local rem = require("regexp/pcre")
+
 ------------------------------------
 -- HTTP compliance
 ------------------------------------
+
 -- check http method value
-haka.rule{
-	hooks = { 'http-request' },
-	eval = function (self, http)
-		local http_methods = dict({ 'get', 'post', 'head', 'put', 'trace', 'delete', 'options' })
-		local method = http.request.method:lower()
-		if not contains(http_methods, method) then
-			local conn = http.connection
+local http_methods = '^get$|^post$|^head$|^put$|^trace$|^delete$|^options$'
+local re = rem.re:compile(http_methods, rem.re.CASE_INSENSITIVE)
+
+haka.rule {
+	hook = http.events.request,
+	eval = function (http, request)
+		local method = request.method
+		local ret = re:match(method)
+		if not ret then
 			haka.alert{
 				description = string.format("non authorized http method '%s'", method),
-				sources = haka.alert.address(conn.srcip),
+				sources = haka.alert.address(http.flow.srcip),
 				targets = {
-					haka.alert.address(conn.dstip),
-					haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
+					haka.alert.address(http.flow.dstip),
+					haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
 				},
 			}
 			http:drop()
@@ -23,20 +33,20 @@ haka.rule{
 }
 
 -- check http version value
-haka.rule{
-	hooks = { 'http-request' },
-	eval = function (self, http)
-		local http_versions = dict({ '0.9', '1.0', '1.1' })
-		local protocol = http.request.version:sub(1,4)
-		local version = http.request.version:sub(6)
-		if not protocol == "HTTP" or not contains(http_versions, version) then
-			local conn = http.connection
+local http_versions = '^0.9$|^1.0$|^1.1$'
+local re = rem.re:compile(http_versions)
+haka.rule {
+	hook = http.events.request,
+	eval = function (http, request)
+		local version = request.version
+		local ret = re:match(version)
+		if not ret then
 			haka.alert{
-				description = string.format("unsupported http version '%s/%s'", protocol, version),
-				sources = haka.alert.address(conn.srcip),
+				description = string.format("unsupported http version '%s'", version),
+				sources = haka.alert.address(http.flow.srcip),
 				targets = {
-					haka.alert.address(conn.dstip),
-					haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
+					haka.alert.address(http.flow.dstip),
+					haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
 				},
 			}
 			http:drop()
@@ -45,24 +55,21 @@ haka.rule{
 }
 
 -- check content length value
-haka.rule{
-	hooks = { 'http-response' },
-	eval = function (self, http)
-		local content_length = http.request.headers["Content-Length"]
-		if content_length then
-			content_length = tonumber(content_length)
-			if content_length == nil or content_length < 0 then
-				local conn = http.connection
-				haka.alert{
-					description = "corrupted content-length header value",
-					sources = haka.alert.address(conn.srcip),
-					targets = {
-						haka.alert.address(conn.dstip),
-						haka.alert.service(string.format("tcp/%d", conn.dstport), "http")
-					},
-				}
-				http:drop()
-			end
+haka.rule {
+	hook = http.events.request,
+	eval = function (http, request)
+		local content_length = request.headers["Content-Length"] or 0
+		content_length = tonumber(content_length)
+		if content_length == nil or content_length < 0 then
+			haka.alert{
+				description = "corrupted content-length header value",
+				sources = haka.alert.address(http.flow.srcip),
+				targets = {
+					haka.alert.address(http.flow.dstip),
+					haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
+				},
+			}
+			http:drop()
 		end
 	end
 }

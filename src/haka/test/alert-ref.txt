@@ -1,0 +1,1050 @@
+alert: id = = <>
+	start time = Mon Jan 20 17:44:43 2014
+	end time = Mon Jan 20 17:44:43 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 1 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:43 2014
+	end time = Mon Jan 20 17:44:43 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 2 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:43 2014
+	end time = Mon Jan 20 17:44:43 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 3 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:47 2014
+	end time = Mon Jan 20 17:44:47 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 4 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:47 2014
+	end time = Mon Jan 20 17:44:47 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 5 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:47 2014
+	end time = Mon Jan 20 17:44:47 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 6 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:47 2014
+	end time = Mon Jan 20 17:44:47 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 7 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:50 2014
+	end time = Mon Jan 20 17:44:50 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 8 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:50 2014
+	end time = Mon Jan 20 17:44:50 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 9 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:50 2014
+	end time = Mon Jan 20 17:44:50 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 10 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:50 2014
+	end time = Mon Jan 20 17:44:50 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 11 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:51 2014
+	end time = Mon Jan 20 17:44:51 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 12 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:51 2014
+	end time = Mon Jan 20 17:44:51 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 13 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:51 2014
+	end time = Mon Jan 20 17:44:51 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 14 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:51 2014
+	end time = Mon Jan 20 17:44:51 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 15 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:51 2014
+	end time = Mon Jan 20 17:44:51 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 16 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:53 2014
+	end time = Mon Jan 20 17:44:53 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 17 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:53 2014
+	end time = Mon Jan 20 17:44:53 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 18 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:53 2014
+	end time = Mon Jan 20 17:44:53 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 19 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:56 2014
+	end time = Mon Jan 20 17:44:56 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 20 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:56 2014
+	end time = Mon Jan 20 17:44:56 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 21 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:56 2014
+	end time = Mon Jan 20 17:44:56 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 22 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:56 2014
+	end time = Mon Jan 20 17:44:56 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 23 }
+alert: id = = <>
+	start time = Mon Jan 20 17:44:56 2014
+	end time = Mon Jan 20 17:44:56 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 0.0.0.0
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 0.0.0.0, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 224.0.0.1/22
+		address: 224.0.0.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 0.0.0.0
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 0.0.0.0
+	}
+	refs = { 24 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:00 2014
+	end time = Mon Jan 20 17:45:00 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 25 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:00 2014
+	end time = Mon Jan 20 17:45:00 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 26 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:06 2014
+	end time = Mon Jan 20 17:45:06 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 27 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:06 2014
+	end time = Mon Jan 20 17:45:06 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 28 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:06 2014
+	end time = Mon Jan 20 17:45:06 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 29 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:06 2014
+	end time = Mon Jan 20 17:45:06 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 30 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:06 2014
+	end time = Mon Jan 20 17:45:06 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 31 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:06 2014
+	end time = Mon Jan 20 17:45:06 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 32 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:06 2014
+	end time = Mon Jan 20 17:45:06 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 33 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:06 2014
+	end time = Mon Jan 20 17:45:06 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.99
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.99, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.1/22
+		address: 192.168.20.1
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.99
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.99
+	}
+	refs = { 34 }
+alert: id = = <>
+	start time = Mon Jan 20 17:45:06 2014
+	end time = Mon Jan 20 17:45:06 2014
+	severity = medium
+	confidence = 7
+	completion = failed
+	description = filtering IP 192.168.20.1
+	method = {
+		description = packet sent on the network
+		ref = { cve/255-45, http://..., cwe:dff }
+	}
+	sources = {
+		address: 192.168.20.1, local.org, blalvla, 33
+		service: 22, ssh
+	}
+	targets = {
+		address: 192.168.20.99/22
+		address: 192.168.20.99
+	}
+alert: update id = = <>
+	severity = high
+	confidence = low
+	description = filtering IP 192.168.20.1
+	method = {
+		ref = { cve/255-45 }
+	}
+	sources = {
+		address: 192.168.20.1
+	}
+	refs = { 35 }

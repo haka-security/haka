@@ -1,0 +1,14 @@
+alert: id = = <>
+	severity = high
+	confidence = medium
+	description = Land attack detected
+	sources = {
+		address: 192.168.20.1
+	}
+alert: id = = <>
+	severity = high
+	confidence = medium
+	description = Land attack detected
+	sources = {
+		address: 192.168.20.1
+	}

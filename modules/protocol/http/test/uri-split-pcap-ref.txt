@@ -1,7 +1,8 @@
-debug tcp-connection: opening connection 10.2.96.127:57794 -> 10.2.104.129:80
+debug cnx: opening connection 10.2.96.127:57794 -> 10.2.104.129:80
+debug http: selecting http dissector on flow
 --> splitting uri
 /
 --> splitting uri
 /
 Table are the same
-debug tcp-connection: closing connection 10.2.96.127:57794 -> 10.2.104.129:80
+debug cnx: closing connection 10.2.96.127:57794 -> 10.2.104.129:80

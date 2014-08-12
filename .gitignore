@@ -1,5 +1,9 @@
 /make
+/workspace
 /buildtag.cmake
+/doc/genimages
+/doc/theme/haka/track.html
+/sample/mymodule/Makefile
 *.swp
 .project
 .externalToolBuilders

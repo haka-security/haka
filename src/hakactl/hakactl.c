@@ -18,7 +18,8 @@
 #include <haka/colors.h>
 #include <haka/log.h>
 #include <haka/error.h>
-#include <luadebug/user.h>
+#include <haka/module.h>
+#include <haka/luadebug/user.h>
 
 #include "config.h"
 #include "ctl_comm.h"
@@ -34,11 +35,11 @@ enum {
 static struct command* commands[] = {
 	&command_status,
 	&command_stop,
-	&command_stats,
 	&command_logs,
 	&command_loglevel,
 	&command_debug,
 	&command_interactive,
+	&command_console,
 	NULL
 };
 
@@ -56,6 +57,7 @@ static void help(const char *program)
 	fprintf(stdout, "Options:\n");
 	fprintf(stdout, "\t-h,--help:          Display this information\n");
 	fprintf(stdout, "\t--version:          Display version information\n");
+	fprintf(stdout, "\t-d,--debug:         Display debug output\n");
 
 	fprintf(stdout, "\nCommands:\n");
 	while (*iter) {
@@ -71,10 +73,11 @@ static int parse_cmdline(int *argc, char ***argv)
 	static struct option long_options[] = {
 		{ "version",      no_argument,       0, 'v' },
 		{ "help",         no_argument,       0, 'h' },
+		{ "debug",        no_argument,       0, 'd' },
 		{ 0,              0,                 0, 0 }
 	};
 
-	while ((c = getopt_long(*argc, *argv, "h", long_options, &index)) != -1) {
+	while ((c = getopt_long(*argc, *argv, "hd", long_options, &index)) != -1) {
 		switch (c) {
 		case 'h':
 			help((*argv)[0]);
@@ -84,6 +87,10 @@ static int parse_cmdline(int *argc, char ***argv)
 			printf("version %s, arch %s, %s\n", HAKA_VERSION, HAKA_ARCH, HAKA_LUA);
 			printf("API version %d\n", HAKA_API_VERSION);
 			return 0;
+
+		case 'd':
+			setlevel(HAKA_LOG_DEBUG, NULL);
+			break;
 
 		default:
 			usage(stderr, (*argv)[0]);
@@ -143,6 +150,12 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
+	if (!module_set_default_path()) {
+		fprintf(stderr, "%ls\n", clear_error());
+		clean_exit();
+		exit(1);
+	}
+
 	/* Find commands */
 	{
 		struct command **iter = commands;
@@ -183,15 +196,15 @@ int main(int argc, char *argv[])
 	/* Status command */
 	if (strcasecmp(argv[0], "STATUS") == 0) {
 		fflush(stdout);
-		ctl_send_chars(fd, "STATUS");
+		ctl_send_chars(fd, "STATUS", -1);
 
-		if (ctl_expect_chars(fd, "OK")) {
-			printf(": haka is running");
-			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
-		}
-		else {
+		if (ctl_recv_status(fd) == -1) {
 			printf(": haka not responding");
 			printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
+		}
+		else {
+			printf(": haka is running");
+			printf("\r[ %sok%s ]\n", c(GREEN, use_colors), c(CLEAR, use_colors));
 		}
 
 		return COMMAND_SUCCESS;

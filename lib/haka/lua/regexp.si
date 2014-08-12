@@ -1,0 +1,299 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%{
+#include <haka/regexp_module.h>
+#include <haka/error.h>
+
+static char *escape_chars(const char *STRING, size_t SIZE) {
+	int iter = 0;
+	char *str;
+	str = malloc(SIZE + 1);
+	if (!str) {
+		error(L"memory error");
+		return NULL;
+	}
+	while (iter < SIZE) {
+		if (STRING[iter] == '%') {
+			str[iter] = '\\';
+			iter++;
+		}
+		if (iter < SIZE) {
+			str[iter] = STRING[iter];
+		}
+		iter++;
+	}
+	str[SIZE] = '\0';
+	return str;
+}
+%}
+
+%import "haka/lua/config.si"
+%include "haka/lua/swig.si"
+
+struct regexp_result {
+	int first;
+	int last;
+
+	%extend {
+		regexp_result() {
+			struct regexp_result *ret = malloc(sizeof(struct regexp_result));
+			if (!ret) {
+				error(L"memory error");
+				return NULL;
+			}
+			*ret = regexp_result_init;
+			return ret;
+		}
+
+		~regexp_result() {
+			free($self);
+		}
+	}
+};
+
+struct regexp_sink {
+	%extend {
+		bool feed(struct vbuffer_sub *vbuf, bool eof=false,
+		          struct vbuffer_iterator **OUTPUT1=NULL,
+		          struct vbuffer_iterator **OUTPUT2=NULL) {
+			struct vbuffer_iterator begin = vbuffer_iterator_init;
+			struct vbuffer_iterator end = vbuffer_iterator_init;
+
+			int ret = $self->regexp->module->vbfeed($self, vbuf, eof, &begin, &end);
+
+			if (vbuffer_iterator_isvalid(&begin)) {
+				*OUTPUT1 = vbuffer_iterator_lua_allocate(&begin);
+				if (!*OUTPUT1) return false;
+			}
+			else {
+				*OUTPUT1 = NULL;
+			}
+
+			if (vbuffer_iterator_isvalid(&end)) {
+				*OUTPUT2 = vbuffer_iterator_lua_allocate(&end);
+				if (!*OUTPUT2) return false;
+			}
+			else {
+				*OUTPUT2 = NULL;
+			}
+
+			return (ret == REGEXP_MATCH);
+		}
+
+		bool feed(const char *STRING, size_t SIZE, bool eof=false,
+		          struct regexp_result *result=NULL) {
+			int ret = $self->regexp->module->feed($self, STRING, SIZE, eof, result);
+			return (ret == REGEXP_MATCH);
+		}
+
+		bool ispartial() {
+			return ($self->match == REGEXP_PARTIAL);
+		}
+
+		~regexp_sink() {
+			$self->regexp->module->free_regexp_sink($self);
+		}
+	}
+};
+
+%newobject regexp::create_sink;
+%newobject regexp::_match;
+
+struct regexp {
+	%extend {
+		void _match(const char *STRING, size_t SIZE, char **TEMP_OUTPUT,
+		            size_t *TEMP_SIZE, int *OUTPUT1, int *OUTPUT2) {
+			struct regexp_result result;
+
+			int ret = $self->module->exec($self, STRING, SIZE, &result);
+
+			*OUTPUT1 = -1;
+			*OUTPUT2 = -1;
+
+			if (ret != REGEXP_MATCH) return;
+
+			*TEMP_SIZE = result.last - result.first;
+			*TEMP_OUTPUT = malloc(*TEMP_SIZE);
+			if (!*TEMP_OUTPUT) {
+				error(L"memory error");
+				return;
+			}
+
+			strncpy(*TEMP_OUTPUT, STRING+result.first, *TEMP_SIZE);
+
+			*OUTPUT1 = result.first;
+			*OUTPUT2 = result.last;
+		}
+
+		struct vbuffer_sub *_match(struct vbuffer_sub *vbuf) {
+			/* We use a temporary result to avoid unneeded memory allocation */
+			struct vbuffer_sub tmp_result;
+			struct vbuffer_sub *result;
+
+			int ret = $self->module->vbexec($self, vbuf, &tmp_result);
+
+			if (ret != REGEXP_MATCH) return NULL;
+
+			result = malloc(sizeof(struct vbuffer_sub));
+			if (!result) error(L"memory error");
+
+			*result = tmp_result;
+			vbuffer_sub_register(result);
+			return result;
+		}
+
+		struct regexp_sink *create_sink() {
+			return $self->module->create_sink($self);
+		}
+
+		~regexp() {
+			$self->module->release_regexp($self);
+		}
+	}
+};
+
+%newobject regexp_module::compile;
+%newobject regexp_module::_match;
+
+struct regexp_module {
+	%extend {
+		void _match(const char *pattern, const char *STRING, size_t SIZE,
+			   int options = 0, char **TEMP_OUTPUT, size_t *TEMP_SIZE,
+			   int *OUTPUT1, int *OUTPUT2) {
+			struct regexp_result result;
+			char *esc_regexp = escape_chars(pattern, strlen(pattern));
+			int ret = $self->match(esc_regexp, options, STRING, SIZE, &result);
+			free(esc_regexp);
+
+			*OUTPUT1 = -1;
+			*OUTPUT2 = -1;
+
+			if (ret != REGEXP_MATCH) return;
+
+			*TEMP_SIZE = result.last - result.first;
+			*TEMP_OUTPUT = malloc(*TEMP_SIZE);
+			if (!*TEMP_OUTPUT) {
+				error(L"memory error");
+				return;
+			}
+
+			strncpy(*TEMP_OUTPUT, STRING+result.first, *TEMP_SIZE);
+
+			*OUTPUT1 = result.first;
+			*OUTPUT2 = result.last;
+		}
+
+		struct vbuffer_sub *_match(const char *pattern, struct vbuffer_sub *vbuf,
+					  int options = 0) {
+			/* We use a temporary result to avoid unneeded memory allocation */
+			struct vbuffer_sub tmp_result;
+			struct vbuffer_sub *result;
+
+			char *esc_regexp = escape_chars(pattern, strlen(pattern));
+			int ret = $self->vbmatch(esc_regexp, options, vbuf, &tmp_result);
+			free(esc_regexp);
+
+			if (ret != REGEXP_MATCH) return NULL;
+
+			result = malloc(sizeof(struct vbuffer_sub));
+			if (!result) error(L"memory error");
+
+			*result = tmp_result;
+			vbuffer_sub_register(result);
+			return result;
+		}
+
+		struct regexp *compile(const char *pattern, int options = 0) {
+			if (!pattern) {
+				error(L"nil argument");
+				return NULL;
+			}
+			char *esc_regexp = escape_chars(pattern, strlen(pattern));
+			struct regexp *ret = $self->compile(esc_regexp, options);
+			free(esc_regexp);
+			return ret;
+		}
+
+		%immutable;
+		int CASE_INSENSITIVE { return REGEXP_CASE_INSENSITIVE; }
+		int EXTENDED { return REGEXP_EXTENDED; }
+	}
+};
+
+%luacode {
+	local vbuffer_iterator_class = swig.getclassmetatable('vbuffer_iterator')
+	local vbuffer_iterator_blocking_class = swig.getclassmetatable('vbuffer_iterator_blocking')
+
+	swig.getclassmetatable('regexp')['.fn'].match = function (self, input, createsub, readonly)
+		local meta = getmetatable(input)
+		if vbuffer_iterator_class ~= meta and
+			vbuffer_iterator_blocking_class ~= meta then
+			return self:_match(input)
+		end
+
+		readonly = readonly or (haka.packet_mode() == 'passthrough')
+
+		local sink = self:create_sink()
+		local begin, mark
+
+		for sub in input:foreach_available() do
+			local match, mbegin, mend = sink:feed(sub, input.iseof)
+
+			if createsub then
+				if sink:ispartial() or match then
+					if not begin then
+						begin = mbegin
+
+						if sink:ispartial() then
+							-- It is possible to mark here as we are sure that no iterator
+							-- exists after begin (we are at the end of the sub without a
+							-- full match)
+							mark = begin:copy()
+							mark:mark()
+						end
+					end
+				else
+					begin = nil
+
+					if mark then
+						mark:unmark()
+						mark = nil
+					end
+				end
+			end
+
+			if match then
+				if mark then mark:unmark() end
+
+				input:move_to(mend)
+
+				if createsub then
+					return haka.vbuffer_sub(begin, mend)
+				else
+					return true
+				end
+			end
+		end
+
+		if mark then mark:unmark() end
+
+		if createsub then
+			return nil
+		else
+			return false
+		end
+	end
+
+	swig.getclassmetatable('regexp_module')['.fn'].match = function (self, pattern, input, options, createsub)
+		local meta = getmetatable(input)
+		if vbuffer_iterator_class ~= meta and
+			vbuffer_iterator_blocking_class ~= meta then
+			return self:_match(pattern, input, options or 0)
+		end
+
+		local re = self:compile(pattern, options)
+		return re:match(input, createsub)
+	end
+}

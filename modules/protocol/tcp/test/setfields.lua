@@ -24,15 +24,11 @@ function checks(proto)
 end
 
 require("protocol/ipv4")
-require("protocol/tcp")
-
--- To avoid the packet to be dropped by the tcp-connection dissector,
--- disable it
-haka.disable_dissector("tcp-connection")
+local tcp = require("protocol/tcp")
 
 haka.rule {
-	hooks = { "tcp-up" },
-	eval = function (self, pkt)
+	hook = tcp.events.receive_packet,
+	eval = function (pkt)
 		pkt.srcport = 3
 		pkt.dstport = 65535
 		pkt.seq = 123456

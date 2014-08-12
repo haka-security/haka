@@ -1,16 +1,16 @@
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
-false operation not supported (pass-through mode)
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer
+false read only buffer

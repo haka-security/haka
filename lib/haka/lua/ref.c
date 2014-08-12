@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <haka/types.h>
+#include <haka/compiler.h>
 #include <haka/lua/ref.h>
 #include <haka/lua/state.h>
 
@@ -53,7 +54,10 @@ bool lua_ref_clear(struct lua_ref *ref)
 void lua_ref_push(struct lua_State *state, struct lua_ref *ref)
 {
 	if (lua_ref_isvalid(ref)) {
-		assert(state == ref->state->L);
+#ifdef HAKA_DEBUG
+		assert(lua_state_get(state) == ref->state);
+#endif
+
 		lua_rawgeti(state, LUA_REGISTRYINDEX, ref->ref);
 	}
 	else {

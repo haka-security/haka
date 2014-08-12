@@ -1,0 +1,98 @@
+debug cnx: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
+debug cnx: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
+debug smtp: selecting smtp dissector on flow
+SMTP RESPONSE
+class Result {
+  responses : class ArrayResult {
+    1 : class Result {
+      code : "220"
+      parameter : "metasploitable.localdomain ESMTP Postfix (Ubuntu)"
+      sep : " "
+    }
+  }
+}
+SMTP COMMAND
+class Result {
+  command : "HELO"
+  parameter : "some_domain"
+}
+SMTP RESPONSE
+class Result {
+  responses : class ArrayResult {
+    1 : class Result {
+      code : "250"
+      parameter : "metasploitable.localdomain"
+      sep : " "
+    }
+  }
+}
+SMTP COMMAND
+class Result {
+  command : "MAIL"
+  parameter : "FROM: hacker@suspicious.org"
+}
+SMTP RESPONSE
+class Result {
+  responses : class ArrayResult {
+    1 : class Result {
+      code : "250"
+      parameter : "2.1.0 Ok"
+      sep : " "
+    }
+  }
+}
+SMTP COMMAND
+class Result {
+  command : "RCPT"
+  parameter : "TO: backup"
+}
+SMTP RESPONSE
+class Result {
+  responses : class ArrayResult {
+    1 : class Result {
+      code : "250"
+      parameter : "2.1.5 Ok"
+      sep : " "
+    }
+  }
+}
+SMTP COMMAND
+class Result {
+  command : "DATA"
+}
+SMTP RESPONSE
+class Result {
+  responses : class ArrayResult {
+    1 : class Result {
+      code : "354"
+      parameter : "End data with <CR><LF>.<CR><LF>"
+      sep : " "
+    }
+  }
+}
+debug cnx: closing connection 192.168.10.10:56704 -> 192.168.20.1:80
+SMTP RESPONSE
+class Result {
+  responses : class ArrayResult {
+    1 : class Result {
+      code : "250"
+      parameter : "2.0.0 Ok: queued as 2E1B4C934"
+      sep : " "
+    }
+  }
+}
+SMTP COMMAND
+class Result {
+  command : "QUIT"
+}
+SMTP RESPONSE
+class Result {
+  responses : class ArrayResult {
+    1 : class Result {
+      code : "221"
+      parameter : "2.0.0 Bye"
+      sep : " "
+    }
+  }
+}
+debug cnx: closing connection 192.168.10.10:41155 -> 192.168.20.1:25

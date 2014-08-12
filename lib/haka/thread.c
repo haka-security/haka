@@ -35,19 +35,23 @@ int thread_get_cpu_count()
 }
 
 static local_storage_t thread_id_key;
+static thread_t main_thread;
 
 INIT static void thread_id_init()
 {
 	UNUSED const bool ret = local_storage_init(&thread_id_key, NULL);
 	assert(ret);
+
+	main_thread = pthread_self();
+	assert(main_thread);
 }
 
-int thread_get_id()
+int thread_getid()
 {
 	return (ptrdiff_t)local_storage_get(&thread_id_key);
 }
 
-void thread_set_id(int id)
+void thread_setid(int id)
 {
 	local_storage_set(&thread_id_key, (void*)(ptrdiff_t)id);
 }
@@ -77,6 +81,21 @@ bool thread_cancel(thread_t thread)
 	const int err = pthread_cancel(thread);
 	if (err) {
 		error(L"thread cancel error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+thread_t thread_current()
+{
+	return pthread_self();
+}
+
+bool thread_signal(thread_t thread, int sig)
+{
+	const int err = pthread_kill(thread, sig);
+	if (err) {
+		error(L"thread sigmask error: %s", errno_error(err));
 		return false;
 	}
 	return true;
@@ -132,6 +151,30 @@ void thread_protect(void (*run)(void *), void *runarg, void (*finish)(void *), v
 	pthread_cleanup_pop(true);
 }
 
+thread_t thread_main()
+{
+	return main_thread;
+}
+
+thread_t thread_self()
+{
+	return pthread_self();
+}
+
+bool thread_equal(thread_t a, thread_t b)
+{
+	return pthread_equal(a, b) != 0;
+}
+
+bool thread_kill(thread_t thread, int sig)
+{
+	const int err = pthread_kill(thread, sig);
+	if (err) {
+		error(L"thread error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
 
 
 /*
@@ -426,6 +469,41 @@ bool semaphore_post(semaphore_t *semaphore)
 	const int err = sem_post(semaphore);
 	if (err) {
 		error(L"semaphore error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+
+/*
+ * Barrier
+ */
+
+bool barrier_init(barrier_t *barrier, uint32 count)
+{
+	const int err = pthread_barrier_init(barrier, NULL, count);
+	if (err) {
+		error(L"barrier error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool barrier_destroy(barrier_t *barrier)
+{
+	const int err = pthread_barrier_destroy(barrier);
+	if (err) {
+		error(L"barrier error: %s", errno_error(err));
+		return false;
+	}
+	return true;
+}
+
+bool barrier_wait(barrier_t *barrier)
+{
+	const int err = pthread_barrier_wait(barrier);
+	if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
+		error(L"barrier error: %s", errno_error(err));
 		return false;
 	}
 	return true;

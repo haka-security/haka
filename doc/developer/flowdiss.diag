@@ -1,0 +1,18 @@
+seqdiag {
+	edge_length = 150;
+	span_height = 20;
+
+	haka;
+	packet [label = "packet dissector"];
+	flow [label = "flow dissector"];
+	rules;
+
+	haka -> haka [label = "wait packet"];
+	haka -> packet -> flow [label = "receive"];
+	                  flow => haka [label = "create or
+retrieve context"];
+	                  flow -> rules [rightnote = "event"];
+	                  flow <-- rules;
+	                  flow => packet [label = "send"];
+	haka <-- packet <-- flow;
+}

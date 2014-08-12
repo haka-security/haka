@@ -1,2 +1,0 @@
-warn core: no registered rule
-info test: exiting

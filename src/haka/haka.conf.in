@@ -1,18 +1,14 @@
 [general]
-
 # Select the haka configuration file to use.
-configuration = "@CMAKE_HAKA_INSTALL_PREFIX@/share/haka/sample/empty.lua"
+configuration = "@CMAKE_INSTALL_PREFIX@/share/haka/sample/empty.lua"
 
 # Optionally select the number of thread to use. By default, all system thread
 # will be used.
 #thread = 4
 
-# Pass-through mode
-pass-through = no
-
 [packet]
 #Select the capture model, nfqueue or pcap
-module = "packet/nfqueue"
+module = "packet/pcap"
 
 # Select the interfaces to listen to
 #interfaces = "eth0,eth1"
@@ -23,12 +19,21 @@ interfaces = "eth0"
 #dump = yes
 #dump_input = "/tmp/input.pcap"
 #dump_output = "/tmp/output.pcap"
-#dump_drop = "/tmp/drop.pcap"
 
 [log]
 # Select the log module
 module = "log/syslog"
 
+# Set the default logging level
+#level = "info,packet=debug"
+
 [alert]
 # Select the alert module
 module = "alert/syslog"
+#module = "alert/file"
+
+# Disable alert on standard output
+#alert_on_stdout = no
+
+# alert/file module option
+#file = "/dev/null"
