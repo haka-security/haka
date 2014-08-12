@@ -11,9 +11,9 @@ Workshop media
 A media is provided which contains all you need to do the Haka workshop.
 You can download it from our web-site in the section *Resources*.
 
-This media contains a full bootable live system contains all dependencies
-of Haka (usable in a virtual machine (VirtualBox for instance) or directly
-as a bootable USB or CD.
+This media contains a full bootable live system that contains all dependencies
+of Haka (usable in a virtual machine (VirtualBox for instance) or directly as a
+bootable USB or CD.
 
 Tips
 ^^^^
@@ -21,8 +21,7 @@ Tips
 Default user/password
 """""""""""""""""""""
 
-The default user of the live system is ``user`` and password ``live``. This is true
-for both the main system and also the client and server virtual machines.
+The default user of the live system is ``user`` and password ``live``.
 
 Changing keyboard mapping
 """""""""""""""""""""""""
