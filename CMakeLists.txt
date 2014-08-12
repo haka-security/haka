@@ -32,22 +32,20 @@ message(STATUS "Build system: ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR}")
 include(version.cmake)
 set(HAKA_VERSION_BUILD "")
 
-# Add a build tag from the Git information
-execute_process(COMMAND git symbolic-ref -q --short HEAD WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-	OUTPUT_VARIABLE BUILD_BRANCH RESULT_VARIABLE HAD_ERROR OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-execute_process(COMMAND git describe --dirty --always WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-	OUTPUT_VARIABLE BUILDTAG RESULT_VARIABLE HAD_ERROR OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-if(HAD_ERROR EQUAL 0)
-	if((BUILD_BRANCH MATCHES "^master$" OR BUILD_BRANCH MATCHES "^release/.*$") AND
-		(NOT BUILDTAG MATCHES "-dirty"))
-		# Release build not dirty, no extra buildtag
-		execute_process(COMMAND rm -f "${CMAKE_SOURCE_DIR}/buildtag.cmake")
-	else()
+set(GITTAG "yes" CACHE STRING "Append git tag to build number")
+if(GITTAG STREQUAL "yes")
+	# Add a build tag from the Git information
+	execute_process(COMMAND git symbolic-ref -q --short HEAD WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+		OUTPUT_VARIABLE BUILD_BRANCH RESULT_VARIABLE HAD_ERROR OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+	execute_process(COMMAND git describe --dirty --always WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+		OUTPUT_VARIABLE BUILDTAG RESULT_VARIABLE HAD_ERROR OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+	if(HAD_ERROR EQUAL 0)
 		set(HAKA_VERSION_BUILD "+${BUILDTAG}")
-		execute_process(COMMAND echo "set(HAKA_VERSION_BUILD \"${HAKA_VERSION_BUILD}\")" OUTPUT_FILE ${CMAKE_SOURCE_DIR}/buildtag.cmake)
+		execute_process(COMMAND echo "set(HAKA_VERSION_BUILD \"${HAKA_VERSION_BUILD}\")"
+			OUTPUT_FILE ${CMAKE_SOURCE_DIR}/buildtag.cmake)
+	else()
+		include(buildtag.cmake OPTIONAL)
 	endif()
-else()
-	include(buildtag.cmake OPTIONAL)
 endif()
 
 set(HAKA_VERSION "${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}${HAKA_VERSION_BUILD}")
