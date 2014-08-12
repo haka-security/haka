@@ -203,8 +203,8 @@ static void mar_encode_value(lua_State *L, mar_Buffer *buf, int val, size_t *idx
 
             lua_pushvalue(L, -1);
             lua_getinfo(L, ">nuS", &ar);
-            if (ar.what[0] != 'L') {
-                luaL_error(L, "attempt to persist a C function '%s'", ar.name);
+            if (ar.what[0] == 'C') {
+                luaL_error(L, "attempt to persist C function '%s'", ar.name);
             }
             tag = MAR_TVAL;
             lua_pushvalue(L, -1);

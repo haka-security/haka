@@ -4,4 +4,6 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #}
 
+{% if "@TRACK_URL@" != "" %}
 <script type="text/javascript" src="@TRACK_URL@"></script>
+{% endif %}
