@@ -16,6 +16,7 @@ Welcome to Haka's User Reference Guide!
     alert.rst
     regexp.rst
     hakadissector.rst
+    hakamodule.rst
     rule.rst
     grammar.rst
     state_machine.rst
