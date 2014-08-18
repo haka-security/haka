@@ -85,6 +85,19 @@ Events
 
     Event triggered when some data are available on a UDP connection.
 
+.. haka:function:: udp_connection.events.receive_packet(flow, packet, direction)
+    :module:
+    :objtype: event
+
+    :param flow: UDP flow.
+    :paramtype flow: :haka:class:`UdpConnectionDissector`
+    :param packet: Current receive UDP packet.
+    :ptype packet: :haka:class:`UdpDissector`
+    :param direction: Data direction (``'up'`` or ``'down'``).
+    :paramtype direction: string
+
+    Event triggered when a packet associated with the stream is received.
+
 
 Helper
 ------
