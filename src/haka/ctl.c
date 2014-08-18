@@ -45,6 +45,7 @@ struct ctl_client_state {
 };
 
 struct ctl_server_state {
+	char                    *socket_file;
 	int                      fd;
 	thread_t                 thread;
 	bool                     thread_created:1;
@@ -195,7 +196,7 @@ static void ctl_server_cleanup(struct ctl_server_state *state, bool cancel_threa
 		}
 
 		if (state->binded) {
-			if (remove(HAKA_CTL_SOCKET_FILE)) {
+			if (remove(state->socket_file)) {
 				messagef(HAKA_LOG_ERROR, MODULE, L"cannot remove socket file: %s", errno_error(errno));
 			}
 
@@ -208,11 +209,17 @@ static void ctl_server_cleanup(struct ctl_server_state *state, bool cancel_threa
 	}
 }
 
-static bool ctl_server_init(struct ctl_server_state *state)
+static bool ctl_server_init(struct ctl_server_state *state, const char *socket_file)
 {
 	struct sockaddr_un addr;
 	socklen_t len;
 	int err;
+
+	state->socket_file = strdup(socket_file);
+	if (!state->socket_file) {
+		messagef(HAKA_LOG_FATAL, MODULE, L"memory error");
+		return false;
+	}
 
 	mutex_init(&state->lock, true);
 
@@ -226,13 +233,13 @@ static bool ctl_server_init(struct ctl_server_state *state)
 
 	bzero((char *)&addr, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, HAKA_CTL_SOCKET_FILE);
+	strcpy(addr.sun_path, state->socket_file);
 
 	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
 	err = bind(state->fd, (struct sockaddr *)&addr, len);
 	if (err && errno == EADDRINUSE) {
-		if (unlink(HAKA_CTL_SOCKET_FILE)) {
+		if (unlink(state->socket_file)) {
 			messagef(HAKA_LOG_FATAL, MODULE, L"cannot remove ctl server socket: %s", errno_error(errno));
 			ctl_server_cleanup(&ctl_server, true);
 			return false;
@@ -370,9 +377,9 @@ static void *ctl_server_coreloop(void *param)
 	return NULL;
 }
 
-bool prepare_ctl_server()
+bool prepare_ctl_server(const char *ctl_socket_file)
 {
-	return ctl_server_init(&ctl_server);
+	return ctl_server_init(&ctl_server, ctl_socket_file);
 }
 
 bool start_ctl_server()
