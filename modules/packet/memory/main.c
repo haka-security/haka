@@ -22,6 +22,8 @@
 #include <haka/container/list.h>
 #include <haka/pcap.h>
 
+#define PROGRESS_DELAY      5 /* 5 seconds */
+
 struct pcap_packet {
 	struct packet               core_packet;
 	struct list                 list;
@@ -39,13 +41,14 @@ struct packet_module_state {
 	struct pcap_packet         *received_head;
 	struct pcap_packet         *current;
 	struct pcap_packet         *received_tail;
+	int                         repeated;
 };
 
 /* Init parameters */
 static char  *input_file;
 static char  *output_file;
 static bool   passthrough = true;
-static int    repeat = 0;
+static int    repeat = 1;
 
 static void cleanup()
 {
@@ -71,7 +74,7 @@ static int init(struct parameters *args)
 	}
 
 	passthrough = parameters_get_boolean(args, "pass-through", true);
-	repeat = parameters_get_integer(args, "repeat", 0);
+	repeat = parameters_get_integer(args, "repeat", 1);
 
 	return 0;
 }
@@ -151,29 +154,6 @@ static bool load_packet(struct packet_module_state *state)
 
 		if (header->caplen < header->len)
 			messagef(HAKA_LOG_WARNING, L"memory", L"packet truncated");
-
-		if (state->pd.file) {
-			const size_t cur = ftell(state->pd.file);
-			const float percent = ((cur * 10000) / state->pd.file_size) / 100.f;
-			struct time time, difftime;
-			time_gettimestamp(&time);
-
-			if (time_isvalid(&state->pd.last_progress)) {
-				time_diff(&difftime, &time, &state->pd.last_progress);
-
-				if (difftime.secs >= PROGRESS_DELAY) /* 5 seconds */
-				{
-					state->pd.last_progress = time;
-					if (percent > 0) {
-						messagef(HAKA_LOG_INFO, L"memory", L"progress %.2f %%", percent);
-					}
-				}
-			}
-			else {
-				state->pd.last_progress = time;
-			}
-		}
-
 
 		packet->protocol = get_protocol(state->pd.link_type, &data, &data_offset);
 
@@ -284,6 +264,7 @@ static struct packet_module_state *init_state(int thread_id)
 	}
 
 	state->packet_id = 0;
+	state->repeated = 0;
 
 	return state;
 }
@@ -291,10 +272,27 @@ static struct packet_module_state *init_state(int thread_id)
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
 	if (!state->current) {
-		if (repeat > 0) {
-			messagef(HAKA_LOG_INFO, L"memory", L"repeating input");
+		state->repeated++;
+		if (state->repeated < repeat) {
+			const float percent = state->repeated * 100.f / repeat;
+			struct time time, difftime;
+			time_gettimestamp(&time);
+
+			if (time_isvalid(&state->pd.last_progress)) {
+				time_diff(&difftime, &time, &state->pd.last_progress);
+
+				if (difftime.secs >= PROGRESS_DELAY) /* 5 seconds */
+				{
+					state->pd.last_progress = time;
+					if (percent > 0) {
+						messagef(HAKA_LOG_INFO, L"memory", L"repeating input, progress %.2f %%", percent);
+					}
+				}
+			} else {
+				state->pd.last_progress = time;
+			}
+
 			state->current = state->received_head;
-			repeat--;
 		} else {
 			/* No more packet */
 			return 1;

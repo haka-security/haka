@@ -22,6 +22,8 @@
 #include <haka/container/list.h>
 #include <haka/pcap.h>
 
+#define PROGRESS_DELAY      5 /* 5 seconds */
+
 struct pcap_packet {
 	struct packet               core_packet;
 	struct list                 list;
