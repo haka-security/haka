@@ -6,16 +6,16 @@ find_package(PCAP REQUIRED)
 if(PCAP_FOUND)
 	INCLUDE_MODULE(pcap packet)
 
-	add_library(memory MODULE main.c)
-	set_target_properties(memory PROPERTIES OUTPUT_NAME memory)
+	add_library(benchmark MODULE main.c)
+	set_target_properties(benchmark PROPERTIES OUTPUT_NAME benchmark)
 
 	include_directories(${PCAP_INCLUDE_DIR})
-	target_link_libraries(memory ${PCAP_LIBRARY})
+	target_link_libraries(benchmark ${PCAP_LIBRARY})
 
-	DEPENDS_MODULE(memory packet-pcap packet)
-	INSTALL_MODULE(memory packet)
+	DEPENDS_MODULE(benchmark packet-pcap packet)
+	INSTALL_MODULE(benchmark packet)
 
 	# Test
 	# include(TestModuleLoad)
-	# TEST_MODULE_LOAD(packet-memory)
+	# TEST_MODULE_LOAD(packet-benchmark)
 endif()

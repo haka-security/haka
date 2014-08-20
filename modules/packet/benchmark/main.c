@@ -22,6 +22,8 @@
 #include <haka/container/list.h>
 #include <haka/pcap.h>
 
+#define MODULE L"benchmark"
+
 #define PROGRESS_DELAY      5 /* 5 seconds */
 #define MEBI 1048576.f
 #define NANO 1000000000.f
@@ -70,7 +72,7 @@ static void cleanup()
 	duration = difftime.secs + (difftime.nsecs / NANO);
 	bandwidth = size * 8 / duration / MEBI;
 
-	messagef(HAKA_LOG_INFO, L"memory",
+	messagef(HAKA_LOG_INFO, MODULE,
 			L"processing %d bytes took %d.%.9d seconds being %02f Mib/s",
 			size, difftime.secs, difftime.nsecs, bandwidth);
 
@@ -88,7 +90,7 @@ static int init(struct parameters *args)
 		input_file = strdup(input);
 	}
 	else {
-		messagef(HAKA_LOG_ERROR, L"memory", L"missing input parameter");
+		messagef(HAKA_LOG_ERROR, MODULE, L"missing input parameter");
 		cleanup();
 		return 1;
 	}
@@ -150,7 +152,7 @@ static bool load_packet(struct packet_module_state *state)
 
 	ret = pcap_next_ex(state->pd.pd, &header, &p);
 	if (ret == -1) {
-		messagef(HAKA_LOG_ERROR, L"memory", L"%s", pcap_geterr(state->pd.pd));
+		messagef(HAKA_LOG_ERROR, MODULE, L"%s", pcap_geterr(state->pd.pd));
 		return 1;
 	}
 	else if (ret == -2) {
@@ -163,7 +165,7 @@ static bool load_packet(struct packet_module_state *state)
 	}
 	else if (header->caplen == 0 ||
 			header->len < header->caplen) {
-		messagef(HAKA_LOG_ERROR, L"memory", L"skipping malformed packet %d", ++state->packet_id);
+		messagef(HAKA_LOG_ERROR, MODULE, L"skipping malformed packet %d", ++state->packet_id);
 		return 0;
 	}
 	else {
@@ -189,7 +191,7 @@ static bool load_packet(struct packet_module_state *state)
 		packet->timestamp.nsecs = header->ts.tv_usec*1000;
 
 		if (header->caplen < header->len)
-			messagef(HAKA_LOG_WARNING, L"memory", L"packet truncated");
+			messagef(HAKA_LOG_WARNING, MODULE, L"packet truncated");
 
 		packet->protocol = get_protocol(state->pd.link_type, &data, &data_offset);
 
@@ -226,12 +228,12 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 
 	assert(input);
 
-	messagef(HAKA_LOG_INFO, L"memory", L"opening file '%s'", input);
+	messagef(HAKA_LOG_INFO, MODULE, L"opening file '%s'", input);
 
 	state->pd.pd = pcap_open_offline(input, errbuf);
 
 	if (!state->pd.pd) {
-		messagef(HAKA_LOG_ERROR, L"memory", L"%s", errbuf);
+		messagef(HAKA_LOG_ERROR, MODULE, L"%s", errbuf);
 		return false;
 	}
 
@@ -246,7 +248,7 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 	/* Determine the datalink layer type. */
 	if ((state->pd.link_type = pcap_datalink(state->pd.pd)) < 0)
 	{
-		messagef(HAKA_LOG_ERROR, L"memory", L"%s", pcap_geterr(state->pd.pd));
+		messagef(HAKA_LOG_ERROR, MODULE, L"%s", pcap_geterr(state->pd.pd));
 		return false;
 	}
 
@@ -263,13 +265,13 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 	case DLT_SLIP:
 	case DLT_PPP:
 	default:
-		messagef(HAKA_LOG_ERROR, L"memory", L"%s", "unsupported data link");
+		messagef(HAKA_LOG_ERROR, MODULE, L"%s", "unsupported data link");
 		return false;
 	}
 
-	messagef(HAKA_LOG_INFO, L"memory", L"loading packet in memory", input);
+	messagef(HAKA_LOG_INFO, MODULE, L"loading packet in memory", input);
 	while(load_packet(state) == 0);
-	messagef(HAKA_LOG_INFO, L"memory", L"loaded %d bytes in memory", state->size);
+	messagef(HAKA_LOG_INFO, MODULE, L"loaded %d bytes in memory", state->size);
 
 	return true;
 }
@@ -301,7 +303,7 @@ static struct packet_module_state *init_state(int thread_id)
 		state->pf = pcap_dump_open(state->pd.pd, output_file);
 		if (!state->pf) {
 			cleanup_state(state);
-			messagef(HAKA_LOG_ERROR, L"memory", L"unable to dump on %s", output_file);
+			messagef(HAKA_LOG_ERROR, MODULE, L"unable to dump on %s", output_file);
 			return NULL;
 		}
 	}
@@ -330,7 +332,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				{
 					state->pd.last_progress = time;
 					if (percent > 0) {
-						messagef(HAKA_LOG_INFO, L"memory", L"progress %.2f %%", percent);
+						messagef(HAKA_LOG_INFO, MODULE, L"progress %.2f %%", percent);
 					}
 				}
 			} else {
@@ -443,7 +445,7 @@ static bool is_realtime()
 struct packet_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_PACKET,
-		name:        L"Memory Module",
+		name:        L"Benchmark Module",
 		description: L"Packet capture from memory module",
 		api_version: HAKA_API_VERSION,
 		init:        init,
