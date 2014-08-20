@@ -2,15 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <haka/packet_module.h>
-#include <haka/log.h>
-#include <haka/types.h>
-#include <haka/parameters.h>
-#include <haka/thread.h>
-#include <haka/error.h>
-#include <haka/engine.h>
-#include <haka/container/list.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -21,22 +12,28 @@
 #include <linux/if_ether.h>
 #include <arpa/inet.h>
 
+#include <haka/packet_module.h>
+#include <haka/log.h>
+#include <haka/types.h>
+#include <haka/parameters.h>
+#include <haka/thread.h>
+#include <haka/error.h>
+#include <haka/engine.h>
+#include <haka/container/list.h>
+#include <haka/pcap.h>
 
-/* snapshot length - a value of 65535 is sufficient to get all
- * of the packet's data on most networks (from pcap man page)
- */
-#define SNAPLEN 65535
-
-#define PROGRESS_DELAY      5 /* 5 seconds */
-
-struct pcap_packet;
+struct pcap_packet {
+	struct packet               core_packet;
+	struct list                 list;
+	struct time                 timestamp;
+	struct packet_module_state *state;
+	uint64                      id;
+	bool                        captured;
+	int                         protocol;
+};
 
 struct packet_module_state {
-	pcap_t                     *pd;
-	int                         link_type;
-	FILE                       *file;
-	size_t                      file_size;
-	struct time                 last_progress;
+	struct pcap_capture         pd;
 	pcap_dumper_t              *pf;
 	uint64                      packet_id;
 	struct pcap_packet         *received_head;
@@ -46,37 +43,10 @@ struct packet_module_state {
 	struct pcap_packet         *sent_tail;
 };
 
-struct pcap_packet {
-	struct packet               core_packet;
-	struct list                 list;
-	struct time                 timestamp;
-	struct packet_module_state *state;
-	struct pcap_pkthdr          header;
-	struct vbuffer              data;
-	struct vbuffer_iterator     select;
-	uint64                      id;
-	int                         link_type;
-	bool                        captured;
-};
-
-/*
- * Packet headers
- */
-
-struct linux_sll_header {
-	uint16     type;
-	uint16     arphdr_type;
-	uint16     link_layer_length;
-	uint64     link_layer_address;
-	uint16     protocol;
-} PACKED;
-
-
 /* Init parameters */
 static char  *input_file;
 static char  *output_file;
 static bool   passthrough = true;
-
 
 static void cleanup()
 {
@@ -123,7 +93,7 @@ static void cleanup_state(struct packet_module_state *state)
 		state->pf = NULL;
 	}
 
-	pcap_close(state->pd);
+	pcap_close(state->pd.pd);
 
 	free(state);
 }
@@ -133,10 +103,13 @@ static bool load_packet(struct packet_module_state *state)
 	int ret;
 	struct pcap_pkthdr *header;
 	const u_char *p;
+	struct vbuffer data;
+	struct vbuffer_sub sub;
+	size_t data_offset;
 
-	ret = pcap_next_ex(state->pd, &header, &p);
+	ret = pcap_next_ex(state->pd.pd, &header, &p);
 	if (ret == -1) {
-		messagef(HAKA_LOG_ERROR, L"memory", L"%s", pcap_geterr(state->pd));
+		messagef(HAKA_LOG_ERROR, L"memory", L"%s", pcap_geterr(state->pd.pd));
 		return 1;
 	}
 	else if (ret == -2) {
@@ -160,6 +133,59 @@ static bool load_packet(struct packet_module_state *state)
 
 		memset(packet, 0, sizeof(struct pcap_packet));
 
+		if (!vbuffer_create_from(&data, (char *)p, header->caplen)) {
+			free(packet);
+			return ENOMEM;
+		}
+
+		vbuffer_setwritable(&data, !passthrough);
+
+		/* fill packet data structure */
+		packet->state = state;
+		packet->captured = true;
+		packet->id = ++state->packet_id;
+		packet->timestamp.secs = header->ts.tv_sec;
+		packet->timestamp.nsecs = header->ts.tv_usec*1000;
+
+		if (header->caplen < header->len)
+			messagef(HAKA_LOG_WARNING, L"memory", L"packet truncated");
+
+		if (state->pd.file) {
+			const size_t cur = ftell(state->pd.file);
+			const float percent = ((cur * 10000) / state->pd.file_size) / 100.f;
+			struct time time, difftime;
+			time_gettimestamp(&time);
+
+			if (time_isvalid(&state->pd.last_progress)) {
+				time_diff(&difftime, &time, &state->pd.last_progress);
+
+				if (difftime.secs >= PROGRESS_DELAY) /* 5 seconds */
+				{
+					state->pd.last_progress = time;
+					if (percent > 0) {
+						messagef(HAKA_LOG_INFO, L"memory", L"progress %.2f %%", percent);
+					}
+				}
+			}
+			else {
+				state->pd.last_progress = time;
+			}
+		}
+
+
+		packet->protocol = get_protocol(state->pd.link_type, &data, &data_offset);
+
+		vbuffer_sub_create(&sub, &data, data_offset, ALL);
+		ret = vbuffer_select(&sub, &packet->core_packet.payload, NULL);
+		vbuffer_release(&data);
+		if (!ret) {
+			messagef(HAKA_LOG_ERROR, L"pcap", L"malformed packet %d", packet->id);
+			free(packet);
+			return ENOMEM;
+		}
+
+
+		/* Finally insert packet in list */
 		list_init(packet);
 		if (state->received_head) {
 			list_insert_after(packet, state->received_tail, &state->received_head, &state->received_tail);
@@ -168,47 +194,6 @@ static bool load_packet(struct packet_module_state *state)
 			state->current = packet;
 		}
 		state->received_tail = packet;
-
-		if (!vbuffer_create_from(&packet->data, (char *)p, header->caplen)) {
-			free(packet);
-			return ENOMEM;
-		}
-
-		vbuffer_setwritable(&packet->data, !passthrough);
-
-		/* fill packet data structure */
-		packet->header = *header;
-		packet->state = state;
-		packet->captured = true;
-		packet->link_type = state->link_type;
-		packet->id = ++state->packet_id;
-		packet->timestamp.secs = header->ts.tv_sec;
-		packet->timestamp.nsecs = header->ts.tv_usec*1000;
-
-		if (packet->header.caplen < packet->header.len)
-			messagef(HAKA_LOG_WARNING, L"memory", L"packet truncated");
-
-		if (state->file) {
-			const size_t cur = ftell(state->file);
-			const float percent = ((cur * 10000) / state->file_size) / 100.f;
-			struct time time, difftime;
-			time_gettimestamp(&time);
-
-			if (time_isvalid(&state->last_progress)) {
-				time_diff(&difftime, &time, &state->last_progress);
-
-				if (difftime.secs >= PROGRESS_DELAY) /* 5 seconds */
-				{
-					state->last_progress = time;
-					if (percent > 0) {
-						messagef(HAKA_LOG_INFO, L"memory", L"progress %.2f %%", percent);
-					}
-				}
-			}
-			else {
-				state->last_progress = time;
-			}
-		}
 
 		return 0;
 	}
@@ -224,30 +209,30 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 
 	messagef(HAKA_LOG_INFO, L"memory", L"opening file '%s'", input);
 
-	state->pd = pcap_open_offline(input, errbuf);
+	state->pd.pd = pcap_open_offline(input, errbuf);
 
-	if (!state->pd) {
+	if (!state->pd.pd) {
 		messagef(HAKA_LOG_ERROR, L"memory", L"%s", errbuf);
 		return false;
 	}
 
-	state->file = pcap_file(state->pd);
-	assert(state->file);
+	state->pd.file = pcap_file(state->pd.pd);
+	assert(state->pd.file);
 
-	cur = ftell(state->file);
-	fseek(state->file, 0L, SEEK_END);
-	state->file_size = ftell(state->file);
-	fseek(state->file, cur, SEEK_SET);
+	cur = ftell(state->pd.file);
+	fseek(state->pd.file, 0L, SEEK_END);
+	state->pd.file_size = ftell(state->pd.file);
+	fseek(state->pd.file, cur, SEEK_SET);
 
 	/* Determine the datalink layer type. */
-	if ((state->link_type = pcap_datalink(state->pd)) < 0)
+	if ((state->pd.link_type = pcap_datalink(state->pd.pd)) < 0)
 	{
-		messagef(HAKA_LOG_ERROR, L"memory", L"%s", pcap_geterr(state->pd));
+		messagef(HAKA_LOG_ERROR, L"memory", L"%s", pcap_geterr(state->pd.pd));
 		return false;
 	}
 
 	/* Check for supported datalink layer. */
-	switch (state->link_type)
+	switch (state->pd.link_type)
 	{
 	case DLT_EN10MB:
 	case DLT_NULL:
@@ -288,7 +273,7 @@ static struct packet_module_state *init_state(int thread_id)
 
 	if (output_file) {
 		/* open pcap savefile */
-		state->pf = pcap_dump_open(state->pd, output_file);
+		state->pf = pcap_dump_open(state->pd.pd, output_file);
 		if (!state->pf) {
 			cleanup_state(state);
 			messagef(HAKA_LOG_ERROR, L"memory", L"unable to dump on %s", output_file);
@@ -301,163 +286,34 @@ static struct packet_module_state *init_state(int thread_id)
 	return state;
 }
 
-static int get_link_type_offset(struct pcap_packet *pkt)
-{
-	size_t size;
-
-	switch (pkt->link_type)
-	{
-	case DLT_LINUX_SLL: size = sizeof(struct linux_sll_header); break;
-	case DLT_EN10MB:    size = sizeof(struct ethhdr); break;
-	case DLT_IPV4:
-	case DLT_RAW:       size = 0; break;
-	case DLT_NULL:      size = 4; break;
-
-	default:            assert(!"unsupported link type"); return -1;
-	}
-
-	return size;
-}
-
-static int get_protocol(struct pcap_packet *pkt, size_t *data_offset)
-{
-	size_t len, size;
-	struct vbuffer_sub sub;
-	const uint8* data = NULL;
-
-	size = get_link_type_offset(pkt);
-	*data_offset = size;
-
-	if (size > 0) {
-		vbuffer_sub_create(&sub, &pkt->data, 0, size);
-		data = vbuffer_sub_flatten(&sub, &len);
-
-		if (len < *data_offset) {
-			messagef(HAKA_LOG_ERROR, L"memory", L"malformed packet %d", pkt->id);
-			return -1;
-		}
-
-		assert(data);
-	}
-
-	switch (pkt->link_type)
-	{
-	case DLT_LINUX_SLL:
-		{
-			struct linux_sll_header *eh = (struct linux_sll_header *)data;
-			if (eh) return ntohs(eh->protocol);
-			else return 0;
-		}
-		break;
-
-	case DLT_EN10MB:
-		{
-			struct ethhdr *eh = (struct ethhdr *)data;
-			if (eh) return ntohs(eh->h_proto);
-			else return 0;
-		}
-		break;
-
-	case DLT_IPV4:
-	case DLT_RAW:
-		return ETH_P_IP;
-
-	case DLT_NULL:
-		*data_offset = 4;
-		if (*(uint32 *)data == PF_INET) {
-			return ETH_P_IP;
-		}
-		else {
-			return -1;
-		}
-		break;
-
-	default:
-		assert(!"unsupported link type");
-		return -1;
-	}
-}
-
-static bool packet_build_payload(struct pcap_packet *packet)
-{
-	struct vbuffer_sub sub;
-	size_t data_offset;
-	if (get_protocol(packet, &data_offset) < 0) {
-		return false;
-	}
-
-	vbuffer_sub_create(&sub, &packet->data, data_offset, ALL);
-
-	return vbuffer_select(&sub, &packet->core_packet.payload, &packet->select);
-}
-
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
-	/* first check if a packet is waiting in the sent queue */
-	if (state->sent_head) {
-		struct pcap_packet *packet = state->sent_head;
-
-		list_remove(packet, &state->sent_head, &state->sent_tail);
-		packet->captured = true;
-
-		*pkt = (struct packet *)packet;
-		return 0;
+	if (!state->current) {
+		/* No more packet */
+		return 1;
 	}
-	else {
-		if (!state->current) {
-			/* No more packet */
-			return 1;
-		}
 
-		if (!packet_build_payload(state->current)) {
-			return ENOMEM;
-		}
+	*pkt = (struct packet *)state->current;
+	state->current = list_next(state->current);
+	return 0;
 
-		*pkt = (struct packet *)state->current;
-		state->current = list_next(state->current);
-		return 0;
-
-	}
 }
 
 static void packet_verdict(struct packet *orig_pkt, filter_result result)
 {
-	/* dump capture in pcap file */
-	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-
-	if (vbuffer_isvalid(&pkt->data)) {
-		vbuffer_restore(&pkt->select, &pkt->core_packet.payload, false);
-
-		if (pkt->state->pf && result == FILTER_ACCEPT) {
-			const uint8 *data;
-			size_t len;
-
-			data = vbuffer_flatten(&pkt->data, &len);
-			if (!data) {
-				assert(check_error());
-				vbuffer_clear(&pkt->data);
-				return;
-			}
-
-			if (pkt->header.caplen != len) {
-				pkt->header.len = len;
-				pkt->header.caplen = len;
-			}
-
-			pcap_dump((u_char *)pkt->state->pf, &(pkt->header), data);
-		}
-
-		vbuffer_clear(&pkt->data);
-	}
+	/* Nothing to do */
 }
 
 static const char *packet_get_dissector(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	size_t data_offset;
-	switch (get_protocol(pkt, &data_offset)) {
+
+	switch (pkt->protocol) {
 	case ETH_P_IP:
 		return "ipv4";
+
+	case -1:
+		messagef(HAKA_LOG_ERROR, L"pcap", L"malformed packet %d", pkt->id);
 
 	default:
 		return NULL;
@@ -472,37 +328,21 @@ static uint64 packet_get_id(struct packet *orig_pkt)
 
 static void packet_do_release(struct packet *orig_pkt)
 {
-	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-
-	if (vbuffer_isvalid(&pkt->data)) {
-		packet_verdict(orig_pkt, FILTER_DROP);
-	}
-
-	vbuffer_release(&pkt->core_packet.payload);
-	vbuffer_release(&pkt->data);
-	free(pkt);
+	/* Nothing to do */
 }
 
 static enum packet_status packet_getstate(struct packet *orig_pkt)
 {
 	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
 
-	if (vbuffer_isvalid(&pkt->data) && !list_next(pkt) && !list_prev(pkt)) {
-		if (pkt->captured)
-			return STATUS_NORMAL;
-		else
-			return STATUS_FORGED;
-	}
-	else {
-		return STATUS_SENT;
-	}
+	if (pkt->captured)
+		return STATUS_NORMAL;
+	else
+		return STATUS_FORGED;
 }
 
 static struct packet *new_packet(struct packet_module_state *state, size_t size)
 {
-	uint8 *data;
-	size_t data_offset, len;
-	struct vbuffer_sub sub;
 	struct pcap_packet *packet = malloc(sizeof(struct pcap_packet));
 	if (!packet) {
 		error(L"Memory error");
@@ -514,59 +354,11 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	list_init(packet);
 	packet->state = state;
 	packet->captured = false;
-	packet->link_type = state->link_type;
 	time_gettimestamp(&packet->timestamp);
-
-	data_offset = get_link_type_offset(packet);
-	size += data_offset;
-
-	if (!vbuffer_create_new(&packet->data, size, true)) {
-		assert(check_error());
-		free(packet);
-		return NULL;
-	}
-
-	vbuffer_sub_create(&sub, &packet->data, 0, data_offset);
-
-	data = vbuffer_mmap(&sub, &len, true, NULL, NULL);
-	assert(data || len == 0);
-	assert(len == data_offset);
-
-	packet->header.len = size;
-	packet->header.caplen = size;
 	packet->id = 0;
 
-	switch (state->link_type)
-	{
-	case DLT_IPV4:
-	case DLT_RAW:
-		break;
-
-	case DLT_NULL:
-		*(uint32 *)data = PF_INET;
-		break;
-
-	case DLT_LINUX_SLL:
-		{
-			struct linux_sll_header *eh = (struct linux_sll_header *)data;
-			eh->protocol = htons(ETH_P_IP);
-		}
-		break;
-
-	case DLT_EN10MB:
-		{
-			struct ethhdr *eh = (struct ethhdr *)data;
-			eh->h_proto = htons(ETH_P_IP);
-		}
-		break;
-
-	default:
-		assert(0);
-		break;
-	}
-
-	if (!packet_build_payload(packet)) {
-		vbuffer_release(&packet->data);
+	if (!vbuffer_create_new(&packet->core_packet.payload, size, true)) {
+		assert(check_error());
 		free(packet);
 		return NULL;
 	}
@@ -576,19 +368,8 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 static bool send_packet(struct packet *orig_pkt)
 {
-	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-
-	if (passthrough) {
-		error(L"sending is not supported in pass-through");
-		return false;
-	}
-
-	assert(vbuffer_isvalid(&pkt->data));
-	assert(!list_next(pkt) && !list_prev(pkt));
-
-	list_insert_after(pkt, pkt->state->sent_tail, &pkt->state->sent_head, &pkt->state->sent_tail);
-
-	return true;
+	error(L"sending is not supported in pass-through");
+	return false;
 }
 
 static size_t get_mtu(struct packet *pkt)
@@ -606,7 +387,6 @@ static bool is_realtime()
 {
 	return false;
 }
-
 
 struct packet_module HAKA_MODULE = {
 	module: {

@@ -4,13 +4,16 @@
 
 find_package(PCAP REQUIRED)
 if(PCAP_FOUND)
-	add_library(packet-memory MODULE main.c)
-	set_target_properties(packet-memory PROPERTIES OUTPUT_NAME memory)
+	INCLUDE_MODULE(pcap packet)
+
+	add_library(memory MODULE main.c)
+	set_target_properties(memory PROPERTIES OUTPUT_NAME memory)
 
 	include_directories(${PCAP_INCLUDE_DIR})
-	target_link_libraries(packet-memory ${PCAP_LIBRARY})
+	target_link_libraries(memory ${PCAP_LIBRARY})
 
-	INSTALL_MODULE(packet-memory packet)
+	DEPENDS_MODULE(memory packet-pcap packet)
+	INSTALL_MODULE(memory packet)
 
 	# Test
 	# include(TestModuleLoad)
