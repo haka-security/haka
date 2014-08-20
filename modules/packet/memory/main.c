@@ -23,6 +23,8 @@
 #include <haka/pcap.h>
 
 #define PROGRESS_DELAY      5 /* 5 seconds */
+#define MEBI 1048576.f
+#define NANO 1000000000.f
 
 struct pcap_packet {
 	struct packet               core_packet;
@@ -35,24 +37,45 @@ struct pcap_packet {
 };
 
 struct packet_module_state {
-	struct pcap_capture         pd;
-	pcap_dumper_t              *pf;
-	uint64                      packet_id;
-	struct pcap_packet         *received_head;
-	struct pcap_packet         *current;
-	struct pcap_packet         *received_tail;
-	int                         repeated;
-	int                         size;
+	struct pcap_capture  pd;
+	pcap_dumper_t       *pf;
+	uint64               packet_id;
+	struct pcap_packet  *received_head;
+	struct pcap_packet  *current;
+	struct pcap_packet  *received_tail;
+	int                  repeated;
+	size_t               size;
+	bool                 started;
+	struct time          start;
+	struct time          end;
 };
 
 /* Init parameters */
-static char  *input_file;
-static char  *output_file;
-static bool   passthrough = true;
-static int    repeat = 1;
+static char         *input_file;
+static char         *output_file;
+static bool          passthrough = true;
+static int           repeat = 1;
+static mutex_t       stats_lock;
+static struct time   start = INVALID_TIME;
+static struct time   end = INVALID_TIME;
+static size_t        size;
 
 static void cleanup()
 {
+	struct time difftime;
+	double duration;
+	double bandwidth;
+
+	time_diff(&difftime, &end, &start);
+	duration = difftime.secs + (difftime.nsecs / NANO);
+	bandwidth = size * 8 / duration / MEBI;
+
+	messagef(HAKA_LOG_INFO, L"memory",
+			L"processing %d bytes took %d.%.9d seconds being %02f Mib/s",
+			size, difftime.secs, difftime.nsecs, bandwidth);
+
+	mutex_destroy(&stats_lock);
+
 	free(input_file);
 	free(output_file);
 }
@@ -77,6 +100,8 @@ static int init(struct parameters *args)
 	passthrough = parameters_get_boolean(args, "pass-through", true);
 	repeat = parameters_get_integer(args, "repeat", 1);
 
+	mutex_init(&stats_lock, false);
+
 	return 0;
 }
 
@@ -92,6 +117,16 @@ static bool pass_through()
 
 static void cleanup_state(struct packet_module_state *state)
 {
+	mutex_lock(&stats_lock);
+	if (!time_isvalid(&start) || time_cmp(&state->start, &start) < 0) {
+		start = state->start;
+	}
+	if (!time_isvalid(&end) || time_cmp(&state->end, &end) > 0) {
+		end = state->end;
+	}
+	size += state->size * state->repeated;
+	mutex_unlock(&stats_lock);
+
 	if (state->pf) {
 		pcap_dump_close(state->pf);
 		state->pf = NULL;
@@ -249,6 +284,11 @@ static struct packet_module_state *init_state(int thread_id)
 		return NULL;
 	}
 
+	state->packet_id = 0;
+	state->repeated = 0;
+	state->size = 0;
+	state->started = false;
+
 	bzero(state, sizeof(struct packet_module_state));
 
 	if (!load_pcap(state, input_file)) {
@@ -266,15 +306,16 @@ static struct packet_module_state *init_state(int thread_id)
 		}
 	}
 
-	state->packet_id = 0;
-	state->repeated = 0;
-	state->size = 0;
-
 	return state;
 }
 
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
+	if (!state->started) {
+		time_gettimestamp(&state->start);
+		state->started = true;
+	}
+
 	if (!state->current) {
 		state->repeated++;
 		if (state->repeated < repeat) {
@@ -289,7 +330,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				{
 					state->pd.last_progress = time;
 					if (percent > 0) {
-						messagef(HAKA_LOG_INFO, L"memory", L"repeating input, progress %.2f %%", percent);
+						messagef(HAKA_LOG_INFO, L"memory", L"progress %.2f %%", percent);
 					}
 				}
 			} else {
@@ -311,7 +352,8 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 static void packet_verdict(struct packet *orig_pkt, filter_result result)
 {
-	/* Nothing to do */
+	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
+	time_gettimestamp(&pkt->state->end);
 }
 
 static const char *packet_get_dissector(struct packet *orig_pkt)
