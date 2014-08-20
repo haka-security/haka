@@ -42,6 +42,7 @@ struct packet_module_state {
 	struct pcap_packet         *current;
 	struct pcap_packet         *received_tail;
 	int                         repeated;
+	int                         size;
 };
 
 /* Init parameters */
@@ -166,6 +167,7 @@ static bool load_packet(struct packet_module_state *state)
 			return ENOMEM;
 		}
 
+		state->size += header->caplen - data_offset;
 
 		/* Finally insert packet in list */
 		list_init(packet);
@@ -232,6 +234,7 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 
 	messagef(HAKA_LOG_INFO, L"memory", L"loading packet in memory", input);
 	while(load_packet(state) == 0);
+	messagef(HAKA_LOG_INFO, L"memory", L"loaded %d bytes in memory", state->size);
 
 	return true;
 }
@@ -265,6 +268,7 @@ static struct packet_module_state *init_state(int thread_id)
 
 	state->packet_id = 0;
 	state->repeated = 0;
+	state->size = 0;
 
 	return state;
 }
