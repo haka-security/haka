@@ -85,5 +85,5 @@ bool stdout_support_colors();
 	end
 
 	package.cpath = addpath(package.cpath, hakainit.module_path(true), { hakainit.module_prefix .. '?' .. hakainit.module_suffix })
-	package.path = addpath(package.path, hakainit.module_path(false), { '?.bc', '?.lua' })
+	package.path = addpath(package.path, hakainit.module_path(false), { '?.bc', '?.lua', '?/init.lua' })
 }
