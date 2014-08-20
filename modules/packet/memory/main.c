@@ -39,14 +39,13 @@ struct packet_module_state {
 	struct pcap_packet         *received_head;
 	struct pcap_packet         *current;
 	struct pcap_packet         *received_tail;
-	struct pcap_packet         *sent_head;
-	struct pcap_packet         *sent_tail;
 };
 
 /* Init parameters */
 static char  *input_file;
 static char  *output_file;
 static bool   passthrough = true;
+static int    repeat = 0;
 
 static void cleanup()
 {
@@ -72,6 +71,7 @@ static int init(struct parameters *args)
 	}
 
 	passthrough = parameters_get_boolean(args, "pass-through", true);
+	repeat = parameters_get_integer(args, "repeat", 0);
 
 	return 0;
 }
@@ -289,8 +289,14 @@ static struct packet_module_state *init_state(int thread_id)
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
 {
 	if (!state->current) {
-		/* No more packet */
-		return 1;
+		if (repeat > 0) {
+			messagef(HAKA_LOG_INFO, L"memory", L"repeating input");
+			state->current = state->received_head;
+			repeat--;
+		} else {
+			/* No more packet */
+			return 1;
+		}
 	}
 
 	*pkt = (struct packet *)state->current;
