@@ -93,7 +93,9 @@ static void cleanup_state(struct packet_module_state *state)
 		state->pf = NULL;
 	}
 
-	pcap_close(state->pd.pd);
+	if (state->pd.pd) {
+		pcap_close(state->pd.pd);
+	}
 
 	free(state);
 }
