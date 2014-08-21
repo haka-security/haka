@@ -293,17 +293,17 @@ static struct packet_module_state *init_state(int thread_id)
 	return state;
 }
 
-static bool packet_build_payload(struct packet *packet, int link_type, struct vbuffer *data, struct vbuffer_iterator *select)
+static bool packet_build_payload(struct pcap_packet *packet)
 {
 	struct vbuffer_sub sub;
 	size_t data_offset;
-	if (get_protocol(link_type, data, &data_offset) < 0) {
+	if (get_protocol(packet->link_type, &packet->core_packet.payload, &data_offset) < 0) {
 		return false;
 	}
 
-	vbuffer_sub_create(&sub, data, data_offset, ALL);
+	vbuffer_sub_create(&sub, &packet->data, data_offset, ALL);
 
-	return vbuffer_select(&sub, &packet->payload, select);
+	return vbuffer_select(&sub, &packet->core_packet.payload, &packet->select);
 }
 
 static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
@@ -442,7 +442,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 					}
 				}
 
-				if (!packet_build_payload(&packet->core_packet, packet->link_type, &packet->data, &packet->select)) {
+				if (!packet_build_payload(packet)) {
 					messagef(HAKA_LOG_ERROR, L"pcap", L"malformed packet %d", packet->id);
 					vbuffer_release(&packet->data);
 					free(packet);
@@ -604,7 +604,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 		break;
 	}
 
-	if (!packet_build_payload(&packet->core_packet, packet->link_type, &packet->data, &packet->select)) {
+	if (!packet_build_payload(packet)) {
 		vbuffer_release(&packet->data);
 		free(packet);
 		return NULL;
