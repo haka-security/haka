@@ -54,7 +54,7 @@ struct packet_module_state {
 static char         *input_file;
 static bool          passthrough = true;
 static int           repeat = 1;
-static mutex_t       stats_lock;
+static mutex_t       stats_lock = MUTEX_INIT;
 static struct time   start = INVALID_TIME;
 static struct time   end = INVALID_TIME;
 static size_t        size;
@@ -72,8 +72,6 @@ static void cleanup()
 	messagef(HAKA_LOG_INFO, MODULE,
 			L"processing %d bytes took %d.%.9d seconds being %02f Mib/s",
 			size, difftime.secs, difftime.nsecs, bandwidth);
-
-	mutex_destroy(&stats_lock);
 
 	free(input_file);
 }
@@ -93,8 +91,6 @@ static int init(struct parameters *args)
 
 	passthrough = parameters_get_boolean(args, "pass-through", true);
 	repeat = parameters_get_integer(args, "repeat", 1);
-
-	mutex_init(&stats_lock, false);
 
 	return 0;
 }
