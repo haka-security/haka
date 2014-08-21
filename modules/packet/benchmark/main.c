@@ -26,7 +26,6 @@
 
 #define PROGRESS_DELAY      5 /* 5 seconds */
 #define MEBI 1048576.f
-#define NANO 1000000000.f
 
 struct pcap_packet {
 	struct packet               core_packet;
@@ -69,7 +68,7 @@ static void cleanup()
 	double bandwidth;
 
 	time_diff(&difftime, &end, &start);
-	duration = difftime.secs + (difftime.nsecs / NANO);
+	duration = time_sec(&difftime);
 	bandwidth = size * 8 / duration / MEBI;
 
 	messagef(HAKA_LOG_INFO, MODULE,
