@@ -43,21 +43,23 @@ static void help(const char *program)
 	usage(stdout, program);
 
 	fprintf(stdout, "Options:\n");
-	fprintf(stdout, "\t-h,--help:              Display this information\n");
-	fprintf(stdout, "\t--version:              Display version information\n");
-	fprintf(stdout, "\t-c,--config <conf>:     Load a specific configuration file\n"
-					"\t                          (default: " HAKA_CONFIG ")\n");
-	fprintf(stdout, "\t-r,--rule <rule>:       Override the rule configuration file\n");
-	fprintf(stdout, "\t-d,--debug:             Display debug output\n");
+	fprintf(stdout, "\t-h,--help:               Display this information\n");
+	fprintf(stdout, "\t--version:               Display version information\n");
+	fprintf(stdout, "\t-c,--config <conf>:      Load a specific configuration file\n"
+			"\t                           (default: " HAKA_CONFIG ")\n");
+	fprintf(stdout, "\t-r,--rule <rule>:        Override the rule configuration file\n");
+	fprintf(stdout, "\t-d,--debug:              Display debug output\n");
 	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
-	fprintf(stdout, "\t                        Override configuration parameter\n");
-	fprintf(stdout, "\t-l,--loglevel <level>:  Set the log level\n");
-	fprintf(stdout, "\t                          (debug, info, warning, error or fatal)\n");
-	fprintf(stdout, "\t--debug-lua:            Activate lua debugging (and keep haka in foreground)\n");
-	fprintf(stdout, "\t--dump-dissector-graph: Dump dissector internals (grammar and state machine) in file <name>.dot\n");
-	fprintf(stdout, "\t--no-daemon:            Do no run in the background\n");
-	fprintf(stdout, "\t--pid-file <pid-file>   Full path to pid file\n");
-	fprintf(stdout, "\t--ctl-file <ctl-file>   Full path to socket control file\n");
+	fprintf(stdout, "\t                          Override configuration parameter\n");
+	fprintf(stdout, "\t-l,--loglevel <level>:    Set the log level\n");
+	fprintf(stdout, "\t                            (debug, info, warning, error or fatal)\n");
+	fprintf(stdout, "\t--debug-lua:              Activate lua debugging (and keep haka in foreground)\n");
+	fprintf(stdout, "\t--dump-dissector-graph:   Dump dissector internals (grammar and state machine) in file <name>.dot\n");
+	fprintf(stdout, "\t--no-daemon:              Do no run in the background\n");
+	fprintf(stdout, "\t--pid-file <pid-file>     Full path to pid file\n"
+			"\t                            (default: " HAKA_PID_FILE ")\n");
+	fprintf(stdout, "\t--ctl-socket <ctl-socket> Full path to socket control file\n"
+			"\t                            (default: " HAKA_CTL_SOCKET_FILE ")\n");
 }
 
 static bool  daemonize = true;
