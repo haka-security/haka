@@ -201,6 +201,8 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 	curl_easy_setopt(connector->curl, CURLOPT_POSTFIELDS, NULL);
 	curl_easy_setopt(connector->curl, CURLOPT_URL, url);
 
+	curl_easy_setopt(connector->curl, CURLOPT_TIMEOUT, 5);
+
 	res = curl_easy_perform(connector->curl);
 
 	if (res != CURLE_OK) {
@@ -267,22 +269,6 @@ static void *elasticsearch_request_thread(void *_connector)
 	struct elasticsearch_connector *connector = _connector;
 	char buffer[BUFFER_SIZE];
 	char url[BUFFER_SIZE];
-	CURLcode res;
-
-	/* Test connection */
-	curl_easy_setopt(connector->curl, CURLOPT_HTTPGET, 1L);
-	curl_easy_setopt(connector->curl, CURLOPT_WRITEFUNCTION, &write_callback_null);
-	curl_easy_setopt(connector->curl, CURLOPT_URL, connector->server_address);
-
-	res = curl_easy_perform(connector->curl);
-	if (res != CURLE_OK) {
-		error(L"unable to connect to elasticsearch server '%s': %s",
-				connector->server_address, curl_easy_strerror(res));
-		return NULL;
-	}
-
-	messagef(HAKA_LOG_DEBUG, L"elasticsearch", L"connected to elasticsearch server '%s'",
-			connector->server_address);
 
 	while (!connector->exit) {
 		struct list2 copy;
