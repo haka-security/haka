@@ -39,7 +39,6 @@ struct pcap_packet {
 
 struct packet_module_state {
 	struct pcap_capture  pd;
-	pcap_dumper_t       *pf;
 	uint64               packet_id;
 	struct pcap_packet  *received_head;
 	struct pcap_packet  *current;
@@ -53,7 +52,6 @@ struct packet_module_state {
 
 /* Init parameters */
 static char         *input_file;
-static char         *output_file;
 static bool          passthrough = true;
 static int           repeat = 1;
 static mutex_t       stats_lock;
@@ -78,12 +76,11 @@ static void cleanup()
 	mutex_destroy(&stats_lock);
 
 	free(input_file);
-	free(output_file);
 }
 
 static int init(struct parameters *args)
 {
-	const char *input, *output;
+	const char *input;
 
 	if ((input = parameters_get_string(args, "file", NULL))) {
 		input_file = strdup(input);
@@ -92,10 +89,6 @@ static int init(struct parameters *args)
 		messagef(HAKA_LOG_ERROR, MODULE, L"missing input parameter");
 		cleanup();
 		return 1;
-	}
-
-	if ((output = parameters_get_string(args, "output", NULL))) {
-		output_file = strdup(output);
 	}
 
 	passthrough = parameters_get_boolean(args, "pass-through", true);
@@ -127,11 +120,6 @@ static void cleanup_state(struct packet_module_state *state)
 	}
 	size += state->size * state->repeated;
 	mutex_unlock(&stats_lock);
-
-	if (state->pf) {
-		pcap_dump_close(state->pf);
-		state->pf = NULL;
-	}
 
 	if (state->pd.pd) {
 		pcap_close(state->pd.pd);
@@ -295,16 +283,6 @@ static struct packet_module_state *init_state(int thread_id)
 	if (!load_pcap(state, input_file)) {
 		cleanup_state(state);
 		return NULL;
-	}
-
-	if (output_file) {
-		/* open pcap savefile */
-		state->pf = pcap_dump_open(state->pd.pd, output_file);
-		if (!state->pf) {
-			cleanup_state(state);
-			messagef(HAKA_LOG_ERROR, MODULE, L"unable to dump on %s", output_file);
-			return NULL;
-		}
 	}
 
 	return state;
