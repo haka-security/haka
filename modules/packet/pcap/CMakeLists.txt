@@ -12,8 +12,6 @@ if(PCAP_FOUND)
 
 	INSTALL_MODULE(packet-pcap packet)
 
-	install(DIRECTORY haka DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.si")
-
 	# Test
 	# include(TestModuleLoad)
 	# TEST_MODULE_LOAD(packet-pcap)
