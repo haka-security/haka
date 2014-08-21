@@ -301,8 +301,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			if (time_isvalid(&state->pd.last_progress)) {
 				time_diff(&difftime, &time, &state->pd.last_progress);
 
-				if (difftime.secs >= PROGRESS_DELAY) /* 5 seconds */
-				{
+				if (difftime.secs >= PROGRESS_DELAY) {
 					state->pd.last_progress = time;
 					if (percent > 0) {
 						messagef(HAKA_LOG_INFO, MODULE, L"progress %.2f %%", percent);
