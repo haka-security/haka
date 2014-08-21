@@ -354,7 +354,8 @@ static uint64 packet_get_id(struct packet *orig_pkt)
 
 static void packet_do_release(struct packet *orig_pkt)
 {
-	/* Nothing to do */
+	/* Nothing to do as packet are in memory and will be released on state
+	 * cleanup */
 }
 
 static enum packet_status packet_getstate(struct packet *orig_pkt)
