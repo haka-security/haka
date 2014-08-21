@@ -395,7 +395,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 static bool send_packet(struct packet *orig_pkt)
 {
-	error(L"sending is not supported in pass-through");
+	error(L"sending is not supported");
 	return false;
 }
 
