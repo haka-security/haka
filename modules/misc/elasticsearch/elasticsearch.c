@@ -291,8 +291,6 @@ static void *elasticsearch_request_thread(void *_connector)
 		mutex_unlock(&connector->request_mutex);
 
 		/* Build request data */
-		vector_resize(&connector->request_content, 0);
-
 		end = list2_end(&copy);
 		for (iter = list2_begin(&copy); iter != end; ) {
 			struct elasticsearch_request *req = list2_get(iter, struct elasticsearch_request, list);
@@ -308,6 +306,7 @@ static void *elasticsearch_request_thread(void *_connector)
 			case INSERT:
 			case UPDATE:
 				snprintf(url, BUFFER_SIZE, "%s/_bulk", connector->server_address);
+				vector_resize(&connector->request_content, 0);
 
 				for (; iter != end; ) {
 					req = list2_get(iter, struct elasticsearch_request, list);
