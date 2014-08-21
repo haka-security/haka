@@ -1,0 +1,109 @@
+#!/bin/sh
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+set -e
+
+PAD=".................................................."
+
+_usage() {
+	echo "Usage: $1 [-v] <dir|file>"
+	exit 1
+}
+
+_error() {
+	printf "$@" 1>&2
+}
+
+_info() {
+	printf "$@"
+}
+
+_debug() {
+	if $DEBUG; then
+		printf "$@"
+	fi
+}
+
+_bench_dir() {
+	for TARGET in $1/*.pcap; do
+		_do_bench $TARGET
+	done
+}
+
+_do_bench() {
+	PCAP="$1"
+	TEST_PATH="${PCAP%-*}"
+	RULE="$TEST_PATH.lua"
+	OUT="$TEST_PATH.txt"
+	REPEAT="${PCAP##*-}"
+	REPEAT="${REPEAT%.*}"
+	NAME="${TEST_PATH##*/}"
+
+	_info "%s %0.*s" "$NAME" `expr ${#PAD} - ${#NAME}` "$PAD"
+	_debug "\n"
+	_debug "haka -c $CONF -r $RULE --pid-file ./haka.pid --ctl-file ./haka.sock --no-daemon --opt general:thread=$THREAD --opt packet:module=packet/benchmark --opt packet:repeat=$REPEAT --opt packet:file=$PCAP\n"
+	_debug "output at $OUT\n"
+
+	set +e
+	stdbuf -oL \
+	haka -c $CONF -r $RULE \
+		--pid-file /tmp/haka.pid --ctl-file /tmp/haka.sock \
+		--no-daemon \
+		--opt general:thread=$THREAD \
+		--opt packet:module=packet/benchmark \
+		--opt packet:repeat=$REPEAT \
+		--opt packet:file=$PCAP 2>&1 \
+		| tee $OUT | gawk -f $BENCH_PROGRESS_FILTER
+	RET=$?
+	set -e
+
+	if [ $RET -ne 0 ]; then
+		_info "\033[KFailed\n"
+		RESULT="$RESULT$NAME Failed\n"
+		return
+	fi
+
+	RES=`gawk -f $BENCH_RESULT_FILTER $OUT`
+	RESULT="$RESULT$NAME $THREAD $RES\n"
+}
+
+[ -z "$THREAD" ] && THREAD=`nproc`
+BENCH_RESULT_FILTER="$0.awk"
+BENCH_PROGRESS_FILTER="$0-progress.awk"
+DEBUG=false
+
+while getopts ":v" OPT; do
+	case $OPT in
+	v)
+		DEBUG=true
+	;;
+	\?)
+		_usage $0
+	;;
+	esac
+done
+
+shift $((OPTIND-1))
+
+if [ -z "$1" ]; then
+	_usage $0
+fi
+
+for TARGET in "$@"; do
+	if [ -d $TARGET ]; then
+		RESULT_FILE="$TARGET/result.txt"
+		_bench_dir $TARGET
+	elif [ -f $TARGET ]; then
+		RESULT_FILE="$TARGET-result.txt"
+		_do_bench $TARGET
+	else
+		_error "invalid target $TARGET\n"
+	fi
+done
+
+# Save result
+echo -n $RESULT > $RESULT_FILE
+
+_info "\nResults (also in $RESULT_FILE):\n"
+echo $RESULT
