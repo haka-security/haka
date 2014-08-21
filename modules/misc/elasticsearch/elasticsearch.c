@@ -216,6 +216,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 		return -1;
 	}
 
+	/* Check for the rest API return code, treat non 2** has error. */
 	if (ret_code < 200 || ret_code >= 300) {
 		free(resdata.string);
 		return ret_code;
@@ -445,7 +446,7 @@ bool elasticsearch_insert(struct elasticsearch_connector *connector, const char 
 	req->request_type = INSERT;
 	req->index = strdup(index);
 	req->type = strdup(type);
-	if (!req->index || !req->index) {
+	if (!req->index || !req->type) {
 		error(L"memory error");
 		free_request(req);
 		return false;
@@ -548,6 +549,7 @@ bool elasticsearch_insert_sync(struct elasticsearch_connector *connector, const 
 	json_dump = json_dumps(doc, JSON_COMPACT);
 	if (!json_dump) {
 		error(L"cannot dump json object");
+		free(url);
 		return false;
 	}
 
@@ -595,6 +597,7 @@ bool elasticsearch_update_sync(struct elasticsearch_connector *connector, const 
 	json_update = json_object();
 	if (!json_update || json_object_set(json_update, "doc", doc)) {
 		error(L"memory error");
+		free(url)
 		return false;
 	}
 
@@ -604,6 +607,7 @@ bool elasticsearch_update_sync(struct elasticsearch_connector *connector, const 
 	json_dump = json_dumps(json_update, JSON_COMPACT);
 	if (!json_dump) {
 		error(L"cannot dump json object");
+		free(url);
 		return false;
 	}
 

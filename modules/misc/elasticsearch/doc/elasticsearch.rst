@@ -43,7 +43,7 @@ API
 
         :param index: ElasticSearch index name.
         :ptype index: string
-        :param type: Objec type.
+        :param type: Object type.
         :ptype type: string
         :param id: Optional object id (can be ``nil``).
         :ptype id: string
@@ -56,7 +56,7 @@ API
 
         :param index: ElasticSearch index name.
         :ptype index: string
-        :param type: Objec type.
+        :param type: Object type.
         :ptype type: string
         :param id: Object id.
         :ptype id: string
