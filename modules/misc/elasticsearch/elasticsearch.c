@@ -347,7 +347,7 @@ static void *elasticsearch_request_thread(void *_connector)
 			/* Do request */
 			code = elasticsearch_post(connector, url, data, NULL);
 			if (check_error()) {
-				messagef(HAKA_LOG_ERROR, L"elasticsearch", L"request failed: %s", clear_error());
+				messagef(HAKA_LOG_ERROR, L"elasticsearch", L"request failed: %ls", clear_error());
 			}
 			else if (code && (code != 400 || type != NEWINDEX)) {
 				messagef(HAKA_LOG_ERROR, L"elasticsearch", L"request failed: return error %d", code);
