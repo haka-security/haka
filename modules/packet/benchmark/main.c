@@ -117,10 +117,6 @@ static void cleanup_state(struct packet_module_state *state)
 	size += state->size * state->repeated;
 	mutex_unlock(&stats_lock);
 
-	if (state->pd.pd) {
-		pcap_close(state->pd.pd);
-	}
-
 	free(state);
 }
 
@@ -232,6 +228,7 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 	if ((state->pd.link_type = pcap_datalink(state->pd.pd)) < 0)
 	{
 		messagef(HAKA_LOG_ERROR, MODULE, L"%s", pcap_geterr(state->pd.pd));
+		pcap_close(state->pd.pd);
 		return false;
 	}
 
@@ -249,12 +246,15 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 	case DLT_PPP:
 	default:
 		messagef(HAKA_LOG_ERROR, MODULE, L"%s", "unsupported data link");
+		pcap_close(state->pd.pd);
 		return false;
 	}
 
 	messagef(HAKA_LOG_INFO, MODULE, L"loading packet in memory", input);
 	while(load_packet(state) == 0);
 	messagef(HAKA_LOG_INFO, MODULE, L"loaded %d bytes in memory", state->size);
+
+	pcap_close(state->pd.pd);
 
 	return true;
 }
