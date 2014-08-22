@@ -33,6 +33,12 @@ Parameters
         # Capture on all interfaces
         # interfaces = "any"
 
+    .. warning::
+
+        If the module capture on multiple interfaces and is doing forwarding,
+        the packet will be received duplicated by haka. It will create problems
+        with the state-full connection tracking.
+
 .. describe:: file
 
     Read packets from a pcap file.
