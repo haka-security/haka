@@ -23,4 +23,6 @@ if(LIBGEOIP_FOUND)
 	INCLUDE_MODULE(geoip ipv4 protocol)
 
 	INSTALL_MODULE(geoip misc)
+else()
+    message(STATUS "Not building module geoip (missing libraries)")
 endif()

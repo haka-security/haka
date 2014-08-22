@@ -22,4 +22,6 @@ if(JANSSON_FOUND AND LIBCURL_FOUND AND LIBUUID_FOUND)
 	SWIG_FIX_ENTRYPOINT(elasticsearch misc)
 
 	INSTALL_MODULE(elasticsearch misc)
+else()
+    message(STATUS "Not building module elasticsearch (missing libraries)")
 endif()

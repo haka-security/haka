@@ -35,10 +35,12 @@ int main()
 
 	include_directories(${NETFILTERQUEUE_INCLUDE_DIR} ${PCAP_INCLUDE_DIR})
 	target_link_libraries(packet-nfqueue ${NETFILTERQUEUE_LIBRARIES} ${PCAP_LIBRARY})
-	
+
 	if(NFQ_GET_PAYLOAD_UNSIGNED_CHAR)
 		set_target_properties(packet-nfqueue PROPERTIES COMPILE_DEFINITIONS NFQ_GET_PAYLOAD_UNSIGNED_CHAR)
 	endif(NFQ_GET_PAYLOAD_UNSIGNED_CHAR)
 
 	INSTALL_MODULE(packet-nfqueue packet)
+else()
+    message(STATUS "Not building module nfqueue (missing libraries)")
 endif()
