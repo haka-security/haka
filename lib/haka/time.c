@@ -128,7 +128,7 @@ bool time_tostring(const struct time *t, char *buffer, size_t len)
 	return true;
 }
 
-bool time_tofstring(const struct time *t, const char *format, char *buffer, size_t len)
+bool time_format(const struct time *t, const char *format, char *buffer, size_t len)
 {
 	size_t size;
 	struct tm tm;

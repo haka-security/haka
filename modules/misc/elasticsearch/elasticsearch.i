@@ -104,7 +104,7 @@ struct elasticsearch_connector {
 				return;
 			}
 
-			if (!time_tofstring(time, "%Y/%m/%d %H:%M:%S", *TEMP_OUTPUT, 20)) {
+			if (!time_format(time, "%Y/%m/%d %H:%M:%S", *TEMP_OUTPUT, 20)) {
 				assert(check_error());
 				free(*TEMP_OUTPUT);
 				*TEMP_OUTPUT = NULL;
