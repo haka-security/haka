@@ -10,7 +10,8 @@ Description
 
 The module uses the `pcap` library to read packets from a pcap file or from a network interface.
 
-.. note:
+.. note::
+
     To be able to capture packets on a real interface, the process need to be launched with
     the proper permissions.
 
