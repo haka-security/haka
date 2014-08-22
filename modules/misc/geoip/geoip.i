@@ -10,25 +10,29 @@
 
 %{
 #include "geoip.h"
-
-#include <haka/error.h>
-
-static void country(struct ipv4_addr *addr, char **TEMP_OUTPUT)
-{
-	*TEMP_OUTPUT = malloc(3);
-	if (!*TEMP_OUTPUT) {
-		error(L"memory error");
-		return;
-	}
-
-	if (!geoip_lookup_country(addr->addr, *TEMP_OUTPUT)) {
-		free(*TEMP_OUTPUT);
-		*TEMP_OUTPUT = NULL;
-		return;
-	}
-
-	(*TEMP_OUTPUT)[2] = '\0';
-}
 %}
 
-void country(struct ipv4_addr *addr, char **TEMP_OUTPUT);
+%nodefaultctor;
+%nodefaultdtor;
+
+struct geoip_handle {
+	%extend{
+		~geoip_handle() {
+			geoip_destroy($self);
+		}
+
+		const char *country(struct ipv4_addr *addr) {
+			static char country_code[3];
+
+			if (!geoip_lookup_country($self, addr->addr, country_code)) {
+				return NULL;
+			}
+
+			return country_code;
+		}
+	}
+};
+
+%rename(open) geoip_initialize;
+%newobject geoip_initialize;
+struct geoip_handle *geoip_initialize(const char *database);

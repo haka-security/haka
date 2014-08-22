@@ -10,8 +10,12 @@
 
 #include <GeoIP.h>
 
-extern GeoIP *geoip_handle;
+struct geoip_handle;
 
-bool geoip_lookup_country(ipv4addr addr, char *country_code);
+struct geoip_handle *geoip_initialize(const char *database);
+void                 geoip_destroy(struct geoip_handle *geoip);
+
+bool                 geoip_lookup_country(struct geoip_handle *geoip, ipv4addr addr,
+                            char country_code[3]);
 
 #endif /* _GEOIP_H_ */
