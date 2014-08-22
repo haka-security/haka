@@ -63,12 +63,12 @@ struct callback_sting_data {
 	size_t   rem;
 };
 
-static size_t read_callback_string(char *buffer, size_t size, size_t nitems, void *_data)
+static size_t read_callback_string(char *buffer, size_t size, size_t nmemb, void *_data)
 {
 	size_t maxsize;
-	struct callback_sting_data *data = (struct callback_sting_data *)_data;
+	struct callback_sting_data *data = _data;
 
-	maxsize = size*nitems;
+	maxsize = size*nmemb;
 	if (maxsize > data->rem) maxsize = data->rem;
 
 	memcpy(buffer, data->string, maxsize);
@@ -80,7 +80,7 @@ static size_t read_callback_string(char *buffer, size_t size, size_t nitems, voi
 
 static size_t write_callback_string(char *ptr, size_t size, size_t nmemb, void *_data)
 {
-	struct callback_sting_data *data = (struct callback_sting_data *)_data;
+	struct callback_sting_data *data = _data;
 
 	size *= nmemb;
 
@@ -502,6 +502,7 @@ bool elasticsearch_update(struct elasticsearch_connector *connector, const char 
 }
 
 #if 0
+/* Elasticsearch synchroneous API not used any more */
 bool elasticsearch_insert_sync(struct elasticsearch_connector *connector, const char *index,
 		const char *type, const char *id, json_t *doc)
 {
