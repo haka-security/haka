@@ -15,6 +15,7 @@
 #include <haka/container/list2.h>
 #include <haka/container/vector.h>
 
+#define MODULE L"elasticsearch"
 
 struct elasticsearch_request {
 	struct list2_elem   list;
@@ -218,6 +219,8 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 		return -1;
 	}
 
+	messagef(HAKA_LOG_DEBUG, MODULE, L"post successful: %s return %d", url, ret_code);
+
 	/* Check for the rest API return code, treat non 2** has error. */
 	if (ret_code < 200 || ret_code >= 300) {
 		free(resdata.string);
@@ -228,7 +231,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 		if (!resdata.string) {
 			error(L"post error: invalid json response");
 			free(resdata.string);
-			return ret_code;
+			return -1;
 		}
 
 		*json_res = json_loads(resdata.string, 0, NULL);
@@ -264,6 +267,16 @@ static void push_request(struct elasticsearch_connector *connector, struct elast
 
 #define BUFFER_SIZE    1024
 
+static int do_one_request(struct elasticsearch_connector *connector, const char *url, const char *data)
+{
+	const int code = elasticsearch_post(connector, url, data, NULL);
+	if (check_error()) {
+		messagef(HAKA_LOG_ERROR, MODULE, L"request failed: %ls", clear_error());
+		return -1;
+	}
+	return code;
+}
+
 static void *elasticsearch_request_thread(void *_connector)
 {
 	struct elasticsearch_connector *connector = _connector;
@@ -291,31 +304,26 @@ static void *elasticsearch_request_thread(void *_connector)
 		mutex_unlock(&connector->request_mutex);
 
 		/* Build request data */
+		vector_resize(&connector->request_content, 0);
+
 		end = list2_end(&copy);
 		for (iter = list2_begin(&copy); iter != end; ) {
 			struct elasticsearch_request *req = list2_get(iter, struct elasticsearch_request, list);
-			char *data = NULL;
-			int type = req->request_type;
 
-			switch (type) {
+			switch (req->request_type) {
 			case NEWINDEX:
-				snprintf(url, BUFFER_SIZE, "%s/%s", connector->server_address, req->index);
-				data = req->data;
+				{
+					snprintf(url, BUFFER_SIZE, "%s/%s", connector->server_address, req->index);
+					code = do_one_request(connector, url, req->data);
+					if (code && code != 400) {
+						messagef(HAKA_LOG_ERROR, MODULE, L"request failed: %s return error %d", url, code);
+					}
+				}
 				break;
 
 			case INSERT:
 			case UPDATE:
-				snprintf(url, BUFFER_SIZE, "%s/_bulk", connector->server_address);
-				vector_resize(&connector->request_content, 0);
-
-				for (; iter != end; ) {
-					req = list2_get(iter, struct elasticsearch_request, list);
-
-					if (req->request_type != INSERT &&
-					    req->request_type != UPDATE) {
-						break;
-					}
-
+				{
 					snprintf(buffer, BUFFER_SIZE, "{ \"%s\" : { \"_index\" : \"%s\", \"_type\" : \"%s\"",
 							(req->request_type == INSERT ? "index" : "update"), req->index, req->type);
 					append(&connector->request_content, buffer);
@@ -328,37 +336,26 @@ static void *elasticsearch_request_thread(void *_connector)
 					append(&connector->request_content, " } }\n");
 					append(&connector->request_content, req->data);
 					append(&connector->request_content, "\n");
-
-					iter = list2_erase(iter);
-					free_request(req);
-					req = NULL;
 				}
-
-				*vector_push(&connector->request_content, char) = '\0';
-				data = vector_first(&connector->request_content, char);
-
 				break;
 
 			default:
-				messagef(HAKA_LOG_ERROR, L"elasticsearch", L"invalid request type: %d", type);
+				messagef(HAKA_LOG_ERROR, MODULE, L"invalid request type: %d", req->request_type);
 				break;
 			}
 
-			/* Do request */
-			code = elasticsearch_post(connector, url, data, NULL);
-			if (check_error()) {
-				messagef(HAKA_LOG_ERROR, L"elasticsearch", L"request failed: %ls", clear_error());
-			}
-			else if (code && (code != 400 || type != NEWINDEX)) {
-				messagef(HAKA_LOG_ERROR, L"elasticsearch", L"request failed: return error %d", code);
-			}
-			else {
-				messagef(HAKA_LOG_DEBUG, L"elasticsearch", L"request successful: %s", url);
-			}
+			iter = list2_erase(iter);
+			free_request(req);
+		}
 
-			if (req) {
-				iter = list2_erase(iter);
-				free_request(req);
+		/* Do bulk request if needed :*/
+		if (vector_count(&connector->request_content) > 0) {
+			snprintf(url, BUFFER_SIZE, "%s/_bulk", connector->server_address);
+			*vector_push(&connector->request_content, char) = '\0';
+
+			code = do_one_request(connector, url, vector_first(&connector->request_content, char));
+			if (code) {
+				messagef(HAKA_LOG_ERROR, MODULE, L"request failed: %s return error %d", url, code);
 			}
 		}
 	}
@@ -366,94 +363,73 @@ static void *elasticsearch_request_thread(void *_connector)
 	return NULL;
 }
 
-bool elasticsearch_newindex(struct elasticsearch_connector *connector, const char *index, json_t *data)
+#define DUPSTR(name) \
+	if (name) { \
+		req->name = strdup(name); \
+		if (!req->name) { \
+			error(L"memory error"); \
+			free_request(req); \
+			return false; \
+		} \
+	}
+
+static bool elasticsearch_request(struct elasticsearch_connector *connector,
+		int reqtype, const char *index, const char *type, const char *id, json_t *data)
 {
 	struct elasticsearch_request *req;
 
 	assert(connector);
-	assert(index);
 
 	req = malloc(sizeof(struct elasticsearch_request));
 	if (!req) {
 		error(L"memory error");
+		free(data);
 		return false;
 	}
 
 	memset(req, 0, sizeof(struct elasticsearch_request));
 
+	req->request_type = reqtype;
+
+	DUPSTR(index);
+	DUPSTR(type);
+	DUPSTR(id);
+
 	req->data = json_dumps(data, JSON_COMPACT);
 	json_decref(data);
-
 	if (!req->data) {
 		error(L"cannot dump json object");
 		free_request(req);
 		return false;
 	}
 
-	req->request_type = NEWINDEX;
-	req->index = strdup(index);
-	if (!req->index) {
-		error(L"memory error");
-		free_request(req);
-		return false;
-	}
-
 	push_request(connector, req);
 	return true;
+
+}
+
+bool elasticsearch_newindex(struct elasticsearch_connector *connector, const char *index, json_t *data)
+{
+	assert(connector);
+	assert(index);
+
+	return elasticsearch_request(connector, NEWINDEX, index, NULL, NULL, data);
 }
 
 bool elasticsearch_insert(struct elasticsearch_connector *connector, const char *index,
-		const char *type, const char *id, json_t *doc)
+		const char *type, const char *id, json_t *data)
 {
-	struct elasticsearch_request *req;
 
 	assert(connector);
 	assert(index);
 	assert(type);
 
-	req = malloc(sizeof(struct elasticsearch_request));
-	if (!req) {
-		error(L"memory error");
-		return false;
-	}
-
-	memset(req, 0, sizeof(struct elasticsearch_request));
-
-	req->data = json_dumps(doc, JSON_COMPACT);
-	json_decref(doc);
-
-	if (!req->data) {
-		error(L"cannot dump json object");
-		free_request(req);
-		return false;
-	}
-
-	req->request_type = INSERT;
-	req->index = strdup(index);
-	req->type = strdup(type);
-	if (!req->index || !req->type) {
-		error(L"memory error");
-		free_request(req);
-		return false;
-	}
-
-	if (id) {
-		req->id = strdup(id);
-		if (!req->id) {
-			error(L"memory error");
-			free_request(req);
-			return false;
-		}
-	}
-
-	push_request(connector, req);
-	return true;
+	return elasticsearch_request(connector, INSERT, index, type, id, data);
 }
 
 bool elasticsearch_update(struct elasticsearch_connector *connector, const char *index, const char *type,
-		const char *id, json_t *doc)
+		const char *id, json_t *data)
 {
-	struct elasticsearch_request *req;
 	json_t *json_update;
 
 	assert(connector);
@@ -461,44 +437,16 @@ bool elasticsearch_update(struct elasticsearch_connector *connector, const char 
 	assert(type);
 	assert(id);
 
-	req = malloc(sizeof(struct elasticsearch_request));
-	if (!req) {
-		error(L"memory error");
-		return false;
-	}
-
-	memset(req, 0, sizeof(struct elasticsearch_request));
-
-	req->request_type = UPDATE;
-	req->index = strdup(index);
-	req->type = strdup(type);
-	req->id = strdup(id);
-	if (!req->index || !req->index || !req->id) {
-		error(L"memory error");
-		free_request(req);
-		return false;
-	}
-
 	json_update = json_object();
-	if (!json_update || json_object_set(json_update, "doc", doc)) {
+	if (!json_update || json_object_set(json_update, "doc", data)) {
 		error(L"memory error");
-		free_request(req);
+		json_decref(data);
 		return false;
 	}
 
-	json_decref(doc);
+	json_decref(data);
 
-	req->data = json_dumps(json_update, JSON_COMPACT);
-	json_decref(json_update);
-
-	if (!req->data) {
-		error(L"cannot dump json object");
-		free_request(req);
-		return false;
-	}
-
-	push_request(connector, req);
-	return true;
+	return elasticsearch_request(connector, UPDATE, index, type, id, json_update);
 }
 
 #if 0
