@@ -50,3 +50,7 @@ Parameters
 
         file = "/tmp/input.pcap"
         output = "/tmp/output.pcap"
+
+.. describe:: dump_input=`file`
+
+    Save the received packets to the specified pcap file.

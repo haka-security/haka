@@ -40,7 +40,8 @@ struct pcap_packet {
 struct packet_module_state {
 	uint32                      pd_count;
 	struct pcap_capture        *pd;
-	pcap_dumper_t              *pf;
+	pcap_dumper_t              *pin;
+	pcap_dumper_t              *pout;
 	uint64                      packet_id;
 	int                         link_type;
 	struct pcap_packet         *sent_head;
@@ -51,7 +52,8 @@ struct packet_module_state {
 static int    input_count;
 static char **inputs;
 static bool   input_is_iface;
-static char  *output_file;
+static char  *output_dump_file;
+static char  *input_dump_file;
 static bool   passthrough = true;
 
 static void cleanup()
@@ -63,12 +65,13 @@ static void cleanup()
 	}
 
 	free(inputs);
-	free(output_file);
+	free(output_dump_file);
+	free(input_dump_file);
 }
 
 static int init(struct parameters *args)
 {
-	const char *input, *output, *interfaces;
+	const char *input, *dump, *interfaces;
 
 	interfaces = parameters_get_string(args, "interfaces", NULL);
 	input = parameters_get_string(args, "file", NULL);
@@ -140,8 +143,12 @@ static int init(struct parameters *args)
 		return 1;
 	}
 
-	if ((output = parameters_get_string(args, "output", NULL))) {
-		output_file = strdup(output);
+	if ((dump = parameters_get_string(args, "output", NULL))) {
+		output_dump_file = strdup(dump);
+	}
+
+	if ((dump = parameters_get_string(args, "dump_input", NULL))) {
+		input_dump_file = strdup(dump);
 	}
 
 	passthrough = parameters_get_boolean(args, "pass-through", true);
@@ -163,9 +170,14 @@ static void cleanup_state(struct packet_module_state *state)
 {
 	int i;
 
-	if (state->pf) {
-		pcap_dump_close(state->pf);
-		state->pf = NULL;
+	if (state->pin) {
+		pcap_dump_close(state->pin);
+		state->pin = NULL;
+	}
+
+	if (state->pout) {
+		pcap_dump_close(state->pout);
+		state->pout = NULL;
 	}
 
 	for (i=0; i<state->pd_count; ++i) {
@@ -244,6 +256,22 @@ static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 	return true;
 }
 
+static pcap_dumper_t *open_dump_file(struct packet_module_state *state, const char *filename)
+{
+	pcap_dumper_t *dump;
+
+	if (!filename) return NULL;
+
+	dump = pcap_dump_open(state->pd[0].pd, filename);
+	if (!dump) {
+		cleanup_state(state);
+		messagef(HAKA_LOG_ERROR, L"pcap", L"unable to dump on %s", filename);
+		return NULL;
+	}
+
+	return dump;
+}
+
 static struct packet_module_state *init_state(int thread_id)
 {
 	struct packet_module_state *state;
@@ -278,15 +306,8 @@ static struct packet_module_state *init_state(int thread_id)
 
 	state->link_type = state->pd[0].link_type;
 
-	if (output_file) {
-		/* open pcap savefile */
-		state->pf = pcap_dump_open(state->pd[0].pd, output_file);
-		if (!state->pf) {
-			cleanup_state(state);
-			messagef(HAKA_LOG_ERROR, L"pcap", L"unable to dump on %s", output_file);
-			return NULL;
-		}
-	}
+	state->pin = open_dump_file(state, input_dump_file);
+	state->pout = open_dump_file(state, output_dump_file);
 
 	state->packet_id = 0;
 
@@ -399,6 +420,10 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 				memset(packet, 0, sizeof(struct pcap_packet));
 
+				if (state->pin) {
+					pcap_dump((u_char *)state->pin, header, p);
+				}
+
 				list_init(packet);
 
 				if (!vbuffer_create_from(&packet->data, (char *)p, header->caplen)) {
@@ -464,7 +489,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	if (vbuffer_isvalid(&pkt->data)) {
 		vbuffer_restore(&pkt->select, &pkt->core_packet.payload, false);
 
-		if (pkt->state->pf && result == FILTER_ACCEPT) {
+		if (pkt->state->pout && result == FILTER_ACCEPT) {
 			const uint8 *data;
 			size_t len;
 
@@ -480,7 +505,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 				pkt->header.caplen = len;
 			}
 
-			pcap_dump((u_char *)pkt->state->pf, &(pkt->header), data);
+			pcap_dump((u_char *)pkt->state->pout, &(pkt->header), data);
 		}
 
 		vbuffer_clear(&pkt->data);
