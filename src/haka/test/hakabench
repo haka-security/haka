@@ -5,6 +5,14 @@
 set -e
 
 PAD=".................................................."
+AWK_RESULT='$0 ~ /^info  benchmark: processing/ { print $4" "$7" "$10; }'
+AWK_PROGRESS='$0 ~ /^info  benchmark: progress/ {
+	printf " %5s %%\033[8D", $4
+	fflush()
+}
+$0 ~ /^info  benchmark: processing/ {
+	printf "Passed %13s Mib/s\033[K\n", $10
+}'
 
 _usage() {
 	echo "Usage: $1 [-v] <dir|file>"
@@ -54,7 +62,7 @@ _do_bench() {
 		--opt packet:module=packet/benchmark \
 		--opt packet:repeat=$REPEAT \
 		--opt packet:file=$PCAP 2>&1 \
-		| tee $OUT | gawk -f $BENCH_PROGRESS_FILTER
+		| tee $OUT | gawk "$AWK_PROGRESS"
 	RET=$?
 	set -e
 
@@ -64,13 +72,11 @@ _do_bench() {
 		return
 	fi
 
-	RES=`gawk -f $BENCH_RESULT_FILTER $OUT`
+	RES=`gawk "$AWK_RESULT" $OUT`
 	RESULT="$RESULT$NAME $THREAD $RES\n"
 }
 
-[ -z "$THREAD" ] && THREAD=`nproc`
-BENCH_RESULT_FILTER="$0.awk"
-BENCH_PROGRESS_FILTER="$0-progress.awk"
+THREAD=`nproc`
 DEBUG=false
 
 while getopts ":v" OPT; do
