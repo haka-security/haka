@@ -70,7 +70,7 @@ static void cleanup()
 	bandwidth = size * 8 / duration / MEBI;
 
 	messagef(HAKA_LOG_INFO, MODULE,
-			L"processing %d bytes took %d.%.9d seconds being %02f Mib/s",
+			L"processing %ld bytes took %d.%.9d seconds being %02f Mib/s",
 			size, difftime.secs, difftime.nsecs, bandwidth);
 
 	free(input_file);
