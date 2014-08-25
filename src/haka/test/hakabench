@@ -15,8 +15,12 @@ $0 ~ /^info  benchmark: processing/ {
 }'
 
 _usage() {
-	echo "Usage: $1 [-v] <dir|file>"
-	exit 1
+	echo "Usage: $1 [-vjkh] <dir|file>"
+	echo "Options:"
+	echo "\t-j <thread-count>:  Run haka on <thread-count> threads"
+	echo "\t-v:                 Display debug output"
+	echo "\t-k:                 Keep configuration files"
+	echo "\t-h:                 Display this help"
 }
 
 _error() {
@@ -39,6 +43,28 @@ _bench_dir() {
 	done
 }
 
+_gen_conf() {
+	CONF=`mktemp $1`
+	cat > $CONF <<EOF
+[general]
+configuration = "$2"
+
+thread = $4
+
+[packet]
+module = "packet/benchmark"
+file = "$3"
+repeat = $5
+
+[log]
+module = "log/syslog"
+
+[alert]
+module = "alert/syslog"
+EOF
+	echo "$CONF"
+}
+
 _do_bench() {
 	PCAP="$1"
 	TEST_PATH="${PCAP%-*}"
@@ -48,23 +74,25 @@ _do_bench() {
 	REPEAT="${REPEAT%.*}"
 	NAME="${TEST_PATH##*/}"
 
+	CONF=`_gen_conf "$TEST_PATH.XXXXX.conf" $RULE $PCAP $THREAD $REPEAT`
+
 	_info "%s %0.*s" "$NAME" `expr ${#PAD} - ${#NAME}` "$PAD"
 	_debug "\n"
-	_debug "haka -c $CONF -r $RULE --pid-file ./haka.pid --ctl-file ./haka.sock --no-daemon --opt general:thread=$THREAD --opt packet:module=packet/benchmark --opt packet:repeat=$REPEAT --opt packet:file=$PCAP\n"
+	_debug "haka -c $CONF --pid-file ./haka.pid --ctl-file ./haka.sock --no-daemon\n"
 	_debug "output at $OUT\n"
 
 	set +e
 	stdbuf -oL \
-	haka -c $CONF -r $RULE \
+	haka -c $CONF \
 		--pid-file /tmp/haka.pid --ctl-file /tmp/haka.sock \
 		--no-daemon \
-		--opt general:thread=$THREAD \
-		--opt packet:module=packet/benchmark \
-		--opt packet:repeat=$REPEAT \
-		--opt packet:file=$PCAP 2>&1 \
-		| tee $OUT | gawk "$AWK_PROGRESS"
+		2>&1 | tee $OUT | gawk "$AWK_PROGRESS"
 	RET=$?
 	set -e
+
+	if $RM_CONFIG; then
+		rm $CONF
+	fi
 
 	if [ $RET -ne 0 ]; then
 		_info "\033[KFailed\n"
@@ -78,14 +106,22 @@ _do_bench() {
 
 THREAD=`nproc`
 DEBUG=false
+RM_CONFIG=true
 
-while getopts ":v" OPT; do
+while getopts "vkhj:" OPT; do
 	case $OPT in
 	v)
 		DEBUG=true
 	;;
-	\?)
+	j)
+		THREAD="$OPTARG"
+	;;
+	k)
+		RM_CONFIG=false
+	;;
+	h|\?)
 		_usage $0
+		exit 0
 	;;
 	esac
 done
@@ -93,7 +129,9 @@ done
 shift $((OPTIND-1))
 
 if [ -z "$1" ]; then
+	_error "Missing benchmark directory or file.\n"
 	_usage $0
+	exit 1
 fi
 
 for TARGET in "$@"; do
