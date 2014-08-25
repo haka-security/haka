@@ -68,13 +68,13 @@ EOF
 _do_bench() {
 	PCAP="$1"
 	TEST_PATH="${PCAP%-*}"
+	NAME="${TEST_PATH##*/}"
 	RULE="$TEST_PATH.lua"
-	OUT="$TEST_PATH.txt"
+	OUT="$NAME.txt"
 	REPEAT="${PCAP##*-}"
 	REPEAT="${REPEAT%.*}"
-	NAME="${TEST_PATH##*/}"
 
-	CONF=`_gen_conf "$TEST_PATH.XXXXX.conf" $RULE $PCAP $THREAD $REPEAT`
+	CONF=`_gen_conf "$NAME.XXXXX.conf" $RULE $PCAP $THREAD $REPEAT`
 
 	_info "%s %0.*s" "$NAME" `expr ${#PAD} - ${#NAME}` "$PAD"
 	_debug "\n"
@@ -134,12 +134,11 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
+RESULT_FILE="hakabench-result-`date +%FT%T`.txt"
 for TARGET in "$@"; do
 	if [ -d $TARGET ]; then
-		RESULT_FILE="$TARGET/result.txt"
 		_bench_dir $TARGET
 	elif [ -f $TARGET ]; then
-		RESULT_FILE="$TARGET-result.txt"
 		_do_bench $TARGET
 	else
 		_error "invalid target $TARGET\n"
