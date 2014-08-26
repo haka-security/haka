@@ -1,0 +1,152 @@
+#!/bin/sh
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+set -e
+
+PAD=".................................................."
+AWK_RESULT='$0 ~ /^info  benchmark: processing/ { print $4" "$7" "$10; }'
+AWK_PROGRESS='$0 ~ /^info  benchmark: progress/ {
+	printf " %5s %%\033[8D", $4
+	fflush()
+}
+$0 ~ /^info  benchmark: processing/ {
+	printf "Passed %13s Mib/s\033[K\n", $10
+}'
+
+_usage() {
+	echo "Usage: $1 [-vjkh] <dir|pcap file>"
+	echo "Options:"
+	echo "\t-j <thread-count>:  Run haka on <thread-count> threads"
+	echo "\t-v:                 Display debug output"
+	echo "\t-k:                 Keep configuration files"
+	echo "\t-h:                 Display this help"
+}
+
+_error() {
+	printf "$@" 1>&2
+}
+
+_info() {
+	printf "$@"
+}
+
+_debug() {
+	if $DEBUG; then
+		printf "$@"
+	fi
+}
+
+_bench_dir() {
+	for TARGET in $1/*.pcap; do
+		_do_bench $TARGET
+	done
+}
+
+_gen_conf() {
+	CONF=`mktemp $1`
+	cat > $CONF <<EOF
+[general]
+configuration = "$2"
+
+thread = $4
+
+[packet]
+module = "packet/benchmark"
+file = "$3"
+repeat = $5
+
+[log]
+module = "log/syslog"
+
+[alert]
+module = "alert/syslog"
+EOF
+	echo "$CONF"
+}
+
+_do_bench() {
+	PCAP="$1"
+	TEST_PATH="${PCAP%-*}"
+	NAME="${TEST_PATH##*/}"
+	RULE="$TEST_PATH.lua"
+	OUT="$NAME.txt"
+	REPEAT="${PCAP##*-}"
+	REPEAT="${REPEAT%.*}"
+
+	CONF=`_gen_conf "$NAME.XXXXX.conf" $RULE $PCAP $THREAD $REPEAT`
+
+	_info "%s %0.*s" "$NAME" `expr ${#PAD} - ${#NAME}` "$PAD"
+	_debug "\n"
+	_debug "haka -c $CONF --pid-file ./haka.pid --ctl-file ./haka.sock --no-daemon\n"
+	_debug "output at $OUT\n"
+
+	set +e
+	stdbuf -oL \
+	haka -c $CONF \
+		--pid-file /tmp/haka.pid --ctl-file /tmp/haka.sock \
+		--no-daemon \
+		2>&1 | tee $OUT | gawk "$AWK_PROGRESS"
+	RET=$?
+	set -e
+
+	if $RM_CONFIG; then
+		rm $CONF
+	fi
+
+	if [ $RET -ne 0 ]; then
+		_info "\033[KFailed\n"
+		RESULT="$RESULT$NAME Failed\n"
+		return
+	fi
+
+	RES=`gawk "$AWK_RESULT" $OUT`
+	RESULT="$RESULT$NAME $THREAD $RES\n"
+}
+
+THREAD=`nproc`
+DEBUG=false
+RM_CONFIG=true
+
+while getopts "vkhj:" OPT; do
+	case $OPT in
+	v)
+		DEBUG=true
+	;;
+	j)
+		THREAD="$OPTARG"
+	;;
+	k)
+		RM_CONFIG=false
+	;;
+	h|\?)
+		_usage $0
+		exit 0
+	;;
+	esac
+done
+
+shift $((OPTIND-1))
+
+if [ -z "$1" ]; then
+	_error "Missing benchmark directory or file.\n"
+	_usage $0
+	exit 1
+fi
+
+RESULT_FILE="hakabench-result-`date +%FT%T`.txt"
+for TARGET in "$@"; do
+	if [ -d $TARGET ]; then
+		_bench_dir $TARGET
+	elif [ -f $TARGET ]; then
+		_do_bench $TARGET
+	else
+		_error "invalid target $TARGET\n"
+	fi
+done
+
+# Save result
+echo -n $RESULT > $RESULT_FILE
+
+_info "\nResults (also in $RESULT_FILE):\n"
+echo $RESULT
