@@ -15,7 +15,7 @@ $0 ~ /^info  benchmark: processing/ {
 }'
 
 _usage() {
-	echo "Usage: $1 [-vjkh] <dir|file>"
+	echo "Usage: $1 [-vjkh] <dir|pcap file>"
 	echo "Options:"
 	echo "\t-j <thread-count>:  Run haka on <thread-count> threads"
 	echo "\t-v:                 Display debug output"
