@@ -43,25 +43,31 @@ static void help(const char *program)
 	usage(stdout, program);
 
 	fprintf(stdout, "Options:\n");
-	fprintf(stdout, "\t-h,--help:              Display this information\n");
-	fprintf(stdout, "\t--version:              Display version information\n");
-	fprintf(stdout, "\t-c,--config <conf>:     Load a specific configuration file\n"
-					"\t                          (default: " HAKA_CONFIG ")\n");
-	fprintf(stdout, "\t-r,--rule <rule>:       Override the rule configuration file\n");
-	fprintf(stdout, "\t-d,--debug:             Display debug output\n");
+	fprintf(stdout, "\t-h,--help:               Display this information\n");
+	fprintf(stdout, "\t--version:               Display version information\n");
+	fprintf(stdout, "\t-c,--config <conf>:      Load a specific configuration file\n"
+			"\t                           (default: " HAKA_CONFIG ")\n");
+	fprintf(stdout, "\t-r,--rule <rule>:        Override the rule configuration file\n");
+	fprintf(stdout, "\t-d,--debug:              Display debug output\n");
 	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
-	fprintf(stdout, "\t                        Override configuration parameter\n");
-	fprintf(stdout, "\t-l,--loglevel <level>:  Set the log level\n");
-	fprintf(stdout, "\t                          (debug, info, warning, error or fatal)\n");
-	fprintf(stdout, "\t--debug-lua:            Activate lua debugging (and keep haka in foreground)\n");
-	fprintf(stdout, "\t--dump-dissector-graph: Dump dissector internals (grammar and state machine) in file <name>.dot\n");
-	fprintf(stdout, "\t--no-daemon:            Do no run in the background\n");
+	fprintf(stdout, "\t                          Override configuration parameter\n");
+	fprintf(stdout, "\t-l,--loglevel <level>:    Set the log level\n");
+	fprintf(stdout, "\t                            (debug, info, warning, error or fatal)\n");
+	fprintf(stdout, "\t--debug-lua:              Activate lua debugging (and keep haka in foreground)\n");
+	fprintf(stdout, "\t--dump-dissector-graph:   Dump dissector internals (grammar and state machine) in file <name>.dot\n");
+	fprintf(stdout, "\t--no-daemon:              Do no run in the background\n");
+	fprintf(stdout, "\t--pid-file <pid-file>     Full path to pid file\n"
+			"\t                            (default: " HAKA_PID_FILE ")\n");
+	fprintf(stdout, "\t--ctl-socket <ctl-socket> Full path to socket control file\n"
+			"\t                            (default: " HAKA_CTL_SOCKET_FILE ")\n");
 }
 
-static bool daemonize = true;
+static bool  daemonize = true;
 static char *config = NULL;
-static bool lua_debugger = false;
-static bool dissector_graph = false;
+static bool  lua_debugger = false;
+static bool  dissector_graph = false;
+static char *pid_file_path = NULL;
+static char *ctl_file_path = NULL;
 
 struct config_override {
 	char *key;
@@ -109,10 +115,12 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "no-daemon",            no_argument,       0, 'D' },
 		{ "opt",                  required_argument, 0, 'o' },
 		{ "rule",                 required_argument, 0, 'r' },
+		{ "pid-file",             required_argument, 0, 'P' },
+		{ "ctl-file",             required_argument, 0, 'S' },
 		{ 0,                      0,                 0, 0 }
 	};
 
-	while ((c = getopt_long(*argc, *argv, "dl:hc:r:", long_options, &index)) != -1) {
+	while ((c = getopt_long(*argc, *argv, "dl:hc:r:P:S:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
 			add_override("log:level", "debug");
@@ -168,6 +176,24 @@ static int parse_cmdline(int *argc, char ***argv)
 			}
 			break;
 
+		case 'P':
+			pid_file_path = strdup(optarg);
+			if (!pid_file_path) {
+				message(HAKA_LOG_FATAL, L"core", L"memory error");
+				clean_exit();
+				exit(2);
+			}
+			break;
+
+		case 'S':
+			ctl_file_path = strdup(optarg);
+			if (!ctl_file_path) {
+				message(HAKA_LOG_FATAL, L"core", L"memory error");
+				clean_exit();
+				exit(2);
+			}
+			break;
+
 		default:
 			usage(stderr, (*argv)[0]);
 			return 2;
@@ -182,6 +208,24 @@ static int parse_cmdline(int *argc, char ***argv)
 	if (!config) {
 		config = strdup(HAKA_CONFIG);
 		if (!config) {
+			message(HAKA_LOG_FATAL, L"core", L"memory error");
+			clean_exit();
+			exit(2);
+		}
+	}
+
+	if (!pid_file_path) {
+		pid_file_path = strdup(HAKA_PID_FILE);
+		if (!pid_file_path) {
+			message(HAKA_LOG_FATAL, L"core", L"memory error");
+			clean_exit();
+			exit(2);
+		}
+	}
+
+	if (!ctl_file_path) {
+		ctl_file_path = strdup(HAKA_CTL_SOCKET_FILE);
+		if (!ctl_file_path) {
 			message(HAKA_LOG_FATAL, L"core", L"memory error");
 			clean_exit();
 			exit(2);
@@ -392,7 +436,7 @@ void clean_exit()
 	stop_ctl_server();
 
 	if (haka_started) {
-		unlink(HAKA_PID_FILE);
+		unlink(pid_file_path);
 	}
 
 	vector_destroy(&config_overrides);
@@ -403,7 +447,7 @@ void clean_exit()
 bool check_running_haka()
 {
 	pid_t pid;
-	FILE *pid_file = fopen(HAKA_PID_FILE, "r");
+	FILE *pid_file = fopen(pid_file_path, "r");
 	if (!pid_file) {
 		return false;
 	}
@@ -442,6 +486,8 @@ int main(int argc, char *argv[])
 	ret = parse_cmdline(&argc, &argv);
 	if (ret >= 0) {
 		free(config);
+		free(pid_file_path);
+		free(ctl_file_path);
 		clean_exit();
 		return ret;
 	}
@@ -460,7 +506,9 @@ int main(int argc, char *argv[])
 
 	haka_started = true;
 
-	if (!prepare_ctl_server()) {
+	ret = prepare_ctl_server(ctl_file_path);
+	free(ctl_file_path);
+	if (!ret) {
 		clean_exit();
 		return 2;
 	}
@@ -484,7 +532,6 @@ int main(int argc, char *argv[])
 		child = fork();
 		if (child == -1) {
 			message(HAKA_LOG_FATAL, L"core", L"failed to daemonize");
-			fclose(pid_file);
 			clean_exit();
 			return 1;
 		}
@@ -504,7 +551,7 @@ int main(int argc, char *argv[])
 
 	prepare(-1, lua_debugger, dissector_graph);
 
-	pid_file = fopen(HAKA_PID_FILE, "w");
+	pid_file = fopen(pid_file_path, "w");
 	if (!pid_file) {
 		message(HAKA_LOG_FATAL, L"core", L"cannot create pid file");
 		clean_exit();
