@@ -20,6 +20,8 @@ add_custom_target(bench
 	DEPENDS pretests
 )
 
+install(PROGRAMS hakabench DESTINATION share/haka/scripts/ )
+
 TEST_PCAP(core rule-error)
 TEST_PCAP(core hakaevents)
 TEST_PCAP(core timestamp)
