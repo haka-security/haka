@@ -9,7 +9,7 @@ Geoip
 
 .. haka:module:: geoip
 
-Geoip utility module.
+GeoIP utility module.
 
 **Usage:**
 
@@ -20,22 +20,34 @@ Geoip utility module.
 API
 ---
 
-.. haka:function:: country(ip) -> country_code
+.. haka:function:: open(file) -> geoip_handle
 
-    :param ip: IPv4 address.
-    :ptype ip: :haka:class:`ipv4.addr`
-    :return country_code: Result country code or nil if not found.
-    :rtype country_code: string
 
-    Query the country code for an IP address.
+    :param file: GeoIP data file.
+    :ptype file: string
+
+    Load GeoIP data file.
+
+.. haka:class:: GeoIPHandle
+
+    .. haka:function:: GeoIPHandle:country(ip) -> country_code
+
+        :param ip: IPv4 address.
+        :ptype ip: :haka:class:`ipv4.addr`
+        :return country_code: Result country code or nil if not found.
+        :rtype country_code: string
+
+        Query the country code for an IP address.
 
 Example
 -------
 
 ::
 
-    local geoip = require('misc/geoip')
     local ipv4 = require('protocol/ipv4')
 
-    print(geoip.country(ipv4.addr("8.8.8.8"))
+    local geoip_module = require('misc/geoip')
+    local geoip = geoip_module.open('/usr/share/GeoIP/GeoIP.dat')
+
+    print(geoip:country(ipv4.addr("8.8.8.8")))
 
