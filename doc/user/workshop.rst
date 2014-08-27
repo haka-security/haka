@@ -21,5 +21,6 @@ full environment containing Haka with all its dependencies.
     workshop/filter.rst
     workshop/modif.rst
     workshop/smtp.rst
+    workshop/hakabana.rst
     workshop/goingfurther.rst
     workshop/appendix.rst
