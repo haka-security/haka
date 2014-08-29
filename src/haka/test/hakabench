@@ -17,7 +17,8 @@ $0 ~ /^info  benchmark: processing/ {
 _usage() {
 	echo "Usage: $1 [-vjkh] <dir|pcap file>"
 	echo "Options:"
-	echo "\t-j <thread-count>:  Run haka on <thread-count> threads"
+	echo "\t-j <thread count>:  Run haka on <thread count> threads"
+	echo "\t-o <output file>:   Output benchmark results to <output file>"
 	echo "\t-v:                 Display debug output"
 	echo "\t-k:                 Keep configuration files"
 	echo "\t-h:                 Display this help"
@@ -107,8 +108,9 @@ _do_bench() {
 THREAD=`nproc`
 DEBUG=false
 RM_CONFIG=true
+RESULT_FILE="hakabench-result-`date +%FT%T`.txt"
 
-while getopts "vkhj:" OPT; do
+while getopts "vkhj:o:" OPT; do
 	case $OPT in
 	v)
 		DEBUG=true
@@ -118,6 +120,9 @@ while getopts "vkhj:" OPT; do
 	;;
 	k)
 		RM_CONFIG=false
+	;;
+	o)
+		RESULT_FILE="$OPTARG"
 	;;
 	h|\?)
 		_usage $0
@@ -134,7 +139,6 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
-RESULT_FILE="hakabench-result-`date +%FT%T`.txt"
 for TARGET in "$@"; do
 	if [ -d $TARGET ]; then
 		_bench_dir $TARGET

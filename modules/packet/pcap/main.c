@@ -297,7 +297,7 @@ static bool packet_build_payload(struct pcap_packet *packet)
 {
 	struct vbuffer_sub sub;
 	size_t data_offset;
-	if (get_protocol(packet->link_type, &packet->core_packet.payload, &data_offset) < 0) {
+	if (get_protocol(packet->link_type, &packet->data, &data_offset) < 0) {
 		return false;
 	}
 
