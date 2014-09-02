@@ -5,19 +5,18 @@
 Hakabana
 ========
 
-Hakabana is monitoring tool that uses Kibana and Elasticsearch to visualize in
-real-time traffic passing through Haka.
+Hakabana is a monitoring tool that uses Kibana and Elasticsearch to visualize
+traffic passing through Haka in *real-time*.
 
 Getting started
 ^^^^^^^^^^^^^^^
 
-Hakabana module is installed at ``/usr/local/share/haka/modules/misc/hakabana``
-and consists of a set of security rules that export network traffic to
-Elasticsearch server that are then displayed thanks to our Kibana dashboard:
-Hakabana.
+Hakabana module is installed at ``/usr/local/share/haka/modules/misc/hakabana``.
+It consists of a set of security rules that export network traffic to
+Elasticsearch server. They are then displayed thanks to our Kibana dashboard.
 
 Hakabana ships with a default configuration allowing starting quickly with
-traffic monitoring. These setting are available in
+traffic monitoring. It is available in
 ``/usr/local/share/haka/hakabana``
 
 .. admonition:: Exercise
@@ -25,7 +24,7 @@ traffic monitoring. These setting are available in
     * follow the instruction below to start haka:
 
     .. code-block:: console
-        
+
         cd /usr/local/share/haka/hakabana
         haka -c haka.conf
 
@@ -47,8 +46,8 @@ Your goal here is to customize the security rules in order to export extra data.
 Geo localization
 ^^^^^^^^^^^^^^^^
 
-Hakabana features a `geoip` allowing to get the country code associated to an ip
-address:
+Hakabana features a `geoip` module allowing to get the country code associated to an ip
+address. Here is an example using it:
 
 .. code-block:: lua
 
@@ -58,11 +57,11 @@ address:
     local geoip = geoip_module.open('/usr/share/GeoIP/GeoIP.dat')
 
     haka.rule {
-       	hook = ipv4.events.receive_packet,
-      	eval = function (pkt)
-	        local dst = pkt.dst
-       		haka.log("geoip", "ip %s from %s",dst, geoip:country(dst))
-	    end
+        hook = ipv4.events.receive_packet,
+        eval = function (pkt)
+            local dst = pkt.dst
+            haka.log("geoip", "ip %s from %s",dst, geoip:country(dst))
+        end
     }
 
 .. admonition:: Exercise
