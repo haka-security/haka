@@ -58,7 +58,7 @@ static void help(const char *program)
 	fprintf(stdout, "\t--no-daemon:              Do no run in the background\n");
 	fprintf(stdout, "\t--pid-file <pid-file>     Full path to pid file\n"
 			"\t                            (default: " HAKA_PID_FILE ")\n");
-	fprintf(stdout, "\t--ctl-socket <ctl-socket> Full path to socket control file\n"
+	fprintf(stdout, "\t--ctl-file <ctl-file>     Full path to socket control file\n"
 			"\t                            (default: " HAKA_CTL_SOCKET_FILE ")\n");
 }
 
