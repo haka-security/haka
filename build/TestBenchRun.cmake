@@ -10,13 +10,12 @@ set(ENV{HAKA_PATH} ${HAKA_PATH})
 set(ENV{PATH} $ENV{PATH}:${HAKA_PATH}/sbin:${HAKA_PATH}/bin)
 set(ENV{LD_LIBRARY_PATH} ${HAKA_PATH}/lib:${HAKA_PATH}/lib/haka/modules/protocol:${HAKA_PATH}/lib/haka/modules/packet)
 set(ENV{TZ} Europe/Paris)
-set(ENV{CONF} ${CONF})
 
 set(CMAKE_MODULE_PATH ${CTEST_MODULE_DIR} ${CMAKE_MODULE_PATH})
 
-message("Executing TZ=\"Europe/Paris\" LANG=\"C\" LC_ALL=\"C\" LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" CONF=\"$ENV{CONF}\" ${EXE} ${BENCH}")
+message("Executing TZ=\"Europe/Paris\" LANG=\"C\" LC_ALL=\"C\" LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" ${EXE} ${EXE_OPTIONS} ${BENCH}")
 
-execute_process(COMMAND ${EXE} ${BENCH} RESULT_VARIABLE HAD_ERROR)
+execute_process(COMMAND ${EXE} ${EXE_OPTIONS} ${BENCH} RESULT_VARIABLE HAD_ERROR)
 
 if(HAD_ERROR)
 	message(FATAL_ERROR "Benchmark script failed")
