@@ -5,7 +5,7 @@
 %module elasticsearch
 
 %{
-#include "elasticsearch.h"
+#include "haka/elasticsearch.h"
 
 #include <haka/time.h>
 

@@ -145,6 +145,21 @@ uint64          alert(const struct alert *alert);
 bool            alert_update(uint64 id, const struct alert *alert);
 
 /**
+ * Convert alert level to human readable string.
+ */
+const char *alert_level_to_str(alert_level level);
+
+/**
+ * Convert alert completion to human readable string.
+ */
+const char *alert_completion_to_str(alert_completion completion);
+
+/**
+ * Convert alert node to human readable string.
+ */
+const char *alert_node_to_str(alert_node_type type);
+
+/**
  * Convert an alert to a string.
  */
 const char     *alert_tostring(uint64 id, const struct time *time, const struct alert *alert,
