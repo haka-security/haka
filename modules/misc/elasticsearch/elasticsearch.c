@@ -137,6 +137,9 @@ struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
 
 	curl_easy_setopt(ret->curl, CURLOPT_FOLLOWLOCATION, 1L);
 
+	/* Uses of signal is not possible here in multi-threaded environment */
+	curl_easy_setopt(ret->curl, CURLOPT_NOSIGNAL, 1L);
+
 	/* Create request thread */
 	if (!thread_create(&ret->request_thread, &elasticsearch_request_thread, ret)) {
 		elasticsearch_connector_close(ret);
