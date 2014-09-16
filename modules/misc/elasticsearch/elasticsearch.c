@@ -135,8 +135,6 @@ struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
 		return NULL;
 	}
 
-	curl_easy_setopt(ret->curl, CURLOPT_FOLLOWLOCATION, 1L);
-
 	/* Uses of signal is not possible here in multi-threaded environment */
 	curl_easy_setopt(ret->curl, CURLOPT_NOSIGNAL, 1L);
 
