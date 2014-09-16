@@ -21,7 +21,7 @@ static char base64_encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                        'w', 'x', 'y', 'z', '0', '1', '2', '3',
                                        '4', '5', '6', '7', '8', '9', '+', '='};
 
-#define BASE64_ENCODE_LEN(len) ((len * 4) / 3)
+#define BASE64_ENCODE_LEN(len) ((len * 4) / 3 + 1)
 
 static void base64_encode(const unsigned char *data,
 		size_t input_length, char *output)
