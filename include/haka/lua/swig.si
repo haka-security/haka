@@ -64,10 +64,19 @@
 
 	#define SWIG_Lua_class_register SWIG_Lua_class_register_custom
 
-	/* Fix the thread safety of module loading. */
+	/* Fix the thread safety of module loading.
+	 *
+	 * The goal is to wrap the function created by SWIG named SWIG_init in
+	 * a lock. To do this we use a trick to redefine the macro SWIG_init to
+	 * force our function to be called instead of the default one.
+	 *
+	 * SWIG_init and SWIG_init_user is a marco defined by SWIG which uses the
+	 * module name. The real function SWIG_init is defined at the end of the
+	 * generated file.
+	 */
 	#define SWIG_custom_init CONCAT(SWIG_init_user, _init)
 
-	static mutex_t global_lock = MUTEX_INIT;
+	static mutex_t luaopen_lock = MUTEX_INIT;
 
 	#ifdef __cplusplus
 	extern "C" {
@@ -88,9 +97,9 @@
 		#undef SWIG_init
 		#define SWIG_init SWIG_custom_init
 
-		mutex_lock(&global_lock);
+		mutex_lock(&luaopen_lock);
 		SWIG_init(L);
-		mutex_unlock(&global_lock);
+		mutex_unlock(&luaopen_lock);
 	}
 
 	#ifdef __cplusplus
