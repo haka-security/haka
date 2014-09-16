@@ -5,6 +5,9 @@
 #ifndef _ELASTICSEARCH_H_
 #define _ELASTICSEARCH_H_
 
+#define BASE64_ENCODE_LEN(len) ((len * 4) / 3 + 1)
+#define ALERT_PREFIX_LENGTH  BASE64_ENCODE_LEN(16)
+
 #include <haka/types.h>
 
 #include "json.h"
@@ -14,6 +17,7 @@ struct elasticsearch_connector;
 
 struct elasticsearch_connector *elasticsearch_connector_new(const char *server);
 bool                            elasticsearch_connector_close(struct elasticsearch_connector *connector);
+void                            elasticsearch_genid(char *);
 bool                            elasticsearch_newindex(struct elasticsearch_connector *connector,
 		const char *index, json_t *data);
 bool                            elasticsearch_insert(struct elasticsearch_connector *connector,

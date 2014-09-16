@@ -4,10 +4,12 @@
 
 #include "haka/elasticsearch.h"
 
-#include <curl/curl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+#include <curl/curl.h>
+#include <uuid/uuid.h>
 
 #include <haka/error.h>
 #include <haka/log.h>
@@ -16,6 +18,51 @@
 #include <haka/container/vector.h>
 
 #define MODULE "elasticsearch"
+
+static char base64_encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+                                       'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+                                       'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+                                       'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+                                       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+                                       'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                                       'w', 'x', 'y', 'z', '0', '1', '2', '3',
+                                       '4', '5', '6', '7', '8', '9', '+', '='};
+
+static void base64_encode(const unsigned char *data,
+		size_t input_length, char *output)
+{
+	int j = 0;
+
+	for (; input_length >= 3; data+=3, input_length-=3) {
+		const uint32 triple = (data[2] << 0x10) + (data[1] << 0x08) + data[0];
+
+		output[j++] = base64_encoding_table[(triple >> 0 * 6) & 0x3F];
+		output[j++] = base64_encoding_table[(triple >> 1 * 6) & 0x3F];
+		output[j++] = base64_encoding_table[(triple >> 2 * 6) & 0x3F];
+		output[j++] = base64_encoding_table[(triple >> 3 * 6) & 0x3F];
+	}
+
+	/* Leftover */
+	if (input_length > 0) {
+		const uint32 b0 = data[0];
+		const uint32 b1 = input_length > 1 ? data[1] : 0;
+		const uint32 b2 = input_length > 2 ? data[2] : 0;
+
+		const uint32 triple = (b2 << 0x10) + (b1 << 0x08) + b0;
+
+		output[j++] = base64_encoding_table[(triple >> 0 * 6) & 0x3F];
+		output[j++] = base64_encoding_table[(triple >> 1 * 6) & 0x3F];
+		if (input_length > 1) {
+			output[j++] = base64_encoding_table[(triple >> 2 * 6) & 0x3F];
+			if (input_length > 2) {
+				output[j++] = base64_encoding_table[(triple >> 3 * 6) & 0x3F];
+			}
+		}
+	}
+
+	output[j] = '\0';
+}
+
 
 struct elasticsearch_request {
 	struct list2_elem   list;
@@ -407,6 +454,13 @@ static bool elasticsearch_request(struct elasticsearch_connector *connector,
 	push_request(connector, req);
 	return true;
 
+}
+
+void elasticsearch_genid(char *id)
+{
+	uuid_t uuid;
+	uuid_generate(uuid);
+	base64_encode(uuid, 16, id);
 }
 
 bool elasticsearch_newindex(struct elasticsearch_connector *connector, const char *index, json_t *data)
