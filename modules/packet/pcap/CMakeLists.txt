@@ -4,7 +4,7 @@
 
 find_package(PCAP REQUIRED)
 if(PCAP_FOUND)
-	add_library(packet-pcap MODULE main.c pcap.c)
+	add_library(packet-pcap SHARED main.c pcap.c)
 	set_target_properties(packet-pcap PROPERTIES OUTPUT_NAME pcap)
 
 	include_directories(${PCAP_INCLUDE_DIR})
