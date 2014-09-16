@@ -24,7 +24,7 @@ endmacro(INCLUDE_MODULE)
 macro(DEPENDS_MODULE target name type)
 	INCLUDE_MODULE(${name} ${type})
 	target_link_libraries(${target} ${name})
-	set_target_properties(${target} PROPERTIES INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/haka/modules/${type}")
+	set_property(TARGET ${target} APPEND PROPERTY INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/haka/modules/${type}")
 endmacro(DEPENDS_MODULE)
 
 macro(INSTALL_MODULE target type)
