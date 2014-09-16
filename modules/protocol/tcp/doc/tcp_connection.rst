@@ -94,7 +94,6 @@ Events
     :module:
     :objtype: event
 
-
     **Event options:**
 
         .. haka:data:: streamed
@@ -128,6 +127,20 @@ Events
                 -- do some check and reaction
             end
         }
+
+.. haka:function:: tcp_connection.events.receive_packet(flow, packet, direction)
+    :module:
+    :objtype: event
+
+    :param flow: TCP flow.
+    :paramtype flow: :haka:class:`TcpConnectionDissector`
+    :param packet: Current receive TCP packet.
+    :ptype packet: :haka:class:`TcpDissector`
+    :param direction: Data direction (``'up'`` or ``'down'``).
+    :paramtype direction: string
+
+    Event triggered when a packet associated with the stream is received.
+
 
 Helper
 ------

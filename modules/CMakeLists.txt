@@ -31,7 +31,7 @@ macro(INSTALL_MODULE target type)
 	set_property(GLOBAL APPEND PROPERTY module-${type} ${target})
 	include_directories(.)
 	target_link_libraries(${target} libhaka)
-	install(TARGETS ${target} LIBRARY DESTINATION ${MODULE_INSTALL_CPATH}/${type})
+	install(TARGETS ${target} LIBRARY DESTINATION ${MODULE_INSTALL_CPATH}/${type} ${ARGN})
 endmacro(INSTALL_MODULE)
 
 # Find all modules. We need a separated loop in case one of the sub make adds

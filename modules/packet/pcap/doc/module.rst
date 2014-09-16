@@ -10,7 +10,8 @@ Description
 
 The module uses the `pcap` library to read packets from a pcap file or from a network interface.
 
-.. note:
+.. note::
+
     To be able to capture packets on a real interface, the process need to be launched with
     the proper permissions.
 
@@ -32,6 +33,12 @@ Parameters
         # Capture on all interfaces
         # interfaces = "any"
 
+    .. warning::
+
+        If the module capture on multiple interfaces and is doing forwarding,
+        the packet will be received duplicated by haka. It will create problems
+        with the state-full connection tracking.
+
 .. describe:: file
 
     Read packets from a pcap file.
@@ -50,3 +57,7 @@ Parameters
 
         file = "/tmp/input.pcap"
         output = "/tmp/output.pcap"
+
+.. describe:: dump_input=`file`
+
+    Save the received packets to the specified pcap file.

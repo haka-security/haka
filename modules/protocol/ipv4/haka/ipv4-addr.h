@@ -11,6 +11,7 @@
 #define _HAKA_PROTO_IPV4_ADDR_H
 
 #include <haka/types.h>
+#include <stddef.h>
 
 
 /**

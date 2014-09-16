@@ -17,4 +17,6 @@ if(PCRE_FOUND)
 
 	# Tests
 	add_subdirectory(test)
+else()
+    message(STATUS "Not building module pcre (missing libraries)")
 endif()

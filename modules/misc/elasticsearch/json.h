@@ -2,13 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_MACRO_H
-#define _HAKA_MACRO_H
+#include <jansson.h>
 
-#define _STR(v)		#v
-#define STR(v)		_STR(v)
+#include <haka/types.h>
 
-#define _CONCAT(a, b)   a ## b
-#define CONCAT(a, b)    _CONCAT(a, b)
+struct lua_State;
 
-#endif /* _HAKA_MACRO_H */
+json_t *lua2json(struct lua_State *L, int index);

@@ -71,10 +71,16 @@ int        time_cmp(const struct time *t1, const struct time *t2);
 double     time_sec(const struct time *t);
 
 /**
- * Convert time to a string
+ * Convert time to a string.
  * \see TIME_BUFSIZE
  */
 bool       time_tostring(const struct time *t, char *buffer, size_t len);
+
+/**
+ * Convert time to a formated string.
+ * \see strftime()
+ */
+bool       time_format(const struct time *t, const char *format, char *buffer, size_t len);
 
 /**
  * Check if the time is valid.
