@@ -45,9 +45,8 @@ Example
 ::
 
     local ipv4 = require('protocol/ipv4')
-
     local geoip_module = require('misc/geoip')
-    local geoip = geoip_module.open('/usr/share/GeoIP/GeoIP.dat')
 
+    local geoip = geoip_module.open('/usr/share/GeoIP/GeoIP.dat')
     print(geoip:country(ipv4.addr("8.8.8.8")))
 
