@@ -9,7 +9,7 @@ find_package(LibUuid)
 if(JANSSON_FOUND AND LIBCURL_FOUND AND LIBUUID_FOUND)
 	swig_process(elasticsearchswig lua elasticsearch.i)
 
-	add_library(elasticsearch MODULE
+	add_library(elasticsearch SHARED
 		main.c
 		elasticsearch.c
 		json.c
