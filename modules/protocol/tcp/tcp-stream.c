@@ -174,7 +174,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_
 		}
 
 		if (iter != end && chunk->end_seq > qchunk->start_seq) {
-			message(HAKA_LOG_WARNING, L"tcp_connection", L"retransmit packet (ignored)");
+			message(HAKA_LOG_WARNING, "tcp_connection", L"retransmit packet (ignored)");
 			tcp_stream_chunk_free(chunk);
 			return false;
 		}
@@ -182,7 +182,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_
 		list2_insert(iter, &chunk->list);
 	}
 	else {
-		message(HAKA_LOG_WARNING, L"tcp_connection", L"retransmit packet (ignored)");
+		message(HAKA_LOG_WARNING, "tcp_connection", L"retransmit packet (ignored)");
 		tcp_stream_chunk_free(chunk);
 		return false;
 	}

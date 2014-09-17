@@ -63,8 +63,8 @@ void cleanup_alerter(struct alerter_module *alerter)
 struct alert_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_ALERT,
-		name:        L"Syslog alert",
-		description: L"Alert output to syslog",
+		name:        "Syslog alert",
+		description: "Alert output to syslog",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup

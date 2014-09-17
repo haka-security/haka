@@ -87,14 +87,15 @@ struct command command_stop = {
 static bool display_log_line(int fd)
 {
 	log_level level;
-	wchar_t *module, *msg;
+	char *module;
+	wchar_t *msg;
 
 	level = ctl_recv_int(fd);
 	if (check_error()) {
 		return false;
 	}
 
-	module = ctl_recv_wchars(fd, NULL);
+	module = ctl_recv_chars(fd, NULL);
 	if (!module) {
 		return false;
 	}
@@ -192,7 +193,7 @@ static int run_remote(int fd, const char *command)
 	if (check_status(fd, NULL) == COMMAND_SUCCESS) {
 		luadebug_user_remote_server(fd, readline_user);
 		if (check_error()) {
-			message(HAKA_LOG_FATAL, L"debug", clear_error());
+			message(HAKA_LOG_FATAL, "debug", clear_error());
 			return COMMAND_FAILED;
 		}
 		return COMMAND_SUCCESS;

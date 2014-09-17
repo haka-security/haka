@@ -11,7 +11,7 @@
 #include <haka/regexp_module.h>
 #include <haka/thread.h>
 
-#define LOG_MODULE L"pcre"
+#define LOG_MODULE "pcre"
 
 /* We enforce multiline on all API */
 #define DEFAULT_COMPILE_OPTIONS PCRE_MULTILINE
@@ -82,8 +82,8 @@ static int                      _vbpartial_exec(struct regexp_sink_pcre *sink, s
 struct regexp_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_REGEXP,
-		name:        L"PCRE regexp engine",
-		description: L"PCRE regexp engine",
+		name:        "PCRE regexp engine",
+		description: "PCRE regexp engine",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup

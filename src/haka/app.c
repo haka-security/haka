@@ -99,7 +99,7 @@ void initialize()
 	if (sigaction(SIGTERM, &sa, NULL) ||
 	    sigaction(SIGINT, &sa, NULL) ||
 	    sigaction(SIGQUIT, &sa, NULL)) {
-		messagef(HAKA_LOG_FATAL, L"core", L"%s", errno_error(errno));
+		messagef(HAKA_LOG_FATAL, "core", L"%s", errno_error(errno));
 		clean_exit();
 		exit(1);
 	}
@@ -127,11 +127,11 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 	}
 
 	if (packet_module->pass_through()) {
-		messagef(HAKA_LOG_INFO, L"core", L"setting packet mode to pass-through\n");
+		messagef(HAKA_LOG_INFO, "core", L"setting packet mode to pass-through\n");
 		packet_set_mode(MODE_PASSTHROUGH);
 	}
 
-	messagef(HAKA_LOG_INFO, L"core", L"loading rule file '%s'", configuration_file);
+	messagef(HAKA_LOG_INFO, "core", L"loading rule file '%s'", configuration_file);
 
 	/* Add module path to the configuration folder */
 	{
@@ -145,7 +145,7 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 
 		module_add_path(module_path, false);
 		if (check_error()) {
-			message(HAKA_LOG_FATAL, L"core", clear_error());
+			message(HAKA_LOG_FATAL, "core", clear_error());
 			free(module_path);
 			clean_exit();
 			exit(1);
@@ -159,16 +159,16 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 			attach_debugger, dissector_graph);
 	if (!thread_states) {
 		assert(check_error());
-		message(HAKA_LOG_FATAL, L"core", clear_error());
+		message(HAKA_LOG_FATAL, "core", clear_error());
 		clean_exit();
 		exit(1);
 	}
 
 	if (threadcount > 1) {
-		messagef(HAKA_LOG_INFO, L"core", L"starting multi-threaded processing on %i threads\n", threadcount);
+		messagef(HAKA_LOG_INFO, "core", L"starting multi-threaded processing on %i threads\n", threadcount);
 	}
 	else {
-		message(HAKA_LOG_INFO, L"core", L"starting single threaded processing\n");
+		message(HAKA_LOG_INFO, "core", L"starting single threaded processing\n");
 	}
 }
 
@@ -176,7 +176,7 @@ void start()
 {
 	thread_pool_start(thread_states);
 	if (check_error()) {
-		message(HAKA_LOG_FATAL, L"core", clear_error());
+		message(HAKA_LOG_FATAL, "core", clear_error());
 		clean_exit();
 		exit(1);
 	}
@@ -220,7 +220,7 @@ bool setup_loglevel(char *level)
 {
 	while (true) {
 		char *value;
-		wchar_t *module=NULL;
+		char *module=NULL;
 		log_level loglevel;
 
 		char *next_level = strchr(level, ',');
@@ -234,16 +234,7 @@ bool setup_loglevel(char *level)
 			*value = '\0';
 			++value;
 
-			module = malloc(sizeof(wchar_t)*(strlen(level)+1));
-			if (!module) {
-				error(L"memory error");
-				return false;
-			}
-
-			if (mbstowcs(module, level, strlen(level)+1) == -1) {
-				error(L"invalid module string");
-				return false;
-			}
+			module = level;
 		}
 		else {
 			value = level;
@@ -255,8 +246,6 @@ bool setup_loglevel(char *level)
 		}
 
 		setlevel(loglevel, module);
-
-		if (module) free(module);
 
 		if (next_level) level = next_level;
 		else break;

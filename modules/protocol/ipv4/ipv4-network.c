@@ -66,7 +66,7 @@ ipv4network ipv4_network_from_string(const char *string)
 
 	if (maskedaddr != netaddr.net) {
 		netaddr.net = maskedaddr;
-		message(HAKA_LOG_WARNING, L"ipv4" , L"Incorrect network mask");
+		message(HAKA_LOG_WARNING, "ipv4" , L"Incorrect network mask");
 	}
 
 	return netaddr;

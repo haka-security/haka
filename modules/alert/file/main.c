@@ -150,8 +150,8 @@ void cleanup_alerter(struct alerter_module *module)
 struct alert_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_ALERT,
-		name:        L"File alert",
-		description: L"Alert output to file",
+		name:        "File alert",
+		description: "Alert output to file",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup

@@ -18,8 +18,8 @@ static void cleanup();
 
 struct module MY_MODULE = {
 	type:        MODULE_EXTENSION,
-	name:        L"my module",
-	description: L"my module",
+	name:        "my module",
+	description: "my module",
 	api_version: HAKA_API_VERSION,
 	init:        init,
 	cleanup:     cleanup
@@ -28,16 +28,16 @@ struct module MY_MODULE = {
 
 static int init(struct parameters *args)
 {
-	messagef(HAKA_LOG_INFO, L"mymodule", L"init my module");
+	messagef(HAKA_LOG_INFO, "mymodule", L"init my module");
 	return 0;
 }
 
 static void cleanup()
 {
-	messagef(HAKA_LOG_INFO, L"mymodule", L"cleanup my module");
+	messagef(HAKA_LOG_INFO, "mymodule", L"cleanup my module");
 }
 
 void myfunc(void)
 {
-	messagef(HAKA_LOG_INFO, L"mymodule", L"myfunc");
+	messagef(HAKA_LOG_INFO, "mymodule", L"myfunc");
 }

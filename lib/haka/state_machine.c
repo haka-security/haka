@@ -14,7 +14,7 @@
 #include <haka/container/vector.h>
 
 
-#define MODULE    L"state-machine"
+#define MODULE    "state-machine"
 
 
 /*

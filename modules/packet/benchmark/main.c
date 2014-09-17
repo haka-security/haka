@@ -22,7 +22,7 @@
 #include <haka/container/list.h>
 #include <haka/pcap.h>
 
-#define MODULE L"benchmark"
+#define MODULE "benchmark"
 
 #define PROGRESS_DELAY      5 /* 5 seconds */
 #define MEBI 1048576.f
@@ -178,7 +178,7 @@ static bool load_packet(struct packet_module_state *state)
 		ret = vbuffer_select(&sub, &packet->core_packet.payload, NULL);
 		vbuffer_release(&data);
 		if (!ret) {
-			messagef(HAKA_LOG_ERROR, L"pcap", L"malformed packet %d", packet->id);
+			messagef(HAKA_LOG_ERROR, MODULE, L"malformed packet %d", packet->id);
 			free(packet);
 			return ENOMEM;
 		}
@@ -339,7 +339,7 @@ static const char *packet_get_dissector(struct packet *orig_pkt)
 		return "ipv4";
 
 	case -1:
-		messagef(HAKA_LOG_ERROR, L"pcap", L"malformed packet %d", pkt->id);
+		messagef(HAKA_LOG_ERROR, MODULE, L"malformed packet %d", pkt->id);
 
 	default:
 		return NULL;
@@ -418,8 +418,8 @@ static bool is_realtime()
 struct packet_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_PACKET,
-		name:        L"Benchmark Module",
-		description: L"Packet capture from memory module",
+		name:        "Benchmark Module",
+		description: "Packet capture from memory module",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup

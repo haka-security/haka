@@ -19,8 +19,8 @@ static void cleanup()
 
 struct module HAKA_MODULE = {
 	type:        MODULE_EXTENSION,
-	name:        L"GeoIP lookup utility",
-	description: L"Query the geoip database on ip addresses",
+	name:        "GeoIP lookup utility",
+	description: "Query the geoip database on ip addresses",
 	api_version: HAKA_API_VERSION,
 	init:        init,
 	cleanup:     cleanup

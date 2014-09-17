@@ -50,7 +50,7 @@ INIT static void system_init()
 	    sigaction(SIGILL, &sa, NULL) ||
 	    sigaction(SIGFPE, &sa, NULL) ||
 	    sigaction(SIGABRT, &sa, NULL)) {
-		messagef(HAKA_LOG_FATAL, L"core", L"%s", errno_error(errno));
+		messagef(HAKA_LOG_FATAL, "core", L"%s", errno_error(errno));
 		abort();
 	}
 }

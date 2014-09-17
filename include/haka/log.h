@@ -46,23 +46,23 @@ log_level str_to_level(const char *str);
 /**
  * Log a message without string formating.
  */
-void message(log_level level, const wchar_t *module, const wchar_t *message);
+void message(log_level level, const char *module, const wchar_t *message);
 
 /**
  * Log a message with string formating.
  */
-void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...);
+void messagef(log_level level, const char *module, const wchar_t *fmt, ...);
 
 /**
  * Set the logging level to display for a given module name. The `module` parameter can be
  * `NULL` in which case it will set the default level.
  */
-void setlevel(log_level level, const wchar_t *module);
+void setlevel(log_level level, const char *module);
 
 /**
  * Get the logging level for a given module name.
  */
-log_level getlevel(const wchar_t *module);
+log_level getlevel(const char *module);
 
 /**
  * Change the display of log message on stdout.
@@ -72,7 +72,7 @@ void enable_stdout_logging(bool enable);
 /**
  * Show a log line on the stdout.
  */
-bool stdout_message(log_level lvl, const wchar_t *module, const wchar_t *message);
+bool stdout_message(log_level lvl, const char *module, const wchar_t *message);
 
 /**
  * Logger instance structure.
@@ -80,7 +80,7 @@ bool stdout_message(log_level lvl, const wchar_t *module, const wchar_t *message
 struct logger {
 	struct list   list;
 	void        (*destroy)(struct logger *state);
-	int         (*message)(struct logger *state, log_level level, const wchar_t *module, const wchar_t *message);
+	int         (*message)(struct logger *state, log_level level, const char *module, const wchar_t *message);
 	bool          mark_for_remove; /**< \private */
 };
 

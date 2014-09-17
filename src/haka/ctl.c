@@ -28,7 +28,7 @@
 #include "ctl_comm.h"
 
 
-#define MODULE             L"ctl"
+#define MODULE             "ctl"
 #define MAX_CLIENT_QUEUE   10
 #define MAX_COMMAND_LEN    1024
 
@@ -342,7 +342,7 @@ static void *ctl_server_coreloop(void *param)
 	/* Block all signal to let the main thread handle them */
 	sigfillset(&set);
 	if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
-		message(HAKA_LOG_FATAL, L"core", clear_error());
+		message(HAKA_LOG_FATAL, "core", clear_error());
 		return NULL;
 	}
 
@@ -411,13 +411,13 @@ void stop_ctl_server()
  */
 
 int redirect_message(int fd, mutex_t *mutex, log_level level,
-		const wchar_t *module, const wchar_t *message)
+		const char *module, const wchar_t *message)
 {
 	if (fd > 0) {
 		mutex_lock(mutex);
 
 		if (!ctl_send_int(fd, level) ||
-			!ctl_send_wchars(fd, module, -1) ||
+			!ctl_send_chars(fd, module, -1) ||
 			!ctl_send_wchars(fd, message, -1)) {
 			mutex_unlock(mutex);
 			clear_error();
@@ -435,7 +435,7 @@ struct redirect_logger {
 	mutex_t          mutex;
 };
 
-int redirect_logger_message(struct logger *_logger, log_level level, const wchar_t *module, const wchar_t *message)
+int redirect_logger_message(struct logger *_logger, log_level level, const char *module, const wchar_t *message)
 {
 	struct redirect_logger *logger = (struct redirect_logger *)_logger;
 	if (!redirect_message(logger->fd, &logger->mutex, level, module, message)) {
@@ -481,7 +481,7 @@ struct redirect_alerter {
 bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
-	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, L"alert",
+	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, "alert",
 			alert_tostring(id, time, alert, "", "\n\t", false))) {
 		alerter->alerter.mark_for_remove = true;
 	}
@@ -491,7 +491,7 @@ bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, const struct ti
 bool redirect_alerter_update(struct alerter *_alerter, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
-	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, L"alert",
+	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, "alert",
 			alert_tostring(id, time, alert, "update ", "\n\t", false))) {
 		alerter->alerter.mark_for_remove = true;
 	}

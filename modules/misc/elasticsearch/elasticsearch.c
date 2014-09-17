@@ -15,7 +15,7 @@
 #include <haka/container/list2.h>
 #include <haka/container/vector.h>
 
-#define MODULE L"elasticsearch"
+#define MODULE "elasticsearch"
 
 struct elasticsearch_request {
 	struct list2_elem   list;

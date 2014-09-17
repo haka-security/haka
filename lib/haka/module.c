@@ -93,7 +93,7 @@ struct module *module_load(const char *module_name, struct parameters *args)
 	module->handle = module_handle;
 
 	if (module->api_version != HAKA_API_VERSION) {
-		messagef(HAKA_LOG_INFO, L"core", L"%s: invalid API version", full_module_name);
+		messagef(HAKA_LOG_INFO, "core", L"%s: invalid API version", full_module_name);
 		dlclose(module->handle);
 		free(full_module_name);
 		return NULL;
@@ -102,16 +102,16 @@ struct module *module_load(const char *module_name, struct parameters *args)
 	if (atomic_get(&module->ref) == 0) {
 		/* Initialize the module */
 		if (module->name && module->author) {
-			messagef(HAKA_LOG_INFO, L"core", L"load module '%s', %ls, %ls",
+			messagef(HAKA_LOG_INFO, "core", L"load module '%s', %s, %s",
 			         full_module_name, module->name, module->author);
 		}
 		else if (module->name || module->author) {
-			messagef(HAKA_LOG_INFO, L"core", L"load module '%s', %ls%ls",
-			         full_module_name, module->name ? module->name : L"",
-			         module->author ? module->author : L"");
+			messagef(HAKA_LOG_INFO, "core", L"load module '%s', %s%s",
+			         full_module_name, module->name ? module->name : "",
+			         module->author ? module->author : "");
 		}
 		else {
-			messagef(HAKA_LOG_INFO, L"core", L"load module '%s'", full_module_name);
+			messagef(HAKA_LOG_INFO, "core", L"load module '%s'", full_module_name);
 		}
 
 		if (module->init(args) || check_error()) {
@@ -142,7 +142,7 @@ void module_release(struct module *module)
 {
 	if (atomic_dec(&module->ref) == 0) {
 		/* Cleanup the module */
-		messagef(HAKA_LOG_INFO, L"core", L"unload module '%ls'", module->name);
+		messagef(HAKA_LOG_INFO, "core", L"unload module '%s'", module->name);
 		module->cleanup();
 		dlclose(module->handle);
 	}

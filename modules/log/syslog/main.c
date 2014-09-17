@@ -34,11 +34,11 @@ static const int syslog_level[HAKA_LOG_LEVEL_LAST] = {
 	LOG_DEBUG,
 };
 
-static int logger_message(struct logger *state, log_level lvl, const wchar_t *module, const wchar_t *message)
+static int logger_message(struct logger *state, log_level lvl, const char *module, const wchar_t *message)
 {
 	/* Send log to syslog */
 	assert(lvl >= 0 && lvl < HAKA_LOG_LEVEL_LAST);
-	syslog(syslog_level[lvl], "%ls: %ls", module, message);
+	syslog(syslog_level[lvl], "%s: %ls", module, message);
 	return 0;
 }
 
@@ -60,8 +60,8 @@ void cleanup_logger(struct logger_module *logger)
 struct log_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_LOG,
-		name:        L"Syslog logger",
-		description: L"Logger to syslog",
+		name:        "Syslog logger",
+		description: "Logger to syslog",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup

@@ -215,11 +215,11 @@ void enable_stdout_logging(bool enable)
 	stdout_enable = enable;
 }
 
-bool stdout_message(log_level lvl, const wchar_t *module, const wchar_t *message)
+bool stdout_message(log_level lvl, const char *module, const wchar_t *message)
 {
 	const char *level_str = level_to_str(lvl);
 	const int level_size = strlen(level_str);
-	const int module_size = wcslen(module);
+	const int module_size = strlen(module);
 	FILE *fd = (lvl == HAKA_LOG_FATAL) ? stderr : stdout;
 
 	thread_setcancelstate(false);
@@ -231,12 +231,12 @@ bool stdout_message(log_level lvl, const wchar_t *module, const wchar_t *message
 	}
 
 	if (stdout_use_colors) {
-		fprintf(fd, "%s%s" CLEAR "%*s " MODULE_COLOR "%ls:" CLEAR "%*s %s%ls\n" CLEAR, level_color[lvl], level_str,
+		fprintf(fd, "%s%s" CLEAR "%*s " MODULE_COLOR "%s:" CLEAR "%*s %s%ls\n" CLEAR, level_color[lvl], level_str,
 				level_size-5, "", module, stdout_module_size-module_size, "", message_color[lvl], message);
 	}
 	else
 	{
-		fprintf(fd, "%s%*s %ls:%*s %ls\n", level_str, level_size-5, "",
+		fprintf(fd, "%s%*s %s:%*s %ls\n", level_str, level_size-5, "",
 				module, stdout_module_size-module_size, "", message);
 	}
 
@@ -247,7 +247,7 @@ bool stdout_message(log_level lvl, const wchar_t *module, const wchar_t *message
 	return true;
 }
 
-void message(log_level level, const wchar_t *module, const wchar_t *message)
+void message(log_level level, const char *module, const wchar_t *message)
 {
 	struct message_context_t *context = message_context();
 	if (context && !context->doing_message) {
@@ -288,7 +288,7 @@ void message(log_level level, const wchar_t *module, const wchar_t *message)
 	}
 }
 
-void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...)
+void messagef(log_level level, const char *module, const wchar_t *fmt, ...)
 {
 	const log_level max_level = getlevel(module);
 	if (level <= max_level) {
@@ -305,7 +305,7 @@ void messagef(log_level level, const wchar_t *module, const wchar_t *fmt, ...)
 }
 
 struct module_level {
-	wchar_t             *module;
+	char                *module;
 	log_level            level;
 	struct module_level *next;
 };
@@ -314,11 +314,11 @@ static struct module_level *module_level = NULL;
 static log_level default_level = HAKA_LOG_INFO;
 static rwlock_t log_level_lock = RWLOCK_INIT;
 
-static struct module_level *get_module_level(const wchar_t *module, bool create)
+static struct module_level *get_module_level(const char *module, bool create)
 {
 	struct module_level *iter = module_level, *prev = NULL;
 	while (iter) {
-		if (wcscmp(module, iter->module) == 0) {
+		if (strcmp(module, iter->module) == 0) {
 			break;
 		}
 
@@ -333,7 +333,7 @@ static struct module_level *get_module_level(const wchar_t *module, bool create)
 			return NULL;
 		}
 
-		iter->module = wcsdup(module);
+		iter->module = strdup(module);
 		if (!iter->module) {
 			free(iter);
 			error(L"memory error");
@@ -349,11 +349,11 @@ static struct module_level *get_module_level(const wchar_t *module, bool create)
 	return iter;
 }
 
-static void reset_module_level(const wchar_t *module)
+static void reset_module_level(const char *module)
 {
 	struct module_level *iter = module_level, *prev = NULL;
 	while (iter) {
-		if (wcscmp(module, iter->module) == 0) {
+		if (strcmp(module, iter->module) == 0) {
 			if (prev) {
 				prev->next = iter->next;
 			} else {
@@ -367,13 +367,13 @@ static void reset_module_level(const wchar_t *module)
 	}
 }
 
-void setlevel(log_level level, const wchar_t *module)
+void setlevel(log_level level, const char *module)
 {
 	rwlock_writelock(&log_level_lock);
 
 	if (!module) {
 		if (level == HAKA_LOG_DEFAULT) {
-			message(HAKA_LOG_WARNING, L"core", L"cannot set log level default for global level");
+			message(HAKA_LOG_WARNING, "core", L"cannot set log level default for global level");
 		} else {
 			default_level = level;
 		}
@@ -392,7 +392,7 @@ void setlevel(log_level level, const wchar_t *module)
 	rwlock_unlock(&log_level_lock);
 }
 
-log_level getlevel(const wchar_t *module)
+log_level getlevel(const char *module)
 {
 	log_level level;
 

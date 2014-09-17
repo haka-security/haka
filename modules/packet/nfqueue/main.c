@@ -855,7 +855,7 @@ struct packet_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_PACKET,
 		name:        MODULE_NAME,
-		description: L"Netfilter queue packet module",
+		description: "Netfilter queue packet module",
 		api_version: HAKA_API_VERSION,
 		init:		 init,
 		cleanup:	 cleanup
