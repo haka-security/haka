@@ -66,7 +66,7 @@ struct elasticsearch_connector {
 
 		void genid(char **TEMP_OUTPUT)
 		{
-			*TEMP_OUTPUT = malloc(ALERT_PREFIX_LENGTH + 1);
+			*TEMP_OUTPUT = malloc(ELASTICSEARCH_ID_LENGTH + 1);
 			if (!*TEMP_OUTPUT) {
 				error("memory error");
 				return;
