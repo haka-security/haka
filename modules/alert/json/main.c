@@ -248,20 +248,6 @@ struct elasticsearch_alerter {
 	char                              alert_id_prefix[ELASTICSEARCH_ID_LENGTH + 1];
 };
 
-bool check_elasticsearch_connection(struct elasticsearch_alerter *alerter)
-{
-	if (!alerter->connector) {
-		alerter->connector = elasticsearch_connector_new(alerter->server);
-		if (!alerter->connector) {
-			error("enable to connect to elasticsearch server %s", alerter->server);
-			return false;
-		}
-		json_create_mapping(alerter->connector, alerter->index);
-	}
-	return true;
-}
-
-
 static int init(struct parameters *args)
 {
 	return 0;
@@ -274,29 +260,39 @@ static void cleanup()
 static bool do_alert(struct alerter *state, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct elasticsearch_alerter *alerter = (struct elasticsearch_alerter *)state;
+
+	json_t *ret;
 	char elasticsearch_id[ELASTICSEARCH_ID_LENGTH + ALERT_ID_LENGTH + 1];
 	snprintf(elasticsearch_id, ELASTICSEARCH_ID_LENGTH + ALERT_ID_LENGTH + 1,
 		"%s%llx", alerter->alert_id_prefix, id);
 
-	if (check_elasticsearch_connection(alerter)) {
-		json_t *ret = alert_tojson(time, alert, alerter->geoip_handler);
-		return ret && elasticsearch_insert(alerter->connector, alerter->index, "alert", elasticsearch_id, ret);
-	}
-	return false;
+	ret = alert_tojson(time, alert, alerter->geoip_handler);
+	return ret && elasticsearch_insert(alerter->connector, alerter->index, "alert", elasticsearch_id, ret);
 }
 
 static bool do_alert_update(struct alerter *state, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct elasticsearch_alerter *alerter = (struct elasticsearch_alerter *)state;
+
+	json_t *ret;
 	char elasticsearch_id[ELASTICSEARCH_ID_LENGTH + ALERT_ID_LENGTH + 1];
 	snprintf(elasticsearch_id, ELASTICSEARCH_ID_LENGTH + ALERT_ID_LENGTH + 1,
 		"%s%llx", alerter->alert_id_prefix, id);
 
-	if (check_elasticsearch_connection(alerter)) {
-		json_t *ret = alert_tojson(time, alert, alerter->geoip_handler);
-		return ret && elasticsearch_update(alerter->connector, alerter->index, "alert", elasticsearch_id, ret);
+	ret = alert_tojson(time, alert, alerter->geoip_handler);
+	return ret && elasticsearch_update(alerter->connector, alerter->index, "alert", elasticsearch_id, ret);
+}
+
+void cleanup_alerter(struct alerter_module *module)
+{
+	struct elasticsearch_alerter *alerter = (struct elasticsearch_alerter *)module;
+	if (alerter->connector) {
+		elasticsearch_connector_close(alerter->connector);
+		free(alerter->server);
 	}
-	return false;
+	if (alerter->geoip_handler)
+		geoip_destroy(alerter->geoip_handler);
+	free(alerter);
 }
 
 struct alerter_module *init_alerter(struct parameters *args)
@@ -322,7 +318,13 @@ struct alerter_module *init_alerter(struct parameters *args)
 		return NULL;
 	}
 
-	elasticsearch_alerter->connector = NULL;
+	elasticsearch_alerter->connector = elasticsearch_connector_new(elasticsearch_alerter->server);
+	if (!elasticsearch_alerter->connector) {
+		error("enable to connect to elasticsearch server %s", elasticsearch_alerter->server);
+		cleanup_alerter(&elasticsearch_alerter->module);
+		return NULL;
+	}
+	json_create_mapping(elasticsearch_alerter->connector, elasticsearch_alerter->index);
 
 	const char *index = parameters_get_string(args, "elasticsearch_index", NULL);
 	if (!index) {
@@ -351,20 +353,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 		messagef(HAKA_LOG_WARNING, "geoip", "missing geoip database");
 	}
 
-	return &elasticsearch_alerter->module;
-}
-
-void cleanup_alerter(struct alerter_module *module)
-{
-	struct elasticsearch_alerter *alerter = (struct elasticsearch_alerter *)module;
-	if (alerter->connector) {
-		elasticsearch_connector_close(alerter->connector);
-		free(alerter->server);
-		free(alerter->index);
-	}
-	if (alerter->geoip_handler)
-		geoip_destroy(alerter->geoip_handler);
-	free(alerter);
+	return  &elasticsearch_alerter->module;
 }
 
 struct alert_module HAKA_MODULE = {
