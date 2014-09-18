@@ -76,12 +76,12 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 
 	if (!lua_isnil(state->lua->L, -1)) {
 		if (!lua_pushppacket(state->lua->L, pkt)) {
-			message(HAKA_LOG_ERROR, L"core", L"packet internal error");
+			message(HAKA_LOG_ERROR, "core", "packet internal error");
 			packet_drop(pkt);
 		}
 		else {
 			if (lua_pcall(state->lua->L, 1, 0, h)) {
-				lua_state_print_error(state->lua->L, L"filter");
+				lua_state_print_error(state->lua->L, "filter");
 				packet_drop(pkt);
 			}
 		}
@@ -147,11 +147,11 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	state->state = STATE_NOTSARTED;
 	state->engine = NULL;
 
-	messagef(HAKA_LOG_INFO, L"core", L"initializing thread %d", thread_id);
+	messagef(HAKA_LOG_INFO, "core", "initializing thread %d", thread_id);
 
 	state->lua = lua_state_init();
 	if (!state->lua) {
-		message(HAKA_LOG_FATAL, L"core", L"unable to create lua state");
+		message(HAKA_LOG_FATAL, "core", "unable to create lua state");
 		cleanup_thread_state(state);
 		return NULL;
 	}
@@ -176,7 +176,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 
 	state->capture = packet_module->init_state(thread_id);
 	if (!state->capture) {
-		message(HAKA_LOG_FATAL, L"core", L"unable to create packet capture state");
+		message(HAKA_LOG_FATAL, "core", "unable to create packet capture state");
 		cleanup_thread_state(state);
 		return NULL;
 	}
@@ -200,7 +200,7 @@ static bool init_thread_lua_state(struct thread_state *state)
 	lua_getglobal(state->lua->L, "require");
 	lua_pushstring(state->lua->L, "rule");
 	if (lua_pcall(state->lua->L, 1, 0, h)) {
-		lua_state_print_error(state->lua->L, L"init");
+		lua_state_print_error(state->lua->L, "init");
 		lua_pop(state->lua->L, 1);
 
 		LUA_STACK_CHECK(state->lua->L, 0);
@@ -215,7 +215,7 @@ static bool init_thread_lua_state(struct thread_state *state)
 	lua_getglobal(state->lua->L, "haka");
 	lua_getfield(state->lua->L, -1, "rule_summary");
 	if (lua_pcall(state->lua->L, 0, 0, h)) {
-		lua_state_print_error(state->lua->L, L"init");
+		lua_state_print_error(state->lua->L, "init");
 		lua_pop(state->lua->L, 1);
 
 		LUA_STACK_CHECK(state->lua->L, 0);
@@ -243,14 +243,14 @@ static void *thread_main_loop(void *_state)
 		sigdelset(&set, SIGFPE);
 
 		if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
-			message(HAKA_LOG_FATAL, L"core", clear_error());
+			message(HAKA_LOG_FATAL, "core", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
 			return NULL;
 		}
 
 		if (!timer_init_thread()) {
-			message(HAKA_LOG_FATAL, L"core", clear_error());
+			message(HAKA_LOG_FATAL, "core", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
 			return NULL;
@@ -259,7 +259,7 @@ static void *thread_main_loop(void *_state)
 		/* To make sure we can still cancel even if some thread are locked in
 		 * infinite loops */
 		if (!thread_setcanceltype(THREAD_CANCEL_ASYNCHRONOUS)) {
-			message(HAKA_LOG_FATAL, L"core", clear_error());
+			message(HAKA_LOG_FATAL, "core", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
 			return NULL;
@@ -279,7 +279,7 @@ static void *thread_main_loop(void *_state)
 
 	if (!state->pool->single) {
 		if (!barrier_wait(&state->pool->thread_start_sync)) {
-			message(HAKA_LOG_FATAL, L"core", clear_error());
+			message(HAKA_LOG_FATAL, "core", clear_error());
 			state->state = STATE_ERROR;
 			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
@@ -288,7 +288,7 @@ static void *thread_main_loop(void *_state)
 
 	if (!state->pool->single) {
 		if (!barrier_wait(&state->pool->thread_sync)) {
-			message(HAKA_LOG_FATAL, L"core", clear_error());
+			message(HAKA_LOG_FATAL, "core", clear_error());
 			state->state = STATE_ERROR;
 			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
@@ -340,7 +340,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 
 	pool = malloc(sizeof(struct thread_pool));
 	if (!pool) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -348,7 +348,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 
 	pool->threads = malloc(sizeof(struct thread_state*)*count);
 	if (!pool) {
-		error(L"memory error");
+		error("memory error");
 		thread_pool_cleanup(pool);
 		return NULL;
 	}
@@ -376,7 +376,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 	for (i=0; i<count; ++i) {
 		pool->threads[i] = init_thread_state(packet_module, i, dissector_graph);
 		if (!pool->threads[i]) {
-			error(L"thread initialization error");
+			error("thread initialization error");
 			thread_pool_cleanup(pool);
 			return NULL;
 		}
@@ -385,7 +385,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 
 		if (pool->single) {
 			if (!init_thread_lua_state(pool->threads[i])) {
-				error(L"thread initialization error");
+				error("thread initialization error");
 				thread_pool_cleanup(pool);
 				return NULL;
 			}
@@ -404,7 +404,7 @@ struct thread_pool *thread_pool_create(int count, struct packet_module *packet_m
 			}
 
 			if (pool->threads[i]->state == STATE_ERROR) {
-				error(L"thread initialization error");
+				error("thread initialization error");
 				thread_pool_cleanup(pool);
 				return NULL;
 			}
@@ -455,7 +455,7 @@ void thread_pool_wait(struct thread_pool *pool)
 		    pool->threads[i]->state != STATE_JOINED) {
 			void *ret;
 			if (!thread_join(pool->threads[i]->thread, &ret)) {
-				message(HAKA_LOG_FATAL, L"core", clear_error());
+				message(HAKA_LOG_FATAL, "core", clear_error());
 			}
 			pool->threads[i]->state = STATE_JOINED;
 		}
@@ -470,7 +470,7 @@ void thread_pool_cancel(struct thread_pool *pool)
 		for (i=0; i<pool->count; ++i) {
 			if (pool->threads[i] && pool->threads[i]->state == STATE_RUNNING) {
 				if (!thread_cancel(pool->threads[i]->thread)) {
-					message(HAKA_LOG_FATAL, L"core", clear_error());
+					message(HAKA_LOG_FATAL, "core", clear_error());
 				}
 				pool->threads[i]->state = STATE_CANCELED;
 			}
@@ -494,7 +494,7 @@ void thread_pool_start(struct thread_pool *pool)
 		thread_pool_wait(pool);
 	}
 	else {
-		error(L"no thread to run");
+		error("no thread to run");
 	}
 }
 

@@ -41,7 +41,7 @@ static struct ipv4_frag_table *ipv4_frag_table_new()
 {
 	struct ipv4_frag_table *table = malloc(sizeof(struct ipv4_frag_table));
 	if (!table) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -58,7 +58,7 @@ static struct ipv4_frag_table *ipv4_frag_table_new()
 	return table;
 }
 
-static void raise_alert(struct ipv4 *ip, wchar_t *message)
+static void raise_alert(struct ipv4 *ip, char *message)
 {
 	if (ip) {
 		ALERT(invalid_packet, 1, 1)
@@ -66,8 +66,8 @@ static void raise_alert(struct ipv4 *ip, wchar_t *message)
 			severity: HAKA_ALERT_LOW,
 		ENDALERT
 
-		TOWSTR(srcip, ipv4addr, ipv4_get_src(ip));
-		TOWSTR(dstip, ipv4addr, ipv4_get_dst(ip));
+		TOSTR(srcip, ipv4addr, ipv4_get_src(ip));
+		TOSTR(dstip, ipv4addr, ipv4_get_dst(ip));
 
 		ALERT_NODE(invalid_packet, sources, 0, HAKA_ALERT_NODE_ADDRESS, srcip);
 		ALERT_NODE(invalid_packet, targets, 0, HAKA_ALERT_NODE_ADDRESS, dstip);
@@ -166,7 +166,7 @@ static bool ipv4_frag_insert(struct ipv4_frag_elem *elem, struct ipv4 *pkt)
 					cur = list2_get(iter, struct ipv4, frag_list);
 					iter = list2_erase(iter);
 
-					raise_alert(cur, L"invalid ipv4 fragment");
+					raise_alert(cur, "invalid ipv4 fragment");
 					ipv4_action_drop(cur);
 					ipv4_release(cur);
 				}
@@ -181,7 +181,7 @@ static bool ipv4_frag_insert(struct ipv4_frag_elem *elem, struct ipv4 *pkt)
 		 * packet does have the mf flag set. */
 		struct ipv4 *last = list2_get(list2_prev(end), struct ipv4, frag_list);
 		if (!ipv4_get_flags_mf(last)) {
-			raise_alert(pkt, L"invalid ipv4 fragment");
+			raise_alert(pkt, "invalid ipv4 fragment");
 			ipv4_action_drop(pkt);
 			ipv4_release(pkt);
 			return false;
@@ -217,7 +217,7 @@ static struct ipv4_frag_elem *ipv4_frag_table_insert(struct ipv4_frag_table *tab
 	else {
 		ptr = malloc(sizeof(struct ipv4_frag_elem));
 		if (!ptr) {
-			error(L"memory error");
+			error("memory error");
 			mutex_unlock(&table->mutex);
 			return false;
 		}
@@ -304,7 +304,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	}
 
 	if (!vbuffer_check_size(payload, sizeof(struct ipv4_header), NULL)) {
-		raise_alert(NULL, L"corrupted ip packet, size is too small");
+		raise_alert(NULL, "corrupted ip packet, size is too small");
 
 		packet_drop(packet);
 		packet_release(packet);
@@ -313,7 +313,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 
 	ip = malloc(sizeof(struct ipv4));
 	if (!ip) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -328,7 +328,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 
 	header_len = hdrlen.hdr_len << IPV4_HDR_LEN_OFFSET;
 	if (header_len < sizeof(struct ipv4_header)) {
-		raise_alert(NULL, L"corrupted ip packet");
+		raise_alert(NULL, "corrupted ip packet");
 
 		packet_drop(packet);
 		packet_release(packet);
@@ -346,7 +346,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	 * as the packet might contains some padding.
 	 */
 	if (vbuffer_size(payload) < ipv4_get_len(ip)) {
-		raise_alert(ip, L"invalid ip packet, invalid size is too small");
+		raise_alert(ip, "invalid ip packet, invalid size is too small");
 
 		packet_drop(packet);
 		packet_release(packet);

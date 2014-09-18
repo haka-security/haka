@@ -127,14 +127,10 @@
 %}
 
 %exception %{
-	const wchar_t *error;
+	const char *error;
 	$action
 	if ((error = clear_error())) {
-		if (!lua_pushwstring(L, error)) {
-			if (!lua_pushwstring(L, clear_error())) {
-				lua_pushstring(L, "unknown error");
-			}
-		}
+		lua_pushstring(L, error);
 		SWIG_execfail;
 	}
 %}
@@ -165,11 +161,11 @@
 
 %{
 void type ## ___getitem(struct type *self, char *KEY) {
-	error(L"unknown field '%s'", KEY);
+	error("unknown field '%s'", KEY);
 }
 
 void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
-	error(L"unknown field '%s'", KEY);
+	error("unknown field '%s'", KEY);
 }
 %}
 

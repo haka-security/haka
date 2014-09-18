@@ -10,7 +10,6 @@
 #ifndef _HAKA_ALERT_H
 #define _HAKA_ALERT_H
 
-#include <wchar.h>
 #include <haka/types.h>
 #include <haka/time.h>
 #include <haka/container/list.h>
@@ -55,7 +54,7 @@ typedef enum {
  */
 struct alert_node {
 	alert_node_type     type; /**< Alert node type. */
-	wchar_t           **list; /**< NULL terminated array of strings. */
+	char              **list; /**< NULL terminated array of strings. */
 };
 
 /**
@@ -64,13 +63,13 @@ struct alert_node {
 struct alert {
 	struct time         start_time;          /**< Alert time. */
 	struct time         end_time;            /**< Alert time. */
-	wchar_t            *description;         /**< Alert description. */
+	char               *description;         /**< Alert description. */
 	alert_level         severity;            /**< Alert severity (HAKA_ALERT_NUMERIC is not a valid value here). */
 	alert_level         confidence;          /**< Alert confidence. */
 	double              confidence_num;      /**< Alert confidence numeric value if confidence == HAKA_ALERT_NUMERIC. */
 	alert_completion    completion;          /**< Alert completion. */
-	wchar_t            *method_description;  /**< Alert method description. */
-	wchar_t           **method_ref;          /**< Alert method references (NULL terminated array). */
+	char               *method_description;  /**< Alert method description. */
+	char              **method_ref;          /**< Alert method references (NULL terminated array). */
 	struct alert_node **sources;             /**< Alert sources (NULL terminated array of nodes). */
 	struct alert_node **targets;             /**< Alert targets (NULL terminated array of nodes). */
 	size_t              alert_ref_count;     /**< Reference count. */
@@ -103,12 +102,12 @@ struct alert {
  * \param name ``sources`` or ``target``.
  * \param index Index of the node.
  * \param type Type of node (see :c:type:`alert_node_type`).
- * \param ... List of strings (wchar_t *).
+ * \param ... List of strings.
  */
 #define ALERT_NODE(alert, name, index, type, ...) \
 	struct alert_node _node##name##index = { type }; \
 	alert.name[index] = &_node##name##index; \
-	wchar_t *_node##name##index_list[] = { __VA_ARGS__, NULL }; \
+	char *_node##name##index_list[] = { __VA_ARGS__, NULL }; \
 	_node##name##index.list = _node##name##index_list
 
 /**
@@ -127,10 +126,10 @@ struct alert {
  * Add method references.
  *
  * \param alert Alert name.
- * \param ... List of strings (wchar_t *).
+ * \param ... List of strings.
  */
 #define ALERT_METHOD_REF(alert, ...) \
-	wchar_t *_method_ref[] = { __VA_ARGS__, NULL }; \
+	char *_method_ref[] = { __VA_ARGS__, NULL }; \
 	alert.method_ref = _method_ref
 
 /**
@@ -148,7 +147,8 @@ bool            alert_update(uint64 id, const struct alert *alert);
 /**
  * Convert an alert to a string.
  */
-const wchar_t  *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent, bool color);
+const char     *alert_tostring(uint64 id, const struct time *time, const struct alert *alert,
+		const char *header, const char *indent, bool color);
 
 /**
  * Enable display of alerts on stdout.

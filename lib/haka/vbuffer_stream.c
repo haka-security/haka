@@ -95,13 +95,13 @@ bool vbuffer_stream_push(struct vbuffer_stream *stream, struct vbuffer *buffer, 
 	struct vbuffer_stream_chunk *chunk;
 
 	if (stream->data.chunks->flags.eof) {
-		error(L"stream marked as finished");
+		error("stream marked as finished");
 		return false;
 	}
 
 	chunk = malloc(sizeof(struct vbuffer_stream_chunk));
 	if (!chunk) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 

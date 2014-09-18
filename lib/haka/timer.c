@@ -52,7 +52,7 @@ static struct time_realm_state *create_time_realm_state(struct time_realm *realm
 
 	struct time_realm_state *state = malloc(sizeof(struct time_realm_state));
 	if (!state) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -67,7 +67,7 @@ static struct time_realm_state *create_time_realm_state(struct time_realm *realm
 
 		if (timer_create(CLOCK_MONOTONIC, &sev, &state->timer)) {
 			free(state);
-			error(L"timer creation error: %s", errno_error(errno));
+			error("timer creation error: %s", errno_error(errno));
 			return NULL;
 		}
 	}
@@ -118,7 +118,7 @@ bool time_realm_initialize(struct time_realm *realm, enum time_realm_mode mode)
 		break;
 
 	default:
-		error(L"invalid timer mode");
+		error("invalid timer mode");
 		return false;
 	}
 
@@ -146,10 +146,10 @@ void time_realm_update(struct time_realm *realm, const struct time *value)
 
 	sign = time_diff(&difftime, value, &oldtime);
 	if (sign < 0) {
-		messagef(HAKA_LOG_DEBUG, L"timer", L"static time going backward (ignored)");
+		messagef(HAKA_LOG_DEBUG, "timer", "static time going backward (ignored)");
 	}
 	else {
-		messagef(HAKA_LOG_DEBUG, L"timer", L"static time offset %s%f seconds", sign >= 0? "+" : "-", time_sec(&difftime));
+		messagef(HAKA_LOG_DEBUG, "timer", "static time offset %s%f seconds", sign >= 0? "+" : "-", time_sec(&difftime));
 
 		realm->time = *value;
 		realm->check_timer = true;
@@ -167,7 +167,7 @@ const struct time *time_realm_current_time(struct time_realm *realm)
 		return &realm->time;
 
 	default:
-		error(L"invalid timer mode");
+		error("invalid timer mode");
 		return NULL;
 	}
 }
@@ -181,7 +181,7 @@ INIT static void _timer_init()
 	sa.sa_sigaction = timer_handler;
 	sigemptyset(&sa.sa_mask);
 	if (sigaction(SIGALRM, &sa, NULL) == -1) {
-		messagef(HAKA_LOG_FATAL, L"timer", L"%s", errno_error(errno));
+		messagef(HAKA_LOG_FATAL, "timer", "%s", errno_error(errno));
 		abort();
 	}
 
@@ -209,7 +209,7 @@ struct timer *time_realm_timer(struct time_realm *realm, timer_callback callback
 
 	timer = malloc(sizeof(struct timer));
 	if (!timer) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -258,7 +258,7 @@ static bool time_realm_update_timer_list(struct time_realm_state *state,
 		if (list2_empty(&state->sorted_timer)) {
 			/* stop the timer */
 			if (timer_settime(state->timer, 0, &ts, NULL) != 0) {
-				error(L"%s", errno_error(errno));
+				error("%s", errno_error(errno));
 				return false;
 			}
 		}
@@ -273,7 +273,7 @@ static bool time_realm_update_timer_list(struct time_realm_state *state,
 				/* stop the timer, the timer will be restarted if needed by the
 				 * next call to timer_realm_check(). */
 				if (timer_settime(state->timer, 0, &ts, NULL) != 0) {
-					error(L"%s", errno_error(errno));
+					error("%s", errno_error(errno));
 					return false;
 				}
 			}
@@ -282,11 +282,11 @@ static bool time_realm_update_timer_list(struct time_realm_state *state,
 				ts.it_value.tv_nsec = diff.nsecs;
 
 				if (timer_settime(state->timer, 0, &ts, NULL) != 0) {
-					error(L"%s", errno_error(errno));
+					error("%s", errno_error(errno));
 					return false;
 				}
 
-				messagef(HAKA_LOG_DEBUG, L"timer", L"next timer in %f seconds", time_sec(&diff));
+				messagef(HAKA_LOG_DEBUG, "timer", "next timer in %f seconds", time_sec(&diff));
 			}
 		}
 	}
@@ -297,7 +297,7 @@ static bool time_realm_update_timer_list(struct time_realm_state *state,
 			struct time current = *time_realm_current_time(state->realm);
 
 			if (time_diff(&diff, &first->trigger_time, &current) > 0) {
-				messagef(HAKA_LOG_DEBUG, L"timer", L"next timer in %f seconds", time_sec(&diff));
+				messagef(HAKA_LOG_DEBUG, "timer", "next timer in %f seconds", time_sec(&diff));
 			}
 		}
 	}
@@ -316,7 +316,7 @@ static bool timer_start(struct timer *timer, struct time *delay, bool repeat)
 	struct time_realm_state *state = get_time_realm_state(timer->realm, true);
 
 	if (delay->secs == 0 && delay->nsecs == 0) {
-		error(L"invalid timer delay");
+		error("invalid timer delay");
 		return false;
 	}
 

@@ -13,7 +13,7 @@
 INIT static int init(struct parameters *args)
 {
 	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-		error(L"unable to initialize curl library");
+		error("unable to initialize curl library");
 		return -1;
 	}
 
@@ -27,8 +27,8 @@ FINI static void cleanup()
 
 struct module HAKA_MODULE = {
 	type:        MODULE_EXTENSION,
-	name:        L"ElasticSearch connector",
-	description: L"Insert and query an eleastic search server",
+	name:        "ElasticSearch connector",
+	description: "Insert and query an eleastic search server",
 	api_version: HAKA_API_VERSION,
 	init:        init,
 	cleanup:     cleanup

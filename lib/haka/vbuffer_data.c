@@ -63,7 +63,7 @@ struct vbuffer_data_basic *vbuffer_data_basic(size_t size, bool zero)
 {
 	struct vbuffer_data_basic *buf = malloc(sizeof(struct vbuffer_data_basic) + size);
 	if (!buf) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -127,7 +127,7 @@ struct vbuffer_data_ctl_select *vbuffer_data_ctl_select()
 {
 	struct vbuffer_data_ctl_select *buf = malloc(sizeof(struct vbuffer_data_ctl_select));
 	if (!buf) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -148,7 +148,7 @@ struct vbuffer_data_ctl_push *vbuffer_data_ctl_push(struct vbuffer_stream *strea
 {
 	struct vbuffer_data_ctl_push *buf = malloc(sizeof(struct vbuffer_data_ctl_push));
 	if (!buf) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -170,7 +170,7 @@ struct vbuffer_data_ctl_mark *vbuffer_data_ctl_mark(bool readonly)
 {
 	struct vbuffer_data_ctl_mark *buf = malloc(sizeof(struct vbuffer_data_ctl_mark));
 	if (!buf) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 

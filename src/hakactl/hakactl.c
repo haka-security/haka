@@ -103,7 +103,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		case 'S':
 			ctl_file_path = strdup(optarg);
 			if (!ctl_file_path) {
-				message(HAKA_LOG_FATAL, L"core", L"memory error");
+				message(HAKA_LOG_FATAL, "core", "memory error");
 				clean_exit();
 				exit(2);
 			}
@@ -123,7 +123,7 @@ static int parse_cmdline(int *argc, char ***argv)
 	if (!ctl_file_path) {
 		ctl_file_path = strdup(HAKA_CTL_SOCKET_FILE);
 		if (!ctl_file_path) {
-			message(HAKA_LOG_FATAL, L"core", L"memory error");
+			message(HAKA_LOG_FATAL, "core", "memory error");
 			clean_exit();
 			exit(2);
 		}
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (!module_set_default_path()) {
-		fprintf(stderr, "%ls\n", clear_error());
+		fprintf(stderr, "%s\n", clear_error());
 		clean_exit();
 		exit(1);
 	}

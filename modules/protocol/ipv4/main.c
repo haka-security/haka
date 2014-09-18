@@ -16,8 +16,8 @@ static void cleanup()
 
 struct module HAKA_MODULE = {
 	type:        MODULE_EXTENSION,
-	name:        L"IPv4",
-	description: L"IPv4 protocol",
+	name:        "IPv4",
+	description: "IPv4 protocol",
 	api_version: HAKA_API_VERSION,
 	init:        init,
 	cleanup:     cleanup

@@ -27,7 +27,7 @@
 #include "debugger.h"
 #include "utils.h"
 
-#define MODULE    L"debugger"
+#define MODULE    "debugger"
 
 
 struct luadebug_debugger {
@@ -804,7 +804,7 @@ static bool prepare_debugger(struct luadebug_debugger *session)
 
 	if (!session->user) {
 		mutex_unlock(&current_user_mutex);
-		message(HAKA_LOG_ERROR, MODULE, L"no input/output handler");
+		message(HAKA_LOG_ERROR, MODULE, "no input/output handler");
 		on_user_error(session);
 		return false;
 	}
@@ -988,7 +988,7 @@ static void luadebug_debugger_activate(struct luadebug_debugger *session)
 
 		session->active = true;
 
-		message(HAKA_LOG_INFO, MODULE, L"lua debugger activated");
+		message(HAKA_LOG_INFO, MODULE, "lua debugger activated");
 	}
 }
 
@@ -998,7 +998,7 @@ struct luadebug_debugger *luadebug_debugger_create(struct lua_State *L, bool bre
 
 	lua_getfield(L, LUA_REGISTRYINDEX, "__debugger");
 	if (!lua_isnil(L, -1)) {
-		error(L"debugger already attached");
+		error("debugger already attached");
 		lua_pop(L, 1);
 		return NULL;
 	}
@@ -1006,7 +1006,7 @@ struct luadebug_debugger *luadebug_debugger_create(struct lua_State *L, bool bre
 
 	ret = malloc(sizeof(struct luadebug_debugger));
 	if (!ret) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -1054,7 +1054,7 @@ static void luadebug_debugger_deactivate(struct luadebug_debugger *session, bool
 
 		session->active = false;
 
-		message(HAKA_LOG_INFO, MODULE, L"lua debugger deactivated");
+		message(HAKA_LOG_INFO, MODULE, "lua debugger deactivated");
 	}
 }
 

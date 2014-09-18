@@ -23,7 +23,7 @@ struct alerter *alert_module_alerter(struct module *module, struct parameters *a
 	struct alert_module *alert_module;
 
 	if (module->type != MODULE_ALERT) {
-		error(L"invalid module type: not an alert module");
+		error("invalid module type: not an alert module");
 		return NULL;
 	}
 

@@ -21,15 +21,15 @@
 static bool ctl_check_error(int err, int expected, bool forread)
 {
 	if (err == 0 && forread) {
-		error(L"end of file");
+		error("end of file");
 		return false;
 	}
 	else if (err <= 0) {
-		error(L"%s", errno_error(errno));
+		error("%s", errno_error(errno));
 		return false;
 	}
 	else if (err != expected) {
-		error(L"communication error");
+		error("communication error");
 		return false;
 	}
 	return true;
@@ -77,13 +77,13 @@ bool ctl_send_int(int fd, int32 i)
 	return true;
 }
 
-bool ctl_send_status(int fd, int ret, const wchar_t *err)
+bool ctl_send_status(int fd, int ret, const char *err)
 {
 	if (ret == -1) {
-		if (!err) err = L"";
+		if (!err) err = "";
 
 		if (!ctl_send_int(fd, ret)) return false;
-		return ctl_send_wchars(fd, err, -1);
+		return ctl_send_chars(fd, err, -1);
 	}
 	else {
 		return ctl_send_int(fd, ret);
@@ -98,7 +98,7 @@ int ctl_recv_status(int fd)
 	}
 
 	if (ret == -1) {
-		wchar_t *err = ctl_recv_wchars(fd, NULL);
+		char *err = ctl_recv_chars(fd, NULL);
 		if (!err) {
 			assert(check_error());
 			return -1;
@@ -121,7 +121,7 @@ char *ctl_recv_chars(int fd, size_t *_len)
 
 	str = malloc(len+1);
 	if (!str) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -145,13 +145,13 @@ wchar_t *ctl_recv_wchars(int fd, size_t *_len)
 	}
 
 	if (len < 0) {
-		error(L"communication error");
+		error("communication error");
 		return NULL;
 	}
 
 	str = malloc(sizeof(wchar_t)*(len+1));
 	if (!str) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -190,7 +190,7 @@ bool ctl_expect_chars(int fd, const char *str)
 		return false;
 	}
 	if (len < 0) {
-		error(L"communication error");
+		error("communication error");
 		return false;
 	}
 

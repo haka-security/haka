@@ -10,8 +10,8 @@
 #ifndef _HAKA_ERROR_H
 #define _HAKA_ERROR_H
 
-#include <wchar.h>
 #include <haka/types.h>
+#include <haka/compiler.h>
 
 
 
@@ -22,7 +22,7 @@
  *
  * If lua is at the origin of this call, the error will be converted to a lua error.
  */
-void error(const wchar_t *error, ...);
+void error(const char *error, ...) FORMAT_PRINTF(1, 2);
 
 /**
  * Convert the `err` value to a human readable error message.
@@ -40,6 +40,6 @@ bool check_error();
 /**
  * Get the error message and clear the error state.
  */
-const wchar_t *clear_error();
+const char *clear_error();
 
 #endif /* _HAKA_ERROR_H */

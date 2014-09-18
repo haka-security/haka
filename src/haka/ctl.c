@@ -28,7 +28,7 @@
 #include "ctl_comm.h"
 
 
-#define MODULE             L"ctl"
+#define MODULE             "ctl"
 #define MAX_CLIENT_QUEUE   10
 #define MAX_COMMAND_LEN    1024
 
@@ -122,7 +122,7 @@ UNUSED static bool ctl_start_client_thread(struct ctl_client_state *state, void 
 	state->data = data;
 
 	if (!thread_create(&state->thread, ctl_client_process_thread, state)) {
-		messagef(HAKA_LOG_DEBUG, MODULE, L"failed to create thread: %ls", clear_error(errno));
+		messagef(HAKA_LOG_DEBUG, MODULE, "failed to create thread: %s", clear_error(errno));
 		return false;
 	}
 
@@ -135,9 +135,9 @@ static enum clt_client_rc ctl_client_process(struct ctl_client_state *state)
 	char *command = ctl_recv_chars(state->fd, NULL);
 
 	if (!command) {
-		const wchar_t *error = clear_error();
-		if (wcscmp(error, L"end of file") != 0) {
-			messagef(HAKA_LOG_ERROR, MODULE, L"cannot read from ctl socket: %ls", error);
+		const char *error = clear_error();
+		if (strcmp(error, "end of file") != 0) {
+			messagef(HAKA_LOG_ERROR, MODULE, "cannot read from ctl socket: %s", error);
 		}
 		return CTL_CLIENT_DONE;
 	}
@@ -197,7 +197,7 @@ static void ctl_server_cleanup(struct ctl_server_state *state, bool cancel_threa
 
 		if (state->binded) {
 			if (remove(state->socket_file)) {
-				messagef(HAKA_LOG_ERROR, MODULE, L"cannot remove socket file: %s", errno_error(errno));
+				messagef(HAKA_LOG_ERROR, MODULE, "cannot remove socket file: %s", errno_error(errno));
 			}
 
 			state->binded = false;
@@ -217,7 +217,7 @@ static bool ctl_server_init(struct ctl_server_state *state, const char *socket_f
 
 	state->socket_file = strdup(socket_file);
 	if (!state->socket_file) {
-		messagef(HAKA_LOG_FATAL, MODULE, L"memory error");
+		messagef(HAKA_LOG_FATAL, MODULE, "memory error");
 		return false;
 	}
 
@@ -227,7 +227,7 @@ static bool ctl_server_init(struct ctl_server_state *state, const char *socket_f
 
 	/* Create the socket */
 	if ((state->fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-		messagef(HAKA_LOG_FATAL, MODULE, L"cannot create ctl server socket: %s", errno_error(errno));
+		messagef(HAKA_LOG_FATAL, MODULE, "cannot create ctl server socket: %s", errno_error(errno));
 		return false;
 	}
 
@@ -240,7 +240,7 @@ static bool ctl_server_init(struct ctl_server_state *state, const char *socket_f
 	err = bind(state->fd, (struct sockaddr *)&addr, len);
 	if (err && errno == EADDRINUSE) {
 		if (unlink(state->socket_file)) {
-			messagef(HAKA_LOG_FATAL, MODULE, L"cannot remove ctl server socket: %s", errno_error(errno));
+			messagef(HAKA_LOG_FATAL, MODULE, "cannot remove ctl server socket: %s", errno_error(errno));
 			ctl_server_cleanup(&ctl_server, true);
 			return false;
 		}
@@ -249,7 +249,7 @@ static bool ctl_server_init(struct ctl_server_state *state, const char *socket_f
 	}
 
 	if (err) {
-		messagef(HAKA_LOG_FATAL, MODULE, L"cannot bind ctl server socket: %s", errno_error(errno));
+		messagef(HAKA_LOG_FATAL, MODULE, "cannot bind ctl server socket: %s", errno_error(errno));
 		ctl_server_cleanup(&ctl_server, true);
 		return false;
 	}
@@ -271,7 +271,7 @@ static void ctl_server_accept(struct ctl_server_state *state, fd_set *listfds, i
 
 	fd = accept(state->fd, (struct sockaddr *)&addr, &len);
 	if (fd < 0) {
-		messagef(HAKA_LOG_DEBUG, MODULE, L"failed to accept ctl connection: %s", errno_error(errno));
+		messagef(HAKA_LOG_DEBUG, MODULE, "failed to accept ctl connection: %s", errno_error(errno));
 		return;
 	}
 
@@ -280,7 +280,7 @@ static void ctl_server_accept(struct ctl_server_state *state, fd_set *listfds, i
 	client = malloc(sizeof(struct ctl_client_state));
 	if (!client) {
 		thread_setcancelstate(true);
-		message(HAKA_LOG_ERROR, MODULE, L"memmory error");
+		message(HAKA_LOG_ERROR, MODULE, "memmory error");
 		return;
 	}
 
@@ -342,7 +342,7 @@ static void *ctl_server_coreloop(void *param)
 	/* Block all signal to let the main thread handle them */
 	sigfillset(&set);
 	if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
-		message(HAKA_LOG_FATAL, L"core", clear_error());
+		message(HAKA_LOG_FATAL, "core", clear_error());
 		return NULL;
 	}
 
@@ -357,7 +357,7 @@ static void *ctl_server_coreloop(void *param)
 		rc = select(maxfd+1, &readfds, NULL, NULL, NULL);
 
 		if (rc < 0) {
-			messagef(HAKA_LOG_FATAL, MODULE, L"failed to handle ctl connection (closing ctl socket): %s", errno_error(errno));
+			messagef(HAKA_LOG_FATAL, MODULE, "failed to handle ctl connection (closing ctl socket): %s", errno_error(errno));
 			break;
 		}
 		else if (rc > 0) {
@@ -385,7 +385,7 @@ bool prepare_ctl_server(const char *ctl_socket_file)
 bool start_ctl_server()
 {
 	if (listen(ctl_server.fd, MAX_CLIENT_QUEUE)) {
-		messagef(HAKA_LOG_FATAL, MODULE, L"failed to listen on ctl socket: %s", errno_error(errno));
+		messagef(HAKA_LOG_FATAL, MODULE, "failed to listen on ctl socket: %s", errno_error(errno));
 		ctl_server_cleanup(&ctl_server, true);
 		return false;
 	}
@@ -411,14 +411,14 @@ void stop_ctl_server()
  */
 
 int redirect_message(int fd, mutex_t *mutex, log_level level,
-		const wchar_t *module, const wchar_t *message)
+		const char *module, const char *message)
 {
 	if (fd > 0) {
 		mutex_lock(mutex);
 
 		if (!ctl_send_int(fd, level) ||
-			!ctl_send_wchars(fd, module, -1) ||
-			!ctl_send_wchars(fd, message, -1)) {
+			!ctl_send_chars(fd, module, -1) ||
+			!ctl_send_chars(fd, message, -1)) {
 			mutex_unlock(mutex);
 			clear_error();
 			return false;
@@ -435,7 +435,7 @@ struct redirect_logger {
 	mutex_t          mutex;
 };
 
-int redirect_logger_message(struct logger *_logger, log_level level, const wchar_t *module, const wchar_t *message)
+int redirect_logger_message(struct logger *_logger, log_level level, const char *module, const char *message)
 {
 	struct redirect_logger *logger = (struct redirect_logger *)_logger;
 	if (!redirect_message(logger->fd, &logger->mutex, level, module, message)) {
@@ -458,7 +458,7 @@ struct redirect_logger *redirect_logger_create(d)
 {
 	struct redirect_logger *logger = malloc(sizeof(struct redirect_logger));
 	if (!logger) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -481,7 +481,7 @@ struct redirect_alerter {
 bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
-	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, L"alert",
+	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, "alert",
 			alert_tostring(id, time, alert, "", "\n\t", false))) {
 		alerter->alerter.mark_for_remove = true;
 	}
@@ -491,7 +491,7 @@ bool redirect_alerter_alert(struct alerter *_alerter, uint64 id, const struct ti
 bool redirect_alerter_update(struct alerter *_alerter, uint64 id, const struct time *time, const struct alert *alert)
 {
 	struct redirect_alerter *alerter = (struct redirect_alerter *)_alerter;
-	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, L"alert",
+	if (!redirect_message(alerter->fd, &alerter->mutex, HAKA_LOG_INFO, "alert",
 			alert_tostring(id, time, alert, "update ", "\n\t", false))) {
 		alerter->alerter.mark_for_remove = true;
 	}
@@ -512,7 +512,7 @@ struct redirect_alerter *redirect_alerter_create(d)
 {
 	struct redirect_alerter *alerter = malloc(sizeof(struct redirect_alerter));
 	if (!alerter) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -568,10 +568,10 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 			return CTL_CLIENT_DONE;
 		}
 
-		messagef(HAKA_LOG_INFO, MODULE, L"setting log level to %s", level);
+		messagef(HAKA_LOG_INFO, MODULE, "setting log level to %s", level);
 
 		if (!setup_loglevel(level)) {
-			const wchar_t *err = clear_error();
+			const char *err = clear_error();
 			messagef(HAKA_LOG_ERROR, MODULE, err);
 			ctl_send_status(state->fd, -1, err);
 		}
@@ -678,7 +678,7 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 	}
 	else {
 		if (strlen(command) > 0) {
-			messagef(HAKA_LOG_ERROR, MODULE, L"invalid ctl command '%s'", command);
+			messagef(HAKA_LOG_ERROR, MODULE, "invalid ctl command '%s'", command);
 			ctl_send_status(state->fd, -1, NULL);
 		}
 		return CTL_CLIENT_DONE;

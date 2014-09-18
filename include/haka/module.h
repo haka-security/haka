@@ -37,9 +37,9 @@ struct module {
 
 	enum module_type type;      /**< Module type */
 
-	const wchar_t *name;        /**< Module name. */
-	const wchar_t *description; /**< Module description. */
-	const wchar_t *author;      /**< Module author. */
+	const char    *name;        /**< Module name. */
+	const char    *description; /**< Module description. */
+	const char    *author;      /**< Module author. */
 	int            api_version; /**< API version (use HAKA_API_VERSION). */
 
 	/**

@@ -16,8 +16,8 @@ static void cleanup()
 
 struct module HAKA_MODULE = {
 	type:        MODULE_EXTENSION,
-	name:        L"Raw",
-	description: L"Raw packet protocol",
+	name:        "Raw",
+	description: "Raw packet protocol",
 	api_version: HAKA_API_VERSION,
 	init:        init,
 	cleanup:     cleanup

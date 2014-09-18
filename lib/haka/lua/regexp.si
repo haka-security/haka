@@ -11,7 +11,7 @@ static char *escape_chars(const char *STRING, size_t SIZE) {
 	char *str;
 	str = malloc(SIZE + 1);
 	if (!str) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 	while (iter < SIZE) {
@@ -40,7 +40,7 @@ struct regexp_result {
 		regexp_result() {
 			struct regexp_result *ret = malloc(sizeof(struct regexp_result));
 			if (!ret) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 			*ret = regexp_result_init;
@@ -117,7 +117,7 @@ struct regexp {
 			*TEMP_SIZE = result.last - result.first;
 			*TEMP_OUTPUT = malloc(*TEMP_SIZE);
 			if (!*TEMP_OUTPUT) {
-				error(L"memory error");
+				error("memory error");
 				return;
 			}
 
@@ -137,7 +137,7 @@ struct regexp {
 			if (ret != REGEXP_MATCH) return NULL;
 
 			result = malloc(sizeof(struct vbuffer_sub));
-			if (!result) error(L"memory error");
+			if (!result) error("memory error");
 
 			*result = tmp_result;
 			vbuffer_sub_register(result);
@@ -175,7 +175,7 @@ struct regexp_module {
 			*TEMP_SIZE = result.last - result.first;
 			*TEMP_OUTPUT = malloc(*TEMP_SIZE);
 			if (!*TEMP_OUTPUT) {
-				error(L"memory error");
+				error("memory error");
 				return;
 			}
 
@@ -198,7 +198,7 @@ struct regexp_module {
 			if (ret != REGEXP_MATCH) return NULL;
 
 			result = malloc(sizeof(struct vbuffer_sub));
-			if (!result) error(L"memory error");
+			if (!result) error("memory error");
 
 			*result = tmp_result;
 			vbuffer_sub_register(result);
@@ -207,7 +207,7 @@ struct regexp_module {
 
 		struct regexp *compile(const char *pattern, int options = 0) {
 			if (!pattern) {
-				error(L"nil argument");
+				error("nil argument");
 				return NULL;
 			}
 			char *esc_regexp = escape_chars(pattern, strlen(pattern));

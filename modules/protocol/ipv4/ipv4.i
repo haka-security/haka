@@ -59,7 +59,7 @@ struct ipv4_addr {
 			struct ipv4_addr *ret;
 
 			if (!str) {
-				error(L"invalid parameter");
+				error("invalid parameter");
 				return NULL;
 			}
 
@@ -83,7 +83,7 @@ struct ipv4_addr {
 
 		ipv4_addr(unsigned int a, unsigned int b, unsigned int c, unsigned int d) {
 			if (a > 255 || b > 255 || c > 255 || d > 255) {
-				error(L"invalid IPv4 address format");
+				error("invalid IPv4 address format");
 				return NULL;
 			}
 
@@ -125,7 +125,7 @@ struct ipv4_addr {
 		{
 			*TEMP_OUTPUT = malloc(IPV4_ADDR_STRING_MAXLEN + 1);
 			if (!*TEMP_OUTPUT) {
-				error(L"memory error");
+				error("memory error");
 				return;
 			}
 
@@ -142,7 +142,7 @@ struct checksum_partial {
 		checksum_partial() {
 			struct checksum_partial *ret = malloc(sizeof(struct checksum_partial));
 			if (!ret) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 			*ret = checksum_partial_init;
@@ -186,7 +186,7 @@ struct ipv4_network {
 			struct ipv4_network *ret;
 
 			if (!str) {
-				error(L"invalid parameter");
+				error("invalid parameter");
 				return NULL;
 			}
 
@@ -206,7 +206,7 @@ struct ipv4_network {
 
 		ipv4_network(struct ipv4_addr addr, unsigned char mask) {
 			if (mask < 0 || mask > 32) {
-				error(L"Invalid IPv4 addresss network format");
+				error("Invalid IPv4 addresss network format");
 				return NULL;
 			}
 
@@ -228,7 +228,7 @@ struct ipv4_network {
 		{
 			*TEMP_OUTPUT = malloc(IPV4_NETWORK_STRING_MAXLEN + 1);
 			if (!*TEMP_OUTPUT) {
-				error(L"memory error");
+				error("memory error");
 				return;
 			}
 
@@ -240,7 +240,7 @@ struct ipv4_network {
 		bool _contains(struct ipv4_addr *addr)
 		{
 			if (!addr) {
-				error(L"nil argument");
+				error("nil argument");
 				return false;
 			}
 			return ipv4_network_contains($self->net, addr->addr);
