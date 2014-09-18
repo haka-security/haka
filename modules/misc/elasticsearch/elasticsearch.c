@@ -85,6 +85,7 @@ struct elasticsearch_connector {
 	struct list2   request;
 	struct vector  request_content;
 	thread_t       request_thread;
+	bool           started:1;
 	bool           exit:1;
 };
 
@@ -145,6 +146,16 @@ static size_t write_callback_string(char *ptr, size_t size, size_t nmemb, void *
 	return size;
 }
 
+static bool start_request_thread(struct elasticsearch_connector *connector)
+{
+	if (!connector->started) {
+		if (!thread_create(&connector->request_thread, &elasticsearch_request_thread, connector)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
 {
 	struct elasticsearch_connector *ret = malloc(sizeof(struct elasticsearch_connector));
@@ -185,11 +196,7 @@ struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
 	/* Uses of signal is not possible here in multi-threaded environment */
 	curl_easy_setopt(ret->curl, CURLOPT_NOSIGNAL, 1L);
 
-	/* Create request thread */
-	if (!thread_create(&ret->request_thread, &elasticsearch_request_thread, ret)) {
-		elasticsearch_connector_close(ret);
-		return NULL;
-	}
+	ret->started = false;
 
 	return ret;
 }
@@ -305,6 +312,8 @@ static void append(struct vector *string, const char *str)
 
 static void push_request(struct elasticsearch_connector *connector, struct elasticsearch_request *req)
 {
+	start_request_thread(connector);
+
 	list2_elem_init(&req->list);
 
 	mutex_lock(&connector->request_mutex);
@@ -330,6 +339,8 @@ static void *elasticsearch_request_thread(void *_connector)
 	struct elasticsearch_connector *connector = _connector;
 	char buffer[BUFFER_SIZE];
 	char url[BUFFER_SIZE];
+
+	connector->started = true;
 
 	while (!connector->exit) {
 		struct list2 copy;
@@ -407,6 +418,8 @@ static void *elasticsearch_request_thread(void *_connector)
 			}
 		}
 	}
+
+	connector->started = false;
 
 	return NULL;
 }
