@@ -87,7 +87,7 @@ static size_t write_callback_string(char *ptr, size_t size, size_t nmemb, void *
 
 	data->string = realloc(data->string, data->rem + size + 1);
 	if (!data->string) {
-		error(L"memory error");
+		error("memory error");
 		return 0;
 	}
 
@@ -102,7 +102,7 @@ struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
 {
 	struct elasticsearch_connector *ret = malloc(sizeof(struct elasticsearch_connector));
 	if (!ret) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -130,7 +130,7 @@ struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
 
 	ret->curl = curl_easy_init();
 	if (!ret->curl) {
-		error(L"unable to initialize curl session");
+		error("unable to initialize curl session");
 		elasticsearch_connector_close(ret);
 		return NULL;
 	}
@@ -208,19 +208,19 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 	res = curl_easy_perform(connector->curl);
 
 	if (res != CURLE_OK) {
-		error(L"post error: %s", curl_easy_strerror(res));
+		error("post error: %s", curl_easy_strerror(res));
 		free(resdata.string);
 		return -1;
 	}
 
 	res = curl_easy_getinfo(connector->curl, CURLINFO_RESPONSE_CODE, &ret_code);
 	if (res != CURLE_OK) {
-		error(L"post error: %s", curl_easy_strerror(res));
+		error("post error: %s", curl_easy_strerror(res));
 		free(resdata.string);
 		return -1;
 	}
 
-	messagef(HAKA_LOG_DEBUG, MODULE, L"post successful: %s return %d", url, ret_code);
+	messagef(HAKA_LOG_DEBUG, MODULE, "post successful: %s return %lu", url, ret_code);
 
 	/* Check for the rest API return code, treat non 2** has error. */
 	if (ret_code < 200 || ret_code >= 300) {
@@ -230,7 +230,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 
 	if (json_res) {
 		if (!resdata.string) {
-			error(L"post error: invalid json response");
+			error("post error: invalid json response");
 			free(resdata.string);
 			return -1;
 		}
@@ -239,7 +239,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 		free(resdata.string);
 
 		if (!(*json_res)) {
-			error(L"post error: invalid json response");
+			error("post error: invalid json response");
 			return -1;
 		}
 	}
@@ -272,7 +272,7 @@ static int do_one_request(struct elasticsearch_connector *connector, const char 
 {
 	const int code = elasticsearch_post(connector, url, data, NULL);
 	if (check_error()) {
-		messagef(HAKA_LOG_ERROR, MODULE, L"request failed: %ls", clear_error());
+		messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s", clear_error());
 		return -1;
 	}
 	return code;
@@ -317,7 +317,7 @@ static void *elasticsearch_request_thread(void *_connector)
 					snprintf(url, BUFFER_SIZE, "%s/%s", connector->server_address, req->index);
 					code = do_one_request(connector, url, req->data);
 					if (code && code != 400) {
-						messagef(HAKA_LOG_ERROR, MODULE, L"request failed: %s return error %d", url, code);
+						messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
 					}
 				}
 				break;
@@ -341,7 +341,7 @@ static void *elasticsearch_request_thread(void *_connector)
 				break;
 
 			default:
-				messagef(HAKA_LOG_ERROR, MODULE, L"invalid request type: %d", req->request_type);
+				messagef(HAKA_LOG_ERROR, MODULE, "invalid request type: %d", req->request_type);
 				break;
 			}
 
@@ -356,7 +356,7 @@ static void *elasticsearch_request_thread(void *_connector)
 
 			code = do_one_request(connector, url, vector_first(&connector->request_content, char));
 			if (code) {
-				messagef(HAKA_LOG_ERROR, MODULE, L"request failed: %s return error %d", url, code);
+				messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
 			}
 		}
 	}
@@ -368,7 +368,7 @@ static void *elasticsearch_request_thread(void *_connector)
 	if (name) { \
 		req->name = strdup(name); \
 		if (!req->name) { \
-			error(L"memory error"); \
+			error("memory error"); \
 			free_request(req); \
 			return false; \
 		} \
@@ -383,7 +383,7 @@ static bool elasticsearch_request(struct elasticsearch_connector *connector,
 
 	req = malloc(sizeof(struct elasticsearch_request));
 	if (!req) {
-		error(L"memory error");
+		error("memory error");
 		free(data);
 		return false;
 	}
@@ -399,7 +399,7 @@ static bool elasticsearch_request(struct elasticsearch_connector *connector,
 	req->data = json_dumps(data, JSON_COMPACT);
 	json_decref(data);
 	if (!req->data) {
-		error(L"cannot dump json object");
+		error("cannot dump json object");
 		free_request(req);
 		return false;
 	}
@@ -440,7 +440,7 @@ bool elasticsearch_update(struct elasticsearch_connector *connector, const char 
 
 	json_update = json_object();
 	if (!json_update || json_object_set(json_update, "doc", data)) {
-		error(L"memory error");
+		error("memory error");
 		json_decref(data);
 		return false;
 	}
@@ -468,7 +468,7 @@ bool elasticsearch_insert_sync(struct elasticsearch_connector *connector, const 
 			(id ? strlen(id) : 0) + 4;
 	url = malloc(len);
 	if (!url) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 
@@ -483,7 +483,7 @@ bool elasticsearch_insert_sync(struct elasticsearch_connector *connector, const 
 
 	json_dump = json_dumps(doc, JSON_COMPACT);
 	if (!json_dump) {
-		error(L"cannot dump json object");
+		error("cannot dump json object");
 		free(url);
 		return false;
 	}
@@ -496,7 +496,7 @@ bool elasticsearch_insert_sync(struct elasticsearch_connector *connector, const 
 	if (check_error()) return false;
 
 	if (res < 200 || res >= 300) {
-		error(L"post error: result %d %s", res, url);
+		error("post error: result %d %s", res, url);
 		return false;
 	}
 
@@ -522,7 +522,7 @@ bool elasticsearch_update_sync(struct elasticsearch_connector *connector, const 
 	len = strlen(connector->server_address) + strlen(index) + strlen(type) + strlen(id) + 12;
 	url = malloc(len);
 	if (!url) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 
@@ -531,7 +531,7 @@ bool elasticsearch_update_sync(struct elasticsearch_connector *connector, const 
 
 	json_update = json_object();
 	if (!json_update || json_object_set(json_update, "doc", doc)) {
-		error(L"memory error");
+		error("memory error");
 		free(url)
 		return false;
 	}
@@ -541,7 +541,7 @@ bool elasticsearch_update_sync(struct elasticsearch_connector *connector, const 
 
 	json_dump = json_dumps(json_update, JSON_COMPACT);
 	if (!json_dump) {
-		error(L"cannot dump json object");
+		error("cannot dump json object");
 		free(url);
 		return false;
 	}
@@ -554,7 +554,7 @@ bool elasticsearch_update_sync(struct elasticsearch_connector *connector, const 
 	if (check_error()) return false;
 
 	if (res < 200 || res >= 300) {
-		error(L"post error: result %d %s", res);
+		error("post error: result %d %s", res);
 		return false;
 	}
 

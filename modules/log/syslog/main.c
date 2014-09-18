@@ -34,11 +34,11 @@ static const int syslog_level[HAKA_LOG_LEVEL_LAST] = {
 	LOG_DEBUG,
 };
 
-static int logger_message(struct logger *state, log_level lvl, const char *module, const wchar_t *message)
+static int logger_message(struct logger *state, log_level lvl, const char *module, const char *message)
 {
 	/* Send log to syslog */
 	assert(lvl >= 0 && lvl < HAKA_LOG_LEVEL_LAST);
-	syslog(syslog_level[lvl], "%s: %ls", module, message);
+	syslog(syslog_level[lvl], "%s: %s", module, message);
 	return 0;
 }
 

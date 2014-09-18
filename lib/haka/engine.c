@@ -24,7 +24,7 @@ struct remote_launch {
 	void              (*callback)(void *);
 	void               *data;
 	int                 state;
-	const wchar_t      *error;
+	const char         *error;
 	bool                own_error;
 	semaphore_t         sync;
 };
@@ -62,7 +62,7 @@ bool engine_prepare(int thread_count)
 
 	engine_threads = malloc(sizeof(struct engine_thread *)*thread_count);
 	if (!engine_threads) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 
@@ -76,7 +76,7 @@ struct engine_thread *engine_thread_init(struct lua_State *state, int id)
 
 	struct engine_thread *new = malloc(sizeof(struct engine_thread));
 	if (!new) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -92,7 +92,7 @@ struct engine_thread *engine_thread_init(struct lua_State *state, int id)
 
 	err = pipe2(new->interrupt_fd, O_NONBLOCK);
 	if (err) {
-		error(L"%s", errno_error(errno));
+		error("%s", errno_error(errno));
 		free(new);
 		return NULL;
 	}
@@ -132,7 +132,7 @@ void engine_thread_cleanup(struct engine_thread *thread)
 		struct remote_launch *current = list2_get(iter, struct remote_launch, list);
 
 		current->state = -1;
-		current->error = L"aborted";
+		current->error = "aborted";
 		current->own_error = false;
 
 		iter = list2_erase(iter);
@@ -229,7 +229,7 @@ static void _lua_remote_launcher(void *_data)
 
 	if (lua_unmarshal(thread->lua_state, data->code, data->size)) {
 		if (lua_pcall(thread->lua_state, 0, 1, h)) {
-			error(L"%s", lua_tostring(thread->lua_state, -1));
+			error("%s", lua_tostring(thread->lua_state, -1));
 		}
 		else {
 			data->res = lua_marshal(thread->lua_state, h+1, &data->res_size);
@@ -282,14 +282,14 @@ char* engine_thread_raw_lua_remote_launch(struct engine_thread *thread, const ch
 	data.res = NULL;
 	data.res_size = 0;
 
-	messagef(HAKA_LOG_DEBUG, "engine", L"lua remote launch on thread %d: %llu bytes",
+	messagef(HAKA_LOG_DEBUG, "engine", "lua remote launch on thread %d: %zu bytes",
 	         engine_thread_id(thread), data.size);
 
 	if (!engine_thread_remote_launch(thread, _lua_remote_launcher, &data)) {
 		return NULL;
 	}
 
-	messagef(HAKA_LOG_DEBUG, "engine", L"lua remote launch result on thread %d: %llu bytes",
+	messagef(HAKA_LOG_DEBUG, "engine", "lua remote launch result on thread %d: %zu bytes",
 	         engine_thread_id(thread), data.res_size);
 
 	if (data.res) {
@@ -312,16 +312,16 @@ static void _engine_thread_check_remote_launch(void *_thread)
 	for (iter = list2_begin(&thread->remote_launches); iter != end; ) {
 		struct remote_launch *current = list2_get(iter, struct remote_launch, list);
 
-		messagef(HAKA_LOG_DEBUG, "engine", L"execute lua remote launch on thread %d",
+		messagef(HAKA_LOG_DEBUG, "engine", "execute lua remote launch on thread %d",
 		         engine_thread_id(thread));
 
 		current->callback(current->data);
 		if (check_error()) {
-			current->error = wcsdup(clear_error());
+			current->error = strdup(clear_error());
 			current->own_error = true;
 			current->state = -1;
 
-			messagef(HAKA_LOG_DEBUG, "engine", L"remote launch error on thread %d: %ls",
+			messagef(HAKA_LOG_DEBUG, "engine", "remote launch error on thread %d: %s",
 			         engine_thread_id(thread), current->error);
 		}
 		else {
@@ -358,10 +358,10 @@ void engine_thread_interrupt_begin(struct engine_thread *thread)
 		const int err = write(thread->interrupt_fd[1], &interrupt_magic, 1);
 		if (err != 1) {
 			if (err == -1) {
-				messagef(HAKA_LOG_ERROR, "engine", L"engine interrupt error: %s", errno_error(errno));
+				messagef(HAKA_LOG_ERROR, "engine", "engine interrupt error: %s", errno_error(errno));
 			}
 			else {
-				message(HAKA_LOG_ERROR, "engine", L"engine interrupt error");
+				message(HAKA_LOG_ERROR, "engine", "engine interrupt error");
 			}
 		}
 	}
@@ -374,10 +374,10 @@ void engine_thread_interrupt_end(struct engine_thread *thread)
 		const int err = read(thread->interrupt_fd[0], &byte, 1);
 		if (err != 1 || byte != interrupt_magic) {
 			if (err == -1) {
-				messagef(HAKA_LOG_ERROR, "engine", L"engine interrupt error: %s", errno_error(errno));
+				messagef(HAKA_LOG_ERROR, "engine", "engine interrupt error: %s", errno_error(errno));
 			}
 			else {
-				message(HAKA_LOG_ERROR, "engine", L"engine interrupt error");
+				message(HAKA_LOG_ERROR, "engine", "engine interrupt error");
 			}
 		}
 	}

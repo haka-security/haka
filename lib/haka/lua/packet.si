@@ -57,7 +57,7 @@ struct packet {
 				break;
 
 			case STATUS_SENT:
-				error(L"operation not supported");
+				error("operation not supported");
 				return;
 
 			default:
@@ -78,7 +78,7 @@ struct packet {
 
 			case STATUS_NORMAL:
 			case STATUS_SENT:
-				error(L"operation not supported");
+				error("operation not supported");
 				return;
 
 			default:

@@ -9,7 +9,7 @@ struct regexp_module *regexp_module_load(const char *module_name, struct paramet
 	struct module *module = module_load(module_name, args);
 	if (module == NULL || module->type != MODULE_REGEXP) {
 		if (module != NULL) module_release(module);
-		error(L"Module %s is not of type MODULE_REGEXP", module_name);
+		error("Module %s is not of type MODULE_REGEXP", module_name);
 		return NULL;
 	}
 

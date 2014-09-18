@@ -110,13 +110,13 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_
 	uint64 ref_seq;
 
 	if (stream->start_seq == (size_t)-1) {
-		error(L"uninitialized stream");
+		error("uninitialized stream");
 		return false;
 	}
 
 	chunk = malloc(sizeof(struct tcp_stream_chunk));
 	if (!chunk) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 
@@ -174,7 +174,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_
 		}
 
 		if (iter != end && chunk->end_seq > qchunk->start_seq) {
-			message(HAKA_LOG_WARNING, "tcp_connection", L"retransmit packet (ignored)");
+			message(HAKA_LOG_WARNING, "tcp_connection", "retransmit packet (ignored)");
 			tcp_stream_chunk_free(chunk);
 			return false;
 		}
@@ -182,7 +182,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_
 		list2_insert(iter, &chunk->list);
 	}
 	else {
-		message(HAKA_LOG_WARNING, "tcp_connection", L"retransmit packet (ignored)");
+		message(HAKA_LOG_WARNING, "tcp_connection", "retransmit packet (ignored)");
 		tcp_stream_chunk_free(chunk);
 		return false;
 	}

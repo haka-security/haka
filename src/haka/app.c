@@ -99,7 +99,7 @@ void initialize()
 	if (sigaction(SIGTERM, &sa, NULL) ||
 	    sigaction(SIGINT, &sa, NULL) ||
 	    sigaction(SIGQUIT, &sa, NULL)) {
-		messagef(HAKA_LOG_FATAL, "core", L"%s", errno_error(errno));
+		messagef(HAKA_LOG_FATAL, "core", "%s", errno_error(errno));
 		clean_exit();
 		exit(1);
 	}
@@ -108,7 +108,7 @@ void initialize()
 	signal(SIGHUP, handle_sighup);
 
 	if (!module_set_default_path()) {
-		fprintf(stderr, "%ls\n", clear_error());
+		fprintf(stderr, "%s\n", clear_error());
 		clean_exit();
 		exit(1);
 	}
@@ -127,11 +127,11 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 	}
 
 	if (packet_module->pass_through()) {
-		messagef(HAKA_LOG_INFO, "core", L"setting packet mode to pass-through\n");
+		messagef(HAKA_LOG_INFO, "core", "setting packet mode to pass-through\n");
 		packet_set_mode(MODE_PASSTHROUGH);
 	}
 
-	messagef(HAKA_LOG_INFO, "core", L"loading rule file '%s'", configuration_file);
+	messagef(HAKA_LOG_INFO, "core", "loading rule file '%s'", configuration_file);
 
 	/* Add module path to the configuration folder */
 	{
@@ -165,10 +165,10 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 	}
 
 	if (threadcount > 1) {
-		messagef(HAKA_LOG_INFO, "core", L"starting multi-threaded processing on %i threads\n", threadcount);
+		messagef(HAKA_LOG_INFO, "core", "starting multi-threaded processing on %i threads\n", threadcount);
 	}
 	else {
-		message(HAKA_LOG_INFO, "core", L"starting single threaded processing\n");
+		message(HAKA_LOG_INFO, "core", "starting single threaded processing\n");
 	}
 }
 

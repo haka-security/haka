@@ -28,16 +28,16 @@ struct module MY_MODULE = {
 
 static int init(struct parameters *args)
 {
-	messagef(HAKA_LOG_INFO, "mymodule", L"init my module");
+	messagef(HAKA_LOG_INFO, "mymodule", "init my module");
 	return 0;
 }
 
 static void cleanup()
 {
-	messagef(HAKA_LOG_INFO, "mymodule", L"cleanup my module");
+	messagef(HAKA_LOG_INFO, "mymodule", "cleanup my module");
 }
 
 void myfunc(void)
 {
-	messagef(HAKA_LOG_INFO, "mymodule", L"myfunc");
+	messagef(HAKA_LOG_INFO, "mymodule", "myfunc");
 }

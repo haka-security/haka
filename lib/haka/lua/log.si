@@ -6,7 +6,6 @@
 #include <haka/log.h>
 %}
 
-%include "haka/lua/wchar.si"
 %include "haka/lua/swig.si"
 
 
@@ -20,7 +19,7 @@
 enum log_level { HAKA_LOG_FATAL, HAKA_LOG_ERROR, HAKA_LOG_WARNING, HAKA_LOG_INFO, HAKA_LOG_DEBUG, HAKA_LOG_DEFAULT };
 
 %rename(_message) message;
-void message(log_level level, const char *module, const wchar_t *message);
+void message(log_level level, const char *module, const char *message);
 
 %rename(_setloglevel) setlevel;
 void setlevel(log_level level, const char *module);

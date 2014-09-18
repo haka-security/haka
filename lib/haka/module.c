@@ -78,13 +78,13 @@ struct module *module_load(const char *module_name, struct parameters *args)
 
 	if (!module_handle) {
 		free(full_module_name);
-		error(L"%s", strdup(dlerror()));
+		error("%s", strdup(dlerror()));
 		return NULL;
 	}
 
 	module = (struct module*)dlsym(module_handle, "HAKA_MODULE");
 	if (!module) {
-		error(L"%s", strdup(dlerror()));
+		error("%s", strdup(dlerror()));
 		dlclose(module);
 		free(full_module_name);
 		return NULL;
@@ -93,7 +93,7 @@ struct module *module_load(const char *module_name, struct parameters *args)
 	module->handle = module_handle;
 
 	if (module->api_version != HAKA_API_VERSION) {
-		messagef(HAKA_LOG_INFO, "core", L"%s: invalid API version", full_module_name);
+		messagef(HAKA_LOG_INFO, "core", "%s: invalid API version", full_module_name);
 		dlclose(module->handle);
 		free(full_module_name);
 		return NULL;
@@ -102,23 +102,23 @@ struct module *module_load(const char *module_name, struct parameters *args)
 	if (atomic_get(&module->ref) == 0) {
 		/* Initialize the module */
 		if (module->name && module->author) {
-			messagef(HAKA_LOG_INFO, "core", L"load module '%s', %s, %s",
+			messagef(HAKA_LOG_INFO, "core", "load module '%s', %s, %s",
 			         full_module_name, module->name, module->author);
 		}
 		else if (module->name || module->author) {
-			messagef(HAKA_LOG_INFO, "core", L"load module '%s', %s%s",
+			messagef(HAKA_LOG_INFO, "core", "load module '%s', %s%s",
 			         full_module_name, module->name ? module->name : "",
 			         module->author ? module->author : "");
 		}
 		else {
-			messagef(HAKA_LOG_INFO, "core", L"load module '%s'", full_module_name);
+			messagef(HAKA_LOG_INFO, "core", "load module '%s'", full_module_name);
 		}
 
 		if (module->init(args) || check_error()) {
 			if (check_error()) {
-				error(L"unable to initialize module: %ls", clear_error());
+				error("unable to initialize module: %s", clear_error());
 			} else {
-				error(L"unable to initialize module");
+				error("unable to initialize module");
 			}
 
 			dlclose(module->handle);
@@ -142,7 +142,7 @@ void module_release(struct module *module)
 {
 	if (atomic_dec(&module->ref) == 0) {
 		/* Cleanup the module */
-		messagef(HAKA_LOG_INFO, "core", L"unload module '%s'", module->name);
+		messagef(HAKA_LOG_INFO, "core", "unload module '%s'", module->name);
 		module->cleanup();
 		dlclose(module->handle);
 	}
@@ -169,7 +169,7 @@ bool module_set_default_path()
 
 		path = malloc(path_len);
 		if (!path) {
-			error(L"memory error");
+			error("memory error");
 			return false;
 		}
 
@@ -191,7 +191,7 @@ bool module_set_default_path()
 
 		path = malloc(path_len);
 		if (!path) {
-			error(L"memory error");
+			error("memory error");
 			return false;
 		}
 
@@ -210,7 +210,7 @@ void module_set_path(const char *path, bool c)
 	char **old_path = c ? &modules_cpath : &modules_path;
 
 	if (!strchr(path, '*')) {
-		error(L"invalid module path");
+		error("invalid module path");
 		return;
 	}
 
@@ -219,7 +219,7 @@ void module_set_path(const char *path, bool c)
 
 	*old_path = strdup(path);
 	if (!*old_path) {
-		error(L"memory error");
+		error("memory error");
 		return;
 	}
 }
@@ -231,14 +231,14 @@ void module_add_path(const char *path, bool c)
 	const int modules_path_len = *old_path ? strlen(*old_path) : 0;
 
 	if (!strchr(path, '*')) {
-		error(L"invalid module path");
+		error("invalid module path");
 		return;
 	}
 
 	if (modules_path_len > 0) {
 		new_modules_path = malloc(modules_path_len + strlen(path) + 2);
 		if (!new_modules_path) {
-			error(L"memory error");
+			error("memory error");
 			return;
 		}
 

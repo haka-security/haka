@@ -17,7 +17,7 @@
 #define TCP_GET_BITS(type, v, r)        GET_BITS(SWAP_FROM_BE(type, v), r)
 #define TCP_SET_BITS(type, v, r, x)     SWAP_TO_BE(type, SET_BITS(SWAP_FROM_BE(type, v), r, x))
 
-#define TCP_CHECK(tcp, ...)             if (!(tcp) || !(tcp)->packet) { error(L"invalid tcp packet"); return __VA_ARGS__; }
+#define TCP_CHECK(tcp, ...)             if (!(tcp) || !(tcp)->packet) { error("invalid tcp packet"); return __VA_ARGS__; }
 
 #define TCP_FLAGS_BITS                  0, 8
 #define TCP_FLAGS_START                 13

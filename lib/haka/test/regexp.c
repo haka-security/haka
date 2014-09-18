@@ -51,9 +51,9 @@ START_TEST(regexp_module_load_should_return_null_if_module_is_not_MODULE_REGEXP)
 
 	// Then
 	ck_assert(module == NULL);
-	const wchar_t *error = clear_error();
-	ck_assert_msg(wcscmp(error, L"Module protocol/ipv4 is not of type MODULE_REGEXP") == 0,
-			"Was expecting 'Module protocol/ipv4 is not of type MODULE_REGEXP', but found '%ls'", error);
+	const char *error = clear_error();
+	ck_assert_msg(strcmp(error, "Module protocol/ipv4 is not of type MODULE_REGEXP") == 0,
+			"Was expecting 'Module protocol/ipv4 is not of type MODULE_REGEXP', but found '%s'", error);
 }
 END_TEST
 
@@ -96,9 +96,9 @@ START_TEST(regexp_compile_should_should_fail_with_module_error)
 
 	// Then
 	ck_assert(re == NULL);
-	const wchar_t *error = clear_error();
-	ck_assert_msg(wcsncmp(error, L"PCRE compilation failed with error '", 36) == 0,
-			"Was expecting 'PCRE compilation failed with error '...', but found '%ls'", error);
+	const char *error = clear_error();
+	ck_assert_msg(strncmp(error, "PCRE compilation failed with error '", 36) == 0,
+			"Was expecting 'PCRE compilation failed with error '...', but found '%s'", error);
 
 	// Finally
 	rem->release_regexp(re);

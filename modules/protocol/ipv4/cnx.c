@@ -39,7 +39,7 @@ struct cnx_table *cnx_table_new(void (*cnx_release)(struct cnx *, bool))
 {
 	struct cnx_table *table = malloc(sizeof(struct cnx_table));
 	if (!table) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -150,14 +150,14 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 			cnx_release(table, elem, true);
 		}
 		else {
-			error(L"cnx already exists");
+			error("cnx already exists");
 			return NULL;
 		}
 	}
 
 	elem = malloc(sizeof(struct cnx_table_elem));
 	if (!elem) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -181,7 +181,7 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 
 		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
 		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
-		messagef(HAKA_LOG_DEBUG, "cnx", L"opening connection %s:%u -> %s:%u",
+		messagef(HAKA_LOG_DEBUG, "cnx", "opening connection %s:%u -> %s:%u",
 				srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
 	}
 
@@ -258,7 +258,7 @@ void cnx_close(struct cnx* cnx)
 		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
 		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
 
-		messagef(HAKA_LOG_DEBUG, "cnx", L"closing connection %s:%u -> %s:%u",
+		messagef(HAKA_LOG_DEBUG, "cnx", "closing connection %s:%u -> %s:%u",
 				srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
 	}
 
@@ -277,7 +277,7 @@ void cnx_drop(struct cnx *cnx)
 		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
 		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
 
-		messagef(HAKA_LOG_DEBUG, "cnx", L"dropping connection %s:%u -> %s:%u",
+		messagef(HAKA_LOG_DEBUG, "cnx", "dropping connection %s:%u -> %s:%u",
 				srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
 	}
 

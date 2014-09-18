@@ -54,7 +54,7 @@ struct state *lua_transition_callback(struct state_machine_instance *state_machi
 			newstate = state_machine_finish_state;
 		}
 		else {
-			lua_state_print_error(L, L"state machine");
+			lua_state_print_error(L, "state machine");
 			newstate = state_machine_fail_state;
 		}
 	}
@@ -65,14 +65,14 @@ struct state *lua_transition_callback(struct state_machine_instance *state_machi
 			}
 			else {
 				if (!lua_istable(L, -1)) {
-					message(HAKA_LOG_ERROR, "state machine", L"transition failed, invalid state");
+					message(HAKA_LOG_ERROR, "state machine", "transition failed, invalid state");
 				}
 				else {
 					lua_getfield(L, -1, "_state");
 					assert(!lua_isnil(L, -1));
 
 					if (!SWIG_IsOK(SWIG_ConvertPtr(L, -1, (void**)&newstate, SWIGTYPE_p_state, 0))) {
-						message(HAKA_LOG_ERROR, "state machine", L"transition failed, invalid state");
+						message(HAKA_LOG_ERROR, "state machine", "transition failed, invalid state");
 					}
 
 					lua_pop(L, 2);
@@ -100,7 +100,7 @@ static struct transition_data *lua_transition_data_new(struct lua_ref *func)
 {
 	struct lua_transition_data *ret = malloc(sizeof(struct lua_transition_data));
 	if (!ret) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -189,7 +189,7 @@ struct state_machine {
 		state_machine(const char *name)
 		{
 			if (!name) {
-				error(L"missing name parameter");
+				error("missing name parameter");
 				return NULL;
 			}
 
@@ -217,7 +217,7 @@ struct state_machine {
 		{
 			struct lua_state_machine_context *context = malloc(sizeof(struct lua_state_machine_context));
 			if (!context) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 

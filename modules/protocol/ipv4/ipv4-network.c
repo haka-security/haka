@@ -35,13 +35,13 @@ ipv4network ipv4_network_from_string(const char *string)
 {
 	int8 * ptr;
 	if (!(ptr = strchr(string, '/'))) {
-		error(L"Invalid IPv4 network address format");
+		error("Invalid IPv4 network address format");
 		return ipv4_network_zero;
 	}
 
 	int32 slash_index = ptr - string;
 	if (slash_index > IPV4_ADDR_STRING_MAXLEN) {
-		error(L"Invalid IPv4 network address format");
+		error("Invalid IPv4 network address format");
 		return ipv4_network_zero;
 	}
 
@@ -57,7 +57,7 @@ ipv4network ipv4_network_from_string(const char *string)
 
 	if ((sscanf(string + slash_index, "/%hhu", &netaddr.mask) != 1) ||
 		(netaddr.mask > 32 || netaddr.mask < 0)) {
-		error(L"Invalid IPv4 network address format");
+		error("Invalid IPv4 network address format");
 		return ipv4_network_zero;
 	}
 
@@ -66,7 +66,7 @@ ipv4network ipv4_network_from_string(const char *string)
 
 	if (maskedaddr != netaddr.net) {
 		netaddr.net = maskedaddr;
-		message(HAKA_LOG_WARNING, "ipv4" , L"Incorrect network mask");
+		message(HAKA_LOG_WARNING, "ipv4" , "Incorrect network mask");
 	}
 
 	return netaddr;

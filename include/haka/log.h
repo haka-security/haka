@@ -10,8 +10,8 @@
 #ifndef _HAKA_LOG_H
 #define _HAKA_LOG_H
 
-#include <wchar.h>
 #include <haka/types.h>
+#include <haka/compiler.h>
 #include <haka/container/list.h>
 
 
@@ -46,12 +46,12 @@ log_level str_to_level(const char *str);
 /**
  * Log a message without string formating.
  */
-void message(log_level level, const char *module, const wchar_t *message);
+void message(log_level level, const char *module, const char *message);
 
 /**
  * Log a message with string formating.
  */
-void messagef(log_level level, const char *module, const wchar_t *fmt, ...);
+void messagef(log_level level, const char *module, const char *fmt, ...) FORMAT_PRINTF(3, 4);
 
 /**
  * Set the logging level to display for a given module name. The `module` parameter can be
@@ -72,7 +72,7 @@ void enable_stdout_logging(bool enable);
 /**
  * Show a log line on the stdout.
  */
-bool stdout_message(log_level lvl, const char *module, const wchar_t *message);
+bool stdout_message(log_level lvl, const char *module, const char *message);
 
 /**
  * Logger instance structure.
@@ -80,7 +80,7 @@ bool stdout_message(log_level lvl, const char *module, const wchar_t *message);
 struct logger {
 	struct list   list;
 	void        (*destroy)(struct logger *state);
-	int         (*message)(struct logger *state, log_level level, const char *module, const wchar_t *message);
+	int         (*message)(struct logger *state, log_level level, const char *module, const char *message);
 	bool          mark_for_remove; /**< \private */
 };
 

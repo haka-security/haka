@@ -50,7 +50,7 @@ INIT static void system_init()
 	    sigaction(SIGILL, &sa, NULL) ||
 	    sigaction(SIGFPE, &sa, NULL) ||
 	    sigaction(SIGABRT, &sa, NULL)) {
-		messagef(HAKA_LOG_FATAL, "core", L"%s", errno_error(errno));
+		messagef(HAKA_LOG_FATAL, "core", "%s", errno_error(errno));
 		abort();
 	}
 }
@@ -64,7 +64,7 @@ bool system_register_fatal_cleanup(void (*callback)())
 {
 	void (**func)() = (void (**)()) vector_push(&fatal_cleanup, void *);
 	if (!func) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 

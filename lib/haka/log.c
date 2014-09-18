@@ -44,7 +44,7 @@ static const char *message_color[HAKA_LOG_LEVEL_LAST] = {
 	CLEAR,       // LOG_DEBUG
 };
 
-#define MESSAGE_BUFSIZE   2048
+#define MESSAGE_BUFSIZE   3072
 
 static void message_delete(void *value)
 {
@@ -71,7 +71,7 @@ FINI static void _message_fini()
 	remove_all_logger();
 
 	{
-		wchar_t *buffer = local_storage_get(&local_message_key);
+		void *buffer = local_storage_get(&local_message_key);
 		if (buffer) {
 			message_delete(buffer);
 		}
@@ -92,7 +92,7 @@ FINI static void _message_fini()
 
 struct message_context_t {
 	bool       doing_message;
-	wchar_t    buffer[MESSAGE_BUFSIZE];
+	char       buffer[MESSAGE_BUFSIZE];
 };
 
 static struct message_context_t *message_context()
@@ -150,7 +150,7 @@ bool remove_logger(struct logger *logger)
 	}
 
 	if (!iter) {
-		error(L"Log module is not registered");
+		error("Log module is not registered");
 		return false;
 	}
 
@@ -204,7 +204,7 @@ log_level str_to_level(const char *str)
 	}
 
 	if (level == HAKA_LOG_LEVEL_LAST) {
-		error(L"invalid logging level: %s", str);
+		error("invalid logging level: %s", str);
 	}
 
 	return level;
@@ -215,7 +215,7 @@ void enable_stdout_logging(bool enable)
 	stdout_enable = enable;
 }
 
-bool stdout_message(log_level lvl, const char *module, const wchar_t *message)
+bool stdout_message(log_level lvl, const char *module, const char *message)
 {
 	const char *level_str = level_to_str(lvl);
 	const int level_size = strlen(level_str);
@@ -231,12 +231,12 @@ bool stdout_message(log_level lvl, const char *module, const wchar_t *message)
 	}
 
 	if (stdout_use_colors) {
-		fprintf(fd, "%s%s" CLEAR "%*s " MODULE_COLOR "%s:" CLEAR "%*s %s%ls\n" CLEAR, level_color[lvl], level_str,
+		fprintf(fd, "%s%s" CLEAR "%*s " MODULE_COLOR "%s:" CLEAR "%*s %s%s\n" CLEAR, level_color[lvl], level_str,
 				level_size-5, "", module, stdout_module_size-module_size, "", message_color[lvl], message);
 	}
 	else
 	{
-		fprintf(fd, "%s%*s %s:%*s %ls\n", level_str, level_size-5, "",
+		fprintf(fd, "%s%*s %s:%*s %s\n", level_str, level_size-5, "",
 				module, stdout_module_size-module_size, "", message);
 	}
 
@@ -247,7 +247,7 @@ bool stdout_message(log_level lvl, const char *module, const wchar_t *message)
 	return true;
 }
 
-void message(log_level level, const char *module, const wchar_t *message)
+void message(log_level level, const char *module, const char *message)
 {
 	struct message_context_t *context = message_context();
 	if (context && !context->doing_message) {
@@ -288,7 +288,7 @@ void message(log_level level, const char *module, const wchar_t *message)
 	}
 }
 
-void messagef(log_level level, const char *module, const wchar_t *fmt, ...)
+void messagef(log_level level, const char *module, const char *fmt, ...)
 {
 	const log_level max_level = getlevel(module);
 	if (level <= max_level) {
@@ -296,8 +296,7 @@ void messagef(log_level level, const char *module, const wchar_t *fmt, ...)
 		if (context && !context->doing_message) {
 			va_list ap;
 			va_start(ap, fmt);
-			vswprintf(context->buffer, MESSAGE_BUFSIZE, fmt, ap);
-			context->buffer[MESSAGE_BUFSIZE-1] = 0;
+			vsnprintf(context->buffer, MESSAGE_BUFSIZE, fmt, ap);
 			message(level, module, context->buffer);
 			va_end(ap);
 		}
@@ -329,14 +328,14 @@ static struct module_level *get_module_level(const char *module, bool create)
 	if (!iter && create) {
 		iter = malloc(sizeof(struct module_level));
 		if (!iter) {
-			error(L"memory error");
+			error("memory error");
 			return NULL;
 		}
 
 		iter->module = strdup(module);
 		if (!iter->module) {
 			free(iter);
-			error(L"memory error");
+			error("memory error");
 			return NULL;
 		}
 
@@ -373,7 +372,7 @@ void setlevel(log_level level, const char *module)
 
 	if (!module) {
 		if (level == HAKA_LOG_DEFAULT) {
-			message(HAKA_LOG_WARNING, "core", L"cannot set log level default for global level");
+			message(HAKA_LOG_WARNING, "core", "cannot set log level default for global level");
 		} else {
 			default_level = level;
 		}

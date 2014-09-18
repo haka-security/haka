@@ -37,7 +37,6 @@ static void free_nodes(struct alert_node **nodes)
 
 %}
 
-%include "haka/lua/wchar.si"
 %include "haka/lua/swig.si"
 %include "haka/lua/array.si"
 
@@ -48,13 +47,13 @@ enum alert_level { HAKA_ALERT_LOW, HAKA_ALERT_MEDIUM, HAKA_ALERT_HIGH, HAKA_ALER
 enum alert_completion { HAKA_ALERT_FAILED, HAKA_ALERT_SUCCESSFUL };
 enum alert_node_type { HAKA_ALERT_NODE_ADDRESS, HAKA_ALERT_NODE_SERVICE };
 
-%typemap(in) wchar_t ** {
+%typemap(in) char ** {
 	if (lua_istable(L, $input)) {
 		int i, size = lua_rawlen(L, $input);
-		$1 = malloc((size+1)*sizeof(wchar_t *));
+		$1 = malloc((size+1)*sizeof(char *));
 		for (i = 0; i < size; ++i) {
 			lua_rawgeti(L, $input, i+1);
-			$1[i] = str2wstr(lua_tostring(L, -1), lua_objlen(L, -1));
+			$1[i] = strdup(lua_tostring(L, -1));
 			lua_pop(L, 1);
 		}
 		$1[i] = NULL;
@@ -65,30 +64,30 @@ enum alert_node_type { HAKA_ALERT_NODE_ADDRESS, HAKA_ALERT_NODE_SERVICE };
 	}
 }
 
-%typemap(typecheck, precedence=SWIG_TYPECHECK_STRING_ARRAY) wchar_t ** {
+%typemap(typecheck, precedence=SWIG_TYPECHECK_STRING_ARRAY) char ** {
 	$1 = lua_istable(L, $input);
 }
 
-%typemap(memberin) wchar_t ** {
+%typemap(memberin) char ** {
 	free_array((void **)$1);
 	$1 = $input;
 	$input = NULL;
 }
 
-%typemap(freearg) wchar_t ** {
+%typemap(freearg) char ** {
 	free_array((void**)$1);
 }
 
 struct alert_node {
 	alert_node_type   type;
-	wchar_t         **list;
+	char            **list;
 
 	%extend {
 		alert_node()
 		{
 			struct alert_node *node = malloc(sizeof(struct alert_node));
 			if (!node) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 			memset(node, 0, sizeof(struct alert_node));
@@ -122,20 +121,20 @@ APPLY_NULLTERM_ARRAY(alert_id);
 STRUCT_UNKNOWN_KEY_ERROR(alert_id);
 
 struct alert {
-	wchar_t            *description;
-	wchar_t            *method_description;
+	char               *description;
+	char               *method_description;
 	alert_level         severity;
 	alert_level         confidence;
 	double              confidence_num;
 	alert_completion    completion;
-	wchar_t           **method_ref;
+	char              **method_ref;
 
 	%extend {
 		alert()
 		{
 			struct alert *alert = malloc(sizeof(struct alert));
 			if (!alert) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 			memset(alert, 0, sizeof(struct alert));
@@ -171,7 +170,7 @@ struct alert {
 			free($self->alert_ref);
 			$self->alert_ref = malloc(size*sizeof(uint64));
 			if (!$self->alert_ref) {
-				error(L"memory error");
+				error("memory error");
 				return;
 			}
 
@@ -204,7 +203,7 @@ struct alert_id *_post(struct alert *_alert)
 {
 	struct alert_id *ret = malloc(sizeof(struct alert_id));
 	if (!ret) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 

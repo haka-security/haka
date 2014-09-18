@@ -13,11 +13,11 @@
 #include <assert.h>
 
 
-#define HAKA_ERROR_SIZE    2048
+#define HAKA_ERROR_SIZE    3072
 
 struct local_error {
 	bool       is_error;
-	wchar_t    error_message[HAKA_ERROR_SIZE];
+	char       error_message[HAKA_ERROR_SIZE];
 	char       errno_message[HAKA_ERROR_SIZE];
 };
 
@@ -69,15 +69,14 @@ static struct local_error *error_context()
 }
 
 
-void error(const wchar_t *error, ...)
+void error(const char *error, ...)
 {
 	if (error_is_valid) {
 		struct local_error *context = error_context();
 		if (!context->is_error) {
 			va_list ap;
 			va_start(ap, error);
-			vswprintf(context->error_message, HAKA_ERROR_SIZE, error, ap);
-			context->error_message[HAKA_ERROR_SIZE-1] = 0;
+			vsnprintf(context->error_message, HAKA_ERROR_SIZE, error, ap);
 			va_end(ap);
 
 			context->is_error = true;
@@ -116,7 +115,7 @@ bool check_error()
 	}
 }
 
-const wchar_t *clear_error()
+const char *clear_error()
 {
 	if (error_is_valid) {
 		struct local_error *context = error_context();

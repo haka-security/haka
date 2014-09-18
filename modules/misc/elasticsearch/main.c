@@ -13,7 +13,7 @@
 INIT static int init(struct parameters *args)
 {
 	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-		error(L"unable to initialize curl library");
+		error("unable to initialize curl library");
 		return -1;
 	}
 

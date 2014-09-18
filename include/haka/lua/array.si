@@ -12,7 +12,7 @@ static struct type **_get_##type##_array(lua_State* L, int input, swig_type_info
 	int i, size = lua_rawlen(L, input);
 	array = malloc(sizeof(struct type*)*(size+1));
 	if (!array) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 	for (i = 0, iter = array; i < size; ++iter, ++i) {

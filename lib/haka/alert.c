@@ -22,7 +22,7 @@ static local_storage_t alert_string_key;
 static atomic64_t alert_id;
 static rwlock_t alert_module_lock = RWLOCK_INIT;
 
-#define BUFFER_SIZE    2048
+#define BUFFER_SIZE    3072
 
 static void alert_string_delete(void *value)
 {
@@ -45,7 +45,7 @@ FINI static void _alert_fini()
 	atomic64_destroy(&alert_id);
 
 	{
-		wchar_t *buffer = local_storage_get(&alert_string_key);
+		char *buffer = local_storage_get(&alert_string_key);
 		if (buffer) {
 			alert_string_delete(buffer);
 		}
@@ -93,7 +93,7 @@ bool remove_alerter(struct alerter *alerter)
 	}
 
 	if (!iter) {
-		error(L"Alert module is not registered");
+		error("Alert module is not registered");
 		return false;
 	}
 
@@ -180,11 +180,11 @@ bool alert_update(uint64 id, const struct alert *alert)
 	return id;
 }
 
-static wchar_t *alert_string_context()
+static char *alert_string_context()
 {
-	wchar_t *context = (wchar_t *)local_storage_get(&alert_string_key);
+	char *context = (char *)local_storage_get(&alert_string_key);
 	if (!context) {
-		context = malloc(sizeof(wchar_t)*BUFFER_SIZE);
+		context = malloc(sizeof(char)*BUFFER_SIZE);
 		assert(context);
 
 		local_storage_set(&alert_string_key, context);
@@ -229,51 +229,51 @@ static const char *alert_node_to_str(alert_node_type type)
 	return str_alert_node_type[type];
 }
 
-static void alert_string_append(wchar_t **buffer, size_t *len, wchar_t *format, ...)
+FORMAT_PRINTF(3, 4) static void alert_string_append(char **buffer, size_t *len, char *format, ...)
 {
 	int count;
 	va_list ap;
 	va_start(ap, format);
-	count = vswprintf(*buffer, *len, format, ap);
+	count = vsnprintf(*buffer, *len, format, ap);
 	*buffer += count;
 	*len -= count;
 	va_end(ap);
 }
 
-static void alert_stringlist_append(wchar_t **buffer, size_t *len, wchar_t **array)
+static void alert_stringlist_append(char **buffer, size_t *len, char **array)
 {
 	if (array) {
-		wchar_t **iter;
+		char **iter;
 		for (iter = array; *iter; ++iter) {
 			if (iter != array)
-				alert_string_append(buffer, len, L",");
-			alert_string_append(buffer, len, L" %ls", *iter);
+				alert_string_append(buffer, len, ",");
+			alert_string_append(buffer, len, " %s", *iter);
 		}
 	}
 }
 
-static void alert_array_append(wchar_t **buffer, size_t *len, wchar_t **array)
+static void alert_array_append(char **buffer, size_t *len, char **array)
 {
-	alert_string_append(buffer, len, L"{");
+	alert_string_append(buffer, len, "{");
 	alert_stringlist_append(buffer, len, array);
-	alert_string_append(buffer, len, L" }");
+	alert_string_append(buffer, len, " }");
 }
 
-static void alert_nodes_append(wchar_t **buffer, size_t *len, struct alert_node **array, const char *indent, char *color, char *clear)
+static void alert_nodes_append(char **buffer, size_t *len, struct alert_node **array, const char *indent, char *color, char *clear)
 {
 	struct alert_node **iter;
-	alert_string_append(buffer, len, L"{");
+	alert_string_append(buffer, len, "{");
 	for (iter = array; *iter; ++iter) {
-		alert_string_append(buffer, len, L"%s\t%s%s%s:", indent, color, alert_node_to_str((*iter)->type), clear);
+		alert_string_append(buffer, len, "%s\t%s%s%s:", indent, color, alert_node_to_str((*iter)->type), clear);
 		alert_stringlist_append(buffer, len, (*iter)->list);
 	}
-	alert_string_append(buffer, len, L"%s}", indent);
+	alert_string_append(buffer, len, "%s}", indent);
 }
 
-const wchar_t *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent, bool colored)
+const char *alert_tostring(uint64 id, const struct time *time, const struct alert *alert, const char *header, const char *indent, bool colored)
 {
-	wchar_t *buffer = alert_string_context();
-	wchar_t *iter = buffer;
+	char *buffer = alert_string_context();
+	char *iter = buffer;
 	size_t len = BUFFER_SIZE;
 	char *color = "", *clear = "";
 
@@ -282,85 +282,85 @@ const wchar_t *alert_tostring(uint64 id, const struct time *time, const struct a
 		clear = CLEAR;
 	}
 
-	alert_string_append(&iter, &len, L"%s%sid%s = %llu", header, color, clear, id);
+	alert_string_append(&iter, &len, "%s%sid%s = %llu", header, color, clear, id);
 
 	{
 		char timestr[TIME_BUFSIZE];
 		time_tostring(time, timestr, TIME_BUFSIZE);
-		alert_string_append(&iter, &len, L"%s%stime%s = %s", indent, color, clear, timestr);
+		alert_string_append(&iter, &len, "%s%stime%s = %s", indent, color, clear, timestr);
 	}
 
 	if (time_isvalid(&alert->start_time)) {
 		char timestr[TIME_BUFSIZE];
 		time_tostring(&alert->start_time, timestr, TIME_BUFSIZE);
-		alert_string_append(&iter, &len, L"%s%sstart time%s = %s", indent, color, clear, timestr);
+		alert_string_append(&iter, &len, "%s%sstart time%s = %s", indent, color, clear, timestr);
 	}
 
 	if (time_isvalid(&alert->end_time)) {
 		char timestr[TIME_BUFSIZE];
 		time_tostring(&alert->end_time, timestr, TIME_BUFSIZE);
-		alert_string_append(&iter, &len, L"%s%send time%s = %s", indent, color, clear, timestr);
+		alert_string_append(&iter, &len, "%s%send time%s = %s", indent, color, clear, timestr);
 	}
 
 	if (alert->severity > HAKA_ALERT_LEVEL_NONE && alert->severity < HAKA_ALERT_NUMERIC) {
-		alert_string_append(&iter, &len, L"%s%sseverity%s = %s", indent, color, clear,
+		alert_string_append(&iter, &len, "%s%sseverity%s = %s", indent, color, clear,
 				alert_level_to_str(alert->severity));
 	}
 
 	if (alert->confidence > HAKA_ALERT_LEVEL_NONE) {
 		if (alert->confidence == HAKA_ALERT_NUMERIC) {
-			alert_string_append(&iter, &len, L"%s%sconfidence%s = %g", indent, color, clear,
+			alert_string_append(&iter, &len, "%s%sconfidence%s = %g", indent, color, clear,
 					alert->confidence_num);
 		}
 		else {
-			alert_string_append(&iter, &len, L"%s%sconfidence%s = %s", indent, color, clear,
+			alert_string_append(&iter, &len, "%s%sconfidence%s = %s", indent, color, clear,
 					alert_level_to_str(alert->confidence));
 		}
 	}
 
 	if (alert->completion > HAKA_ALERT_COMPLETION_NONE) {
-		alert_string_append(&iter, &len, L"%s%scompletion%s = %s", indent, color, clear,
+		alert_string_append(&iter, &len, "%s%scompletion%s = %s", indent, color, clear,
 				alert_completion_to_str(alert->completion));
 	}
 
 	if (alert->description)
-		alert_string_append(&iter, &len, L"%s%sdescription%s = %ls", indent, color, clear, alert->description);
+		alert_string_append(&iter, &len, "%s%sdescription%s = %s", indent, color, clear, alert->description);
 
 	if (alert->method_description || alert->method_ref) {
-		alert_string_append(&iter, &len, L"%s%smethod%s = {", indent, color, clear);
+		alert_string_append(&iter, &len, "%s%smethod%s = {", indent, color, clear);
 
 		if (alert->method_description) {
-			alert_string_append(&iter, &len, L"%s%s\tdescription%s = %ls", indent, color, clear,
+			alert_string_append(&iter, &len, "%s%s\tdescription%s = %s", indent, color, clear,
 					alert->method_description);
 		}
 
 		if (alert->method_ref) {
-			alert_string_append(&iter, &len, L"%s%s\tref%s = ", indent, color, clear);
+			alert_string_append(&iter, &len, "%s%s\tref%s = ", indent, color, clear);
 			alert_array_append(&iter, &len, alert->method_ref);
 		}
 
-		alert_string_append(&iter, &len, L"%s}", indent);
+		alert_string_append(&iter, &len, "%s}", indent);
 	}
 
 	if (alert->sources) {
-		alert_string_append(&iter, &len, L"%s%ssources%s = ", indent, color, clear);
+		alert_string_append(&iter, &len, "%s%ssources%s = ", indent, color, clear);
 		alert_nodes_append(&iter, &len, alert->sources, indent, color, clear);
 	}
 
 	if (alert->targets) {
-		alert_string_append(&iter, &len, L"%s%stargets%s = ", indent, color, clear);
+		alert_string_append(&iter, &len, "%s%stargets%s = ", indent, color, clear);
 		alert_nodes_append(&iter, &len, alert->targets, indent, color, clear);
 	}
 
 	if (alert->alert_ref_count && alert->alert_ref) {
 		int i;
-		alert_string_append(&iter, &len, L"%s%srefs%s = {", indent, color, clear);
+		alert_string_append(&iter, &len, "%s%srefs%s = {", indent, color, clear);
 		for (i=0; i<alert->alert_ref_count; ++i) {
 			if (i != 0)
-				alert_string_append(&iter, &len, L",");
-			alert_string_append(&iter, &len, L" %llu", alert->alert_ref[i]);
+				alert_string_append(&iter, &len, ",");
+			alert_string_append(&iter, &len, " %llu", alert->alert_ref[i]);
 		}
-		alert_string_append(&iter, &len, L" }");
+		alert_string_append(&iter, &len, " }");
 	}
 
 

@@ -41,7 +41,7 @@ struct time {
 		time(double ts) {
 			struct time *t = malloc(sizeof(struct time));
 			if (!t) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -60,7 +60,7 @@ struct time {
 		{
 			*TEMP_OUTPUT = malloc(TIME_BUFSIZE);
 			if (!*TEMP_OUTPUT) {
-				error(L"memory error");
+				error("memory error");
 				return;
 			}
 

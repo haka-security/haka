@@ -18,10 +18,10 @@
 static int check_status(int fd, const char *format, ...)
 {
 	if (ctl_recv_status(fd) == -1) {
-		const wchar_t *err = clear_error();
-		if (!err) err = L"failed!";
+		const char *err = clear_error();
+		if (!err) err = "failed!";
 
-		printf(": %s%ls%s", c(RED, use_colors), err, c(CLEAR, use_colors));
+		printf(": %s%s%s", c(RED, use_colors), err, c(CLEAR, use_colors));
 		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 		return COMMAND_FAILED;
 	}
@@ -87,8 +87,7 @@ struct command command_stop = {
 static bool display_log_line(int fd)
 {
 	log_level level;
-	char *module;
-	wchar_t *msg;
+	char *module, *msg;
 
 	level = ctl_recv_int(fd);
 	if (check_error()) {
@@ -100,7 +99,7 @@ static bool display_log_line(int fd)
 		return false;
 	}
 
-	msg = ctl_recv_wchars(fd, NULL);
+	msg = ctl_recv_chars(fd, NULL);
 	if (!msg) {
 		return false;
 	}
@@ -186,7 +185,7 @@ static int run_remote(int fd, const char *command)
 
 	struct luadebug_user *readline_user = luadebug_user_readline();
 	if (!readline_user) {
-		printf(": %ls", clear_error());
+		printf(": %s", clear_error());
 		printf("\r[%sFAIL%s]\n", c(RED, use_colors), c(CLEAR, use_colors));
 	}
 

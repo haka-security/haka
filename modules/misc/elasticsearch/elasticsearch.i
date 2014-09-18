@@ -79,19 +79,19 @@ struct elasticsearch_connector {
 		}
 
 		void newindex(const char *index, json_t *data) {
-			if (!index || !data) { error(L"invalid parameter"); return; }
+			if (!index || !data) { error("invalid parameter"); return; }
 
 			elasticsearch_newindex($self, index, data);
 		}
 
 		void insert(const char *index, const char *type, const char *id, json_t *data) {
-			if (!index || !type || !data) { error(L"invalid parameter"); return; }
+			if (!index || !type || !data) { error("invalid parameter"); return; }
 
 			elasticsearch_insert($self, index, type, id, data);
 		}
 
 		void update(const char *index, const char *type, const char *id, json_t *data) {
-			if (!index || !type || !id || !data) { error(L"invalid parameter"); return; }
+			if (!index || !type || !id || !data) { error("invalid parameter"); return; }
 
 			elasticsearch_update($self, index, type, id, data);
 		}
@@ -100,7 +100,7 @@ struct elasticsearch_connector {
 		{
 			*TEMP_OUTPUT = malloc(20);
 			if (!*TEMP_OUTPUT) {
-				error(L"memory error");
+				error("memory error");
 				return;
 			}
 
@@ -118,7 +118,7 @@ struct elasticsearch_connector {
 
 			*TEMP_OUTPUT = malloc(size+1);
 			if (!*TEMP_OUTPUT) {
-				error(L"memory error");
+				error("memory error");
 				return;
 			}
 

@@ -42,7 +42,7 @@ bool vbuffer_sub_stream_push(struct vbuffer_sub_stream *stream, struct vbuffer_s
 
 	chunk = malloc(sizeof(struct vbuffer_sub_stream_chunk));
 	if (!chunk) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 

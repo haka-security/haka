@@ -13,7 +13,7 @@ struct geoip_handle *geoip_initialize(const char *database)
 {
 	GeoIP *geoip_handle = GeoIP_open(database, GEOIP_MEMORY_CACHE);
 	if (!geoip_handle) {
-		error(L"cannot initialize geoip");
+		error("cannot initialize geoip");
 		return NULL;
 	}
 
