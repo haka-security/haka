@@ -3,9 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 add_library(alert-json MODULE main.c)
-set_target_properties(alert-json PROPERTIES OUTPUT_NAME json)
+set_target_properties(alert-json PROPERTIES OUTPUT_NAME elasticsearch)
 
-DEPENDS_MODULE(alert-json elasticsearch misc)
+INCLUDE_MODULE(elasticsearch misc)
+target_link_libraries(alert-json libelasticsearch)
+
 DEPENDS_MODULE(alert-json geoip misc)
 DEPENDS_MODULE(alert-json ipv4 protocol)
 INSTALL_MODULE(alert-json alert)

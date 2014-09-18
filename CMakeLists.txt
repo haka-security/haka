@@ -143,7 +143,7 @@ set(ENV_SH ${LOCALINSTALL}/env.sh)
 
 add_custom_target(localinstall
 	COMMAND $(MAKE) install DESTDIR=${LOCALINSTALL}
-	COMMAND echo "export LD_LIBRARY_PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/protocol:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/packet:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/misc\"" > ${ENV_SH}
+	COMMAND echo "export LD_LIBRARY_PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/protocol:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/packet:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/misc\"" > ${ENV_SH}
 	COMMAND echo "export HAKA_PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}\"" >> ${ENV_SH}
 	COMMAND echo "export PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/bin\":\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/sbin\":$PATH" >> ${ENV_SH}
 	COMMAND echo "export LUA_PATH=\"\$(realpath \$HAKA_PATH/share/haka/lua/share/luajit* | head -n 1)/?.lua\"" >> ${ENV_SH}

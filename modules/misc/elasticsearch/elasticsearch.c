@@ -19,6 +19,31 @@
 
 #define MODULE "elasticsearch"
 
+
+static bool initialized = false;
+
+static bool init()
+{
+	if (!initialized) {
+		if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
+			error("unable to initialize curl library");
+			return false;
+		}
+
+		initialized = true;
+	}
+
+	return true;
+}
+
+FINI static void cleanup()
+{
+	if (initialized) {
+		curl_global_cleanup();
+	}
+}
+
+
 static char base64_encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                        'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
                                        'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
@@ -158,7 +183,13 @@ static bool start_request_thread(struct elasticsearch_connector *connector)
 
 struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
 {
-	struct elasticsearch_connector *ret = malloc(sizeof(struct elasticsearch_connector));
+	struct elasticsearch_connector *ret;
+
+	if (!init()) {
+		return NULL;
+	}
+
+	ret = malloc(sizeof(struct elasticsearch_connector));
 	if (!ret) {
 		error("memory error");
 		return NULL;
