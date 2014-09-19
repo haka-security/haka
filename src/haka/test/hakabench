@@ -15,12 +15,13 @@ $0 ~ /^info  benchmark: processing/ {
 }'
 
 _usage() {
-	echo "Usage: $1 [-djkhvpl] <dir|pcap file>"
+	echo "Usage: $1 [-djkrhvpl] <dir|pcap file>"
 	echo "Options:"
 	echo "\t-j <thread count>:  Run haka on <thread count> threads"
 	echo "\t-o <output file>:   Output benchmark results to <output file>"
 	echo "\t-d:                 Display debug output"
 	echo "\t-k:                 Keep configuration files"
+	echo "\t-r <repeat>:        Repeat pcap <repeat> times. Default use last part of pcap file name"
 	echo "\t-h:                 Display this help"
 	echo "\t-v:                 Profile with valgrind"
 	echo "\t-p:                 Profile with perf"
@@ -74,8 +75,12 @@ _bench_file() {
 	local test_path="${pcap%-*}"
 	local name="${test_path##*/}"
 	local rule="$test_path.lua"
-	local repeat="${pcap##*-}"
-	local repeat="${repeat%.*}"
+	if [ -z "$REPEAT" ]; then
+		local repeat="${pcap##*-}"
+		local repeat="${repeat%.*}"
+	else
+		local repeat="$REPEAT"
+	fi
 
 	local conf=`_gen_conf "$name.XXXXX.conf" $rule $pcap $THREAD $repeat`
 
@@ -141,7 +146,7 @@ VALGRIND_WRAPPER="valgrind --tool=callgrind --collect-bus=yes --dump-instr=yes -
 PERF_WRAPPER="perf record -e cycles,instructions,cache-misses,branch-misses,cs,migrations,faults -g -v -F 100 --output=%s"
 RESULT_FILE="$RESULT_DIR/summary.txt"
 
-while getopts "dkhj:o:vpl" OPT; do
+while getopts "dkr:hj:o:vpl" OPT; do
 	case $OPT in
 	d)
 		DEBUG=true
@@ -154,6 +159,9 @@ while getopts "dkhj:o:vpl" OPT; do
 	;;
 	o)
 		RESULT_DIR="$OPTARG"
+	;;
+	r)
+		REPEAT="$OPTARG"
 	;;
 	h|\?)
 		_usage $0
