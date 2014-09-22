@@ -146,6 +146,7 @@ add_custom_target(localinstall
 	COMMAND echo "export LD_LIBRARY_PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/protocol:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/packet\"" > ${ENV_SH}
 	COMMAND echo "export HAKA_PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}\"" >> ${ENV_SH}
 	COMMAND echo "export PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/bin\":\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/sbin\":$PATH" >> ${ENV_SH}
+	COMMAND echo "export LUA_PATH=\"\$(realpath \$HAKA_PATH/share/haka/lua/share/luajit* | head -n 1)/?.lua\"" >> ${ENV_SH}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Install locally..." VERBATIM
 	VERBATIM
