@@ -10,16 +10,6 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 
-bool ipv4_addr_from_string_safe(const char *string, ipv4addr *addr_ret)
-{
-	struct in_addr addr;
-	if (inet_pton(AF_INET, string, &addr) <= 0) {
-		return (*addr_ret = 0);
-	}
-
-	return (*addr_ret = SWAP_FROM_BE(ipv4addr, addr.s_addr));
-}
-
 uint32 ipv4_addr_from_string(const char *string)
 {
 	struct in_addr addr;

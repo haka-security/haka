@@ -11,12 +11,18 @@ Description
 This module will exports all alerts to an elasticsearch server. The module adds also
 some extra information such as geoip data.
 
+.. warning:: Do not create security rules that block elasticsearch traffic.
+
 Parameters
 ^^^^^^^^^^
 
-.. describe:: elasticsearch
+.. describe:: elasticsearch_server
 
     Elasticsearch server address.
+
+.. describe:: elasticsearch_index
+
+    Elasticsearch index.
 
 .. describe:: geoip
 
@@ -26,6 +32,16 @@ Example :
 
 .. code-block:: ini
 
-    elasticsearch = "http://127.0.0.1:9200"
+    [alert]
+    # Select the alert module
+    module = "alert/elasticsearch"
+
+    # alert/elasticsearch module option
+    elasticsearch_server = "http://127.0.0.1:9200"
+    #elasticsearch_index = "ips"
     geoip = "/usr/share/GeoIP/GeoIP.dat"
 
+The folder <haka_install_path>/share/haka/sample/kibana/dashboard contains an
+example of a Kibana dashboard that shows some info about haka alerts.
+
+.. note:: Set the elasticsearch index to ``elasticsearch_index`` value in the main kibana dashboard setting.

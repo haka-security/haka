@@ -34,11 +34,6 @@ typedef uint32 ipv4addr;
 void ipv4_addr_to_string(ipv4addr addr, char *string, size_t size);
 
 /**
- * Check if IP address is valid.
- */
-bool ipv4_addr_from_string_safe(const char *string, ipv4addr *addr_ret);
-
-/**
  * Convert IP from string to ipv4addr structure.
  */
 ipv4addr ipv4_addr_from_string(const char *string);

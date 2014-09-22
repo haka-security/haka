@@ -72,7 +72,7 @@ struct elasticsearch_connector {
 				return;
 			}
 
-			elasticsearch_genid(*TEMP_OUTPUT);
+			elasticsearch_genid(*TEMP_OUTPUT, ELASTICSEARCH_ID_LENGTH);
 		}
 	}
 };

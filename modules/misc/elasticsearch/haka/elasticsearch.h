@@ -16,7 +16,7 @@ struct elasticsearch_connector;
 
 struct elasticsearch_connector *elasticsearch_connector_new(const char *server);
 bool                            elasticsearch_connector_close(struct elasticsearch_connector *connector);
-void                            elasticsearch_genid(char *id);
+void                            elasticsearch_genid(char *id, size_t size);
 bool                            elasticsearch_newindex(struct elasticsearch_connector *connector,
 		const char *index, json_t *data);
 bool                            elasticsearch_insert(struct elasticsearch_connector *connector,

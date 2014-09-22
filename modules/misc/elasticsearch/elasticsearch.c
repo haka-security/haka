@@ -500,8 +500,9 @@ static bool elasticsearch_request(struct elasticsearch_connector *connector,
 
 }
 
-void elasticsearch_genid(char *id)
+void elasticsearch_genid(char *id, size_t size)
 {
+	assert(size <= ELASTICSEARCH_ID_LENGTH);
 	uuid_t uuid;
 	uuid_generate(uuid);
 	base64_encode(uuid, 16, id);

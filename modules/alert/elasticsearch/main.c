@@ -14,6 +14,7 @@
 
 #include <jansson.h>
 
+/* Limit the length of alert id suffixes */
 #define ALERT_ID_LENGTH 16
 
 
@@ -42,11 +43,9 @@ void json_insert_double(json_t *obj, const char *key, double val)
 void alert_add_geolocalization(json_t *list, char *address, struct geoip_handle *geoip_handler)
 {
 	if (geoip_handler) {
-		ipv4addr addr;
 		char country_code[3];
-
-		if (ipv4_addr_from_string_safe(address, &addr) &&
-				geoip_lookup_country(geoip_handler, addr, country_code)) {
+		ipv4addr addr = ipv4_addr_from_string(address);
+		if (addr && geoip_lookup_country(geoip_handler, addr, country_code)) {
 			json_t *json_country = json_string(country_code);
 			if (!json_country) {
 				error("json string creation error");
@@ -340,7 +339,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 	messagef(HAKA_LOG_DEBUG, "elasticsearch-alert", "using elasticsearch index %s",
 		elasticsearch_alerter->index);
 
-	elasticsearch_genid(elasticsearch_alerter->alert_id_prefix);
+	elasticsearch_genid(elasticsearch_alerter->alert_id_prefix, ELASTICSEARCH_ID_LENGTH);
 	messagef(HAKA_LOG_DEBUG, "elasticsearch-alert", "generating global id prefix %s",
 		elasticsearch_alerter->alert_id_prefix);
 
