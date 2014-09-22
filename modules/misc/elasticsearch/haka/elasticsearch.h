@@ -8,6 +8,7 @@
 #define ELASTICSEARCH_ID_LENGTH 24
 
 #include <haka/types.h>
+#include <haka/time.h>
 
 #include "json.h"
 
@@ -19,6 +20,8 @@ bool                            elasticsearch_connector_close(struct elasticsear
 void                            elasticsearch_genid(char *id, size_t size);
 bool                            elasticsearch_newindex(struct elasticsearch_connector *connector,
 		const char *index, json_t *data);
+bool                            elasticsearch_formattimestamp(const struct time *time,
+        char *timestr, size_t size);
 bool                            elasticsearch_insert(struct elasticsearch_connector *connector,
 		const char *index, const char *type, const char *id, json_t *doc);
 bool                            elasticsearch_update(struct elasticsearch_connector *connector,

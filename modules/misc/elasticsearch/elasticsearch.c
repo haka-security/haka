@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "haka/elasticsearch.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -16,6 +14,7 @@
 #include <haka/thread.h>
 #include <haka/container/list2.h>
 #include <haka/container/vector.h>
+#include "haka/elasticsearch.h"
 
 #define MODULE "elasticsearch"
 
@@ -179,6 +178,10 @@ static bool start_request_thread(struct elasticsearch_connector *connector)
 		}
 	}
 	return true;
+}
+
+bool elasticsearch_formattimestamp(const struct time *time, char *timestr, size_t size) {
+    return time_format(time, "%Y/%m/%d %H:%M:%S", timestr, size);
 }
 
 struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
@@ -502,7 +505,7 @@ static bool elasticsearch_request(struct elasticsearch_connector *connector,
 
 void elasticsearch_genid(char *id, size_t size)
 {
-	assert(size <= ELASTICSEARCH_ID_LENGTH);
+	assert(size >= ELASTICSEARCH_ID_LENGTH);
 	uuid_t uuid;
 	uuid_generate(uuid);
 	base64_encode(uuid, 16, id);

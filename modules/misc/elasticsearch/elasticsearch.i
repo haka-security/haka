@@ -51,13 +51,13 @@ struct elasticsearch_connector {
 
 		void timestamp(struct time *time, char **TEMP_OUTPUT)
 		{
-			*TEMP_OUTPUT = malloc(20);
+			*TEMP_OUTPUT = malloc(TIME_BUFSIZE);
 			if (!*TEMP_OUTPUT) {
 				error("memory error");
 				return;
 			}
 
-			if (!time_format(time, "%Y/%m/%d %H:%M:%S", *TEMP_OUTPUT, 20)) {
+			if (!elasticsearch_formattimestamp(time, *TEMP_OUTPUT, TIME_BUFSIZE)) {
 				assert(check_error());
 				free(*TEMP_OUTPUT);
 				*TEMP_OUTPUT = NULL;

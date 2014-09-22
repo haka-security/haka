@@ -20,28 +20,39 @@
 
 const char ELASTICSEARCH_INDEX[] = "ips";
 
-void json_insert_string(json_t *obj, const char *key, const char *string)
+static bool json_insert_string(json_t *obj, const char *key, const char *string)
 {
+	bool ret;
 	json_t *json_str = json_string(string);
 	if (!json_str) {
 		error("json string creation error");
-		return;
+		return false;
 	}
-	json_object_set_new(obj, key, json_str);
+	ret = json_object_set_new(obj, key, json_str) == 0;
+	if (!ret) {
+		error("json object insertion error");
+	}
+	return ret;
 }
 
-void json_insert_double(json_t *obj, const char *key, double val)
+static bool json_insert_double(json_t *obj, const char *key, double val)
 {
+	bool ret;
 	json_t *json_val = json_real(val);
 	if (!json_val) {
 		error("json real creation error");
-		return;
+		return false;
 	}
-	json_object_set_new(obj, key, json_val);
+	ret = json_object_set_new(obj, key, json_val) == 0;
+	if (!ret) {
+		error("json object insertion error");
+	}
+	return ret;
 }
 
-void alert_add_geolocalization(json_t *list, char *address, struct geoip_handle *geoip_handler)
+static bool alert_add_geolocalization(json_t *list, char *address, struct geoip_handle *geoip_handler)
 {
+	bool ret;
 	if (geoip_handler) {
 		char country_code[3];
 		ipv4addr addr = ipv4_addr_from_string(address);
@@ -49,14 +60,19 @@ void alert_add_geolocalization(json_t *list, char *address, struct geoip_handle 
 			json_t *json_country = json_string(country_code);
 			if (!json_country) {
 				error("json string creation error");
-				return;
+				return false;
 			}
-			json_array_append_new(list, json_country);
+			ret = json_array_append_new(list, json_country) == 0;
+			if (!ret) {
+				error("json array insertion error");
+				return false;
+			}
 		}
 	}
+	return true;
 }
 
-json_t *json_get_list(json_t *obj, const char *key)
+json_t *json_get_or_create_list(json_t *obj, const char *key)
 {
 	json_t *array = json_object_get(obj, key);
 	if (!array) {
@@ -65,57 +81,90 @@ json_t *json_get_list(json_t *obj, const char *key)
 			error("json array creation error");
 			return NULL;
 		}
-		json_object_set(obj, key, array);
+		if (json_object_set(obj, key, array) < 0) {
+			error("json object insertion error");
+			json_decref(array);
+			return NULL;
+		}
+	}
+	else {
+		json_incref(array);
 	}
 	return array;
 }
 
-void json_insert_list(json_t *obj, const char *key, char **array)
+static bool json_insert_list(json_t *obj, const char *key, char **array)
 {
+	bool ret;
+	char **iter;
+	json_t *json_str;
+
 	json_t *nodes = json_array();
 	if (!nodes) {
 		error("json array creation error");
-		return;
+		return false;
 	}
 
-	char **iter;
-	json_t *json_str;
 	for (iter = array; *iter; ++iter) {
 		json_str = json_string(*iter);
 		if (!json_str) {
 			error("json string creation error");
-			return;
+			json_decref(nodes);
+			return false;
 		}
-		json_array_append(nodes, json_str);
+		ret = json_array_append_new(nodes, json_str) == 0;
+		if (!ret) {
+			error("json array insertion error");
+			return false;
+		}
 	}
-	json_object_set_new(obj, key, nodes);
+
+	ret = json_object_set_new(obj, key, nodes) == 0;
+	if (!ret) {
+		error("json object insertion error");
+	}
+
+	return ret;
 }
 
 
-void json_insert_address(json_t *obj, char **list, struct geoip_handle *geoip_handler)
+static bool json_insert_address(json_t *obj, char **list, struct geoip_handle *geoip_handler)
 {
+	bool ret;
 	json_t *json_str;
 	char **iter;
+	json_t *address, *geo;
 
-	json_t *address = json_get_list(obj, "address");
-	json_t *geo = json_get_list(obj, "geo");
+	address = json_get_or_create_list(obj, "address");
+	if (!address) {
+		return false;
+	}
 
-	if (!(address && geo)) return;
+	geo = json_get_or_create_list(obj, "geo");
+	if (!geo) {
+		json_decref(address);
+		return false;
+	}
 
 	for (iter = list; *iter; ++iter) {
 		alert_add_geolocalization(geo, *iter, geoip_handler);
 		json_str = json_string(*iter);
 		if (!json_str) {
 			error("json string creation error");
-			return;
+			json_decref(address);
+			json_decref(geo);
+			return false;
 		}
-		json_array_append_new(address, json_str);
+		ret = json_array_append_new(address, json_str) == 0;
+		if (!ret) {
+			error("json array insertion error");
+			return false;
+		}
 	}
-	json_decref(address);
-	json_decref(geo);
+	return true;
 }
 
-void json_create_mapping(struct elasticsearch_connector* connector, const char *index)
+static void json_create_mapping(struct elasticsearch_connector *connector, const char *index)
 {
 	json_t *mapping = json_pack("{s{s{s{s{s{s{ssss}s{ssss}}}}}}}",
 		"mappings", "alert", "properties", "method", "properties",
@@ -128,12 +177,15 @@ void json_create_mapping(struct elasticsearch_connector* connector, const char *
 	}
 	if (!elasticsearch_newindex(connector, index, mapping)) {
 		error("elasticsearch index creation error");
+		json_decref(mapping);
 		return;
 	}
+	json_decref(mapping);
 }
 
 json_t *alert_tojson(const struct time *time, const struct alert *alert, struct geoip_handle *geoip_handler)
 {
+	struct alert_node **iter;
 	json_t *ret = json_object();
 	if (!ret) {
 		error("json object creation error");
@@ -142,97 +194,157 @@ json_t *alert_tojson(const struct time *time, const struct alert *alert, struct 
 
 	{
 		char timestr[TIME_BUFSIZE];
-		time_format(time, "%Y/%m/%d %H:%M:%S", timestr, TIME_BUFSIZE);
-		json_insert_string(ret, "time", timestr);
+		elasticsearch_formattimestamp(time, timestr, TIME_BUFSIZE);
+		if (!json_insert_string(ret, "time", timestr)) {
+			json_decref(ret);
+			return NULL;
+		}
 	}
 
 	if (time_isvalid(&alert->start_time)) {
 		char timestr[TIME_BUFSIZE];
 		time_tostring(&alert->start_time, timestr, TIME_BUFSIZE);
-		json_insert_string(ret, "start time", timestr);
+		if (!json_insert_string(ret, "start time", timestr)) {
+			json_decref(ret);
+			return NULL;
+		}
 	}
 
 	if (time_isvalid(&alert->end_time)) {
 		char timestr[TIME_BUFSIZE];
 		time_tostring(&alert->end_time, timestr, TIME_BUFSIZE);
-		json_insert_string(ret, "end time", timestr);
+		if (!json_insert_string(ret, "end time", timestr)) {
+			json_decref(ret);
+			return NULL;
+		}
 	}
 
 	if (alert->severity > HAKA_ALERT_LEVEL_NONE && alert->severity < HAKA_ALERT_NUMERIC) {
-		json_insert_string(ret, "severity", alert_level_to_str(alert->severity));
+		if (!json_insert_string(ret, "severity", alert_level_to_str(alert->severity))) {
+			json_decref(ret);
+			return NULL;
+		}
 	}
 
 	if (alert->confidence > HAKA_ALERT_LEVEL_NONE) {
 		if (alert->confidence == HAKA_ALERT_NUMERIC) {
-			json_insert_double(ret, "confidence", alert->confidence_num);
+			if (!json_insert_double(ret, "confidence", alert->confidence_num)) {
+				json_decref(ret);
+				return NULL;
+			}
 		}
 		else {
-			json_insert_string(ret, "confidence", alert_level_to_str(alert->confidence));
+			if (!json_insert_string(ret, "confidence", alert_level_to_str(alert->confidence))) {
+				json_decref(ret);
+				return NULL;
+			}
 		}
 	}
 
 	if (alert->completion > HAKA_ALERT_COMPLETION_NONE) {
-		json_insert_string(ret, "completion", alert_completion_to_str(alert->completion));
+		if (!json_insert_string(ret, "completion", alert_completion_to_str(alert->completion))) {
+			json_decref(ret);
+			return NULL;
+		}
 	}
 
-	if (alert->description)
-		json_insert_string(ret, "description", alert->description);
+	if (alert->description) {
+		if (!json_insert_string(ret, "description", alert->description)) {
+			json_decref(ret);
+			return NULL;
+		}
+	}
 
 	if (alert->method_description || alert->method_ref) {
 		json_t *desc = json_object();
 		if (!desc) {
 			error("json object creation error");
-			free(ret);
+			json_decref(ret);
 			return NULL;
 		}
 
 		if (alert->method_description) {
-			json_insert_string(desc, "description", alert->method_description);
+			if (!json_insert_string(desc, "description", alert->method_description)) {
+				json_decref(desc);
+				json_decref(ret);
+				return NULL;
+			}
 		}
 
 		if (alert->method_ref) {
-			json_insert_list(desc, "ref", alert->method_ref);
+			if (!json_insert_list(desc, "ref", alert->method_ref)) {
+				json_decref(desc);
+				json_decref(ret);
+				return NULL;
+			}
 		}
 
-		json_object_set_new(ret, "method", desc);
+		if (json_object_set_new(ret, "method", desc) < 0) {
+			error("json object insertion error");
+			json_decref(ret);
+			return NULL;
+		}
 	}
-
-	struct alert_node **iter;
 
 	if (alert->sources) {
 		json_t *sources = json_object();
 		if (!sources) {
 			error("json object creation error");
-			free(ret);
+			json_decref(ret);
 			return NULL;
 		}
 		for (iter = alert->sources; *iter; ++iter) {
 			if (strcmp(alert_node_to_str((*iter)->type), "address") == 0) {
-				json_insert_address(sources, (*iter)->list, geoip_handler);
+				if (!json_insert_address(sources, (*iter)->list, geoip_handler)) {
+					json_decref(sources);
+					json_decref(ret);
+					return NULL;
+				}
 			}
 			else {
-				json_insert_list(sources, "services", (*iter)->list);
+				if (!json_insert_list(sources, "services", (*iter)->list)) {
+					json_decref(sources);
+					json_decref(ret);
+					return NULL;
+				}
 			}
 		}
-		json_object_set_new(ret, "sources", sources);
+
+		if (!json_object_set_new(ret, "sources", sources) < 0) {
+			error("json object insertion error");
+			json_decref(ret);
+			return NULL;
+		}
 	}
 
 	if (alert->targets) {
 		json_t *targets = json_object();
 		if (!targets) {
 			error("json object creation error");
-			free(ret);
+			json_decref(ret);
 			return NULL;
 		}
 		for (iter = alert->targets; *iter; ++iter) {
 			if (strcmp(alert_node_to_str((*iter)->type), "address") == 0) {
-				json_insert_address(targets, (*iter)->list, geoip_handler);
+				if (!json_insert_address(targets, (*iter)->list, geoip_handler)) {
+					json_decref(targets);
+					json_decref(ret);
+					return NULL;
+				}
 			}
 			else {
-				json_insert_list(targets, "services", (*iter)->list);
+				if (!json_insert_list(targets, "services", (*iter)->list)) {
+					json_decref(targets);
+					json_decref(ret);
+				}
 			}
 		}
-		json_object_set_new(ret, "targets", targets);
+
+		if (!json_object_set_new(ret, "targets", targets) < 0) {
+			error("json object insertion error");
+			json_decref(ret);
+			return NULL;
+		}
 	}
 
 	return ret;
@@ -242,7 +354,7 @@ struct elasticsearch_alerter {
 	struct alerter_module             module;
 	struct elasticsearch_connector   *connector;
 	char                             *server;
-	char						     *index;
+	char                             *index;
 	struct geoip_handle              *geoip_handler;
 	char                              alert_id_prefix[ELASTICSEARCH_ID_LENGTH + 1];
 };
@@ -288,9 +400,11 @@ void cleanup_alerter(struct alerter_module *module)
 	if (alerter->connector) {
 		elasticsearch_connector_close(alerter->connector);
 		free(alerter->server);
+		free(alerter->index);
 	}
-	if (alerter->geoip_handler)
+	if (alerter->geoip_handler) {
 		geoip_destroy(alerter->geoip_handler);
+	}
 	free(alerter);
 }
 
@@ -308,12 +422,14 @@ struct alerter_module *init_alerter(struct parameters *args)
 	const char *server = parameters_get_string(args, "elasticsearch_server", NULL);
 	if (!server) {
 		error("missing elasticsearch address server");
+		free(elasticsearch_alerter);
 		return NULL;
 	}
 
 	elasticsearch_alerter->server = strdup(server);
 	if (!elasticsearch_alerter->server) {
 		error("memory error");
+		free(elasticsearch_alerter);
 		return NULL;
 	}
 
@@ -323,7 +439,6 @@ struct alerter_module *init_alerter(struct parameters *args)
 		cleanup_alerter(&elasticsearch_alerter->module);
 		return NULL;
 	}
-	json_create_mapping(elasticsearch_alerter->connector, elasticsearch_alerter->index);
 
 	const char *index = parameters_get_string(args, "elasticsearch_index", NULL);
 	if (!index) {
@@ -343,13 +458,15 @@ struct alerter_module *init_alerter(struct parameters *args)
 	messagef(HAKA_LOG_DEBUG, "elasticsearch-alert", "generating global id prefix %s",
 		elasticsearch_alerter->alert_id_prefix);
 
+	json_create_mapping(elasticsearch_alerter->connector, elasticsearch_alerter->index);
+
 	const char *database = parameters_get_string(args, "geoip_database", NULL);
 	if (database) {
 		elasticsearch_alerter->geoip_handler = geoip_initialize(database);
 	}
 	else {
 		elasticsearch_alerter->geoip_handler = NULL;
-		messagef(HAKA_LOG_WARNING, "geoip", "missing geoip database");
+		messagef(HAKA_LOG_WARNING, "geoip", "missing geoip database, the ip geographic data will not be collected");
 	}
 
 	return  &elasticsearch_alerter->module;

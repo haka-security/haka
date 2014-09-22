@@ -8,10 +8,10 @@ Elasticsearch alert `alert/elasticsearch`
 Description
 ^^^^^^^^^^^
 
-This module will exports all alerts to an elasticsearch server. The module adds also
+This module will exports all alerts to an elasticsearch server. It also adds also
 some extra information such as geoip data.
 
-.. warning:: Do not create security rules that block elasticsearch traffic.
+.. warning:: Be careful not to create security rules that block elasticsearch traffic.
 
 Parameters
 ^^^^^^^^^^
@@ -24,9 +24,12 @@ Parameters
 
     Elasticsearch index.
 
-.. describe:: geoip
+    .. note:: If this field is missing, Haka will use ``ips`` as default kibana index.
 
-    Absolute file path to geoip data file.
+.. describe:: geoip_database
+
+    Absolute file path to geoip data file. Optional field that provides
+    geolocalization support.
 
 Example :
 
