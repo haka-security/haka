@@ -9,10 +9,10 @@ add_custom_target(bench
 	COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
 		-DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
-		-DEXE=${CMAKE_CURRENT_SOURCE_DIR}/hakabench
+		-DEXE=${TEST_RUNDIR}/share/haka/scripts/hakabench
 		-DBENCH=${CMAKE_CURRENT_SOURCE_DIR}/benchmark
+		-DHAKA=${TEST_RUNDIR}/sbin/haka
 		-DHAKA_PATH=${TEST_RUNDIR}
-		-DCONF=${CMAKE_BINARY_DIR}/test/etc/haka/haka.conf
 		-P ${CTEST_MODULE_DIR}/TestBenchRun.cmake
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 	COMMENT "Run benchmark test" VERBATIM
@@ -23,11 +23,11 @@ add_custom_target(profiling
 	COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
 		-DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
-		-DEXE=${CMAKE_CURRENT_SOURCE_DIR}/hakabench
+		-DEXE=${TEST_RUNDIR}/share/haka/scripts/hakabench
 		-DEXE_OPTIONS=-vp
 		-DBENCH=${CMAKE_CURRENT_SOURCE_DIR}/benchmark
+		-DHAKA=${TEST_RUNDIR}/sbin/haka
 		-DHAKA_PATH=${TEST_RUNDIR}
-		-DCONF=${CMAKE_BINARY_DIR}/test/etc/haka/haka.conf
 		-P ${CTEST_MODULE_DIR}/TestBenchRun.cmake
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 	COMMENT "Run benchmark test" VERBATIM
