@@ -10,19 +10,13 @@
 #include <curl/curl.h>
 
 
-INIT static int init(struct parameters *args)
+static int init(struct parameters *args)
 {
-	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-		error("unable to initialize curl library");
-		return -1;
-	}
-
 	return 0;
 }
 
-FINI static void cleanup()
+static void cleanup()
 {
-	curl_global_cleanup();
 }
 
 struct module HAKA_MODULE = {

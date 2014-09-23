@@ -9,15 +9,22 @@ find_package(LibUuid)
 if(JANSSON_FOUND AND LIBCURL_FOUND AND LIBUUID_FOUND)
 	swig_process(elasticsearchswig lua elasticsearch.i)
 
-	add_library(elasticsearch MODULE
-		main.c
+	add_library(libelasticsearch SHARED
 		elasticsearch.c
 		json.c
-		${SWIG_elasticsearchswig_FILES}
 	)
 
 	include_directories(${JANSSON_INCLUDE_DIR} ${LIBCURL_INCLUDE_DIR} ${LIBUUID_INCLUDE_DIR})
-	target_link_libraries(elasticsearch ${JANSSON_LIBRARY} ${LIBCURL_LIBRARY} ${LIBUUID_LIBRARY})
+	target_link_libraries(libelasticsearch ${JANSSON_LIBRARY} ${LIBCURL_LIBRARY} ${LIBUUID_LIBRARY})
+
+	install(TARGETS libelasticsearch LIBRARY DESTINATION ${MODULE_INSTALL_LIB})
+
+	add_library(elasticsearch MODULE
+		main.c
+		${SWIG_elasticsearchswig_FILES}
+	)
+
+	target_link_libraries(elasticsearch libelasticsearch)
 
 	SWIG_FIX_ENTRYPOINT(elasticsearch misc)
 

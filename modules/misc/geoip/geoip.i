@@ -9,7 +9,7 @@
 %include "haka/lua/ipv4-addr.si"
 
 %{
-#include "geoip.h"
+#include "haka/geoip.h"
 %}
 
 %nodefaultctor;

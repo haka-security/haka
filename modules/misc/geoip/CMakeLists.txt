@@ -9,7 +9,7 @@ if(LIBGEOIP_FOUND)
 
 	swig_process(geoipswig lua geoip.i)
 
-	add_library(geoip MODULE
+	add_library(geoip SHARED
 		main.c
 		geoip.c
 		${SWIG_geoipswig_FILES}

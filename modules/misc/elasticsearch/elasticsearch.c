@@ -2,20 +2,91 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "elasticsearch.h"
-
-#include <curl/curl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+#include <curl/curl.h>
+#include <uuid/uuid.h>
 
 #include <haka/error.h>
 #include <haka/log.h>
 #include <haka/thread.h>
 #include <haka/container/list2.h>
 #include <haka/container/vector.h>
+#include "haka/elasticsearch.h"
 
 #define MODULE "elasticsearch"
+
+
+static bool initialized = false;
+
+static bool init()
+{
+	if (!initialized) {
+		if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
+			error("unable to initialize curl library");
+			return false;
+		}
+
+		initialized = true;
+	}
+
+	return true;
+}
+
+FINI static void cleanup()
+{
+	if (initialized) {
+		curl_global_cleanup();
+	}
+}
+
+
+static char base64_encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+                                       'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+                                       'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+                                       'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+                                       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+                                       'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                                       'w', 'x', 'y', 'z', '0', '1', '2', '3',
+                                       '4', '5', '6', '7', '8', '9', '+', '='};
+
+static void base64_encode(const unsigned char *data,
+		size_t input_length, char *output)
+{
+	int j = 0;
+
+	for (; input_length >= 3; data+=3, input_length-=3) {
+		const uint32 triple = (data[2] << 0x10) + (data[1] << 0x08) + data[0];
+
+		output[j++] = base64_encoding_table[(triple >> 0 * 6) & 0x3F];
+		output[j++] = base64_encoding_table[(triple >> 1 * 6) & 0x3F];
+		output[j++] = base64_encoding_table[(triple >> 2 * 6) & 0x3F];
+		output[j++] = base64_encoding_table[(triple >> 3 * 6) & 0x3F];
+	}
+
+	/* Leftover */
+	if (input_length > 0) {
+		const uint32 b0 = data[0];
+		const uint32 b1 = input_length > 1 ? data[1] : 0;
+		const uint32 b2 = input_length > 2 ? data[2] : 0;
+
+		const uint32 triple = (b2 << 0x10) + (b1 << 0x08) + b0;
+
+		output[j++] = base64_encoding_table[(triple >> 0 * 6) & 0x3F];
+		output[j++] = base64_encoding_table[(triple >> 1 * 6) & 0x3F];
+		if (input_length > 1) {
+			output[j++] = base64_encoding_table[(triple >> 2 * 6) & 0x3F];
+			if (input_length > 2) {
+				output[j++] = base64_encoding_table[(triple >> 3 * 6) & 0x3F];
+			}
+		}
+	}
+
+	output[j] = '\0';
+}
+
 
 struct elasticsearch_request {
 	struct list2_elem   list;
@@ -38,6 +109,7 @@ struct elasticsearch_connector {
 	struct list2   request;
 	struct vector  request_content;
 	thread_t       request_thread;
+	bool           started:1;
 	bool           exit:1;
 };
 
@@ -98,9 +170,29 @@ static size_t write_callback_string(char *ptr, size_t size, size_t nmemb, void *
 	return size;
 }
 
+static bool start_request_thread(struct elasticsearch_connector *connector)
+{
+	if (!connector->started) {
+		if (!thread_create(&connector->request_thread, &elasticsearch_request_thread, connector)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool elasticsearch_formattimestamp(const struct time *time, char *timestr, size_t size) {
+    return time_format(time, "%Y/%m/%d %H:%M:%S", timestr, size);
+}
+
 struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
 {
-	struct elasticsearch_connector *ret = malloc(sizeof(struct elasticsearch_connector));
+	struct elasticsearch_connector *ret;
+
+	if (!init()) {
+		return NULL;
+	}
+
+	ret = malloc(sizeof(struct elasticsearch_connector));
 	if (!ret) {
 		error("memory error");
 		return NULL;
@@ -138,11 +230,7 @@ struct elasticsearch_connector *elasticsearch_connector_new(const char *server)
 	/* Uses of signal is not possible here in multi-threaded environment */
 	curl_easy_setopt(ret->curl, CURLOPT_NOSIGNAL, 1L);
 
-	/* Create request thread */
-	if (!thread_create(&ret->request_thread, &elasticsearch_request_thread, ret)) {
-		elasticsearch_connector_close(ret);
-		return NULL;
-	}
+	ret->started = false;
 
 	return ret;
 }
@@ -210,14 +298,14 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 	if (res != CURLE_OK) {
 		error("post error: %s", curl_easy_strerror(res));
 		free(resdata.string);
-		return -1;
+		return -res;
 	}
 
 	res = curl_easy_getinfo(connector->curl, CURLINFO_RESPONSE_CODE, &ret_code);
 	if (res != CURLE_OK) {
 		error("post error: %s", curl_easy_strerror(res));
 		free(resdata.string);
-		return -1;
+		return -res;
 	}
 
 	messagef(HAKA_LOG_DEBUG, MODULE, "post successful: %s return %lu", url, ret_code);
@@ -232,7 +320,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 		if (!resdata.string) {
 			error("post error: invalid json response");
 			free(resdata.string);
-			return -1;
+			return -CURL_LAST;
 		}
 
 		*json_res = json_loads(resdata.string, 0, NULL);
@@ -240,7 +328,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 
 		if (!(*json_res)) {
 			error("post error: invalid json response");
-			return -1;
+			return -CURL_LAST;
 		}
 	}
 
@@ -256,8 +344,13 @@ static void append(struct vector *string, const char *str)
 	memcpy(vector_get(string, char, index), str, len);
 }
 
-static void push_request(struct elasticsearch_connector *connector, struct elasticsearch_request *req)
+static void push_request(struct elasticsearch_connector *connector, struct elasticsearch_request *req,
+		bool delayed)
 {
+	if (!delayed) {
+		start_request_thread(connector);
+	}
+
 	list2_elem_init(&req->list);
 
 	mutex_lock(&connector->request_mutex);
@@ -268,11 +361,18 @@ static void push_request(struct elasticsearch_connector *connector, struct elast
 
 #define BUFFER_SIZE    1024
 
-static int do_one_request(struct elasticsearch_connector *connector, const char *url, const char *data)
+static int do_one_request(struct elasticsearch_connector *connector, const char *url, const char *data,
+		int *lasterror)
 {
 	const int code = elasticsearch_post(connector, url, data, NULL);
 	if (check_error()) {
-		messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s", clear_error());
+		assert(code < 0);
+
+		if (!lasterror || code != *lasterror) {
+			messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s", clear_error());
+			if (lasterror) *lasterror = code;
+		}
+
 		return -1;
 	}
 	return code;
@@ -283,6 +383,9 @@ static void *elasticsearch_request_thread(void *_connector)
 	struct elasticsearch_connector *connector = _connector;
 	char buffer[BUFFER_SIZE];
 	char url[BUFFER_SIZE];
+	int lasterror = 0;
+
+	connector->started = true;
 
 	while (!connector->exit) {
 		struct list2 copy;
@@ -315,8 +418,8 @@ static void *elasticsearch_request_thread(void *_connector)
 			case NEWINDEX:
 				{
 					snprintf(url, BUFFER_SIZE, "%s/%s", connector->server_address, req->index);
-					code = do_one_request(connector, url, req->data);
-					if (code && code != 400) {
+					code = do_one_request(connector, url, req->data, &lasterror);
+					if (code > 0 && code != 400) {
 						messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
 					}
 				}
@@ -354,12 +457,16 @@ static void *elasticsearch_request_thread(void *_connector)
 			snprintf(url, BUFFER_SIZE, "%s/_bulk", connector->server_address);
 			*vector_push(&connector->request_content, char) = '\0';
 
-			code = do_one_request(connector, url, vector_first(&connector->request_content, char));
+			code = do_one_request(connector, url, vector_first(&connector->request_content, char), &lasterror);
 			if (code) {
-				messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
+				if (code != -1) {
+					messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
+				}
 			}
 		}
 	}
+
+	connector->started = false;
 
 	return NULL;
 }
@@ -374,7 +481,7 @@ static void *elasticsearch_request_thread(void *_connector)
 		} \
 	}
 
-static bool elasticsearch_request(struct elasticsearch_connector *connector,
+static bool elasticsearch_request(struct elasticsearch_connector *connector, bool delayed,
 		int reqtype, const char *index, const char *type, const char *id, json_t *data)
 {
 	struct elasticsearch_request *req;
@@ -404,9 +511,17 @@ static bool elasticsearch_request(struct elasticsearch_connector *connector,
 		return false;
 	}
 
-	push_request(connector, req);
+	push_request(connector, req, delayed);
 	return true;
 
+}
+
+void elasticsearch_genid(char *id, size_t size)
+{
+	assert(size >= ELASTICSEARCH_ID_LENGTH);
+	uuid_t uuid;
+	uuid_generate(uuid);
+	base64_encode(uuid, 16, id);
 }
 
 bool elasticsearch_newindex(struct elasticsearch_connector *connector, const char *index, json_t *data)
@@ -414,7 +529,9 @@ bool elasticsearch_newindex(struct elasticsearch_connector *connector, const cha
 	assert(connector);
 	assert(index);
 
-	return elasticsearch_request(connector, NEWINDEX, index, NULL, NULL, data);
+	/* This request is delayed, it will wait for the next request to start the processing thread
+	 * if it is not already started. */
+	return elasticsearch_request(connector, true, NEWINDEX, index, NULL, NULL, data);
 }
 
 bool elasticsearch_insert(struct elasticsearch_connector *connector, const char *index,
@@ -425,7 +542,7 @@ bool elasticsearch_insert(struct elasticsearch_connector *connector, const char 
 	assert(index);
 	assert(type);
 
-	return elasticsearch_request(connector, INSERT, index, type, id, data);
+	return elasticsearch_request(connector, false, INSERT, index, type, id, data);
 }
 
 bool elasticsearch_update(struct elasticsearch_connector *connector, const char *index, const char *type,
@@ -447,7 +564,7 @@ bool elasticsearch_update(struct elasticsearch_connector *connector, const char 
 
 	json_decref(data);
 
-	return elasticsearch_request(connector, UPDATE, index, type, id, json_update);
+	return elasticsearch_request(connector, false, UPDATE, index, type, id, json_update);
 }
 
 #if 0

@@ -200,7 +200,7 @@ static const char *str_alert_level[HAKA_ALERT_LEVEL_LAST] = {
 	"",
 };
 
-static const char *alert_level_to_str(alert_level level)
+const char *alert_level_to_str(alert_level level)
 {
 	assert(level >= 0 && level < HAKA_ALERT_LEVEL_LAST);
 	return str_alert_level[level];
@@ -212,7 +212,7 @@ static const char *str_alert_completion[HAKA_ALERT_COMPLETION_LAST] = {
 	"successful",
 };
 
-static const char *alert_completion_to_str(alert_completion completion)
+const char *alert_completion_to_str(alert_completion completion)
 {
 	assert(completion >= 0 && completion < HAKA_ALERT_COMPLETION_LAST);
 	return str_alert_completion[completion];
@@ -223,7 +223,7 @@ static const char *str_alert_node_type[HAKA_ALERT_NODE_LAST] = {
 	"service",
 };
 
-static const char *alert_node_to_str(alert_node_type type)
+const char *alert_node_to_str(alert_node_type type)
 {
 	assert(type >= 0 && type < HAKA_ALERT_NODE_LAST);
 	return str_alert_node_type[type];

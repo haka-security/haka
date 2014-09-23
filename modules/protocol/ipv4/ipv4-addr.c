@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 
-
 uint32 ipv4_addr_from_string(const char *string)
 {
 	struct in_addr addr;
