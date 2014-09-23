@@ -4,14 +4,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 set -e
 
+CURSOR_SAVE="\033[s"
+CURSOR_RESTORE="\033[u"
 PAD=".................................................."
 AWK_RESULT='$0 ~ /^info  benchmark: processing/ { print $4" "$7" "$10" "$13" "$16; }'
 AWK_PROGRESS='$0 ~ /^info  benchmark: progress/ {
-	printf "\033[7D%5s %%", $4
+	printf "'$CURSOR_RESTORE'%6s %%", $4
 	fflush()
 }
 $0 ~ /^info  benchmark: processing/ {
-	printf "\033[7DPassed %13s Mib/s, %18s packets/s\033[K\n", $13, $16
+	printf "'$CURSOR_RESTORE'Passed %13s Mib/s, %18s packets/s\033[K\n", $13, $16
 }'
 
 _usage() {
@@ -109,7 +111,7 @@ _do_bench() {
 	local out="$name.txt"
 	local res=""
 
-	_info "%s %0.*s  0.00 %%" "$name" `expr ${#PAD} - ${#name}` "$PAD"
+	_info "%s %0.*s $CURSOR_SAVE  0.00 %%" "$name" `expr ${#PAD} - ${#name}` "$PAD"
 	_debug "\n"
 	_debug "$wrapper $HAKA -c $conf --pid-file ./haka.pid --ctl-file ./haka.sock --no-daemon\n"
 	_debug "output at $out\n"
