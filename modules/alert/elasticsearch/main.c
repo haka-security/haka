@@ -17,42 +17,41 @@
 /* Limit the length of alert id suffixes */
 #define ALERT_ID_LENGTH 16
 
+#define MODULE   "elasticsearch-alert"
+
 
 const char ELASTICSEARCH_INDEX[] = "ips";
 
 static bool json_insert_string(json_t *obj, const char *key, const char *string)
 {
-	bool ret;
 	json_t *json_str = json_string(string);
 	if (!json_str) {
 		error("json string creation error");
 		return false;
 	}
-	ret = json_object_set_new(obj, key, json_str) == 0;
-	if (!ret) {
+	if (json_object_set_new(obj, key, json_str)) {
 		error("json object insertion error");
+		return false;
 	}
-	return ret;
+	return true;
 }
 
 static bool json_insert_double(json_t *obj, const char *key, double val)
 {
-	bool ret;
 	json_t *json_val = json_real(val);
 	if (!json_val) {
 		error("json real creation error");
 		return false;
 	}
-	ret = json_object_set_new(obj, key, json_val) == 0;
-	if (!ret) {
+	if (json_object_set_new(obj, key, json_val)) {
 		error("json object insertion error");
+		return false;
 	}
-	return ret;
+	return true;
 }
 
 static bool alert_add_geolocalization(json_t *list, char *address, struct geoip_handle *geoip_handler)
 {
-	bool ret;
 	if (geoip_handler) {
 		char country_code[3];
 		ipv4addr addr = ipv4_addr_from_string(address);
@@ -62,8 +61,7 @@ static bool alert_add_geolocalization(json_t *list, char *address, struct geoip_
 				error("json string creation error");
 				return false;
 			}
-			ret = json_array_append_new(list, json_country) == 0;
-			if (!ret) {
+			if (json_array_append_new(list, json_country)) {
 				error("json array insertion error");
 				return false;
 			}
@@ -95,7 +93,6 @@ json_t *json_get_or_create_list(json_t *obj, const char *key)
 
 static bool json_insert_list(json_t *obj, const char *key, char **array)
 {
-	bool ret;
 	char **iter;
 	json_t *json_str;
 
@@ -112,25 +109,22 @@ static bool json_insert_list(json_t *obj, const char *key, char **array)
 			json_decref(nodes);
 			return false;
 		}
-		ret = json_array_append_new(nodes, json_str) == 0;
-		if (!ret) {
+		if (json_array_append_new(nodes, json_str)) {
 			error("json array insertion error");
 			return false;
 		}
 	}
 
-	ret = json_object_set_new(obj, key, nodes) == 0;
-	if (!ret) {
+	if (json_object_set_new(obj, key, nodes)) {
 		error("json object insertion error");
+		return false;
 	}
 
-	return ret;
+	return true;
 }
-
 
 static bool json_insert_address(json_t *obj, char **list, struct geoip_handle *geoip_handler)
 {
-	bool ret;
 	json_t *json_str;
 	char **iter;
 	json_t *address, *geo;
@@ -155,9 +149,10 @@ static bool json_insert_address(json_t *obj, char **list, struct geoip_handle *g
 			json_decref(geo);
 			return false;
 		}
-		ret = json_array_append_new(address, json_str) == 0;
-		if (!ret) {
+		if (json_array_append_new(address, json_str)) {
 			error("json array insertion error");
+			json_decref(address);
+			json_decref(geo);
 			return false;
 		}
 	}
@@ -451,11 +446,11 @@ struct alerter_module *init_alerter(struct parameters *args)
 		error("memory error");
 		return NULL;
 	}
-	messagef(HAKA_LOG_DEBUG, "elasticsearch-alert", "using elasticsearch index %s",
+	messagef(HAKA_LOG_DEBUG, MODULE, "using elasticsearch index %s",
 		elasticsearch_alerter->index);
 
 	elasticsearch_genid(elasticsearch_alerter->alert_id_prefix, ELASTICSEARCH_ID_LENGTH);
-	messagef(HAKA_LOG_DEBUG, "elasticsearch-alert", "generating global id prefix %s",
+	messagef(HAKA_LOG_DEBUG, MODULE, "generating global id prefix %s",
 		elasticsearch_alerter->alert_id_prefix);
 
 	json_create_mapping(elasticsearch_alerter->connector, elasticsearch_alerter->index);
