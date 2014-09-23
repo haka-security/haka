@@ -4,8 +4,8 @@
     "query": {
       "list": {
         "0": {
-          "query": "_type:alert",
-          "alias": "",
+          "query": "*",
+          "alias": "all",
           "color": "#7EB26D",
           "id": 0,
           "pin": false,
@@ -15,7 +15,7 @@
         "1": {
           "id": 1,
           "color": "#E24D42",
-          "alias": "",
+          "alias": "high",
           "pin": false,
           "type": "lucene",
           "enable": true,
@@ -24,7 +24,7 @@
         "2": {
           "id": 2,
           "color": "#EAB839",
-          "alias": "",
+          "alias": "successful",
           "pin": false,
           "type": "lucene",
           "enable": true,
@@ -38,8 +38,21 @@
       ]
     },
     "filter": {
-      "list": {},
-      "ids": []
+      "list": {
+        "0": {
+          "type": "time",
+          "field": "time",
+          "from": "now-1h",
+          "to": "now",
+          "mandate": "must",
+          "active": true,
+          "alias": "",
+          "id": 0
+        }
+      },
+      "ids": [
+        0
+      ]
     }
   },
   "rows": [
@@ -84,9 +97,9 @@
               "desc"
             ]
           },
-          "auto_int": false,
+          "auto_int": true,
           "resolution": 100,
-          "interval": "5m",
+          "interval": "30s",
           "intervals": [
             "auto",
             "1s",
@@ -102,7 +115,7 @@
             "1y"
           ],
           "lines": true,
-          "fill": 6,
+          "fill": 4,
           "linewidth": 2,
           "points": false,
           "pointradius": 5,
@@ -149,9 +162,11 @@
           "counter_pos": "above",
           "spyable": true,
           "queries": {
-            "mode": "selected",
+            "mode": "all",
             "ids": [
-              0
+              0,
+              1,
+              2
             ]
           },
           "tmode": "terms",
@@ -254,9 +269,11 @@
           "exclude": [],
           "spyable": true,
           "queries": {
-            "mode": "selected",
+            "mode": "all",
             "ids": [
-              0
+              0,
+              1,
+              2
             ]
           },
           "title": "Source",
@@ -285,9 +302,11 @@
           "counter_pos": "above",
           "spyable": true,
           "queries": {
-            "mode": "selected",
+            "mode": "all",
             "ids": [
-              0
+              0,
+              1,
+              2
             ]
           },
           "tmode": "terms",
@@ -318,9 +337,11 @@
           "counter_pos": "above",
           "spyable": true,
           "queries": {
-            "mode": "selected",
+            "mode": "all",
             "ids": [
-              0
+              0,
+              1,
+              2
             ]
           },
           "tmode": "terms",
@@ -377,9 +398,11 @@
           "timeField": "@timestamp",
           "spyable": true,
           "queries": {
-            "mode": "selected",
+            "mode": "all",
             "ids": [
-              0
+              0,
+              1,
+              2
             ]
           },
           "style": {
@@ -413,9 +436,9 @@
       "history": [
         "completion:successful",
         "severity:high",
+        "*",
         "_type:alert",
         "severity:medium",
-        "*",
         "severity:*",
         "severity:low",
         "",
@@ -427,7 +450,7 @@
     {
       "type": "filtering",
       "collapse": true,
-      "notice": false,
+      "notice": true,
       "enable": true
     }
   ],
@@ -461,7 +484,9 @@
         "2h",
         "1d"
       ],
-      "timefield": "time"
+      "timefield": "time",
+      "now": true,
+      "filter_id": 0
     }
   ],
   "loader": {
