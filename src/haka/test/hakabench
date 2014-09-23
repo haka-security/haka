@@ -144,7 +144,6 @@ DATE=`date +%FT%T`
 RESULT_DIR="hakabench-result-$DATE"
 VALGRIND_WRAPPER="valgrind --tool=callgrind --collect-bus=yes --dump-instr=yes --collect-jumps=yes --cache-sim=yes --branch-sim=yes --callgrind-out-file=%s"
 PERF_WRAPPER="perf record -e cycles,instructions,cache-misses,branch-misses,cs,migrations,faults -g -v -F 100 --output=%s"
-RESULT_FILE="$RESULT_DIR/summary.txt"
 [ -z "$HAKA" ] && HAKA="haka"
 
 while getopts "dkr:hj:o:vpl" OPT; do
@@ -203,6 +202,7 @@ for TARGET in "$@"; do
 done
 
 # Save result
+RESULT_FILE="$RESULT_DIR/summary.txt"
 echo -n $RESULT > $RESULT_FILE
 
 _info "\nResults (also in $RESULT_FILE):\n"
