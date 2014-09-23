@@ -344,9 +344,12 @@ static void append(struct vector *string, const char *str)
 	memcpy(vector_get(string, char, index), str, len);
 }
 
-static void push_request(struct elasticsearch_connector *connector, struct elasticsearch_request *req)
+static void push_request(struct elasticsearch_connector *connector, struct elasticsearch_request *req,
+		bool delayed)
 {
-	start_request_thread(connector);
+	if (!delayed) {
+		start_request_thread(connector);
+	}
 
 	list2_elem_init(&req->list);
 
@@ -478,7 +481,7 @@ static void *elasticsearch_request_thread(void *_connector)
 		} \
 	}
 
-static bool elasticsearch_request(struct elasticsearch_connector *connector,
+static bool elasticsearch_request(struct elasticsearch_connector *connector, bool delayed,
 		int reqtype, const char *index, const char *type, const char *id, json_t *data)
 {
 	struct elasticsearch_request *req;
@@ -508,7 +511,7 @@ static bool elasticsearch_request(struct elasticsearch_connector *connector,
 		return false;
 	}
 
-	push_request(connector, req);
+	push_request(connector, req, delayed);
 	return true;
 
 }
@@ -526,7 +529,9 @@ bool elasticsearch_newindex(struct elasticsearch_connector *connector, const cha
 	assert(connector);
 	assert(index);
 
-	return elasticsearch_request(connector, NEWINDEX, index, NULL, NULL, data);
+	/* This request is delayed, it will wait for the next request to start the processing thread
+	 * if it is not already started. */
+	return elasticsearch_request(connector, true, NEWINDEX, index, NULL, NULL, data);
 }
 
 bool elasticsearch_insert(struct elasticsearch_connector *connector, const char *index,
@@ -537,7 +542,7 @@ bool elasticsearch_insert(struct elasticsearch_connector *connector, const char 
 	assert(index);
 	assert(type);
 
-	return elasticsearch_request(connector, INSERT, index, type, id, data);
+	return elasticsearch_request(connector, false, INSERT, index, type, id, data);
 }
 
 bool elasticsearch_update(struct elasticsearch_connector *connector, const char *index, const char *type,
@@ -559,7 +564,7 @@ bool elasticsearch_update(struct elasticsearch_connector *connector, const char 
 
 	json_decref(data);
 
-	return elasticsearch_request(connector, UPDATE, index, type, id, json_update);
+	return elasticsearch_request(connector, false, UPDATE, index, type, id, json_update);
 }
 
 #if 0
