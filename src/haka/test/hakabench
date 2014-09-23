@@ -5,13 +5,13 @@
 set -e
 
 PAD=".................................................."
-AWK_RESULT='$0 ~ /^info  benchmark: processing/ { print $4" "$7" "$10; }'
+AWK_RESULT='$0 ~ /^info  benchmark: processing/ { print $4" "$7" "$10" "$13" "$16; }'
 AWK_PROGRESS='$0 ~ /^info  benchmark: progress/ {
 	printf "\033[7D%5s %%", $4
 	fflush()
 }
 $0 ~ /^info  benchmark: processing/ {
-	printf "\033[7DPassed %13s Mib/s\033[K\n", $10
+	printf "\033[7DPassed %13s Mib/s, %18s packets/s\033[K\n", $13, $16
 }'
 
 _usage() {
