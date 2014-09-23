@@ -15,7 +15,7 @@ if(JANSSON_FOUND AND LIBCURL_FOUND AND LIBUUID_FOUND)
 	)
 
 	include_directories(${JANSSON_INCLUDE_DIR} ${LIBCURL_INCLUDE_DIR} ${LIBUUID_INCLUDE_DIR})
-	target_link_libraries(libelasticsearch LINK_PRIVATE ${LIBCURL_LIBRARY} ${LIBUUID_LIBRARY})
+	target_link_libraries(libelasticsearch LINK_PRIVATE ${LIBCURL_LIBRARY} ${LIBUUID_LIBRARY} libhaka)
 	target_link_libraries(libelasticsearch ${JANSSON_LIBRARY})
 	set_target_properties(libelasticsearch PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}
 		SOVERSION ${HAKA_VERSION_MAJOR})
