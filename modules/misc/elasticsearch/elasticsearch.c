@@ -298,14 +298,14 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 	if (res != CURLE_OK) {
 		error("post error: %s", curl_easy_strerror(res));
 		free(resdata.string);
-		return -1;
+		return -res;
 	}
 
 	res = curl_easy_getinfo(connector->curl, CURLINFO_RESPONSE_CODE, &ret_code);
 	if (res != CURLE_OK) {
 		error("post error: %s", curl_easy_strerror(res));
 		free(resdata.string);
-		return -1;
+		return -res;
 	}
 
 	messagef(HAKA_LOG_DEBUG, MODULE, "post successful: %s return %lu", url, ret_code);
@@ -320,7 +320,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 		if (!resdata.string) {
 			error("post error: invalid json response");
 			free(resdata.string);
-			return -1;
+			return -CURL_LAST;
 		}
 
 		*json_res = json_loads(resdata.string, 0, NULL);
@@ -328,7 +328,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 
 		if (!(*json_res)) {
 			error("post error: invalid json response");
-			return -1;
+			return -CURL_LAST;
 		}
 	}
 
@@ -358,11 +358,18 @@ static void push_request(struct elasticsearch_connector *connector, struct elast
 
 #define BUFFER_SIZE    1024
 
-static int do_one_request(struct elasticsearch_connector *connector, const char *url, const char *data)
+static int do_one_request(struct elasticsearch_connector *connector, const char *url, const char *data,
+		int *lasterror)
 {
 	const int code = elasticsearch_post(connector, url, data, NULL);
 	if (check_error()) {
-		messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s", clear_error());
+		assert(code < 0);
+
+		if (!lasterror || code != *lasterror) {
+			messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s", clear_error());
+			if (lasterror) *lasterror = code;
+		}
+
 		return -1;
 	}
 	return code;
@@ -373,6 +380,7 @@ static void *elasticsearch_request_thread(void *_connector)
 	struct elasticsearch_connector *connector = _connector;
 	char buffer[BUFFER_SIZE];
 	char url[BUFFER_SIZE];
+	int lasterror = 0;
 
 	connector->started = true;
 
@@ -407,8 +415,8 @@ static void *elasticsearch_request_thread(void *_connector)
 			case NEWINDEX:
 				{
 					snprintf(url, BUFFER_SIZE, "%s/%s", connector->server_address, req->index);
-					code = do_one_request(connector, url, req->data);
-					if (code && code != 400) {
+					code = do_one_request(connector, url, req->data, &lasterror);
+					if (code > 0 && code != 400) {
 						messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
 					}
 				}
@@ -446,9 +454,11 @@ static void *elasticsearch_request_thread(void *_connector)
 			snprintf(url, BUFFER_SIZE, "%s/_bulk", connector->server_address);
 			*vector_push(&connector->request_content, char) = '\0';
 
-			code = do_one_request(connector, url, vector_first(&connector->request_content, char));
+			code = do_one_request(connector, url, vector_first(&connector->request_content, char), &lasterror);
 			if (code) {
-				messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
+				if (code != -1) {
+					messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
+				}
 			}
 		}
 	}
