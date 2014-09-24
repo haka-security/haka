@@ -18,6 +18,8 @@
 
 %{
 	#include <haka/error.h>
+	#include <haka/macro.h>
+	#include <haka/thread.h>
 	#include <haka/lua/luautils.h>
 	#include <haka/lua/state.h>
 
@@ -61,7 +63,50 @@
 	}
 
 	#define SWIG_Lua_class_register SWIG_Lua_class_register_custom
+
+	/* Fix the thread safety of module loading.
+	 *
+	 * The goal is to wrap the function created by SWIG named SWIG_init in
+	 * a lock. To do this we use a trick to redefine the macro SWIG_init to
+	 * force our function to be called instead of the default one.
+	 *
+	 * SWIG_init and SWIG_init_user is a marco defined by SWIG which uses the
+	 * module name. The real function SWIG_init is defined at the end of the
+	 * generated file.
+	 */
+	#define SWIG_custom_init CONCAT(SWIG_init_user, _init)
+
+	static mutex_t luaopen_lock = MUTEX_INIT;
+
+	#ifdef __cplusplus
+	extern "C" {
+	#endif
+
+	#if ((SWIG_LUA_TARGET == SWIG_LUA_FLAVOR_ELUA) || (SWIG_LUA_TARGET == SWIG_LUA_FLAVOR_ELUAC))
+	LUALIB_API int SWIG_custom_init(lua_State* L);
+	#else
+	SWIGEXPORT int SWIG_custom_init(lua_State* L);
+	#endif
+
+	#if ((SWIG_LUA_TARGET == SWIG_LUA_FLAVOR_ELUA) || (SWIG_LUA_TARGET == SWIG_LUA_FLAVOR_ELUAC))
+	LUALIB_API int SWIG_init(lua_State* L)
+	#else
+	SWIGEXPORT int SWIG_init(lua_State* L) /* default Lua action */
+	#endif
+	{
+		#undef SWIG_init
+		#define SWIG_init SWIG_custom_init
+
+		mutex_lock(&luaopen_lock);
+		SWIG_init(L);
+		mutex_unlock(&luaopen_lock);
+	}
+
+	#ifdef __cplusplus
+	}
+	#endif
 %}
+
 
 %insert("init") %{
 	if (luaL_loadbuffer(L, SWIG_LUACODE, strlen(SWIG_LUACODE), SWIG_name)) {
@@ -82,14 +127,10 @@
 %}
 
 %exception %{
-	const wchar_t *error;
+	const char *error;
 	$action
 	if ((error = clear_error())) {
-		if (!lua_pushwstring(L, error)) {
-			if (!lua_pushwstring(L, clear_error())) {
-				lua_pushstring(L, "unknown error");
-			}
-		}
+		lua_pushstring(L, error);
 		SWIG_execfail;
 	}
 %}
@@ -120,11 +161,11 @@
 
 %{
 void type ## ___getitem(struct type *self, char *KEY) {
-	error(L"unknown field '%s'", KEY);
+	error("unknown field '%s'", KEY);
 }
 
 void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
-	error(L"unknown field '%s'", KEY);
+	error("unknown field '%s'", KEY);
 }
 %}
 

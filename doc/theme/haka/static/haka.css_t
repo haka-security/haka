@@ -220,11 +220,16 @@ li.toctree-l2 {
 	padding-left: 20px;
 }
 
+/* Admonition */
+div.admonition {
+	border-radius: 5px;
+}
+
 /* Exercise */
 div.admonition-exercise {
 	background: none repeat scroll 0 0 #f2f8ec;
     border: 1px solid #99CC66;
-    border-radius: 5px 5px 5px 5px;
+    border-radius: 5px;
 }
 
 div.admonition-exercise > p,

@@ -15,7 +15,6 @@ struct tcp_stream;
 
 %}
 
-%include "haka/lua/ipv4-addr.si"
 %include "haka/lua/swig.si"
 %include "haka/lua/ref.si"
 %include "haka/lua/ipv4.si"
@@ -56,7 +55,7 @@ struct tcp_stream
 		{
 			struct tcp_stream *stream = malloc(sizeof(struct tcp_stream));
 			if (!stream) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -89,7 +88,7 @@ struct tcp_stream
 			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
 				free(iter);
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 

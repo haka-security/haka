@@ -45,13 +45,13 @@ bool lua_pushwstring(struct lua_State *L, const wchar_t *str)
 
 	size = wcstombs(NULL, str, 0);
 	if (size == (size_t)-1) {
-		error(L"unknown error");
+		error("unknown error");
 		return false;
 	}
 
 	strmb = malloc(size+1);
 	if (!strmb) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 

@@ -5,6 +5,6 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-#define MODULE_NAME           L"nfqueue"
+#define MODULE_NAME           "nfqueue"
 
 #endif /* _CONFIG_H */

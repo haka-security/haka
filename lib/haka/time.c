@@ -27,7 +27,7 @@ bool time_gettimestamp(struct time *t)
 {
 	struct timespec time;
 	if (clock_gettime(CLOCK_REALTIME, &time)) {
-		error(L"time error: %s", errno_error(errno));
+		error("time error: %s", errno_error(errno));
 		return false;
 	}
 
@@ -119,12 +119,27 @@ bool time_tostring(const struct time *t, char *buffer, size_t len)
 	assert(len >= TIME_BUFSIZE);
 
 	if (!ctime_r(&t->secs, buffer)) {
-		error(L"time convertion error");
+		error("time convertion error");
 		return false;
 	}
 
 	assert(strlen(buffer) > 0);
 	buffer[strlen(buffer)-1] = 0; /* remove trailing '\n' */
+	return true;
+}
+
+bool time_format(const struct time *t, const char *format, char *buffer, size_t len)
+{
+	size_t size;
+	struct tm tm;
+	if (!gmtime_r(&t->secs, &tm)) {
+		error("time error: %s", errno_error(errno));
+		return false;
+	}
+
+	size = strftime(buffer, len, format, &tm);
+	buffer[size] = '\0';
+
 	return true;
 }
 

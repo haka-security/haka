@@ -44,7 +44,7 @@ bool initialize_console(struct lua_state *state)
 
 	console_path = malloc(size);
 	if (!console_path) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 
@@ -52,7 +52,7 @@ bool initialize_console(struct lua_state *state)
 
 	dir = opendir(console_path);
 	if (!dir) {
-		error(L"cannot open console script folder: %s", console_path);
+		error("cannot open console script folder: %s", console_path);
 		return false;
 	}
 	else {
@@ -75,11 +75,11 @@ bool initialize_console(struct lua_state *state)
 				continue;
 			}
 
-			messagef(HAKA_LOG_DEBUG, L"hakactl", L"loading console script '%s'", entry.d_name);
+			messagef(HAKA_LOG_DEBUG, "hakactl", "loading console script '%s'", entry.d_name);
 
 			if (luaL_dofile(state->L, fullfilename)) {
 				const char *msg = lua_tostring(state->L, -1);
-				messagef(HAKA_LOG_ERROR, L"hakactl", L"cannot open console script '%s': %s",
+				messagef(HAKA_LOG_ERROR, "hakactl", "cannot open console script '%s': %s",
 				         entry.d_name, msg);
 				lua_pop(state->L, 1);
 			}
@@ -108,7 +108,7 @@ static int run_console(int fd, int argc, char *argv[])
 
 	state = lua_state_init();
 	if (!state) {
-		messagef(HAKA_LOG_FATAL, L"hakactl", clear_error());
+		messagef(HAKA_LOG_FATAL, "hakactl", clear_error());
 		return COMMAND_FAILED;
 	}
 
@@ -119,14 +119,14 @@ static int run_console(int fd, int argc, char *argv[])
 	lua_setglobal(state->L, "hakactl");
 
 	if (!initialize_console(state)) {
-		messagef(HAKA_LOG_FATAL, L"hakactl", clear_error());
+		messagef(HAKA_LOG_FATAL, "hakactl", clear_error());
 		lua_state_close(state);
 		return COMMAND_FAILED;
 	}
 
 	user = luadebug_user_readline();
 	if (!user) {
-		messagef(HAKA_LOG_FATAL, L"hakactl", clear_error());
+		messagef(HAKA_LOG_FATAL, "hakactl", clear_error());
 		lua_state_close(state);
 		return COMMAND_FAILED;
 	}

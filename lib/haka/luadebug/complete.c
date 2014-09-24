@@ -86,7 +86,7 @@ bool complete_push_table_context(struct lua_State *L, struct luadebug_complete *
 
 		buffer = malloc(7 + table_size + 1);
 		if (!buffer) {
-			error(L"memory error");
+			error("memory error");
 			return false;
 		}
 

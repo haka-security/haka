@@ -6,7 +6,9 @@
 #define _HAKA_MACRO_H
 
 #define _STR(v)		#v
-
 #define STR(v)		_STR(v)
+
+#define _CONCAT(a, b)   a ## b
+#define CONCAT(a, b)    _CONCAT(a, b)
 
 #endif /* _HAKA_MACRO_H */

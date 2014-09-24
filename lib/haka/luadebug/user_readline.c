@@ -92,7 +92,7 @@ struct luadebug_user *luadebug_user_readline()
 {
 	struct luadebug_user *ret = malloc(sizeof(struct luadebug_user));
 	if (!ret) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 

@@ -29,7 +29,7 @@ bool lua_state_run_file(struct lua_state *L, const char *filename, int argc, cha
 void lua_state_trigger_haka_event(struct lua_state *state, const char *event);
 
 int lua_state_error_formater(struct lua_State *L);
-void lua_state_print_error(struct lua_State *L, const wchar_t *msg);
+void lua_state_print_error(struct lua_State *L, const char *msg);
 struct lua_state *lua_state_get(struct lua_State *L);
 
 extern void (*lua_state_error_hook)(struct lua_State *L);

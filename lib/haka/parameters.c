@@ -28,13 +28,13 @@ struct parameters *parameters_open(const char *file)
 
 	ret = malloc(sizeof(struct parameters));
 	if (!ret) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
 	ret->iniparser_dict = iniparser_load(file);
 	if (!ret->iniparser_dict) {
-		error(L"configuration file parsing error");
+		error("configuration file parsing error");
 		free(ret->iniparser_dict);
 		return NULL;
 	}
@@ -50,13 +50,13 @@ struct parameters *parameters_create()
 
 	ret = malloc(sizeof(struct parameters));
 	if (!ret) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
 	ret->iniparser_dict = dictionary_new(0);
 	if (!ret->iniparser_dict) {
-		error(L"memory error");
+		error("memory error");
 		free(ret->iniparser_dict);
 		return NULL;
 	}
@@ -77,7 +77,7 @@ void parameters_free(struct parameters *params)
 int parameters_open_section(struct parameters *params, const char *section)
 {
 	if (strlen(section) >= MAX_SECTION_LEN) {
-		error(L"Section name is too long");
+		error("Section name is too long");
 		return 1;
 	}
 
@@ -100,7 +100,7 @@ int parameters_close_section(struct parameters *params)
 static bool parameters_check_key(struct parameters *params, const char *key)
 {
 	if (strlen(key) >= MAX_KEY_LEN) {
-		error(L"Key is too long");
+		error("Key is too long");
 		return false;
 	}
 

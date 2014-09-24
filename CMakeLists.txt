@@ -137,14 +137,16 @@ set(CMAKE_SWIG_FLAGS "-nomoduleglobal")
 
 # Install prefix
 message(STATUS "Installation prefix (CMAKE_INSTALL_PREFIX): ${CMAKE_INSTALL_PREFIX}")
+set(LOCALINSTALL "${CMAKE_BINARY_DIR}/out" CACHE STRING "Default localinstall dest")
 
-set(ENV_SH ${CMAKE_CURRENT_BINARY_DIR}/out/env.sh)
+set(ENV_SH ${LOCALINSTALL}/env.sh)
 
 add_custom_target(localinstall
-	COMMAND $(MAKE) install DESTDIR=${CMAKE_BINARY_DIR}/out
-	COMMAND echo "export LD_LIBRARY_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}/lib/haka/modules/protocol\"" > ${ENV_SH}
-	COMMAND echo "export HAKA_PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}\"" >> ${ENV_SH}
-	COMMAND echo "export PATH=\"${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}/bin\":\"${CMAKE_CURRENT_BINARY_DIR}/out${CMAKE_INSTALL_PREFIX}/sbin\":$PATH" >> ${ENV_SH}
+	COMMAND $(MAKE) install DESTDIR=${LOCALINSTALL}
+	COMMAND echo "export LD_LIBRARY_PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/protocol:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/packet:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/misc\"" > ${ENV_SH}
+	COMMAND echo "export HAKA_PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}\"" >> ${ENV_SH}
+	COMMAND echo "export PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/bin\":\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/sbin\":$PATH" >> ${ENV_SH}
+	COMMAND echo "export LUA_PATH=\"\$(realpath \$HAKA_PATH/share/haka/lua/share/luajit* | head -n 1)/?.lua\"" >> ${ENV_SH}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Install locally..." VERBATIM
 	VERBATIM

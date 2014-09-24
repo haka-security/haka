@@ -10,12 +10,15 @@
 #include <haka/packet.h>
 #include <haka/packet_module.h>
 #include <haka/error.h>
+#include <haka/timer.h>
 
 bool lua_pushppacket(lua_State *L, struct packet *pkt)
 {
 	return lua_object_push(L, pkt, &pkt->lua_object, SWIGTYPE_p_packet, 1);
 }
 %}
+
+%include "haka/lua/ref.si"
 
 %nodefaultctor;
 %nodefaultdtor;
@@ -25,6 +28,7 @@ bool lua_pushppacket(lua_State *L, struct packet *pkt)
 struct packet {
 	%extend {
 		%immutable;
+		struct lua_ref data;
 		const struct time *timestamp { return packet_timestamp($self); }
 		struct vbuffer *payload { return packet_payload($self); }
 		int id { return packet_id($self); }
@@ -53,7 +57,7 @@ struct packet {
 				break;
 
 			case STATUS_SENT:
-				error(L"operation not supported");
+				error("operation not supported");
 				return;
 
 			default:
@@ -74,7 +78,7 @@ struct packet {
 
 			case STATUS_NORMAL:
 			case STATUS_SENT:
-				error(L"operation not supported");
+				error("operation not supported");
 				return;
 
 			default:
@@ -105,11 +109,28 @@ struct packet {
 	}
 };
 
+%{
+
+#define packet_data_get(pkt) _packet_data_get(L, pkt)
+
+struct lua_ref _packet_data_get(lua_State *L, struct packet *packet)
+{
+	if (!lua_ref_isvalid(&packet->userdata)) {
+		lua_newtable(L);
+		lua_ref_get(L, &packet->userdata, -1);
+		lua_pop(L, 1);
+	}
+
+	return packet->userdata;
+}
+
+%}
+
 %rename(packet_mode) _packet_mode;
 const char *_packet_mode();
 
 %{
-	const char *_packet_mode()
+	static const char *_packet_mode()
 	{
 		enum packet_mode mode = packet_mode();
 		switch (mode) {
@@ -117,5 +138,15 @@ const char *_packet_mode();
 		case MODE_PASSTHROUGH: return "passthrough";
 		default:               assert(0);
 		}
+	}
+%}
+
+%rename(network_time) _network_time;
+const struct time *_network_time();
+
+%{
+	static const struct time *_network_time()
+	{
+		return time_realm_current_time(&network_time);
 	}
 %}

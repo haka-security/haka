@@ -25,12 +25,13 @@ bool lua_ref_isvalid(struct lua_ref *ref)
 	return (ref->state && ref->ref != LUA_NOREF);
 }
 
-void lua_ref_get(struct lua_State *state, struct lua_ref *ref)
+void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index)
 {
 	lua_ref_clear(ref);
 
-	if (!lua_isnil(state, -1)) {
+	if (!lua_isnil(state, index)) {
 		ref->state = lua_state_get(state);
+		lua_pushvalue(state, index);
 		ref->ref = luaL_ref(state, LUA_REGISTRYINDEX);
 	}
 }

@@ -67,7 +67,7 @@ bool vector_reserve(struct vector *v, size_t count)
 		if (!data && count > 0) {
 			free(v->data);
 			v->data = NULL;
-			error(L"memory error");
+			error("memory error");
 			return false;
 		}
 		v->allocated_count = count;
@@ -101,7 +101,7 @@ bool _vector_create(struct vector *v, size_t elemsize, size_t reservecount, void
 	if (reservecount > 0) {
 		v->data = malloc(v->element_size*reservecount);
 		if (!v->data) {
-			error(L"memory error");
+			error("memory error");
 			return false;
 		}
 	}

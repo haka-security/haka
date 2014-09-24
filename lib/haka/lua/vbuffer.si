@@ -28,7 +28,7 @@ struct vbuffer_iterator *vbuffer_iterator_lua_allocate(struct vbuffer_iterator *
 {
 	struct vbuffer_iterator *ret = malloc(sizeof(struct vbuffer_iterator));
 	if (!iter) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -59,18 +59,18 @@ struct vbuffer_iterator {
 			struct vbuffer_sub *sub;
 
 			if (!data) {
-				error(L"missing data parameter");
+				error("missing data parameter");
 				return;
 			}
 
 			if (!vbuffer_iterator_isinsertable($self, data)) {
-				error(L"circular buffer insertion");
+				error("circular buffer insertion");
 				return;
 			}
 
 			sub = malloc(sizeof(struct vbuffer_sub));
 			if (!sub) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -87,12 +87,12 @@ struct vbuffer_iterator {
 		void _restore(struct vbuffer *data, bool clone=false)
 		{
 			if (!data) {
-				error(L"missing data parameter");
+				error("missing data parameter");
 				return;
 			}
 
 			if (!vbuffer_iterator_isinsertable($self, data)) {
-				error(L"circular buffer insertion");
+				error("circular buffer insertion");
 				return;
 			}
 
@@ -122,7 +122,7 @@ struct vbuffer_iterator {
 			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
 
 			if (!sub) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -139,7 +139,7 @@ struct vbuffer_iterator {
 		struct vbuffer_sub *sub(const char *mode, bool split = false)
 		{
 			if (!mode) {
-				error(L"missing mode parameter");
+				error("missing mode parameter");
 				return NULL;
 			}
 
@@ -151,7 +151,7 @@ struct vbuffer_iterator {
 				return vbuffer_iterator_sub__SWIG_0($self, -1, split);
 			}
 			else {
-				error(L"unknown sub buffer mode: %s", mode);
+				error("unknown sub buffer mode: %s", mode);
 				return NULL;
 			}
 		}
@@ -159,7 +159,7 @@ struct vbuffer_iterator {
 		void move_to(struct vbuffer_iterator *iter)
 		{
 			if (!iter) {
-				error(L"invalid source iterator");
+				error("invalid source iterator");
 				return;
 			}
 
@@ -208,7 +208,7 @@ struct vbuffer_iterator_blocking {
 		{
 			struct vbuffer_iterator_blocking *iter = malloc(sizeof(struct vbuffer_iterator_blocking));
 			if (!iter) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -403,7 +403,7 @@ struct vbuffer_sub {
 		{
 			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
 			if (!sub) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -447,7 +447,7 @@ struct vbuffer_sub {
 		void replace(struct vbuffer *data)
 		{
 			if (!vbuffer_iterator_isinsertable(&$self->begin, data)) {
-				error(L"circular buffer insertion");
+				error("circular buffer insertion");
 				return;
 			}
 
@@ -477,7 +477,7 @@ struct vbuffer_sub {
 			if (!select || !ref) {
 				free(select);
 				free(ref);
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -496,7 +496,7 @@ struct vbuffer_sub {
 		{
 			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
 			if (!sub) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -512,7 +512,7 @@ struct vbuffer_sub {
 		struct vbuffer_sub *sub(int offset, const char *mode)
 		{
 			if (!mode) {
-				error(L"missing mode parameter");
+				error("missing mode parameter");
 				return NULL;
 			}
 
@@ -520,7 +520,7 @@ struct vbuffer_sub {
 				return vbuffer_sub_sub__SWIG_0($self, offset, -1);
 			}
 			else {
-				error(L"unknown sub buffer mode: %s", mode);
+				error("unknown sub buffer mode: %s", mode);
 				return NULL;
 			}
 		}
@@ -529,7 +529,7 @@ struct vbuffer_sub {
 		{
 			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -545,14 +545,14 @@ struct vbuffer_sub {
 		struct vbuffer_iterator *pos(const char *pos)
 		{
 			if (!pos) {
-				error(L"missing pos parameter");
+				error("missing pos parameter");
 				return NULL;
 			}
 
 			if (strcmp(pos, "begin") == 0) return vbuffer_sub_pos__SWIG_0($self, 0);
 			else if (strcmp(pos, "end") == 0) return vbuffer_sub_pos__SWIG_0($self, -1);
 			else {
-				error(L"unknown buffer position: %s", pos);
+				error("unknown buffer position: %s", pos);
 				return NULL;
 			}
 		}
@@ -567,7 +567,7 @@ struct vbuffer_sub {
 			*TEMP_SIZE = vbuffer_sub_size($self);
 			*TEMP_OUTPUT = malloc(*TEMP_SIZE+1);
 			if (!*TEMP_OUTPUT) {
-				error(L"memory error");
+				error("memory error");
 				return;
 			}
 
@@ -597,7 +597,7 @@ struct vbuffer {
 		{
 			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
 			if (!buf) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -613,7 +613,7 @@ struct vbuffer {
 		{
 			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
 			if (!buf) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -653,7 +653,7 @@ struct vbuffer {
 		{
 			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -665,14 +665,14 @@ struct vbuffer {
 		struct vbuffer_iterator *pos(const char *pos)
 		{
 			if (!pos) {
-				error(L"missing pos parameter");
+				error("missing pos parameter");
 				return NULL;
 			}
 
 			if (strcmp(pos, "begin") == 0) return vbuffer_pos__SWIG_0($self, 0);
 			else if (strcmp(pos, "end") == 0) return vbuffer_pos__SWIG_0($self, -1);
 			else {
-				error(L"unknown buffer position: %s", pos);
+				error("unknown buffer position: %s", pos);
 				return NULL;
 			}
 		}
@@ -681,7 +681,7 @@ struct vbuffer {
 		{
 			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
 			if (!sub) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -693,7 +693,7 @@ struct vbuffer {
 		struct vbuffer_sub *sub(int offset, const char *mode)
 		{
 			if (!mode) {
-				error(L"missing mode parameter");
+				error("missing mode parameter");
 				return NULL;
 			}
 
@@ -701,7 +701,7 @@ struct vbuffer {
 				return vbuffer_sub__SWIG_0($self, offset, -1);
 			}
 			else {
-				error(L"unknown sub buffer mode: %s", mode);
+				error("unknown sub buffer mode: %s", mode);
 				return NULL;
 			}
 		}
@@ -715,7 +715,7 @@ struct vbuffer {
 		void _append(struct vbuffer *buffer)
 		{
 			if ($self == buffer) {
-				error(L"circular buffer insertion");
+				error("circular buffer insertion");
 				return;
 			}
 
@@ -732,11 +732,11 @@ struct vbuffer {
 			else if (strcmp(_mode, "copy") == 0) mode = CLONE_COPY;
 			else if (strcmp(_mode, "ro orig") == 0) mode = CLONE_RO_ORIG;
 			else if (strcmp(_mode, "ro clone") == 0) mode = CLONE_RO_CLONE;
-			else error(L"invalid clone mode");
+			else error("invalid clone mode");
 
 			buf = malloc(sizeof(struct vbuffer));
 			if (!buf) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -765,7 +765,7 @@ struct vbuffer_stream {
 		{
 			struct vbuffer_stream *stream = malloc(sizeof(struct vbuffer_stream));
 			if (!stream) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -788,7 +788,7 @@ struct vbuffer_stream {
 		{
 			struct vbuffer_iterator *iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -809,7 +809,7 @@ struct vbuffer_stream {
 		{
 			struct vbuffer *buf = malloc(sizeof(struct vbuffer));
 			if (!buf) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -839,7 +839,7 @@ struct vbuffer_sub_stream {
 		{
 			struct vbuffer_sub_stream *stream = malloc(sizeof(struct vbuffer_sub_stream));
 			if (!stream) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -868,7 +868,7 @@ struct vbuffer_sub_stream {
 
 			iter = malloc(sizeof(struct vbuffer_iterator));
 			if (!iter) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 
@@ -887,7 +887,7 @@ struct vbuffer_sub_stream {
 		{
 			struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
 			if (!sub) {
-				error(L"memory error");
+				error("memory error");
 				return NULL;
 			}
 

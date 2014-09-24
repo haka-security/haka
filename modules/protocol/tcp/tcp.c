@@ -23,10 +23,10 @@ struct tcp_pseudo_header {
 	uint16         len;
 };
 
-static void alert_invalid_packet(struct ipv4 *packet, wchar_t *desc)
+static void alert_invalid_packet(struct ipv4 *packet, char *desc)
 {
-	TOWSTR(srcip, ipv4addr, ipv4_get_src(packet));
-	TOWSTR(dstip, ipv4addr, ipv4_get_dst(packet));
+	TOSTR(srcip, ipv4addr, ipv4_get_src(packet));
+	TOSTR(dstip, ipv4addr, ipv4_get_dst(packet));
 	ALERT(invalid_packet, 1, 1)
 		description: desc,
 		severity: HAKA_ALERT_LOW,
@@ -87,21 +87,21 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 
 	/* Not a TCP packet */
 	if (ipv4_get_proto(packet) != TCP_PROTO) {
-		error(L"Not a tcp packet");
+		error("Not a tcp packet");
 		return NULL;
 	}
 
 	assert(packet->payload);
 
 	if (!vbuffer_check_size(packet->payload, sizeof(struct tcp_header), NULL)) {
-		alert_invalid_packet(packet, L"corrupted tcp packet, size is too small");
+		alert_invalid_packet(packet, "corrupted tcp packet, size is too small");
 		ipv4_action_drop(packet);
 		return NULL;
 	}
 
 	tcp = malloc(sizeof(struct tcp));
 	if (!tcp) {
-		error(L"Failed to allocate memory");
+		error("Failed to allocate memory");
 		return NULL;
 	}
 
@@ -115,7 +115,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	hdrlen = _hdrlen.hdr_len << TCP_HDR_LEN;
 
 	if (hdrlen < sizeof(struct tcp_header) || !vbuffer_check_size(packet->payload, hdrlen, NULL)) {
-		alert_invalid_packet(packet, L"corrupted tcp packet, header length is too small");
+		alert_invalid_packet(packet, "corrupted tcp packet, header length is too small");
 		ipv4_action_drop(packet);
 		free(tcp);
 		return NULL;
@@ -161,7 +161,7 @@ struct tcp *tcp_create(struct ipv4 *packet)
 
 	struct tcp *tcp = malloc(sizeof(struct tcp));
 	if (!tcp) {
-		error(L"Failed to allocate memory");
+		error("Failed to allocate memory");
 		return NULL;
 	}
 

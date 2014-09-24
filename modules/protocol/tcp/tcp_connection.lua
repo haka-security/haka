@@ -19,6 +19,7 @@ local tcp_connection_dissector = haka.dissector.new{
 tcp_connection_dissector.cnx_table = ipv4.cnx_table()
 
 tcp_connection_dissector:register_event('new_connection')
+tcp_connection_dissector:register_event('receive_packet')
 tcp_connection_dissector:register_streamed_event('receive_data')
 tcp_connection_dissector:register_event('end_connection')
 
@@ -479,6 +480,7 @@ end
 
 function tcp_connection_dissector.method:emit(pkt, direction)
 	self.connection:update_stat(direction, pkt.ip.len)
+	self:trigger('receive_packet', pkt, direction)
 
 	self.state:update(direction, pkt)
 end

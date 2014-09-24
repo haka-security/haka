@@ -46,17 +46,17 @@ static void lua_dispatcher_hook(lua_State *L, lua_Debug *ar);
 
 static int panic(lua_State *L)
 {
-	messagef(HAKA_LOG_FATAL, L"lua", L"lua panic: %s", lua_tostring(L, -1));
+	messagef(HAKA_LOG_FATAL, "lua", "lua panic: %s", lua_tostring(L, -1));
 	raise(SIGQUIT);
 	return 0;
 }
 
-void lua_state_print_error(struct lua_State *L, const wchar_t *msg)
+void lua_state_print_error(struct lua_State *L, const char *msg)
 {
 	if (msg)
-		messagef(HAKA_LOG_ERROR, L"lua", L"%ls: %s", msg, lua_tostring(L, -1));
+		messagef(HAKA_LOG_ERROR, "lua", "%s: %s", msg, lua_tostring(L, -1));
 	else
-		messagef(HAKA_LOG_ERROR, L"lua", L"%s", lua_tostring(L, -1));
+		messagef(HAKA_LOG_ERROR, "lua", "%s", lua_tostring(L, -1));
 
 	lua_pop(L, 1);
 }
@@ -69,7 +69,7 @@ int lua_state_error_formater(lua_State *L)
 		lua_state_error_hook(L);
 	}
 
-	if (getlevel(L"lua") >= HAKA_LOG_DEBUG) {
+	if (getlevel("lua") >= HAKA_LOG_DEBUG) {
 		if (!lua_isstring(L, -1)) {
 			return 0;
 		}
@@ -424,11 +424,11 @@ void lua_state_trigger_haka_event(struct lua_state *state, const char *event)
 	lua_pushnil(state->L);                /* emitter */
 	lua_getfield(state->L, -5, event);    /* event */
 	if (lua_isnil(state->L, -1)) {
-		messagef(HAKA_LOG_ERROR, L"lua", L"invalid haka event: %s", event);
+		messagef(HAKA_LOG_ERROR, "lua", "invalid haka event: %s", event);
 	}
 	else {
 		if (lua_pcall(state->L, 3, 0, h)) {
-			lua_state_print_error(state->L, L"lua");
+			lua_state_print_error(state->L, "lua");
 		}
 	}
 
@@ -512,7 +512,7 @@ static void lua_interrupt_call(struct lua_state_ext *state)
 
 		if (lua_pcall(state->state.L, func->data ? 1 : 0, 0, h)) {
 			if (!lua_isnil(state->state.L, -1)) {
-				lua_state_print_error(state->state.L, L"lua");
+				lua_state_print_error(state->state.L, "lua");
 			}
 			else {
 				lua_pop(state->state.L, 1);
@@ -574,7 +574,7 @@ bool lua_state_interrupt(struct lua_state *_state, lua_function func, void *data
 	struct lua_interrupt_data *func_data;
 
 	if (!lua_state_isvalid(&state->state)) {
-		error(L"invalid lua state");
+		error("invalid lua state");
 		return false;
 	}
 

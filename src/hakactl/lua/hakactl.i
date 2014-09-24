@@ -43,21 +43,21 @@
 
 		code = lua_marshal(L, 2, &codesize);
 		if (!code) {
-			lua_pushwstring(L, clear_error());
+			lua_pushstring(L, clear_error());
 			lua_error(L);
 			return 0;
 		}
 
 		/* Send the remote command */
 		if (!ctl_send_chars(console_fd, "EXECUTE", -1)) {
-			lua_pushwstring(L, clear_error());
+			lua_pushstring(L, clear_error());
 			lua_error(L);
 			return 0;
 		}
 
 		if (!ctl_send_int(console_fd, thread_id) ||
 		    !ctl_send_chars(console_fd, code, codesize)) {
-			lua_pushwstring(L, clear_error());
+			lua_pushstring(L, clear_error());
 			lua_error(L);
 			return 0;
 		}
@@ -73,7 +73,7 @@
 		while (true) {
 			answer = ctl_recv_status(console_fd);
 			if (answer == -1) {
-				lua_pushwstring(L, clear_error());
+				lua_pushstring(L, clear_error());
 				lua_error(L);
 				return 0;
 			}
@@ -83,14 +83,14 @@
 
 				code = ctl_recv_chars(console_fd, &codesize);
 				if (!code) {
-					lua_pushwstring(L, clear_error());
+					lua_pushstring(L, clear_error());
 					lua_error(L);
 					return 0;
 				}
 
 				if (!lua_unmarshal(L, code, codesize)) {
 					free(code);
-					lua_pushwstring(L, clear_error());
+					lua_pushstring(L, clear_error());
 					lua_error(L);
 					return 0;
 				}

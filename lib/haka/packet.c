@@ -44,7 +44,7 @@ int set_packet_module(struct module *module)
 	struct packet_module *prev_packet_module = packet_module;
 
 	if (module && module->type != MODULE_PACKET) {
-		error(L"'%ls' is not a packet module", module->name);
+		error("'%s' is not a packet module", module->name);
 		return 1;
 	}
 
@@ -119,9 +119,10 @@ int packet_receive(struct packet **pkt)
 
 	if (!ret && *pkt) {
 		(*pkt)->lua_object = lua_object_init;
+		lua_ref_init(&(*pkt)->userdata);
 		atomic_set(&(*pkt)->ref, 1);
 		assert(vbuffer_isvalid(&(*pkt)->payload));
-		messagef(HAKA_LOG_DEBUG, L"packet", L"received packet id=%lli",
+		messagef(HAKA_LOG_DEBUG, "packet", "received packet id=%lli",
 				packet_module->get_id(*pkt));
 
 		if (!packet_module->is_realtime()) {
@@ -147,7 +148,7 @@ void packet_drop(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	messagef(HAKA_LOG_DEBUG, L"packet", L"dropping packet id=%lli",
+	messagef(HAKA_LOG_DEBUG, "packet", "dropping packet id=%lli",
 			packet_module->get_id(pkt));
 
 	packet_module->verdict(pkt, FILTER_DROP);
@@ -163,7 +164,7 @@ void packet_accept(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 
-	messagef(HAKA_LOG_DEBUG, L"packet", L"accepting packet id=%lli",
+	messagef(HAKA_LOG_DEBUG, "packet", "accepting packet id=%lli",
 			packet_module->get_id(pkt));
 
 	{
@@ -188,6 +189,7 @@ bool packet_release(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 	if (atomic_dec(&pkt->ref) == 0) {
+		lua_ref_clear(&pkt->userdata);
 		lua_object_release(pkt, &pkt->lua_object);
 		packet_module->release_packet(pkt);
 		return true;
@@ -210,6 +212,7 @@ struct packet *packet_new(size_t size)
 	}
 
 	pkt->lua_object = lua_object_init;
+	lua_ref_init(&pkt->userdata);
 	atomic_set(&pkt->ref, 1);
 	assert(vbuffer_isvalid(&pkt->payload));
 
@@ -227,7 +230,7 @@ bool packet_send(struct packet *pkt)
 
 	case STATUS_NORMAL:
 	case STATUS_SENT:
-		error(L"operation not supported (packet captured)");
+		error("operation not supported (packet captured)");
 		return false;
 
 	default:
@@ -235,7 +238,7 @@ bool packet_send(struct packet *pkt)
 		return false;
 	}
 
-	messagef(HAKA_LOG_DEBUG, L"packet", L"sending packet id=%lli",
+	messagef(HAKA_LOG_DEBUG, "packet", "sending packet id=%lli",
 		packet_module->get_id(pkt));
 
 	{

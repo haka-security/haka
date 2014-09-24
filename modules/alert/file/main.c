@@ -77,7 +77,7 @@ static bool write_to_file(struct file_alerter *alerter, uint64 id, const struct 
 	}
 
 	flockfile(alerter->output);
-	fprintf(alerter->output, "%salert%s: %s%ls\n", color, clear,
+	fprintf(alerter->output, "%salert%s: %s%s\n", color, clear,
 	        update ? "update " : "", alert_tostring(id, time, alert, "", indent, alerter->color));
 	funlockfile(alerter->output);
 
@@ -98,7 +98,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 {
 	struct file_alerter *file_alerter = malloc(sizeof(struct file_alerter));
 	if (!file_alerter) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -115,7 +115,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 	}
 
 	if (file_alerter->format == FORMAT_LAST) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -123,7 +123,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 	if (filename && strcmp(filename, "-") != 0) {
 		file_alerter->output = fopen(filename, "a");
 		if (!file_alerter->output) {
-			error(L"cannot open file '%s' for alert", filename);
+			error("cannot open file '%s' for alert", filename);
 			return NULL;
 		}
 	} else {
@@ -150,8 +150,8 @@ void cleanup_alerter(struct alerter_module *module)
 struct alert_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_ALERT,
-		name:        L"File alert",
-		description: L"Alert output to file",
+		name:        "File alert",
+		description: "Alert output to file",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup

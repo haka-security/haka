@@ -55,15 +55,22 @@ static void help(const char *program)
 	usage(stdout, program);
 
 	fprintf(stdout, "Options:\n");
-	fprintf(stdout, "\t-h,--help:          Display this information\n");
-	fprintf(stdout, "\t--version:          Display version information\n");
-	fprintf(stdout, "\t-d,--debug:         Display debug output\n");
+	fprintf(stdout, "\t-h,--help:            Display this information\n");
+	fprintf(stdout, "\t--version:            Display version information\n");
+	fprintf(stdout, "\t-d,--debug:           Display debug output\n");
+	fprintf(stdout, "\t--ctl-file <ctl-file> Full path to socket control file\n");
 
 	fprintf(stdout, "\nCommands:\n");
 	while (*iter) {
 		fprintf(stdout, "\t%s\n", (*iter)->help);
 		++iter;
 	}
+}
+
+static char *ctl_file_path = NULL;
+
+static void clean_exit()
+{
 }
 
 static int parse_cmdline(int *argc, char ***argv)
@@ -74,6 +81,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "version",      no_argument,       0, 'v' },
 		{ "help",         no_argument,       0, 'h' },
 		{ "debug",        no_argument,       0, 'd' },
+		{ "ctl-file",     required_argument, 0, 'S' },
 		{ 0,              0,                 0, 0 }
 	};
 
@@ -92,6 +100,15 @@ static int parse_cmdline(int *argc, char ***argv)
 			setlevel(HAKA_LOG_DEBUG, NULL);
 			break;
 
+		case 'S':
+			ctl_file_path = strdup(optarg);
+			if (!ctl_file_path) {
+				message(HAKA_LOG_FATAL, "core", "memory error");
+				clean_exit();
+				exit(2);
+			}
+			break;
+
 		default:
 			usage(stderr, (*argv)[0]);
 			return ERROR_INVALID_OPTIONS;
@@ -103,13 +120,18 @@ static int parse_cmdline(int *argc, char ***argv)
 		return ERROR_INVALID_OPTIONS;
 	}
 
+	if (!ctl_file_path) {
+		ctl_file_path = strdup(HAKA_CTL_SOCKET_FILE);
+		if (!ctl_file_path) {
+			message(HAKA_LOG_FATAL, "core", "memory error");
+			clean_exit();
+			exit(2);
+		}
+	}
+
 	*argc -= optind;
 	*argv += optind;
 	return -1;
-}
-
-static void clean_exit()
-{
 }
 
 static int ctl_open_socket()
@@ -124,7 +146,7 @@ static int ctl_open_socket()
 
 	bzero((char *)&addr, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, HAKA_CTL_SOCKET_FILE);
+	strcpy(addr.sun_path, ctl_file_path);
 
 	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 	if (connect(fd, (struct sockaddr *)&addr, len)) {
@@ -146,12 +168,13 @@ int main(int argc, char *argv[])
 
 	ret = parse_cmdline(&argc, &argv);
 	if (ret >= 0) {
+		free(ctl_file_path);
 		clean_exit();
 		return ret;
 	}
 
 	if (!module_set_default_path()) {
-		fprintf(stderr, "%ls\n", clear_error());
+		fprintf(stderr, "%s\n", clear_error());
 		clean_exit();
 		exit(1);
 	}

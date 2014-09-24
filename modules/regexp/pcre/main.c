@@ -11,7 +11,7 @@
 #include <haka/regexp_module.h>
 #include <haka/thread.h>
 
-#define LOG_MODULE L"pcre"
+#define LOG_MODULE "pcre"
 
 /* We enforce multiline on all API */
 #define DEFAULT_COMPILE_OPTIONS PCRE_MULTILINE
@@ -28,7 +28,7 @@
 #define CHECK_REGEXP_TYPE(re)\
 	do {\
 		if (re == NULL || re->super.module != &HAKA_MODULE) {\
-			error(L"Wrong regexp struct passed to PCRE module");\
+			error("Wrong regexp struct passed to PCRE module");\
 			goto type_error;\
 		}\
 	} while(0)
@@ -36,7 +36,7 @@
 #define CHECK_REGEXP_SINK_TYPE(sink)\
 	do {\
 		if (sink == NULL || sink->super.regexp->module != &HAKA_MODULE) {\
-			error(L"Wrong regexp_sink struct passed to PCRE module");\
+			error("Wrong regexp_sink struct passed to PCRE module");\
 			goto type_error;\
 		}\
 	} while(0)
@@ -82,8 +82,8 @@ static int                      _vbpartial_exec(struct regexp_sink_pcre *sink, s
 struct regexp_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_REGEXP,
-		name:        L"PCRE regexp engine",
-		description: L"PCRE regexp engine",
+		name:        "PCRE regexp engine",
+		description: "PCRE regexp engine",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup
@@ -159,7 +159,7 @@ static struct regexp *compile(const char *pattern, int options)
 
 	re = malloc(sizeof(struct regexp_pcre));
 	if (!re) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -178,7 +178,7 @@ static struct regexp *compile(const char *pattern, int options)
 
 error:
 	free(re);
-	error(L"PCRE compilation failed with error '%s' at offset %d", errorstr, erroffset);
+	error("PCRE compilation failed with error '%s' at offset %d", errorstr, erroffset);
 	return NULL;
 }
 
@@ -249,7 +249,7 @@ static struct regexp_sink_pcre *_create_sink(struct regexp *_re)
 
 	sink = malloc(sizeof(struct regexp_sink_pcre));
 	if (!sink) {
-		error(L"memory error");
+		error("memory error");
 		goto error;
 	}
 
@@ -260,7 +260,7 @@ static struct regexp_sink_pcre *_create_sink(struct regexp *_re)
 	sink->wscount = re->wscount_max;
 	sink->workspace = calloc(sink->wscount, sizeof(int));
 	if (!sink->workspace) {
-		error(L"memory error");
+		error("memory error");
 		goto error;
 	}
 
@@ -306,10 +306,10 @@ static bool workspace_grow(struct regexp_sink_pcre *sink)
 
 	sink->wscount *= 2;
 
-	messagef(HAKA_LOG_DEBUG, LOG_MODULE, L"growing PCRE workspace to %d int", sink->wscount);
+	messagef(HAKA_LOG_DEBUG, LOG_MODULE, "growing PCRE workspace to %d int", sink->wscount);
 
 	if (sink->wscount > WSCOUNT_MAX) {
-		error(L"PCRE workspace too big, max allowed size is %d int", WSCOUNT_MAX);
+		error("PCRE workspace too big, max allowed size is %d int", WSCOUNT_MAX);
 		return false;
 	}
 
@@ -327,7 +327,7 @@ static bool workspace_grow(struct regexp_sink_pcre *sink)
 
 	sink->workspace = realloc(sink->workspace, sink->wscount*sizeof(int));
 	if (!sink->workspace) {
-		error(L"memory error");
+		error("memory error");
 		return false;
 	}
 
@@ -388,7 +388,7 @@ static int _exec(struct regexp *_re, const char *buf, int len, struct regexp_res
 		case PCRE_ERROR_NOMATCH:
 			return REGEXP_NOMATCH;
 		default:
-			error(L"PCRE internal error %d", ret);
+			error("PCRE internal error %d", ret);
 			return REGEXP_ERROR;
 	}
 
@@ -407,7 +407,7 @@ static int _partial_exec(struct regexp_sink_pcre *sink, const char *buf, int len
 	assert(buf);
 
 	if (sink->workspace == NULL) {
-		error(L"Invalid sink. NULL workspace");
+		error("Invalid sink. NULL workspace");
 		goto error;
 	}
 
@@ -491,7 +491,7 @@ try_again:
 			return sink->super.match;
 		default:
 			sink->super.match = REGEXP_ERROR;
-			error(L"PCRE internal error %d", ret);
+			error("PCRE internal error %d", ret);
 			return sink->super.match;
 	}
 

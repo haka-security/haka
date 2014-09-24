@@ -30,7 +30,7 @@ static void cleanup()
 
 static bool post(uint64 id, const struct time *time, const struct alert *alert, bool update)
 {
-	syslog(LOG_NOTICE, "alert: %s%ls", update ? "update " : "", alert_tostring(id, time, alert, "", " ", false));
+	syslog(LOG_NOTICE, "alert: %s%s", update ? "update " : "", alert_tostring(id, time, alert, "", " ", false));
 	return true;
 }
 
@@ -63,8 +63,8 @@ void cleanup_alerter(struct alerter_module *alerter)
 struct alert_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_ALERT,
-		name:        L"Syslog alert",
-		description: L"Alert output to syslog",
+		name:        "Syslog alert",
+		description: "Alert output to syslog",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup

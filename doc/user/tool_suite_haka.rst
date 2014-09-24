@@ -128,6 +128,7 @@ Example
 
 .. literalinclude:: ../../sample/gettingstarted/gettingstarted.conf
     :tab-width: 4
+    :language: ini
 
 Service
 -------

@@ -5,6 +5,23 @@
 # Tests
 include(TestPcap)
 
+add_custom_target(bench
+	COMMAND ${CMAKE_COMMAND}
+		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
+		-DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+		-DEXE=${CMAKE_CURRENT_SOURCE_DIR}/hakabench
+		-DEXE_OPTIONS=${TEST_BENCH_OPTIONS}
+		-DBENCH=${CMAKE_CURRENT_SOURCE_DIR}/benchmark
+		-DHAKA_PATH=${TEST_RUNDIR}
+		-DCONF=${CMAKE_BINARY_DIR}/test/etc/haka/haka.conf
+		-P ${CTEST_MODULE_DIR}/TestBenchRun.cmake
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+	COMMENT "Run benchmark test" VERBATIM
+	DEPENDS pretests
+)
+
+install(PROGRAMS hakabench DESTINATION bin)
+
 TEST_PCAP(core rule-error)
 TEST_PCAP(core hakaevents)
 TEST_PCAP(core timestamp)

@@ -50,7 +50,7 @@ static struct vbuffer_chunk *vbuffer_chunk_create_end(bool writable)
 {
 	struct vbuffer_chunk *chunk = malloc(sizeof(struct vbuffer_chunk));
 	if (!chunk) {
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -89,7 +89,7 @@ struct vbuffer_chunk *vbuffer_chunk_create(struct vbuffer_data *data, size_t off
 	struct vbuffer_chunk *chunk = malloc(sizeof(struct vbuffer_chunk));
 	if (!chunk) {
 		if (data) data->ops->free(data);
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -119,7 +119,7 @@ struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_chunk *insert, str
 	chunk = malloc(sizeof(struct vbuffer_chunk));
 	if (!chunk) {
 		if (data) data->ops->free(data);
-		error(L"memory error");
+		error("memory error");
 		return NULL;
 	}
 
@@ -144,7 +144,7 @@ struct vbuffer_chunk *vbuffer_chunk_insert_ctl(struct vbuffer_chunk *insert, str
 INLINE bool vbuffer_chunk_check_writeable(struct vbuffer_chunk *chunk)
 {
 	if (!chunk->flags.writable) {
-		error(L"read only buffer");
+		error("read only buffer");
 		return false;
 	}
 	return true;
@@ -444,7 +444,7 @@ static bool _vbuffer_iterator_check(const struct vbuffer_iterator *position)
 	assert(position);
 
 	if (!vbuffer_iterator_isvalid(position)) {
-		error(L"empty iterator");
+		error("empty iterator");
 		return false;
 	}
 
@@ -453,7 +453,7 @@ static bool _vbuffer_iterator_check(const struct vbuffer_iterator *position)
 		    position->offset > position->chunk->size ||
 		    !position->chunk->list.next ||
 		    !position->chunk->list.prev) {
-			error(L"invalid buffer iterator");
+			error("invalid buffer iterator");
 			return false;
 		}
 	}
@@ -584,7 +584,7 @@ static bool _vbuffer_iterator_check_available(struct vbuffer_iterator *position,
 	while (!iter->flags.end) {
 		if (enditer && enditer == iter) {
 			if (offset > endoffset) {
-				error(L"invalid buffer end");
+				error("invalid buffer end");
 				return false;
 			}
 
@@ -953,7 +953,7 @@ bool vbuffer_iterator_unmark(struct vbuffer_iterator *position)
 
 	mark = vbuffer_data_cast(position->chunk->data, vbuffer_data_ctl_mark);
 	if (!mark) {
-		error(L"iterator is not a mark");
+		error("iterator is not a mark");
 		return false;
 	}
 
@@ -1215,7 +1215,7 @@ static struct vbuffer_chunk *_vbuffer_sub_iterate(struct vbuffer_sub *data, size
 
 		if (chunk == end) {
 			if (endoffset < offset) {
-				error(L"invalid buffer end");
+				error("invalid buffer end");
 				return NULL;
 			}
 			else {
@@ -1419,7 +1419,7 @@ bool vbuffer_restore(struct vbuffer_iterator *position, struct vbuffer *data, bo
 
 	ctl = vbuffer_data_cast(position->chunk->data, vbuffer_data_ctl_select);
 	if (!ctl) {
-		error(L"invalid restore iterator");
+		error("invalid restore iterator");
 		return false;
 	}
 
@@ -1596,7 +1596,7 @@ const uint8 *vbuffer_sub_flatten(struct vbuffer_sub *data, size_t *rsize)
 		bool has_ctl = false;
 		size_t size;
 		if (!_vbuffer_compact(data, &has_ctl, &size) || has_ctl) {
-			error(L"buffer cannot be flatten");
+			error("buffer cannot be flatten");
 			return NULL;
 		}
 
@@ -1684,7 +1684,7 @@ int64 vbuffer_asnumber(struct vbuffer_sub *data, bool bigendian)
 	}
 
 	if (length > 8) {
-		error(L"asnumber: unsupported size %zu", length);
+		error("asnumber: unsupported size %zu", length);
 		return 0;
 	}
 
@@ -1709,7 +1709,7 @@ int64 vbuffer_asnumber(struct vbuffer_sub *data, bool bigendian)
 	case 4: return bigendian ? SWAP_FROM_BE(int32, *(int32*)ptr) : SWAP_FROM_LE(int32, *(int32*)ptr);
 	case 8: return bigendian ? SWAP_FROM_BE(int64, *(int64*)ptr) : SWAP_FROM_LE(int64, *(int64*)ptr);
 	default:
-		error(L"asnumber: unsupported size %zu", length);
+		error("asnumber: unsupported size %zu", length);
 		return 0;
 	}
 }
@@ -1723,13 +1723,13 @@ bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 	}
 
 	if (length > 8) {
-		error(L"setnumber: unsupported size %zu", length);
+		error("setnumber: unsupported size %zu", length);
 		return false;
 	}
 
 	if ((num < 0 && (-num & ((1ULL << (length*8))-1)) != -num) ||
 	    (num >= 0 && (num & ((1ULL << (length*8))-1)) != num)) {
-		error(L"setnumber: invalid number, value does not fit in %d bytes", length);
+		error("setnumber: invalid number, value does not fit in %zu bytes", length);
 		return false;
 	}
 
@@ -1747,7 +1747,7 @@ bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 		case 4: *(int32*)ptr = bigendian ? SWAP_TO_BE(int32, (int32)num) : SWAP_TO_LE(int32, (int32)num); break;
 		case 8: *(int64*)ptr = bigendian ? SWAP_TO_BE(int64, num) : SWAP_TO_LE(int64, num); break;
 		default:
-			error(L"setnumber: unsupported size %zu", length);
+			error("setnumber: unsupported size %zu", length);
 			return false;
 		}
 	}
@@ -1766,7 +1766,7 @@ bool vbuffer_setnumber(struct vbuffer_sub *data, bool bigendian, int64 num)
 		case 4: temp.i32 = bigendian ? SWAP_TO_BE(int32, (int32)num) : SWAP_TO_LE(int32, (int32)num); break;
 		case 8: temp.i64 = bigendian ? SWAP_TO_BE(int64, num) : SWAP_TO_LE(int64, num); break;
 		default:
-			error(L"setnumber: unsupported size %zu", length);
+			error("setnumber: unsupported size %zu", length);
 			return false;
 		}
 
@@ -1817,17 +1817,17 @@ int64 vbuffer_asbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool 
 	}
 
 	if (begin >= length) {
-		error(L"asbits: invalid bit offset");
+		error("asbits: invalid bit offset");
 		return -1;
 	}
 
 	if (end > length) {
-		error(L"asbits: invalid bit size");
+		error("asbits: invalid bit size");
 		return -1;
 	}
 
 	if (end > 8) {
-		error(L"asbits: unsupported size");
+		error("asbits: unsupported size");
 		return -1;
 	}
 
@@ -1854,13 +1854,13 @@ int64 vbuffer_asbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool 
 bool vbuffer_setbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool bigendian, int64 num)
 {
 	if (bits > 64) {
-		error(L"setbits: unsupported size %zu", bits);
+		error("setbits: unsupported size %zu", bits);
 		return false;
 	}
 
 	if ((num < 0 && (-num & ((1ULL << bits)-1)) != -num) ||
 	    (num >= 0 && (num & ((1ULL << bits)-1)) != num)) {
-		error(L"setbits: invalid number, value does not fit in %d bits", bits);
+		error("setbits: invalid number, value does not fit in %zd bits", bits);
 		return false;
 	}
 
@@ -1878,17 +1878,17 @@ bool vbuffer_setbits(struct vbuffer_sub *data, size_t offset, size_t bits, bool 
 		}
 
 		if (begin >= length) {
-			error(L"setbits: invalid bit offset");
+			error("setbits: invalid bit offset");
 			return -1;
 		}
 
 		if (end > length) {
-			error(L"setbits: invalid bit size");
+			error("setbits: invalid bit size");
 			return -1;
 		}
 
 		if (end > 8) {
-			error(L"setbits: unsupported size");
+			error("setbits: unsupported size");
 			return false;
 		}
 

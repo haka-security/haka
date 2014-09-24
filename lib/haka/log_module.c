@@ -23,7 +23,7 @@ struct logger *log_module_logger(struct module *module, struct parameters *args)
 	struct log_module *log_module;
 
 	if (module->type != MODULE_LOG) {
-		error(L"invalid module type: not a log module");
+		error("invalid module type: not a log module");
 		return NULL;
 	}
 

@@ -4,7 +4,12 @@
 
 %{
 
-struct ipv4_addr;
+#include <haka/ipv4-addr.h>
+
+struct ipv4_addr {
+	ipv4addr   addr;
+};
+
 struct ipv4_addr *ipv4_addr_new(ipv4addr a);
 
 %}

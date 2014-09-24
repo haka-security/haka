@@ -29,7 +29,7 @@
 #define IPV4_GET_BITS(type, v, r)        GET_BITS(SWAP_FROM_BE(type, v), r)
 #define IPV4_SET_BITS(type, v, r, x)     SWAP_TO_BE(type, SET_BITS(SWAP_FROM_BE(type, v), r, x))
 
-#define IPV4_CHECK(ip, ...)              if (!(ip) || !(ip)->packet) { error(L"invalid ipv4 packet"); return __VA_ARGS__; }
+#define IPV4_CHECK(ip, ...)              if (!(ip) || !(ip)->packet) { error("invalid ipv4 packet"); return __VA_ARGS__; }
 
 #define IPV4_FLAG_RB               15
 #define IPV4_FLAG_DF               15-1
