@@ -6,18 +6,18 @@ Hakabana
 ========
 
 Hakabana is a monitoring tool that uses Kibana and Elasticsearch to visualize
-traffic passing through Haka in *real-time*.
+traffic passing through Haka in *real-time*. The package is already installed
+in the haka-live iso but can be downloaded directly from http://www.haka-security.org.
 
 Getting started
 ^^^^^^^^^^^^^^^
 
-Hakabana module is installed at ``/usr/local/share/haka/modules/misc/hakabana``.
+Hakabana module is installed at ``/usr/share/haka/modules/misc/hakabana``.
 It consists of a set of security rules that export network traffic to
 Elasticsearch server. They are then displayed thanks to our Kibana dashboard.
 
 Hakabana ships with a default configuration allowing starting quickly with
-traffic monitoring. It is available in
-``/usr/local/share/haka/hakabana``
+traffic monitoring. It is available in ``/usr/share/haka/hakabana``
 
 .. admonition:: Exercise
 
@@ -29,7 +29,7 @@ traffic monitoring. It is available in
         haka -c haka.conf
 
     * visit the url: http://localhost/kibana/ and load hakabana dashboard
-      from ``/usr/local/share/haka/hakabana/dashboard/``
+      from ``/usr/share/haka/hakabana/dashboard/``
 
 I want more DNS info
 ^^^^^^^^^^^^^^^^^^^^
