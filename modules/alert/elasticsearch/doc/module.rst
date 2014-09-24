@@ -45,6 +45,27 @@ Example :
     #elasticsearch_index = "ips"
     geoip_database = "/usr/share/GeoIP/GeoIP.dat"
 
+Kibana and Elasticsearch setup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Install and start Elasticsearch server
+
+.. code-block:: console
+
+    sudo dpkg -i elasticsearch-<version>.deb
+    sudo service elasticsearch start
+
+* Install and setup Kibana
+
+.. code-block:: console
+
+    tar -zxvf kibana-<version>.tar.gz \
+        --strip-components=1 \
+            -C <webserver-path>/kibana
+
+.. note:: you may need to edit 'config.js' file and set the elasticsearch
+    address (e.g. elasticsearch = http://127.0.0.1:9200)
+
 Kibana dashboard
 ^^^^^^^^^^^^^^^^
 
