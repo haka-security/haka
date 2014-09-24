@@ -16,7 +16,7 @@ if(LIBGEOIP_FOUND)
 	)
 
 	include_directories(${LIBGEOIP_INCLUDE_DIR})
-	target_link_libraries(geoip ${LIBGEOIP_LIBRARY})
+	target_link_libraries(geoip LINK_PRIVATE ${LIBGEOIP_LIBRARY})
 
 	SWIG_FIX_ENTRYPOINT(geoip misc)
 
