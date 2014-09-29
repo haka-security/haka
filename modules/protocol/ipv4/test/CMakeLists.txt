@@ -24,5 +24,4 @@ TEST_PCAP(ipv4 fragment_overrun)
 TEST_PCAP(ipv4 fragment_incomplete)
 # TEST_PCAP(ipv4 options)
 
-TEST_UNIT(MODULE ipv4 NAME unit FILES unit.c)
-target_link_libraries(ipv4-unit ipv4)
+TEST_UNIT(MODULE ipv4 NAME unit FILES unit.c LIBS ipv4)
