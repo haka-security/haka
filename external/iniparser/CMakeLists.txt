@@ -2,11 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-add_library(libiniparser STATIC
-	src/src/dictionary.c
-	src/src/iniparser.c)
+find_library(LIBINIPARSER_FOUND iniparser)
 
-# The static library is going to be used in a shared library
-SET_TARGET_PROPERTIES(libiniparser PROPERTIES COMPILE_FLAGS "-fPIC")
+if(NOT LIBINIPARSER_FOUND)
 
-set(LIBINIPARSER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/src" CACHE INTERNAL "iniparser include path")
+	add_library(iniparser STATIC
+		src/src/dictionary.c
+		src/src/iniparser.c)
+
+	# The static library is going to be used in a shared library
+	SET_TARGET_PROPERTIES(iniparser PROPERTIES COMPILE_FLAGS "-fPIC")
+
+	set(LIBINIPARSER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/src" CACHE INTERNAL "iniparser include path")
+else()
+	find_path(LIBINIPARSER_INCLUDE "iniparser.h")
+endif()

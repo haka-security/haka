@@ -18,8 +18,9 @@
 #include <sys/wait.h>
 
 
-#define IPTABLES_SAVE         "/sbin/iptables-save"
-#define IPTABLES_RESTORE      "/sbin/iptables-restore"
+#define IPTABLES_SAVE         IPTABLES_PATH "/iptables-save"
+
+#define IPTABLES_RESTORE      IPTABLES_PATH "/iptables-restore"
 
 
 static pid_t fork_with_pipes(int pipefd_in[2], int pipefd_out[2])
