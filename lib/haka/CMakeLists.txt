@@ -82,7 +82,7 @@ set_target_properties(libhaka PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VE
 
 target_link_libraries(libhaka LINK_PRIVATE ${DL_LIBRARIES})
 target_link_libraries(libhaka LINK_PRIVATE ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(libhaka LINK_PRIVATE libiniparser)
+target_link_libraries(libhaka LINK_PRIVATE iniparser)
 target_link_libraries(libhaka LINK_PRIVATE rt)
 target_link_libraries(libhaka LINK_PRIVATE m)
 target_link_libraries(libhaka LINK_PRIVATE ${EDITLINE_LIBRARY})
