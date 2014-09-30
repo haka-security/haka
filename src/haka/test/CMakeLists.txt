@@ -9,7 +9,7 @@ add_custom_target(bench
 	COMMAND ${CMAKE_COMMAND}
 		-DCTEST_MODULE_DIR=${CTEST_MODULE_DIR}
 		-DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
-		-DEXE=${TEST_RUNDIR}/share/haka/scripts/hakabench
+		-DEXE=${TEST_RUNDIR}/bin/hakabench
 		-DBENCH=${CMAKE_CURRENT_SOURCE_DIR}/benchmark
 		-DHAKA=${TEST_RUNDIR}/sbin/haka
 		-DHAKA_PATH=${TEST_RUNDIR}
