@@ -24,6 +24,7 @@ typedef enum {
 	HAKA_LOG_WARNING, /**< Warning. */
 	HAKA_LOG_INFO, /**< Informations. */
 	HAKA_LOG_DEBUG, /**< Debugging informations. */
+	HAKA_LOG_TRACE, /**< Trace debugging (only available in debug build). */
 	HAKA_LOG_DEFAULT, /**< Reset module log level to global one. */
 
 	HAKA_LOG_LEVEL_LAST /**< Last log level. For internal use only. */
@@ -44,14 +45,26 @@ const char *level_to_str(log_level level);
 log_level str_to_level(const char *str);
 
 /**
- * Log a message without string formating.
- */
-void message(log_level level, const char *module, const char *message);
-
-/**
  * Log a message with string formating.
  */
-void messagef(log_level level, const char *module, const char *fmt, ...) FORMAT_PRINTF(3, 4);
+void _messagef(log_level level, const char *module, const char *fmt, ...) FORMAT_PRINTF(3, 4);
+
+#define _LOG(level, module, fmt, ...) \
+	do { if (level <= getlevel(module)) { \
+		_messagef(level, module, fmt, ##__VA_ARGS__); \
+	} } while(0)
+
+#define LOG_FATAL(module, fmt, ...)    _LOG(HAKA_LOG_FATAL, module, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(module, fmt, ...)    _LOG(HAKA_LOG_ERROR, module, fmt, ##__VA_ARGS__)
+#define LOG_WARNING(module, fmt, ...)  _LOG(HAKA_LOG_WARNING, module, fmt, ##__VA_ARGS__)
+#define LOG_INFO(module, fmt, ...)     _LOG(HAKA_LOG_INFO, module, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(module, fmt, ...)    _LOG(HAKA_LOG_DEBUG, module, fmt, ##__VA_ARGS__)
+
+#ifdef HAKA_DEBUG
+	#define LOG_TRACE(module, fmt, ...) _LOG(HAKA_LOG_TRACE, module, fmt, ##__VA_ARGS__)
+#else
+	#define LOG_TRACE(module, fmt, ...)
+#endif
 
 /**
  * Set the logging level to display for a given module name. The `module` parameter can be

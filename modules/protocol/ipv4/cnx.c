@@ -62,7 +62,7 @@ static void cnx_log(struct cnx_table_elem *elem, const char *msg)
 
 	ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
 	ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
-	messagef(HAKA_LOG_DEBUG, "cnx", "%s connection %s:%u -> %s:%u",
+	LOG_DEBUG("cnx", "%s connection %s:%u -> %s:%u",
 			msg, srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
 
 }

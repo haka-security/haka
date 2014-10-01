@@ -306,7 +306,7 @@ static bool workspace_grow(struct regexp_sink_pcre *sink)
 
 	sink->wscount *= 2;
 
-	messagef(HAKA_LOG_DEBUG, LOG_MODULE, "growing PCRE workspace to %d int", sink->wscount);
+	LOG_DEBUG(LOG_MODULE, "growing PCRE workspace to %d int", sink->wscount);
 
 	if (sink->wscount > WSCOUNT_MAX) {
 		error("PCRE workspace too big, max allowed size is %d int", WSCOUNT_MAX);

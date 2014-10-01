@@ -95,7 +95,7 @@ void luadebug_interactive_enter(struct lua_State *L, const char *single, const c
 		session.user = user;
 
 		if (!session.user) {
-			message(HAKA_LOG_ERROR, "interactive", "no input/output handler");
+			LOG_ERROR("interactive", "no input/output handler");
 			mutex_unlock(&current_user_mutex);
 			return;
 		}

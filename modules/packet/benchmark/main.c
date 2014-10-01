@@ -73,7 +73,7 @@ static void cleanup()
 	bandwidth = size * 8 / duration / MEBI;
 	packets_per_s = packet_count / duration;
 
-	messagef(HAKA_LOG_INFO, MODULE,
+	LOG_INFO(MODULE,
 			"processing %zd bytes in %lld packets took %lld.%.9u seconds being %02f Mib/s and %02f packets/s",
 			size, packet_count, (int64)difftime.secs, difftime.nsecs, bandwidth, packets_per_s);
 
@@ -88,7 +88,7 @@ static int init(struct parameters *args)
 		input_file = strdup(input);
 	}
 	else {
-		messagef(HAKA_LOG_ERROR, MODULE, "missing input parameter");
+		LOG_ERROR(MODULE, "missing input parameter");
 		cleanup();
 		return 1;
 	}
@@ -138,7 +138,7 @@ static bool load_packet(struct packet_module_state *state)
 
 	ret = pcap_next_ex(state->pd.pd, &header, &p);
 	if (ret == -1) {
-		messagef(HAKA_LOG_ERROR, MODULE, "%s", pcap_geterr(state->pd.pd));
+		LOG_ERROR(MODULE, "%s", pcap_geterr(state->pd.pd));
 		return 1;
 	}
 	else if (ret == -2) {
@@ -151,7 +151,7 @@ static bool load_packet(struct packet_module_state *state)
 	}
 	else if (header->caplen == 0 ||
 			header->len < header->caplen) {
-		messagef(HAKA_LOG_ERROR, MODULE, "skipping malformed packet %llu", ++state->packet_id);
+		LOG_ERROR(MODULE, "skipping malformed packet %llu", ++state->packet_id);
 		return 0;
 	}
 	else {
@@ -177,7 +177,7 @@ static bool load_packet(struct packet_module_state *state)
 		packet->timestamp.nsecs = header->ts.tv_usec*1000;
 
 		if (header->caplen < header->len)
-			messagef(HAKA_LOG_WARNING, MODULE, "packet truncated");
+			LOG_WARNING(MODULE, "packet truncated");
 
 		packet->protocol = get_protocol(state->pd.link_type, &data, &data_offset);
 
@@ -185,7 +185,7 @@ static bool load_packet(struct packet_module_state *state)
 		ret = vbuffer_select(&sub, &packet->core_packet.payload, NULL);
 		vbuffer_release(&data);
 		if (!ret) {
-			messagef(HAKA_LOG_ERROR, MODULE, "malformed packet %llu", packet->id);
+			LOG_ERROR(MODULE, "malformed packet %llu", packet->id);
 			free(packet);
 			return ENOMEM;
 		}
@@ -215,12 +215,12 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 
 	assert(input);
 
-	messagef(HAKA_LOG_INFO, MODULE, "opening file '%s'", input);
+	LOG_INFO(MODULE, "opening file '%s'", input);
 
 	state->pd.pd = pcap_open_offline(input, errbuf);
 
 	if (!state->pd.pd) {
-		messagef(HAKA_LOG_ERROR, MODULE, "%s", errbuf);
+		LOG_ERROR(MODULE, "%s", errbuf);
 		return false;
 	}
 
@@ -235,7 +235,7 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 	/* Determine the datalink layer type. */
 	if ((state->pd.link_type = pcap_datalink(state->pd.pd)) < 0)
 	{
-		messagef(HAKA_LOG_ERROR, MODULE, "%s", pcap_geterr(state->pd.pd));
+		LOG_ERROR(MODULE, "%s", pcap_geterr(state->pd.pd));
 		pcap_close(state->pd.pd);
 		return false;
 	}
@@ -253,14 +253,14 @@ static bool load_pcap(struct packet_module_state *state, const char *input)
 	case DLT_SLIP:
 	case DLT_PPP:
 	default:
-		messagef(HAKA_LOG_ERROR, MODULE, "%s", "unsupported data link");
+		LOG_ERROR(MODULE, "%s", "unsupported data link");
 		pcap_close(state->pd.pd);
 		return false;
 	}
 
-	messagef(HAKA_LOG_INFO, MODULE, "loading packet in memory from '%s'", input);
+	LOG_INFO(MODULE, "loading packet in memory from '%s'", input);
 	while(load_packet(state) == 0);
-	messagef(HAKA_LOG_INFO, MODULE, "loaded %zd bytes in memory", state->size);
+	LOG_INFO(MODULE, "loaded %zd bytes in memory", state->size);
 
 	pcap_close(state->pd.pd);
 
@@ -313,7 +313,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				if (difftime.secs >= PROGRESS_DELAY) {
 					state->pd.last_progress = time;
 					if (percent > 0) {
-						messagef(HAKA_LOG_INFO, MODULE, "progress %.2f %%", percent);
+						LOG_INFO(MODULE, "progress %.2f %%", percent);
 					}
 				}
 			} else {
@@ -346,7 +346,7 @@ static const char *packet_get_dissector(struct packet *orig_pkt)
 		return "ipv4";
 
 	case -1:
-		messagef(HAKA_LOG_ERROR, MODULE, "malformed packet %llu", pkt->id);
+		LOG_ERROR(MODULE, "malformed packet %llu", pkt->id);
 
 	default:
 		return NULL;

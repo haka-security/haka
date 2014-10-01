@@ -4,6 +4,12 @@
 
 %{
 #include <haka/log.h>
+
+static void message(log_level level, const char *module, const char *message)
+{
+	_messagef(level, module, "%s", message);
+}
+
 %}
 
 %include "haka/lua/swig.si"

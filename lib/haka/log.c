@@ -29,19 +29,12 @@ static int stdout_module_size = 0;
 #define MODULE_COLOR   CYAN
 
 static const char *level_color[HAKA_LOG_LEVEL_LAST] = {
-	BOLD RED,    // LOG_FATAL
-	BOLD RED,    // LOG_ERROR
-	BOLD YELLOW, // LOG_WARNING
-	BOLD,        // LOG_INFO
-	CLEAR,       // LOG_DEBUG
-};
-
-static const char *message_color[HAKA_LOG_LEVEL_LAST] = {
-	CLEAR,       // LOG_FATAL
-	CLEAR,       // LOG_ERROR
-	CLEAR,       // LOG_WARNING
-	CLEAR,       // LOG_INFO
-	CLEAR,       // LOG_DEBUG
+	BOLD RED,    // HAKA_LOG_FATAL
+	BOLD RED,    // HAKA_LOG_ERROR
+	BOLD YELLOW, // HAKA_LOG_WARNING
+	BOLD,        // HAKA_LOG_INFO
+	CLEAR,       // HAKA_LOG_DEBUG
+	CLEAR,       // HAKA_LOG_TRACE
 };
 
 #define MESSAGE_BUFSIZE   3072
@@ -187,6 +180,7 @@ static const char *str_level[HAKA_LOG_LEVEL_LAST] = {
 	"warn",
 	"info",
 	"debug",
+	"trace",
 	"default",
 };
 
@@ -231,8 +225,8 @@ bool stdout_message(log_level lvl, const char *module, const char *message)
 	}
 
 	if (stdout_use_colors) {
-		fprintf(fd, "%s%s" CLEAR "%*s " MODULE_COLOR "%s:" CLEAR "%*s %s%s\n" CLEAR, level_color[lvl], level_str,
-				level_size-5, "", module, stdout_module_size-module_size, "", message_color[lvl], message);
+		fprintf(fd, "%s%s" CLEAR "%*s " MODULE_COLOR "%s:" CLEAR "%*s %s\n" CLEAR, level_color[lvl], level_str,
+				level_size-5, "", module, stdout_module_size-module_size, "", message);
 	}
 	else
 	{
@@ -247,48 +241,42 @@ bool stdout_message(log_level lvl, const char *module, const char *message)
 	return true;
 }
 
-void message(log_level level, const char *module, const char *message)
+static void message(log_level level, const char *module, const char *message, struct message_context_t *context)
 {
-	struct message_context_t *context = message_context();
-	if (context && !context->doing_message) {
-		const log_level max_level = getlevel(module);
-		if (level <= max_level) {
-			bool remove_pass = false;
+	bool remove_pass = false;
 
-			context->doing_message = true;
+	context->doing_message = true;
 
-			struct logger *iter;
+	struct logger *iter;
 
-			rwlock_readlock(&log_module_lock);
-			for (iter=loggers; iter; iter = list_next(iter)) {
-				iter->message(iter, level, module, message);
+	rwlock_readlock(&log_module_lock);
+	for (iter=loggers; iter; iter = list_next(iter)) {
+		iter->message(iter, level, module, message);
 
-				remove_pass |= iter->mark_for_remove;
-			}
-			rwlock_unlock(&log_module_lock);
-
-			if (stdout_enable) {
-				stdout_message(level, module, message);
-			}
-
-			if (remove_pass) {
-				rwlock_readlock(&log_module_lock);
-				for (iter=loggers; iter; iter = list_next(iter)) {
-					if (iter->mark_for_remove) {
-						rwlock_unlock(&log_module_lock);
-						remove_logger(iter);
-						rwlock_readlock(&log_module_lock);
-					}
-				}
-				rwlock_unlock(&log_module_lock);
-			}
-
-			context->doing_message = false;
-		}
+		remove_pass |= iter->mark_for_remove;
 	}
+	rwlock_unlock(&log_module_lock);
+
+	if (stdout_enable) {
+		stdout_message(level, module, message);
+	}
+
+	if (remove_pass) {
+		rwlock_readlock(&log_module_lock);
+		for (iter=loggers; iter; iter = list_next(iter)) {
+			if (iter->mark_for_remove) {
+				rwlock_unlock(&log_module_lock);
+				remove_logger(iter);
+				rwlock_readlock(&log_module_lock);
+			}
+		}
+		rwlock_unlock(&log_module_lock);
+	}
+
+	context->doing_message = false;
 }
 
-void messagef(log_level level, const char *module, const char *fmt, ...)
+void _messagef(log_level level, const char *module, const char *fmt, ...)
 {
 	const log_level max_level = getlevel(module);
 	if (level <= max_level) {
@@ -297,7 +285,7 @@ void messagef(log_level level, const char *module, const char *fmt, ...)
 			va_list ap;
 			va_start(ap, fmt);
 			vsnprintf(context->buffer, MESSAGE_BUFSIZE, fmt, ap);
-			message(level, module, context->buffer);
+			message(level, module, context->buffer, context);
 			va_end(ap);
 		}
 	}
@@ -372,7 +360,7 @@ void setlevel(log_level level, const char *module)
 
 	if (!module) {
 		if (level == HAKA_LOG_DEFAULT) {
-			message(HAKA_LOG_WARNING, "core", "cannot set log level default for global level");
+			LOG_WARNING("core", "cannot set log level default for global level");
 		} else {
 			default_level = level;
 		}

@@ -192,7 +192,7 @@ static int run_remote(int fd, const char *command)
 	if (check_status(fd, NULL) == COMMAND_SUCCESS) {
 		luadebug_user_remote_server(fd, readline_user);
 		if (check_error()) {
-			message(HAKA_LOG_FATAL, "debug", clear_error());
+			LOG_FATAL("debug", clear_error());
 			return COMMAND_FAILED;
 		}
 		return COMMAND_SUCCESS;
