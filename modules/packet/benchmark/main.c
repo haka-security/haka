@@ -115,6 +115,8 @@ static void cleanup_state(struct packet_module_state *state)
 	if (!time_isvalid(&start) || time_cmp(&state->start, &start) < 0) {
 		start = state->start;
 	}
+
+	time_gettimestamp(&state->end);
 	if (!time_isvalid(&end) || time_cmp(&state->end, &end) > 0) {
 		end = state->end;
 	}
@@ -333,8 +335,6 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 static void packet_verdict(struct packet *orig_pkt, filter_result result)
 {
-	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	time_gettimestamp(&pkt->state->end);
 }
 
 static const char *packet_get_dissector(struct packet *orig_pkt)
