@@ -140,16 +140,18 @@ bool time_realm_destroy(struct time_realm *realm)
 
 void time_realm_update(struct time_realm *realm, const struct time *value)
 {
-	struct time difftime, oldtime = realm->time;
+	const struct time oldtime = realm->time;
 	int sign;
 	assert(realm->mode == TIME_REALM_STATIC);
 
-	sign = time_diff(&difftime, value, &oldtime);
+	sign = time_cmp(value, &oldtime);
 	if (sign < 0) {
 		LOG_DEBUG("timer", "static time going backward (ignored)");
 	}
 	else {
-		LOG_DEBUG("timer", "static time offset %s%f seconds", sign >= 0? "+" : "-", time_sec(&difftime));
+		UNUSED struct time difftime;
+		LOG_TRACE("timer", "static time offset %s%f seconds", sign >= 0 ? "+" : "-",
+				(time_diff(&difftime, value, &oldtime), time_sec(&difftime)));
 
 		realm->time = *value;
 		realm->check_timer = true;
