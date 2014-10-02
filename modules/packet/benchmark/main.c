@@ -25,6 +25,7 @@
 #define MODULE "benchmark"
 
 #define PROGRESS_DELAY      5 /* 5 seconds */
+#define PROGRESS_FREQ       10000
 #define MEBI 1048576.f
 
 struct pcap_packet {
@@ -45,7 +46,8 @@ struct packet_module_state {
 	struct pcap_packet  *received_tail;
 	int                  repeated;
 	size_t               size;
-	long long            packet_count;
+	uint64               packet_count;
+	uint64               progress_samples;
 	bool                 started;
 	struct time          start;
 	struct time          end;
@@ -59,7 +61,7 @@ static mutex_t       stats_lock = MUTEX_INIT;
 static struct time   start = INVALID_TIME;
 static struct time   end = INVALID_TIME;
 static size_t        size;
-static long long     packet_count;
+static uint64        packet_count;
 
 static void cleanup()
 {
@@ -74,7 +76,7 @@ static void cleanup()
 	packets_per_s = packet_count / duration;
 
 	LOG_INFO(MODULE,
-			"processing %zd bytes in %lld packets took %lld.%.9u seconds being %02f Mib/s and %02f packets/s",
+			"processing %zd bytes in %llu packets took %lld.%.9u seconds being %02f Mib/s and %02f packets/s",
 			size, packet_count, (int64)difftime.secs, difftime.nsecs, bandwidth, packets_per_s);
 
 	free(input_file);
@@ -281,6 +283,7 @@ static struct packet_module_state *init_state(int thread_id)
 	state->repeated = 0;
 	state->size = 0;
 	state->packet_count = 0;
+	state->progress_samples = 0;
 	state->started = false;
 
 	bzero(state, sizeof(struct packet_module_state));
@@ -303,24 +306,29 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	if (!state->current) {
 		state->repeated++;
 		if (state->repeated < repeat) {
-			const float percent = state->repeated * 100.f / repeat;
-			struct time time, difftime;
-			time_gettimestamp(&time);
+			if (state->progress_samples > PROGRESS_FREQ) {
+				const float percent = state->repeated * 100.f / repeat;
+				struct time time, difftime;
+				time_gettimestamp(&time);
 
-			if (time_isvalid(&state->pd.last_progress)) {
-				time_diff(&difftime, &time, &state->pd.last_progress);
+				if (time_isvalid(&state->pd.last_progress)) {
+					time_diff(&difftime, &time, &state->pd.last_progress);
 
-				if (difftime.secs >= PROGRESS_DELAY) {
-					state->pd.last_progress = time;
-					if (percent > 0) {
-						LOG_INFO(MODULE, "progress %.2f %%", percent);
+					if (difftime.secs >= PROGRESS_DELAY) {
+						state->pd.last_progress = time;
+						if (percent > 0) {
+							LOG_INFO(MODULE, "progress %.2f %%", percent);
+						}
 					}
+				} else {
+					state->pd.last_progress = time;
 				}
-			} else {
-				state->pd.last_progress = time;
+
+				state->progress_samples %= PROGRESS_FREQ;
 			}
 
 			state->current = state->received_head;
+			state->progress_samples += state->packet_count;
 		} else {
 			/* No more packet */
 			return 1;
