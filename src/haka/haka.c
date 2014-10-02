@@ -49,6 +49,9 @@ static void help(const char *program)
 			"\t                           (default: " HAKA_CONFIG ")\n");
 	fprintf(stdout, "\t-r,--rule <rule>:        Override the rule configuration file\n");
 	fprintf(stdout, "\t-d,--debug:              Display debug output\n");
+#ifdef HAKA_DEBUG
+	fprintf(stdout, "\t                   (Repeat twice for trace output)\n");
+#endif
 	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
 	fprintf(stdout, "\t                          Override configuration parameter\n");
 	fprintf(stdout, "\t-l,--loglevel <level>:    Set the log level\n");
@@ -103,6 +106,9 @@ static int parse_cmdline(int *argc, char ***argv)
 {
 	int c;
 	int index = 0;
+#ifdef HAKA_DEBUG
+	int debug_count = 0;
+#endif
 
 	static struct option long_options[] = {
 		{ "version",              no_argument,       0, 'v' },
@@ -123,6 +129,12 @@ static int parse_cmdline(int *argc, char ***argv)
 	while ((c = getopt_long(*argc, *argv, "dl:hc:r:P:S:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
+#ifdef HAKA_DEBUG
+			if (debug_count++ > 0) {
+				add_override("log:level", "trace");
+				break;
+			}
+#endif
 			add_override("log:level", "debug");
 			break;
 
