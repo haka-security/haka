@@ -16,7 +16,7 @@ local my_group = haka.rule_group{
 	name = "my_group",
 	hook = tcp_connection.events.new_connection,
 	init = function (flow, pkt)
-		haka.log.debug("filter", "Entering packet filtering rules : %d --> %d",
+		haka.log.debug("Entering packet filtering rules : %d --> %d",
 			pkt.srcport, pkt.dstport)
 	end,
 
@@ -45,7 +45,7 @@ local my_group = haka.rule_group{
 my_group:rule{
 	eval = function (flow, pkt)
 		if pkt.dstport == 80 then
-			haka.log("Filter", "Authorizing traffic on port 80")
+			haka.log("Authorizing traffic on port 80")
 			return true
 		end
 	end
@@ -54,7 +54,7 @@ my_group:rule{
 my_group:rule{
 	eval = function (flow, pkt)
 		if pkt.dstport == 22 then
-			haka.log("Filter", "Authorizing traffic on port 22")
+			haka.log("Authorizing traffic on port 22")
 			return true
 		end
 	end

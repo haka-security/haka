@@ -19,7 +19,7 @@ haka.rule {
 		request.headers['If-Modified-Since'] = nil
 		request.headers['If-None-Match'] = nil
 
-		haka.log("bluring", "received request for %s on %s", request.uri,
+		haka.log("received request for %s on %s", request.uri,
 			request.headers['Host'])
 	end
 }
@@ -39,7 +39,7 @@ haka.rule{
 	eval = function (flow, iter)
 		local result = regexp:match(iter, true)
 		if result then
-			haka.log("bluring", "bluring response")
+			haka.log("bluring response")
 			result:pos('begin'):insert(haka.vbuffer_from(css))
 		end
 	end
