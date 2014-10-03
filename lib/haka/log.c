@@ -27,6 +27,8 @@ static mutex_t stdout_mutex;
 static bool stdout_use_colors = 0;
 static int stdout_module_size = 0;
 
+static void cleanup_sections(void);
+
 #define MODULE_COLOR   CYAN
 
 static const char *level_color[HAKA_LOG_LEVEL_LAST] = {
@@ -108,6 +110,8 @@ FINI static void _message_fini()
 		ret = local_storage_destroy(&local_message_key);
 		assert(ret);
 	}
+
+	cleanup_sections();
 }
 
 struct message_context_t {
@@ -279,6 +283,15 @@ struct section_info {
 
 static struct section_info sections[MAX_SECTION];
 static int sections_count = 0;
+
+static void cleanup_sections(void)
+{
+	int i;
+	for (i=0; i<sections_count; ++i) {
+		free(sections[i].name);
+		sections[i].name = NULL;
+	}
+}
 
 section_id register_log_section(const char *name)
 {
