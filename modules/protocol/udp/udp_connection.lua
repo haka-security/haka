@@ -9,6 +9,7 @@ local ipv4 = require("protocol/ipv4")
 local udp = require("protocol/udp")
 
 local module = {}
+local log = haka.log_section("udp")
 
 local udp_connection_dissector = haka.dissector.new{
 	type = haka.helper.FlowDissector,
@@ -54,7 +55,7 @@ function udp_connection_dissector:receive(pkt)
 
 	if not ret then
 		if err then
-			haka.log.error(dissector.name, "%s", err)
+			log.error("%s", err)
 			dissector:error()
 		end
 	end
@@ -203,7 +204,7 @@ function module.helper.UdpFlowDissector.install_udp_rule(cls, port)
 		hook = udp_connection_dissector.events.new_connection,
 		eval = function (flow, pkt)
 			if pkt.dstport == port then
-				haka.log.debug(cls.name, string.format("selecting %s dissector on flow", cls.name))
+				log.debug("selecting %s dissector on flow", cls.name)
 				flow:select_next_dissector(cls:new(flow))
 			end
 		end

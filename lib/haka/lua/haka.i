@@ -128,7 +128,11 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 
 %luacode {
 	haka = unpack({...})
+}
 
+%include "lua/log.si"
+
+%luacode {
 	require('class')
 	require('utils')
 	require('events')
@@ -154,7 +158,6 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 %include "lua/regexp.si"
 %include "lua/packet.si"
 %include "lua/alert.si"
-%include "lua/log.si"
 %include "lua/state_machine.si"
 
 %luacode {

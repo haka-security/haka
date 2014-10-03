@@ -7,6 +7,8 @@ local check = require('check')
 
 local type = {}
 local dissector = {}
+local log = haka.log_section("dissector")
+local log_lua = haka.log_section("lua")
 
 
 --
@@ -89,7 +91,7 @@ function dissector.pcall(self, f)
 
 	if not ret then
 		if err then
-			haka.log.error(self.name, "%s", err)
+			log_lua.error("%s: %s", self.name, err)
 			return self:error()
 		end
 	end
@@ -304,7 +306,7 @@ function dissector.new(args)
 	check.assert(args.type, string.format("no type defined for dissector '%s'", args.name))
 
 	if haka.mode ~= 'console' then
-		haka.log.info("dissector", "register new dissector '%s'", args.name)
+		log("register new dissector '%s'", args.name)
 	end
 
 	local d = class.class(args.name, args.type)

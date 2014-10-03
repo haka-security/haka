@@ -15,6 +15,7 @@ haka.state_machine_instance = nil
 local class = require('class')
 
 local states = {}
+local log = haka.log_section("states")
 
 states.StateMachine = class.class('StateMachine')
 
@@ -66,7 +67,7 @@ function states.StateMachine.method:compile()
 		end
 
 		for name, _ in pairs(unused) do
-			haka.log.warning("state_machine", "state machine %s never jump on state: %s", self.name, name)
+			log.warning("state machine %s never jump on state: %s", self.name, name)
 		end
 
 		self._state_machine.initial = initial._compiled_state
@@ -245,7 +246,7 @@ function state_machine.new(name, def)
 	sm:compile()
 
 	if state_machine.debug then
-		haka.log.warning("state_machine", "dumping '%s' state_machine graph to %s-state-machine.dot", sm.name, sm.name)
+		log.warning("dumping '%s' state_machine graph to %s-state-machine.dot", sm.name, sm.name)
 		f = io.open(string.format("%s-state-machine.dot", sm.name), "w+")
 		sm:dump_graph(f)
 		f:close()

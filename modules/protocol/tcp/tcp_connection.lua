@@ -10,6 +10,7 @@ local ipv4 = require("protocol/ipv4")
 local tcp = require("protocol/tcp")
 
 local module = {}
+local log = haka.log_section("tcp")
 
 local tcp_connection_dissector = haka.dissector.new{
 	type = haka.helper.FlowDissector,
@@ -42,7 +43,7 @@ function tcp_connection_dissector:receive(pkt)
 				end, debug.format_error)
 
 			if err then
-				haka.log.error(self.name, "%s", err)
+				log.error("%s", err)
 				pkt:drop()
 				self:error()
 				haka.abort()
@@ -92,7 +93,7 @@ function tcp_connection_dissector:receive(pkt)
 
 	if not ret then
 		if err then
-			haka.log.error(dissector.name, "%s", err)
+			log.error("%s", err)
 			dissector:error()
 		end
 	end
@@ -128,13 +129,13 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	timed_wait   = state()
 
 	local function unexpected_packet(self, pkt)
-		haka.log.error('tcp_connection', "unexpected tcp packet")
+		log.error("unexpected tcp packet")
 		pkt:drop()
 	end
 
 	local function invalid_handshake(type)
 		return function (self, pkt)
-			haka.log.error('tcp_connection', string.format("invalid tcp %s handshake", type))
+			log.error("invalid tcp %s handshake", type)
 			pkt:drop()
 		end
 	end
@@ -645,7 +646,7 @@ function module.helper.TcpFlowDissector.install_tcp_rule(cls, port)
 		hook = tcp_connection_dissector.events.new_connection,
 		eval = function (flow, pkt)
 			if pkt.dstport == port then
-				haka.log.debug(cls.name, string.format("selecting %s dissector on flow", cls.name))
+				log.debug("selecting %s dissector on flow", cls.name)
 				flow:select_next_dissector(cls:new(flow))
 			end
 		end
