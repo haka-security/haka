@@ -7,7 +7,9 @@
 
 void _message(log_level level, int section, const char *message)
 {
-	_messagef(level, section, "%s", message);
+	if (check_section_log_level(section, level)) {
+		_messagef(level, section, "%s", message);
+	}
 }
 
 %}
@@ -64,9 +66,7 @@ void setlevel(log_level level, const char *section);
 		for k,v in pairs(loglevel) do
 			if k ~= 'default' then
 				logf[k] = function (fmt, ...)
-					if check(section, v) then
-						message(v, section, string.format(fmt, ...))
-					end
+					message(v, section, string.format(fmt, ...))
 				end
 			end
 		end
