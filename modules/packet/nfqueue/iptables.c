@@ -28,13 +28,13 @@ static pid_t fork_with_pipes(int pipefd_in[2], int pipefd_out[2])
 	pid_t child_pid;
 
 	if (pipe(pipefd_in) < 0) {
-		LOG_ERROR(MODULE_NAME, "%s", errno_error(errno));
+		LOG_ERROR(nfqueue_section, "%s", errno_error(errno));
 		return -1;
 	}
 
 	if (pipefd_out) {
 		if (pipe(pipefd_out) < 0) {
-			LOG_ERROR(MODULE_NAME, "%s", errno_error(errno));
+			LOG_ERROR(nfqueue_section, "%s", errno_error(errno));
 			close(pipefd_in[0]);
 			close(pipefd_in[1]);
 			return -1;
@@ -43,7 +43,7 @@ static pid_t fork_with_pipes(int pipefd_in[2], int pipefd_out[2])
 
 	child_pid = fork();
 	if (child_pid < 0) {
-		LOG_ERROR(MODULE_NAME, "%s", errno_error(errno));
+		LOG_ERROR(nfqueue_section, "%s", errno_error(errno));
 		close(pipefd_in[0]);
 		close(pipefd_in[1]);
 
@@ -103,7 +103,7 @@ int apply_iptables(const char *table, const char *conf, bool noflush)
 		ssize_t line_size;
 		FILE *output = fdopen(pipefd_out[0], "r");
 		if (!output) {
-			LOG_ERROR(MODULE_NAME, "iptables-restore: %s", errno_error(errno));
+			LOG_ERROR(nfqueue_section, "iptables-restore: %s", errno_error(errno));
 			return errno;
 		}
 
@@ -122,7 +122,7 @@ int apply_iptables(const char *table, const char *conf, bool noflush)
 		while ((line_size = getline(&buffer, &buffer_size, output)) >= 0) {
 			if (line_size > 1) {
 				buffer[line_size-1] = '\0';
-				LOG_INFO(MODULE_NAME, "iptables-restore: %s", buffer);
+				LOG_INFO(nfqueue_section, "iptables-restore: %s", buffer);
 			}
 		}
 
@@ -225,7 +225,7 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 		int max_fd, fd_count;
 
 		if (!input || !err) {
-			LOG_ERROR(MODULE_NAME, "iptables-save: %s", errno_error(errno));
+			LOG_ERROR(nfqueue_section, "iptables-save: %s", errno_error(errno));
 			fclose(input);
 			fclose(err);
 			return errno;
@@ -249,7 +249,7 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 
 			rc = select(max_fd+1, &curfds, NULL, NULL, NULL);
 			if (rc < 0) {
-				LOG_ERROR(MODULE_NAME, "iptables-save: %s", errno_error(errno));
+				LOG_ERROR(nfqueue_section, "iptables-save: %s", errno_error(errno));
 				free(buffer);
 				fclose(input);
 				fclose(err);
@@ -260,7 +260,7 @@ int save_iptables(const char *table, char **conf, bool all_targets)
 				line_size = getline(&buffer, &buffer_size, err);
 				if (line_size > 1) {
 					buffer[line_size-1] = '\0';
-					LOG_INFO(MODULE_NAME, "iptables-save: %s", buffer);
+					LOG_INFO(nfqueue_section, "iptables-save: %s", buffer);
 				}
 				else {
 					FD_CLR(pipefd_err[1], &fds);

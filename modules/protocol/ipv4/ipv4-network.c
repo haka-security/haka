@@ -16,6 +16,7 @@
 #define IPV4_APPLY_NETMASK(addr, network)	\
 	((addr) & ((1 << (network).mask) - 1) << (IPV4_MASK_MAXVAL - (network).mask))
 
+static REGISTER_LOG_SECTION(ipv4);
 
 const ipv4network ipv4_network_zero = {
 	net:  0,
@@ -35,13 +36,13 @@ ipv4network ipv4_network_from_string(const char *string)
 {
 	int8 * ptr;
 	if (!(ptr = strchr(string, '/'))) {
-		error("Invalid IPv4 network address format");
+		error("invalid IPv4 network address format");
 		return ipv4_network_zero;
 	}
 
 	int32 slash_index = ptr - string;
 	if (slash_index > IPV4_ADDR_STRING_MAXLEN) {
-		error("Invalid IPv4 network address format");
+		error("invalid IPv4 network address format");
 		return ipv4_network_zero;
 	}
 
@@ -57,7 +58,7 @@ ipv4network ipv4_network_from_string(const char *string)
 
 	if ((sscanf(string + slash_index, "/%hhu", &netaddr.mask) != 1) ||
 		(netaddr.mask > 32 || netaddr.mask < 0)) {
-		error("Invalid IPv4 network address format");
+		error("invalid IPv4 network address format");
 		return ipv4_network_zero;
 	}
 
@@ -65,8 +66,9 @@ ipv4network ipv4_network_from_string(const char *string)
 	maskedaddr = IPV4_APPLY_NETMASK(netaddr.net, netaddr);
 
 	if (maskedaddr != netaddr.net) {
+		/* incorrect network mask, correct it */
 		netaddr.net = maskedaddr;
-		LOG_WARNING("ipv4" , "Incorrect network mask");
+		LOG_DEBUG(ipv4_section, "incorrect network mask");
 	}
 
 	return netaddr;

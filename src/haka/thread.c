@@ -77,7 +77,7 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 
 	if (!lua_isnil(state->lua->L, -1)) {
 		if (!lua_pushppacket(state->lua->L, pkt)) {
-			LOG_ERROR("core", "packet internal error");
+			LOG_ERROR(SECTION_CORE, "packet internal error");
 			packet_drop(pkt);
 		}
 		else {
@@ -148,11 +148,11 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	state->state = STATE_NOTSARTED;
 	state->engine = NULL;
 
-	LOG_INFO("core", "initializing thread %d", thread_id);
+	LOG_INFO(SECTION_CORE, "initializing thread %d", thread_id);
 
 	state->lua = lua_state_init();
 	if (!state->lua) {
-		LOG_FATAL("core", "unable to create lua state");
+		LOG_FATAL(SECTION_CORE, "unable to create lua state");
 		cleanup_thread_state(state);
 		return NULL;
 	}
@@ -177,7 +177,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 
 	state->capture = packet_module->init_state(thread_id);
 	if (!state->capture) {
-		LOG_FATAL("core", "unable to create packet capture state");
+		LOG_FATAL(SECTION_CORE, "unable to create packet capture state");
 		cleanup_thread_state(state);
 		return NULL;
 	}
@@ -248,14 +248,14 @@ static void *thread_main_loop(void *_state)
 		sigdelset(&set, SIGFPE);
 
 		if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
-			LOG_FATAL("core", clear_error());
+			LOG_FATAL(SECTION_CORE, clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
 			return NULL;
 		}
 
 		if (!timer_init_thread()) {
-			LOG_FATAL("core", clear_error());
+			LOG_FATAL(SECTION_CORE, clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
 			return NULL;
@@ -264,7 +264,7 @@ static void *thread_main_loop(void *_state)
 		/* To make sure we can still cancel even if some thread are locked in
 		 * infinite loops */
 		if (!thread_setcanceltype(THREAD_CANCEL_ASYNCHRONOUS)) {
-			LOG_FATAL("core", clear_error());
+			LOG_FATAL(SECTION_CORE, clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
 			return NULL;
@@ -284,7 +284,7 @@ static void *thread_main_loop(void *_state)
 
 	if (!state->pool->single) {
 		if (!barrier_wait(&state->pool->thread_start_sync)) {
-			LOG_FATAL("core", clear_error());
+			LOG_FATAL(SECTION_CORE, clear_error());
 			state->state = STATE_ERROR;
 			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
@@ -293,7 +293,7 @@ static void *thread_main_loop(void *_state)
 
 	if (!state->pool->single) {
 		if (!barrier_wait(&state->pool->thread_sync)) {
-			LOG_FATAL("core", clear_error());
+			LOG_FATAL(SECTION_CORE, clear_error());
 			state->state = STATE_ERROR;
 			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
@@ -327,11 +327,11 @@ static void *thread_main_loop(void *_state)
 		if (((pkt_count++) % mem_rate) == 0) {
 			size_t vmsize, rss;
 			if (!get_memory_size(&vmsize, &rss)) {
-				LOG_ERROR("core", "cannot get memory report: %s", clear_error());
+				LOG_ERROR(SECTION_CORE, "cannot get memory report: %s", clear_error());
 			}
 			else {
 				const size_t luasize = lua_gc(state->lua->L, LUA_GCCOUNT, 0);
-				LOG_DEBUG("core", "memory report: thread=%d vmsize=%zd rsssize=%zd luasize=%zd",
+				LOG_DEBUG(SECTION_CORE, "memory report: thread=%d vmsize=%zd rsssize=%zd luasize=%zd",
 						engine_thread_id(state->engine), vmsize, rss, luasize);
 			}
 		}
@@ -474,7 +474,7 @@ void thread_pool_wait(struct thread_pool *pool)
 		    pool->threads[i]->state != STATE_JOINED) {
 			void *ret;
 			if (!thread_join(pool->threads[i]->thread, &ret)) {
-				LOG_FATAL("core", clear_error());
+				LOG_FATAL(SECTION_CORE, clear_error());
 			}
 			pool->threads[i]->state = STATE_JOINED;
 		}
@@ -489,7 +489,7 @@ void thread_pool_cancel(struct thread_pool *pool)
 		for (i=0; i<pool->count; ++i) {
 			if (pool->threads[i] && pool->threads[i]->state == STATE_RUNNING) {
 				if (!thread_cancel(pool->threads[i]->thread)) {
-					LOG_FATAL("core", clear_error());
+					LOG_FATAL(SECTION_CORE, clear_error());
 				}
 				pool->threads[i]->state = STATE_CANCELED;
 			}

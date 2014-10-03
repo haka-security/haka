@@ -35,6 +35,8 @@
 #define MAX_INTERFACE 8
 
 
+REGISTER_LOG_SECTION(nfqueue);
+
 struct pcap_dump {
 	pcap_t        *pd;
 	pcap_dumper_t *pf;
@@ -226,17 +228,17 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 
 	packet_hdr = nfq_get_msg_packet_hdr(nfad);
 	if (!packet_hdr) {
-		LOG_ERROR(MODULE_NAME, "unable to get packet header");
+		LOG_ERROR(nfqueue_section, "unable to get packet header");
 		return 0;
 	}
 
 	packet_len = nfq_get_payload(nfad, &packet_data);
 	if (packet_len > PACKET_BUFFER_SIZE) {
-		LOG_WARNING(MODULE_NAME, "received packet is too large");
+		LOG_WARNING(nfqueue_section, "received packet is too large");
 		return 0;
 	}
 	else if (packet_len < 0) {
-		LOG_ERROR(MODULE_NAME, "unable to get packet payload");
+		LOG_ERROR(nfqueue_section, "unable to get packet payload");
 		return 0;
 	}
 
@@ -284,13 +286,13 @@ static int open_send_socket(bool mark)
 
 	fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
 	if (fd < 0) {
-		LOG_ERROR(MODULE_NAME, "cannot open send socket: %s", errno_error(errno));
+		LOG_ERROR(nfqueue_section, "cannot open send socket: %s", errno_error(errno));
 		return -1;
 	}
 
 	if (setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
 		close(fd);
-		LOG_ERROR(MODULE_NAME, "cannot setup send socket: %s", errno_error(errno));
+		LOG_ERROR(nfqueue_section, "cannot setup send socket: %s", errno_error(errno));
 		return -1;
 	}
 
@@ -298,7 +300,7 @@ static int open_send_socket(bool mark)
 		one = 0xffff;
 		if (setsockopt(fd, SOL_SOCKET, SO_MARK, &one, sizeof(one)) < 0) {
 			close(fd);
-			LOG_ERROR(MODULE_NAME, "cannot setup send socket: %s", errno_error(errno));
+			LOG_ERROR(nfqueue_section, "cannot setup send socket: %s", errno_error(errno));
 			return -1;
 		}
 	}
@@ -340,20 +342,20 @@ static struct packet_module_state *init_state(int thread_id)
 	/* Setup nfqueue connection */
 	state->handle = nfq_open();
 	if (!state->handle) {
-		LOG_ERROR(MODULE_NAME, "unable to open nfqueue handle");
+		LOG_ERROR(nfqueue_section, "unable to open nfqueue handle");
 		cleanup_state(state);
 		return NULL;
 	}
 
 	for (i=0; i<sizeof(proto_family)/sizeof(proto_family[0]); ++i) {
 		if (nfq_unbind_pf(state->handle, proto_family[i]) < 0) {
-			LOG_ERROR(MODULE_NAME, "cannot unbind queue");
+			LOG_ERROR(nfqueue_section, "cannot unbind queue");
 			cleanup_state(state);
 			return NULL;
 		}
 
 		if (nfq_bind_pf(state->handle, proto_family[i]) < 0) {
-			LOG_ERROR(MODULE_NAME, "cannot bind queue");
+			LOG_ERROR(nfqueue_section, "cannot bind queue");
 			cleanup_state(state);
 			return NULL;
 		}
@@ -374,14 +376,14 @@ static struct packet_module_state *init_state(int thread_id)
 	state->queue = nfq_create_queue(state->handle, thread_id,
 			&packet_callback, state);
 	if (!state->queue) {
-		LOG_ERROR(MODULE_NAME, "cannot create queue");
+		LOG_ERROR(nfqueue_section, "cannot create queue");
 		cleanup_state(state);
 		return NULL;
 	}
 
 	if (nfq_set_mode(state->queue, NFQNL_COPY_PACKET,
 			PACKET_BUFFER_SIZE) < 0) {
-		LOG_ERROR(MODULE_NAME, "cannot set mode to copy packet");
+		LOG_ERROR(nfqueue_section, "cannot set mode to copy packet");
 		cleanup_state(state);
 		return NULL;
 	}
@@ -390,7 +392,7 @@ static struct packet_module_state *init_state(int thread_id)
 
 	/* Change nfq queue len and netfilter receive size */
 	if (nfq_set_queue_maxlen(state->queue, nfqueue_len) < 0) {
-		LOG_WARNING(MODULE_NAME, "cannot change netfilter queue len");
+		LOG_WARNING(nfqueue_section, "cannot change netfilter queue len");
 	}
 
 	nfnl_rcvbufsiz(nfq_nfnlh(state->handle), nfqueue_len * 1500);
@@ -403,13 +405,13 @@ static int open_pcap(struct pcap_dump *pcap, const char *file)
 	if (file) {
 		pcap->pd = pcap_open_dead(DLT_IPV4, PACKET_RECV_SIZE);
 		if (!pcap->pd) {
-			LOG_ERROR(MODULE_NAME, "cannot setup pcap sink");
+			LOG_ERROR(nfqueue_section, "cannot setup pcap sink");
 			return 1;
 		}
 
 		pcap->pf = pcap_dump_open(pcap->pd, file);
 		if (!pcap->pf) {
-			LOG_ERROR(MODULE_NAME, "cannot setup pcap sink");
+			LOG_ERROR(nfqueue_section, "cannot setup pcap sink");
 			return 1;
 		}
 	}
@@ -430,7 +432,7 @@ static void restore_iptables()
 {
 	if (iptables_saved) {
 		if (apply_iptables("raw", iptables_saved, !iptables_save_need_flush) != 0) {
-			LOG_ERROR(MODULE_NAME, "cannot restore iptables rules");
+			LOG_ERROR(nfqueue_section, "cannot restore iptables rules");
 		}
 	}
 }
@@ -475,7 +477,7 @@ static int init(struct parameters *args)
 	/* Setup iptables rules */
 	iptables_save_need_flush = install;
 	if (save_iptables("raw", &iptables_saved, install)) {
-		LOG_ERROR(MODULE_NAME, "cannot save iptables rules");
+		LOG_ERROR(nfqueue_section, "cannot save iptables rules");
 		cleanup();
 		return 1;
 	}
@@ -486,7 +488,7 @@ static int init(struct parameters *args)
 		const char *iter;
 		const char *interfaces = parameters_get_string(args, "interfaces", NULL);
 		if (!interfaces || strlen(interfaces) == 0) {
-			LOG_ERROR(MODULE_NAME, "no interfaces selected");
+			LOG_ERROR(nfqueue_section, "no interfaces selected");
 			cleanup();
 			return 1;
 		}
@@ -508,13 +510,13 @@ static int init(struct parameters *args)
 
 	ifaces = malloc((sizeof(char *) * (count + 1)));
 	if (!ifaces) {
-		LOG_ERROR(MODULE_NAME, "memory error");
+		LOG_ERROR(nfqueue_section, "memory error");
 		free(interfaces_buf);
 		cleanup();
 		return 1;
 	}
 
-	LOG_INFO(MODULE_NAME, "installing iptables rules for device(s) %s", interfaces_buf);
+	LOG_INFO(nfqueue_section, "installing iptables rules for device(s) %s", interfaces_buf);
 
 	{
 		int index = 0;
@@ -522,7 +524,7 @@ static int init(struct parameters *args)
 		struct ifaddrs *ifa;
 
 		if (getifaddrs(&ifa)) {
-			LOG_ERROR(MODULE_NAME, "%s", errno_error(errno));
+			LOG_ERROR(nfqueue_section, "%s", errno_error(errno));
 			free(interfaces_buf);
 			cleanup();
 			return 1;
@@ -533,7 +535,7 @@ static int init(struct parameters *args)
 			assert(token != NULL);
 
 			if (!is_iface_valid(ifa, token)) {
-				LOG_ERROR(MODULE_NAME, "'%s' is not a valid network interface", token);
+				LOG_ERROR(nfqueue_section, "'%s' is not a valid network interface", token);
 				free(interfaces_buf);
 				cleanup();
 				return 1;
@@ -547,12 +549,12 @@ static int init(struct parameters *args)
 	}
 
 	if (!install) {
-		LOG_WARNING(MODULE_NAME, "iptables setup rely on user rules");
+		LOG_WARNING(nfqueue_section, "iptables setup rely on user rules");
 	}
 
 	new_iptables_config = iptables_config(ifaces, thread_count, install);
 	if (!new_iptables_config) {
-		LOG_ERROR(MODULE_NAME, "cannot generate iptables rules");
+		LOG_ERROR(nfqueue_section, "cannot generate iptables rules");
 		free(ifaces);
 		free(interfaces_buf);
 		cleanup();
@@ -564,7 +566,7 @@ static int init(struct parameters *args)
 	interfaces_buf = NULL;
 
 	if (apply_iptables("raw", new_iptables_config, !install)) {
-		LOG_ERROR(MODULE_NAME, "cannot setup iptables rules");
+		LOG_ERROR(nfqueue_section, "cannot setup iptables rules");
 		free(new_iptables_config);
 		cleanup();
 		return 1;
@@ -578,12 +580,12 @@ static int init(struct parameters *args)
 		file_in = parameters_get_string(args, "dump_input", NULL);
 		file_out = parameters_get_string(args, "dump_output", NULL);
 		if (!(file_in || file_out)) {
-			LOG_WARNING(MODULE_NAME, "no dump pcap files specified");
+			LOG_WARNING(nfqueue_section, "no dump pcap files specified");
 		}
 		else {
 			pcap = malloc(sizeof(struct pcap_sinks));
 			if (!pcap) {
-				LOG_ERROR(MODULE_NAME, "memory error");
+				LOG_ERROR(nfqueue_section, "memory error");
 				cleanup();
 				return 1;
 			}
@@ -591,11 +593,11 @@ static int init(struct parameters *args)
 
 			if (file_in) {
 				open_pcap(&pcap->in, file_in);
-				LOG_INFO(MODULE_NAME, "dumping received packets into '%s'", file_in);
+				LOG_INFO(nfqueue_section, "dumping received packets into '%s'", file_in);
 			}
 			if (file_out) {
 				open_pcap(&pcap->out, file_out);
-				LOG_INFO(MODULE_NAME, "dumping emitted packets into '%s'", file_out);
+				LOG_INFO(nfqueue_section, "dumping emitted packets into '%s'", file_out);
 			}
 		}
 	}
@@ -648,7 +650,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	rv = select(max_fd+1, &read_set, NULL, NULL, NULL);
 	if (rv <= 0) {
 		if (rv == -1 && errno != EINTR) {
-			LOG_ERROR(MODULE_NAME, "packet reception failed, %s", errno_error(errno));
+			LOG_ERROR(nfqueue_section, "packet reception failed, %s", errno_error(errno));
 		}
 		return 0;
 	}
@@ -657,7 +659,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		rv = recv(state->fd, state->receive_buffer, sizeof(state->receive_buffer), 0);
 		if (rv < 0) {
 			if (errno != EINTR) {
-				LOG_ERROR(MODULE_NAME, "packet reception failed, %s", errno_error(errno));
+				LOG_ERROR(nfqueue_section, "packet reception failed, %s", errno_error(errno));
 			}
 			return 0;
 		}
@@ -685,7 +687,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			}
 		}
 		else {
-			LOG_ERROR(MODULE_NAME, "packet processing failed");
+			LOG_ERROR(nfqueue_section, "packet processing failed");
 			return 0;
 		}
 	}
@@ -727,7 +729,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 			case FILTER_ACCEPT: verdict = NF_ACCEPT; break;
 			case FILTER_DROP:   verdict = NF_DROP; break;
 			default:
-				LOG_DEBUG(MODULE_NAME, "unknown verdict");
+				LOG_DEBUG(nfqueue_section, "unknown verdict");
 				verdict = NF_DROP;
 				break;
 			}
@@ -745,7 +747,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 		}
 
 		if (ret == -1) {
-			LOG_ERROR(MODULE_NAME, "packet verdict failed");
+			LOG_ERROR(nfqueue_section, "packet verdict failed");
 		}
 
 		vbuffer_clear(&pkt->core_packet.payload);
@@ -854,7 +856,7 @@ static bool is_realtime()
 struct packet_module HAKA_MODULE = {
 	module: {
 		type:        MODULE_PACKET,
-		name:        MODULE_NAME,
+		name:        "nfqueue",
 		description: "Netfilter queue packet module",
 		api_version: HAKA_API_VERSION,
 		init:		 init,

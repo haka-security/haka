@@ -25,10 +25,12 @@ typedef enum {
 	HAKA_LOG_INFO, /**< Informations. */
 	HAKA_LOG_DEBUG, /**< Debugging informations. */
 	HAKA_LOG_TRACE, /**< Trace debugging (only available in debug build). */
-	HAKA_LOG_DEFAULT, /**< Reset module log level to global one. */
 
+	HAKA_LOG_DEFAULT, /**< Reset module log level to global one. */
 	HAKA_LOG_LEVEL_LAST /**< Last log level. For internal use only. */
 } log_level;
+
+#define HAKA_LOG_LEVEL_MAX   6
 
 /**
  * Convert a logging level to a human readable string.
@@ -45,37 +47,83 @@ const char *level_to_str(log_level level);
 log_level str_to_level(const char *str);
 
 /**
- * Log a message with string formating.
+ * Log section identifier.
  */
-void _messagef(log_level level, const char *module, const char *fmt, ...) FORMAT_PRINTF(3, 4);
+typedef int section_id;
 
-#define _LOG(level, module, fmt, ...) \
-	do { if (level <= getlevel(module)) { \
-		_messagef(level, module, fmt, ##__VA_ARGS__); \
+/**
+ * Global section id.
+ */
+enum {
+	SECTION_CORE,
+	SECTION_PACKET,
+	SECTION_TIME,
+	SECTION_STATES,
+	SECTION_REMOTE,
+	SECTION_EXTERNAL,
+	SECTION_LUA,
+};
+
+/**
+ * Invalid section id.
+ */
+#define INVALID_SECTION_ID -1
+
+/**
+ * Register a log section.
+ */
+section_id register_log_section(const char *name);
+
+#define DECLARE_LOG_SECTION(name) \
+	int name##_section;
+
+#define REGISTER_LOG_SECTION(name) \
+	int name##_section = SECTION_EXTERNAL; \
+	INIT static void __init_log_section_##name() { name##_section = register_log_section(#name); }
+
+/**
+ * Search for a log section by name.
+ * \returns The section id or INVALID_SECTION_ID if not found.
+ */
+section_id search_log_section(const char *name);
+
+/**
+ * Check if section should be logged.
+ */
+bool check_section_log_level(section_id section, log_level level);
+
+void _messagef(log_level level, section_id sectio, const char *fmt, ...) FORMAT_PRINTF(3, 4);
+
+#define _LOG(level, section, fmt, ...) \
+	do { if (check_section_log_level(section, level)) { \
+		_messagef(level, section, fmt, ##__VA_ARGS__); \
 	} } while(0)
 
-#define LOG_FATAL(module, fmt, ...)    _LOG(HAKA_LOG_FATAL, module, fmt, ##__VA_ARGS__)
-#define LOG_ERROR(module, fmt, ...)    _LOG(HAKA_LOG_ERROR, module, fmt, ##__VA_ARGS__)
-#define LOG_WARNING(module, fmt, ...)  _LOG(HAKA_LOG_WARNING, module, fmt, ##__VA_ARGS__)
-#define LOG_INFO(module, fmt, ...)     _LOG(HAKA_LOG_INFO, module, fmt, ##__VA_ARGS__)
-#define LOG_DEBUG(module, fmt, ...)    _LOG(HAKA_LOG_DEBUG, module, fmt, ##__VA_ARGS__)
+/**
+ * Log a message with string formating in various level.
+ */
+#define LOG_FATAL(section, fmt, ...)    _LOG(HAKA_LOG_FATAL, section, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(section, fmt, ...)    _LOG(HAKA_LOG_ERROR, section, fmt, ##__VA_ARGS__)
+#define LOG_WARNING(section, fmt, ...)  _LOG(HAKA_LOG_WARNING, section, fmt, ##__VA_ARGS__)
+#define LOG_INFO(section, fmt, ...)     _LOG(HAKA_LOG_INFO, section, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(section, fmt, ...)    _LOG(HAKA_LOG_DEBUG, section, fmt, ##__VA_ARGS__)
 
 #ifdef HAKA_DEBUG
-	#define LOG_TRACE(module, fmt, ...) _LOG(HAKA_LOG_TRACE, module, fmt, ##__VA_ARGS__)
+	#define LOG_TRACE(section, fmt, ...) _LOG(HAKA_LOG_TRACE, section, fmt, ##__VA_ARGS__)
 #else
-	#define LOG_TRACE(module, fmt, ...)
+	#define LOG_TRACE(section, fmt, ...)
 #endif
 
 /**
- * Set the logging level to display for a given module name. The `module` parameter can be
+ * Set the logging level to display for a given section name. The `name` parameter can be
  * `NULL` in which case it will set the default level.
  */
-void setlevel(log_level level, const char *module);
+bool setlevel(log_level level, const char *name);
 
 /**
- * Get the logging level for a given module name.
+ * Get the logging level for a given section name.
  */
-log_level getlevel(const char *module);
+log_level getlevel(const char *name);
 
 /**
  * Change the display of log message on stdout.

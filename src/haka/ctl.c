@@ -28,7 +28,7 @@
 #include "ctl_comm.h"
 
 
-#define MODULE             "ctl"
+#define MODULE             SECTION_REMOTE
 #define MAX_CLIENT_QUEUE   10
 #define MAX_COMMAND_LEN    1024
 
@@ -342,7 +342,7 @@ static void *ctl_server_coreloop(void *param)
 	/* Block all signal to let the main thread handle them */
 	sigfillset(&set);
 	if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
-		LOG_FATAL("core", clear_error());
+		LOG_FATAL(SECTION_CORE, clear_error());
 		return NULL;
 	}
 

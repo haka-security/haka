@@ -14,6 +14,7 @@
 #include <haka/colors.h>
 #include <haka/log_module.h>
 #include <haka/container/list.h>
+#include <haka/container/bitfield.h>
 
 
 static struct logger *loggers = NULL;
@@ -44,9 +45,30 @@ static void message_delete(void *value)
 	free(value);
 }
 
+/*
+ * This list should be synchronized with the enum
+ * in haka/log.h.
+ */
+struct static_section_entry {
+	const char *name;
+	int         id;
+};
+
+static struct static_section_entry static_log_section[] = {
+	{ "core", SECTION_CORE },
+	{ "packet", SECTION_PACKET },
+	{ "time", SECTION_TIME },
+	{ "states", SECTION_STATES },
+	{ "remote", SECTION_REMOTE },
+	{ "external", SECTION_EXTERNAL },
+	{ "lua", SECTION_LUA },
+	{ NULL, 0 }
+};
+
 INIT static void _message_init()
 {
 	UNUSED bool ret;
+	int i;
 
 	ret = local_storage_init(&local_message_key, message_delete);
 	assert(ret);
@@ -55,6 +77,11 @@ INIT static void _message_init()
 	assert(ret);
 
 	stdout_use_colors = colors_supported(fileno(stdout));
+
+	for (i=0; static_log_section[i].name; ++i) {
+		UNUSED const int id = register_log_section(static_log_section[i].name);
+		assert(id == static_log_section[i].id);
+	}
 
 	message_is_valid = true;
 }
@@ -228,8 +255,7 @@ bool stdout_message(log_level lvl, const char *module, const char *message)
 		fprintf(fd, "%s%s" CLEAR "%*s " MODULE_COLOR "%s:" CLEAR "%*s %s\n" CLEAR, level_color[lvl], level_str,
 				level_size-5, "", module, stdout_module_size-module_size, "", message);
 	}
-	else
-	{
+	else {
 		fprintf(fd, "%s%*s %s:%*s %s\n", level_str, level_size-5, "",
 				module, stdout_module_size-module_size, "", message);
 	}
@@ -239,6 +265,49 @@ bool stdout_message(log_level lvl, const char *module, const char *message)
 	thread_setcancelstate(true);
 
 	return true;
+}
+
+/*
+ * Section management
+ */
+
+#define MAX_SECTION   256
+
+struct section_info {
+	char                *name;
+};
+
+static struct section_info sections[MAX_SECTION];
+static int sections_count = 0;
+
+section_id register_log_section(const char *name)
+{
+	int id = search_log_section(name);
+	if (id != INVALID_SECTION_ID) {
+		return id;
+	}
+
+	if (sections_count >= MAX_SECTION) {
+		error("too many log section");
+		return INVALID_SECTION_ID;
+	}
+
+	sections[sections_count].name = strdup(name);
+
+	return sections_count++;
+}
+
+section_id search_log_section(const char *name)
+{
+	int i;
+
+	for (i=0; i<sections_count; ++i) {
+		if (strcmp(name, sections[i].name) == 0) {
+			return i;
+		}
+	}
+
+	return INVALID_SECTION_ID;
 }
 
 static void message(log_level level, const char *module, const char *message, struct message_context_t *context)
@@ -276,124 +345,114 @@ static void message(log_level level, const char *module, const char *message, st
 	context->doing_message = false;
 }
 
-void _messagef(log_level level, const char *module, const char *fmt, ...)
+void _messagef(log_level level, section_id section, const char *fmt, ...)
 {
-	const log_level max_level = getlevel(module);
-	if (level <= max_level) {
-		struct message_context_t *context = message_context();
-		if (context && !context->doing_message) {
-			va_list ap;
-			va_start(ap, fmt);
-			vsnprintf(context->buffer, MESSAGE_BUFSIZE, fmt, ap);
-			message(level, module, context->buffer, context);
-			va_end(ap);
+	struct message_context_t *context = message_context();
+	if (context && !context->doing_message) {
+		if (section >= sections_count) {
+			error("invalid section");
+			return;
 		}
+
+		va_list ap;
+		va_start(ap, fmt);
+		vsnprintf(context->buffer, MESSAGE_BUFSIZE, fmt, ap);
+		message(level, sections[section].name, context->buffer, context);
+		va_end(ap);
 	}
 }
 
-struct module_level {
-	char                *module;
-	log_level            level;
-	struct module_level *next;
+
+/*
+ * Section level.
+ */
+
+BITFIELD_STATIC(MAX_SECTION, bitfield_section);
+static struct bitfield_section section_custom_level = BITFIELD_STATIC_INIT(MAX_SECTION);
+static struct bitfield_section section_levels[HAKA_LOG_LEVEL_MAX] = {
+	BITFIELD_STATIC_INIT(MAX_SECTION),
+	BITFIELD_STATIC_INIT(MAX_SECTION),
+	BITFIELD_STATIC_INIT(MAX_SECTION),
+	BITFIELD_STATIC_INIT(MAX_SECTION),
+	BITFIELD_STATIC_INIT(MAX_SECTION),
+	BITFIELD_STATIC_INIT(MAX_SECTION),
 };
+static mutex_t log_level_lock = MUTEX_INIT;
 
-static struct module_level *module_level = NULL;
 static log_level default_level = HAKA_LOG_INFO;
-static rwlock_t log_level_lock = RWLOCK_INIT;
 
-static struct module_level *get_module_level(const char *module, bool create)
+bool check_section_log_level(section_id section, log_level level)
 {
-	struct module_level *iter = module_level, *prev = NULL;
-	while (iter) {
-		if (strcmp(module, iter->module) == 0) {
-			break;
-		}
+	assert(section < sections_count);
+	assert(level < HAKA_LOG_LEVEL_MAX);
 
-		prev = iter;
-		iter = iter->next;
-	}
-
-	if (!iter && create) {
-		iter = malloc(sizeof(struct module_level));
-		if (!iter) {
-			error("memory error");
-			return NULL;
-		}
-
-		iter->module = strdup(module);
-		if (!iter->module) {
-			free(iter);
-			error("memory error");
-			return NULL;
-		}
-
-		iter->next = NULL;
-
-		if (prev) prev->next = iter;
-		else module_level = iter;
-	}
-
-	return iter;
+	return bitfield_get(&section_levels[level].bitfield, section);
 }
 
-static void reset_module_level(const char *module)
+bool setlevel(log_level level, const char *name)
 {
-	struct module_level *iter = module_level, *prev = NULL;
-	while (iter) {
-		if (strcmp(module, iter->module) == 0) {
-			if (prev) {
-				prev->next = iter->next;
-			} else {
-				module_level = iter->next;
-			}
-			free(iter);
-			break;
+	if (name) {
+		int i;
+		const section_id section = search_log_section(name);
+		if (section == INVALID_SECTION_ID) {
+			error("invalid section name");
+			return false;
 		}
-		prev = iter;
-		iter = iter->next;
-	}
-}
 
-void setlevel(log_level level, const char *module)
-{
-	rwlock_writelock(&log_level_lock);
+		mutex_lock(&log_level_lock);
 
-	if (!module) {
 		if (level == HAKA_LOG_DEFAULT) {
-			LOG_WARNING("core", "cannot set log level default for global level");
-		} else {
-			default_level = level;
+			bitfield_set(&section_custom_level.bitfield, section, false);
+			level = default_level;
+		}
+		else {
+			bitfield_set(&section_custom_level.bitfield, section, true);
+		}
+
+		assert(level < HAKA_LOG_LEVEL_MAX);
+
+		for (i=0; i<HAKA_LOG_LEVEL_MAX; ++i) {
+			bitfield_set(&section_levels[i].bitfield, section, i <= level);
 		}
 	}
 	else {
+		int i, j;
+
 		if (level == HAKA_LOG_DEFAULT) {
-			reset_module_level(module);
-		} else {
-			struct module_level *module_level = get_module_level(module, true);
-			if (module_level) {
-				module_level->level = level;
+			error("invalid default log level");
+			return false;
+		}
+
+		mutex_lock(&log_level_lock);
+
+		for (i=0; i<HAKA_LOG_LEVEL_MAX; ++i) {
+			for (j=0; j<MAX_SECTION; ++j) {
+				if (!bitfield_get(&section_custom_level.bitfield, j)) {
+					bitfield_set(&section_levels[i].bitfield, j, i <= level);
+				}
 			}
 		}
 	}
 
-	rwlock_unlock(&log_level_lock);
+	mutex_unlock(&log_level_lock);
+
+	return true;
 }
 
-log_level getlevel(const char *module)
+log_level getlevel(const char *name)
 {
-	log_level level;
+	int i;
+	const section_id section = search_log_section(name);
+	if (section == INVALID_SECTION_ID) {
+		error("invalid section name");
+		return false;
+	}
 
-	rwlock_readlock(&log_level_lock);
-
-	level = default_level;
-	if (module) {
-		struct module_level *module_level = get_module_level(module, false);
-		if (module_level) {
-			level = module_level->level;
+	for (i=1; i<HAKA_LOG_LEVEL_MAX; ++i) {
+		if (!bitfield_get(&section_levels[i].bitfield, section)) {
+			return (log_level)i-1;
 		}
 	}
 
-	rwlock_unlock(&log_level_lock);
-
-	return level;
+	return (log_level)i-1;
 }

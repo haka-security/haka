@@ -5,9 +5,9 @@
 %{
 #include <haka/log.h>
 
-static void message(log_level level, const char *module, const char *message)
+static void message(log_level level, const char *section, const char *message)
 {
-	_messagef(level, module, "%s", message);
+	_messagef(level, SECTION_EXTERNAL, "%s", message);
 }
 
 %}

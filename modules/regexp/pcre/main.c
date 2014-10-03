@@ -11,7 +11,7 @@
 #include <haka/regexp_module.h>
 #include <haka/thread.h>
 
-#define LOG_MODULE "pcre"
+static REGISTER_LOG_SECTION(pcre);
 
 /* We enforce multiline on all API */
 #define DEFAULT_COMPILE_OPTIONS PCRE_MULTILINE
@@ -306,7 +306,7 @@ static bool workspace_grow(struct regexp_sink_pcre *sink)
 
 	sink->wscount *= 2;
 
-	LOG_DEBUG(LOG_MODULE, "growing PCRE workspace to %d int", sink->wscount);
+	LOG_DEBUG(pcre_section, "growing PCRE workspace to %d int", sink->wscount);
 
 	if (sink->wscount > WSCOUNT_MAX) {
 		error("PCRE workspace too big, max allowed size is %d int", WSCOUNT_MAX);

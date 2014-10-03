@@ -17,8 +17,7 @@
 /* Limit the length of alert id suffixes */
 #define ALERT_ID_LENGTH 16
 
-#define MODULE   "elasticsearch-alert"
-
+static REGISTER_LOG_SECTION(elasticsearch);
 
 const char ELASTICSEARCH_INDEX[] = "ips";
 
@@ -446,11 +445,11 @@ struct alerter_module *init_alerter(struct parameters *args)
 		error("memory error");
 		return NULL;
 	}
-	LOG_DEBUG(MODULE, "using elasticsearch index %s",
+	LOG_DEBUG(elasticsearch_section, "using elasticsearch index %s",
 		elasticsearch_alerter->index);
 
 	elasticsearch_genid(elasticsearch_alerter->alert_id_prefix, ELASTICSEARCH_ID_LENGTH);
-	LOG_DEBUG(MODULE, "generating global id prefix %s",
+	LOG_DEBUG(elasticsearch_section, "generating global id prefix %s",
 		elasticsearch_alerter->alert_id_prefix);
 
 	json_create_mapping(elasticsearch_alerter->connector, elasticsearch_alerter->index);
@@ -461,7 +460,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 	}
 	else {
 		elasticsearch_alerter->geoip_handler = NULL;
-		LOG_WARNING("geoip", "missing geoip database, the ip geographic data will not be collected");
+		LOG_WARNING(elasticsearch_section, "missing geoip database, the ip geographic data will not be collected");
 	}
 
 	return  &elasticsearch_alerter->module;

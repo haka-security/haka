@@ -27,7 +27,7 @@
 #include "debugger.h"
 #include "utils.h"
 
-#define MODULE    "debugger"
+#define MODULE    SECTION_LUA
 
 
 struct luadebug_debugger {

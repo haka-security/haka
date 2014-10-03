@@ -282,14 +282,14 @@ char* engine_thread_raw_lua_remote_launch(struct engine_thread *thread, const ch
 	data.res = NULL;
 	data.res_size = 0;
 
-	LOG_DEBUG("engine", "lua remote launch on thread %d: %zu bytes",
+	LOG_DEBUG(SECTION_CORE, "lua remote launch on thread %d: %zu bytes",
 	         engine_thread_id(thread), data.size);
 
 	if (!engine_thread_remote_launch(thread, _lua_remote_launcher, &data)) {
 		return NULL;
 	}
 
-	LOG_DEBUG("engine", "lua remote launch result on thread %d: %zu bytes",
+	LOG_DEBUG(SECTION_CORE, "lua remote launch result on thread %d: %zu bytes",
 	         engine_thread_id(thread), data.res_size);
 
 	if (data.res) {
@@ -312,7 +312,7 @@ static void _engine_thread_check_remote_launch(void *_thread)
 	for (iter = list2_begin(&thread->remote_launches); iter != end; ) {
 		struct remote_launch *current = list2_get(iter, struct remote_launch, list);
 
-		LOG_DEBUG("engine", "execute lua remote launch on thread %d",
+		LOG_DEBUG(SECTION_CORE, "execute lua remote launch on thread %d",
 		         engine_thread_id(thread));
 
 		current->callback(current->data);
@@ -321,7 +321,7 @@ static void _engine_thread_check_remote_launch(void *_thread)
 			current->own_error = true;
 			current->state = -1;
 
-			LOG_DEBUG("engine", "remote launch error on thread %d: %s",
+			LOG_DEBUG(SECTION_CORE, "remote launch error on thread %d: %s",
 			         engine_thread_id(thread), current->error);
 		}
 		else {
@@ -358,10 +358,10 @@ void engine_thread_interrupt_begin(struct engine_thread *thread)
 		const int err = write(thread->interrupt_fd[1], &interrupt_magic, 1);
 		if (err != 1) {
 			if (err == -1) {
-				LOG_ERROR("engine", "engine interrupt error: %s", errno_error(errno));
+				LOG_ERROR(SECTION_CORE, "engine interrupt error: %s", errno_error(errno));
 			}
 			else {
-				LOG_ERROR("engine", "engine interrupt error");
+				LOG_ERROR(SECTION_CORE, "engine interrupt error");
 			}
 		}
 	}
@@ -374,10 +374,10 @@ void engine_thread_interrupt_end(struct engine_thread *thread)
 		const int err = read(thread->interrupt_fd[0], &byte, 1);
 		if (err != 1 || byte != interrupt_magic) {
 			if (err == -1) {
-				LOG_ERROR("engine", "engine interrupt error: %s", errno_error(errno));
+				LOG_ERROR(SECTION_CORE, "engine interrupt error: %s", errno_error(errno));
 			}
 			else {
-				LOG_ERROR("engine", "engine interrupt error");
+				LOG_ERROR(SECTION_CORE, "engine interrupt error");
 			}
 		}
 	}
