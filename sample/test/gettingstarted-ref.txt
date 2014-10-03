@@ -1,5 +1,5 @@
-debug cnx: opening connection 192.168.10.1:50683 -> 192.168.20.1:80
-debug filter: Traffic on HTTP port from 192.168.10.1
+debug conn: opening connection 192.168.10.1:50683 -> 192.168.20.1:80
+debug external: Traffic on HTTP port from 192.168.10.1
 alert: id = = <>
 	description = Bad TCP checksum
 alert: id = = <>
@@ -27,4 +27,4 @@ alert: id = = <>
 		service: tcp/0
 	}
 debug lua: closing state
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection

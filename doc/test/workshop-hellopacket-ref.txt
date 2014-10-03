@@ -1,32 +1,32 @@
-info Hello: packet from 192.168.10.1 to 192.168.10.99
+info external: packet from 192.168.10.1 to 192.168.10.99
 alert: id = = <>
 	severity = low
 	description = packet from 192.168.10.1 to 192.168.10.99
-info Hello: packet from 192.168.10.99 to 192.168.10.1
+info external: packet from 192.168.10.99 to 192.168.10.1
 alert: id = = <>
 	severity = low
 	description = packet from 192.168.10.99 to 192.168.10.1
-info Hello: packet from 192.168.10.1 to 192.168.10.99
+info external: packet from 192.168.10.1 to 192.168.10.99
 alert: id = = <>
 	severity = low
 	description = packet from 192.168.10.1 to 192.168.10.99
-info Hello: packet from 192.168.10.1 to 192.168.10.99
+info external: packet from 192.168.10.1 to 192.168.10.99
 alert: id = = <>
 	severity = low
 	description = packet from 192.168.10.1 to 192.168.10.99
-info Hello: packet from 192.168.10.99 to 192.168.10.1
+info external: packet from 192.168.10.99 to 192.168.10.1
 alert: id = = <>
 	severity = low
 	description = packet from 192.168.10.99 to 192.168.10.1
-info Hello: packet from 192.168.10.1 to 192.168.10.99
+info external: packet from 192.168.10.1 to 192.168.10.99
 alert: id = = <>
 	severity = low
 	description = packet from 192.168.10.1 to 192.168.10.99
-info Hello: packet from 192.168.10.99 to 192.168.10.1
+info external: packet from 192.168.10.99 to 192.168.10.1
 alert: id = = <>
 	severity = low
 	description = packet from 192.168.10.99 to 192.168.10.1
-info Hello: packet from 192.168.10.1 to 192.168.10.99
+info external: packet from 192.168.10.1 to 192.168.10.99
 alert: id = = <>
 	severity = low
 	description = packet from 192.168.10.1 to 192.168.10.99

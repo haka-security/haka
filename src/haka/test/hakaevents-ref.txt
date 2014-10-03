@@ -1,3 +1,3 @@
-info test: started
+info external: started
 debug lua: closing state
-info test: exiting
+info external: exiting

@@ -1,7 +1,7 @@
-debug cnx: opening connection 192.168.10.1:53440 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: Domain requested: server
-info Filter: UA detected: Mozilla Firefox/12.0
+debug conn: opening connection 192.168.10.1:53440 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: Domain requested: server
+info external: UA detected: Mozilla Firefox/12.0
 alert: id = = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
@@ -23,15 +23,15 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug cnx: dropping connection 192.168.10.1:53440 -> 192.168.20.1:80
-debug cnx: opening connection 192.168.10.1:53441 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: Domain requested: server
-info Filter: UA detected: Mozilla Firefox/28.0
-debug cnx: opening connection 192.168.10.1:53442 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: Domain requested: server
-info Filter: UA detected: Mozilla Firefox/plop
+debug conn: dropping connection 192.168.10.1:53440 -> 192.168.20.1:80
+debug conn: opening connection 192.168.10.1:53441 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: Domain requested: server
+info external: UA detected: Mozilla Firefox/28.0
+debug conn: opening connection 192.168.10.1:53442 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: Domain requested: server
+info external: UA detected: Mozilla Firefox/plop
 alert: id = = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
@@ -53,11 +53,11 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug cnx: dropping connection 192.168.10.1:53442 -> 192.168.20.1:80
-debug cnx: opening connection 192.168.10.1:53443 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: Domain requested: server
-info Filter: UA detected: Mozilla Firefox/
+debug conn: dropping connection 192.168.10.1:53442 -> 192.168.20.1:80
+debug conn: opening connection 192.168.10.1:53443 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: Domain requested: server
+info external: UA detected: Mozilla Firefox/
 alert: id = = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
@@ -79,24 +79,24 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug cnx: dropping connection 192.168.10.1:53443 -> 192.168.20.1:80
-debug cnx: opening connection 192.168.10.1:53444 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: Domain requested: server
-info Filter: UA detected: Mozilla Firefox
-info Filter: Unknown or missing User-Agent
-debug cnx: opening connection 192.168.10.1:53445 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: Domain requested: server
-info Filter: UA detected: No User-Agent header
-info Filter: Unknown or missing User-Agent
-debug cnx: opening connection 192.168.10.1:53446 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: UA detected: No User-Agent header
-info Filter: Unknown or missing User-Agent
-debug cnx: opening connection 192.168.10.1:53447 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: UA detected: Mozilla Firefox/18.0
+debug conn: dropping connection 192.168.10.1:53443 -> 192.168.20.1:80
+debug conn: opening connection 192.168.10.1:53444 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: Domain requested: server
+info external: UA detected: Mozilla Firefox
+info external: Unknown or missing User-Agent
+debug conn: opening connection 192.168.10.1:53445 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: Domain requested: server
+info external: UA detected: No User-Agent header
+info external: Unknown or missing User-Agent
+debug conn: opening connection 192.168.10.1:53446 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: UA detected: No User-Agent header
+info external: Unknown or missing User-Agent
+debug conn: opening connection 192.168.10.1:53447 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: UA detected: Mozilla Firefox/18.0
 alert: id = = <>
 	severity = medium
 	description = Firefox is outdated, please upgrade
@@ -116,21 +116,21 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug cnx: opening connection 192.168.10.1:53448 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: UA detected: Mozilla Firefox/28.0
-debug cnx: opening connection 192.168.10.1:53449 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info Filter: Domain requested: mozilla.org
-info Filter: Update domain: go for it
+debug conn: opening connection 192.168.10.1:53448 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: UA detected: Mozilla Firefox/28.0
+debug conn: opening connection 192.168.10.1:53449 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: Domain requested: mozilla.org
+info external: Update domain: go for it
 debug lua: closing state
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection

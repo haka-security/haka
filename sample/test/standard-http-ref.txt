@@ -1,9 +1,9 @@
-debug cnx: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
-debug filter: entering packet filtering rules : 50692 --> 80
-warn filter: authorizing http traffic
-debug cnx: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
-debug filter: entering packet filtering rules : 50693 --> 80
-warn filter: authorizing http traffic
+debug conn: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
+debug external: entering packet filtering rules : 50692 --> 80
+warn external: authorizing http traffic
+debug conn: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
+debug external: entering packet filtering rules : 50693 --> 80
+warn external: authorizing http traffic
 alert: id = = <>
 	description = non authorized http method 'WRONG'
 	sources = {
@@ -13,10 +13,10 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/80, http
 	}
-debug cnx: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
-debug cnx: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
-debug filter: entering packet filtering rules : 50694 --> 80
-warn filter: authorizing http traffic
+debug conn: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
+debug conn: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
+debug external: entering packet filtering rules : 50694 --> 80
+warn external: authorizing http traffic
 alert: id = = <>
 	description = unsupported http version '2.1'
 	sources = {
@@ -26,10 +26,10 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/80, http
 	}
-debug cnx: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
-debug cnx: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
-debug filter: entering packet filtering rules : 50695 --> 80
-warn filter: authorizing http traffic
+debug conn: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
+debug conn: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
+debug external: entering packet filtering rules : 50695 --> 80
+warn external: authorizing http traffic
 alert: id = = <>
 	description = forbidden http method 'TRACE'
 	sources = {
@@ -39,9 +39,9 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/80, http
 	}
-debug cnx: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
-debug filter: entering packet filtering rules : 50696 --> 80
-warn filter: authorizing http traffic
+debug conn: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
+debug external: entering packet filtering rules : 50696 --> 80
+warn external: authorizing http traffic
 alert: id = = <>
 	severity = high
 	description = 'sqlmap' scan detected
@@ -52,10 +52,10 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/80, http
 	}
-debug cnx: dropping connection 192.168.10.1:50696 -> 192.168.20.1:80
+debug conn: dropping connection 192.168.10.1:50696 -> 192.168.20.1:80
 debug lua: closing state
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection

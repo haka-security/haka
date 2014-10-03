@@ -16,7 +16,7 @@ haka.rule {
 		local data = {}
 
 		for sub in iter:foreach_available() do
-			haka.log("test", "connection=%s:%d->%s:%d, dir %s, data received len=%d ",
+			haka.log("connection=%s:%d->%s:%d, dir %s, data received len=%d ",
 				flow.srcip, flow.srcport,
 				flow.dstip, flow.dstport,
 				direction, #sub)
@@ -24,7 +24,7 @@ haka.rule {
 			table.insert(data, sub:asstring())
 		end
 
-		haka.log("test", "connection=%s:%d->%s:%d, dir %s, data: %s",
+		haka.log("connection=%s:%d->%s:%d, dir %s, data: %s",
 				flow.srcip, flow.srcport,
 				flow.dstip, flow.dstport,
 				direction, table.concat(data))

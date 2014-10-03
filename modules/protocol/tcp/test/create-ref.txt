@@ -1,5 +1,5 @@
-debug cnx: opening connection 127.0.0.1:44393 -> 127.0.0.1:4444
-debug cnx: opening connection 127.0.0.1:44403 -> 127.0.0.1:4454
+debug conn: opening connection 127.0.0.1:44393 -> 127.0.0.1:4444
+debug conn: opening connection 127.0.0.1:44403 -> 127.0.0.1:4454
 debug lua: closing state
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection

@@ -1,4 +1,4 @@
-debug cnx: opening connection 127.0.0.1:53318 -> 127.0.0.1:2888
+debug conn: opening connection 127.0.0.1:53318 -> 127.0.0.1:2888
 word1= hello
 word2= word
 word1= two
@@ -8,4 +8,4 @@ word2= course
 word1= it
 word2= works
 debug lua: closing state
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection

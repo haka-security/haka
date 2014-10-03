@@ -11,7 +11,7 @@ local icmp = require("protocol/icmp")
 haka.rule {
 	hook = icmp.events.receive_packet,
 	eval = function (pkt)
-		haka.log("test", "received icmp packet size=%d", #pkt.payload)
+		haka.log("received icmp packet size=%d", #pkt.payload)
 
 		if #pkt.payload > 2000 then
 			pkt.payload:pos(1476):insert(haka.vbuffer_from("HAKAHAKA"))
