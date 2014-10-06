@@ -20,6 +20,7 @@ static struct packet_module *packet_module = NULL;
 static enum packet_mode global_packet_mode = MODE_NORMAL;
 static local_storage_t capture_state;
 struct time_realm network_time;
+static bool is_realtime = false;
 static bool network_time_inited = false;
 
 INIT static void __init()
@@ -69,6 +70,7 @@ int set_packet_module(struct module *module)
 		time_realm_initialize(&network_time,
 				packet_module->is_realtime() ? TIME_REALM_REALTIME : TIME_REALM_STATIC);
 		network_time_inited = true;
+		is_realtime = packet_module->is_realtime();
 	}
 
 	return 0;
@@ -125,7 +127,7 @@ int packet_receive(struct packet **pkt)
 		LOG_DEBUG(packet, "received packet id=%lli",
 				packet_module->get_id(*pkt));
 
-		if (!packet_module->is_realtime()) {
+		if (!is_realtime) {
 			time_realm_update(&network_time,
 					packet_module->get_timestamp(*pkt));
 		}
