@@ -5,10 +5,6 @@
 find_path(LIBUUID_INCLUDE_DIR uuid/uuid.h)
 find_library(LIBUUID_LIBRARY NAMES uuid)
 
-if(LIBUUID_INCLUDE_DIR AND LIBUUID_LIBRARY)
-	set(LIBUUID_FOUND)
-endif()
-
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(LibUuid

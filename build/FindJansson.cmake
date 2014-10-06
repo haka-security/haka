@@ -5,10 +5,6 @@
 find_path(JANSSON_INCLUDE_DIR jansson.h)
 find_library(JANSSON_LIBRARY NAMES jansson)
 
-if(JANSSON_INCLUDE_DIR AND JANSSON_LIBRARY)
-	set(JANSSON_FOUND)
-endif()
-
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(Jansson
