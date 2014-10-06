@@ -392,7 +392,7 @@ bool start_ctl_server()
 
 	/* Start the processing thread */
 	if (!thread_create(&ctl_server.thread, ctl_server_coreloop, &ctl_server)) {
-		messagef(HAKA_LOG_FATAL, MODULE, clear_error());
+		messagef(HAKA_LOG_FATAL, MODULE, "%s", clear_error());
 		ctl_server_cleanup(&ctl_server, true);
 		return false;
 	}
@@ -572,7 +572,7 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 
 		if (!setup_loglevel(level)) {
 			const char *err = clear_error();
-			messagef(HAKA_LOG_ERROR, MODULE, err);
+			messagef(HAKA_LOG_ERROR, MODULE, "%s", err);
 			ctl_send_status(state->fd, -1, err);
 		}
 		else {
