@@ -169,8 +169,8 @@ function parse.Context.method:_traverse(entity, f, all)
 
 			iter = self:catch()
 			if not iter then
-				log.debug(tostring(self._error))
-				log.debug(self._error:context())
+				log.debug("%s", tostring(self._error))
+				log.debug("%s", self._error:context())
 				break
 			else
 				log.debug("catched: %s", self._error)
