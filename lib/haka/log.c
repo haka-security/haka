@@ -332,7 +332,7 @@ static void message(log_level level, const char *module, const char *message, st
 	struct logger *iter;
 
 	rwlock_readlock(&log_module_lock);
-	for (iter=loggers; iter; iter = list_next(iter)) {
+	for (iter = loggers; iter; iter = list_next(iter)) {
 		iter->message(iter, level, module, message);
 
 		remove_pass |= iter->mark_for_remove;
@@ -345,7 +345,7 @@ static void message(log_level level, const char *module, const char *message, st
 
 	if (remove_pass) {
 		rwlock_readlock(&log_module_lock);
-		for (iter=loggers; iter; iter = list_next(iter)) {
+		for (iter = loggers; iter; iter = list_next(iter)) {
 			if (iter->mark_for_remove) {
 				rwlock_unlock(&log_module_lock);
 				remove_logger(iter);
