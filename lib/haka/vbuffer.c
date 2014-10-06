@@ -323,6 +323,20 @@ void vbuffer_release(struct vbuffer *buffer)
 	lua_object_release(buffer, &buffer->lua_object);
 }
 
+size_t vbuffer_size(struct vbuffer *buf)
+{
+	struct vbuffer_chunk *iter;
+	size_t size = 0;
+
+	assert(vbuffer_isvalid(buf));
+
+	VBUFFER_FOR_EACH(buf, iter) {
+		size += iter->size;
+	}
+
+	return size;
+}
+
 void vbuffer_position(const struct vbuffer *buf, struct vbuffer_iterator *position, size_t offset)
 {
 	assert(vbuffer_isvalid(buf));
@@ -1020,7 +1034,10 @@ void vbuffer_sub_create(struct vbuffer_sub *data, struct vbuffer *buffer, size_t
 	*data = vbuffer_sub_init;
 
 	vbuffer_begin(buffer, &data->begin);
-	vbuffer_iterator_advance(&data->begin, offset);
+
+	if (offset) {
+		vbuffer_iterator_advance(&data->begin, offset);
+	}
 
 	data->use_size = false;
 	if (length == ALL) {
