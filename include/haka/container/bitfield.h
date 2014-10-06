@@ -6,9 +6,14 @@
 #define _HAKA_CONTAINER_BITFIELD_H
 
 #include <haka/compiler.h>
-#include <stddef.h>
+#include <haka/types.h>
+#include <assert.h>
 
 
+/*
+ * Basic bitfield type which store bit by group of 32
+ * inside a 32 bit integer.
+ */
 struct bitfield {
 	size_t     size;
 	int32      data[0];
@@ -22,12 +27,18 @@ struct bitfield {
 
 #define BITFIELD_STATIC_INIT(n) { { size: n }, {0} }
 
+/**
+ * Get the value of a flag in the bitfield.
+ */
 INLINE bool bitfield_get(struct bitfield *bf, int off)
 {
 	assert(off < bf->size);
 	return (bf->data[off >> 5] & (1L << (off & 0x1f))) != 0;
 }
 
+/**
+ * Set the value of a flag in the bitfield.
+ */
 INLINE void bitfield_set(struct bitfield *bf, int off, bool val)
 {
 	int32 * const ptr = bf->data + (off >> 5);
