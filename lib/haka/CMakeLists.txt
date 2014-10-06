@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+find_package(DL REQUIRED)
+find_package(Editline REQUIRED)
+
 include_directories(.)
 include_directories(${LIBINIPARSER_INCLUDE})
 include_directories(${EDITLINE_INCLUDE_DIR})
@@ -76,9 +79,6 @@ set_target_properties(libhaka PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
 set_target_properties(libhaka PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}
 	SOVERSION ${HAKA_VERSION_MAJOR})
-
-find_package(DL REQUIRED)
-find_package(Editline REQUIRED)
 
 target_link_libraries(libhaka LINK_PRIVATE ${DL_LIBRARIES})
 target_link_libraries(libhaka LINK_PRIVATE ${CMAKE_THREAD_LIBS_INIT})

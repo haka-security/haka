@@ -5,10 +5,6 @@
 find_path(LIBGEOIP_INCLUDE_DIR GeoIP.h)
 find_library(LIBGEOIP_LIBRARY NAMES GeoIP)
 
-if(LIBGEOIP_INCLUDE_DIR AND LIBGEOIP_LIBRARY)
-	set(LIBGEOIP_FOUND)
-endif()
-
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(LibGeoIP

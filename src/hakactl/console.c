@@ -108,7 +108,7 @@ static int run_console(int fd, int argc, char *argv[])
 
 	state = lua_state_init();
 	if (!state) {
-		messagef(HAKA_LOG_FATAL, "hakactl", clear_error());
+		messagef(HAKA_LOG_FATAL, "hakactl", "%s", clear_error());
 		return COMMAND_FAILED;
 	}
 
@@ -119,14 +119,14 @@ static int run_console(int fd, int argc, char *argv[])
 	lua_setglobal(state->L, "hakactl");
 
 	if (!initialize_console(state)) {
-		messagef(HAKA_LOG_FATAL, "hakactl", clear_error());
+		messagef(HAKA_LOG_FATAL, "hakactl", "%s", clear_error());
 		lua_state_close(state);
 		return COMMAND_FAILED;
 	}
 
 	user = luadebug_user_readline();
 	if (!user) {
-		messagef(HAKA_LOG_FATAL, "hakactl", clear_error());
+		messagef(HAKA_LOG_FATAL, "hakactl", "%s", clear_error());
 		lua_state_close(state);
 		return COMMAND_FAILED;
 	}

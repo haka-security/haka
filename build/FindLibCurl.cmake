@@ -5,10 +5,6 @@
 find_path(LIBCURL_INCLUDE_DIR curl/curl.h)
 find_library(LIBCURL_LIBRARY NAMES curl)
 
-if(LIBCURL_INCLUDE_DIR AND LIBCURL_LIBRARY)
-	set(LIBCURL_FOUND)
-endif()
-
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(LibCurl
