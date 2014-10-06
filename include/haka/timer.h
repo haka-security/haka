@@ -26,8 +26,6 @@ enum time_realm_mode {
 /** Opaque timer environment structure. */
 struct time_realm {
 	enum time_realm_mode   mode;
-	struct time            time;
-	bool                   check_timer;
 	local_storage_t        states; /* struct timer_group_state */;
 };
 

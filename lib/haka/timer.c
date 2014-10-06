@@ -31,6 +31,7 @@ struct timer {
 };
 
 struct time_realm_state {
+	struct time        time;
 	timer_t            timer;
 	struct list2       sorted_timer;
 	bool               check_timer;
@@ -140,33 +141,35 @@ bool time_realm_destroy(struct time_realm *realm)
 
 void time_realm_update(struct time_realm *realm, const struct time *value)
 {
-	const struct time oldtime = realm->time;
 	int sign;
+	struct time_realm_state *state = get_time_realm_state(realm, true);
 	assert(realm->mode == TIME_REALM_STATIC);
 
-	sign = time_cmp(value, &oldtime);
+	sign = time_cmp(value, &state->time);
 	if (sign < 0) {
 		LOG_DEBUG(time, "static time going backward (ignored)");
 	}
 	else {
 		UNUSED struct time difftime;
 		LOG_TRACE(time, "static time offset %s%f seconds", sign >= 0 ? "+" : "-",
-				(time_diff(&difftime, value, &oldtime), time_sec(&difftime)));
+				(time_diff(&difftime, value, &state->time), time_sec(&difftime)));
 
-		realm->time = *value;
-		realm->check_timer = true;
+		state->time = *value;
+		state->check_timer = true;
 	}
 }
 
 const struct time *time_realm_current_time(struct time_realm *realm)
 {
+	struct time_realm_state *state = get_time_realm_state(realm, true);
+
 	switch (realm->mode) {
 	case TIME_REALM_REALTIME:
-		time_gettimestamp(&realm->time);
+		time_gettimestamp(&state->time);
 		/* no break */
 
 	case TIME_REALM_STATIC:
-		return &realm->time;
+		return &state->time;
 
 	default:
 		error("invalid timer mode");
@@ -358,7 +361,7 @@ bool timer_stop(struct timer *timer)
 bool time_realm_check(struct time_realm *realm)
 {
 	struct time_realm_state *state = get_time_realm_state(realm, false);
-	if (state && (state->check_timer || state->realm->check_timer)) {
+	if (state && state->check_timer) {
 		bool need_update = false;
 		struct list2 repeat_list; /* store repeat timers to reinsert them safely */
 		struct time current = *time_realm_current_time(state->realm);
@@ -366,7 +369,6 @@ bool time_realm_check(struct time_realm *realm)
 		list2_iter end = list2_end(&state->sorted_timer);
 
 		state->check_timer = false;
-		state->realm->check_timer = false;
 
 		list2_init(&repeat_list);
 
