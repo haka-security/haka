@@ -49,8 +49,9 @@ bool time_realm_destroy(struct time_realm *realm);
 
 /**
  * Update the time of a time realm that is in TIMER_REALM_STATIC mode.
+ * It does also check for timer to trigger.
  */
-void time_realm_update(struct time_realm *realm, const struct time *value);
+void time_realm_update_and_check(struct time_realm *realm, const struct time *value);
 
 /**
  * Get the current local time of the time realm.

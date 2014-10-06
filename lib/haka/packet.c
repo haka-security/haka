@@ -112,7 +112,7 @@ struct vbuffer *packet_payload(struct packet *pkt)
 	return &pkt->payload;
 }
 
-int packet_receive(struct packet **pkt)
+int packet_receive(struct engine_thread *engine, struct packet **pkt)
 {
 	int ret;
 	assert(packet_module);
@@ -127,13 +127,8 @@ int packet_receive(struct packet **pkt)
 		LOG_DEBUG(packet, "received packet id=%lli",
 				packet_module->get_id(*pkt));
 
-		if (!is_realtime) {
-			time_realm_update(&network_time,
-					packet_module->get_timestamp(*pkt));
-		}
-
 		{
-			volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+			volatile struct packet_stats *stats = engine_thread_statistics(engine);
 			if (stats) {
 				++stats->recv_packets;
 				stats->recv_bytes += vbuffer_size(packet_payload(*pkt));
@@ -141,7 +136,13 @@ int packet_receive(struct packet **pkt)
 		}
 	}
 
-	time_realm_check(&network_time);
+	if (*pkt && !is_realtime) {
+		time_realm_update_and_check(&network_time,
+					packet_module->get_timestamp(*pkt));
+	}
+	else {
+		time_realm_check(&network_time);
+	}
 
 	return ret;
 }

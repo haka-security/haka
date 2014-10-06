@@ -31,13 +31,14 @@ struct timer {
 };
 
 struct time_realm_state {
-	struct time        time;
-	timer_t            timer;
-	struct list2       sorted_timer;
-	bool               check_timer;
-	struct time_realm *realm;
+	struct time             time;
+	timer_t                 timer;
+	struct list2            sorted_timer;
+	bool                    check_timer;
+	struct time_realm      *realm;
 };
 
+static bool _time_realm_check(struct time_realm_state *state);
 
 static void timer_handler(int sig, siginfo_t *si, void *uc)
 {
@@ -75,6 +76,7 @@ static struct time_realm_state *create_time_realm_state(struct time_realm *realm
 
 	state->check_timer = false;
 	state->realm = realm;
+	state->time = invalid_time;
 
 	return state;
 }
@@ -139,7 +141,7 @@ bool time_realm_destroy(struct time_realm *realm)
 	return local_storage_destroy(&realm->states);
 }
 
-void time_realm_update(struct time_realm *realm, const struct time *value)
+void time_realm_update_and_check(struct time_realm *realm, const struct time *value)
 {
 	int sign;
 	struct time_realm_state *state = get_time_realm_state(realm, true);
@@ -156,14 +158,13 @@ void time_realm_update(struct time_realm *realm, const struct time *value)
 
 		state->time = *value;
 		state->check_timer = true;
+		_time_realm_check(state);
 	}
 }
 
-const struct time *time_realm_current_time(struct time_realm *realm)
+static const struct time *_time_realm_current_time(struct time_realm_state *state)
 {
-	struct time_realm_state *state = get_time_realm_state(realm, true);
-
-	switch (realm->mode) {
+	switch (state->realm->mode) {
 	case TIME_REALM_REALTIME:
 		time_gettimestamp(&state->time);
 		/* no break */
@@ -175,6 +176,12 @@ const struct time *time_realm_current_time(struct time_realm *realm)
 		error("invalid timer mode");
 		return NULL;
 	}
+}
+
+const struct time *time_realm_current_time(struct time_realm *realm)
+{
+	struct time_realm_state *state = get_time_realm_state(realm, true);
+	return _time_realm_current_time(state);
 }
 
 INIT static void _timer_init()
@@ -270,7 +277,7 @@ static bool time_realm_update_timer_list(struct time_realm_state *state,
 		else {
 			struct time diff;
 			struct timer *first = list2_first(&state->sorted_timer, struct timer, list);
-			struct time current = *time_realm_current_time(state->realm);
+			struct time current = *_time_realm_current_time(state);
 
 			if (time_diff(&diff, &first->trigger_time, &current) <= 0) {
 				state->check_timer = true;
@@ -299,7 +306,7 @@ static bool time_realm_update_timer_list(struct time_realm_state *state,
 		if (!list2_empty(&state->sorted_timer)) {
 			struct time diff;
 			struct timer *first = list2_first(&state->sorted_timer, struct timer, list);
-			struct time current = *time_realm_current_time(state->realm);
+			struct time current = *_time_realm_current_time(state);
 
 			if (time_diff(&diff, &first->trigger_time, &current) > 0) {
 				LOG_DEBUG(time, "next timer in %f seconds", time_sec(&diff));
@@ -358,71 +365,77 @@ bool timer_stop(struct timer *timer)
 	return time_realm_update_timer_list(state, is_first);
 }
 
+static bool _time_realm_check(struct time_realm_state *state)
+{
+	bool need_update = false;
+	struct list2 repeat_list; /* store repeat timers to reinsert them safely */
+	struct time current = *_time_realm_current_time(state);
+	list2_iter iter = list2_begin(&state->sorted_timer);
+	list2_iter end = list2_end(&state->sorted_timer);
+
+	state->check_timer = false;
+	if (iter == end) return true;
+
+	list2_init(&repeat_list);
+
+	while (iter != end) {
+		struct timer *timer = list2_get(iter, struct timer, list);
+		if (time_cmp(&timer->trigger_time, &current) <= 0) {
+			int count;
+
+			iter = list2_erase(&timer->list);
+			if (timer->repeat) {
+				struct time offset;
+				list2_insert(list2_end(&repeat_list), &timer->list);
+
+				/* Compute the next trigger time as well as the number
+				 * of missed triggers. */
+				if (time_diff(&offset, &timer->trigger_time, &current) <= 0) {
+					count = time_divide(&offset, &timer->delay) + 1;
+					time_mult(&offset, &timer->delay, count);
+					time_add(&timer->trigger_time, &timer->trigger_time, &offset);
+
+					assert(time_cmp(&timer->trigger_time, &current) >= 0);
+				}
+				else {
+					/* The time seams to have gone back in time, this is case
+					 * should not be reached. */
+					time_add(&timer->trigger_time, &current, &timer->delay);
+					count = 1;
+				}
+			}
+			else {
+				count = 1;
+				timer->armed = false;
+			}
+
+			(*timer->callback)(count, timer->data);
+
+			need_update = true;
+		}
+		else {
+			break;
+		}
+	}
+
+	if (!list2_empty(&repeat_list)) {
+		iter = list2_begin(&repeat_list);
+		end = list2_end(&repeat_list);
+		while (iter != end) {
+			struct timer *timer = list2_get(iter, struct timer, list);
+			iter = list2_erase(iter);
+			time_realm_insert_timer(state, timer);
+		}
+	}
+
+	return time_realm_update_timer_list(state, need_update);
+}
+
 bool time_realm_check(struct time_realm *realm)
 {
 	struct time_realm_state *state = get_time_realm_state(realm, false);
 	if (state && state->check_timer) {
-		bool need_update = false;
-		struct list2 repeat_list; /* store repeat timers to reinsert them safely */
-		struct time current = *time_realm_current_time(state->realm);
-		list2_iter iter = list2_begin(&state->sorted_timer);
-		list2_iter end = list2_end(&state->sorted_timer);
-
-		state->check_timer = false;
-
-		list2_init(&repeat_list);
-
-		while (iter != end) {
-			struct timer *timer = list2_get(iter, struct timer, list);
-			if (time_cmp(&timer->trigger_time, &current) <= 0) {
-				int count;
-
-				iter = list2_erase(&timer->list);
-				if (timer->repeat) {
-					struct time offset;
-					list2_insert(list2_end(&repeat_list), &timer->list);
-
-					/* Compute the next trigger time as well as the number
-					 * of missed triggers. */
-					if (time_diff(&offset, &timer->trigger_time, &current) <= 0) {
-						count = time_divide(&offset, &timer->delay) + 1;
-						time_mult(&offset, &timer->delay, count);
-						time_add(&timer->trigger_time, &timer->trigger_time, &offset);
-
-						assert(time_cmp(&timer->trigger_time, &current) >= 0);
-					}
-					else {
-						/* The time seams to have gone back in time, this is case
-						 * should not be reached. */
-						time_add(&timer->trigger_time, &current, &timer->delay);
-						count = 1;
-					}
-				}
-				else {
-					count = 1;
-					timer->armed = false;
-				}
-
-				(*timer->callback)(count, timer->data);
-
-				need_update = true;
-			}
-			else {
-				break;
-			}
-		}
-
-		if (!list2_empty(&repeat_list)) {
-			iter = list2_begin(&repeat_list);
-			end = list2_end(&repeat_list);
-			while (iter != end) {
-				struct timer *timer = list2_get(iter, struct timer, list);
-				iter = list2_erase(iter);
-				time_realm_insert_timer(state, timer);
-			}
-		}
-
-		return time_realm_update_timer_list(state, need_update);
+		return _time_realm_check(state);
 	}
 	return true;
 }

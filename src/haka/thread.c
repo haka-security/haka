@@ -304,7 +304,7 @@ static void *thread_main_loop(void *_state)
 
 	engine_thread_update_status(state->engine, THREAD_WAITING);
 
-	while (packet_receive(&pkt) == 0) {
+	while (packet_receive(state->engine, &pkt) == 0) {
 		engine_thread_update_status(state->engine, THREAD_RUNNING);
 
 		/* The packet can be NULL in case of failure in packet receive */
