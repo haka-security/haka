@@ -6,7 +6,7 @@ find_package(DL REQUIRED)
 find_package(Editline REQUIRED)
 
 include_directories(.)
-include_directories(${LIBINIPARSER_INCLUDE})
+include_directories(${INIPARSER_INCLUDE_DIR})
 include_directories(${EDITLINE_INCLUDE_DIR})
 
 # Haka library shared between runtime and modules
@@ -82,7 +82,7 @@ set_target_properties(libhaka PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VE
 
 target_link_libraries(libhaka LINK_PRIVATE ${DL_LIBRARIES})
 target_link_libraries(libhaka LINK_PRIVATE ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(libhaka LINK_PRIVATE iniparser)
+target_link_libraries(libhaka LINK_PRIVATE ${INIPARSER_LIBRARY})
 target_link_libraries(libhaka LINK_PRIVATE rt)
 target_link_libraries(libhaka LINK_PRIVATE m)
 target_link_libraries(libhaka LINK_PRIVATE ${EDITLINE_LIBRARY})
