@@ -13,13 +13,27 @@ BITFIELD_STATIC(94, bitfield94);
 struct bitfield11 bf11 = BITFIELD_STATIC_INIT(11);
 struct bitfield94 bf94 = BITFIELD_STATIC_INIT(94);
 
+static bool count_bits(struct bitfield *bf)
+{
+	int i;
+	int count = 0;
+
+	for (i=0; i<bf->size; ++i) {
+		if (bitfield_get(bf, i)) ++count;
+	}
+
+	return count;
+}
+
 START_TEST(test_set_get_11)
 {
 	bitfield_set(&bf11.bitfield, 9, true);
 	ck_assert(bitfield_get(&bf11.bitfield, 9));
+	ck_assert_int_eq(count_bits(&bf11.bitfield), 1);
 
 	bitfield_set(&bf11.bitfield, 9, false);
 	ck_assert(!bitfield_get(&bf11.bitfield, 9));
+	ck_assert_int_eq(count_bits(&bf11.bitfield), 0);
 }
 END_TEST
 
@@ -27,9 +41,11 @@ START_TEST(test_set_get_94)
 {
 	bitfield_set(&bf94.bitfield, 32, true);
 	ck_assert(bitfield_get(&bf94.bitfield, 32));
+	ck_assert_int_eq(count_bits(&bf94.bitfield), 1);
 
 	bitfield_set(&bf94.bitfield, 32, false);
 	ck_assert(!bitfield_get(&bf94.bitfield, 32));
+	ck_assert_int_eq(count_bits(&bf94.bitfield), 0);
 }
 END_TEST
 
@@ -37,9 +53,11 @@ START_TEST(test_set_get_94_2)
 {
 	bitfield_set(&bf94.bitfield, 77, true);
 	ck_assert(bitfield_get(&bf94.bitfield, 77));
+	ck_assert_int_eq(count_bits(&bf94.bitfield), 1);
 
 	bitfield_set(&bf94.bitfield, 77, false);
 	ck_assert(!bitfield_get(&bf94.bitfield, 77));
+	ck_assert_int_eq(count_bits(&bf94.bitfield), 0);
 }
 END_TEST
 
