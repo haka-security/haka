@@ -381,7 +381,12 @@ void _messagef(log_level level, section_id section, const char *fmt, ...)
  */
 
 BITFIELD_STATIC(MAX_SECTION, bitfield_section);
+
+/* Variable to store if a section has been set with a custom level or
+ * if it should use the default level instead. */
 static struct bitfield_section section_custom_level = BITFIELD_STATIC_INIT(MAX_SECTION);
+
+/* Store the logging level for each log section. */
 static struct bitfield_section section_levels[HAKA_LOG_LEVEL_MAX] = {
 	BITFIELD_STATIC_INIT(MAX_SECTION),
 	BITFIELD_STATIC_INIT(MAX_SECTION),
@@ -390,6 +395,7 @@ static struct bitfield_section section_levels[HAKA_LOG_LEVEL_MAX] = {
 	BITFIELD_STATIC_INIT(MAX_SECTION),
 	BITFIELD_STATIC_INIT(MAX_SECTION),
 };
+
 static mutex_t log_level_lock = MUTEX_INIT;
 
 static log_level default_level = HAKA_LOG_INFO;
@@ -415,6 +421,8 @@ bool setlevel(log_level level, const char *name)
 		mutex_lock(&log_level_lock);
 
 		if (level == HAKA_LOG_DEFAULT) {
+			/* The level should be the default, so remove the custom level flag and
+			 * overwrite the level. */
 			bitfield_set(&section_custom_level.bitfield, section, false);
 			level = default_level;
 		}
@@ -461,6 +469,8 @@ log_level getlevel(const char *name)
 		return false;
 	}
 
+	/* We search at which level we should not log. We assume that fatal is always
+	 * activated. */
 	for (i=1; i<HAKA_LOG_LEVEL_MAX; ++i) {
 		if (!bitfield_get(&section_levels[i].bitfield, section)) {
 			return (log_level)i-1;

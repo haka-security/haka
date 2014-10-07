@@ -13,6 +13,9 @@
 /*
  * Basic bitfield type which store bit by group of 32
  * inside a 32 bit integer.
+ *
+ * TODO: The dynamic API is not yet written, so you can only use the
+ * BITFIELD_STATIC macro for now.
  */
 struct bitfield {
 	size_t     size;
