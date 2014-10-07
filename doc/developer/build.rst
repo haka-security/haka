@@ -66,7 +66,7 @@ You will need to get a swig build from upstream.
 
     $ git clone https://github.com/swig/swig.git
     $ cd swig
-    $ git co rel-2.0.11
+    $ git checkout rel-2.0.11
     $ ./autogen.sh
     $ ./configure
     $ make
