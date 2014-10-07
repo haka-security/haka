@@ -15,7 +15,7 @@
 
 #include <haka/luadebug/user.h>
 
-#define MODULE    SECTION_REMOTE
+#define MODULE    remote
 
 
 struct luadebug_remote_user {

@@ -14,7 +14,7 @@
 #include <haka/container/vector.h>
 
 
-#define MODULE    SECTION_STATES
+#define MODULE    states
 
 
 /*

@@ -28,16 +28,16 @@ struct module MY_MODULE = {
 
 static int init(struct parameters *args)
 {
-	LOG_INFO(SECTION_EXTERNAL, "init my module");
+	LOG_INFO(external, "init my module");
 	return 0;
 }
 
 static void cleanup()
 {
-	LOG_INFO(SECTION_EXTERNAL, "cleanup my module");
+	LOG_INFO(external, "cleanup my module");
 }
 
 void myfunc(void)
 {
-	LOG_INFO(SECTION_EXTERNAL, "myfunc");
+	LOG_INFO(external, "myfunc");
 }

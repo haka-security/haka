@@ -75,11 +75,11 @@ bool initialize_console(struct lua_state *state)
 				continue;
 			}
 
-			LOG_DEBUG(SECTION_CORE, "loading console script '%s'", entry.d_name);
+			LOG_DEBUG(core, "loading console script '%s'", entry.d_name);
 
 			if (luaL_dofile(state->L, fullfilename)) {
 				const char *msg = lua_tostring(state->L, -1);
-				LOG_ERROR(SECTION_CORE, "cannot open console script '%s': %s",
+				LOG_ERROR(core, "cannot open console script '%s': %s",
 				         entry.d_name, msg);
 				lua_pop(state->L, 1);
 			}
@@ -108,7 +108,7 @@ static int run_console(int fd, int argc, char *argv[])
 
 	state = lua_state_init();
 	if (!state) {
-		LOG_FATAL(SECTION_CORE, "%s", clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		return COMMAND_FAILED;
 	}
 
@@ -119,14 +119,14 @@ static int run_console(int fd, int argc, char *argv[])
 	lua_setglobal(state->L, "hakactl");
 
 	if (!initialize_console(state)) {
-		LOG_FATAL(SECTION_CORE, "%s", clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		lua_state_close(state);
 		return COMMAND_FAILED;
 	}
 
 	user = luadebug_user_readline();
 	if (!user) {
-		LOG_FATAL(SECTION_CORE, "%s", clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		lua_state_close(state);
 		return COMMAND_FAILED;
 	}

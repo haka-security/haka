@@ -52,19 +52,6 @@ log_level str_to_level(const char *str);
 typedef int section_id;
 
 /**
- * Global section id.
- */
-enum {
-	SECTION_CORE,
-	SECTION_PACKET,
-	SECTION_TIME,
-	SECTION_STATES,
-	SECTION_REMOTE,
-	SECTION_EXTERNAL,
-	SECTION_LUA,
-};
-
-/**
  * Invalid section id.
  */
 #define INVALID_SECTION_ID -1
@@ -75,11 +62,26 @@ enum {
 section_id register_log_section(const char *name);
 
 #define DECLARE_LOG_SECTION(name) \
-	int name##_section;
+	int _##name##_section;
 
 #define REGISTER_LOG_SECTION(name) \
-	int name##_section = SECTION_EXTERNAL; \
-	INIT static void __init_log_section_##name() { name##_section = register_log_section(#name); }
+	int _##name##_section = LOG_SECTION(external); \
+	INIT static void __init_log_section_##name() { _##name##_section = register_log_section(#name); }
+
+#define LOG_SECTION(name)     _##name##_section
+
+/**
+ * Global section id.
+ */
+enum {
+	LOG_SECTION(core),
+	LOG_SECTION(packet),
+	LOG_SECTION(time),
+	LOG_SECTION(states),
+	LOG_SECTION(remote),
+	LOG_SECTION(external),
+	LOG_SECTION(lua)
+};
 
 /**
  * Search for a log section by name.
@@ -102,14 +104,14 @@ void _messagef(log_level level, section_id section, const char *fmt, ...) FORMAT
 /**
  * Log a message with string formating in various level.
  */
-#define LOG_FATAL(section, fmt, ...)    _LOG(HAKA_LOG_FATAL, section, fmt, ##__VA_ARGS__)
-#define LOG_ERROR(section, fmt, ...)    _LOG(HAKA_LOG_ERROR, section, fmt, ##__VA_ARGS__)
-#define LOG_WARNING(section, fmt, ...)  _LOG(HAKA_LOG_WARNING, section, fmt, ##__VA_ARGS__)
-#define LOG_INFO(section, fmt, ...)     _LOG(HAKA_LOG_INFO, section, fmt, ##__VA_ARGS__)
-#define LOG_DEBUG(section, fmt, ...)    _LOG(HAKA_LOG_DEBUG, section, fmt, ##__VA_ARGS__)
+#define LOG_FATAL(section, fmt, ...)    _LOG(HAKA_LOG_FATAL, LOG_SECTION(section), fmt, ##__VA_ARGS__)
+#define LOG_ERROR(section, fmt, ...)    _LOG(HAKA_LOG_ERROR, LOG_SECTION(section), fmt, ##__VA_ARGS__)
+#define LOG_WARNING(section, fmt, ...)  _LOG(HAKA_LOG_WARNING, LOG_SECTION(section), fmt, ##__VA_ARGS__)
+#define LOG_INFO(section, fmt, ...)     _LOG(HAKA_LOG_INFO, LOG_SECTION(section), fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(section, fmt, ...)    _LOG(HAKA_LOG_DEBUG, LOG_SECTION(section), fmt, ##__VA_ARGS__)
 
 #ifdef HAKA_DEBUG
-	#define LOG_TRACE(section, fmt, ...) _LOG(HAKA_LOG_TRACE, section, fmt, ##__VA_ARGS__)
+	#define LOG_TRACE(section, fmt, ...) _LOG(HAKA_LOG_TRACE, LOG_SECTION(section), fmt, ##__VA_ARGS__)
 #else
 	#define LOG_TRACE(section, fmt, ...)
 #endif

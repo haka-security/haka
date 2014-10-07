@@ -57,13 +57,13 @@ struct static_section_entry {
 };
 
 static struct static_section_entry static_log_section[] = {
-	{ "core", SECTION_CORE },
-	{ "packet", SECTION_PACKET },
-	{ "time", SECTION_TIME },
-	{ "states", SECTION_STATES },
-	{ "remote", SECTION_REMOTE },
-	{ "external", SECTION_EXTERNAL },
-	{ "lua", SECTION_LUA },
+	{ "core", LOG_SECTION(core) },
+	{ "packet", LOG_SECTION(packet) },
+	{ "time", LOG_SECTION(time) },
+	{ "states", LOG_SECTION(states) },
+	{ "remote", LOG_SECTION(remote) },
+	{ "external", LOG_SECTION(external) },
+	{ "lua", LOG_SECTION(lua) },
 	{ NULL, 0 }
 };
 

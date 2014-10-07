@@ -89,14 +89,14 @@ static void add_override(const char *key, const char *value)
 {
 	struct config_override *override = vector_push(&config_overrides, struct config_override);
 	if (!override) {
-		LOG_FATAL(SECTION_CORE, "memory error");
+		LOG_FATAL(core, "memory error");
 		exit(2);
 	}
 
 	override->key = strdup(key);
 	override->value = strdup(value);
 	if (!override->key || !override->value) {
-		LOG_FATAL(SECTION_CORE, "memory error");
+		LOG_FATAL(core, "memory error");
 		clean_exit();
 		exit(2);
 	}
@@ -158,7 +158,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		case 'c':
 			config = strdup(optarg);
 			if (!config) {
-				LOG_FATAL(SECTION_CORE, "memory error");
+				LOG_FATAL(core, "memory error");
 				clean_exit();
 				exit(2);
 			}
@@ -191,7 +191,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		case 'P':
 			pid_file_path = strdup(optarg);
 			if (!pid_file_path) {
-				LOG_FATAL(SECTION_CORE, "memory error");
+				LOG_FATAL(core, "memory error");
 				clean_exit();
 				exit(2);
 			}
@@ -200,7 +200,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		case 'S':
 			ctl_file_path = strdup(optarg);
 			if (!ctl_file_path) {
-				LOG_FATAL(SECTION_CORE, "memory error");
+				LOG_FATAL(core, "memory error");
 				clean_exit();
 				exit(2);
 			}
@@ -220,7 +220,7 @@ static int parse_cmdline(int *argc, char ***argv)
 	if (!config) {
 		config = strdup(HAKA_CONFIG);
 		if (!config) {
-			LOG_FATAL(SECTION_CORE, "memory error");
+			LOG_FATAL(core, "memory error");
 			clean_exit();
 			exit(2);
 		}
@@ -229,7 +229,7 @@ static int parse_cmdline(int *argc, char ***argv)
 	if (!pid_file_path) {
 		pid_file_path = strdup(HAKA_PID_FILE);
 		if (!pid_file_path) {
-			LOG_FATAL(SECTION_CORE, "memory error");
+			LOG_FATAL(core, "memory error");
 			clean_exit();
 			exit(2);
 		}
@@ -238,7 +238,7 @@ static int parse_cmdline(int *argc, char ***argv)
 	if (!ctl_file_path) {
 		ctl_file_path = strdup(HAKA_CTL_SOCKET_FILE);
 		if (!ctl_file_path) {
-			LOG_FATAL(SECTION_CORE, "memory error");
+			LOG_FATAL(core, "memory error");
 			clean_exit();
 			exit(2);
 		}
@@ -253,7 +253,7 @@ int read_configuration(const char *file)
 {
 	struct parameters *config = parameters_open(file);
 	if (check_error()) {
-		LOG_FATAL(SECTION_CORE, clear_error());
+		LOG_FATAL(core, clear_error());
 		return 2;
 	}
 
@@ -288,13 +288,13 @@ int read_configuration(const char *file)
 		if (_level) {
 			char *level = strdup(_level);
 			if (!level) {
-				LOG_FATAL(SECTION_CORE, "memory error");
+				LOG_FATAL(core, "memory error");
 				clean_exit();
 				exit(1);
 			}
 
 			if (!setup_loglevel(level)) {
-				LOG_FATAL(SECTION_CORE, clear_error());
+				LOG_FATAL(core, clear_error());
 				clean_exit();
 				exit(1);
 			}
@@ -315,21 +315,21 @@ int read_configuration(const char *file)
 
 			struct module *logger_module = module_load(module, config);
 			if (!logger_module) {
-				LOG_FATAL(SECTION_CORE, "cannot load logging module: %s", clear_error());
+				LOG_FATAL(core, "cannot load logging module: %s", clear_error());
 				clean_exit();
 				return 1;
 			}
 
 			logger = log_module_logger(logger_module, config);
 			if (!logger) {
-				LOG_FATAL(SECTION_CORE, "cannot initialize logging module: %s", clear_error());
+				LOG_FATAL(core, "cannot initialize logging module: %s", clear_error());
 				module_release(logger_module);
 				clean_exit();
 				return 1;
 			}
 
 			if (!add_logger(logger)) {
-				LOG_FATAL(SECTION_CORE, "cannot install logging module: %s", clear_error());
+				LOG_FATAL(core, "cannot install logging module: %s", clear_error());
 				logger->destroy(logger);
 				module_release(logger_module);
 				clean_exit();
@@ -351,21 +351,21 @@ int read_configuration(const char *file)
 
 			struct module *alerter_module = module_load(module, config);
 			if (!alerter_module) {
-				LOG_FATAL(SECTION_CORE, "cannot load alert module: %s", clear_error());
+				LOG_FATAL(core, "cannot load alert module: %s", clear_error());
 				clean_exit();
 				return 1;
 			}
 
 			alerter = alert_module_alerter(alerter_module, config);
 			if (!alerter) {
-				LOG_FATAL(SECTION_CORE, "cannot initialize alert module: %s", clear_error());
+				LOG_FATAL(core, "cannot initialize alert module: %s", clear_error());
 				module_release(alerter_module);
 				clean_exit();
 				return 1;
 			}
 
 			if (!add_alerter(alerter)) {
-				LOG_FATAL(SECTION_CORE, "cannot install alert module: %s", clear_error());
+				LOG_FATAL(core, "cannot install alert module: %s", clear_error());
 				alerter->destroy(alerter);
 				module_release(alerter_module);
 				clean_exit();
@@ -386,7 +386,7 @@ int read_configuration(const char *file)
 
 			module = module_load("alert/file", NULL);
 			if (!module) {
-				LOG_FATAL(SECTION_CORE, "cannot load default alert module: %s", clear_error());
+				LOG_FATAL(core, "cannot load default alert module: %s", clear_error());
 				clean_exit();
 				return 1;
 			}
@@ -406,7 +406,7 @@ int read_configuration(const char *file)
 		if (module) {
 			struct module *packet = module_load(module, config);
 			if (!packet) {
-				LOG_FATAL(SECTION_CORE, "cannot load packet module: %s", clear_error());
+				LOG_FATAL(core, "cannot load packet module: %s", clear_error());
 				clean_exit();
 				return 1;
 			}
@@ -415,7 +415,7 @@ int read_configuration(const char *file)
 			module_release(packet);
 		}
 		else {
-			LOG_FATAL(SECTION_CORE, "no packet module specified");
+			LOG_FATAL(core, "no packet module specified");
 			clean_exit();
 			return 1;
 		}
@@ -427,7 +427,7 @@ int read_configuration(const char *file)
 	{
 		const char *configuration = parameters_get_string(config, "configuration", NULL);
 		if (!configuration) {
-			LOG_FATAL(SECTION_CORE, "no configuration specified");
+			LOG_FATAL(core, "no configuration specified");
 			clean_exit();
 			return 1;
 		}
@@ -465,7 +465,7 @@ bool check_running_haka()
 	}
 
 	if (fscanf(pid_file, "%i", &pid) != 1) {
-		LOG_WARNING(SECTION_CORE, "malformed pid file");
+		LOG_WARNING(core, "malformed pid file");
 		return false;
 	}
 
@@ -473,7 +473,7 @@ bool check_running_haka()
 		return false;
 	}
 
-	LOG_FATAL(SECTION_CORE, "an instance of haka is already running");
+	LOG_FATAL(core, "an instance of haka is already running");
 	return true;
 }
 
@@ -528,7 +528,7 @@ int main(int argc, char *argv[])
 	{
 		struct luadebug_user *user = luadebug_user_readline();
 		if (!user) {
-			LOG_FATAL(SECTION_CORE, "cannot create readline handler");
+			LOG_FATAL(core, "cannot create readline handler");
 			clean_exit();
 			return 2;
 		}
@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
 
 		child = fork();
 		if (child == -1) {
-			LOG_FATAL(SECTION_CORE, "failed to daemonize");
+			LOG_FATAL(core, "failed to daemonize");
 			clean_exit();
 			return 1;
 		}
@@ -565,7 +565,7 @@ int main(int argc, char *argv[])
 
 	pid_file = fopen(pid_file_path, "w");
 	if (!pid_file) {
-		LOG_FATAL(SECTION_CORE, "cannot create pid file");
+		LOG_FATAL(core, "cannot create pid file");
 		clean_exit();
 		return 1;
 	}
@@ -586,12 +586,12 @@ int main(int argc, char *argv[])
 		luadebug_debugger_user(NULL);
 		luadebug_interactive_user(NULL);
 
-		LOG_INFO(SECTION_CORE, "switch to background");
+		LOG_INFO(core, "switch to background");
 
 		{
 			const int nullfd = open("/dev/null", O_RDWR);
 			if (nullfd == -1) {
-				LOG_FATAL(SECTION_CORE, "failed to daemonize");
+				LOG_FATAL(core, "failed to daemonize");
 				fclose(pid_file);
 				clean_exit();
 				return 1;
@@ -609,7 +609,7 @@ int main(int argc, char *argv[])
 
 	start();
 
-	LOG_INFO(SECTION_CORE, "stopping haka");
+	LOG_INFO(core, "stopping haka");
 
 	clean_exit();
 	return 0;

@@ -176,7 +176,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_
 		}
 
 		if (iter != end && chunk->end_seq > qchunk->start_seq) {
-			LOG_WARNING(tcp_section, "retransmit packet (ignored)");
+			LOG_WARNING(tcp, "retransmit packet (ignored)");
 			tcp_stream_chunk_free(chunk);
 			return false;
 		}
@@ -184,7 +184,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_
 		list2_insert(iter, &chunk->list);
 	}
 	else {
-		LOG_WARNING(tcp_section, "retransmit packet (ignored)");
+		LOG_WARNING(tcp, "retransmit packet (ignored)");
 		tcp_stream_chunk_free(chunk);
 		return false;
 	}

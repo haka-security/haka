@@ -92,7 +92,7 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'l':
 			if (!setup_loglevel(optarg)) {
-				LOG_FATAL(SECTION_CORE, clear_error());
+				LOG_FATAL(core, clear_error());
 				clean_exit();
 				exit(1);
 			}
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
 		args = NULL;
 
 		if (!pcap) {
-			LOG_FATAL(SECTION_CORE, "cannot load packet module: %s", clear_error());
+			LOG_FATAL(core, "cannot load packet module: %s", clear_error());
 			clean_exit();
 			return 1;
 		}
@@ -214,14 +214,14 @@ int main(int argc, char *argv[])
 
 		module = module_load("alert/file", NULL);
 		if (!module) {
-			LOG_FATAL(SECTION_CORE, "cannot load alert module: %s", clear_error());
+			LOG_FATAL(core, "cannot load alert module: %s", clear_error());
 			clean_exit();
 			return 1;
 		}
 
 		alerter = alert_module_alerter(module, args);
 		if (!alerter) {
-			LOG_FATAL(SECTION_CORE, "cannot load alert module: %s", clear_error());
+			LOG_FATAL(core, "cannot load alert module: %s", clear_error());
 			clean_exit();
 			return 1;
 		}
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 	{
 		struct luadebug_user *user = luadebug_user_readline();
 		if (!user) {
-			LOG_FATAL(SECTION_CORE, "cannot create readline handler");
+			LOG_FATAL(core, "cannot create readline handler");
 			clean_exit();
 			return 2;
 		}

@@ -68,7 +68,7 @@ ipv4network ipv4_network_from_string(const char *string)
 	if (maskedaddr != netaddr.net) {
 		/* incorrect network mask, correct it */
 		netaddr.net = maskedaddr;
-		LOG_DEBUG(ipv4_section, "incorrect network mask");
+		LOG_DEBUG(ipv4, "incorrect network mask");
 	}
 
 	return netaddr;
