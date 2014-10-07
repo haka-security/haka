@@ -92,7 +92,7 @@ section_id search_log_section(const char *name);
  */
 bool check_section_log_level(section_id section, log_level level);
 
-void _messagef(log_level level, section_id sectio, const char *fmt, ...) FORMAT_PRINTF(3, 4);
+void _messagef(log_level level, section_id section, const char *fmt, ...) FORMAT_PRINTF(3, 4);
 
 #define _LOG(level, section, fmt, ...) \
 	do { if (check_section_log_level(section, level)) { \
