@@ -31,10 +31,14 @@ void setlevel(log_level level, const char *section);
 
 %luacode {
 	-- Hide internals
-	local message = haka._message haka._message = nil
-	local check = haka._check haka._check = nil
-	local register = haka.register_log_section haka.register_log_section = nil
-	local setloglevel = haka._setloglevel haka._setloglevel = nil
+	local message = haka._message
+	haka._message = nil
+	local check = haka._check
+	haka._check = nil
+	local register = haka.register_log_section
+	haka.register_log_section = nil
+	local setloglevel = haka._setloglevel
+	haka._setloglevel = nil
 
 	local loglevel = {
 		fatal = haka.HAKA_LOG_FATAL,
