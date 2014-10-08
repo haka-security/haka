@@ -4,7 +4,7 @@
 
 set(ENV{LANG} "C")
 set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
-set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/src/lua/?.lua)
+set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/external/luaunit/src/?.lua)
 set(ENV{HAKA_PATH} ${HAKA_PATH})
 set(ENV{LD_LIBRARY_PATH} ${HAKA_PATH}/lib)
 set(ENV{TZ} Europe/Paris)
