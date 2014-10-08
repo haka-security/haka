@@ -7,9 +7,9 @@ find_package(PCAP)
 
 include(CheckCSourceCompiles)
 
-set(IPTABLES_PATH "\\\"/sbin\\\"" CACHE STRING "path to iptables binaries")
-if(NETFILTERQUEUE_FOUND AND PCAP_FOUND)
+set(IPTABLES_PATH "/sbin" CACHE STRING "path to iptables binaries")
 
+if(NETFILTERQUEUE_FOUND AND PCAP_FOUND)
 	# Check if nfq_get_payload does take an argument as unisgned char** or char**
 	set(CMAKE_REQUIRED_LIBRARIES ${NETFILTERQUEUE_LIBRARIES})
 	set(CMAKE_REQUIRED_INCLUDES ${NETFILTERQUEUE_INCLUDE_DIR})
@@ -33,7 +33,7 @@ int main()
 		main.c
 		iptables.c)
 	set_target_properties(packet-nfqueue PROPERTIES OUTPUT_NAME nfqueue)
-	set_target_properties(packet-nfqueue PROPERTIES COMPILE_DEFINITIONS  IPTABLES_PATH="${IPTABLES_PATH}")
+	set_target_properties(packet-nfqueue PROPERTIES COMPILE_DEFINITIONS IPTABLES_PATH="${IPTABLES_PATH}")
 
 	include_directories(${NETFILTERQUEUE_INCLUDE_DIR} ${PCAP_INCLUDE_DIR})
 	target_link_libraries(packet-nfqueue ${NETFILTERQUEUE_LIBRARIES} ${PCAP_LIBRARY})
