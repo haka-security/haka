@@ -557,6 +557,10 @@ function tcp_connection_dissector.method:send(direction)
 	end
 end
 
+function tcp_connection_dissector.method:error()
+	self:_close()
+end
+
 function tcp_connection_dissector.method:drop()
 	check.assert(self.state, "connection already dropped")
 
