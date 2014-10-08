@@ -392,7 +392,7 @@ static void *elasticsearch_request_thread(void *_connector)
 	char url[BUFFER_SIZE];
 	int lasterror = 0;
 
-	while (!connector->exit) {
+	while (true) {
 		struct list2 copy;
 		list2_iter iter, end;
 		int code;
@@ -406,6 +406,7 @@ static void *elasticsearch_request_thread(void *_connector)
 		mutex_lock(&connector->request_mutex);
 		if (list2_empty(&connector->request)) {
 			mutex_unlock(&connector->request_mutex);
+			if (connector->exit) break;
 			continue;
 		}
 
