@@ -213,7 +213,7 @@ struct state_machine {
 			state_machine_compile($self);
 		}
 
-		struct state_machine_instance *instanciate(struct lua_ref states)
+		struct state_machine_instance *instanciate(struct lua_ref WEAK)
 		{
 			struct lua_state_machine_context *context = malloc(sizeof(struct lua_state_machine_context));
 			if (!context) {
@@ -222,7 +222,7 @@ struct state_machine {
 			}
 
 			context->super.destroy = lua_state_machine_context_destroy;
-			context->states = states;
+			context->states = WEAK;
 
 			return state_machine_instance($self, &context->super);
 		}

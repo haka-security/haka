@@ -14,6 +14,7 @@
 
 #include <haka/lua/state.h>
 #include <haka/lua/object.h>
+#include <haka/lua/ref.h>
 #include <haka/log.h>
 #include <haka/compiler.h>
 #include <haka/error.h>
@@ -398,6 +399,8 @@ struct lua_state *lua_state_init()
 
 	lua_pushlightuserdata(L, ret);
 	lua_setfield(L, LUA_REGISTRYINDEX, STATE_TABLE);
+
+	lua_ref_init_state(L);
 
 	ret->next = allocated_state;
 	allocated_state = ret;

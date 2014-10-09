@@ -117,7 +117,7 @@ struct lua_ref _packet_data_get(lua_State *L, struct packet *packet)
 {
 	if (!lua_ref_isvalid(&packet->userdata)) {
 		lua_newtable(L);
-		lua_ref_get(L, &packet->userdata, -1);
+		lua_ref_get(L, &packet->userdata, -1, false);
 		lua_pop(L, 1);
 	}
 
