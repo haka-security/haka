@@ -518,10 +518,6 @@ void state_machine_instance_finish(struct state_machine_instance *instance)
 
 void state_machine_instance_destroy(struct state_machine_instance *instance)
 {
-	if (!instance->finished) {
-		state_machine_instance_finish(instance);
-	}
-
 	if (instance->context) {
 		instance->context->destroy(instance->context);
 	}
