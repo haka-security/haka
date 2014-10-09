@@ -24,7 +24,7 @@ eog /tmp/mem-graph.png &
 
 while true; do
 	echo "0 0" > /tmp/mem.log
-	sed -n -e 's/^.*memory report: vmsize=\(.*\) luasize=\(.*\)/\1 \2/p' /tmp/out.log >> /tmp/mem.log
+	sed -n -e 's/^.*memory report:.*vmsize=\(.*\) luasize=\(.*\)/\1 \2/p' /tmp/out.log >> /tmp/mem.log
 	gnuplot /tmp/gnuplot.script
 
 	pidof $1 > /dev/null

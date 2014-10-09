@@ -327,7 +327,7 @@ static void *thread_main_loop(void *_state)
 		if (((pkt_count++) % mem_rate) == 0) {
 			const size_t vmsize = get_vmsize();
 			const size_t luasize = lua_gc(state->lua->L, LUA_GCCOUNT, 0);
-			messagef(HAKA_LOG_DEBUG, "core", "thread %d: memory report: vmsize=%zd luasize=%zd",
+			messagef(HAKA_LOG_DEBUG, "core", "memory report: thread=%d vmsize=%zd luasize=%zd",
 					engine_thread_id(state->engine), vmsize, luasize);
 		}
 #endif
