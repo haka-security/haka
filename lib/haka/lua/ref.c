@@ -50,6 +50,10 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 		ref->state = lua_state_get(state);
 		ref->weak = weak;
 
+		if (index < 0) {
+			index = lua_gettop(state)+index+1;
+		}
+
 		lua_getfield(state, LUA_REGISTRYINDEX, weak ? WEAKREF_TABLE : REF_TABLE);
 		assert(lua_istable(state, -1));
 
