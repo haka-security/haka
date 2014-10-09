@@ -62,6 +62,16 @@ void cnx_table_release(struct cnx_table *table)
 
 	HASH_ITER(hh, table->head, elem, tmp) {
 		HASH_DEL(table->head, elem);
+
+		{
+			char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
+
+			ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
+			ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
+			messagef(HAKA_LOG_DEBUG, "cnx", "release connection %s:%u -> %s:%u",
+					srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
+		}
+
 		cnx_release(table, elem, true);
 	}
 
