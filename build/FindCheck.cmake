@@ -8,6 +8,7 @@ include(FindPackageHandleStandardArgs)
 
 find_path(CHECK_INCLUDE_DIRS NAMES check.h)
 find_library(CHECK_LIBRARIES NAMES check)
+find_package(Threads REQUIRED)
 
 list(APPEND CHECK_LIBRARIES rt)
 list(APPEND CHECK_LIBRARIES m)
