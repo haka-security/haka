@@ -39,8 +39,10 @@ if(FILE_IS_SAME)
 	execute_process(COMMAND cp ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.tmp ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.opt)
 endif(FILE_IS_SAME)
 
+find_package(Rsync REQUIRED)
+
 add_custom_target(luajit-sync
-	COMMAND rsync -rt ${CMAKE_SOURCE_DIR}/${LUAJIT_DIR} ${CMAKE_BINARY_DIR}/external/luajit
+	COMMAND ${RSYNC_EXECUTABLE} -rt ${CMAKE_SOURCE_DIR}/${LUAJIT_DIR} ${CMAKE_BINARY_DIR}/external/luajit
 )
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/cmake.build
