@@ -17,6 +17,7 @@
 #include <haka/error.h>
 #include <haka/thread.h>
 #include <haka/engine.h>
+#include <haka/system.h>
 #include <haka/timer.h>
 #include <haka/lua/state.h>
 #include <haka/lua/luautils.h>
@@ -232,6 +233,10 @@ static void *thread_main_loop(void *_state)
 	struct thread_state *state = (struct thread_state *)_state;
 	struct packet *pkt = NULL;
 	sigset_t set;
+#ifdef HAKA_MEMCHECK
+	int64 pkt_count=0;
+	const int mem_rate=10;
+#endif
 
 	thread_setid(state->thread_id);
 
@@ -317,6 +322,15 @@ static void *thread_main_loop(void *_state)
 		}
 
 		engine_thread_update_status(state->engine, THREAD_WAITING);
+
+#ifdef HAKA_MEMCHECK
+		if (((pkt_count++) % mem_rate) == 0) {
+			const size_t vmsize = get_vmsize();
+			const size_t luasize = lua_gc(state->lua->L, LUA_GCCOUNT, 0);
+			messagef(HAKA_LOG_DEBUG, "core", "thread %d: memory report: vmsize=%zd luasize=%zd",
+					engine_thread_id(state->engine), vmsize, luasize);
+		}
+#endif
 
 		if (state->pool->stop) {
 			break;

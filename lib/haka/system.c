@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 
@@ -88,4 +89,26 @@ const char *haka_path()
 void haka_exit()
 {
 	kill(getpid(), SIGTERM);
+}
+
+#define PROC_BUFSIZE 85
+
+size_t get_vmsize(void)
+{
+	FILE *proc;
+	int rint;
+	size_t vmsize=0;
+	char buf[PROC_BUFSIZE];
+	if((proc = fopen("/proc/self/status", "r"))) {
+		while (fgets(buf, PROC_BUFSIZE, proc) != NULL) {
+			if(strstr(buf, "VmSize") != NULL){
+				if (sscanf(buf, "%*s %d", &rint) == 1){
+					vmsize = rint;
+					break;
+				}
+			}
+		}
+		fclose(proc);
+	}
+	return vmsize;
 }
