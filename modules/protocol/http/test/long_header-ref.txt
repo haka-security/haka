@@ -30,4 +30,4 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug cnx: closing connection 127.0.0.1:42076 -> 127.0.0.1:80
+debug cnx: release connection 127.0.0.1:42076 -> 127.0.0.1:80

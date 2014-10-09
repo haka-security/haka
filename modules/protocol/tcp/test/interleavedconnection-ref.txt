@@ -7,6 +7,6 @@ debug cnx: opening connection 192.168.10.1:32891 -> 192.168.20.1:80
 info test: new tcp connection 192.168.10.1:32891 -> 192.168.20.1:80
 info test: end tcp connection 192.168.10.1:32889 -> 192.168.20.1:80
 info test: end tcp connection 192.168.10.1:32891 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:32891 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:32890 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:32889 -> 192.168.20.1:80
+debug cnx: release connection 192.168.10.1:32889 -> 192.168.20.1:80
+debug cnx: release connection 192.168.10.1:32890 -> 192.168.20.1:80
+debug cnx: release connection 192.168.10.1:32891 -> 192.168.20.1:80

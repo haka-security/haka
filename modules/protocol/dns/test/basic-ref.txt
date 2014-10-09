@@ -657,7 +657,7 @@ class DnsResult {
   rd : true
   tc : false
 }
-debug cnx: closing connection 172.16.3.38:37869 -> 172.16.13.5:53
-debug cnx: closing connection 172.16.3.38:51292 -> 172.16.13.5:53
-debug cnx: closing connection 172.16.3.38:50391 -> 172.16.13.5:53
-debug cnx: closing connection 172.16.3.38:38360 -> 172.16.13.5:53
+debug cnx: release connection 172.16.3.38:38360 -> 172.16.13.5:53
+debug cnx: release connection 172.16.3.38:50391 -> 172.16.13.5:53
+debug cnx: release connection 172.16.3.38:51292 -> 172.16.13.5:53
+debug cnx: release connection 172.16.3.38:37869 -> 172.16.13.5:53

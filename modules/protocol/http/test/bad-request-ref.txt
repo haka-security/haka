@@ -28,4 +28,4 @@ alert: id = = <>
 		address: 10.2.104.129
 		service: tcp/80
 	}
-debug cnx: closing connection 10.2.96.127:57861 -> 10.2.104.129:80
+debug cnx: release connection 10.2.96.127:57861 -> 10.2.104.129:80
