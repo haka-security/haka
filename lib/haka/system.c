@@ -91,24 +91,31 @@ void haka_exit()
 	kill(getpid(), SIGTERM);
 }
 
-#define PROC_BUFSIZE 85
-
-size_t get_vmsize(void)
+bool get_memory_size(size_t *vmsize, size_t *rss)
 {
-	FILE *proc;
-	int rint;
-	size_t vmsize=0;
-	char buf[PROC_BUFSIZE];
-	if((proc = fopen("/proc/self/status", "r"))) {
-		while (fgets(buf, PROC_BUFSIZE, proc) != NULL) {
-			if(strstr(buf, "VmSize") != NULL){
-				if (sscanf(buf, "%*s %d", &rint) == 1){
-					vmsize = rint;
-					break;
-				}
-			}
-		}
-		fclose(proc);
+	FILE *fp;
+	static size_t page_size = 0;
+
+	if (!page_size) {
+		page_size = (size_t)sysconf( _SC_PAGESIZE);
 	}
-	return vmsize;
+
+	if ((fp = fopen("/proc/self/statm", "r")) == NULL) {
+		error("cannot get memory information");
+		return false;
+	}
+
+	if (fscanf(fp, "%ld%ld", vmsize, rss) != 2) {
+		error("cannot get memory information");
+		fclose(fp);
+		*vmsize = 0;
+		*rss = 0;
+		return false;
+	}
+
+	*vmsize = (*vmsize * page_size) / 1024;
+	*rss = (*rss * page_size) / 1024;
+
+	fclose(fp);
+	return true;
 }

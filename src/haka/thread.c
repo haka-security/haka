@@ -325,10 +325,15 @@ static void *thread_main_loop(void *_state)
 
 #ifdef HAKA_MEMCHECK
 		if (((pkt_count++) % mem_rate) == 0) {
-			const size_t vmsize = get_vmsize();
-			const size_t luasize = lua_gc(state->lua->L, LUA_GCCOUNT, 0);
-			messagef(HAKA_LOG_DEBUG, "core", "memory report: thread=%d vmsize=%zd luasize=%zd",
-					engine_thread_id(state->engine), vmsize, luasize);
+			size_t vmsize, rss;
+			if (!get_memory_size(&vmsize, &rss)) {
+				messagef(HAKA_LOG_ERROR, "core", "cannot get memory report: %s", clear_error());
+			}
+			else {
+				const size_t luasize = lua_gc(state->lua->L, LUA_GCCOUNT, 0);
+				messagef(HAKA_LOG_DEBUG, "core", "memory report: thread=%d vmsize=%zd rsssize=%zd luasize=%zd",
+						engine_thread_id(state->engine), vmsize, rss, luasize);
+			}
 		}
 #endif
 
