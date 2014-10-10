@@ -105,7 +105,7 @@ bool get_memory_size(size_t *vmsize, size_t *rss)
 		return false;
 	}
 
-	if (fscanf(fp, "%ld%ld", vmsize, rss) != 2) {
+	if (fscanf(fp, "%zd%zd", vmsize, rss) != 2) {
 		error("cannot get memory information");
 		fclose(fp);
 		*vmsize = 0;
