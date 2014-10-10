@@ -68,7 +68,7 @@ int lua_state_error_formater(lua_State *L)
 		lua_state_error_hook(L);
 	}
 
-	if (check_section_log_level(LOG_SECTION(lua), HAKA_LOG_DEBUG)) {
+	if (SHOULD_LOG_DEBUG(lua)) {
 		if (!lua_isstring(L, -1)) {
 			return 0;
 		}
