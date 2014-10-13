@@ -13,8 +13,9 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#define REF_TABLE      "__ref"
-#define WEAKREF_TABLE  "__weak_ref"
+#define REF_TABLE         "__ref"
+#define WEAKREF_TABLE     "__weak_ref"
+#define WEAKREF_ID_TABLE  "__weak_ref_id"
 
 
 void lua_ref_init_state(lua_State *L)
@@ -28,6 +29,9 @@ void lua_ref_init_state(lua_State *L)
 	lua_setfield(L, -2, "__mode");
 	lua_setmetatable(L, -2);
 	lua_setfield(L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
+
+	lua_newtable(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
 }
 
 void lua_ref_init(struct lua_ref *ref)
@@ -54,11 +58,22 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 			index = lua_gettop(state)+index+1;
 		}
 
-		lua_getfield(state, LUA_REGISTRYINDEX, weak ? WEAKREF_TABLE : REF_TABLE);
-		assert(lua_istable(state, -1));
+		if (weak) {
+			lua_getfield(state, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
+			lua_pushboolean(state, true);
+			ref->ref = luaL_ref(state, -2);
+			lua_pop(state, 1);
 
-		lua_pushvalue(state, index);
-		ref->ref = luaL_ref(state, -2);
+			lua_getfield(state, LUA_REGISTRYINDEX, WEAKREF_TABLE);
+			lua_pushvalue(state, index);
+			lua_rawseti(state, -2, ref->ref);
+		}
+		else {
+			lua_getfield(state, LUA_REGISTRYINDEX, REF_TABLE);
+			lua_pushvalue(state, index);
+			ref->ref = luaL_ref(state, -2);
+		}
+
 		lua_pop(state, 1);
 	}
 }
@@ -66,9 +81,17 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 bool lua_ref_clear(struct lua_ref *ref)
 {
 	if (lua_ref_isvalid(ref)) {
-		if (lua_state_isvalid(ref->state) && !ref->weak) {
-			lua_getfield(ref->state->L, LUA_REGISTRYINDEX, ref->weak ? WEAKREF_TABLE : REF_TABLE);
-			assert(lua_istable(ref->state->L, -1));
+		if (lua_state_isvalid(ref->state)) {
+			if (ref->weak) {
+				lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
+				lua_pushnil(ref->state->L);
+				lua_rawseti(ref->state->L, -2, ref->ref);
+
+				lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
+			}
+			else {
+				lua_getfield(ref->state->L, LUA_REGISTRYINDEX, REF_TABLE);
+			}
 
 			luaL_unref(ref->state->L, -1, ref->ref);
 			lua_pop(ref->state->L, 1);
