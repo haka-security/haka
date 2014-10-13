@@ -29,7 +29,7 @@ safe_update = haka.rule_group{
 	init = function (http, response)
 		local host = http.request.headers['Host']
 		if host then
-			haka.log("Filter", "Domain requested: %s", host)
+			haka.log("Domain requested: %s", host)
 		end
 	end,
 
@@ -47,7 +47,7 @@ safe_update:rule{
 		local host = http.request.headers['Host'] or ''
 		for _, dom in ipairs(update_domains) do
 			if string.find(host, dom) then
-				haka.log("Filter", "Update domain: go for it")
+				haka.log("Update domain: go for it")
 				return true
 			end
 		end
@@ -62,7 +62,7 @@ safe_update:rule{
 		-- debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
 
 		local UA = http.request.headers["User-Agent"] or "No User-Agent header"
-		haka.log("Filter", "UA detected: %s", UA)
+		haka.log("UA detected: %s", UA)
 		local FF_UA = (string.find(UA, "Firefox/"))
 
 		if FF_UA then -- Firefox was detected
@@ -83,7 +83,7 @@ safe_update:rule{
 				debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
 			end
 		else
-			haka.log("Filter", "Unknown or missing User-Agent")
+			haka.log("Unknown or missing User-Agent")
 		end
 	end
 }

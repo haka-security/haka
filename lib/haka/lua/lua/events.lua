@@ -5,6 +5,7 @@
 local class = require('class')
 
 local module = {}
+local log = haka.log_section("event")
 
 --
 -- Event
@@ -32,7 +33,7 @@ end
 function module.EventConnections.method:signal(emitter, event, ...)
 	local listeners = self:_get(event)
 	if listeners then
-		haka.log.debug("event", "signal '%s', %d listeners", event.name, #listeners)
+		log.debug("signal '%s', %d listeners", event.name, #listeners)
 
 		for _, listener in ipairs(listeners) do
 			self:_signal(event, listener, emitter, ...)

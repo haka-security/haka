@@ -122,7 +122,7 @@ int packet_receive(struct packet **pkt)
 		lua_ref_init(&(*pkt)->userdata);
 		atomic_set(&(*pkt)->ref, 1);
 		assert(vbuffer_isvalid(&(*pkt)->payload));
-		messagef(HAKA_LOG_DEBUG, "packet", "received packet id=%lli",
+		LOG_DEBUG(packet, "received packet id=%lli",
 				packet_module->get_id(*pkt));
 
 		if (!packet_module->is_realtime()) {
@@ -148,7 +148,7 @@ void packet_drop(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	messagef(HAKA_LOG_DEBUG, "packet", "dropping packet id=%lli",
+	LOG_DEBUG(packet, "dropping packet id=%lli",
 			packet_module->get_id(pkt));
 
 	packet_module->verdict(pkt, FILTER_DROP);
@@ -164,7 +164,7 @@ void packet_accept(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 
-	messagef(HAKA_LOG_DEBUG, "packet", "accepting packet id=%lli",
+	LOG_DEBUG(packet, "accepting packet id=%lli",
 			packet_module->get_id(pkt));
 
 	{
@@ -238,7 +238,7 @@ bool packet_send(struct packet *pkt)
 		return false;
 	}
 
-	messagef(HAKA_LOG_DEBUG, "packet", "sending packet id=%lli",
+	LOG_DEBUG(packet, "sending packet id=%lli",
 		packet_module->get_id(pkt));
 
 	{

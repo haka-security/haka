@@ -34,7 +34,7 @@ haka.rule{
 	eval = function (flow, tcp)
 		local web_server = ipv4.addr("192.168.20.1")
 		if tcp.ip.dst == web_server and tcp.dstport == 80 then
-			haka.log.debug("filter","Traffic on HTTP port from %s", tcp.ip.src)
+			haka.log.debug("Traffic on HTTP port from %s", tcp.ip.src)
 		end
 	end
 }

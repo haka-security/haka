@@ -1,5 +1,5 @@
-debug dns: selecting dns dissector on flow
-debug cnx: opening connection 172.16.3.38:38360 -> 172.16.13.5:53
+debug udp: selecting dns dissector on flow
+debug conn: opening connection 172.16.3.38:38360 -> 172.16.13.5:53
 DNS QUERY
 class DnsResult {
   additional : class ArrayResult {
@@ -230,8 +230,8 @@ class DnsResult {
   rd : true
   tc : false
 }
-debug dns: selecting dns dissector on flow
-debug cnx: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
+debug udp: selecting dns dissector on flow
+debug conn: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
 DNS QUERY
 class DnsResult {
   additional : class ArrayResult {
@@ -428,8 +428,8 @@ class DnsResult {
   rd : true
   tc : false
 }
-debug dns: selecting dns dissector on flow
-debug cnx: opening connection 172.16.3.38:51292 -> 172.16.13.5:53
+debug udp: selecting dns dissector on flow
+debug conn: opening connection 172.16.3.38:51292 -> 172.16.13.5:53
 DNS QUERY
 class DnsResult {
   additional : class ArrayResult {
@@ -520,8 +520,8 @@ class DnsResult {
   rd : true
   tc : false
 }
-debug dns: selecting dns dissector on flow
-debug cnx: opening connection 172.16.3.38:37869 -> 172.16.13.5:53
+debug udp: selecting dns dissector on flow
+debug conn: opening connection 172.16.3.38:37869 -> 172.16.13.5:53
 DNS QUERY
 class DnsResult {
   additional : class ArrayResult {
@@ -658,7 +658,7 @@ class DnsResult {
   tc : false
 }
 debug lua: closing state
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection

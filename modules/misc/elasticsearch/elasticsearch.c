@@ -16,8 +16,7 @@
 #include <haka/container/vector.h>
 #include "haka/elasticsearch.h"
 
-#define MODULE "elasticsearch"
-
+static REGISTER_LOG_SECTION(elasticsearch);
 
 static bool initialized = false;
 
@@ -315,7 +314,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 		return -res;
 	}
 
-	messagef(HAKA_LOG_DEBUG, MODULE, "post successful: %s return %lu", url, ret_code);
+	LOG_DEBUG(elasticsearch, "post successful: %s return %lu", url, ret_code);
 
 	/* Check for the rest API return code, treat non 2** has error. */
 	if (ret_code < 200 || ret_code >= 300) {
@@ -376,7 +375,7 @@ static int do_one_request(struct elasticsearch_connector *connector, const char 
 		assert(code < 0);
 
 		if (!lasterror || code != *lasterror) {
-			messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s", clear_error());
+			LOG_ERROR(elasticsearch, "request failed: %s", clear_error());
 			if (lasterror) *lasterror = code;
 		}
 
@@ -426,7 +425,7 @@ static void *elasticsearch_request_thread(void *_connector)
 					snprintf(url, BUFFER_SIZE, "%s/%s", connector->server_address, req->index);
 					code = do_one_request(connector, url, req->data, &lasterror);
 					if (code > 0 && code != 400) {
-						messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
+						LOG_ERROR(elasticsearch, "request failed: %s return error %d", url, code);
 					}
 				}
 				break;
@@ -450,7 +449,7 @@ static void *elasticsearch_request_thread(void *_connector)
 				break;
 
 			default:
-				messagef(HAKA_LOG_ERROR, MODULE, "invalid request type: %d", req->request_type);
+				LOG_ERROR(elasticsearch, "invalid request type: %d", req->request_type);
 				break;
 			}
 
@@ -466,7 +465,7 @@ static void *elasticsearch_request_thread(void *_connector)
 			code = do_one_request(connector, url, vector_first(&connector->request_content, char), &lasterror);
 			if (code) {
 				if (code != -1) {
-					messagef(HAKA_LOG_ERROR, MODULE, "request failed: %s return error %d", url, code);
+					LOG_ERROR(elasticsearch, "request failed: %s return error %d", url, code);
 				}
 			}
 		}

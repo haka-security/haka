@@ -9,7 +9,7 @@ http.install_tcp_rule(80)
 haka.rule {
 	hook = http.events.request,
 	eval = function(http, request)
-		haka.log.debug("filter", "%s", request.uri)
+		haka.log.debug("%s", request.uri)
 		if #request.uri > 10 then
 			http:reset()
 		end

@@ -1,6 +1,6 @@
-info test: received ip packet data=8
-info test: received ip packet data=8
-info test: received ip packet data=24
+info external: received ip packet data=8
+info external: received ip packet data=8
+info external: received ip packet data=24
 alert: id = = <>
 	severity = low
 	description = invalid ipv4 fragment
@@ -10,5 +10,5 @@ alert: id = = <>
 	targets = {
 		address: 127.0.0.1
 	}
-info test: received icmp packet data=28
+info external: received icmp packet data=28
 debug lua: closing state

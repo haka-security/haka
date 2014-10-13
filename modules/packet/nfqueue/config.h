@@ -5,6 +5,8 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-#define MODULE_NAME           "nfqueue"
+#include <haka/log.h>
+
+extern DECLARE_LOG_SECTION(nfqueue);
 
 #endif /* _CONFIG_H */

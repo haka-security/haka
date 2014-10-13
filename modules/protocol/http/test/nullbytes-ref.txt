@@ -1,10 +1,10 @@
-debug cnx: opening connection 127.0.0.1:42071 -> 127.0.0.1:80
-debug http: selecting http dissector on flow
+debug conn: opening connection 127.0.0.1:42071 -> 127.0.0.1:80
+debug tcp: selecting http dissector on flow
 debug grammar: parse error at byte 120 for field 2 in request_line: token /[[:blank:]]+/ doesn't match
 debug grammar: parse error context: ...
 alert: id = = <>
 	severity = low
 	description = invalid http request_line
-debug cnx: dropping connection 127.0.0.1:42071 -> 127.0.0.1:80
+debug conn: dropping connection 127.0.0.1:42071 -> 127.0.0.1:80
 debug lua: closing state
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection

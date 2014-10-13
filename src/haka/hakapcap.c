@@ -39,6 +39,9 @@ static void help(const char *program)
 	fprintf(stdout, "\t-h,--help:              Display this information\n");
 	fprintf(stdout, "\t--version:              Display version information\n");
 	fprintf(stdout, "\t-d,--debug:             Display debug output\n");
+#ifdef HAKA_DEBUG
+	fprintf(stdout, "\t                   (Repeat twice for trace output)\n");
+#endif
 	fprintf(stdout, "\t-l,--loglevel <level>:  Set the log level\n");
 	fprintf(stdout, "\t                          (debug, info, warning, error or fatal)\n");
 	fprintf(stdout, "\t-a,--alert-to <file>:   Redirect alerts to given file\n");
@@ -58,6 +61,9 @@ static int parse_cmdline(int *argc, char ***argv)
 {
 	int c;
 	int index = 0;
+#ifdef HAKA_DEBUG
+	int debug_count = 0;
+#endif
 
 	static struct option long_options[] = {
 		{ "version",              no_argument,       0, 'v' },
@@ -75,12 +81,18 @@ static int parse_cmdline(int *argc, char ***argv)
 	while ((c = getopt_long(*argc, *argv, "dl:a:ho:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
+#ifdef HAKA_DEBUG
+			if (debug_count++ > 0) {
+				setlevel(HAKA_LOG_TRACE, NULL);
+				break;
+			}
+#endif
 			setlevel(HAKA_LOG_DEBUG, NULL);
 			break;
 
 		case 'l':
 			if (!setup_loglevel(optarg)) {
-				message(HAKA_LOG_FATAL, "core", clear_error());
+				LOG_FATAL(core, clear_error());
 				clean_exit();
 				exit(1);
 			}
@@ -176,7 +188,7 @@ int main(int argc, char *argv[])
 		args = NULL;
 
 		if (!pcap) {
-			messagef(HAKA_LOG_FATAL, "core", "cannot load packet module: %s", clear_error());
+			LOG_FATAL(core, "cannot load packet module: %s", clear_error());
 			clean_exit();
 			return 1;
 		}
@@ -202,14 +214,14 @@ int main(int argc, char *argv[])
 
 		module = module_load("alert/file", NULL);
 		if (!module) {
-			messagef(HAKA_LOG_FATAL, "core", "cannot load alert module: %s", clear_error());
+			LOG_FATAL(core, "cannot load alert module: %s", clear_error());
 			clean_exit();
 			return 1;
 		}
 
 		alerter = alert_module_alerter(module, args);
 		if (!alerter) {
-			messagef(HAKA_LOG_FATAL, "core", "cannot load alert module: %s", clear_error());
+			LOG_FATAL(core, "cannot load alert module: %s", clear_error());
 			clean_exit();
 			return 1;
 		}
@@ -226,7 +238,7 @@ int main(int argc, char *argv[])
 	{
 		struct luadebug_user *user = luadebug_user_readline();
 		if (!user) {
-			message(HAKA_LOG_FATAL, "core", "cannot create readline handler");
+			LOG_FATAL(core, "cannot create readline handler");
 			clean_exit();
 			return 2;
 		}

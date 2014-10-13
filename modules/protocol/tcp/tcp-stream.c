@@ -15,6 +15,8 @@
 #include <assert.h>
 
 
+static REGISTER_LOG_SECTION(tcp);
+
 enum tcp_modif_type {
 	TCP_MODIF_INSERT,
 	TCP_MODIF_ERASE
@@ -174,7 +176,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_
 		}
 
 		if (iter != end && chunk->end_seq > qchunk->start_seq) {
-			message(HAKA_LOG_WARNING, "tcp_connection", "retransmit packet (ignored)");
+			LOG_WARNING(tcp, "retransmit packet (ignored)");
 			tcp_stream_chunk_free(chunk);
 			return false;
 		}
@@ -182,7 +184,7 @@ bool tcp_stream_push(struct tcp_stream *stream, struct tcp *tcp, struct vbuffer_
 		list2_insert(iter, &chunk->list);
 	}
 	else {
-		message(HAKA_LOG_WARNING, "tcp_connection", "retransmit packet (ignored)");
+		LOG_WARNING(tcp, "retransmit packet (ignored)");
 		tcp_stream_chunk_free(chunk);
 		return false;
 	}

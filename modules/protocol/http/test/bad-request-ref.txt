@@ -1,11 +1,11 @@
-debug cnx: opening connection 10.2.96.127:57861 -> 10.2.104.129:80
-debug http: selecting http dissector on flow
+debug conn: opening connection 10.2.96.127:57861 -> 10.2.104.129:80
+debug tcp: selecting http dissector on flow
 debug grammar: parse error at byte 14 for field 4 in request_line: token /[[:blank:]]+/ doesn't match
 debug grammar: parse error context: \x0aHost: --\x0a\x0a...
 alert: id = = <>
 	severity = low
 	description = invalid http request_line
-debug cnx: dropping connection 10.2.96.127:57861 -> 10.2.104.129:80
+debug conn: dropping connection 10.2.96.127:57861 -> 10.2.104.129:80
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -29,4 +29,4 @@ alert: id = = <>
 		service: tcp/80
 	}
 debug lua: closing state
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection

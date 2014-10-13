@@ -75,7 +75,7 @@ sqli:rule{
 			-- Skip evaluation if the normalized path (without dot-segments)
 			-- is in the list of safe resources
 			if splitted_uri.path == res then
-				haka.log("sqli", "skip SQLi detection (white list rule)")
+				haka.log("skip SQLi detection (white list rule)")
 				return true
 			end
 		end

@@ -6,6 +6,7 @@ local class = require('class')
 local parseResult = require('parse_result')
 
 local parse = {}
+local log = haka.log_section("grammar")
 
 parse.max_recursion = 10
 
@@ -168,12 +169,12 @@ function parse.Context.method:_traverse(entity, f, all)
 
 			iter = self:catch()
 			if not iter then
-				haka.log.debug("grammar", tostring(self._error))
-				haka.log.debug("grammar", self._error:context())
+				log.debug("%s", tostring(self._error))
+				log.debug("%s", self._error:context())
 				break
 			else
-				haka.log.debug("grammar", "catched: %s", self._error)
-				haka.log.debug("grammar", "         %s", self._error:context())
+				log.debug("catched: %s", self._error)
+				log.debug("         %s", self._error:context())
 				self._error = nil
 			end
 		else

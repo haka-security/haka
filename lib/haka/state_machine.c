@@ -14,7 +14,7 @@
 #include <haka/container/vector.h>
 
 
-#define MODULE    "state-machine"
+#define MODULE    states
 
 
 /*
@@ -330,7 +330,7 @@ static struct state *state_machine_leave_state(struct state_machine_instance *in
 		}
 
 		if (have_transition(instance, &instance->current->leave)) {
-			messagef(HAKA_LOG_DEBUG, MODULE, "%s: leave transition on state '%s'",
+			LOG_DEBUG(MODULE, "%s: leave transition on state '%s'",
 					instance->state_machine->name, instance->current->name);
 
 			newstate = do_transition(instance, &instance->current->leave);
@@ -355,7 +355,7 @@ static void transition_timeout(int count, void *_data)
 		trans = vector_get(&data->instance->current->timeouts, struct transition, data->timer_index);
 		assert(trans);
 
-		messagef(HAKA_LOG_DEBUG, MODULE, "%s: timeout trigger on state '%s'",
+		LOG_DEBUG(MODULE, "%s: timeout trigger on state '%s'",
 				data->instance->state_machine->name, data->instance->current->name);
 
 		newstate = do_transition(data->instance, trans);
@@ -384,7 +384,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 			instance->current = state;
 
 			if (have_transition(instance, &instance->current->enter)) {
-				messagef(HAKA_LOG_DEBUG, MODULE, "%s: enter transition on state '%s'",
+				LOG_DEBUG(MODULE, "%s: enter transition on state '%s'",
 					instance->state_machine->name, instance->current->name);
 
 				newstate = do_transition(instance, &instance->current->enter);
@@ -407,7 +407,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 				for (i=tcount; i<count; ++i) {
 					struct timeout_data *timer = vector_push(&instance->timers, struct timeout_data);
 					if (!timer) {
-						message(HAKA_LOG_ERROR, MODULE, clear_error());
+						LOG_ERROR(MODULE, clear_error());
 						state_machine_leave_state(instance);
 						return;
 					}
@@ -419,7 +419,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 					if (!timer->timer) {
 						vector_pop(&instance->timers);
 						assert(check_error());
-						message(HAKA_LOG_ERROR, MODULE, clear_error());
+						LOG_ERROR(MODULE, clear_error());
 						state_machine_leave_state(instance);
 						return;
 					}
@@ -467,7 +467,7 @@ struct state_machine_instance *state_machine_instance(struct state_machine *stat
 	instance->failed = false;
 	instance->in_failure = false;
 
-	messagef(HAKA_LOG_DEBUG, MODULE, "%s: initial state '%s'",
+	LOG_DEBUG(MODULE, "%s: initial state '%s'",
 			instance->state_machine->name, state_machine->initial->name);
 
 	return instance;
@@ -483,7 +483,7 @@ void state_machine_instance_init(struct state_machine_instance *instance)
 	instance->in_failure = false;
 
 	if (have_transition(instance, &instance->current->init)) {
-		messagef(HAKA_LOG_DEBUG, MODULE, "%s: init transition on state '%s'",
+		LOG_DEBUG(MODULE, "%s: init transition on state '%s'",
 				instance->state_machine->name, instance->current->name);
 
 		do_transition(instance, &instance->current->init);
@@ -502,11 +502,11 @@ void state_machine_instance_finish(struct state_machine_instance *instance)
 
 		state_machine_leave_state(instance);
 
-		messagef(HAKA_LOG_DEBUG, MODULE, "%s: finish from state '%s'",
+		LOG_DEBUG(MODULE, "%s: finish from state '%s'",
 				instance->state_machine->name, current->name);
 
 		if (have_transition(instance, &current->finish)) {
-			messagef(HAKA_LOG_DEBUG, MODULE, "%s: finish transition on state '%s'",
+			LOG_DEBUG(MODULE, "%s: finish transition on state '%s'",
 					instance->state_machine->name, current->name);
 
 			do_transition(instance, &current->finish);
@@ -547,11 +547,11 @@ void state_machine_instance_update(struct state_machine_instance *instance, stru
 	}
 	else {
 		if (instance->current) {
-			messagef(HAKA_LOG_DEBUG, MODULE, "%s: transition from state '%s' to state '%s'",
+			LOG_DEBUG(MODULE, "%s: transition from state '%s' to state '%s'",
 					instance->state_machine->name, instance->current->name, newstate->name);
 		}
 		else {
-			messagef(HAKA_LOG_DEBUG, MODULE, "%s: transition to state '%s'",
+			LOG_DEBUG(MODULE, "%s: transition to state '%s'",
 					instance->state_machine->name, newstate->name);
 		}
 
@@ -567,7 +567,7 @@ static void _state_machine_instance_transition(struct state_machine_instance *in
 	if (instance->current) {
 		if (trans->callback) {
 			if (trans->callback->callback) {
-				messagef(HAKA_LOG_DEBUG, MODULE, "%s: %s transition on state '%s'",
+				LOG_DEBUG(MODULE, "%s: %s transition on state '%s'",
 						instance->state_machine->name, type, instance->current->name);
 
 				newstate = trans->callback->callback(instance, trans->callback);

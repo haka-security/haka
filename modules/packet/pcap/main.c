@@ -22,7 +22,8 @@
 #include <haka/container/list.h>
 #include <haka/pcap.h>
 
-#define MODULE_NAME         "pcap"
+static REGISTER_LOG_SECTION(pcap);
+
 #define PROGRESS_DELAY      5 /* 5 seconds */
 
 struct pcap_packet {
@@ -139,7 +140,7 @@ static int init(struct parameters *args)
 		input_is_iface = false;
 	}
 	else {
-		messagef(HAKA_LOG_ERROR, MODULE_NAME, "specifiy either a device or a pcap filename");
+		LOG_ERROR(pcap, "specifiy either a device or a pcap filename");
 		cleanup();
 		return 1;
 	}
@@ -200,15 +201,15 @@ static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 	assert(input);
 
 	if (isiface) {
-		messagef(HAKA_LOG_INFO, MODULE_NAME, "listening on device %s", input);
+		LOG_INFO(pcap, "listening on device %s", input);
 
 		pd->pd = pcap_open_live(input, SNAPLEN, 1, 0, errbuf);
 		if (pd->pd && (strlen(errbuf) > 0)) {
-			messagef(HAKA_LOG_WARNING, MODULE_NAME, "%s", errbuf);
+			LOG_WARNING(pcap, "%s", errbuf);
 		}
 	}
 	else {
-		messagef(HAKA_LOG_INFO, MODULE_NAME, "opening file '%s'", input);
+		LOG_INFO(pcap, "opening file '%s'", input);
 
 		pd->pd = pcap_open_offline(input, errbuf);
 
@@ -226,14 +227,14 @@ static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 	}
 
 	if (!pd->pd) {
-		messagef(HAKA_LOG_ERROR, MODULE_NAME, "%s", errbuf);
+		LOG_ERROR(pcap, "%s", errbuf);
 		return false;
 	}
 
 	/* Determine the datalink layer type. */
 	if ((pd->link_type = pcap_datalink(pd->pd)) < 0)
 	{
-		messagef(HAKA_LOG_ERROR, MODULE_NAME, "%s", pcap_geterr(pd->pd));
+		LOG_ERROR(pcap, "%s", pcap_geterr(pd->pd));
 		return false;
 	}
 
@@ -250,7 +251,7 @@ static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 	case DLT_SLIP:
 	case DLT_PPP:
 	default:
-		messagef(HAKA_LOG_ERROR, MODULE_NAME, "%s", "unsupported data link");
+		LOG_ERROR(pcap, "%s", "unsupported data link");
 		return false;
 	}
 
@@ -266,7 +267,7 @@ static pcap_dumper_t *open_dump_file(struct packet_module_state *state, const ch
 	dump = pcap_dump_open(state->pd[0].pd, filename);
 	if (!dump) {
 		cleanup_state(state);
-		messagef(HAKA_LOG_ERROR, MODULE_NAME, "unable to dump on %s", filename);
+		LOG_ERROR(pcap, "unable to dump on %s", filename);
 		return NULL;
 	}
 
@@ -352,7 +353,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		for (i=0; i<state->pd_count; ++i) {
 			const int fd = pcap_get_selectable_fd(state->pd[i].pd);
 			if (fd < 0) {
-				messagef(HAKA_LOG_ERROR, MODULE_NAME, "%s", errno_error(errno));
+				LOG_ERROR(pcap, "%s", errno_error(errno));
 				return 1;
 			}
 			else {
@@ -370,7 +371,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				return 0;
 			}
 			else {
-				messagef(HAKA_LOG_ERROR, MODULE_NAME, "%s", errno_error(errno));
+				LOG_ERROR(pcap, "%s", errno_error(errno));
 				return 1;
 			}
 		}
@@ -397,7 +398,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 			ret = pcap_next_ex(pd->pd, &header, &p);
 			if (ret == -1) {
-				messagef(HAKA_LOG_ERROR, MODULE_NAME, "%s", pcap_geterr(pd->pd));
+				LOG_ERROR(pcap, "%s", pcap_geterr(pd->pd));
 				return 1;
 			}
 			else if (ret == -2) {
@@ -410,7 +411,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			}
 			else if (header->caplen == 0 ||
 			         header->len < header->caplen) {
-				messagef(HAKA_LOG_ERROR, MODULE_NAME, "skipping malformed packet %llu", ++state->packet_id);
+				LOG_ERROR(pcap, "skipping malformed packet %llu", ++state->packet_id);
 				return 0;
 			}
 			else {
@@ -444,7 +445,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				packet->timestamp.nsecs = header->ts.tv_usec*1000;
 
 				if (packet->header.caplen < packet->header.len)
-					messagef(HAKA_LOG_WARNING, MODULE_NAME, "packet truncated");
+					LOG_WARNING(pcap, "packet truncated");
 
 				if (pd->file) {
 					const size_t cur = ftell(pd->file);
@@ -459,7 +460,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 						{
 							pd->last_progress = time;
 							if (percent > 0) {
-								messagef(HAKA_LOG_INFO, MODULE_NAME, "progress %.2f %%", percent);
+								LOG_INFO(pcap, "progress %.2f %%", percent);
 							}
 						}
 					}
@@ -469,7 +470,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				}
 
 				if (!packet_build_payload(packet)) {
-					messagef(HAKA_LOG_ERROR, MODULE_NAME, "malformed packet %llu", packet->id);
+					LOG_ERROR(pcap, "malformed packet %llu", packet->id);
 					vbuffer_release(&packet->data);
 					free(packet);
 					return ENOMEM;
@@ -522,7 +523,7 @@ static const char *packet_get_dissector(struct packet *orig_pkt)
 		return "ipv4";
 
 	case -1:
-		messagef(HAKA_LOG_ERROR, MODULE_NAME, "malformed packet %llu", pkt->id);
+		LOG_ERROR(pcap, "malformed packet %llu", pkt->id);
 
 	default:
 		return NULL;

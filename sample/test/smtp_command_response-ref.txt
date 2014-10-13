@@ -1,6 +1,6 @@
-debug cnx: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
-debug cnx: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
-debug smtp: selecting smtp dissector on flow
+debug conn: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
+debug conn: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
+debug tcp: selecting smtp dissector on flow
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {
@@ -70,7 +70,7 @@ class Result {
     }
   }
 }
-debug cnx: closing connection 192.168.10.10:56704 -> 192.168.20.1:80
+debug conn: closing connection 192.168.10.10:56704 -> 192.168.20.1:80
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {
@@ -96,4 +96,4 @@ class Result {
   }
 }
 debug lua: closing state
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection

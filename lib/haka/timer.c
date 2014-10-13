@@ -140,16 +140,18 @@ bool time_realm_destroy(struct time_realm *realm)
 
 void time_realm_update(struct time_realm *realm, const struct time *value)
 {
-	struct time difftime, oldtime = realm->time;
+	const struct time oldtime = realm->time;
 	int sign;
 	assert(realm->mode == TIME_REALM_STATIC);
 
-	sign = time_diff(&difftime, value, &oldtime);
+	sign = time_cmp(value, &oldtime);
 	if (sign < 0) {
-		messagef(HAKA_LOG_DEBUG, "timer", "static time going backward (ignored)");
+		LOG_DEBUG(time, "static time going backward (ignored)");
 	}
 	else {
-		messagef(HAKA_LOG_DEBUG, "timer", "static time offset %s%f seconds", sign >= 0? "+" : "-", time_sec(&difftime));
+		UNUSED struct time difftime;
+		LOG_TRACE(time, "static time offset %s%f seconds", sign >= 0 ? "+" : "-",
+				(time_diff(&difftime, value, &oldtime), time_sec(&difftime)));
 
 		realm->time = *value;
 		realm->check_timer = true;
@@ -181,7 +183,7 @@ INIT static void _timer_init()
 	sa.sa_sigaction = timer_handler;
 	sigemptyset(&sa.sa_mask);
 	if (sigaction(SIGALRM, &sa, NULL) == -1) {
-		messagef(HAKA_LOG_FATAL, "timer", "%s", errno_error(errno));
+		LOG_FATAL(time, "%s", errno_error(errno));
 		abort();
 	}
 
@@ -286,7 +288,7 @@ static bool time_realm_update_timer_list(struct time_realm_state *state,
 					return false;
 				}
 
-				messagef(HAKA_LOG_DEBUG, "timer", "next timer in %f seconds", time_sec(&diff));
+				LOG_DEBUG(time, "next timer in %f seconds", time_sec(&diff));
 			}
 		}
 	}
@@ -297,7 +299,7 @@ static bool time_realm_update_timer_list(struct time_realm_state *state,
 			struct time current = *time_realm_current_time(state->realm);
 
 			if (time_diff(&diff, &first->trigger_time, &current) > 0) {
-				messagef(HAKA_LOG_DEBUG, "timer", "next timer in %f seconds", time_sec(&diff));
+				LOG_DEBUG(time, "next timer in %f seconds", time_sec(&diff));
 			}
 		}
 	}

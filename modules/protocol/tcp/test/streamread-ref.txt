@@ -1,6 +1,6 @@
-debug cnx: opening connection 127.0.0.1:44393 -> 127.0.0.1:4444
-debug filter: received stream len=41
+debug conn: opening connection 127.0.0.1:44393 -> 127.0.0.1:4444
+debug external: received stream len=41
 1234567890ABCDEFGHIJ1234567890abcdefghij
 
 debug lua: closing state
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection

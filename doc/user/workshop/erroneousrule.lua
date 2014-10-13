@@ -16,9 +16,9 @@ haka.rule{
 		-- The next line will generate a lua error:
 		-- there is no 'destport' field. Replace 'destport' by 'dstport'
 		if pkt.destport == 80 or pkt.srcport == 80 then
-			haka.log("Filter", "Authorizing trafic on port 80")
+			haka.log("Authorizing trafic on port 80")
 		else
-			haka.log("Filter", "Trafic not authorized on port %d", pkt.dstport)
+			haka.log("Trafic not authorized on port %d", pkt.dstport)
 			pkt:drop()
 		end
 	end

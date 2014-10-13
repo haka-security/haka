@@ -17,7 +17,7 @@ haka.rule{
 	eval = function (pkt)
 		-- All fields are accessible through pkt variable.
 		-- See the Haka documentation for a complete list.
-		haka.log("Hello", "packet from %s to %s", pkt.src, pkt.dst)
+		haka.log("packet from %s to %s", pkt.src, pkt.dst)
 	end
 }
 
@@ -28,7 +28,7 @@ haka.rule{
 	-- Rule evaluated at connection establishment attempt
 	eval = function (flow, tcp)
 		-- Fields from previous layer are accessible too
-		haka.log("Hello", "TCP connection from %s:%d to %s:%d", tcp.ip.src,
+		haka.log("TCP connection from %s:%d to %s:%d", tcp.ip.src,
 			tcp.srcport, tcp.ip.dst, tcp.dstport)
 		-- Raise a simple alert for testing purpose
 		haka.alert{
