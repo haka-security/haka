@@ -444,6 +444,8 @@ void lua_state_close(struct lua_state *_state)
 {
 	struct lua_state_ext *state = (struct lua_state_ext *)_state;
 
+	messagef(HAKA_LOG_DEBUG, "lua", "closing state");
+
 	lua_state_trigger_haka_event(_state, "exiting");
 
 	vector_destroy(&state->interrupts);

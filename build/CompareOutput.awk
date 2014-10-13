@@ -7,6 +7,7 @@ BEGIN {
 	show = 0
 	trace = 0
 	alert = 0
+	closing = 0
 }
 
 $0 ~ /^[^ \t]+[ \t]+[^:]+:[ ]+.*$/ {
@@ -66,6 +67,17 @@ $0 ~ /^alert:/ {
 $0 ~ /^\ttime = / {
 	if (!alert) print;
 	next;
+}
+
+$0 ~ /^debug lua: closing state$/ {
+	closing = 1;
+}
+
+$0 ~ /^debug cnx: .* connection/ {
+	if (closing) {
+		print($1 " " $2 " <cleanup> " $4);
+		next;
+	}
 }
 
 {
