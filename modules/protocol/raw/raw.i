@@ -45,7 +45,7 @@ const char *packet_dissector(struct packet *pkt);
 				return next_dissector:receive(self)
 			else
 				if raw_dissector.options.drop_unknown_dissector then
-					haka.log.error("raw", "dissector '%s' is unknown", dissector)
+					haka.log.error("dissector '%s' is unknown", dissector)
 					return self:drop()
 				else
 					return self:send()
