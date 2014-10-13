@@ -26,4 +26,4 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/0
 	}
-debug cnx: release connection 192.168.10.1:50683 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:50683 -> 192.168.20.1:80

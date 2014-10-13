@@ -6,4 +6,4 @@ alert: id = = <>
 	description = forbidden mail domain
 debug cnx: dropping connection 192.168.10.10:41155 -> 192.168.20.1:25
 debug cnx: closing connection 192.168.10.10:56704 -> 192.168.20.1:80
-debug cnx: release connection 192.168.10.10:41155 -> 192.168.20.1:25
+debug cnx: closing connection 192.168.10.10:41155 -> 192.168.20.1:25

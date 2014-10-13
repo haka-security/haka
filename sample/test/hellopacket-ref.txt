@@ -11,4 +11,4 @@ info Hello: packet from 192.168.10.99 to 192.168.10.1
 info Hello: packet from 192.168.10.1 to 192.168.10.99
 info Hello: packet from 192.168.10.99 to 192.168.10.1
 info Hello: packet from 192.168.10.1 to 192.168.10.99
-debug cnx: release connection 192.168.10.1:47161 -> 192.168.10.99:3000
+debug cnx: closing connection 192.168.10.1:47161 -> 192.168.10.99:3000

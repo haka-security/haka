@@ -29,8 +29,8 @@ list of source ip using 'Mozilla/2.0' as user-gent'
 
 top ten of http resources that generated the most 404 status error
 
-debug cnx: release connection 192.168.10.1:50692 -> 192.168.20.1:80
-debug cnx: release connection 192.168.10.1:50693 -> 192.168.20.1:80
-debug cnx: release connection 192.168.10.1:50694 -> 192.168.20.1:80
-debug cnx: release connection 192.168.10.1:50695 -> 192.168.20.1:80
-debug cnx: release connection 192.168.10.1:50696 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:50696 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:50695 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:50694 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:50693 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:50692 -> 192.168.20.1:80

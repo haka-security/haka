@@ -33,6 +33,6 @@ alert: id = = <>
 		service: tcp, 31337
 	}
 debug cnx: dropping connection 192.168.10.1:51666 -> 192.168.20.1:31337
-debug cnx: release connection 192.168.10.1:43557 -> 192.168.20.1:8000
-debug cnx: release connection 192.168.10.1:53459 -> 192.168.20.1:80
-debug cnx: release connection 192.168.10.1:51666 -> 192.168.20.1:31337
+debug cnx: closing connection 192.168.10.1:51666 -> 192.168.20.1:31337
+debug cnx: closing connection 192.168.10.1:53459 -> 192.168.20.1:80
+debug cnx: closing connection 192.168.10.1:43557 -> 192.168.20.1:8000
