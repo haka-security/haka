@@ -4,6 +4,7 @@
 
 #include <haka/types.h>
 #include <haka/compiler.h>
+#include <haka/lua/luautils.h>
 #include <haka/lua/ref.h>
 #include <haka/lua/state.h>
 
@@ -20,6 +21,8 @@
 
 void lua_ref_init_state(lua_State *L)
 {
+	LUA_STACK_MARK(L);
+
 	lua_newtable(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, REF_TABLE);
 
@@ -32,6 +35,8 @@ void lua_ref_init_state(lua_State *L)
 
 	lua_newtable(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
+
+	LUA_STACK_CHECK(L, 0);
 }
 
 void lua_ref_init(struct lua_ref *ref)
@@ -48,6 +53,8 @@ bool lua_ref_isvalid(struct lua_ref *ref)
 
 void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool weak)
 {
+	LUA_STACK_MARK(state);
+
 	lua_ref_clear(ref);
 
 	if (!lua_isnil(state, index)) {
@@ -76,16 +83,21 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 
 		lua_pop(state, 1);
 	}
+
+	LUA_STACK_CHECK(state, 0);
 }
 
 bool lua_ref_clear(struct lua_ref *ref)
 {
 	if (lua_ref_isvalid(ref)) {
 		if (lua_state_isvalid(ref->state)) {
+			LUA_STACK_MARK(ref->state->L);
+
 			if (ref->weak) {
 				lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
 				lua_pushnil(ref->state->L);
 				lua_rawseti(ref->state->L, -2, ref->ref);
+				lua_pop(ref->state->L, 1);
 
 				lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
 			}
@@ -95,6 +107,8 @@ bool lua_ref_clear(struct lua_ref *ref)
 
 			luaL_unref(ref->state->L, -1, ref->ref);
 			lua_pop(ref->state->L, 1);
+
+			LUA_STACK_CHECK(ref->state->L, 0);
 		}
 
 		ref->ref = LUA_NOREF;
@@ -108,6 +122,8 @@ bool lua_ref_clear(struct lua_ref *ref)
 
 void lua_ref_push(struct lua_State *state, struct lua_ref *ref)
 {
+	LUA_STACK_MARK(state);
+
 	if (lua_ref_isvalid(ref)) {
 		assert(lua_state_get(state) == ref->state);
 
@@ -120,4 +136,6 @@ void lua_ref_push(struct lua_State *state, struct lua_ref *ref)
 	else {
 		lua_pushnil(state);
 	}
+
+	LUA_STACK_CHECK(state, 1);
 }
