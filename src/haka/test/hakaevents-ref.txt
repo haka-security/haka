@@ -1,2 +1,3 @@
 info test: started
+debug lua: closing state
 info test: exiting

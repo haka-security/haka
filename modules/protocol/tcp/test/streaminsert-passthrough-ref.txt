@@ -90,3 +90,4 @@ alert: id = = <>
 		address: 10.2.104.129
 		service: tcp/4444
 	}
+debug lua: closing state

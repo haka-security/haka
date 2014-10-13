@@ -1048,3 +1048,4 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 35 }
+debug lua: closing state

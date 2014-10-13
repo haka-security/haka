@@ -4,3 +4,4 @@ info test: received icmp packet size=60
 info test: received icmp packet size=60
 info test: received icmp packet size=1604
 info test: received icmp packet size=1604
+debug lua: closing state

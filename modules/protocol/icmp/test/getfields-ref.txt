@@ -18,3 +18,4 @@ Internet Control Message Protocol
     Code: 8
     Checksum: 0x338a [correct]
 
+debug lua: closing state

@@ -11,3 +11,4 @@ alert: id = = <>
 		address: 127.0.0.1
 	}
 info test: received icmp packet data=28
+debug lua: closing state

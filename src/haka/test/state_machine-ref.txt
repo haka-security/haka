@@ -21,3 +21,4 @@ enter state2
 fail on state2
 leave state2
 finished hello
+debug lua: closing state

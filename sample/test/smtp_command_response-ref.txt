@@ -95,4 +95,5 @@ class Result {
     }
   }
 }
-debug cnx: closing connection 192.168.10.10:41155 -> 192.168.20.1:25
+debug lua: closing state
+debug cnx: <cleanup> connection

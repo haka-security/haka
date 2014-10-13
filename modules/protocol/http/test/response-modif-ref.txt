@@ -49,4 +49,5 @@ class HttpResponseResult {
   status : "200"
   version : "2.0"
 }
-debug cnx: closing connection 192.168.10.10:56353 -> 192.168.20.1:80
+debug lua: closing state
+debug cnx: <cleanup> connection

@@ -141,3 +141,4 @@ alert: id = = <>
 		address: 192.168.10.10
 		service: tcp/41155
 	}
+debug lua: closing state

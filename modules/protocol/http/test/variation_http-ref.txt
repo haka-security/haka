@@ -172,12 +172,13 @@ alert: id = = <>
 	severity = low
 	description = invalid http version
 debug cnx: dropping connection 192.168.10.1:33990 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:33990 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:33989 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:33988 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:33987 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:33986 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:33985 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:33984 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:33983 -> 192.168.20.1:80
-debug cnx: closing connection 192.168.10.1:33982 -> 192.168.20.1:80
+debug lua: closing state
+debug cnx: <cleanup> connection
+debug cnx: <cleanup> connection
+debug cnx: <cleanup> connection
+debug cnx: <cleanup> connection
+debug cnx: <cleanup> connection
+debug cnx: <cleanup> connection
+debug cnx: <cleanup> connection
+debug cnx: <cleanup> connection
+debug cnx: <cleanup> connection

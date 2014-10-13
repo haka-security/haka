@@ -160,3 +160,4 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:51 2013
 }
+debug lua: closing state

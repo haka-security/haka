@@ -33,3 +33,4 @@ error ipv4: unknown field 'none'
 error ipv4: unknown field 'none'
 error ipv4: unknown field 'none'
 error ipv4: unknown field 'none'
+debug lua: closing state

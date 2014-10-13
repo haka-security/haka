@@ -8,3 +8,4 @@ UDP Source Port: 53
 UDP Destination Port: 53
 UDP Checksum: 0x1110
 UDP Length: 111
+debug lua: closing state

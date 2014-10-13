@@ -7,4 +7,5 @@ word1= of
 word2= course
 word1= it
 word2= works
-debug cnx: closing connection 127.0.0.1:53318 -> 127.0.0.1:2888
+debug lua: closing state
+debug cnx: <cleanup> connection

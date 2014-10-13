@@ -18,3 +18,4 @@ debug filter: net=192.168.10.0/24 ; host=192.168.10.1
 debug filter: net=192.168.10.0/24 ; host=192.168.10.1
 debug filter: net=192.168.20.0/24 ; host=192.168.20.1
 debug filter: net=192.168.10.0/24 ; host=192.168.10.1
+debug lua: closing state

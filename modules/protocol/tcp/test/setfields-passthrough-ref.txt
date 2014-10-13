@@ -14,3 +14,4 @@ false read only buffer
 false read only buffer
 false read only buffer
 false read only buffer
+debug lua: closing state
