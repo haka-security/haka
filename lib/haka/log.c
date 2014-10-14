@@ -408,6 +408,11 @@ bool check_section_log_level(section_id section, log_level level)
 	return bitfield_get(&section_levels[level].bitfield, section);
 }
 
+INIT static void init_loglevel(void)
+{
+	setlevel(default_level, NULL);
+}
+
 bool setlevel(log_level level, const char *name)
 {
 	if (name) {
