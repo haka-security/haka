@@ -8,53 +8,43 @@ Logging
 =======
 
 This section introduces the Haka logging API. The logs are used for various type of
-information about a running Haka.
+information about a running Haka. The API defines various log sections that allows to
+have a fine grained control over information reported.
 
-.. haka:module:: haka.log
+.. haka:module:: haka
 
-.. haka:function:: fatal(module, fmt[, ...])
-                   error(module, fmt[, ...])
-                   warning(module, fmt[, ...])
-                   info(module, fmt[, ...])
-                   debug(module, fmt[, ...])
+.. haka:function:: haka.log.fatal(fmt[, ...])
+                   haka.log.error(fmt[, ...])
+                   haka.log.warning(fmt[, ...])
+                   haka.log.info(fmt[, ...])
+                   haka.log.debug(fmt[, ...])
 
-    :param module: Name of the module issuing the log.
-    :paramtype module: string
     :param fmt: Format string.
     :paramtype fmt: string
     :param ...: Format arguments.
 
-    Log a message in corresponding level.
+    Log a message in corresponding level. This function log to the section named ``'external'``.
 
-.. haka:function:: haka.log(module, fmt[, ...])
+.. haka:function:: haka.log(fmt[, ...])
 
     Alias to :haka:func:`haka.log.info`.
 
-.. haka:function:: message(level, module, fmt[, ...])
 
-    :param level: Level for the log (``'debug'``, ``'info'``, ``'warning'``, ``'error'`` or ``'fatal'``).
-    :paramtype level: string
-    :param module: Name of the module issuing the log.
-    :paramtype module: string
-    :param fmt: Format string.
-    :paramtype fmt: string
-    :param ...: Format arguments.
+Using different log section
+---------------------------
 
-    Log a message.
+.. haka:function:: log_section(name) -> logging
 
-.. haka:function:: setlevel(level[, module])
+    If you want more control, you can define a new section with this function. It will
+    return a tabe without have the same API as the table :haka:func:`haka.log`.
 
-    :param level: Level for the log (``'debug'``, ``'info'``, ``'warning'``, ``'error'`` or ``'fatal'``).
-    :paramtype level: string
-    :param module: Name of the module to modify.
-    :paramtype module: string
-
-    Set the logging level to display. It can be set globally and also manually for
-    each module.
 
 Example
 -------
 
 ::
 
-    haka.log("test", "error in packet %s", pkt)
+    haka.log("error in packet %s", pkt)
+
+    local log = haka.log_section("mysection")
+    log.debug("this is a log")
