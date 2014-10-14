@@ -203,7 +203,7 @@ bool          vbuffer_append(struct vbuffer *buf, struct vbuffer *buffer);
  * Compute the size of the buffer.
  * \note This function needs to process all memory block.
  */
-INLINE size_t vbuffer_size(struct vbuffer *buf);
+size_t        vbuffer_size(struct vbuffer *buf);
 
 /**
  * Check if the buffer is larger than a given size.
@@ -546,13 +546,6 @@ INLINE void   vbuffer_begin(const struct vbuffer *buf, struct vbuffer_iterator *
 INLINE void   vbuffer_end(const struct vbuffer *buf, struct vbuffer_iterator *position)
 {
 	vbuffer_position(buf, position, ALL);
-}
-
-INLINE size_t vbuffer_size(struct vbuffer *buf)
-{
-	struct vbuffer_sub sub;
-	vbuffer_sub_create(&sub, buf, 0, ALL);
-	return vbuffer_sub_size(&sub);
 }
 
 INLINE bool   vbuffer_check_size(struct vbuffer *buf, size_t minsize, size_t *size)

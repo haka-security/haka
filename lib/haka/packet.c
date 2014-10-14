@@ -20,6 +20,7 @@ static struct packet_module *packet_module = NULL;
 static enum packet_mode global_packet_mode = MODE_NORMAL;
 static local_storage_t capture_state;
 struct time_realm network_time;
+static bool is_realtime = false;
 static bool network_time_inited = false;
 
 INIT static void __init()
@@ -69,6 +70,7 @@ int set_packet_module(struct module *module)
 		time_realm_initialize(&network_time,
 				packet_module->is_realtime() ? TIME_REALM_REALTIME : TIME_REALM_STATIC);
 		network_time_inited = true;
+		is_realtime = packet_module->is_realtime();
 	}
 
 	return 0;
@@ -110,7 +112,7 @@ struct vbuffer *packet_payload(struct packet *pkt)
 	return &pkt->payload;
 }
 
-int packet_receive(struct packet **pkt)
+int packet_receive(struct engine_thread *engine, struct packet **pkt)
 {
 	int ret;
 	assert(packet_module);
@@ -125,13 +127,8 @@ int packet_receive(struct packet **pkt)
 		LOG_DEBUG(packet, "received packet id=%lli",
 				packet_module->get_id(*pkt));
 
-		if (!packet_module->is_realtime()) {
-			time_realm_update(&network_time,
-					packet_module->get_timestamp(*pkt));
-		}
-
 		{
-			volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+			volatile struct packet_stats *stats = engine_thread_statistics(engine);
 			if (stats) {
 				++stats->recv_packets;
 				stats->recv_bytes += vbuffer_size(packet_payload(*pkt));
@@ -139,7 +136,13 @@ int packet_receive(struct packet **pkt)
 		}
 	}
 
-	time_realm_check(&network_time);
+	if (*pkt && !is_realtime) {
+		time_realm_update_and_check(&network_time,
+					packet_module->get_timestamp(*pkt));
+	}
+	else {
+		time_realm_check(&network_time);
+	}
 
 	return ret;
 }

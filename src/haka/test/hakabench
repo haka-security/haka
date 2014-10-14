@@ -113,7 +113,7 @@ _do_bench() {
 
 	_info "%s %0.*s $CURSOR_SAVE  0.00 %%" "$name" `expr ${#PAD} - ${#name}` "$PAD"
 	_debug "\n"
-	_debug "$wrapper $HAKA -c $conf --pid-file ./haka.pid --ctl-file ./haka.sock --no-daemon\n"
+	_debug "$wrapper $HAKA -c $conf --pid-file /tmp/haka.pid --ctl-file /tmp/haka.sock --no-daemon\n"
 	_debug "output at $out\n"
 
 	set +e
