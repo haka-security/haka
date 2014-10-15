@@ -28,12 +28,28 @@ function BaseClassView.__tostring(self)
 end
 
 local BaseClass = {}
-function BaseClass.__index(self, key)
-	local v
-	for c in class_hierarchy(self) do
-		local v = rawget(c, key)
-		if v then return v end
+
+local function build_class_index_table(cls)
+	local cache = {}
+
+	for c in class_hierarchy(cls) do
+		for name, func in pairs(c) do
+			if not cache[name] then
+				cache[name] = func
+			end
+		end
 	end
+
+	return cache
+end
+
+function BaseClass.__index(self, key)
+	local cache = rawget(self, '__class_index')
+	if not cache then
+		cache = build_class_index_table(self)
+		rawset(self, '__class_index', cache)
+	end
+	return cache[key]
 end
 
 function BaseClass.__tostring(self)
@@ -95,6 +111,91 @@ function module.super(cls)
 	return rawget(cls.super, '__view')
 end
 
+local function build_index_table(cls)
+	local cache = {}
+	local index
+
+	for c in class_hierarchy(cls) do
+		for name, method in pairs(rawget(c, 'method')) do
+			if name == '__index' then
+				if not index then
+					index = method
+				end
+			else
+				if not cache[name] then
+					cache[name] = function () return method end
+				end
+			end
+		end
+
+		for name, prop in pairs(rawget(c, 'property')) do
+			if prop.get and not cache[name] then
+				local getter = prop.get
+				cache[name] = function (self) return getter(self) end
+			end
+		end
+	end
+
+	return function (self, key)
+		local v
+
+		-- Dynamic properties
+		v = rawget(self, '__property')
+		if v then
+			v = v[key]
+			if v and v.get then
+				return v.get(self)
+			end
+		end
+
+		v = cache[key]
+		if v then return v(self) end
+
+		if index then
+			return index(self, key)
+		end
+	end
+end
+
+local function build_newindex_table(cls)
+	local cache = {}
+	local newindex
+
+	for c in class_hierarchy(cls) do
+		if not newindex then
+			newindex = rawget(c, 'method').__newindex
+		end
+
+		for name, prop in pairs(rawget(c, 'property')) do
+			if prop.set and not cache[name] then
+				local setter = prop.set
+				cache[name] = function (self, value) return setter(self, value) end
+			end
+		end
+	end
+
+	return function (self, key, value)
+		local v
+
+		-- Dynamic properties
+		v = rawget(self, '__property')
+		if v then
+			v = v[key]
+			if v and v.set then
+				return v.set(self, value)
+			end
+		end
+
+		v = cache[key]
+		if v then return v(self, value) end
+
+		if newindex then
+			return newindex(self, key, value)
+		end
+
+		rawset(self, key, value)
+	end
+end
 
 function module.class(name, super)
 	super = super or BaseObject
@@ -115,57 +216,12 @@ function module.class(name, super)
 	cls.method = {}
 	cls.property = {}
 	cls.__index = function (self, key)
-		local v
-
-		-- Dynamic properties
-		v = rawget(self, '__property')
-		if v then
-			v = v[key]
-			if v and v.get then
-				return v.get(self)
-			end
-		end
-
-		for c in class_hierarchy(module.classof(self)) do
-			local method = rawget(c, 'method')
-
-			v = method[key]
-			if v then return v end
-
-			v = rawget(c, 'property')[key]
-			if v and v.get then return v.get(self) end
-
-			v = method['__index']
-			if v then
-				local v = v(self, key)
-				if v then return v end
-			end
-		end
+		cls.__index = build_index_table(cls)
+		return cls.__index(self, key)
 	end
 	cls.__newindex = function (self, key, value)
-		local v
-
-		-- Dynamic properties
-		v = rawget(self, '__property')
-		if v then
-			v = v[key]
-			if v and v.set then
-				return v.set(self, value)
-			end
-		end
-
-		for c in class_hierarchy(module.classof(self)) do
-			v = rawget(c, 'property')[key]
-			if v and v.set then return v.set(self, value) end
-
-			local method = rawget(c, 'method')
-			v = method['__newindex']
-			if v then
-				return v(self, key, value)
-			end
-		end
-
-		rawset(self, key, value)
+		cls.__newindex = build_newindex_table(cls)
+		return cls.__newindex(self, key, value)
 	end
 
 	setmetatable(cls, BaseClass)
