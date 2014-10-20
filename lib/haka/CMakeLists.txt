@@ -80,17 +80,17 @@ set_target_properties(libhaka PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 set_target_properties(libhaka PROPERTIES VERSION ${HAKA_VERSION_MAJOR}.${HAKA_VERSION_MINOR}.${HAKA_VERSION_PATCH}
 	SOVERSION ${HAKA_VERSION_MAJOR})
 
+target_link_libraries(libhaka LINK_PRIVATE  ${LUA_LIBRARIES})
+add_dependencies(libhaka ${LUA_DEPENDENCY})
+include_directories(${LUA_INCLUDE_DIR})
+link_directories(${LUA_LIBRARY_DIR})
+
 target_link_libraries(libhaka LINK_PRIVATE ${DL_LIBRARIES})
 target_link_libraries(libhaka LINK_PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(libhaka LINK_PRIVATE ${INIPARSER_LIBRARY})
 target_link_libraries(libhaka LINK_PRIVATE rt)
 target_link_libraries(libhaka LINK_PRIVATE m)
 target_link_libraries(libhaka LINK_PRIVATE ${EDITLINE_LIBRARY})
-
-target_link_libraries(libhaka LINK_PRIVATE  ${LUA_LIBRARIES})
-add_dependencies(libhaka ${LUA_DEPENDENCY})
-include_directories(${LUA_INCLUDE_DIR})
-link_directories(${LUA_LIBRARY_DIR})
 
 set_target_properties(libhaka PROPERTIES OUTPUT_NAME haka)
 
