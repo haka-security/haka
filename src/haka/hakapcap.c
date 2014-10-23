@@ -80,7 +80,7 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'l':
 			if (!setup_loglevel(optarg)) {
-				message(HAKA_LOG_FATAL, "core", clear_error());
+				messagef(HAKA_LOG_FATAL, "core", "%s", clear_error());
 				clean_exit();
 				exit(1);
 			}
