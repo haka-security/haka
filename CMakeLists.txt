@@ -164,6 +164,26 @@ endif()
 message(STATUS "Lua version (LUA): ${CMAKE_LUA}")
 include(UseLua)
 
+# Lua binding
+set(LUA_BINDING "ffi" CACHE STRING "Lua binding method")
+
+if(NOT ("$ENV{LUA_BINDING}" STREQUAL ""))
+	set(CMAKE_LUA_BINDING $ENV{LUA_BINDING})
+else()
+	set(CMAKE_LUA_BINDING ${LUA_BINDING})
+endif()
+
+if(NOT (${CMAKE_LUA_BINDING} STREQUAL "ffi"))
+	set(HAKA_FFI 0)
+	set(HAKA_CFUNC 1)
+else()
+	set(HAKA_FFI 1)
+	set(HAKA_CFUNC 0)
+endif()
+
+
+message(STATUS "Lua binding method (LUA_BINDING): ${CMAKE_LUA_BINDING}")
+
 find_package(Threads REQUIRED)
 
 set(HAKA_MODULE_PREFIX "" CACHE STRING "Haka module prefix")
