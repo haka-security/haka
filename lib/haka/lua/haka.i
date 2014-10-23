@@ -136,6 +136,7 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	require('class')
 	require('utils')
 	require('events')
+	local packet_receive = require('packet')
 
 	haka.events = {}
 
@@ -152,6 +153,26 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 
 	haka.console.threads = haka._threads_info
 	haka._threads_info = nil
+
+	function haka.main_loop(state, run_interrupts)
+		local filter = haka.filter
+		local pkt, has_interrupts, stop
+
+		while true do
+			pkt, has_interrupts, stop = packet_receive(state)
+			if has_interrupts then
+				run_interrupts(state)
+			end
+			if stop then
+				break
+			end
+			local ret = pcall(filter, pkt)
+			if not ret then
+				pkt:drop()
+			end
+		end
+	end
+
 }
 
 %include "lua/vbuffer.si"

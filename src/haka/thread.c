@@ -60,42 +60,57 @@ struct thread_pool {
 	struct thread_state       **threads;
 };
 
-extern bool lua_pushppacket(lua_State *L, struct packet *pkt);
+void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, bool *has_interrupts, bool *stop)
+{
 
-static void filter_wrapper(struct thread_state *state, struct packet *pkt)
+	if (state->pool->stop) {
+		*stop = true;
+	}
+
+	engine_thread_update_status(state->engine, THREAD_WAITING);
+
+	while (packet_receive(state->engine, pkt) == 0) {
+		engine_thread_update_status(state->engine, THREAD_RUNNING);
+
+		*has_interrupts = lua_state_has_interrupts(state->lua);
+		engine_thread_check_remote_launch(state->engine);
+
+		//if (state->pool->attach_debugger > state->attach_debugger) {
+		//      luadebug_debugger_start(state->lua->L, true);
+		//      state->attach_debugger = state->pool->attach_debugger;
+		//}
+
+		return;
+	}
+
+	*stop = true;
+}
+
+static void lua_start_main_loop(struct thread_state *state)
 {
 	int h;
 	LUA_STACK_MARK(state->lua->L);
-
-	packet_addref(pkt);
 
 	lua_pushcfunction(state->lua->L, lua_state_error_formater);
 	h = lua_gettop(state->lua->L);
 
 	lua_getglobal(state->lua->L, "haka");
-	lua_getfield(state->lua->L, -1, "filter");
+	lua_getfield(state->lua->L, -1, "main_loop");
+	lua_pushlightuserdata(state->lua->L, state);
+	lua_pushcfunction(state->lua->L, lua_state_runinterrupt);
 
-	if (!lua_isnil(state->lua->L, -1)) {
-		if (!lua_pushppacket(state->lua->L, pkt)) {
-			LOG_ERROR(core, "packet internal error");
-			packet_drop(pkt);
-		}
-		else {
-			if (lua_pcall(state->lua->L, 1, 0, h)) {
-				lua_state_print_error(state->lua->L, "filter");
-				packet_drop(pkt);
-			}
+	if (!lua_isnil(state->lua->L, -3)) {
+		if (lua_pcall(state->lua->L, 2, 0, h)) {
+			lua_state_print_error(state->lua->L, "main_loop");
 		}
 	}
 	else {
-		lua_pop(state->lua->L, 1);
-		packet_drop(pkt);
+		LOG_FATAL(core, "unable to load lua main loop");
+		lua_pop(state->lua->L, 2);
 	}
 
 	lua_pop(state->lua->L, 2);
 	LUA_STACK_CHECK(state->lua->L, 0);
-
-	packet_release(pkt);
 }
 
 static void cleanup_thread_state_lua(struct thread_state *state)
@@ -231,7 +246,6 @@ static bool init_thread_lua_state(struct thread_state *state)
 static void *thread_main_loop(void *_state)
 {
 	struct thread_state *state = (struct thread_state *)_state;
-	struct packet *pkt = NULL;
 	sigset_t set;
 #ifdef HAKA_MEMCHECK
 	int64 pkt_count=0;
@@ -302,27 +316,6 @@ static void *thread_main_loop(void *_state)
 
 	lua_state_trigger_haka_event(state->lua, "started");
 
-	engine_thread_update_status(state->engine, THREAD_WAITING);
-
-	while (packet_receive(state->engine, &pkt) == 0) {
-		engine_thread_update_status(state->engine, THREAD_RUNNING);
-
-		/* The packet can be NULL in case of failure in packet receive */
-		if (pkt) {
-			filter_wrapper(state, pkt);
-			pkt = NULL;
-		}
-
-		lua_state_runinterrupt(state->lua);
-		engine_thread_check_remote_launch(state->engine);
-
-		if (state->pool->attach_debugger > state->attach_debugger) {
-			luadebug_debugger_start(state->lua->L, true);
-			state->attach_debugger = state->pool->attach_debugger;
-		}
-
-		engine_thread_update_status(state->engine, THREAD_WAITING);
-
 #ifdef HAKA_MEMCHECK
 		if (((pkt_count++) % mem_rate) == 0) {
 			size_t vmsize, rss;
@@ -337,10 +330,7 @@ static void *thread_main_loop(void *_state)
 		}
 #endif
 
-		if (state->pool->stop) {
-			break;
-		}
-	}
+	lua_start_main_loop(state);
 
 	state->state = STATE_FINISHED;
 	engine_thread_update_status(state->engine, THREAD_STOPPED);

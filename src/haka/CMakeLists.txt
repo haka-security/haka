@@ -8,28 +8,25 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 lua_compile(NAME haka-lua FILES
 	lua/rule.lua
+	lua/packet.lua
 	lua/rule_group.lua
 )
 lua_compile(NAME haka-lua FILES lua/interactive.lua FLAGS ${LUA_FLAGS_DEBUG})
 lua_install(TARGET haka-lua DESTINATION share/haka/core)
-
-# Build common sources
-add_library(haka-common STATIC
-	app.c
-	thread.c
-	${SWIG_hakalua_FILES}
-)
-
-target_link_libraries(haka-common libhaka)
 
 # Build haka program
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 add_executable(haka
 	haka.c
-	ctl.c)
+	ctl.c
+	app.c
+	thread.c
+	${SWIG_hakalua_FILES}
+	packet.c
+)
 
-target_link_libraries(haka haka-common)
+target_link_libraries(haka libhaka)
 target_link_libraries(haka libhakactl)
 target_link_libraries(haka ${CMAKE_THREAD_LIBS_INIT})
 
@@ -42,9 +39,14 @@ install(FILES haka.1 hakapcap.1 DESTINATION share/man/man1)
 
 # Build hakapcap program
 add_executable(hakapcap
-	hakapcap.c)
+	hakapcap.c
+	app.c
+	thread.c
+	${SWIG_hakalua_FILES}
+	packet.c
+)
 
-target_link_libraries(hakapcap haka-common)
+target_link_libraries(hakapcap libhaka)
 target_link_libraries(hakapcap ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS hakapcap RUNTIME DESTINATION bin)
