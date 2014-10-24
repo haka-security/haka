@@ -4,11 +4,3 @@
 
 #define LUA_BIND_INIT(name) int luaopen_##name(lua_State *L)
 #define LUA_LOAD(name, L) lua_load_##name(L);
-
-#ifdef HAKA_FFI
-
-
-#else /* HAKA_FFI */
-
-
-#endif

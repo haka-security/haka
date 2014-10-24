@@ -27,8 +27,8 @@
 #cmakedefine HAKA_LUA52       @HAKA_LUA52@
 
 #define HAKA_LUA_BINDING      "@CMAKE_LUA_BINDING"
-#cmakedefine HAKA_FFI         "@HAKA_FFI"
-#cmakedefine HAKA_CFUNC       "@HAKA_CFUNC"
+#cmakedefine HAKA_FFI         @HAKA_FFI@
+#cmakedefine HAKA_CFUNC       @HAKA_CFUNC@
 
 #define PREFIX                "@CMAKE_INSTALL_PREFIX@"
 
