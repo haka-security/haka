@@ -4,8 +4,53 @@
 
 set(MODULE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-macro(SWIG_FIX_ENTRYPOINT target type)
-	set_target_properties(${target} PROPERTIES LINK_FLAGS "-Wl,--defsym=luaopen_${type}/${target}=luaopen_${target}")
+macro(MODULE_FIX_ENTRYPOINT name type)
+	set_target_properties(${name} PROPERTIES LINK_FLAGS "-Wl,--defsym=luaopen_${type}/${name}=luaopen_${name}")
+endmacro()
+
+macro(ADD_MODULE)
+	set(oneValueArgs NAME TYPE)
+	set(multiValueArgs FILES LUA)
+	cmake_parse_arguments(MODULE "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+	foreach(file ${MODULE_LUA})
+		get_filename_component(file_dir "${file}" PATH)
+		get_filename_component(file_path "${file}" ABSOLUTE)
+		get_filename_component(file_fullname "${file}" NAME)
+		get_filename_component(file_name "${file}" NAME_WE)
+
+		set(lua_preprocessed_file "${file_dir}/${file_name}.lua")
+		add_custom_command(
+			OUTPUT "${lua_preprocessed_file}"
+			COMMAND mkdir ${file_dir}
+			COMMAND ${CMAKE_C_COMPILER} -E -P -x c ${file_path} -o ${lua_preprocessed_file}
+			COMMENT "Preprocessing Lua file ${file}"
+			DEPENDS "${file_path}"
+			VERBATIM)
+
+		set(lua_bytecode_file "${file_dir}/${file_name}.bc")
+		add_custom_command(
+			OUTPUT "${lua_bytecode_file}"
+			COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_bytecode_file} ${lua_preprocessed_file}
+			COMMENT "Building Lua file ${lua_preprocessed_file}"
+			DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${lua_preprocessed_file}" ${LUA_DEPENDENCY}
+			VERBATIM)
+
+		set(lua_header_file "${file_dir}/${file_name}.h")
+		add_custom_command(
+			OUTPUT "${lua_header_file}"
+			COMMAND ${LUA_BIN} ${BC2C} ${file_name} ${CMAKE_CURRENT_BINARY_DIR}/${lua_bytecode_file} ${CMAKE_CURRENT_BINARY_DIR}/${lua_header_file}
+			DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${lua_bytecode_file}"
+			COMMENT "Building C header from Lua file ${lua_bytecode_file}"
+			VERBATIM)
+
+		LIST(APPEND BINDING_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_header_file}")
+	endforeach(file)
+
+	include_directories(${CMAKE_CURRENT_BINARY_DIR})
+	add_library(${MODULE_NAME} SHARED ${MODULE_FILES} ${BINDING_FILES})
+
+	MODULE_FIX_ENTRYPOINT(${MODULE_NAME} ${MODULE_TYPE})
 endmacro()
 
 # Setup module file names

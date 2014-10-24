@@ -61,9 +61,13 @@ install(FILES
 add_executable(luac ${LUA_CORE_SRC} ${LUA_LIB_SRC} ${LUA_SRC_DIR}/src/luac.c)
 target_link_libraries(luac m ${DL_LIBRARIES})
 
+add_executable(lua ${LUA_CORE_SRC} ${LUA_LIB_SRC} ${LUA_SRC_DIR}/src/lua.c)
+target_link_libraries(lua m ${DL_LIBRARIES})
+
 set(LUA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LUA_SRC_DIR}/src/ ${CMAKE_CURRENT_BINARY_DIR}/${LUA_SRC_DIR}/src/ PARENT_SCOPE)
 set(LUA_LIBRARIES liblua PARENT_SCOPE)
 
+set(LUA_BIN $<TARGET_FILE:lua> PARENT_SCOPE)
 set(LUA_COMPILER $<TARGET_FILE:luac> PARENT_SCOPE)
 set(LUA_FLAGS_NONE "" PARENT_SCOPE)
 set(LUA_FLAGS_DEBUG "" PARENT_SCOPE)

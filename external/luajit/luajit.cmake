@@ -65,6 +65,7 @@ set(LUA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/src)
 set(LUA_LIBRARY_DIR ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/${INSTALL_FULLDIR}/lib/)
 set(LUA_LIBRARIES ${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/src/libluajit.a)
 
+set(LUA_BIN ${CMAKE_SOURCE_DIR}/external/luajit/luajit -p "${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/src/")
 set(LUA_COMPILER ${CMAKE_SOURCE_DIR}/external/luajit/luajitc -p "${CMAKE_BINARY_DIR}/${LUAJIT_DIR}/src/")
 set(LUA_FLAGS_NONE "-g")
 set(LUA_FLAGS_DEBUG "-g")

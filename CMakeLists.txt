@@ -163,6 +163,7 @@ endif()
 
 message(STATUS "Lua version (LUA): ${CMAKE_LUA}")
 include(UseLua)
+include(UseBc2c)
 
 # Lua binding
 set(LUA_BINDING "ffi" CACHE STRING "Lua binding method")

@@ -18,7 +18,7 @@ if(LIBGEOIP_FOUND)
 	include_directories(${LIBGEOIP_INCLUDE_DIR})
 	target_link_libraries(geoip LINK_PRIVATE ${LIBGEOIP_LIBRARY})
 
-	SWIG_FIX_ENTRYPOINT(geoip misc)
+	MODULE_FIX_ENTRYPOINT(geoip misc)
 
 	INCLUDE_MODULE(geoip ipv4 protocol)
 

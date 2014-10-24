@@ -8,7 +8,7 @@ if(PCRE_FOUND)
 
 	add_library(pcre MODULE main.c ${SWIG_PCRE_FILES})
 
-	SWIG_FIX_ENTRYPOINT(pcre regexp)
+	MODULE_FIX_ENTRYPOINT(pcre regexp)
 
 	include_directories(${PCRE_INCLUDE_DIR})
 	target_link_libraries(pcre LINK_PRIVATE ${PCRE_LIBRARY})
