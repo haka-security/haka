@@ -2,6 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with module
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <haka/config.h>
+
 local module = {}
 
 local raw_dissector = haka.dissector.new{
@@ -11,7 +13,8 @@ local raw_dissector = haka.dissector.new{
 
 local dissectors = {}
 
--- #ifdef HAKA_FFI
+#ifdef HAKA_FFI
+
 local ffi = require('ffi')
 ffi.cdef[[
 	const char *packet_dissector(struct packet *pkt);
@@ -85,8 +88,8 @@ local mt = {
 }
 ffi.metatype("struct time", mt)
 
--- #else
--- #endif
+#else
+#endif
 
 function module.register(name, dissector)
 	dissectors[name] = dissector

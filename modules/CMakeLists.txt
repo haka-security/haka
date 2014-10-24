@@ -19,11 +19,18 @@ macro(ADD_MODULE)
 		get_filename_component(file_fullname "${file}" NAME)
 		get_filename_component(file_name "${file}" NAME_WE)
 
+		get_directory_property(inc INCLUDE_DIRECTORIES)
+		if (inc)
+			foreach(dir ${inc})
+				list(APPEND inc_flags
+					"-I${dir}")
+			endforeach()
+		endif()
 		set(lua_preprocessed_file "${file_dir}/${file_name}.lua")
 		add_custom_command(
 			OUTPUT "${lua_preprocessed_file}"
-			COMMAND mkdir ${file_dir}
-			COMMAND ${CMAKE_C_COMPILER} -E -P -x c ${file_path} -o ${lua_preprocessed_file}
+			COMMAND mkdir -p ${file_dir}
+			COMMAND ${CMAKE_C_COMPILER} ${inc_flags} -E -P -x c ${file_path} -o ${lua_preprocessed_file}
 			COMMENT "Preprocessing Lua file ${file}"
 			DEPENDS "${file_path}"
 			VERBATIM)
