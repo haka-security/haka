@@ -10,11 +10,14 @@ endmacro()
 
 macro(ADD_MODULE)
 	set(oneValueArgs NAME TYPE)
-	set(multiValueArgs FILES LUA)
+	set(multiValueArgs FILES LUA SWIG)
 	cmake_parse_arguments(MODULE "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
 	BINDING_COMPILE(NAME ${MODULE_NAME} FILES ${MODULE_FILES} LUA ${MODULE_LUA})
-	add_library(${MODULE_NAME} SHARED ${MODULE_FILES} ${BINDING_${MODULE_NAME}_FILES})
+	if (CMAKE_LUA_BINDING STREQUAL "cfunc")
+		swig_process(${MODULE_NAME} lua ${MODULE_SWIG})
+	endif()
+	add_library(${MODULE_NAME} SHARED ${MODULE_FILES} ${BINDING_${MODULE_NAME}_FILES} ${SWIG_${MODULE_NAME}_FILES})
 
 	MODULE_FIX_ENTRYPOINT(${MODULE_NAME} ${MODULE_TYPE})
 endmacro()
