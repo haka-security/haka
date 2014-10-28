@@ -36,7 +36,6 @@ static const char luabc_%s[] = {
 inline void lua_load_%s(lua_State *L)
 {
 	luaL_loadbuffer(L, luabc_%s, sizeof(luabc_%s), "%s");
-	lua_call(L, 0, 1);
 }
 ]]
 
