@@ -3,28 +3,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <errno.h>
 #include <lua.h>
 #include <semaphore.h>
-#include <string.h>
 #include <signal.h>
-#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-#include <haka/log.h>
-#include <haka/packet_module.h>
-#include <haka/error.h>
-#include <haka/thread.h>
 #include <haka/engine.h>
-#include <haka/system.h>
-#include <haka/timer.h>
-#include <haka/lua/state.h>
+#include <haka/error.h>
+#include <haka/log.h>
 #include <haka/lua/luautils.h>
+#include <haka/lua/state.h>
 #include <haka/luadebug/debugger.h>
+#include <haka/packet_module.h>
+#include <haka/system.h>
+#include <haka/thread.h>
+#include <haka/timer.h>
 
-#include "thread.h"
 #include "app.h"
+#include "packet.h"
+#include "thread.h"
 
 
 enum {
@@ -59,6 +60,11 @@ struct thread_pool {
 	barrier_t                   thread_sync;
 	struct thread_state       **threads;
 };
+
+extern int luaopen_hakainit(lua_State *L);
+extern int luaopen_haka(lua_State *L);
+extern int luaopen_swig(lua_State *L);
+extern int luaopen_luadebug(lua_State *L);
 
 void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, bool *has_interrupts, bool *stop)
 {
@@ -171,6 +177,14 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		cleanup_thread_state(state);
 		return NULL;
 	}
+
+	/* Preload haka core */
+	lua_state_preload(state->lua, "packet", luaopen_packet);
+
+	lua_state_load_module(state->lua, luaopen_swig, "swig");
+	lua_state_load_module(state->lua, luaopen_hakainit, "hakainit");
+	lua_state_load_module(state->lua, luaopen_luadebug, NULL);
+	lua_state_load_module(state->lua, luaopen_haka, "haka");
 
 	/* Set grammar debugging */
 	lua_getglobal(state->lua->L, "haka");

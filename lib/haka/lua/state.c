@@ -297,17 +297,12 @@ static void lua_interrupt_data_destroy(void *_data)
 	}
 }
 
-extern int luaopen_hakainit(lua_State *L);
-extern int luaopen_haka(lua_State *L);
-extern int luaopen_swig(lua_State *L);
-extern int luaopen_luadebug(lua_State *L);
-
-static void load_module(struct lua_State *L, lua_CFunction luaopen, const char *name)
+void lua_state_load_module(struct lua_state *state, lua_CFunction luaopen, const char *name)
 {
-	lua_pushcfunction(L, luaopen);
-	lua_call(L, 0, 1);
-	if (name) lua_setglobal(L, name);
-	else lua_pop(L, 1);
+	lua_pushcfunction(state->L, luaopen);
+	lua_call(state->L, 0, 1);
+	if (name) lua_setglobal(state->L, name);
+	else lua_pop(state->L, 1);
 }
 
 #if HAKA_LUA52
@@ -387,11 +382,6 @@ struct lua_state *lua_state_init()
 	lua_getglobal(L, "debug");
 	lua_pushcfunction(L, lua_state_error_formater);
 	lua_setfield(L, -2, "format_error");
-
-	load_module(L, luaopen_swig, "swig");
-	load_module(L, luaopen_hakainit, "hakainit");
-	load_module(L, luaopen_luadebug, NULL);
-	load_module(L, luaopen_haka, "haka");
 
 	lua_object_initialize(L);
 
@@ -645,6 +635,21 @@ bool lua_state_run_file(struct lua_state *state, const char *filename, int argc,
 
 	lua_pop(state->L, 1);
 	return true;
+}
+
+void lua_state_preload(struct lua_state *state, const char *module, lua_CFunction cfunc)
+{
+	LUA_STACK_MARK(state->L);
+
+	lua_getglobal(state->L, "package");
+	lua_pushstring(state->L, "preload");
+	lua_gettable(state->L, -2);
+	lua_pushcfunction(state->L, cfunc);
+	lua_setfield(state->L, -2, module);
+
+	lua_pop(state->L, 2);
+
+	LUA_STACK_CHECK(state->L, 0);
 }
 
 bool lua_state_require(struct lua_state *state, const char *module)
