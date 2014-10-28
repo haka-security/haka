@@ -38,9 +38,9 @@ void haka_exit();
 #ifdef HAKA_FFI
 
 %typemap(in) struct time * {
-       /* cdata is type 10 */
-       assert(lua_type(L, $input) == 10);
-       $1 = *(struct time **)lua_topointer(L, $input);
+	/* cdata is type 10 */
+	assert(lua_type(L, $input) == 10);
+	$1 = *(struct time **)lua_topointer(L, $input);
 }
 
 #else
