@@ -35,6 +35,10 @@ function module.error(pkt)
 	C.packet_drop(pkt)
 end
 
+#else
+
+module.receive, module.error = unpack({...})
+
 #endif
 
 return module

@@ -38,14 +38,51 @@ LUA_BIND_INIT(packet)
 
 #else
 
-int packet_receive_wrapper_wrap()
+extern bool lua_pushppacket(lua_State *L, struct packet *pkt);
+
+static int packet_receive_wrapper_wrap(lua_State *L)
 {
-	struct packet *pkt;
+	struct thread_state *state;
+	struct packet *pkt = NULL;
 	bool has_interrupts;
 	bool stop;
 
-	// push result on stack
+	assert(lua_islightuserdata(L, -1));
+	state = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+
 	packet_receive_wrapper(state, &pkt, &has_interrupts, &stop);
+
+	lua_pushppacket(L, pkt);
+	lua_pushboolean(L, has_interrupts);
+	lua_pushboolean(L, stop);
+
+	return 3;
+}
+
+static int packet_drop_wrap(lua_State *L)
+{
+	struct packet *pkt;
+
+	assert(lua_isuserdata(L, -1));
+	pkt = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+
+	packet_drop(pkt);
+
+	return 0;
+}
+
+LUA_BIND_INIT(packet)
+{
+	LUA_LOAD(packet, L);
+
+	lua_pushcfunction(L, packet_receive_wrapper_wrap);
+	lua_pushcfunction(L, packet_drop_wrap);
+
+	lua_call(L, 2, 1);
+
+	return 1;
 }
 
 #endif
