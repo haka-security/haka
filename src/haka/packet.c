@@ -2,15 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdio.h>
+#include <lua.h>
+#include <lauxlib.h>
 
 #include <haka/config.h>
+#include <haka/lua/luautils.h>
 #include <haka/luabinding.h>
 #include <haka/packet.h>
 #include <haka/types.h>
 
 #include "packet.h"
 #include "thread.h"
+
+#include "lua/packet.h"
 
 #ifdef HAKA_FFI
 

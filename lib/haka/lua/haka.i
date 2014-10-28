@@ -150,7 +150,7 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	require('class')
 	require('utils')
 	require('events')
-	local packet_receive = require('packet')
+	local packet = require('packet')
 
 	haka.events = {}
 
@@ -173,7 +173,7 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 		local pkt, has_interrupts, stop
 
 		while true do
-			pkt, has_interrupts, stop = packet_receive(state)
+			pkt, has_interrupts, stop = packet.receive(state)
 			if has_interrupts then
 				run_interrupts(state)
 			end
@@ -182,7 +182,7 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 			end
 			local ret = pcall(filter, pkt)
 			if not ret then
-				pkt:drop()
+				packet.error(pkt)
 			end
 		end
 	end
