@@ -83,3 +83,52 @@ macro(LUA_INSTALL)
 	get_target_property(FILES ${LUA_INSTALL_TARGET} LUA_FILES)
 	install(FILES ${FILES} DESTINATION ${LUA_INSTALL_DESTINATION})
 endmacro(LUA_INSTALL)
+
+macro(BINDING_COMPILE)
+	set(oneValueArgs NAME)
+	set(multiValueArgs FILES LUA)
+	cmake_parse_arguments(BINDING "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+	foreach(file ${BINDING_LUA})
+		get_filename_component(file_dir "${file}" PATH)
+		get_filename_component(file_path "${file}" ABSOLUTE)
+		get_filename_component(file_fullname "${file}" NAME)
+		get_filename_component(file_name "${file}" NAME_WE)
+
+		get_directory_property(inc INCLUDE_DIRECTORIES)
+		if (inc)
+			foreach(dir ${inc})
+				list(APPEND inc_flags "-I${dir}")
+			endforeach()
+		endif()
+		set(lua_preprocessed_file "${file_dir}/${file_name}.lua")
+		add_custom_command(
+			OUTPUT "${lua_preprocessed_file}"
+			COMMAND mkdir -p ${file_dir}
+			COMMAND ${CMAKE_C_COMPILER} ${inc_flags} -E -P -x c ${file_path} -o ${lua_preprocessed_file}
+			COMMENT "Preprocessing Lua file ${file}"
+			DEPENDS "${file_path}"
+			VERBATIM)
+
+		set(lua_bytecode_file "${file_dir}/${file_name}.bc")
+		add_custom_command(
+			OUTPUT "${lua_bytecode_file}"
+			COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_bytecode_file} ${lua_preprocessed_file}
+			COMMENT "Building Lua file ${lua_preprocessed_file}"
+			DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${lua_preprocessed_file}" ${LUA_DEPENDENCY}
+			VERBATIM)
+
+		set(lua_header_file "${file_dir}/${file_name}.h")
+		add_custom_command(
+			OUTPUT "${lua_header_file}"
+			COMMAND ${LUA_BIN} ${BC2C} ${file_name} ${CMAKE_CURRENT_BINARY_DIR}/${lua_bytecode_file} ${CMAKE_CURRENT_BINARY_DIR}/${lua_header_file}
+			DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${lua_bytecode_file}"
+			COMMENT "Building C header from Lua file ${lua_bytecode_file}"
+			VERBATIM)
+
+		LIST(APPEND LUA_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_header_file}")
+	endforeach(file)
+
+	include_directories(${CMAKE_CURRENT_BINARY_DIR})
+	set(BINDING_${BINDING_NAME}_FILES ${BINDING_FILES} ${LUA_FILES})
+endmacro(BINDING_COMPILE)
