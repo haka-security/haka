@@ -302,6 +302,11 @@ void packet_set_mode(enum packet_mode mode)
 	global_packet_mode = mode;
 }
 
+struct packet *packet_from_userdata(void *pkt)
+{
+	return (struct packet *)pkt;
+}
+
 enum packet_mode packet_mode()
 {
 	return global_packet_mode;

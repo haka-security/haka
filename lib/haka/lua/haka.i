@@ -4,6 +4,8 @@
 
 %module haka
 
+%import "haka/lua/config.si"
+
 %{
 #include <stdint.h>
 #include <unistd.h>
@@ -32,6 +34,16 @@ int thread_getid();
 
 %rename(exit) haka_exit;
 void haka_exit();
+
+#ifdef HAKA_FFI
+
+%typemap(in) struct time * {
+       /* cdata is type 10 */
+       assert(lua_type(L, $input) == 10);
+       $1 = *(struct time **)lua_topointer(L, $input);
+}
+
+#else
 
 struct time {
 	int    secs;
@@ -74,6 +86,8 @@ struct time {
 };
 
 STRUCT_UNKNOWN_KEY_ERROR(time);
+
+#endif
 
 %native(_threads_info) int threads_info(lua_State *L);
 

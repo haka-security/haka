@@ -139,6 +139,42 @@ void lua_luadebug_debugger_break();
 			end
 		end
 	end
+	local function __pprint_cdata(obj, indent, name, visited, hidden, depth, out, title, meta)
+		title = table.concat({title, color.cyan, color.bold, "cdata", color.clear})
+
+		if meta.mt.__tostring then
+			out(title, tostring(obj))
+		else
+			if depth == 0 then
+				out(title)
+			else
+				local has_value = false
+
+				for key, prop in sorted_pairs(meta.prop) do
+					local success, child_obj = pcall(function () return obj[key] end)
+					if not _hidden(key, child_obj, hidden) then
+						if not has_value then
+							out(title, "{")
+							has_value = true
+						end
+
+						if success then
+							__pprint(child_obj, indent .. "  ", key, visited, hidden, depth-1, out)
+						else
+							local error = table.concat({indent, "  ", color.blue, color.bold, key, color.clear, " : ", color.red, child_obj, color.clear})
+							out(error)
+						end
+					end
+				end
+
+				if has_value then
+					out(indent .. "}")
+				else
+					out(title)
+				end
+			end
+		end
+	end
 
 	local function __print_table(obj, indent, name, visited, hidden, depth, out, title)
 		title = table.concat({title, color.cyan, color.bold, "table", color.clear})
@@ -221,7 +257,7 @@ void lua_luadebug_debugger_break();
 			title = ""
 		end
 
-		if type == "userdata" or type == "table" then
+		if type == "userdata" or type == "table" or type == "cdata" then
 			if visited[obj] then
 				out(table.concat({title, color.red, "recursive value", color.clear}))
 				return
@@ -243,6 +279,13 @@ void lua_luadebug_debugger_break();
 				__pprint_swig(obj, indent, name, visited, hidden, depth, out, title, meta)
 			else
 				out(table.concat({title, color.cyan, color.bold, "userdata", color.clear}))
+			end
+		elseif type == "cdata" then
+			local success, meta = pcall(function () return obj[".meta"] end)
+			if success and meta then
+				__pprint_cdata(obj, indent, name, visited, hidden, depth, out, title, meta)
+			else
+				out(table.concat({title, color.cyan, color.bold, "cdata", color.clear}))
 			end
 		elseif type == "function" then
 			out(table.concat({title, color.cyan, color.bold, "function", color.clear}))

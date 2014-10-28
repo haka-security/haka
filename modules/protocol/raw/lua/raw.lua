@@ -12,84 +12,7 @@ local raw_dissector = haka.dissector.new{
 }
 
 local dissectors = {}
-
-#ifdef HAKA_FFI
-
-local ffi = require('ffi')
-ffi.cdef[[
-	const char *packet_dissector(struct packet *pkt);
-
-	struct time {
-		int32_t      secs;   /**< Seconds */
-		uint32_t     nsecs;  /**< Nano-seconds */
-	};
-
-	int packet_send(struct packet *pkt);
-	void packet_inject(struct packet *pkt);
-	void packet_drop(struct packet *pkt);
-	const struct time *packet_timestamp(struct packet *pkt);
-	struct vbuffer *packet_payload(struct packet *pkt);
-	unsigned long long packet_id(struct packet *pkt);
-	struct packet *packet_from_userdata(void *pkt);
-	int32_t time_sec(const struct time *t);
-
-	struct packet { };
-]]
-
-module.packet_dissector = function(self)
-	local dissector = ffi.C.packet_dissector(self)
-	if dissector == nil then
-		return nil
-	end
-	return ffi.string(dissector)
-end
-
-local packet_send = ffi.C.packet_send
-
-local method = {
-	drop = function () return ffi.C.packet_drop end,
-	inject = function () return ffi.C.packet_inject end,
-	timestamp = ffi.C.packet_timestamp,
-	payload = ffi.C.packet_payload,
-	id = ffi.C.packet_id,
-	send = function () return raw_dissector.method.send end,
-	receive = function () return raw_dissector.method.receive end,
-	continue = function () return haka.helper.Dissector.method.continue end,
-	can_continue = function () return raw_dissector.method.can_continue end,
-	error = function () return ffi.C.packet_drop end,
-	name = function () return "raw" end,
-}
-
-local mt = {
-	__index = function (table, key)
-		local res = method[key]
-		if res then
-			return res(table)
-		else
-			return nil
-		end
-	end
-}
-ffi.metatype("struct packet", mt)
-
-local method = {
-	seconds = ffi.C.time_sec,
-}
-
-local mt = {
-	__index = function (table, key)
-		local res = method[key]
-		if res then
-			return res(table)
-		else
-			return nil
-		end
-	end
-}
-ffi.metatype("struct time", mt)
-
-#else
-#endif
+local packet_send
 
 function module.register(name, dissector)
 	dissectors[name] = dissector
@@ -123,7 +46,7 @@ function raw_dissector:new(pkt)
 end
 
 function raw_dissector:create(size)
-	return haka.packet(size or 0)
+	return packet_new(size or 0)
 end
 
 function raw_dissector.method:send()
@@ -134,6 +57,91 @@ end
 function raw_dissector.method:can_continue()
 	return self:issent()
 end
+
+#ifdef HAKA_FFI
+
+local ffibinding = require("ffibinding")
+local ffi = require('ffi')
+ffi.cdef[[
+	const char *packet_dissector(struct packet *pkt);
+
+	struct time {
+	};
+
+	bool time_tostring(const struct time *t, char *buffer, size_t len);
+
+	enum packet_status {
+		normal, /**< Packet captured by Haka. */
+		forged, /**< Packet forged. */
+		sent,   /**< Packet already sent on the network. */
+	};
+
+	int packet_send(struct packet *pkt);
+	void packet_inject(struct packet *pkt);
+	void packet_drop(struct packet *pkt);
+	const struct time *packet_timestamp(struct packet *pkt);
+	struct vbuffer *packet_payload(struct packet *pkt);
+	uint64_t packet_id(struct packet *pkt);
+	struct packet *packet_from_userdata(void *pkt);
+	double time_sec(const struct time *t);
+	struct packet *packet_new(size_t size);
+	enum packet_status packet_state(struct packet *pkt);
+
+	struct packet { };
+]]
+
+module.packet_dissector = function(self)
+	local dissector = ffi.C.packet_dissector(self)
+	if dissector == nil then
+		return nil
+	end
+	return ffi.string(dissector)
+end
+
+packet_send = ffi.C.packet_send
+
+local prop = {
+	timestamp = ffi.C.packet_timestamp,
+	payload = ffi.C.packet_payload,
+	id = function(self) return tonumber(ffi.C.packet_id(self)) end,
+	state = ffi.C.packet_state
+}
+
+local meth = {
+	drop = ffi.C.packet_drop,
+	inject = ffi.C.packet_inject,
+	send = raw_dissector.method.send,
+	receive = raw_dissector.method.receive,
+	continue = haka.helper.Dissector.method.continue,
+	can_continue = raw_dissector.method.can_continue,
+	error = ffi.C.packet_drop,
+	name = "raw",
+	issent = function(pkt) return ffi.C.packet_state(pkt) == "sent" end,
+}
+
+ffibinding.set_meta("struct packet", prop, meth, {})
+
+local prop = {
+	seconds = ffi.C.time_sec,
+}
+
+local mt = {
+	__tostring = function (self)
+		local res = ffi.new[[
+			char[27] /* \see TIME_BUFSIZE */
+		]]
+		if not ffi.C.time_tostring(self, res, 27) then
+			return nil
+		end
+
+		return ffi.string(res)
+	end,
+}
+ffibinding.set_meta("struct time", prop, {}, mt)
+
+packet_new = ffi.C.packet_new
+
+#endif
 
 function haka.filter(pkt)
 	raw_dissector:receive(pkt)

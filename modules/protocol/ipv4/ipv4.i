@@ -429,7 +429,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 		haka.context:signal(self, ipv4_dissector.events['send_packet'])
 
 		local pkt = this._forge(self)
-		while pkt do
+		while pkt ~= nil do
 			pkt:send()
 			pkt = this._forge(self)
 		end
@@ -437,7 +437,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 
 	function ipv4_dissector.method:inject()
 		local pkt = this._forge(self)
-		while pkt do
+		while pkt ~= nil do
 			pkt:inject()
 			pkt = this._forge(self)
 		end
