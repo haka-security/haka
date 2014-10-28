@@ -167,7 +167,7 @@ include(UseBc2c)
 
 # Lua binding
 set(LUA_BINDING "ffi" CACHE STRING "Lua binding method")
-if ("${CMAKE_LUA}" STREQUAL "lua")
+if (CMAKE_LUA STREQUAL "lua")
 	set(LUA_BINDING "cfunc")
 endif()
 
