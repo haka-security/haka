@@ -90,13 +90,13 @@ void               packet_drop(struct packet *pkt);
 /**
  * Accept a packet and send it on the network.
  */
-void               packet_accept(struct packet *pkt);
+void               packet_send(struct packet *pkt);
 
 /**
  * Send a packet. The packet will re-enter Haka to be filtered
  * like a new packet.
  */
-bool               packet_send(struct packet *pkt);
+void               packet_inject(struct packet *pkt);
 
 /**
  * Wait for some packet to be availabe.

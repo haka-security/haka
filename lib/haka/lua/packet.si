@@ -49,42 +49,14 @@ struct packet {
 		void _send()
 		{
 			assert($self);
-
-			switch (packet_state($self)) {
-			case STATUS_FORGED:
-			case STATUS_NORMAL:
-				packet_accept($self);
-				break;
-
-			case STATUS_SENT:
-				error("operation not supported");
-				return;
-
-			default:
-				assert(0);
-				return;
-			}
+                        packet_send($self);
 		}
 
 		%rename(inject) _inject;
 		void _inject()
 		{
 			assert($self);
-
-			switch (packet_state($self)) {
-			case STATUS_FORGED:
-				packet_send($self);
-				break;
-
-			case STATUS_NORMAL:
-			case STATUS_SENT:
-				error("operation not supported");
-				return;
-
-			default:
-				assert(0);
-				return;
-			}
+                        packet_inject($self);
 		}
 
 		%rename(state) _state;

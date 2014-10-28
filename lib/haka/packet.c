@@ -162,10 +162,24 @@ void packet_drop(struct packet *pkt)
 	}
 }
 
-void packet_accept(struct packet *pkt)
+void packet_send(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
+
+	switch (packet_state(pkt)) {
+		case STATUS_FORGED:
+		case STATUS_NORMAL:
+			break;
+
+		case STATUS_SENT:
+			error("operation not supported");
+			return;
+
+		default:
+			assert(0);
+			return;
+	}
 
 	LOG_DEBUG(packet, "accepting packet id=%lli",
 			packet_module->get_id(pkt));
@@ -222,7 +236,7 @@ struct packet *packet_new(size_t size)
 	return pkt;
 }
 
-bool packet_send(struct packet *pkt)
+void packet_inject(struct packet *pkt)
 {
 	assert(pkt);
 	assert(packet_module);
@@ -234,11 +248,11 @@ bool packet_send(struct packet *pkt)
 	case STATUS_NORMAL:
 	case STATUS_SENT:
 		error("operation not supported (packet captured)");
-		return false;
+		return;
 
 	default:
 		assert(0);
-		return false;
+		return;
 	}
 
 	LOG_DEBUG(packet, "sending packet id=%lli",
@@ -252,7 +266,7 @@ bool packet_send(struct packet *pkt)
 		}
 	}
 
-	return packet_module->send_packet(pkt);
+	packet_module->send_packet(pkt);
 }
 
 enum packet_status packet_state(struct packet *pkt)
