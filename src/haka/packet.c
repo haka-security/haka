@@ -24,6 +24,14 @@ void packet_receive_wrapper_wrap(void *_state, struct receive_result *res)
 	packet_receive_wrapper(state, &res->pkt, &res->has_interrupts, &res->stop);
 }
 
+LUA_BIND_INIT(packet)
+{
+	LUA_LOAD(packet, L);
+	lua_call(L, 0, 1);
+
+	return 1;
+}
+
 #else
 
 int packet_receive_wrapper_wrap()

@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <haka/compiler.h>
+#include <haka/luabinding.h>
+
+LUA_BIND_INIT(packet);
 
 #ifdef HAKA_FFI
 
