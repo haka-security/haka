@@ -12,6 +12,9 @@ function module.load(ct)
 	if ct then
 		ffi.cdef(ct)
 	end
+	ffi.cdef[[
+		const char *clear_error();
+	]]
 	local lib = ffi.load(__path)
 	__path = nil
 	return lib, argv
@@ -24,8 +27,19 @@ function module.preload(path)
 	__path = path
 end
 
-function module.cdef(ct)
-	return ffi.cdef(ct)
+function module.handle_error(fn)
+	if type(fn) ~= 'cdata' then
+		error("cannot handle error on not ffi function")
+	end
+
+	return function(...)
+		local ret = fn(...)
+		local error_str = ffi.C.clear_error()
+		if error_str ~= nil then
+			error(ffi.string(error_str))
+		end
+		return ret
+	end
 end
 
 function module.set_meta(cdef, prop, meth, mt)

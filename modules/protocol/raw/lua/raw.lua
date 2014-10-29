@@ -102,22 +102,22 @@ end
 packet_send = ffi.C.packet_send
 
 local prop = {
-	timestamp = ffi.C.packet_timestamp,
-	payload = ffi.C.packet_payload,
-	id = function(self) return tonumber(ffi.C.packet_id(self)) end,
-	state = ffi.C.packet_state
+	timestamp = ffibinding.handle_error(ffi.C.packet_timestamp),
+	payload = ffibinding.handle_error(ffi.C.packet_payload),
+	id = function(self) return tonumber(ffibinding.handle_error(ffi.C.packet_id)(self)) end,
+	state = ffibinding.handle_error(ffi.C.packet_state),
 }
 
 local meth = {
-	drop = ffi.C.packet_drop,
-	inject = ffi.C.packet_inject,
+	drop = ffibinding.handle_error(ffi.C.packet_drop),
+	inject = ffibinding.handle_error(ffi.C.packet_inject),
 	send = raw_dissector.method.send,
 	receive = raw_dissector.method.receive,
 	continue = haka.helper.Dissector.method.continue,
 	can_continue = raw_dissector.method.can_continue,
-	error = ffi.C.packet_drop,
+	error = ffibinding.handle_error(ffi.C.packet_drop),
 	name = "raw",
-	issent = function(pkt) return ffi.C.packet_state(pkt) == "sent" end,
+	issent = function(pkt) return ffibinding.handle_error(ffi.C.packet_state)(pkt) == "sent" end,
 }
 
 ffibinding.set_meta("struct packet", prop, meth, {})
@@ -140,7 +140,7 @@ local mt = {
 }
 ffibinding.set_meta("struct time", prop, {}, mt)
 
-packet_new = ffi.C.packet_new
+packet_new = ffibinding.handle_error(ffi.C.packet_new)
 
 #endif
 
