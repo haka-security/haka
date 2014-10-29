@@ -652,23 +652,23 @@ void lua_state_preload(struct lua_state *state, const char *module, lua_CFunctio
 	LUA_STACK_CHECK(state->L, 0);
 }
 
-bool lua_state_require(struct lua_state *state, const char *module)
+bool lua_state_require(struct lua_State *L, const char *module, int result)
 {
 	int h;
 
-	lua_pushcfunction(state->L, lua_state_error_formater);
-	h = lua_gettop(state->L);
+	lua_pushcfunction(L, lua_state_error_formater);
+	h = lua_gettop(L);
 
-	lua_getglobal(state->L, "require");
-	lua_pushstring(state->L, module);
+	lua_getglobal(L, "require");
+	lua_pushstring(L, module);
 
-	if (lua_pcall(state->L, 1, 0, h)) {
-		lua_state_print_error(state->L, NULL);
-		lua_pop(state->L, 1);
+	if (lua_pcall(L, 1, result, h)) {
+		lua_state_print_error(L, NULL);
+		lua_pop(L, 1);
 		return false;
 	}
 
-	lua_pop(state->L, 1);
+	if (result) lua_remove(L, - result - 1);
 	return true;
 }
 

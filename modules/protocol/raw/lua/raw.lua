@@ -61,6 +61,7 @@ end
 #ifdef HAKA_FFI
 
 local ffibinding = require("ffibinding")
+local lib = ffibinding.load()
 local ffi = require('ffi')
 ffi.cdef[[
 	const char *packet_dissector(struct packet *pkt);

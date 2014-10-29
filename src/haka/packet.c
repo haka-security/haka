@@ -30,7 +30,7 @@ void packet_receive_wrapper_wrap(void *_state, struct receive_result *res)
 
 LUA_BIND_INIT(packet)
 {
-	LUA_LOAD(packet, L);
+	lua_load_packet(L);
 	lua_call(L, 0, 1);
 
 	return 1;

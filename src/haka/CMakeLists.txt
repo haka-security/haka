@@ -27,6 +27,8 @@ add_executable(haka
 	${BINDING_packet_FILES}
 )
 
+set_target_properties(haka PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
+
 target_link_libraries(haka libhaka)
 target_link_libraries(haka libhakactl)
 target_link_libraries(haka ${CMAKE_THREAD_LIBS_INIT})
@@ -46,6 +48,8 @@ add_executable(hakapcap
 	${SWIG_hakalua_FILES}
 	${BINDING_packet_FILES}
 )
+
+set_target_properties(hakapcap PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
 target_link_libraries(hakapcap libhaka)
 target_link_libraries(hakapcap ${CMAKE_THREAD_LIBS_INIT})

@@ -199,10 +199,10 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	lua_setfield(state->lua->L, -2, "debug");
 
 	/* Load Lua sources */
-	lua_state_require(state->lua, "rule");
-	lua_state_require(state->lua, "rule_group");
-	lua_state_require(state->lua, "interactive");
-	lua_state_require(state->lua, "protocol/raw");
+	lua_state_require(state->lua->L, "rule", 0);
+	lua_state_require(state->lua->L, "rule_group", 0);
+	lua_state_require(state->lua->L, "interactive", 0);
+	lua_state_require(state->lua->L, "protocol/raw", 0);
 
 	state->capture = packet_module->init_state(thread_id);
 	if (!state->capture) {

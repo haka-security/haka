@@ -25,7 +25,7 @@ struct lua_state *lua_state_init();
 void lua_state_close(struct lua_state *state);
 void lua_state_preload(struct lua_state *state, const char *module, lua_CFunction cfunc);
 void lua_state_load_module(struct lua_state *state, lua_CFunction luaopen, const char *name);
-bool lua_state_require(struct lua_state *state, const char *module);
+bool lua_state_require(struct lua_State *L, const char *module, int result);
 bool lua_state_isvalid(struct lua_state *state);
 bool lua_state_interrupt(struct lua_state *state, lua_function func, void *data, void (*destroy)(void *));
 bool lua_state_has_interrupts(struct lua_state *_state);

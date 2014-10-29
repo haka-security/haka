@@ -6,7 +6,27 @@ local ffi = require("ffi")
 local color = require("color")
 
 local module = {}
+local __path = nil
 
+function module.load(ct)
+	if ct then
+		ffi.cdef(ct)
+	end
+	local lib = ffi.load(__path)
+	__path = nil
+	return lib, argv
+end
+
+function module.preload(path)
+	if __path then
+		error("already preloading library")
+	end
+	__path = path
+end
+
+function module.cdef(ct)
+	return ffi.cdef(ct)
+end
 
 function module.set_meta(cdef, prop, meth, mt)
 	local fn = { }
