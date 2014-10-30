@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <lua.h>
+#include <lauxlib.h>
 
 #include <haka/log.h>
 #include <haka/error.h>
@@ -12,6 +14,7 @@
 #include <haka/packet.h>
 #include <haka/state_machine.h>
 #include <haka/container/vector.h>
+#include <haka/lua/state.h>
 
 
 #define MODULE    states
@@ -341,7 +344,7 @@ static struct state *state_machine_leave_state(struct state_machine_instance *in
 	return newstate;
 }
 
-static void transition_timeout(int count, void *_data)
+static void transition_timeout(void *_data)
 {
 	struct transition *trans;
 	struct timeout_data *data = (struct timeout_data *)_data;
@@ -363,6 +366,44 @@ static void transition_timeout(int count, void *_data)
 			state_machine_instance_update(data->instance, newstate);
 		}
 	}
+}
+
+struct lua_transition_data {
+	struct transition_data   data;
+	struct lua_ref           function;
+};
+
+static int transition_timeout_cfunc(struct lua_State *L)
+{
+	assert(lua_islightuserdata(L, -1));
+	void *data = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+
+	transition_timeout(data);
+
+	return 0;
+}
+
+static void transition_timeout_interrupt(int count, void *_data)
+{
+	struct timeout_data *data = (struct timeout_data *)_data;
+	struct transition *trans;
+	struct lua_transition_data *ldata;
+	struct lua_state *state;
+	assert(data);
+	assert(data->timer_index < data->instance->used_timer);
+
+	trans = vector_get(&data->instance->current->timeouts, struct transition, data->timer_index);
+	assert(trans);
+
+	/* WARNING: this cast suppose transmission callback is a
+	 * lua_transition_data and doing so it break the C API for the state
+	 * machine. We do accept this for now as every state machine are
+	 * written in lua and anyway statemachine internal are going to be
+	 * rewritten soon. */
+	ldata = (struct lua_transition_data *)trans->callback;
+	state = ldata->function.state;
+	lua_state_interrupt(state, transition_timeout_cfunc, _data, NULL);
 }
 
 static void state_machine_enter_state(struct state_machine_instance *instance, struct state *state)
@@ -415,7 +456,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 					timer->instance = instance;
 					timer->timer_index = i;
 
-					timer->timer = time_realm_timer(&network_time, transition_timeout, timer);
+					timer->timer = time_realm_timer(&network_time, transition_timeout_interrupt, timer);
 					if (!timer->timer) {
 						vector_pop(&instance->timers);
 						assert(check_error());
