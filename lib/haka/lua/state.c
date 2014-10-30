@@ -607,7 +607,7 @@ int lua_state_runinterrupt(lua_State *L)
 		lua_interrupt_call(state);
 	}
 
-	LUA_STACK_CHECK(L, 0);
+	LUA_STACK_CHECK(L, -1);
 
 	return 0;
 }
