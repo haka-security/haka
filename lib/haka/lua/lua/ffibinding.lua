@@ -17,8 +17,9 @@ function module.load(ct)
 		ffi.cdef(ct)
 	end
 
+	local lib
 	if __path then
-		local lib = ffi.load(__path)
+		lib = ffi.load(__path)
 		__path = nil
 	else
 		lib = ffi.C
