@@ -8,16 +8,22 @@ local color = require("color")
 local module = {}
 local __path = nil
 
+ffi.cdef[[
+	const char *clear_error();
+]]
+
 function module.load(ct)
 	if ct then
 		ffi.cdef(ct)
 	end
-	ffi.cdef[[
-		const char *clear_error();
-	]]
-	local lib = ffi.load(__path)
-	__path = nil
-	return lib, argv
+
+	if __path then
+		local lib = ffi.load(__path)
+		__path = nil
+	else
+		lib = ffi.C
+	end
+	return lib
 end
 
 function module.preload(path)
