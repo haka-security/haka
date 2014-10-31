@@ -168,7 +168,7 @@ include(UseBc2c)
 # Lua binding
 set(LUA_BINDING "ffi" CACHE STRING "Lua binding method")
 if (CMAKE_LUA STREQUAL "lua")
-	set(LUA_BINDING "cfunc")
+	set(LUA_BINDING "swig")
 endif()
 
 if(NOT ("$ENV{LUA_BINDING}" STREQUAL ""))
@@ -177,14 +177,19 @@ else()
 	set(CMAKE_LUA_BINDING ${LUA_BINDING})
 endif()
 
-if(NOT (${CMAKE_LUA_BINDING} STREQUAL "ffi"))
+if(${CMAKE_LUA_BINDING} STREQUAL "ffi")
+	set(HAKA_FFI 1)
+	set(HAKA_SWIG 0)
+elseif(${CMAKE_LUA_BINDING} STREQUAL "swig")
 	set(HAKA_FFI 0)
 	set(HAKA_SWIG 1)
 else()
-	set(HAKA_FFI 1)
-	set(HAKA_SWIG 0)
+	message(FATAL_ERROR "unknown Lua binding method ${CMAKE_LUA_BINDING}")
 endif()
 
+if(${CMAKE_LUA_BINDING} STREQUAL "ffi" AND NOT (${CMAKE_LUA} STREQUAL "luajit"))
+	message(FATAL_ERROR "cannot use Lua binding method ${CMAKE_LUA_BINDING} without luajit")
+endif()
 
 message(STATUS "Lua binding method (LUA_BINDING): ${CMAKE_LUA_BINDING}")
 
