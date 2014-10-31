@@ -110,13 +110,17 @@ macro(BINDING_COMPILE)
 			DEPENDS "${file_path}"
 			VERBATIM)
 
-		set(lua_bytecode_file "${file_dir}/${file_name}.bc")
-		add_custom_command(
-			OUTPUT "${lua_bytecode_file}"
-			COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_bytecode_file} ${lua_preprocessed_file}
-			COMMENT "Building Lua file ${lua_preprocessed_file}"
-			DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${lua_preprocessed_file}" ${LUA_DEPENDENCY}
-			VERBATIM)
+		if (LUAC)
+			set(lua_bytecode_file "${file_dir}/${file_name}.bc")
+			add_custom_command(
+				OUTPUT "${lua_bytecode_file}"
+				COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_bytecode_file} ${lua_preprocessed_file}
+				COMMENT "Building Lua file ${lua_preprocessed_file}"
+				DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${lua_preprocessed_file}" ${LUA_DEPENDENCY}
+				VERBATIM)
+		else()
+			set(lua_bytecode_file "${lua_preprocessed_file}")
+		endif()
 
 		set(lua_header_file "${file_dir}/${file_name}.h")
 		add_custom_command(
