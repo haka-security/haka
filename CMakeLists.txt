@@ -179,10 +179,10 @@ endif()
 
 if(NOT (${CMAKE_LUA_BINDING} STREQUAL "ffi"))
 	set(HAKA_FFI 0)
-	set(HAKA_CFUNC 1)
+	set(HAKA_SWIG 1)
 else()
 	set(HAKA_FFI 1)
-	set(HAKA_CFUNC 0)
+	set(HAKA_SWIG 0)
 endif()
 
 

@@ -52,7 +52,7 @@ const struct time *_network_time();
 	}
 %}
 
-#ifdef HAKA_CFUNC
+#ifdef HAKA_SWIG
 
 %{
 #include <haka/packet.h>
