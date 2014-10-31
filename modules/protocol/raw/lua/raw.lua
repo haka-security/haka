@@ -140,7 +140,7 @@ local mt = {
 }
 ffibinding.set_meta("struct time", prop, {}, mt)
 
-packet_new = ffibinding.handle_error(ffi.C.packet_new)
+local packet_new = ffibinding.handle_error(ffi.C.packet_new)
 
 #endif
 
