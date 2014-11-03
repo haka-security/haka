@@ -130,3 +130,48 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 %define LUA_OBJECT_EX(typeptr, name)
 	_LUA_OBJECT(typeptr, typeptr, name)
 %enddef
+
+%define FFI_OBJECT(typeptr)
+
+%typemap(in) typeptr * {
+	/* cdata is type 10 */
+	assert(lua_type(L, $input) == 10);
+	$1 = *(typeptr **)lua_topointer(L, $input);
+}
+
+%typemap(out) typeptr * {
+	int h;
+	LUA_STACK_MARK(L);
+	lua_pushcfunction(L, lua_state_error_formater);
+	h = lua_gettop(L);
+
+	lua_getglobal(L, "require");
+	lua_pushstring(L, "ffi");
+	if (lua_pcall(L, 1, 1, h)) {
+		lua_state_print_error(L, "raw");
+		lua_pop(L, 1);
+
+		LUA_STACK_CHECK(L, 0);
+		SWIG_execfail;
+	}
+
+	lua_getfield(L, -1, "cast");
+	lua_remove(L, -2);
+	lua_pushstring(L, "typeptr *");
+	lua_pushlightuserdata(L, $1);
+	if (lua_pcall(L, 2, 1, h)) {
+		lua_state_print_error(L, "raw");
+		lua_pop(L, 1);
+
+		LUA_STACK_CHECK(L, 0);
+		SWIG_execfail;
+	}
+
+	lua_remove(L, -2);
+
+	LUA_STACK_CHECK(L, 1);
+
+	SWIG_arg++;
+}
+
+%enddef

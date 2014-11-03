@@ -83,7 +83,6 @@ ffi.cdef[[
 	const struct time *packet_timestamp(struct packet *pkt);
 	struct vbuffer *packet_payload(struct packet *pkt);
 	uint64_t packet_id(struct packet *pkt);
-	struct packet *packet_from_userdata(void *pkt);
 	double time_sec(const struct time *t);
 	struct packet *packet_new(size_t size);
 	enum packet_status packet_state(struct packet *pkt);

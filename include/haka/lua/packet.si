@@ -9,47 +9,7 @@
 
 #ifdef HAKA_FFI
 
-%typemap(in) struct packet * {
-	/* cdata is type 10 */
-	assert(lua_type(L, $input) == 10);
-	$1 = *(struct packet **)lua_topointer(L, $input);
-}
-
-%typemap(out) struct packet * {
-	int h;
-	LUA_STACK_MARK(L);
-	lua_pushcfunction(L, lua_state_error_formater);
-	h = lua_gettop(L);
-
-	lua_getglobal(L, "require");
-	lua_pushstring(L, "ffi");
-	if (lua_pcall(L, 1, 1, h)) {
-		lua_state_print_error(L, "raw");
-		lua_pop(L, 1);
-
-		LUA_STACK_CHECK(L, 0);
-		SWIG_execfail;
-	}
-
-	lua_getfield(L, -1, "C");
-	lua_getfield(L, -1, "packet_from_userdata");
-	lua_pushlightuserdata(L, $1);
-	lua_remove(L, -3);
-	lua_remove(L, -3);
-	if (lua_pcall(L, 1, 1, h)) {
-		lua_state_print_error(L, "raw");
-		lua_pop(L, 1);
-
-		LUA_STACK_CHECK(L, 0);
-		SWIG_execfail;
-	}
-
-	lua_remove(L, -2);
-
-	LUA_STACK_CHECK(L, 1);
-
-	SWIG_arg++;
-}
+FFI_OBJECT(struct packet)
 
 #else
 
