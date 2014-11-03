@@ -13,6 +13,7 @@ local raw_dissector = haka.dissector.new{
 
 local dissectors = {}
 local packet_send
+local packet_new
 
 function module.register(name, dissector)
 	dissectors[name] = dissector
@@ -139,7 +140,7 @@ local mt = {
 }
 ffibinding.set_meta("struct time", prop, {}, mt)
 
-local packet_new = ffibinding.handle_error(ffi.C.packet_new)
+packet_new = ffibinding.handle_error(ffi.C.packet_new)
 
 #endif
 
