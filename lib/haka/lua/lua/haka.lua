@@ -19,16 +19,17 @@ local prop = {
 local meth = {
 }
 
+local tmp_str = ffi.new[[
+	char[27] /* \see TIME_BUFSIZE */
+]]
+
 local mt = {
 	__tostring = function (self)
-		local res = ffi.new[[
-			char[27] /* \see TIME_BUFSIZE */
-		]]
-		if not ffi.C.time_tostring(self, res, 27) then
+		if not ffi.C.time_tostring(self, tmp_str, 27) then
 			return nil
 		end
 
-		return ffi.string(res)
+		return ffi.string(tmp_str)
 	end,
 }
 
