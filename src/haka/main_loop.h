@@ -5,7 +5,7 @@
 #include <haka/compiler.h>
 #include <haka/luabinding.h>
 
-LUA_BIND_INIT(packet);
+LUA_BIND_INIT(main_loop);
 
 #ifdef HAKA_FFI
 

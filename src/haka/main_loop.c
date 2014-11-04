@@ -11,10 +11,10 @@
 #include <haka/packet.h>
 #include <haka/types.h>
 
-#include "packet.h"
+#include "main_loop.h"
 #include "thread.h"
 
-#include "lua/packet.h"
+#include "lua/main_loop.h"
 
 #ifdef HAKA_FFI
 
@@ -28,9 +28,9 @@ void packet_receive_wrapper_wrap(void *_state, struct receive_result *res)
 	packet_receive_wrapper(state, &res->pkt, &res->has_interrupts, &res->stop);
 }
 
-LUA_BIND_INIT(packet)
+LUA_BIND_INIT(main_loop)
 {
-	lua_load_packet(L);
+	lua_load_main_loop(L);
 	lua_call(L, 0, 1);
 
 	return 1;

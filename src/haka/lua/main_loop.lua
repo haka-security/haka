@@ -41,4 +41,23 @@ module.receive, module.error = unpack({...})
 
 #endif
 
+function module.run(state, run_interrupts)
+	local filter = haka.filter
+	local pkt, has_interrupts, stop
+
+	while true do
+		pkt, has_interrupts, stop = module.receive(state)
+		if has_interrupts then
+			run_interrupts(state)
+		end
+		if stop then
+			break
+		end
+		local ret = pcall(filter, pkt)
+		if not ret then
+			module.error(pkt)
+		end
+	end
+end
+
 return module

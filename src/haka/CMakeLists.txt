@@ -6,7 +6,7 @@ include_directories(.)
 include_directories(../hakactl)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-binding_compile(NAME packet FILES packet.c LUA lua/packet.lua)
+binding_compile(NAME main_loop FILES main_loop.c LUA lua/main_loop.lua)
 
 lua_compile(NAME haka-lua FILES
 	lua/rule.lua
@@ -24,7 +24,7 @@ add_executable(haka
 	app.c
 	thread.c
 	${SWIG_hakalua_FILES}
-	${BINDING_packet_FILES}
+	${BINDING_main_loop_FILES}
 )
 
 set_target_properties(haka PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
@@ -46,7 +46,7 @@ add_executable(hakapcap
 	app.c
 	thread.c
 	${SWIG_hakalua_FILES}
-	${BINDING_packet_FILES}
+	${BINDING_main_loop_FILES}
 )
 
 set_target_properties(hakapcap PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)

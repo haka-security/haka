@@ -24,7 +24,7 @@
 #include <haka/timer.h>
 
 #include "app.h"
-#include "packet.h"
+#include "main_loop.h"
 #include "thread.h"
 
 
@@ -100,8 +100,8 @@ static void lua_start_main_loop(struct thread_state *state)
 	lua_pushcfunction(state->lua->L, lua_state_error_formater);
 	h = lua_gettop(state->lua->L);
 
-	lua_getglobal(state->lua->L, "haka");
-	lua_getfield(state->lua->L, -1, "main_loop");
+	lua_state_require(state->lua->L, "main_loop", 1);
+	lua_getfield(state->lua->L, -1, "run");
 	lua_pushlightuserdata(state->lua->L, state);
 	lua_pushcfunction(state->lua->L, lua_state_runinterrupt);
 
@@ -179,7 +179,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	}
 
 	/* Preload haka core */
-	lua_state_preload(state->lua, "packet", luaopen_packet);
+	lua_state_preload(state->lua, "main_loop", luaopen_main_loop);
 
 	lua_state_load_module(state->lua, luaopen_swig, "swig");
 	lua_state_load_module(state->lua, luaopen_hakainit, "hakainit");
