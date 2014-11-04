@@ -68,7 +68,6 @@ extern int luaopen_luadebug(lua_State *L);
 
 void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, bool *has_interrupts, bool *stop)
 {
-
 	if (state->pool->stop) {
 		*stop = true;
 	}

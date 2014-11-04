@@ -17,6 +17,4 @@ struct receive_result {
 
 void packet_receive_wrapper_wrap(void *_state, struct receive_result *res);
 
-#else
-
 #endif
