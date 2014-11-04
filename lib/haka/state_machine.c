@@ -351,7 +351,7 @@ static void transition_timeout(void *_data)
 	assert(data);
 	assert(data->timer_index < data->instance->used_timer);
 
-	if (!data->instance->in_transition) {
+	if (!data->instance->finished && !data->instance->in_transition) {
 		struct state *newstate;
 		assert(data->instance->current);
 
