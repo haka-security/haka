@@ -102,20 +102,24 @@ static void lua_start_main_loop(struct thread_state *state)
 	lua_pushcfunction(state->lua->L, luaopen_main_loop);
 	if (lua_pcall(state->lua->L, 0, 1, h)) {
 		lua_state_print_error(state->lua->L, "load_main_loop");
+		lua_pop(state->lua->L, 1);
+		LUA_STACK_CHECK(state->lua->L, 0);
+		return;
 	}
 
 	lua_getfield(state->lua->L, -1, "run");
+	if (lua_isnil(state->lua->L, -1)) {
+		LOG_FATAL(core, "unable to load lua main loop");
+		lua_pop(state->lua->L, 3);
+		LUA_STACK_CHECK(state->lua->L, 0);
+		return;
+	}
+
 	lua_pushlightuserdata(state->lua->L, state);
 	lua_pushcfunction(state->lua->L, lua_state_runinterrupt);
 
-	if (!lua_isnil(state->lua->L, -3)) {
-		if (lua_pcall(state->lua->L, 2, 0, h)) {
-			lua_state_print_error(state->lua->L, "main_loop");
-		}
-	}
-	else {
-		LOG_FATAL(core, "unable to load lua main loop");
-		lua_pop(state->lua->L, 2);
+	if (lua_pcall(state->lua->L, 2, 0, h)) {
+		lua_state_print_error(state->lua->L, "main_loop");
 	}
 
 	lua_pop(state->lua->L, 2);
