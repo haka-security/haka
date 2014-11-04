@@ -64,8 +64,9 @@ struct ipv4_header {
  * IPv4 opaque structure
  */
 struct ipv4 {
-	struct packet          *packet;
 	struct lua_object       lua_object;
+	struct lua_object       lua_flags_object;
+	struct packet          *packet;
 	struct list2_elem       frag_list;
 	struct vbuffer_iterator select;
 	struct vbuffer         *payload;

@@ -361,6 +361,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	}
 
 	ip->lua_object = lua_object_init;
+	ip->lua_flags_object = lua_object_init;
 
 	return ip;
 }
@@ -479,6 +480,8 @@ struct ipv4 *ipv4_create(struct packet *packet)
 	ipv4_set_hdr_len(ip, hdrlen);
 
 	ip->lua_object = lua_object_init;
+	ip->lua_flags_object = lua_object_init;
+
 	return ip;
 }
 
@@ -586,6 +589,8 @@ static void ipv4_flush(struct ipv4 *ip)
 void ipv4_release(struct ipv4 *ip)
 {
 	lua_object_release(ip, &ip->lua_object);
+	lua_object_release(ip, &ip->lua_flags_object);
+
 	ipv4_flush(ip);
 
 	if (ip->reassembled) {

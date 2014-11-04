@@ -65,6 +65,7 @@ struct tcp_header {
 struct tcp {
 	struct ipv4            *packet;
 	struct lua_object       lua_object;
+	struct lua_object       lua_flags_object;
 	struct vbuffer          payload;
 	struct vbuffer_iterator select;
 	bool                    modified:1;

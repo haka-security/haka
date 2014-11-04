@@ -27,8 +27,6 @@
 
 %include "haka/lua/swig.si"
 
-%include "lua/object.si"
-
 %nodefaultctor;
 %nodefaultdtor;
 

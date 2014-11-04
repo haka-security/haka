@@ -6,27 +6,30 @@
 #define HAKA_LUA_OBJECT_H
 
 #include <haka/types.h>
-
-struct lua_state;
-struct lua_State;
+#include <haka/lua/ref.h>
 
 
 /*
  * Lua object management
  * This type allow to safely share an object between the C
  * and Lua by taking care of never keeping in Lua a reference
- * on a userdata that has been destroyed.
+ * on a data that has been destroyed.
  */
 
 struct lua_object {
-	struct lua_state *state;
+	void            **owner;
+	struct lua_ref    ref;
 };
 
-#define LUA_OBJECT_INIT        { NULL }
+#define LUA_OBJECT_INIT        { NULL, ref: LUA_REF_INIT }
 extern const struct lua_object lua_object_init;
 
 void lua_object_initialize(struct lua_State *L);
-bool lua_object_ownedbylua(struct lua_object *obj);
 void lua_object_release(void *ptr, struct lua_object *obj);
+
+struct lua_State;
+
+void lua_object_register(struct lua_State *L, struct lua_object *obj, void **owner, int index, bool disown);
+bool lua_object_push(struct lua_State *L, void *ptr, struct lua_object *obj, bool owner);
 
 #endif /* HAKA_LUA_OBJECT_H */

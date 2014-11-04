@@ -12,6 +12,7 @@ local ffi = require('ffi')
 ffi.cdef[[
 	int packet_receive_wrapper_wrap(void *state, struct receive_result *result);
 	void packet_drop(struct packet *pkt);
+	void packet_release(struct packet *pkt);
 
 	struct receive_result {
 		struct packet *pkt;

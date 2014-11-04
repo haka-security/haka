@@ -61,7 +61,7 @@ const struct time *_network_time();
 
 bool lua_pushppacket(lua_State *L, struct packet *pkt)
 {
-	return lua_object_push(L, pkt, &pkt->lua_object, SWIGTYPE_p_packet, 1);
+	return lua_object_push_swig(L, pkt, &pkt->lua_object, SWIGTYPE_p_packet, 1);
 }
 %}
 

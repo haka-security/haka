@@ -7,8 +7,10 @@
 #include <haka/lua/luautils.h>
 #include <haka/lua/ref.h>
 #include <haka/lua/state.h>
+#include <haka/error.h>
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <lua.h>
 #include <lualib.h>
@@ -47,12 +49,7 @@ void lua_ref_init_state(lua_State *L)
 	lua_call(L, 3, 0);
 }
 
-void lua_ref_init(struct lua_ref *ref)
-{
-	ref->state = NULL;
-	ref->ref = LUA_NOREF;
-	ref->weak = false;
-}
+const struct lua_ref lua_ref_init = LUA_REF_INIT;
 
 bool lua_ref_isvalid(struct lua_ref *ref)
 {
@@ -63,7 +60,7 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 {
 	LUA_STACK_MARK(state);
 
-	lua_ref_clear(ref);
+	lua_ref_clear(state, ref);
 
 	if (!lua_isnil(state, index)) {
 		ref->state = lua_state_get(state);
@@ -95,28 +92,52 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 	LUA_STACK_CHECK(state, 0);
 }
 
-bool lua_ref_clear(struct lua_ref *ref)
+static int lua_ref_delay_clear(lua_State *L)
+{
+	assert(lua_islightuserdata(L, 1));
+	struct lua_ref *ref = (struct lua_ref *)lua_topointer(L, 1);
+	lua_ref_clear(L, ref);
+	return 0;
+}
+
+bool lua_ref_clear(struct lua_State *state, struct lua_ref *ref)
 {
 	if (lua_ref_isvalid(ref)) {
 		if (lua_state_isvalid(ref->state)) {
-			LUA_STACK_MARK(ref->state->L);
+			if (state && lua_state_get(state) == ref->state) {
+				LUA_STACK_MARK(ref->state->L);
 
-			if (ref->weak) {
-				lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
-				lua_pushnil(ref->state->L);
-				lua_rawseti(ref->state->L, -2, ref->ref);
+				if (ref->weak) {
+					lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
+					lua_pushnil(ref->state->L);
+					lua_rawseti(ref->state->L, -2, ref->ref);
+					lua_pop(ref->state->L, 1);
+
+					lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
+				}
+				else {
+					lua_getfield(ref->state->L, LUA_REGISTRYINDEX, REF_TABLE);
+				}
+
+				luaL_unref(ref->state->L, -1, ref->ref);
 				lua_pop(ref->state->L, 1);
 
-				lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
+				LUA_STACK_CHECK(ref->state->L, 0);
 			}
 			else {
-				lua_getfield(ref->state->L, LUA_REGISTRYINDEX, REF_TABLE);
+				struct lua_ref *ref_copy = malloc(sizeof(struct lua_ref));
+				if (!ref_copy) {
+					error("memory error");
+					return false;
+				}
+
+				*ref_copy = *ref;
+
+				if (!lua_state_interrupt(ref->state, lua_ref_delay_clear, ref_copy, free)) {
+					free(ref_copy);
+					return false;
+				}
 			}
-
-			luaL_unref(ref->state->L, -1, ref->ref);
-			lua_pop(ref->state->L, 1);
-
-			LUA_STACK_CHECK(ref->state->L, 0);
 		}
 
 		ref->ref = LUA_NOREF;

@@ -69,6 +69,7 @@ add_library(libhaka SHARED
 	lua/ref.c
 	lua/lua.c
 	lua/marshal.c
+	lua/object.c
 	luadebug/interactive.c
 	luadebug/complete.c
 	luadebug/debugger.c

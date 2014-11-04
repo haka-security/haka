@@ -7,6 +7,7 @@
 %include "haka/lua/swig.si"
 %include "haka/lua/object.si"
 %include "haka/lua/packet.si"
+%include "haka/lua/vbuffer.si"
 %include "haka/lua/ref.si"
 %include "haka/lua/ipv4.si"
 %include "haka/lua/ipv4-addr.si"
@@ -254,7 +255,7 @@ struct ipv4_network {
 
 STRUCT_UNKNOWN_KEY_ERROR(ipv4_network);
 
-LUA_OBJECT_CAST(struct ipv4_flags, struct ipv4);
+LUA_OBJECT_CAST(struct ipv4_flags, struct ipv4, lua_flags_object);
 
 %nodefaultctor;
 %nodefaultdtor;

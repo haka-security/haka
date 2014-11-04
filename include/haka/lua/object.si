@@ -2,61 +2,68 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * SWIG standard object
+ */
+
 %{
 #include <haka/lua/object.h>
 #include <haka/config.h>
 
-extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swig_type_info *type_info, int owner);
+bool lua_object_push_swig(lua_State *L, void *ptr, struct lua_object *obj, swig_type_info *type_info, bool owner)
+{
+	if (!lua_object_push(L, ptr, obj, owner)) {
+		SWIG_NewPointerObj(L, ptr, type_info, owner);
+
+		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, -1);
+		lua_object_register(L, obj, &usr->ptr, -1, !owner);
+	}
+	else {
+		if (ptr && owner) {
+			swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, -1);
+			assert(usr->own == 0);
+			usr->own = 1;
+		}
+	}
+	return true;
+}
+
 %}
+
+%define _LUA_OBJECT_IN(typeptr, casttype, name, disown)
+	{
+		swig_lua_userdata *usr = NULL;
+
+		if (!lua_isnil(L, $input)) {
+			usr = (swig_lua_userdata*)lua_touserdata(L, $input);
+			assert(!disown || usr->own == 1);
+		}
+
+		if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, disown))){
+			SWIG_fail_ptr("$symname", $argnum, $descriptor);
+		}
+
+		if ($1) {
+			assert(usr);
+			lua_object_register(L, &((casttype*)$1)->name, &usr->ptr, $input, disown);
+		}
+	}
+%enddef
 
 %define _LUA_OBJECT(typeptr, casttype, name)
 
-%typemap(in, checkfn="SWIG_isptrtype") typeptr* %{
-	if (!lua_isnil(L, $input)) {
-		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, $input);
-		/* check that the object is still valid */
-		if (!usr) {
-			lua_pushstring(L,"$symname: object has been destroyed");
-			SWIG_fail;
-		}
+%typemap(in, checkfn="SWIG_isptrtype") typeptr* {
+	_LUA_OBJECT_IN(typeptr, casttype, name, $disown)
+}
 
-#ifdef HAKA_DEBUG
-		if ($disown) {
-			assert(!$disown || usr->own == 1);
-		}
-#endif
-	}
-
-	if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, $disown))){
-		SWIG_fail_ptr("$symname", $argnum, $descriptor);
-	}
-%}
-
-%typemap(in, checkfn="SWIG_isptrtype") typeptr* DISOWN %{
-	if (!lua_isnil(L, $input)) {
-		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, $input);
-		/* check that the object is still valid */
-		if (!usr) {
-			lua_pushstring(L,"$symname: object has been destroyed");
-			SWIG_fail;
-		}
-
-#ifdef HAKA_DEBUG
-		if ($disown) {
-			assert(!$disown || usr->own == 1);
-		}
-#endif
-	}
-
-	if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, SWIG_POINTER_DISOWN))){
-		SWIG_fail_ptr("$symname", $argnum, $descriptor);
-	}
-%}
+%typemap(in, checkfn="SWIG_isptrtype") typeptr* DISOWN {
+	_LUA_OBJECT_IN(typeptr, casttype, name, SWIG_POINTER_DISOWN)
+}
 
 %apply typeptr* DISOWN { typeptr* DISOWN_SUCCESS_ONLY };
 
 %typemap(out) typeptr* {
-	if (!lua_object_push(L, $1, &((casttype*)$1)->name, $descriptor, $owner)) {
+	if (!lua_object_push_swig(L, $1, &((casttype*)$1)->name, $descriptor, $owner)) {
 		SWIG_execfail;
 	}
 	else {
@@ -66,7 +73,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(freearg) typeptr* DISOWN {
 	if (SWIG_arg == -1 && $1) {
-		if (lua_object_push(L, $1, &((casttype*)$1)->name, $descriptor, 1)) {
+		if (lua_object_push_swig(L, $1, &((casttype*)$1)->name, $descriptor, 1)) {
 			lua_pop(L, 1);
 		}
 	}
@@ -74,7 +81,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(freearg) typeptr* DISOWN_SUCCESS_ONLY {
 	if (SWIG_arg == -2 && $1) {
-		if (lua_object_push(L, $1, &((casttype*)$1)->name, $descriptor, 1)) {
+		if (lua_object_push_swig(L, $1, &((casttype*)$1)->name, $descriptor, 1)) {
 			lua_pop(L, 1);
 		}
 	}
@@ -85,7 +92,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(argout) typeptr** OUTPUT_DISOWN {
 	if ($1) {
-		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->name, $*descriptor, 0)) {
+		if (!lua_object_push_swig(L, *$1, &(*(casttype**)$1)->name, $*descriptor, 0)) {
 			SWIG_execfail;
 		}
 		else {
@@ -103,7 +110,7 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 
 %typemap(argout) typeptr** OUTPUT {
 	if ($1) {
-		if (!lua_object_push(L, *$1, &(*(casttype**)$1)->name, $*descriptor, 1)) {
+		if (!lua_object_push_swig(L, *$1, &(*(casttype**)$1)->name, $*descriptor, 1)) {
 			SWIG_execfail;
 		}
 		else {
@@ -119,8 +126,8 @@ extern bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, swi
 %enddef
 
 
-%define LUA_OBJECT_CAST(typeptr, casttype)
-	_LUA_OBJECT(typeptr, casttype, lua_object)
+%define LUA_OBJECT_CAST(typeptr, casttype, name)
+	_LUA_OBJECT(typeptr, casttype, name)
 %enddef
 
 %define LUA_OBJECT(typeptr)

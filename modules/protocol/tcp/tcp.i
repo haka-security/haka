@@ -24,7 +24,7 @@ struct tcp_stream;
 %nodefaultctor;
 %nodefaultdtor;
 
-LUA_OBJECT_CAST(struct tcp_flags, struct tcp);
+LUA_OBJECT_CAST(struct tcp_flags, struct tcp, lua_flags_object);
 
 struct tcp_flags {
 	%extend {

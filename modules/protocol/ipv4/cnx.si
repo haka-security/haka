@@ -63,7 +63,7 @@ STRUCT_UNKNOWN_KEY_ERROR(cnx_table);
 
 		lua_pushnumber(L, index+1);
 
-		if (!lua_object_push(L, ptr, &ptr->lua_object, SWIGTYPE_p_cnx, 0)) {
+		if (!lua_object_push_swig(L, ptr, &ptr->lua_object, SWIGTYPE_p_cnx, 0)) {
 			lua_pop(L, 1);
 			return false;
 		}
@@ -159,7 +159,7 @@ struct lua_ref cnx_data_get(struct cnx *cnx)
 
 void cnx_data_set(struct cnx *cnx, struct lua_ref ref)
 {
-	lua_ref_clear(&cnx->lua_priv);
+	lua_ref_clear(NULL, &cnx->lua_priv);
 	cnx->lua_priv = ref;
 }
 

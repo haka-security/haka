@@ -8,13 +8,13 @@
 
 %typemap(in) struct lua_ref
 %{
-	lua_ref_init(&$1);
+	$1 = lua_ref_init;
 	lua_ref_get(L, &$1, $input, false);
 %}
 
 %typemap(in) struct lua_ref WEAK
 %{
-	lua_ref_init(&$1);
+	$1 = lua_ref_init;
 	lua_ref_get(L, &$1, $input, true);
 %}
 
