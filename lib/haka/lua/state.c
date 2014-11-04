@@ -552,7 +552,7 @@ static void lua_interrupt_call(struct lua_state_ext *state)
 
 static void lua_update_hook(struct lua_state_ext *state)
 {
-	if (state->debug_hook || state->has_interrupts) {
+	if (state->debug_hook) {
 		if (!state->hook_installed) {
 			lua_sethook(state->state.L, &lua_dispatcher_hook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
 			state->hook_installed = true;
@@ -572,12 +572,6 @@ static void lua_dispatcher_hook(lua_State *L, lua_Debug *ar)
 	if (state) {
 		if (state->debug_hook) {
 			state->debug_hook(L, ar);
-		}
-
-		if (state->has_interrupts)
-		{
-			lua_interrupt_call(state);
-			lua_update_hook(state);
 		}
 	}
 }
@@ -609,7 +603,6 @@ bool lua_state_interrupt(struct lua_state *_state, lua_function func, void *data
 	func_data->destroy = destroy;
 
 	state->has_interrupts = true;
-	lua_update_hook(state);
 
 	return true;
 }
