@@ -598,7 +598,6 @@ int lua_state_runinterrupt(lua_State *L)
 
 	assert(lua_islightuserdata(L, -1));
 	state = lua_touserdata(L, -1);
-	lua_pop(L, 1);
 
 	if (!vector_isempty(&state->interrupts)) {
 		state->has_interrupts = false;
@@ -607,7 +606,7 @@ int lua_state_runinterrupt(lua_State *L)
 		lua_interrupt_call(state);
 	}
 
-	LUA_STACK_CHECK(L, -1);
+	LUA_STACK_CHECK(L, 0);
 
 	return 0;
 }
