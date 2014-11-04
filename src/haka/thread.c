@@ -322,7 +322,7 @@ static void *thread_main_loop(void *_state)
 	state->engine = engine_thread_init(state->lua->L, state->thread_id);
 	engine_thread_update_status(state->engine, THREAD_RUNNING);
 
-	packet_init(state->capture);
+	packet_init_thread(state->capture);
 
 	if (!state->pool->single) {
 		if (!barrier_wait(&state->pool->thread_start_sync)) {

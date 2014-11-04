@@ -336,11 +336,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	}
 
 	*pkt = (struct packet *)state->current;
-
-	/* Too avoid the previous packet Lua object to be reused, we need to
-	 * manually clear the object reference */
-	lua_object_release(*pkt, &(*pkt)->lua_object);
-
+	packet_init(*pkt);
 	state->current = list_next(state->current);
 	return 0;
 }

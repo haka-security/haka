@@ -86,7 +86,7 @@ struct packet_module *get_packet_module()
 	return packet_module;
 }
 
-bool packet_init(struct packet_module_state *state)
+bool packet_init_thread(struct packet_module_state *state)
 {
 	assert(!local_storage_get(&capture_state));
 	return local_storage_set(&capture_state, state);
@@ -112,6 +112,13 @@ struct vbuffer *packet_payload(struct packet *pkt)
 	return &pkt->payload;
 }
 
+void packet_init(struct packet *pkt)
+{
+	pkt->lua_object = lua_object_init;
+	pkt->luadata = lua_ref_init;
+	atomic_set(&pkt->ref, 1);
+}
+
 int packet_receive(struct engine_thread *engine, struct packet **pkt)
 {
 	int ret;
@@ -120,9 +127,6 @@ int packet_receive(struct engine_thread *engine, struct packet **pkt)
 	ret = packet_module->receive(get_capture_state(), pkt);
 
 	if (!ret && *pkt) {
-		(*pkt)->lua_object = lua_object_init;
-(??)		lua_ref_init(&(*pkt)->userdata);
-		atomic_set(&(*pkt)->ref, 1);
 		assert(vbuffer_isvalid(&(*pkt)->payload));
 		LOG_DEBUG(packet, "received packet id=%lli",
 				packet_module->get_id(*pkt));
@@ -228,9 +232,7 @@ struct packet *packet_new(size_t size)
 		return NULL;
 	}
 
-	pkt->lua_object = lua_object_init;
-	pkt->luadata = lua_ref_init;
-	atomic_set(&pkt->ref, 1);
+	packet_init(pkt);
 	assert(vbuffer_isvalid(&pkt->payload));
 
 	return pkt;

@@ -421,6 +421,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 				}
 
 				memset(packet, 0, sizeof(struct pcap_packet));
+				packet_init(&packet->core_packet);
 
 				if (state->pin) {
 					pcap_dump((u_char *)state->pin, header, p);

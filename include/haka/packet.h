@@ -45,7 +45,7 @@ enum packet_status {
 /**
  * Initialize packet internals for a given thread.
  */
-bool               packet_init(struct packet_module_state *state);
+bool               packet_init_thread(struct packet_module_state *state);
 
 /**
  * Increment packet ref count.
@@ -56,6 +56,11 @@ void               packet_addref(struct packet *pkt);
  * Decrement packet ref count and release it if needed.
  */
 bool               packet_release(struct packet *pkt);
+
+/**
+ * Initilize the packet structure.
+ */
+void               packet_init(struct packet *pkt);
 
 /**
  * Create a new packet.
