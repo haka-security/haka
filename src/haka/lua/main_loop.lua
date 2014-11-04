@@ -29,7 +29,12 @@ local C = ffi.C
 function module.receive(_state)
 	local state = ffi.cast("void *", _state)
 	C.packet_receive_wrapper_wrap(state, res)
-	return res[0].pkt, res[0].has_extra, res[0].stop
+
+	local pkt = res[0].pkt
+	if pkt ~= nil then ffi.gc(pkt, ffi.C.packet_release)
+	else pkt = nil end
+
+	return pkt, res[0].has_extra, res[0].stop
 end
 
 function module.error(pkt)
