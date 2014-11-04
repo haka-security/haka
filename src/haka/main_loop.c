@@ -73,9 +73,9 @@ static int packet_drop_wrap(lua_State *L)
 	return 0;
 }
 
-LUA_BIND_INIT(packet)
+LUA_BIND_INIT(main_loop)
 {
-	LUA_LOAD(packet, L);
+	LUA_LOAD(main_loop, L);
 
 	lua_pushcfunction(L, packet_receive_wrapper_wrap);
 	lua_pushcfunction(L, packet_drop_wrap);
