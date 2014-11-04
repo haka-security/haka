@@ -29,7 +29,7 @@ bool lua_state_require(struct lua_State *L, const char *module, int result);
 bool lua_state_isvalid(struct lua_state *state);
 bool lua_state_interrupt(struct lua_state *state, lua_function func, void *data, void (*destroy)(void *));
 bool lua_state_has_interrupts(struct lua_state *_state);
-int lua_state_runinterrupt(struct lua_State *L);
+bool lua_state_runinterrupt(struct lua_state *state);
 bool lua_state_setdebugger_hook(struct lua_state *state, lua_hook hook);
 bool lua_state_run_file(struct lua_state *L, const char *filename, int argc, char *argv[]);
 void lua_state_trigger_haka_event(struct lua_state *state, const char *event);

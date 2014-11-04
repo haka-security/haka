@@ -590,25 +590,13 @@ bool lua_state_has_interrupts(struct lua_state *_state)
 	return state->has_interrupts;
 }
 
-int lua_state_runinterrupt(lua_State *L)
+bool lua_state_runinterrupt(struct lua_state *_state)
 {
-	struct lua_state_ext *state;
-
-	LUA_STACK_MARK(L);
-
-	assert(lua_islightuserdata(L, -1));
-	state = lua_touserdata(L, -1);
-
-	if (!vector_isempty(&state->interrupts)) {
-		state->has_interrupts = false;
-		lua_update_hook(state);
-
-		lua_interrupt_call(state);
+	struct lua_state_ext *state = (struct lua_state_ext *)_state;
+	if (state->has_interrupts) {
+		 lua_interrupt_call(state);
 	}
-
-	LUA_STACK_CHECK(L, 0);
-
-	return 0;
+	return true;
 }
 
 bool lua_state_run_file(struct lua_state *state, const char *filename, int argc, char *argv[])

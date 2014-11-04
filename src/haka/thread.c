@@ -91,6 +91,22 @@ void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, boo
 	*stop = true;
 }
 
+static int lua_state_runinterrupt_wrapper(lua_State *L)
+{
+	struct thread_state *state;
+
+	LUA_STACK_MARK(L);
+
+	assert(lua_islightuserdata(L, -1));
+	state = lua_touserdata(L, -1);
+
+	lua_state_runinterrupt(state->lua);
+
+	LUA_STACK_CHECK(L, 0);
+
+	return 0;
+}
+
 static void lua_start_main_loop(struct thread_state *state)
 {
 	int h;
@@ -116,7 +132,7 @@ static void lua_start_main_loop(struct thread_state *state)
 	}
 
 	lua_pushlightuserdata(state->lua->L, state);
-	lua_pushcfunction(state->lua->L, lua_state_runinterrupt);
+	lua_pushcfunction(state->lua->L, lua_state_runinterrupt_wrapper);
 
 	if (lua_pcall(state->lua->L, 2, 0, h)) {
 		lua_state_print_error(state->lua->L, "main_loop");
