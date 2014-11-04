@@ -4,7 +4,7 @@
 
 set(MODULE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-macro(MODULE_FIX_ENTRYPOINT name type)
+macro(MODULE_FIX_LUA_ENTRYPOINT name type)
 	set_target_properties(${name} PROPERTIES LINK_FLAGS "-Wl,--defsym=luaopen_${type}/${name}=luaopen_${name}")
 endmacro()
 
@@ -21,7 +21,7 @@ macro(ADD_MODULE)
 	# To get dladdr (for ffi load trick)
 	set_target_properties(${MODULE_NAME} PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
-	MODULE_FIX_ENTRYPOINT(${MODULE_NAME} ${MODULE_TYPE})
+	MODULE_FIX_LUA_ENTRYPOINT(${MODULE_NAME} ${MODULE_TYPE})
 endmacro()
 
 # Setup module file names

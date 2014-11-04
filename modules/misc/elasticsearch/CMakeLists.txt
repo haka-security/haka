@@ -29,7 +29,7 @@ if(JANSSON_FOUND AND LIBCURL_FOUND AND LIBUUID_FOUND)
 
 	target_link_libraries(elasticsearch LINK_PUBLIC libelasticsearch)
 
-	MODULE_FIX_ENTRYPOINT(elasticsearch misc)
+	MODULE_FIX_LUA_ENTRYPOINT(elasticsearch misc)
 
 	INSTALL_MODULE(elasticsearch misc)
 else()

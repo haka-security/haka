@@ -10,7 +10,7 @@ swig_add_module(tcp lua SHARED
 	tcp.c
 	tcp-stream.c
 )
-MODULE_FIX_ENTRYPOINT(tcp protocol)
+MODULE_FIX_LUA_ENTRYPOINT(tcp protocol)
 
 lua_compile(NAME tcp-console FILES tcp_console.lua)
 lua_install(TARGET tcp-console DESTINATION share/haka/console)
