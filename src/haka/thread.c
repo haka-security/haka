@@ -61,10 +61,6 @@ struct thread_pool {
 	struct thread_state       **threads;
 };
 
-extern int luaopen_hakainit(lua_State *L);
-extern int luaopen_haka(lua_State *L);
-extern int luaopen_swig(lua_State *L);
-extern int luaopen_luadebug(lua_State *L);
 
 void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, bool *has_interrupts, bool *stop)
 {
@@ -201,10 +197,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		return NULL;
 	}
 
-	lua_state_load_module(state->lua, luaopen_swig, "swig");
-	lua_state_load_module(state->lua, luaopen_hakainit, "hakainit");
-	lua_state_load_module(state->lua, luaopen_luadebug, NULL);
-	lua_state_load_module(state->lua, luaopen_haka, "haka");
+	lua_state_openlibs(state->lua);
 
 	/* Set grammar debugging */
 	lua_getglobal(state->lua->L, "haka");

@@ -22,6 +22,7 @@ typedef int  (*lua_function)(struct lua_State *L);
 typedef void (*lua_hook)(struct lua_State *L, struct lua_Debug *ar);
 
 struct lua_state *lua_state_init();
+void lua_state_openlibs(struct lua_state *state);
 void lua_state_close(struct lua_state *state);
 void lua_state_preload(struct lua_state *state, const char *module, lua_CFunction cfunc);
 void lua_state_load_module(struct lua_state *state, lua_CFunction luaopen, const char *name);

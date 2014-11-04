@@ -42,6 +42,11 @@ struct lua_state_ext {
 	struct lua_state_ext  *next;
 };
 
+extern int luaopen_hakainit(lua_State *L);
+extern int luaopen_haka(lua_State *L);
+extern int luaopen_swig(lua_State *L);
+extern int luaopen_luadebug(lua_State *L);
+
 static void lua_dispatcher_hook(lua_State *L, lua_Debug *ar);
 
 
@@ -394,6 +399,15 @@ struct lua_state *lua_state_init()
 	allocated_state = ret;
 
 	return &ret->state;
+}
+
+void lua_state_openlibs(struct lua_state *state)
+{
+	lua_state_load_module(state, luaopen_swig, "swig");
+	lua_state_load_module(state, luaopen_hakainit, "hakainit");
+	lua_state_load_module(state, luaopen_luadebug, NULL);
+	lua_state_load_module(state, luaopen_haka, "haka");
+
 }
 
 void lua_state_trigger_haka_event(struct lua_state *state, const char *event)
