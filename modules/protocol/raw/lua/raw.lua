@@ -65,12 +65,16 @@ local ffibinding = require("ffibinding")
 local lib = ffibinding.load()
 local ffi = require('ffi')
 ffi.cdef[[
+	/**
+	 * \see haka/packet.h
+	 */
+
 	const char *packet_dissector(struct packet *pkt);
 
 	enum packet_status {
-		normal, /**< Packet captured by Haka. */
-		forged, /**< Packet forged. */
-		sent,   /**< Packet already sent on the network. */
+		normal,
+		forged,
+		sent,
 	};
 
 	int packet_send(struct packet *pkt);
