@@ -67,6 +67,8 @@ void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, boo
 		*stop = true;
 	}
 
+	/* Ensure pkt is null so we can check if packte_receive really received one */
+	*pkt = NULL;
 	engine_thread_update_status(state->engine, THREAD_WAITING);
 
 	while (packet_receive(state->engine, pkt) == 0) {
