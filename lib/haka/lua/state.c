@@ -512,8 +512,7 @@ static void lua_interrupt_call(struct lua_state_ext *state)
 	LUA_STACK_MARK(state->state.L);
 	struct vector interrupts;
 
-	vector_create_reserve(&interrupts, struct lua_interrupt_data, 20, lua_interrupt_data_destroy);
-
+	vector_create_reserve(&interrupts, struct lua_interrupt_data, vector_count(&state->interrupts), lua_interrupt_data_destroy);
 	vector_swap(&state->interrupts, &interrupts);
 	state->has_interrupts = false;
 
