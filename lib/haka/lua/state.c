@@ -455,6 +455,8 @@ void lua_state_trigger_haka_event(struct lua_state *state, const char *event)
 	LUA_STACK_CHECK(state->L, 0);
 }
 
+static void lua_interrupt_call(struct lua_state_ext *state);
+
 void lua_state_close(struct lua_state *_state)
 {
 	struct lua_state_ext *state = (struct lua_state_ext *)_state;
@@ -463,10 +465,13 @@ void lua_state_close(struct lua_state *_state)
 
 	lua_state_trigger_haka_event(_state, "exiting");
 
-	vector_destroy(&state->interrupts);
-	state->has_interrupts = false;
+	if (state->has_interrupts) {
+		lua_interrupt_call(state);
+	}
 
 	lua_close(state->state.L);
+
+	vector_destroy(&state->interrupts);
 	state->state.L = NULL;
 }
 
