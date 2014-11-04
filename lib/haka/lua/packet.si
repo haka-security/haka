@@ -71,6 +71,7 @@ bool lua_pushppacket(lua_State *L, struct packet *pkt)
 %nodefaultdtor;
 
 %newobject packet::packet;
+%delobject packet::_inject;
 
 struct packet {
 	%extend {
@@ -96,14 +97,14 @@ struct packet {
 		void _send()
 		{
 			assert($self);
-                        packet_send($self);
+			packet_send($self);
 		}
 
 		%rename(inject) _inject;
 		void _inject()
 		{
 			assert($self);
-                        packet_inject($self);
+			packet_inject($self);
 		}
 
 		%rename(state) _state;
