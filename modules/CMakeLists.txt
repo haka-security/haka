@@ -18,7 +18,6 @@ macro(ADD_MODULE)
 		swig_process(${MODULE_NAME} lua ${MODULE_SWIG})
 	endif()
 	add_library(${MODULE_NAME} SHARED ${MODULE_FILES} ${BINDING_${MODULE_NAME}_FILES} ${SWIG_${MODULE_NAME}_FILES})
-	set_target_properties(${MODULE_NAME} PROPERTIES COMPILE_FLAGS "-rdynamic" )
 	# To get dladdr (for ffi load trick)
 	set_target_properties(${MODULE_NAME} PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
