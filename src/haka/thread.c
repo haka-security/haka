@@ -100,7 +100,11 @@ static void lua_start_main_loop(struct thread_state *state)
 	lua_pushcfunction(state->lua->L, lua_state_error_formater);
 	h = lua_gettop(state->lua->L);
 
-	lua_state_require(state->lua->L, "main_loop", 1);
+	lua_pushcfunction(state->lua->L, luaopen_main_loop);
+	if (lua_pcall(state->lua->L, 0, 1, h)) {
+		lua_state_print_error(state->lua->L, "load_main_loop");
+	}
+
 	lua_getfield(state->lua->L, -1, "run");
 	lua_pushlightuserdata(state->lua->L, state);
 	lua_pushcfunction(state->lua->L, lua_state_runinterrupt);
@@ -177,9 +181,6 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		cleanup_thread_state(state);
 		return NULL;
 	}
-
-	/* Preload haka core */
-	lua_state_preload(state->lua, "main_loop", luaopen_main_loop);
 
 	lua_state_load_module(state->lua, luaopen_swig, "swig");
 	lua_state_load_module(state->lua, luaopen_hakainit, "hakainit");
