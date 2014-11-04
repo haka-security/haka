@@ -14,7 +14,7 @@ macro(ADD_MODULE)
 	cmake_parse_arguments(MODULE "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
 	BINDING_COMPILE(NAME ${MODULE_NAME} FILES ${MODULE_FILES} LUA ${MODULE_LUA})
-	if (CMAKE_LUA_BINDING STREQUAL "cfunc")
+	if (CMAKE_LUA_BINDING STREQUAL "swig")
 		swig_process(${MODULE_NAME} lua ${MODULE_SWIG})
 	endif()
 	add_library(${MODULE_NAME} SHARED ${MODULE_FILES} ${BINDING_${MODULE_NAME}_FILES} ${SWIG_${MODULE_NAME}_FILES})
