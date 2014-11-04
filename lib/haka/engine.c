@@ -342,9 +342,14 @@ static void _engine_thread_check_remote_cleanup(void *_thread)
 	mutex_unlock(&thread->remote_launch_lock);
 }
 
+bool engine_thread_has_remote_launch(struct engine_thread *thread)
+{
+	return !list2_empty(&thread->remote_launches);
+}
+
 void engine_thread_check_remote_launch(struct engine_thread *thread)
 {
-	if (!list2_empty(&thread->remote_launches)) {
+	if (engine_thread_has_remote_launch(thread)) {
 		thread_protect(_engine_thread_check_remote_launch, thread,
 				_engine_thread_check_remote_cleanup, thread);
 	}

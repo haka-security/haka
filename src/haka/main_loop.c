@@ -25,7 +25,7 @@ void packet_receive_wrapper_wrap(void *_state, struct receive_result *res)
 
 	if (state == NULL) return;
 
-	packet_receive_wrapper(state, &res->pkt, &res->has_interrupts, &res->stop);
+	packet_receive_wrapper(state, &res->pkt, &res->has_extra, &res->stop);
 }
 
 LUA_BIND_INIT(main_loop)
@@ -44,17 +44,17 @@ static int packet_receive_wrapper_wrap(lua_State *L)
 {
 	struct thread_state *state;
 	struct packet *pkt = NULL;
-	bool has_interrupts = false;
+	bool has_extra = false;
 	bool stop = false;
 
 	assert(lua_islightuserdata(L, -1));
 	state = lua_touserdata(L, -1);
 	lua_pop(L, 1);
 
-	packet_receive_wrapper(state, &pkt, &has_interrupts, &stop);
+	packet_receive_wrapper(state, &pkt, &has_extra, &stop);
 
 	lua_pushppacket(L, pkt);
-	lua_pushboolean(L, has_interrupts);
+	lua_pushboolean(L, has_extra);
 	lua_pushboolean(L, stop);
 
 	return 3;

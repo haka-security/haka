@@ -61,8 +61,7 @@ struct thread_pool {
 	struct thread_state       **threads;
 };
 
-
-void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, bool *has_interrupts, bool *stop)
+void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, bool *has_extra, bool *stop)
 {
 	if (state->pool->stop) {
 		*stop = true;
@@ -73,13 +72,10 @@ void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, boo
 	while (packet_receive(state->engine, pkt) == 0) {
 		engine_thread_update_status(state->engine, THREAD_RUNNING);
 
-		*has_interrupts = lua_state_has_interrupts(state->lua);
-		engine_thread_check_remote_launch(state->engine);
+		*has_extra = lua_state_has_interrupts(state->lua)
+			|| (state->pool->attach_debugger > state->attach_debugger)
+			|| engine_thread_has_remote_launch(state->engine);
 
-		//if (state->pool->attach_debugger > state->attach_debugger) {
-		//      luadebug_debugger_start(state->lua->L, true);
-		//      state->attach_debugger = state->pool->attach_debugger;
-		//}
 
 		return;
 	}
@@ -87,7 +83,7 @@ void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, boo
 	*stop = true;
 }
 
-static int lua_state_runinterrupt_wrapper(lua_State *L)
+static int lua_state_run_extra(lua_State *L)
 {
 	struct thread_state *state;
 
@@ -97,6 +93,11 @@ static int lua_state_runinterrupt_wrapper(lua_State *L)
 	state = lua_touserdata(L, -1);
 
 	lua_state_runinterrupt(state->lua);
+	engine_thread_check_remote_launch(state->engine);
+	if (state->pool->attach_debugger > state->attach_debugger) {
+	      luadebug_debugger_start(state->lua->L, true);
+	      state->attach_debugger = state->pool->attach_debugger;
+	}
 
 	LUA_STACK_CHECK(L, 0);
 
@@ -128,7 +129,7 @@ static void lua_start_main_loop(struct thread_state *state)
 	}
 
 	lua_pushlightuserdata(state->lua->L, state);
-	lua_pushcfunction(state->lua->L, lua_state_runinterrupt_wrapper);
+	lua_pushcfunction(state->lua->L, lua_state_run_extra);
 
 	if (lua_pcall(state->lua->L, 2, 0, h)) {
 		lua_state_print_error(state->lua->L, "main_loop");

@@ -11,7 +11,7 @@ LUA_BIND_INIT(main_loop);
 
 struct receive_result {
 	struct packet *pkt;
-	bool has_interrupts;
+	bool has_extra;
 	bool stop;
 };
 

@@ -15,7 +15,7 @@ ffi.cdef[[
 
 	struct receive_result {
 		struct packet *pkt;
-		bool has_interrupts;
+		bool has_extra;
 		bool stop;
 	};
 ]]
@@ -28,7 +28,7 @@ local C = ffi.C
 function module.receive(_state)
 	local state = ffi.cast("void *", _state)
 	C.packet_receive_wrapper_wrap(state, res)
-	return res[0].pkt, res[0].has_interrupts, res[0].stop
+	return res[0].pkt, res[0].has_extra, res[0].stop
 end
 
 function module.error(pkt)
@@ -41,14 +41,14 @@ module.receive, module.error = unpack({...})
 
 #endif
 
-function module.run(state, run_interrupts)
+function module.run(state, run_extra)
 	local filter = haka.filter
-	local pkt, has_interrupts, stop
+	local pkt, has_extra, stop
 
 	while true do
-		pkt, has_interrupts, stop = module.receive(state)
-		if has_interrupts then
-			run_interrupts(state)
+		pkt, has_extra, stop = module.receive(state)
+		if has_extra then
+			run_extra(state)
 		end
 		if stop then
 			break
