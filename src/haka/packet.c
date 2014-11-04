@@ -44,8 +44,8 @@ static int packet_receive_wrapper_wrap(lua_State *L)
 {
 	struct thread_state *state;
 	struct packet *pkt = NULL;
-	bool has_interrupts;
-	bool stop;
+	bool has_interrupts = false;
+	bool stop = false;
 
 	assert(lua_islightuserdata(L, -1));
 	state = lua_touserdata(L, -1);
