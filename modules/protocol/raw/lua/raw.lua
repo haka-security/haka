@@ -67,11 +67,6 @@ local ffi = require('ffi')
 ffi.cdef[[
 	const char *packet_dissector(struct packet *pkt);
 
-	struct time {
-	};
-
-	bool time_tostring(const struct time *t, char *buffer, size_t len);
-
 	enum packet_status {
 		normal, /**< Packet captured by Haka. */
 		forged, /**< Packet forged. */
@@ -84,7 +79,6 @@ ffi.cdef[[
 	const struct time *packet_timestamp(struct packet *pkt);
 	struct vbuffer *packet_payload(struct packet *pkt);
 	uint64_t packet_id(struct packet *pkt);
-	double time_sec(const struct time *t);
 	struct packet *packet_new(size_t size);
 	enum packet_status packet_state(struct packet *pkt);
 
@@ -121,24 +115,6 @@ local meth = {
 }
 
 ffibinding.set_meta("struct packet", prop, meth, {})
-
-local prop = {
-	seconds = ffi.C.time_sec,
-}
-
-local mt = {
-	__tostring = function (self)
-		local res = ffi.new[[
-			char[27] /* \see TIME_BUFSIZE */
-		]]
-		if not ffi.C.time_tostring(self, res, 27) then
-			return nil
-		end
-
-		return ffi.string(res)
-	end,
-}
-ffibinding.set_meta("struct time", prop, {}, mt)
 
 packet_new = ffibinding.handle_error(ffi.C.packet_new)
 

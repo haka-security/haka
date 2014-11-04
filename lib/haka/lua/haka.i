@@ -19,6 +19,9 @@
 #include <haka/colors.h>
 #include <haka/engine.h>
 #include <haka/system.h>
+#include <haka/luabinding.h>
+
+#include "lua/haka.h"
 
 %}
 
@@ -180,4 +183,13 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	require('grammar')
 
 	haka.mode = 'normal'
+}
+
+%insert("init") {
+
+#ifdef HAKA_FFI
+	lua_load_haka(L);
+	lua_call(L, 0, 0);
+#endif
+
 }

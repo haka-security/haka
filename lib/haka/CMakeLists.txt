@@ -11,6 +11,8 @@ include_directories(${EDITLINE_INCLUDE_DIR})
 
 # Haka library shared between runtime and modules
 
+binding_compile(NAME haka LUA lua/lua/haka.lua)
+
 swig_process(libhakaswig lua
 	lua/hakainit.i
 	lua/haka.i
@@ -73,6 +75,7 @@ add_library(libhaka SHARED
 	luadebug/user_readline.c
 	luadebug/user_remote.c
 	${SWIG_libhakaswig_FILES}
+	${BINDING_haka_FILES}
 	../../external/lmarshal/lmarshal.c
 )
 
