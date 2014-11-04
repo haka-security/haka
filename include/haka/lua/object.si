@@ -138,47 +138,106 @@ bool lua_object_push_swig(lua_State *L, void *ptr, struct lua_object *obj, swig_
 	_LUA_OBJECT(typeptr, typeptr, name)
 %enddef
 
-%define FFI_OBJECT(typeptr)
+
+/*
+ * FFI object
+ */
+
+%{
+
+bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_object *obj, const char *type_info, bool owner)
+{
+	if (!lua_object_push(L, ptr, obj, owner)) {
+		int h;
+		LUA_STACK_MARK(L);
+		lua_pushcfunction(L, lua_state_error_formater);
+		h = lua_gettop(L);
+
+		lua_getglobal(L, "require");
+		lua_pushstring(L, "ffi");
+		if (lua_pcall(L, 1, 1, h)) {
+			lua_state_print_error(L, "ffi");
+			lua_pop(L, 1);
+
+			LUA_STACK_CHECK(L, 0);
+			return false;
+		}
+
+		lua_getfield(L, -1, "cast");
+		lua_remove(L, -2);
+		lua_pushstring(L, type_info);
+		lua_pushlightuserdata(L, ptr);
+		if (lua_pcall(L, 2, 1, h)) {
+			lua_state_print_error(L, "ffi");
+			lua_pop(L, 1);
+
+			LUA_STACK_CHECK(L, 0);
+			return false;
+		}
+
+		lua_remove(L, -2);
+
+		LUA_STACK_CHECK(L, 1);
+	}
+	return true;
+}
+
+%}
+
+%define _FFI_OBJECT(typeptr, name)
 
 %typemap(in) typeptr * {
 	/* cdata is type 10 */
 	assert(lua_type(L, $input) == 10);
-	$1 = *(typeptr **)lua_topointer(L, $input);
+
+	typeptr **obj = (typeptr **)lua_topointer(L, $input);
+	$1 = *obj;
+
+	if ($1) {
+		lua_object_register(L, &($1)->name, (void**)obj, $input, $disown);
+	}
 }
 
+%typemap(in) typeptr *DISOWN {
+	/* cdata is type 10 */
+	assert(lua_type(L, $input) == 10);
+
+	typeptr **obj = (typeptr **)lua_topointer(L, $input);
+	$1 = *obj;
+
+	if ($1) {
+		lua_object_register(L, &($1)->name, (void**)obj, $input, true);
+	}
+}
+
+%apply typeptr* DISOWN { typeptr* DISOWN_SUCCESS_ONLY };
+
 %typemap(out) typeptr * {
-	int h;
-	LUA_STACK_MARK(L);
-	lua_pushcfunction(L, lua_state_error_formater);
-	h = lua_gettop(L);
-
-	lua_getglobal(L, "require");
-	lua_pushstring(L, "ffi");
-	if (lua_pcall(L, 1, 1, h)) {
-		lua_state_print_error(L, "raw");
-		lua_pop(L, 1);
-
-		LUA_STACK_CHECK(L, 0);
+	if (!lua_object_push_ffi(L, $1, &($1)->name, "typeptr *", $owner)) {
 		SWIG_execfail;
 	}
-
-	lua_getfield(L, -1, "cast");
-	lua_remove(L, -2);
-	lua_pushstring(L, "typeptr *");
-	lua_pushlightuserdata(L, $1);
-	if (lua_pcall(L, 2, 1, h)) {
-		lua_state_print_error(L, "raw");
-		lua_pop(L, 1);
-
-		LUA_STACK_CHECK(L, 0);
-		SWIG_execfail;
-	}
-
-	lua_remove(L, -2);
-
-	LUA_STACK_CHECK(L, 1);
 
 	SWIG_arg++;
 }
 
+%typemap(freearg) typeptr* DISOWN {
+	if (SWIG_arg == -1 && $1) {
+		if (lua_object_push_ffi(L, $1, &($1)->name, "typeptr *", 1)) {
+			lua_pop(L, 1);
+		}
+	}
+}
+
+%typemap(freearg) typeptr* DISOWN_SUCCESS_ONLY {
+	if (SWIG_arg == -2 && $1) {
+		if (lua_object_push_ffi(L, $1, &($1)->name, "typeptr *", 1)) {
+			lua_pop(L, 1);
+		}
+	}
+}
+
+%enddef
+
+%define FFI_OBJECT(typeptr)
+	_FFI_OBJECT(typeptr, lua_object)
 %enddef
