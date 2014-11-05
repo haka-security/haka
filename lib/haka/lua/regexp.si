@@ -243,7 +243,12 @@ struct regexp_module {
 
 			if createsub then
 				if sink:ispartial() or match then
-					if not begin then
+					if mbegin then
+						if mark then
+							mark:unmark()
+							mark = nil
+						end
+
 						begin = mbegin
 
 						if sink:ispartial() then

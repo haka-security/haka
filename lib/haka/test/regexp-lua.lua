@@ -4,8 +4,9 @@
 
 TestRegexpModule = {}
 
-function TestRegexpModule:gen_stream(f)
-	local data = { "bar fo", "o dea", "d beef", " cof", "fee", " foo foo " }
+local stream_data = { "bar fo", "o dea", "d beef", " cof", "fee", " foo foo " }
+
+function TestRegexpModule:gen_stream(data, f)
 	local stream = haka.vbuffer_stream()
 	local manager = haka.vbuffer_stream_comanager:new(stream)
 	manager:start(0, f)
@@ -271,7 +272,7 @@ end
 function TestRegexpModule:test_can_match_on_blocking_iterator ()
 	-- Given
 	local re = self.rem.re:compile("foo")
-	self:gen_stream(function (iter)
+	self:gen_stream(stream_data, function (iter)
 		-- When
 		local ret = re:match(iter, true)
 		-- Then
@@ -283,7 +284,7 @@ end
 function TestRegexpModule:test_can_match_on_blocking_iterator ()
 	-- Given
 	local re = self.rem.re:compile("foo")
-	self:gen_stream(function (iter)
+	self:gen_stream(stream_data, function (iter)
 		local ret
 		local i = 0
 		-- When
@@ -301,7 +302,7 @@ end
 function TestRegexpModule:test_can_match_on_blocking_iterator_with_sub_creation ()
 	-- Given
 	local re = self.rem.re:compile("foo")
-	self:gen_stream(function (iter)
+	self:gen_stream(stream_data, function (iter)
 		local ret
 		local i = 0
 		-- When
@@ -320,7 +321,7 @@ end
 function TestRegexpModule:test_can_match_on_blocking_iterator_with_readonly_sub_creation ()
 	-- Given
 	local re = self.rem.re:compile("foo")
-	self:gen_stream(function (iter)
+	self:gen_stream(stream_data, function (iter)
 		local ret
 		local i = 0
 		-- When
@@ -333,6 +334,25 @@ function TestRegexpModule:test_can_match_on_blocking_iterator_with_readonly_sub_
 			end
 		until not ret
 		assertEquals(i, 3)
+	end)
+end
+
+function TestRegexpModule:test_can_match_on_blocking_iterator_partial_match_fail_follow_by_match ()
+	-- Given
+	local re = self.rem.re:compile("foo")
+	self:gen_stream({"bar fo","b foo"}, function (iter)
+		local ret
+		local i = 0
+		-- When
+		repeat
+			ret = re:match(iter, true, true)
+			-- Then
+			if ret then
+				assertEquals(ret:asstring(), 'foo')
+				i = i + 1
+			end
+		until not ret
+		assertEquals(i, 1)
 	end)
 end
 
