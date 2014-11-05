@@ -2,21 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-find_package(LibCapstone REQUIRED)
-if(LIBCAPSTONE_FOUND)
-	swig_process(asm lua asm.i)
+include(UseCapstone)
 
-	add_library(asm MODULE asm.c
-		${SWIG_asm_FILES})
+swig_process(asm lua asm.i)
 
-	SWIG_FIX_ENTRYPOINT(asm misc)
+add_library(asm MODULE asm.c
+	${SWIG_asm_FILES})
 
-	include_directories(${LIBCAPSTONE_INCLUDE_DIR})
-	target_link_libraries(asm ${LIBCAPSTONE_LIBRARY})
+add_dependencies(asm capstone)
 
-	INSTALL_MODULE(asm misc)
+SWIG_FIX_ENTRYPOINT(asm misc)
 
-	add_subdirectory(test)
-else()
-    message(STATUS "Not building module asm (missing libraries)")
-endif()
+include_directories(${LIBCAPSTONE_INCLUDE_DIR})
+target_link_libraries(asm ${LIBCAPSTONE_LIBRARY})
+
+INSTALL_MODULE(asm misc)
+
+add_subdirectory(test)
