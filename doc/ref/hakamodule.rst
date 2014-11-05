@@ -9,3 +9,4 @@ Haka modules
 
     ../../../modules/misc/geoip/doc/geoip.rst
     ../../../modules/misc/elasticsearch/doc/elasticsearch.rst
+    ../../../modules/misc/asm/doc/asm.rst
