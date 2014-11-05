@@ -23,6 +23,7 @@
 #include <haka/container/vector.h>
 #include <haka/luadebug/debugger.h>
 
+#include "lua/lua/haka_state.h"
 
 #define STATE_TABLE      "__haka_state"
 
@@ -339,6 +340,18 @@ static int lua_setfenv_wrapper(lua_State *L)
 }
 #endif
 
+static void lua_state_save(lua_State *L, struct lua_state *state)
+{
+	/* Save lua_state in registry */
+	lua_pushlightuserdata(L, state);
+	lua_setfield(L, LUA_REGISTRYINDEX, STATE_TABLE);
+
+	/* Save lua_state in haka.state */
+	lua_load_haka_state(L);
+	lua_pushlightuserdata(L, state);
+	lua_call(L, 1, 0);
+}
+
 struct lua_state *lua_state_init()
 {
 	struct lua_state_ext *ret;
@@ -392,8 +405,7 @@ struct lua_state *lua_state_init()
 
 	lua_object_initialize(L);
 
-	lua_pushlightuserdata(L, ret);
-	lua_setfield(L, LUA_REGISTRYINDEX, STATE_TABLE);
+	lua_state_save(L, &ret->state);
 
 	lua_ref_init_state(L);
 

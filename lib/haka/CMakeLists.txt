@@ -13,6 +13,7 @@ include_directories(${EDITLINE_INCLUDE_DIR})
 
 binding_compile(NAME haka LUA lua/lua/haka.lua)
 binding_compile(NAME ref LUA lua/lua/ref.lua)
+binding_compile(NAME haka_state LUA lua/lua/haka_state.lua)
 
 swig_process(libhakaswig lua
 	lua/hakainit.i
@@ -78,6 +79,7 @@ add_library(libhaka SHARED
 	${SWIG_libhakaswig_FILES}
 	${BINDING_haka_FILES}
 	${BINDING_ref_FILES}
+	${BINDING_haka_state_FILES}
 	../../external/lmarshal/lmarshal.c
 )
 

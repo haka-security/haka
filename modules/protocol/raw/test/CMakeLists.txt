@@ -6,3 +6,4 @@
 include(TestPcap)
 
 TEST_PCAP(raw basic)
+TEST_PCAP(raw data)

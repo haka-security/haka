@@ -62,7 +62,10 @@ end
 #ifdef HAKA_FFI
 
 local ffibinding = require("ffibinding")
-local lib = ffibinding.load()
+local lib = ffibinding.load[[
+	struct lua_ref *packet_get_luadata(struct packet *pkt);
+]]
+
 local ffi = require('ffi')
 ffi.cdef[[
 	/**
@@ -104,6 +107,20 @@ local prop = {
 	payload = { get = ffibinding.handle_error(ffi.C.packet_payload) },
 	id = { get = function(self) return tonumber(ffibinding.handle_error(ffi.C.packet_id)(self)) end },
 	state = { get = ffibinding.handle_error(ffi.C.packet_state) },
+	data = {
+		get = function(self)
+			local ref = lib.packet_get_luadata(self)
+			return ref:get()
+		end,
+		set = function(self, value)
+			local ref = lib.packet_get_luadata(self)
+			if not value then
+				ref:clear()
+			else
+				ref:set(value)
+			end
+		end
+	},
 }
 
 local meth = {

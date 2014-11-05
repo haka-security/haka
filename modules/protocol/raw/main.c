@@ -8,6 +8,7 @@
 #include <haka/config.h>
 #include <haka/luabinding.h>
 #include <haka/module.h>
+#include <haka/packet.h>
 
 #include "lua/raw.h"
 
@@ -20,6 +21,11 @@ LUA_BIND_INIT(raw)
 	return 1;
 }
 #endif
+
+struct lua_ref *packet_get_luadata(struct packet *pkt)
+{
+	return &pkt->luadata;
+}
 
 static int init(struct parameters *args)
 {
