@@ -25,7 +25,7 @@ struct packet {
 	struct lua_object        lua_object; /**< \private */
 	atomic_t                 ref;        /**< \private */
 	struct vbuffer           payload;    /**< \private */
-	struct lua_ref           userdata;
+	struct lua_ref           luadata;
 };
 
 /** \cond */
