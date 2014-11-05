@@ -13,7 +13,7 @@ ffi.cdef[[
 ]]
 
 local prop = {
-	seconds = ffi.C.time_sec,
+	seconds = { get = ffi.C.time_sec },
 }
 
 local meth = {

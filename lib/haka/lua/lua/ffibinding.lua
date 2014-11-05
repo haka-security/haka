@@ -50,11 +50,13 @@ function module.handle_error(fn)
 end
 
 function module.set_meta(cdef, prop, meth, mt)
-	local fn = { }
+	local fn = {}
+	local set = {}
 	fn[".meta"] = function() return { prop = prop, meth = meth, mt = mt } end
 
 	for key, value in pairs(prop) do
-		fn[key] = value
+		fn[key] = value.get
+		set[key] = value.set
 	end
 
 	for key, value in pairs(meth) do
@@ -67,6 +69,15 @@ function module.set_meta(cdef, prop, meth, mt)
 			return res(table)
 		else
 			return nil
+		end
+	end
+
+	mt.__newindex = function (table, key, value)
+		local res = set[key]
+		if res then
+			res(table, value)
+		else
+			rawset(table, key, value)
 		end
 	end
 

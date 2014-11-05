@@ -100,10 +100,10 @@ end
 packet_send = ffi.C.packet_send
 
 local prop = {
-	timestamp = ffibinding.handle_error(ffi.C.packet_timestamp),
-	payload = ffibinding.handle_error(ffi.C.packet_payload),
-	id = function(self) return tonumber(ffibinding.handle_error(ffi.C.packet_id)(self)) end,
-	state = ffibinding.handle_error(ffi.C.packet_state),
+	timestamp = { get = ffibinding.handle_error(ffi.C.packet_timestamp) },
+	payload = { get = ffibinding.handle_error(ffi.C.packet_payload) },
+	id = { get = function(self) return tonumber(ffibinding.handle_error(ffi.C.packet_id)(self)) end },
+	state = { get = ffibinding.handle_error(ffi.C.packet_state) },
 }
 
 local meth = {
