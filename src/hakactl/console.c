@@ -112,8 +112,6 @@ static int run_console(int fd, int argc, char *argv[])
 		return COMMAND_FAILED;
 	}
 
-	lua_state_openlibs(state);
-
 	console_fd = fd;
 
 	lua_pushcfunction(state->L, luaopen_hakactl);

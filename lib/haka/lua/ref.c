@@ -14,6 +14,8 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#include "lua/lua/ref.h"
+
 #define REF_TABLE         "__ref"
 #define WEAKREF_TABLE     "__weak_ref"
 #define WEAKREF_ID_TABLE  "__weak_ref_id"
@@ -37,6 +39,12 @@ void lua_ref_init_state(lua_State *L)
 	lua_setfield(L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
 
 	LUA_STACK_CHECK(L, 0);
+
+	lua_load_ref(L);
+	lua_getfield(L, LUA_REGISTRYINDEX, REF_TABLE);
+	lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
+	lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
+	lua_call(L, 3, 0);
 }
 
 void lua_ref_init(struct lua_ref *ref)

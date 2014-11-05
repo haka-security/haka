@@ -388,6 +388,8 @@ struct lua_state *lua_state_init()
 	lua_pushcfunction(L, lua_state_error_formater);
 	lua_setfield(L, -2, "format_error");
 
+	lua_state_openlibs(&ret->state);
+
 	lua_object_initialize(L);
 
 	lua_pushlightuserdata(L, ret);
@@ -407,7 +409,6 @@ void lua_state_openlibs(struct lua_state *state)
 	lua_state_load_module(state, luaopen_hakainit, "hakainit");
 	lua_state_load_module(state, luaopen_luadebug, NULL);
 	lua_state_load_module(state, luaopen_haka, "haka");
-
 }
 
 void lua_state_trigger_haka_event(struct lua_state *state, const char *event)

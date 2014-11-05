@@ -200,8 +200,6 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 		return NULL;
 	}
 
-	lua_state_openlibs(state->lua);
-
 	/* Set grammar debugging */
 	lua_getglobal(state->lua->L, "haka");
 	lua_getfield(state->lua->L, -1, "grammar");
