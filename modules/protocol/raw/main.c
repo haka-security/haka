@@ -15,18 +15,13 @@
 #include "lua/raw.h"
 
 #ifdef HAKA_FFI
+
 LUA_BIND_INIT(raw)
 {
 	LUA_LOAD(raw, L);
 	lua_call(L, 0, 1);
 
 	return 1;
-}
-#endif
-
-struct lua_ref *packet_get_luadata(struct packet *pkt)
-{
-	return &pkt->luadata;
 }
 
 bool packet_new_ffi(struct ffi_object *packet, size_t size)
@@ -42,6 +37,12 @@ bool packet_new_ffi(struct ffi_object *packet, size_t size)
 	}
 }
 
+#endif
+
+struct lua_ref *packet_get_luadata(struct packet *pkt)
+{
+	return &pkt->luadata;
+}
 static int init(struct parameters *args)
 {
 	return 0;
