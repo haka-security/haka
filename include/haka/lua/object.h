@@ -32,4 +32,11 @@ struct lua_State;
 void lua_object_register(struct lua_State *L, struct lua_object *obj, void **owner, int index, bool disown);
 bool lua_object_push(struct lua_State *L, void *ptr, struct lua_object *obj, bool owner);
 
+#ifdef HAKA_FFI
+struct ffi_object {
+	struct lua_ref *ref;
+	void           *ptr;
+};
+#endif
+
 #endif /* HAKA_LUA_OBJECT_H */

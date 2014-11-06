@@ -49,10 +49,13 @@ function module.handle_error(fn)
 	end
 end
 
-function module.set_meta(cdef, prop, meth, mt)
+local object_wrapper = {}
+
+function module.create_type(cdef, prop, meth, mt, destroy)
 	local fn = {}
 	local set = {}
 	fn[".meta"] = function() return { prop = prop, meth = meth, mt = mt } end
+	fn.__gc = function () return destroy end
 
 	for key, value in pairs(prop) do
 		fn[key] = value.get
@@ -82,6 +85,35 @@ function module.set_meta(cdef, prop, meth, mt)
 	end
 
 	local ctype = ffi.metatype(cdef, mt)
+
+	ffi.cdef(string.format([[
+		%s_object {
+			struct lua_ref  *ref;
+			 %s             *ptr;
+		};
+	]], cdef, cdef))
+
+	local tmp = ffi.new(string.format("%s_object", cdef))
+
+	object_wrapper[cdef] = function (f)
+		return function (...)
+			f(tmp, ...)
+
+			if tmp.ref == nil then return nil end
+
+			if tmp.ref:isvalid() then
+				return tmp.ref:get()
+			else
+				local ret = tmp.ptr
+				tmp.ref:set(ret, true)
+				return ret
+			end
+		end
+	end
+end
+
+function module.object_wrapper(cdef)
+	return object_wrapper[cdef]
 end
 
 local function destroy(cdata)

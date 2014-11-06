@@ -64,6 +64,7 @@ end
 local ffibinding = require("ffibinding")
 local lib = ffibinding.load[[
 	struct lua_ref *packet_get_luadata(struct packet *pkt);
+	int packet_new_ffi(struct packet_object *packet, size_t size);
 ]]
 
 local ffi = require('ffi')
@@ -85,8 +86,8 @@ ffi.cdef[[
 	void packet_drop(struct packet *pkt);
 	const struct time *packet_timestamp(struct packet *pkt);
 	uint64_t packet_id(struct packet *pkt);
-	struct packet *packet_new(size_t size);
 	enum packet_status packet_state(struct packet *pkt);
+	void packet_release(struct packet *pkt);
 
 	struct packet { };
 ]]
@@ -120,9 +121,14 @@ local prop = {
 	},
 }
 
+local inject = ffibinding.handle_error(ffi.C.packet_inject)
+
 local meth = {
 	drop = ffibinding.handle_error(ffi.C.packet_drop),
-	inject = ffibinding.handle_error(ffi.C.packet_inject),
+	inject = function (pkt)
+		inject(pkt)
+		ffibinding.disown(pkt)
+	end,
 	send = raw_dissector.method.send,
 	receive = raw_dissector.method.receive,
 	continue = haka.helper.Dissector.method.continue,
@@ -132,9 +138,16 @@ local meth = {
 	issent = function(pkt) return ffibinding.handle_error(ffi.C.packet_state)(pkt) == "sent" end,
 }
 
-ffibinding.set_meta("struct packet", prop, meth, {})
+ffibinding.create_type("struct packet", prop, meth, {}, ffi.C.packet_release)
+local object_wrapper = ffibinding.object_wrapper("struct packet")
 
-packet_new = ffibinding.handle_error(ffi.C.packet_new)
+local packet_new_check_error = object_wrapper(ffibinding.handle_error(lib.packet_new_ffi))
+
+packet_new = function (size)
+	local pkt = packet_new_check_error(size)
+	ffibinding.own(pkt)
+	return pkt
+end
 
 #endif
 

@@ -33,4 +33,4 @@ local mt = {
 	end,
 }
 
-ffibinding.set_meta("struct time", prop, meth, mt)
+ffibinding.create_type("struct time", prop, meth, mt)

@@ -8,14 +8,13 @@ local module = {}
 
 #ifdef HAKA_FFI
 
+local ffibinding = require('ffibinding')
 local ffi = require('ffi')
 ffi.cdef[[
-	int packet_receive_wrapper_wrap(void *state, struct receive_result *result);
+	void packet_receive_wrapper_wrap(struct packet_object *pkt, void *state, struct receive_result *result);
 	void packet_drop(struct packet *pkt);
-	void packet_release(struct packet *pkt);
 
 	struct receive_result {
-		struct packet *pkt;
 		bool has_extra;
 		bool stop;
 	};
@@ -24,14 +23,14 @@ ffi.cdef[[
 local res = ffi.new[[
 	struct receive_result[1]
 ]]
-local C = ffi.C
+
+local receive = ffibinding.object_wrapper('struct packet')(ffi.C.packet_receive_wrapper_wrap)
 
 function module.receive(_state)
 	local state = ffi.cast("void *", _state)
-	C.packet_receive_wrapper_wrap(state, res)
+	local pkt = receive(state, res)
 
-	local pkt = res[0].pkt
-	if pkt ~= nil then ffi.gc(pkt, ffi.C.packet_release)
+	if pkt ~= nil then ffibinding.own(pkt)
 	else pkt = nil end
 
 	return pkt, res[0].has_extra, res[0].stop

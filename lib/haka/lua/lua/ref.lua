@@ -127,6 +127,6 @@ local meth = {
 	end
 }
 
-ffibinding.set_meta("struct lua_ref", prop, meth, {})
+ffibinding.create_type("struct lua_ref", prop, meth, {})
 
 #endif

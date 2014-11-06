@@ -10,11 +10,10 @@ LUA_BIND_INIT(main_loop);
 #ifdef HAKA_FFI
 
 struct receive_result {
-	struct packet *pkt;
 	bool has_extra;
 	bool stop;
 };
 
-void packet_receive_wrapper_wrap(void *_state, struct receive_result *res);
+void packet_receive_wrapper_wrap(struct ffi_object *pkt, void *_state, struct receive_result *res);
 
 #endif

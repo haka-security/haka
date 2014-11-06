@@ -18,14 +18,24 @@
 
 #ifdef HAKA_FFI
 
-void packet_receive_wrapper_wrap(void *_state, struct receive_result *res)
+void packet_receive_wrapper_wrap(struct ffi_object *pktobj, void *_state, struct receive_result *res)
 {
+	struct packet *pkt;
 	struct thread_state *state;
 	state = (struct thread_state *)_state;
 
 	if (state == NULL) return;
 
-	packet_receive_wrapper(state, &res->pkt, &res->has_extra, &res->stop);
+	packet_receive_wrapper(state, &pkt, &res->has_extra, &res->stop);
+
+	if (pkt) {
+		pktobj->ref = &pkt->lua_object.ref;
+		pktobj->ptr = pkt;
+	}
+	else {
+		pktobj->ref = NULL;
+		pktobj->ptr = NULL;
+	}
 }
 
 LUA_BIND_INIT(main_loop)
