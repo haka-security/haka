@@ -423,6 +423,20 @@ void lua_state_openlibs(struct lua_state *state)
 	lua_state_load_module(state, luaopen_haka, "haka");
 }
 
+void lua_state_pushcfunction(lua_State *L, lua_CFunction f, const char *name)
+{
+	LUA_STACK_MARK(L);
+
+	lua_getglobal(L, "haka");
+	lua_getfield(L, -1, "C");
+	assert(lua_istable(L, -1));
+	lua_pushcfunction(L, f);
+	lua_setfield(L, -2, name);
+	lua_pop(L, 2); /* pop haka and C */
+
+	LUA_STACK_CHECK(L, 0);
+}
+
 void lua_state_trigger_haka_event(struct lua_state *state, const char *event)
 {
 	int h;

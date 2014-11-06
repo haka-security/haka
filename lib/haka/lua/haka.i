@@ -167,6 +167,9 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 
 	haka.console.threads = haka._threads_info
 	haka._threads_info = nil
+
+	-- Table used to store cfunction
+	haka.C = {}
 }
 
 %include "lua/vbuffer.si"
