@@ -129,4 +129,16 @@ struct packet {
 	}
 };
 
+#else /* HAKA_FFI */
+
+struct vbuffer *packet_payload(struct packet *pkt);
+
+%luacode {
+
+-- Move cfunc to haka.C
+haka.C.packet_payload = haka.packet_payload
+haka.packet_payload = nil
+
+}
+
 #endif

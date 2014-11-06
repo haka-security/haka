@@ -84,7 +84,6 @@ ffi.cdef[[
 	void packet_inject(struct packet *pkt);
 	void packet_drop(struct packet *pkt);
 	const struct time *packet_timestamp(struct packet *pkt);
-	struct vbuffer *packet_payload(struct packet *pkt);
 	uint64_t packet_id(struct packet *pkt);
 	struct packet *packet_new(size_t size);
 	enum packet_status packet_state(struct packet *pkt);
@@ -104,7 +103,7 @@ packet_send = ffi.C.packet_send
 
 local prop = {
 	timestamp = { get = ffibinding.handle_error(ffi.C.packet_timestamp) },
-	payload = { get = ffibinding.handle_error(ffi.C.packet_payload) },
+	payload = { get = haka.C.packet_payload },
 	id = { get = function(self) return tonumber(ffibinding.handle_error(ffi.C.packet_id)(self)) end },
 	state = { get = ffibinding.handle_error(ffi.C.packet_state) },
 	data = {

@@ -9,6 +9,8 @@
 #include <haka/luabinding.h>
 #include <haka/module.h>
 #include <haka/packet.h>
+#include <haka/lua/state.h>
+#include <haka/log.h>
 
 #include "lua/raw.h"
 
