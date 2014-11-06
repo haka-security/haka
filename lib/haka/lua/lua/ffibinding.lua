@@ -10,6 +10,7 @@ local __path = nil
 
 ffi.cdef[[
 	const char *clear_error();
+	struct lua_ref *lua_object_get_ref(void *_obj);
 ]]
 
 function module.load(ct)
@@ -52,10 +53,12 @@ end
 local object_wrapper = {}
 
 function module.create_type(cdef, prop, meth, mt, destroy)
-	local fn = {}
+	local fn = {
+		__ref = ffi.C.lua_object_get_ref,
+		__gc = function () return destroy end,
+		[".meta"] = function() return { prop = prop, meth = meth, mt = mt } end
+	}
 	local set = {}
-	fn[".meta"] = function() return { prop = prop, meth = meth, mt = mt } end
-	fn.__gc = function () return destroy end
 
 	for key, value in pairs(prop) do
 		fn[key] = value.get
@@ -123,10 +126,22 @@ end
 
 function module.own(cdata)
 	ffi.gc(cdata, destroy)
+	local ref = cdata.__ref
+	assert(ref:isvalid())
+	if not cdata.__ref.weak then
+		cdata.__ref:clear()
+		cdata.__ref:set(cdata, true)
+	end
 end
 
 function module.disown(cdata)
 	ffi.gc(cdata, nil)
+	local ref = cdata.__ref
+	assert(ref:isvalid())
+	if cdata.__ref.weak then
+		cdata.__ref:clear()
+		cdata.__ref:set(cdata, false)
+	end
 end
 
 return module

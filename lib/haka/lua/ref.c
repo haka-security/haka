@@ -7,6 +7,7 @@
 #include <haka/lua/luautils.h>
 #include <haka/lua/ref.h>
 #include <haka/lua/state.h>
+#include <haka/lua/object.h>
 #include <haka/error.h>
 
 #include <assert.h>
@@ -167,4 +168,10 @@ void lua_ref_push(struct lua_State *state, struct lua_ref *ref)
 	}
 
 	LUA_STACK_CHECK(state, 1);
+}
+
+struct lua_ref *lua_object_get_ref(void *_obj)
+{
+	struct lua_object *obj = (struct lua_object *)_obj;
+	return &obj->ref;
 }
