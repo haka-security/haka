@@ -9,7 +9,7 @@ local raw = require("protocol/raw")
 haka.rule {
 	hook = raw.events.receive_packet,
 	eval = function (pkt)
-		pkt.data = "foo"
-		print(pkt.data)
+		pkt.data.foo = "foo"
+		print(pkt.data.foo)
 	end
 }

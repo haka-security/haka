@@ -110,16 +110,14 @@ local prop = {
 	data = {
 		get = function(self)
 			local ref = lib.packet_get_luadata(self)
-			return ref:get()
-		end,
-		set = function(self, value)
-			local ref = lib.packet_get_luadata(self)
-			if not value then
-				ref:clear()
+			if ref:isvalid() then
+				return ref:get()
 			else
-				ref:set(value, true)
+				local data = {}
+				ref:set(data, false)
+				return data
 			end
-		end
+		end,
 	},
 }
 
