@@ -84,4 +84,17 @@ function module.set_meta(cdef, prop, meth, mt)
 	local ctype = ffi.metatype(cdef, mt)
 end
 
+local function destroy(cdata)
+	local gc = cdata.__gc
+	if gc then gc(cdata) end
+end
+
+function module.own(cdata)
+	ffi.gc(cdata, destroy)
+end
+
+function module.disown(cdata)
+	ffi.gc(cdata, nil)
+end
+
 return module
