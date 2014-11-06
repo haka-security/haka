@@ -141,6 +141,44 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	}
 %}
 
+#ifdef HAKA_FFI
+
+%{
+
+#include <haka/lua/object.h>
+
+static int lua_register_object(lua_State *L)
+{
+	struct lua_ref *ref;
+	struct lua_object *obj;
+
+	assert(lua_gettop(L) == 2);
+	assert(lua_type(L, 1) == 10); /* cdata for lua_ref */
+	assert(lua_type(L, 2) == 10); /* cdata for object */
+
+	ref = *(struct lua_ref **)lua_topointer(L, 1);
+	assert(ref);
+	assert(!lua_ref_isvalid(ref));
+
+	/* the ref is the one inside the lua_object struct, get this
+	 * struct from the ref. */
+	obj = (struct lua_object *)((char*)ref-offsetof(struct lua_object, ref));
+	assert(&obj->ref == ref);
+
+	void **owner = (void **)lua_topointer(L, 2);
+	assert(owner);
+
+	lua_object_register(L, obj, owner, 2, false);
+
+	return 0;
+}
+
+%}
+
+%native(lua_register_object) int lua_register_object(lua_State *L);
+
+#endif
+
 %luacode {
 	haka = unpack({...})
 }
@@ -170,6 +208,9 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 
 	-- Table used to store cfunction
 	haka.C = {}
+
+	haka.C.register_object = haka.lua_register_object
+	haka.lua_register_object = nil
 }
 
 %include "lua/vbuffer.si"

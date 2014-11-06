@@ -105,7 +105,7 @@ function module.create_type(cdef, prop, meth, mt, destroy)
 				return tmp.ref:get()
 			else
 				local ret = tmp.ptr
-				tmp.ref:set(ret, true)
+				haka.C.register_object(tmp.ref, ret)
 				return ret
 			end
 		end
