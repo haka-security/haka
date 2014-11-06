@@ -11,6 +11,7 @@
 
 #include <haka/lua/state.h>
 #include <haka/lua/luautils.h>
+#include <haka/config.h>
 
 #define LUA_BIND_INIT(name) int luaopen_##name(lua_State *L)
 #define LUA_LOAD(name, L) do {\
@@ -20,6 +21,7 @@
 
 static inline void lua_ffi_preload(lua_State *L, void *addr)
 {
+#ifdef HAKA_FFI
 	Dl_info info;
 	LUA_STACK_MARK(L);
 
@@ -32,6 +34,7 @@ static inline void lua_ffi_preload(lua_State *L, void *addr)
 	lua_pop(L, 1);
 
 	LUA_STACK_CHECK(L, 0);
+#endif /* HAKA_FFI */
 }
 
 #endif /* _HAKA_LUABINDING_H */
