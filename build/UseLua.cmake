@@ -110,6 +110,7 @@ macro(BINDING_COMPILE)
 			COMMAND ${CMAKE_C_COMPILER} ${inc_flags} -E -P -x c ${file_path} -o ${lua_preprocessed_file}
 			COMMENT "Preprocessing Lua file ${file}"
 			DEPENDS "${file_path}"
+			IMPLICIT_DEPENDS C ${file_path}
 			VERBATIM)
 
 		if (LUAC)
