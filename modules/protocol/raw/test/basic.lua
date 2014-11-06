@@ -12,10 +12,10 @@ haka.rule {
 		if pkt then
 			print("packet {")
 			io.write("  data : ")
-			debug.pprint(pkt.data, nil, nil, { debug.hide_underscore, debug.hide_function })
+			debug.pprint(pkt.data, "  ", nil, { debug.hide_underscore, debug.hide_function })
 			print("  id : "..pkt.id)
 			io.write("  payload : ")
-			debug.pprint(pkt.payload, nil, nil, { debug.hide_underscore, debug.hide_function })
+			debug.pprint(pkt.payload, "  ", nil, { debug.hide_underscore, debug.hide_function })
 			print("  timestamp : "..tostring(pkt.timestamp))
 			print("}")
 		else
