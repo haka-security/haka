@@ -9,6 +9,17 @@ local raw = require("protocol/raw")
 haka.rule {
 	hook = raw.events.receive_packet,
 	eval = function (pkt)
-		debug.pprint(pkt, nil, nil, { debug.hide_underscore, debug.hide_function })
+		if pkt then
+			print("packet {")
+			io.write("  data : ")
+			debug.pprint(pkt.data, nil, nil, { debug.hide_underscore, debug.hide_function })
+			print("  id : "..pkt.id)
+			io.write("  payload : ")
+			debug.pprint(pkt.payload, nil, nil, { debug.hide_underscore, debug.hide_function })
+			print("  timestamp : "..tostring(pkt.timestamp))
+			print("}")
+		else
+			print("nil packet")
+		end
 	end
 }

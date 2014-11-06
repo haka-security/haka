@@ -117,7 +117,7 @@ local prop = {
 			if not value then
 				ref:clear()
 			else
-				ref:set(value)
+				ref:set(value, true)
 			end
 		end
 	},

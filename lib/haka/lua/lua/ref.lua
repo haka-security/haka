@@ -96,17 +96,29 @@ local prop = {
 }
 
 local meth = {
-	set = function(self, obj)
-		local ref = ref(obj)
+	set = function(self, obj, weak)
+		if weak then
+			self.ref = weakref(obj)
+			self.weak = true
+		else
+			self.ref = ref(obj)
+			self.weak = false
+		end
 		self.state = haka.state
-		self.ref = ref
-		self.weak = false
 	end,
 	get = function(self)
-		return refget(self.ref)
+		if self.weak then
+			return weakrefget(self.ref)
+		else
+			return refget(self.ref)
+		end
 	end,
 	clear = function(self)
-		unref(self.ref)
+		if self.weak then
+			unweakref(self.ref)
+		else
+			unref(self.ref)
+		end
 		self.ref = LUA_NOREF
 		self.state = nil
 	end
