@@ -123,7 +123,7 @@ local meth = {
 		self.state = nil
 	end,
 	isvalid = function(self)
-		return self.state and self.ref ~= LUA_NOREF
+		return self.state ~= nil and self.ref ~= LUA_NOREF
 	end
 }
 
