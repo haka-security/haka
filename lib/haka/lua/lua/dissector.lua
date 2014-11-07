@@ -110,13 +110,19 @@ type.PacketDissector = class.class('PacketDissector', type.Dissector)
 type.PacketDissector:register_event('receive_packet')
 type.PacketDissector:register_event('send_packet')
 
+local npkt
+
+local function preceive()
+	npkt:receive()
+end
+
 function type.PacketDissector:receive(pkt)
-	local npkt = self:new(pkt)
+	npkt = self:new(pkt)
 	if not npkt then
 		return
 	end
 
-	return dissector.pcall(npkt, function () npkt:receive() return npkt end)
+	return dissector.pcall(npkt, preceive)
 end
 
 function type.PacketDissector.method:receive()
