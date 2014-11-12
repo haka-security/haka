@@ -127,7 +127,7 @@ end
 function module.own(cdata)
 	ffi.gc(cdata, destroy)
 	local ref = cdata.__ref
-	assert(ref:isvalid())
+	assert(ref:isvalid(), "invalid object")
 	if not cdata.__ref.weak then
 		cdata.__ref:clear()
 		cdata.__ref:set(cdata, true)
@@ -137,7 +137,7 @@ end
 function module.disown(cdata)
 	ffi.gc(cdata, nil)
 	local ref = cdata.__ref
-	assert(ref:isvalid())
+	assert(ref:isvalid(), "invalid object")
 	if cdata.__ref.weak then
 		cdata.__ref:clear()
 		cdata.__ref:set(cdata, false)
