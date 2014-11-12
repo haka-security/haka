@@ -5,7 +5,7 @@
 set(ENV{LANG} "C")
 set(ENV{LC_ALL} "C")
 set(ENV{BUILD_DIR} ${CTEST_MODULE_DIR})
-set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/src/lua/?.lua)
+set(ENV{LUA_PATH} "${PROJECT_SOURCE_DIR}/src/lua/?.lua;${PROJECT_BINARY_DIR}/external/luajit/src/src/?.lua")
 set(ENV{HAKA} ${HAKA})
 set(ENV{HAKA_PATH} ${HAKA_PATH})
 set(ENV{PATH} $ENV{PATH}:${HAKA_PATH}/sbin:${HAKA_PATH}/bin)
