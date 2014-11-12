@@ -19,7 +19,7 @@ struct lua_State;
 struct lua_ref {
 	struct lua_state *state;
 	int               ref;
-	bool              weak:1;
+	bool              weak;
 };
 
 #define LUA_REF_INIT          { NULL, -1, false }

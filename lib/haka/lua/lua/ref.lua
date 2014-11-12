@@ -88,7 +88,7 @@ ffi.cdef[[
 	struct lua_ref {
 		void *state;
 		int   ref;
-		bool  weak:1;
+		bool  weak;
 	};
 ]]
 
