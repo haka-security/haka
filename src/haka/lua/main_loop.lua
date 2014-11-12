@@ -26,9 +26,14 @@ local res = ffi.new[[
 
 local receive = ffibinding.object_wrapper('struct packet')(ffi.C.packet_receive_wrapper_wrap)
 
-function module.receive(_state)
-	local state = ffi.cast("void *", _state)
-	local pkt = receive(state, res)
+local ffi_state
+
+function module.prepare(state)
+	ffi_state = ffi.cast("void *", state)
+end
+
+function module.receive(state)
+	local pkt = receive(ffi_state, res)
 
 	if pkt ~= nil then ffibinding.own(pkt)
 	else pkt = nil end
@@ -49,6 +54,10 @@ module.receive, module.error = unpack({...})
 function module.run(state, run_extra)
 	local filter = haka.filter
 	local pkt, has_extra, stop
+
+	if module.prepare then
+		module.prepare(state)
+	end
 
 	while true do
 		pkt, has_extra, stop = module.receive(state)
