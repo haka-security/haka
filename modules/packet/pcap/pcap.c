@@ -50,7 +50,7 @@ static int get_eth_protocol(int proto, struct vbuffer *packet_buffer, size_t *da
 			vbuffer_sub_create(&sub, packet_buffer, *data_offset, size);
 			vt = (struct vlan_tag *)vbuffer_sub_flatten(&sub, &len);
 
-			if (check_error() || len < size) {
+			if (vt == NULL || len < size) {
 				return -1;
 			}
 
@@ -76,7 +76,7 @@ int get_protocol(int link_type, struct vbuffer *packet_buffer, size_t *data_offs
 		vbuffer_sub_create(&sub, packet_buffer, 0, size);
 		data = vbuffer_sub_flatten(&sub, &len);
 
-		if (check_error() || len < *data_offset) {
+		if (data == NULL || len < *data_offset) {
 			return -1;
 		}
 
