@@ -84,7 +84,7 @@ void tcp_stream_clear(struct tcp_stream *stream)
 	tcp_stream_free_chunks(&stream->queued);
 	tcp_stream_free_chunks(&stream->sent);
 
-	lua_object_release(stream, &stream->lua_object);
+	lua_object_release(&stream->lua_object);
 	vbuffer_stream_clear(&stream->stream);
 }
 

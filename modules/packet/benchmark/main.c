@@ -337,7 +337,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	}
 
 	*pkt = &state->current->core_packet;
-	lua_object_release(NULL, &(*pkt)->lua_object);
+	lua_object_release(&(*pkt)->lua_object);
 	lua_ref_clear(NULL, &(*pkt)->luadata);
 
 	state->current = list_next(state->current);

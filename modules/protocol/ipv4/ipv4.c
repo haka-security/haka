@@ -588,8 +588,8 @@ static void ipv4_flush(struct ipv4 *ip)
 
 void ipv4_release(struct ipv4 *ip)
 {
-	lua_object_release(ip, &ip->lua_object);
-	lua_object_release(ip, &ip->lua_flags_object);
+	lua_object_release(&ip->lua_object);
+	lua_object_release(&ip->lua_flags_object);
 
 	ipv4_flush(ip);
 

@@ -341,8 +341,8 @@ static void tcp_flush(struct tcp *tcp)
 
 void tcp_release(struct tcp *tcp)
 {
-	lua_object_release(tcp, &tcp->lua_object);
-	lua_object_release(tcp, &tcp->lua_flags_object);
+	lua_object_release(&tcp->lua_object);
+	lua_object_release(&tcp->lua_flags_object);
 	tcp_flush(tcp);
 	vbuffer_release(&tcp->payload);
 	free(tcp);

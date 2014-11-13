@@ -320,7 +320,7 @@ void vbuffer_clear(struct vbuffer *buf)
 void vbuffer_release(struct vbuffer *buffer)
 {
 	vbuffer_clear(buffer);
-	lua_object_release(buffer, &buffer->lua_object);
+	lua_object_release(&buffer->lua_object);
 }
 
 size_t vbuffer_size(struct vbuffer *buf)

@@ -51,7 +51,7 @@ static int lua_object_delay_release(lua_State *L)
 	return 0;
 }
 
-void lua_object_release(void *ptr, struct lua_object *obj)
+void lua_object_release(struct lua_object *obj)
 {
 	assert(obj);
 

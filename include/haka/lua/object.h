@@ -26,7 +26,7 @@ struct lua_object {
 extern const struct lua_object lua_object_init;
 
 void lua_object_initialize(struct lua_State *L);
-void lua_object_release(void *ptr, struct lua_object *obj);
+void lua_object_release(struct lua_object *obj);
 
 struct lua_State;
 
