@@ -163,6 +163,7 @@ static bool load_packet(struct packet_module_state *state)
 		}
 
 		memset(packet, 0, sizeof(struct pcap_packet));
+		packet_init(&packet->core_packet);
 
 		if (!vbuffer_create_from(&data, (char *)p, header->caplen)) {
 			free(packet);
@@ -335,8 +336,10 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		}
 	}
 
-	*pkt = (struct packet *)state->current;
-	packet_init(*pkt);
+	*pkt = &state->current->core_packet;
+	lua_object_release(NULL, &(*pkt)->lua_object);
+	lua_ref_clear(NULL, &(*pkt)->luadata);
+
 	state->current = list_next(state->current);
 	return 0;
 }
@@ -369,8 +372,6 @@ static uint64 packet_get_id(struct packet *orig_pkt)
 
 static void packet_do_release(struct packet *orig_pkt)
 {
-	/* Nothing to do as packet are in memory and will be released on state
-	 * cleanup */
 }
 
 static enum packet_status packet_getstate(struct packet *orig_pkt)
