@@ -41,13 +41,13 @@ void lua_ref_init_state(lua_State *L)
 	lua_newtable(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
 
-	LUA_STACK_CHECK(L, 0);
-
 	lua_load_ref(L);
 	lua_getfield(L, LUA_REGISTRYINDEX, REF_TABLE);
 	lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
 	lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
 	lua_call(L, 3, 0);
+
+	LUA_STACK_CHECK(L, 0);
 }
 
 const struct lua_ref lua_ref_init = LUA_REF_INIT;
