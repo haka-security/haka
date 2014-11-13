@@ -120,8 +120,10 @@ function module.object_wrapper(cdef)
 end
 
 local function destroy(cdata)
-	local gc = cdata.__gc
-	if gc then gc(cdata) end
+	if cdata ~= nil then
+		local gc = cdata.__gc
+		if gc then gc(cdata) end
+	end
 end
 
 function module.own(cdata)
