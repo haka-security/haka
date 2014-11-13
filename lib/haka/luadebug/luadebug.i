@@ -100,7 +100,7 @@ void lua_luadebug_debugger_break();
 	local __pprint
 
 	local function __pprint_swig(obj, indent, name, visited, hidden, depth, out, title, meta)
-		title = table.concat({title, color.cyan, color.bold, "userdata", color.clear})
+		title = table.concat({title, color.cyan, color.bold, "swig", color.clear})
 
 		if meta[".type"] then
 			title = table.concat({title, " ", tostring(meta[".type"])})
