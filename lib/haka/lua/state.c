@@ -511,12 +511,14 @@ bool lua_state_isvalid(struct lua_state *state)
 static struct lua_state_ext *lua_state_getext(lua_State *L)
 {
 	const void *p;
+	LUA_STACK_MARK(L);
 
 	lua_getfield(L, LUA_REGISTRYINDEX, STATE_TABLE);
 	assert(lua_islightuserdata(L, -1));
-	p = lua_topointer(L, -1);
+	p = lua_touserdata(L, -1);
 	lua_pop(L, 1);
 
+	LUA_STACK_CHECK(L, 0);
 	return (struct lua_state_ext *)p;
 }
 

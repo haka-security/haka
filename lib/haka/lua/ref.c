@@ -61,6 +61,10 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 {
 	LUA_STACK_MARK(state);
 
+	if (index < 0) {
+		index = lua_gettop(state)+index+1;
+	}
+
 	lua_ref_clear(state, ref);
 
 	if (!lua_isnil(state, index)) {
@@ -96,7 +100,7 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 static int lua_ref_delay_clear(lua_State *L)
 {
 	assert(lua_islightuserdata(L, 1));
-	struct lua_ref *ref = (struct lua_ref *)lua_topointer(L, 1);
+	struct lua_ref *ref = lua_touserdata(L, 1);
 	lua_ref_clear(L, ref);
 	return 0;
 }
@@ -138,6 +142,8 @@ bool lua_ref_clear(struct lua_State *state, struct lua_ref *ref)
 					free(ref_copy);
 					return false;
 				}
+
+				*ref = lua_ref_init;
 			}
 		}
 

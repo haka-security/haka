@@ -19,9 +19,10 @@
 struct lua_object {
 	void            **owner;
 	struct lua_ref    ref;
+	bool              keep:1;
 };
 
-#define LUA_OBJECT_INIT        { NULL, ref: LUA_REF_INIT }
+#define LUA_OBJECT_INIT        { NULL, ref: LUA_REF_INIT, keep: false }
 extern const struct lua_object lua_object_init;
 
 void lua_object_initialize(struct lua_State *L);
