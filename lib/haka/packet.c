@@ -116,7 +116,6 @@ void packet_init(struct packet *pkt)
 {
 	pkt->lua_object = lua_object_init;
 	pkt->luadata = lua_ref_init;
-	atomic_set(&pkt->ref, 1);
 }
 
 int packet_receive(struct engine_thread *engine, struct packet **pkt)
@@ -199,25 +198,14 @@ void packet_send(struct packet *pkt)
 	packet_module->verdict(pkt, FILTER_ACCEPT);
 }
 
-void packet_addref(struct packet *pkt)
-{
-	assert(pkt);
-	atomic_inc(&pkt->ref);
-}
-
 bool packet_release(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	if (atomic_dec(&pkt->ref) == 0) {
-		lua_ref_clear(NULL, &pkt->luadata);
-		lua_object_release(pkt, &pkt->lua_object);
-		packet_module->release_packet(pkt);
-		return true;
-	}
-	else {
-		return false;
-	}
+	lua_ref_clear(NULL, &pkt->luadata);
+	lua_object_release(pkt, &pkt->lua_object);
+	packet_module->release_packet(pkt);
+	return true;
 }
 
 struct packet *packet_new(size_t size)

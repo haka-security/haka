@@ -23,7 +23,6 @@
 /** Opaque packet structure. */
 struct packet {
 	struct lua_object        lua_object; /**< \private */
-	atomic_t                 ref;        /**< \private */
 	struct vbuffer           payload;    /**< \private */
 	struct lua_ref           luadata;
 };
@@ -48,12 +47,7 @@ enum packet_status {
 bool               packet_init_thread(struct packet_module_state *state);
 
 /**
- * Increment packet ref count.
- */
-void               packet_addref(struct packet *pkt);
-
-/**
- * Decrement packet ref count and release it if needed.
+ * Release the packet memory.
  */
 bool               packet_release(struct packet *pkt);
 
