@@ -31,6 +31,7 @@ void lua_object_initialize(lua_State *L)
 
 const struct lua_object lua_object_init = LUA_OBJECT_INIT;
 
+#ifdef HAKA_FFI
 static int lua_object_delay_release(lua_State *L)
 {
 	LUA_STACK_MARK(L);
@@ -50,6 +51,7 @@ static int lua_object_delay_release(lua_State *L)
 	LUA_STACK_CHECK(L, 0);
 	return 0;
 }
+#endif
 
 void lua_object_release(struct lua_object *obj)
 {
@@ -62,6 +64,7 @@ void lua_object_release(struct lua_object *obj)
 	}
 
 	if (obj->ref.state && lua_state_isvalid(obj->ref.state)) {
+#ifdef HAKA_FFI
 		struct lua_object *obj_copy = malloc(sizeof(struct lua_object));
 		if (!obj_copy) {
 			error("memory error");
@@ -74,6 +77,22 @@ void lua_object_release(struct lua_object *obj)
 			free(obj_copy);
 			return;
 		}
+#else
+		lua_State *L = obj->ref.state->L;
+
+		LUA_STACK_MARK(L);
+
+		if (obj->keep) {
+			lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
+			lua_pushnil(L);
+			lua_rawseti(L, -2, obj->ref.ref);
+			lua_pop(L, 1);
+		}
+
+		lua_ref_clear(L, &obj->ref);
+
+		LUA_STACK_CHECK(L, 0);
+#endif
 
 		*obj = lua_object_init;
 	}

@@ -105,29 +105,37 @@ static int lua_ref_delay_clear(lua_State *L)
 	return 0;
 }
 
-bool lua_ref_clear(struct lua_State *state, struct lua_ref *ref)
+bool lua_ref_clear(struct lua_State *L, struct lua_ref *ref)
 {
 	if (lua_ref_isvalid(ref)) {
 		if (lua_state_isvalid(ref->state)) {
-			if (state && lua_state_get(state) == ref->state) {
-				LUA_STACK_MARK(ref->state->L);
+#ifndef HAKA_FFI
+			/* In FFI, it is not possible to use the state L, but it is possible
+			 * otherwise. */
+			if (!L) {
+				L = ref->state->L;
+			}
+#endif
+
+			if (L && lua_state_get(L) == ref->state) {
+				LUA_STACK_MARK(L);
 
 				if (ref->weak) {
-					lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
-					lua_pushnil(ref->state->L);
-					lua_rawseti(ref->state->L, -2, ref->ref);
-					lua_pop(ref->state->L, 1);
+					lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
+					lua_pushnil(L);
+					lua_rawseti(L, -2, ref->ref);
+					lua_pop(L, 1);
 
-					lua_getfield(ref->state->L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
+					lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
 				}
 				else {
-					lua_getfield(ref->state->L, LUA_REGISTRYINDEX, REF_TABLE);
+					lua_getfield(L, LUA_REGISTRYINDEX, REF_TABLE);
 				}
 
-				luaL_unref(ref->state->L, -1, ref->ref);
-				lua_pop(ref->state->L, 1);
+				luaL_unref(L, -1, ref->ref);
+				lua_pop(L, 1);
 
-				LUA_STACK_CHECK(ref->state->L, 0);
+				LUA_STACK_CHECK(L, 0);
 			}
 			else {
 				struct lua_ref *ref_copy = malloc(sizeof(struct lua_ref));
@@ -142,8 +150,6 @@ bool lua_ref_clear(struct lua_State *state, struct lua_ref *ref)
 					free(ref_copy);
 					return false;
 				}
-
-				*ref = lua_ref_init;
 			}
 		}
 
