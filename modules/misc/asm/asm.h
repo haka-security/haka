@@ -14,19 +14,20 @@
 #define INSTRUCTION_MNEMONIC 32
 #define INSTRUCTION_MAX_LEN  15
 
-
 struct asm_instruction_pending {
-    uint8_t                        *code;
-	bool                            skip;
-    uint16_t                        size;
+	uint8_t                        code[INSTRUCTION_MAX_LEN];
+	bool                           skip;
+	bool                           status;
+	uint16_t                       size;
+	size_t                         advance;
 };
 
 struct asm_handle {
-    csh                            *handle;
-	int                             arch;
-	int                             mode;
-    cs_opt_skipdata                *skipdata;
-    struct asm_instruction_pending *pending;
+	csh                            handle;
+	int                            arch;
+	int                            mode;
+	cs_opt_skipdata                skipdata;
+	struct asm_instruction_pending pending;
 };
 
 struct asm_instruction {
@@ -42,7 +43,7 @@ char               *instruction_get_bytes(struct asm_instruction *inst);
 char               *instruction_get_mnemonic(struct asm_instruction *inst);
 char               *instruction_get_operands(struct asm_instruction *inst);
 
-struct asm_handle  *asm_initialize(int arch, int mode);
+struct asm_handle  *asm_initialize(cs_arch arch, cs_mode mode);
 void                asm_destroy(struct asm_handle *asm_handle);
 void                asm_set_disassembly_flavor(struct asm_handle *asm_handle, int syntax);
 int                 asm_get_arch(struct asm_handle *asm_handle);

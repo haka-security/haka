@@ -6,15 +6,12 @@ TestAsmModule = {}
 
 function TestAsmModule:setUp()
 	self.module = require("misc/asm")
-	local arch = self.module.ARCH_X86
-	local mode = self.module.MODE_32
 
-	self.asm = self.module.init(arch, mode)
+	self.asm = self.module.init('x86', '32')
 	self.inst = self.asm:new_inst()
 end
 
-function TestAsmModule:gen_stream(f)
-	local code = { "\x88", "\x05", "\x41\x41\x41\x41" }
+function TestAsmModule:gen_stream(code, f)
 	local stream = haka.vbuffer_stream()
 	local manager = haka.vbuffer_stream_comanager:new(stream)
 	manager:start(0, f)
@@ -33,8 +30,9 @@ end
 
 function TestAsmModule:test_disas_should_succeed_when_valid_single_byte_inst ()
 	-- When
-	local code = haka.vbuffer_from('\x90'):pos('begin')
-	local ret = self.asm:disas(code, self.inst)
+	local code = haka.vbuffer_from('\x90')
+	local start = code:pos('begin')
+	local ret = self.asm:disassemble(start, self.inst)
 	-- Then
 	assertTrue(ret)
 	assertEquals(self.inst.mnemonic, "nop")
@@ -44,8 +42,9 @@ end
 
 function TestAsmModule:test_disas_should_succeed_when_valid_multiple_byte_inst ()
 	-- When
-	local code = haka.vbuffer_from('\x8b\x05\xb8\x13\x60\x60'):pos('begin')
-	local ret = self.asm:disas(code, self.inst)
+	local code = haka.vbuffer_from('\x8b\x05\xb8\x13\x60\x60')
+	local start = code:pos('begin')
+	local ret = self.asm:disassemble(start, self.inst)
 	-- Then
 	assertTrue(ret)
 	assertEquals(self.inst.mnemonic, "mov")
@@ -63,7 +62,7 @@ function TestAsmModule:test_disas_should_succeed_when_inst_overlaps_on_multiple_
 
 	local count = 0
 
-	while self.asm:disas(start, self.inst) do
+	while self.asm:disassemble(start, self.inst) do
 		count = count + 1
 	end
 	-- Then
@@ -75,25 +74,64 @@ end
 
 function TestAsmModule:test_disas_should_skip_bad_inst ()
 	-- When
-	local code = haka.vbuffer_from('\x0f\x0a\x90'):pos('begin')
-	self.asm:disas(code, self.inst)
+	local code = haka.vbuffer_from('\x0f\x0a\x90\x90\x90\x90\x90')
+	local start = code:pos('begin')
+	self.asm:disassemble(start, self.inst)
 	-- Then
 	assertEquals(self.inst.mnemonic, "(bad)")
 	-- And when
-	self.asm:disas(code, self.inst)
+	self.asm:disassemble(start, self.inst)
 	-- Then
-	assertEquals(self.inst.mnemonic, "add")
-	assertEquals(self.inst.op_str, "byte ptr [eax], al")
-	assertEquals(self.inst.size, 2)
+	assertEquals(self.inst.mnemonic, "or")
+	assertEquals(self.inst.op_str, "dl, byte ptr [eax + 0x90909090]")
+	assertEquals(self.inst.size, 6)
 end
 
 function TestAsmModule:test_can_disas_on_blocking_iterator ()
-	self:gen_stream(function (iter)
+	local code = { "\x88", "\x05", "\x41\x41\x41\x41\x90" }
+	self:gen_stream(code, function (iter)
 		-- When
-		local ret = self.asm:disas(iter, self.inst)
+		local ret = self.asm:disassemble(iter, self.inst)
 		-- Then
 		assertTrue(ret)
+		assertEquals(self.inst.mnemonic, "mov")
+		assertEquals(self.inst.op_str, "byte ptr [0x41414141], al")
+		assertEquals(self.inst.size, 6)
+		ret = self.asm:disassemble(iter, self.inst)
+
+		assertTrue(ret)
+		assertEquals(self.inst.mnemonic, "nop")
 	end)
+end
+
+function TestAsmModule:test_disas_should_skip_bad_inst_on_blocking_iterator ()
+	self.asm = self.module.init('arm', 'arm')
+	local code = { "\xca\xfe\xba", "\xbe" , "\x03\x00\xa0\xe1" }
+	self:gen_stream(code, function (iter)
+		-- When
+		local ret = self.asm:disassemble(iter, self.inst)
+		-- Then
+		assertTrue(ret)
+		assertEquals(self.inst.mnemonic, "(bad)")
+		assertEquals(self.inst.size, 4)
+		ret = self.asm:disassemble(iter, self.inst)
+
+		assertTrue(ret)
+		assertEquals(self.inst.mnemonic, "mov")
+	end)
+end
+
+function TestAsmModule:test_disas_should_succeed_on_arm_arch ()
+	-- When
+	self.asm = self.module.init('arm', 'arm')
+	local code = haka.vbuffer_from('\x03\x00\xa0\xe1')
+	local start = code:pos('begin')
+	local ret = self.asm:disassemble(start, self.inst)
+	-- Then
+	assertTrue(ret)
+	assertEquals(self.inst.mnemonic, "mov")
+	assertEquals(self.inst.op_str, "r0, r3")
+	assertEquals(self.inst.size, 4)
 end
 
 addTestSuite('TestAsmModule')

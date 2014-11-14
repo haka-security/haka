@@ -8,7 +8,7 @@
 %include "haka/lua/object.si"
 
 %{
-#include "haka/asm.h"
+#include "asm.h"
 %}
 
 %nodefaultctor;
@@ -36,11 +36,11 @@ struct asm_handle {
             asm_destroy($self);
         }
 
-        void setmode(int mode) {
+        void _setmode(int mode) {
             asm_set_mode($self, mode);
         }
 
-        void setsyntax(int syntax) {
+        void _setsyntax(int syntax) {
             asm_set_disassembly_flavor($self, syntax);
         }
 
@@ -51,7 +51,7 @@ struct asm_handle {
                 return NULL;
             }
             instruction->inst = NULL;
-            instruction->inst = cs_malloc(*(csh *)$self->handle);
+            instruction->inst = cs_malloc(*(csh *)&$self->handle);
             instruction->addr = addr;
             return instruction;
         }
@@ -113,44 +113,82 @@ char *asm_instruction_op_str_get(struct asm_instruction *inst)
 }
 %}
 
-/* Architecture */
-%constant int ARCH_PPC = CS_ARCH_PPC;
-%constant int ARCH_X86 = CS_ARCH_X86;
-%constant int ARCH_ARM = CS_ARCH_ARM;
-%constant int ARCH_ARM64 = CS_ARCH_ARM64;
-%constant int ARCH_MIPS = CS_ARCH_MIPS;
-/* Mode */
-%constant int MODE_16 = CS_MODE_16;
-%constant int MODE_32 = CS_MODE_32;
-%constant int MODE_64 = CS_MODE_64;
-%constant int MODE_ARM = CS_MODE_ARM;
-%constant int MODE_THUMB = CS_MODE_THUMB;
-%constant int MODE_LITTLE_ENDIAN = CS_MODE_LITTLE_ENDIAN;
-%constant int MODE_BIG_ENDIAN = CS_MODE_BIG_ENDIAN;
-%constant int MODE_MICRO = CS_MODE_MICRO;
-/* Syntax */
-%constant int ATT = CS_OPT_SYNTAX_ATT;
-%constant int INTEL = CS_OPT_SYNTAX_INTEL;
-
-%rename(init) asm_initialize;
 %newobject asm_initialize;
 struct asm_handle *asm_initialize(int arch, int mode);
 
 %luacode {
-    local iterator_type = swig.getclassmetatable('vbuffer_iterator_blocking')
+    local asm_arch = {
+        ["arm"] = 0,
+        ["arm64"] = 1,
+        ["mips"] = 2,
+        ["x86"] = 3,
+        ["ppc"] = 4,
+    }
 
-    swig.getclassmetatable('asm_handle')['.fn'].disas = function (self, pos,
+    local asm_mode = {
+        ["arm"] = 0,
+        ["16"] = 2,
+        ["32"] = 4,
+        ["64"] = 8,
+        ["thumb"] = 16,
+    }
+
+    local asm_syntax = {
+        ["intel"] = 1, 
+        ["att"] = 2,
+    }
+
+    local this = unpack({...})
+    local asm_initialize = this.asm_initialize
+    this.asm_initialize = nil
+
+    function this.init(str_arch, str_mode)
+        local cs_arch arch = asm_arch[str_arch]
+        if not arch then
+            error("unsupported hardware architecture")
+            return nil
+        end
+        local cs_mode mode = asm_mode[str_mode]
+        if not mode then
+            error("unsupported hardware mode")
+            return nil
+        end
+        return asm_initialize(arch, mode)
+    end
+
+    swig.getclassmetatable('asm_handle')['.fn'].setmode = function (self, str_mode)
+        local cs_mode mode = asm_mode[str_mode]
+        if not mode then
+            error("unsupported hardware mode")
+        end
+        return self:_setmode(mode)
+    end
+
+    swig.getclassmetatable('asm_handle')['.fn'].setsyntax = function (self, str_syntax)
+        local cs_mode syntax = asm_syntax[str_syntax]
+        if not syntax then
+            error("unknown syntax")
+        end
+        return self:_setsyntax(syntax)
+    end
+
+
+    local iter = swig.getclassmetatable('vbuffer_iterator')
+    local iter_block = swig.getclassmetatable('vbuffer_iterator_blocking')
+
+    swig.getclassmetatable('asm_handle')['.fn'].disassemble = function (self, pos,
 inst)
         local meta = getmetatable(pos)
-        local block_iter = pos
-        if meta == iterator_type then
-            block_iter = pos._iter
+        if meta == iter then
+            return self:_disas(pos, inst)
+        elseif meta == iter_block then
+            local iter = pos._iter
+            repeat
+                if self:_disas(iter, inst) then
+                    return true
+                end
+            until not pos:wait() or iter:available() == 0
         end
-        repeat
-            if self:_disas(block_iter, inst) then
-                return true
-            end
-        until not pos:wait() or block_iter:available() == 0
         return false
     end
 }

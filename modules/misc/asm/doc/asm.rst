@@ -26,9 +26,9 @@ Disassembler syntax
 .. haka:function:: init(architecture, mode) -> asm_handle
 
     :param architecture: Hardware architecture.
-    :ptype architecture: int
+    :ptype architecture: string
     :param mode: Hardware mode.
-    :ptype mode: int
+    :ptype mode: string
     :return asm_handle: Disassembler handler.
     :rtype asm_handle: AsmHandle
 
@@ -37,43 +37,34 @@ Disassembler syntax
 Supported architecture
 ~~~~~~~~~~~~~~~~~~~~~~
 
-    .. haka:attribute:: AsmInstruction:AsmHandle:ARCH_PPC
-    .. haka:attribute:: AsmInstruction:AsmHandle:ARCH_X86
-    .. haka:attribute:: AsmInstruction:AsmHandle:ARCH_ARM
-    .. haka:attribute:: AsmInstruction:AsmHandle:ARCH_ARM64
-    .. haka:attribute:: AsmInstruction:AsmHandle:ARCH_MIPS
+    * arm
+    * arm64
+    * mips
+    * x86
+    * ppc
 
 Supported mode
 ~~~~~~~~~~~~~~
 
-    .. haka:attribute:: AsmInstruction:AsmHandle:MODE_16
-    .. haka:attribute:: AsmInstruction:AsmHandle:MODE_32
-    .. haka:attribute:: AsmInstruction:AsmHandle:MODE_64
-    .. haka:attribute:: AsmInstruction:AsmHandle:MODE_ARM
-    .. haka:attribute:: AsmInstruction:AsmHandle:MODE_THUMB
-    .. haka:attribute:: AsmInstruction:AsmHandle:MODE_LITTLE_ENDIAN
-    .. haka:attribute:: AsmInstruction:AsmHandle:MODE_BIG_ENDIAN
-    .. haka:attribute:: AsmInstruction:AsmHandle:MODE_MICRO
-
-Syntax flavor
-~~~~~~~~~~~~~
-
-    .. haka:attribute:: AsmInstruction:AsmHandle:ATT
-    .. haka:attribute:: AsmInstruction:AsmHandle:INTEL
+    * arm
+    * 16
+    * 32
+    * 64
+    * thumb
 
 .. haka:class:: AsmHandle
 
     .. haka:function:: AsmHandle:setsyntax(syntax)
 
         :param syntax: Syntax flavor.
-        :ptype syntax: int
+        :ptype syntax: string
 
-        Set the assembly syntax.
+        Set the assembly syntax (``att`` or ``intel``).
 
     .. haka:function:: AsmHandle:setmode(mode)
 
         :param mode: Hardware mode.
-        :ptype mode: int.
+        :ptype mode: string.
 
         Set the hardware mode.
 
@@ -117,6 +108,9 @@ Syntax flavor
 
         Instruction mnemonic.
 
+        .. note:: The mnemonic is set to ``(bad)`` when the disassembler
+        encounters an invalid opcode.
+
     .. haka:attribute:: AsmInstruction:op_str
 
         :type: string
@@ -143,17 +137,17 @@ Example
 
     local asm_module = require('misc/asm')
 
-    asm = asm_module.init(asm_module.ARCH_X86, asm_module.MODE_32)
-    asm:setsyntax(asm_module.ATT)
+    asm = asm_module.init('x86', '32')
+    asm:setsyntax('att')
 
     local inst = asm:new_inst()
-    local code = haka.vbuffer_from("\x41\x42\x48\x8b\x05\xb8\x13\x60\x60"):pos('begin')
+    local code = haka.vbuffer_from("\x41\x42\x48\x8b\x05\xb8\x13\x60\x60")
+    local start = code:pos('begin')
 
-    while asm:disas(code, inst) do
+    while asm:disas(start, inst) do
         io.write(string.format("0x%08x %-8s %-16s ", inst.address, inst.mnemonic, inst.op_str))
         for i = 1,inst.size do
             io.write(string.format('%02X ', inst.bytes:byte(i)))
         end
         print("")
     end
-

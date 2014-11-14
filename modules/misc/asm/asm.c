@@ -8,7 +8,7 @@
 #include <haka/error.h>
 #include <haka/log.h>
 
-#include "haka/asm.h"
+#include "asm.h"
 
 enum instruction_status {
 	FAIL,
@@ -19,26 +19,27 @@ enum instruction_status {
 static size_t asm_callback(const char *buffer, size_t size, size_t offset, uint16_t current, void *user_data)
 {
 	struct asm_instruction_pending *pending = (struct asm_instruction_pending *)user_data;
-	uint16_t length = pending->size;
 	pending->skip = true;
 	assert(current <= INSTRUCTION_MAX_LEN);
+
+	if (pending->size == 0) {
+		memcpy(pending->code, buffer, current);
+		pending->size = current;
+	}
+
 	/* invalid instruction */
 	if (current < size) {
-		pending->size = INSTRUCTION_MAX_LEN + 1;
+		pending->status = 0;
 	}
 	/* broken instruction */
 	else {
-		if (pending->size == 0) {
-			memcpy(pending->code + length, buffer + length, current - length);
-			pending->size += current;
-		}
+		pending->status = 1;
 	}
 	return 0;
 }
 
-struct asm_handle *asm_initialize(int arch, int mode)
+struct asm_handle *asm_initialize(cs_arch arch, cs_mode mode)
 {
-	csh *handle;
 	struct asm_handle *asm_handle = malloc(sizeof(struct asm_handle));
 
 	if (!asm_handle) {
@@ -46,62 +47,45 @@ struct asm_handle *asm_initialize(int arch, int mode)
 		return NULL;
 	}
 
-	handle = malloc(sizeof(csh));
-	if (!handle) {
-		error("memory error");
-		return NULL;
-	}
-	asm_handle->handle = handle;
+	asm_handle->pending.size = 0;
+	asm_handle->pending.skip = false;
+	asm_handle->pending.status = true;
+	asm_handle->pending.advance = 0;
 
-	asm_handle->pending = malloc(sizeof(struct asm_instruction_pending));
-	if (!asm_handle->pending) {
-		error("memory error");
-		return NULL;
-	}
-	asm_handle->pending->code = malloc(sizeof(15));
-	asm_handle->pending->size = 0;
-	asm_handle->pending->skip = false;
+	asm_handle->skipdata.callback = (cs_skipdata_cb_t)asm_callback;
+	asm_handle->skipdata.user_data = &asm_handle->pending;
 
-	asm_handle->skipdata = malloc(sizeof(cs_opt_skipdata));
-	if (!asm_handle->skipdata) {
-		error("memory error");
-		return NULL;
-	}
-	asm_handle->skipdata->callback = (cs_skipdata_cb_t)asm_callback;
-	asm_handle->skipdata->user_data = asm_handle->pending;
-
-	if (cs_open(arch, mode, handle) != CS_ERR_OK) {
+	if (cs_open(arch, mode, &asm_handle->handle) != CS_ERR_OK) {
 		error("cannot initialize asm module");
+		free(asm_handle);
 		return NULL;
 	}
 
 	asm_handle->arch = arch;
 	asm_handle->mode = mode;
 
-    cs_option(*handle, CS_OPT_SKIPDATA_SETUP, (size_t)asm_handle->skipdata);
-    cs_option(*handle, CS_OPT_SKIPDATA, CS_OPT_ON);
+	cs_option(asm_handle->handle, CS_OPT_SKIPDATA_SETUP, (size_t)&asm_handle->skipdata);
+	cs_option(asm_handle->handle, CS_OPT_SKIPDATA, CS_OPT_ON);
 
-	cs_option(*handle, CS_OPT_DETAIL, CS_OPT_ON);
+	cs_option(asm_handle->handle, CS_OPT_DETAIL, CS_OPT_ON);
 
 	return asm_handle;
 }
 
 void asm_destroy(struct asm_handle *asm_handle) {
 	if (asm_handle) {
-		free(asm_handle->skipdata);
-		cs_close((csh *)asm_handle->handle);
+		cs_close(&asm_handle->handle);
+		free(asm_handle);
 	}
 }
 
 void asm_set_disassembly_flavor(struct asm_handle *asm_handle, int syntax)
 {
-	csh *handle = asm_handle->handle;
-	cs_option(*handle, CS_OPT_SYNTAX, syntax);
+	cs_option(asm_handle->handle, CS_OPT_SYNTAX, syntax);
 }
 
 void asm_set_mode(struct asm_handle *asm_handle, int mode) {
-	csh *handle = asm_handle->handle;
-	cs_option(*handle, CS_OPT_MODE, mode);
+	cs_option(asm_handle->handle, CS_OPT_MODE, mode);
 	asm_handle->mode = mode;
 }
 
@@ -110,42 +94,65 @@ int asm_get_mode(struct asm_handle *asm_handle) {
 }
 
 int asm_get_arch(struct asm_handle *asm_handle) {
+
 	return asm_handle->arch;
 }
 
-int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t *size,
+static int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t *size,
 	struct asm_instruction *inst)
 {
 	csh *handle;
+	cs_insn *instruction;
+	cs_arch arch;
+	cs_mode mode;
+	int skip;
+	bool ret = true;
+	const uint8_t *ptr_code;
 	struct asm_instruction_pending *pending;
-	size_t len, tmp;
+	size_t tmp;
 	enum instruction_status status;
 
-	handle = asm_handle->handle;
-	pending = asm_handle->pending;
+	handle = &asm_handle->handle;
+	pending = &asm_handle->pending;
 	pending->skip = false;
 
-	if (pending->size > 0) {
-		len = (*size <=  INSTRUCTION_MAX_LEN - pending->size) ? *size :  INSTRUCTION_MAX_LEN - pending->size;
+	if (pending->size == 0) {
+		ret = cs_disasm_iter(*handle, code, size, &inst->addr, inst->inst);
+	}
+	else {
+		const uint16_t len = (*size <=  INSTRUCTION_MAX_LEN - pending->size)
+			? *size :  INSTRUCTION_MAX_LEN - pending->size;
 		memcpy(pending->code + pending->size, *code, len);
 		pending->size += len;
 		tmp = pending->size;
-		cs_disasm_iter(*handle, (const uint8_t **)&pending->code, &tmp, &inst->addr, inst->inst);
-
+		ptr_code = pending->code;
+		ret = cs_disasm_iter(*handle, &ptr_code, &tmp, &inst->addr, inst->inst);
 		if (!pending->skip) {
-			memset(pending->code, 0, pending->size);
 			pending->size = 0;
 		}
 	}
 
-	else {
-		cs_disasm_iter(*handle, code, size, &inst->addr, inst->inst);
+	/* check disas result */
+	if (!ret && pending->status) {
+		asm_callback((const char *)*code, *size, 0, *size , pending);
 	}
 
-	/* check disas result */
-	if (pending->size ==  INSTRUCTION_MAX_LEN + 1) {
-        strcpy(inst->inst->mnemonic, "(bad)");
+	if (!pending->status) {
+		mode = asm_handle->mode;
+		arch = asm_handle->arch;
+		if (arch == CS_ARCH_X86) skip = 1;
+		else if (arch == CS_ARCH_ARM && mode == CS_MODE_THUMB) skip = 2;
+		else skip = 4;
+
+		inst->addr += skip;
+		instruction = inst->inst;
+		strcpy(instruction->mnemonic, "(bad)");
+		memcpy(instruction->bytes, pending->code, skip);
+		instruction->size = skip;
+		instruction->op_str[0] = '\0';
+
 		status = FAIL;
+		pending->status = 1;
 	}
 	else {
 		if (pending->skip) {
@@ -162,40 +169,57 @@ int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t *size,
 bool asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos, struct asm_instruction *inst)
 {
 	const uint8_t *code;
-	size_t size, skip = 0;
-	int arch, mode;
+	size_t size, skip = 0, remaining, pending_skip;
 	struct vbuffer_iterator iter;
+	struct asm_instruction_pending *pending;
 	enum instruction_status status = NEEDMOREDATA;
 
 	if (!vbuffer_iterator_isvalid(pos)) {
 		error("invalid vbuffer iterator");
 		return false;
 	}
+
+	pending = &asm_handle->pending;
+	remaining = pending->size;
+
+	if (pending->advance) {
+		pending_skip = vbuffer_iterator_advance(pos, pending->advance);
+		if (pending_skip != pending->advance) {
+			pending->advance -= pending_skip;
+			return false;
+		}
+		pending->advance = 0;
+	}
+
 	vbuffer_iterator_copy(pos, &iter);
 
 	while (status == NEEDMOREDATA) {
 		code = vbuffer_iterator_mmap(pos, ALL, &size, 0);
 		if (!code) {
-			vbuffer_iterator_clear(&iter);
 			return false;
 		}
 		status = asm_disas(asm_handle, &code, &size, inst);
 	}
 
-	if (status == SUCCESS) {
-		skip = inst->inst->size;
+	int diff = inst->inst->size - remaining;
+	if (diff >= 0) {
+		skip = diff;
+		pending->size = 0;
 	}
 	else {
-		mode = asm_handle->mode;
-		arch = asm_handle->arch;
-		if (arch == CS_ARCH_X86) skip = 1;
-		else if (arch == CS_ARCH_ARM && mode == CS_MODE_THUMB) skip = 2;
-		else skip = 4;
-		inst->addr += skip;
+		skip = 0;
+		memmove(pending->code, pending->code, -diff);
+		pending->size = -diff;
 	}
+
 	vbuffer_iterator_copy(&iter, pos);
-	vbuffer_iterator_advance(pos, skip);
-	vbuffer_iterator_clear(&iter);
+	pending_skip = vbuffer_iterator_advance(pos, skip);
+	if (pending_skip != skip) {
+		pending->advance = skip - pending_skip;
+	}
+	else {
+		pending->advance = 0;
+	}
 	return true;
 }
 
