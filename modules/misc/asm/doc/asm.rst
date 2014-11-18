@@ -77,7 +77,7 @@ Supported mode
 
         Create a new instruction.
 
-    .. haka:function:: AsmHandle:disas(code, inst) -> ret
+    .. haka:function:: AsmHandle:disassemble(code, inst) -> ret
 
         :param code: Code to disassemble.
         :ptype code: :haka:class:`vbuffer_iterator`
@@ -123,11 +123,10 @@ Supported mode
 
         Instruction size.
 
-    .. haka:attribute:: AsmInstruction:bytes
+    .. haka:function:: AsmInstruction:bytes() -> bytes
 
-        :type: string
-
-        Instruction byte sequence.
+        :return bytes: Instruction byte sequence.
+        :rtype bytes: string
 
 
 Example
@@ -144,10 +143,13 @@ Example
     local code = haka.vbuffer_from("\x41\x42\x48\x8b\x05\xb8\x13\x60\x60")
     local start = code:pos('begin')
 
-    while asm:disas(start, inst) do
+    local size, bytes
+    while asm:disassemble(start, inst) do
         io.write(string.format("0x%08x %-8s %-16s ", inst.address, inst.mnemonic, inst.op_str))
+        size = inst.size
+        bytes = inst:bytes()
         for i = 1,inst.size do
-            io.write(string.format('%02X ', inst.bytes:byte(i)))
+            io.write(string.format('%02X ', bytes:byte(i)))
         end
         print("")
     end

@@ -20,11 +20,27 @@ struct asm_instruction {
             if ($self)
                 instruction_release($self);
         }
+
+        void bytes(char **TEMP_OUTPUT, size_t *TEMP_SIZE)
+        {
+            unsigned short size = instruction_get_size($self);
+            if (size == 0) {
+                return ;
+            }
+            char *buffer = malloc(sizeof(char) * size);
+            if (!buffer) {
+                error("memory error");
+                return;
+            }
+            memcpy(buffer, instruction_get_bytes($self), size);
+            *TEMP_OUTPUT = buffer;
+            *TEMP_SIZE = size;
+        }
+
         %immutable;
         unsigned int id;
         unsigned long address;
         unsigned short size;
-        char *bytes;
         char *mnemonic;
         char *op_str;
     }
@@ -79,16 +95,7 @@ unsigned short asm_instruction_size_get(struct asm_instruction *inst)
     return instruction_get_size(inst);
 }
 
-char *asm_instruction_bytes_get(struct asm_instruction *inst)
-{
-    char *buffer = malloc(sizeof(char) * INSTRUCTION_BYTES);
-    if (!buffer) {
-        error("memory error");
-        return NULL;
-    }
-    snprintf(buffer, 16, "%s", instruction_get_bytes(inst));
-    return buffer;
-}
+
 
 char *asm_instruction_mnemonic_get(struct asm_instruction *inst)
 {
