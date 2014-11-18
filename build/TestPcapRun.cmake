@@ -10,12 +10,13 @@ set(ENV{TSHARK} ${TSHARK})
 set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/src/lua/?.lua)
 set(ENV{HAKA_PATH} ${HAKA_PATH})
 set(ENV{LD_LIBRARY_PATH} ${HAKA_PATH}/lib)
+set(ENV{C_INCLUDE_PATH} ${HAKA_PATH}/include)
 set(ENV{TZ} Europe/Paris)
 
 set(CMAKE_MODULE_PATH ${CTEST_MODULE_DIR} ${CMAKE_MODULE_PATH})
 include(Valgrind)
 
-message("Executing TZ=\"Europe/Paris\" LANG=\"C\" LC_ALL=\"C\" LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" ${EXE} -d --no-pass-through ${EXE_OPTIONS} -o ${DST}.pcap ${CONF} ${SRC}")
+message("Executing TZ=\"Europe/Paris\" LANG=\"C\" LC_ALL=\"C\" LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" C_INCLUDE_PATH=\"$ENV{C_INCLUDE_PATH}\" ${EXE} -d --no-pass-through ${EXE_OPTIONS} -o ${DST}.pcap ${CONF} ${SRC}")
 
 VALGRIND_FULL(${DST} ${EXE} -d --no-pass-through ${EXE_OPTIONS} -o ${DST}.pcap ${CONF} ${SRC}
 	RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)

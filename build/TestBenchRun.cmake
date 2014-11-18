@@ -10,11 +10,12 @@ set(ENV{HAKA} ${HAKA})
 set(ENV{HAKA_PATH} ${HAKA_PATH})
 set(ENV{PATH} $ENV{PATH}:${HAKA_PATH}/sbin:${HAKA_PATH}/bin)
 set(ENV{LD_LIBRARY_PATH} ${HAKA_PATH}/lib:${HAKA_PATH}/lib/haka/modules/protocol:${HAKA_PATH}/lib/haka/modules/packet)
+set(ENV{C_INCLUDE_PATH} ${HAKA_PATH}/include)
 set(ENV{TZ} Europe/Paris)
 
 set(CMAKE_MODULE_PATH ${CTEST_MODULE_DIR} ${CMAKE_MODULE_PATH})
 
-message("Executing TZ=\"Europe/Paris\" LANG=\"C\" LC_ALL=\"C\" LUA_PATH=\"$ENV{LUA_PATH}\" HAKA=\"$ENV{HAKA}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" ${EXE} ${EXE_OPTIONS} ${BENCH}")
+message("Executing TZ=\"Europe/Paris\" LANG=\"C\" LC_ALL=\"C\" LUA_PATH=\"$ENV{LUA_PATH}\" HAKA=\"$ENV{HAKA}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" C_INCLUDE_PATH=\"$ENV{C_INCLUDE_PATH}\" ${EXE} ${EXE_OPTIONS} ${BENCH}")
 
 execute_process(COMMAND ${EXE} ${EXE_OPTIONS} ${BENCH} RESULT_VARIABLE HAD_ERROR)
 
