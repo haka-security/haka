@@ -52,10 +52,6 @@ struct asm_handle {
             asm_destroy($self);
         }
 
-        void _setmode(int mode) {
-            asm_set_mode($self, mode);
-        }
-
         void _setsyntax(int syntax) {
             asm_set_disassembly_flavor($self, syntax);
         }
@@ -94,8 +90,6 @@ unsigned short asm_instruction_size_get(struct asm_instruction *inst)
 {
     return instruction_get_size(inst);
 }
-
-
 
 char *asm_instruction_mnemonic_get(struct asm_instruction *inst)
 {
@@ -161,14 +155,6 @@ struct asm_handle *asm_initialize(int arch, int mode);
             return nil
         end
         return asm_initialize(arch, mode)
-    end
-
-    swig.getclassmetatable('asm_handle')['.fn'].setmode = function (self, str_mode)
-        local cs_mode mode = asm_mode[str_mode]
-        if not mode then
-            error("unsupported hardware mode")
-        end
-        return self:_setmode(mode)
     end
 
     swig.getclassmetatable('asm_handle')['.fn'].setsyntax = function (self, str_syntax)

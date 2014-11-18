@@ -61,13 +61,6 @@ Supported mode
 
         Set the assembly syntax ('att' or 'intel').
 
-    .. haka:function:: AsmHandle:setmode(mode)
-
-        :param mode: Hardware mode.
-        :ptype mode: string.
-
-        Set the hardware mode.
-
     .. haka:function:: AsmHandle:new_inst(address = 0) -> asm_inst
 
         :param address: Instruction address.

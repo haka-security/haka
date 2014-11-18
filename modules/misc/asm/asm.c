@@ -84,11 +84,6 @@ void asm_set_disassembly_flavor(struct asm_handle *asm_handle, int syntax)
 	cs_option(asm_handle->handle, CS_OPT_SYNTAX, syntax);
 }
 
-void asm_set_mode(struct asm_handle *asm_handle, int mode) {
-	cs_option(asm_handle->handle, CS_OPT_MODE, mode);
-	asm_handle->mode = mode;
-}
-
 int asm_get_mode(struct asm_handle *asm_handle) {
 	return asm_handle->mode;
 }
