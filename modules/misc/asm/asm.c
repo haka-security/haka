@@ -112,7 +112,7 @@ static int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t
 	pending->skip = false;
 
 	if (pending->size == 0) {
-		ret = cs_disasm_iter(*handle, code, size, &inst->addr, inst->inst);
+		ret = cs_disasm_iter(*handle, code, size, &inst->addr, &inst->inst);
 	}
 	else {
 		const uint16_t len = (*size <=  INSTRUCTION_MAX_LEN - pending->size)
@@ -121,7 +121,7 @@ static int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t
 		pending->size += len;
 		tmp = pending->size;
 		ptr_code = pending->code;
-		ret = cs_disasm_iter(*handle, &ptr_code, &tmp, &inst->addr, inst->inst);
+		ret = cs_disasm_iter(*handle, &ptr_code, &tmp, &inst->addr, &inst->inst);
 		if (!pending->skip) {
 			pending->size = 0;
 		}
@@ -140,7 +140,7 @@ static int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t
 		else skip = 4;
 
 		inst->addr += skip;
-		instruction = inst->inst;
+		instruction = &inst->inst;
 		strcpy(instruction->mnemonic, "(bad)");
 		memcpy(instruction->bytes, pending->code, skip);
 		instruction->size = skip;
@@ -196,7 +196,7 @@ bool asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos, st
 		status = asm_disas(asm_handle, &code, &size, inst);
 	}
 
-	int diff = inst->inst->size - remaining;
+	int diff = inst->inst.size - remaining;
 	if (diff >= 0) {
 		skip = diff;
 		pending->size = 0;
@@ -220,44 +220,44 @@ bool asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos, st
 
 void instruction_release(struct asm_instruction *inst)
 {
-	cs_insn *instruction = inst->inst;
-	cs_free(instruction, 1);
-	free(inst);
+	if (inst) {
+		free(inst);
+	}
 }
 
 uint32 instruction_get_id(struct asm_instruction *inst)
 {
-	cs_insn *instruction = inst->inst;
-	return instruction->id;
+	cs_insn instruction = inst->inst;
+	return instruction.id;
 }
 
 uintptr_t instruction_get_address(struct asm_instruction *inst)
 {
-	cs_insn *instruction = inst->inst;
-	return instruction->address;
+	cs_insn instruction = inst->inst;
+	return instruction.address;
 }
 
 uint16 instruction_get_size(struct asm_instruction *inst)
 {
-	cs_insn *instruction = inst->inst;
-	return instruction->size;
+	cs_insn instruction = inst->inst;
+	return instruction.size;
 }
 
 const uint8 *instruction_get_bytes(struct asm_instruction *inst)
 {
-	cs_insn *instruction = inst->inst;
+	cs_insn *instruction = &inst->inst;
 	return instruction->bytes;
 }
 
 const char *instruction_get_mnemonic(struct asm_instruction *inst)
 {
-	cs_insn *instruction = inst->inst;
+	cs_insn *instruction = &inst->inst;
 	return instruction->mnemonic;
 }
 
 const char *instruction_get_operands(struct asm_instruction *inst)
 {
-	cs_insn *instruction = inst->inst;
+	cs_insn *instruction = &inst->inst;
 	return instruction->op_str;
 }
 

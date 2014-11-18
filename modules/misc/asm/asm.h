@@ -36,8 +36,9 @@ struct asm_handle {
 };
 
 struct asm_instruction {
-	uint64_t addr;
-	cs_insn *inst;
+	uint64_t   addr;
+	cs_insn    inst;
+	cs_detail  detail;
 };
 
 void               instruction_release(struct asm_instruction *inst);

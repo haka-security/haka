@@ -34,6 +34,17 @@ Disassembler syntax
 
     Initialize the disassembler module with selected architecture and mode.
 
+.. haka:function:: AsmHandle:new_instruction(address = 0) -> asm_inst
+
+    :param address: Instruction address.
+    :ptype address: int
+    :return asm_inst: Instruction.
+    :rtype asm_inst: AsmInstruction
+
+    Create a new instruction.
+
+
+
 Supported architecture
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -60,15 +71,6 @@ Supported mode
         :ptype syntax: string
 
         Set the assembly syntax ('att' or 'intel').
-
-    .. haka:function:: AsmHandle:new_inst(address = 0) -> asm_inst
-
-        :param address: Instruction address.
-        :ptype address: int
-        :return asm_inst: Instruction.
-        :rtype asm_inst: AsmInstruction
-
-        Create a new instruction.
 
     .. haka:function:: AsmHandle:disassemble(code, inst) -> ret
 
@@ -129,10 +131,10 @@ Example
 
     local asm_module = require('misc/asm')
 
+    inst = asm_module.new_instruction()
     asm = asm_module.new_disassembler('x86', '32')
     asm:setsyntax('att')
 
-    local inst = asm:new_inst()
     local code = haka.vbuffer_from("\x41\x42\x48\x8b\x05\xb8\x13\x60\x60")
     local start = code:pos('begin')
 

@@ -9,6 +9,18 @@
 
 %{
 #include "asm.h"
+
+struct asm_instruction *new_instruction(unsigned long addr) {
+    struct asm_instruction *instruction = malloc(sizeof(struct asm_instruction));
+    if (!instruction) {
+        error("memory error");
+        return NULL;
+    }
+    memset(instruction, 0, sizeof(struct asm_instruction));
+    instruction->inst.detail = &instruction->detail;
+    instruction->addr = addr;
+    return instruction;
+}
 %}
 
 %nodefaultctor;
@@ -17,8 +29,9 @@
 struct asm_instruction {
     %extend {
         ~asm_instruction() {
-            if ($self)
+            if ($self) {
                 instruction_release($self);
+            }
         }
 
         void bytes(char **TEMP_OUTPUT, size_t *TEMP_SIZE)
@@ -54,18 +67,6 @@ struct asm_handle {
 
         void _setsyntax(int syntax) {
             asm_set_disassembly_flavor($self, syntax);
-        }
-
-        struct asm_instruction *new_inst(unsigned long addr = 0) {
-            struct asm_instruction *instruction = malloc(sizeof(struct asm_instruction));
-            if (!instruction) {
-                error("memory error");
-                return NULL;
-            }
-            instruction->inst = NULL;
-            instruction->inst = cs_malloc(*(csh *)&$self->handle);
-            instruction->addr = addr;
-            return instruction;
         }
 
         bool _disas(struct vbuffer_iterator *pos, struct asm_instruction
@@ -116,6 +117,9 @@ char *asm_instruction_op_str_get(struct asm_instruction *inst)
 
 %newobject asm_initialize;
 struct asm_handle *asm_initialize(int arch, int mode);
+
+%newobject new_instruction;
+struct asm_instruction *new_instruction(unsigned long addr = 0);
 
 %luacode {
     local asm_arch = {
@@ -171,6 +175,10 @@ struct asm_handle *asm_initialize(int arch, int mode);
 
     swig.getclassmetatable('asm_handle')['.fn'].disassemble = function (self, pos,
 inst)
+        if not inst then
+            error("invalid instruction parameter")
+            return false
+        end
         local meta = getmetatable(pos)
         if meta == iter then
             return self:_disas(pos, inst)

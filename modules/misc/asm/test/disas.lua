@@ -8,7 +8,7 @@ function TestAsmModule:setUp()
 	self.module = require("misc/asm")
 
 	self.asm = self.module.new_disassembler('x86', '32')
-	self.inst = self.asm:new_inst()
+	self.inst = self.module.new_instruction()
 end
 
 function TestAsmModule:gen_stream(code, f)
