@@ -149,7 +149,7 @@ struct asm_handle *asm_initialize(int arch, int mode);
     local asm_initialize = this.asm_initialize
     this.asm_initialize = nil
 
-    function this.init(str_arch, str_mode)
+    function this.new_disassembler(str_arch, str_mode)
         local cs_arch arch = asm_arch[str_arch]
         if not arch then
             error("unsupported hardware architecture")

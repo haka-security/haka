@@ -7,7 +7,7 @@ TestAsmModule = {}
 function TestAsmModule:setUp()
 	self.module = require("misc/asm")
 
-	self.asm = self.module.init('x86', '32')
+	self.asm = self.module.new_disassembler('x86', '32')
 	self.inst = self.asm:new_inst()
 end
 
@@ -105,7 +105,7 @@ function TestAsmModule:test_can_disas_on_blocking_iterator ()
 end
 
 function TestAsmModule:test_disas_should_skip_bad_inst_on_blocking_iterator ()
-	self.asm = self.module.init('arm', 'arm')
+	self.asm = self.module.new_disassembler('arm', 'arm')
 	local code = { "\xca\xfe\xba", "\xbe" , "\x03\x00\xa0\xe1" }
 	self:gen_stream(code, function (iter)
 		-- When
@@ -123,7 +123,7 @@ end
 
 function TestAsmModule:test_disas_should_succeed_on_arm_arch ()
 	-- When
-	self.asm = self.module.init('arm', 'arm')
+	self.asm = self.module.new_disassembler('arm', 'arm')
 	local code = haka.vbuffer_from('\x03\x00\xa0\xe1')
 	local start = code:pos('begin')
 	local ret = self.asm:disassemble(start, self.inst)

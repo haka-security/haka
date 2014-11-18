@@ -23,7 +23,7 @@ API
 Disassembler syntax
 -------------------
 
-.. haka:function:: init(architecture, mode) -> asm_handle
+.. haka:function:: new_disassembler(architecture, mode) -> asm_handle
 
     :param architecture: Hardware architecture.
     :ptype architecture: string
@@ -136,7 +136,7 @@ Example
 
     local asm_module = require('misc/asm')
 
-    asm = asm_module.init('x86', '32')
+    asm = asm_module.new_disassembler('x86', '32')
     asm:setsyntax('att')
 
     local inst = asm:new_inst()
