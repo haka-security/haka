@@ -59,7 +59,7 @@ Supported mode
         :param syntax: Syntax flavor.
         :ptype syntax: string
 
-        Set the assembly syntax (``att`` or ``intel``).
+        Set the assembly syntax ('att' or 'intel').
 
     .. haka:function:: AsmHandle:setmode(mode)
 

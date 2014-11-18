@@ -16,7 +16,7 @@ enum instruction_status {
 	NEEDMOREDATA,
 };
 
-static size_t asm_callback(const char *buffer, size_t size, size_t offset, uint16_t current, void *user_data)
+static size_t update_pending_bytes(const char *buffer, size_t size, size_t offset, uint16_t current, void *user_data)
 {
 	struct asm_instruction_pending *pending = (struct asm_instruction_pending *)user_data;
 	pending->skip = true;
@@ -52,7 +52,7 @@ struct asm_handle *asm_initialize(cs_arch arch, cs_mode mode)
 	asm_handle->pending.status = true;
 	asm_handle->pending.advance = 0;
 
-	asm_handle->skipdata.callback = (cs_skipdata_cb_t)asm_callback;
+	asm_handle->skipdata.callback = (cs_skipdata_cb_t)update_pending_bytes;
 	asm_handle->skipdata.user_data = &asm_handle->pending;
 
 	if (cs_open(arch, mode, &asm_handle->handle) != CS_ERR_OK) {
@@ -134,7 +134,7 @@ static int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t
 
 	/* check disas result */
 	if (!ret && pending->status) {
-		asm_callback((const char *)*code, *size, 0, *size , pending);
+		update_pending_bytes((const char *)*code, *size, 0, *size , pending);
 	}
 
 	if (!pending->status) {
@@ -230,37 +230,37 @@ void instruction_release(struct asm_instruction *inst)
 	free(inst);
 }
 
-unsigned int instruction_get_id(struct asm_instruction *inst)
+uint32 instruction_get_id(struct asm_instruction *inst)
 {
 	cs_insn *instruction = inst->inst;
 	return instruction->id;
 }
 
-unsigned long instruction_get_address(struct asm_instruction *inst)
+uintptr_t instruction_get_address(struct asm_instruction *inst)
 {
 	cs_insn *instruction = inst->inst;
 	return instruction->address;
 }
 
-unsigned short instruction_get_size(struct asm_instruction *inst)
+uint16 instruction_get_size(struct asm_instruction *inst)
 {
 	cs_insn *instruction = inst->inst;
 	return instruction->size;
 }
 
-char *instruction_get_bytes(struct asm_instruction *inst)
+const uint8 *instruction_get_bytes(struct asm_instruction *inst)
 {
 	cs_insn *instruction = inst->inst;
-	return (char *)instruction->bytes;
+	return instruction->bytes;
 }
 
-char *instruction_get_mnemonic(struct asm_instruction *inst)
+const char *instruction_get_mnemonic(struct asm_instruction *inst)
 {
 	cs_insn *instruction = inst->inst;
 	return instruction->mnemonic;
 }
 
-char *instruction_get_operands(struct asm_instruction *inst)
+const char *instruction_get_operands(struct asm_instruction *inst)
 {
 	cs_insn *instruction = inst->inst;
 	return instruction->op_str;

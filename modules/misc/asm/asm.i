@@ -195,6 +195,8 @@ inst)
                     return true
                 end
             until not pos:wait() or iter:available() == 0
+        else
+            error("invalid parameters")
         end
         return false
     end

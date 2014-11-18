@@ -12,6 +12,11 @@
 #define INSTRUCTION_BYTES    16
 #define INSTRUCTION_OPERANDS 160
 #define INSTRUCTION_MNEMONIC 32
+
+/* The maximum size of an instruction depends
+ * on the architecture. Instruction size does
+ * not exceed 15 (on x86).
+ */
 #define INSTRUCTION_MAX_LEN  15
 
 struct asm_instruction_pending {
@@ -35,21 +40,21 @@ struct asm_instruction {
 	cs_insn *inst;
 };
 
-void                instruction_release(struct asm_instruction *inst);
-unsigned int        instruction_get_id(struct asm_instruction *inst);
-unsigned long       instruction_get_address(struct asm_instruction *inst);
-unsigned short      instruction_get_size(struct asm_instruction *inst);
-char               *instruction_get_bytes(struct asm_instruction *inst);
-char               *instruction_get_mnemonic(struct asm_instruction *inst);
-char               *instruction_get_operands(struct asm_instruction *inst);
+void               instruction_release(struct asm_instruction *inst);
+uint32             instruction_get_id(struct asm_instruction *inst);
+uintptr_t          instruction_get_address(struct asm_instruction *inst);
+uint16             instruction_get_size(struct asm_instruction *inst);
+const uint8       *instruction_get_bytes(struct asm_instruction *inst);
+const char        *instruction_get_mnemonic(struct asm_instruction *inst);
+const char        *instruction_get_operands(struct asm_instruction *inst);
 
-struct asm_handle  *asm_initialize(cs_arch arch, cs_mode mode);
-void                asm_destroy(struct asm_handle *asm_handle);
-void                asm_set_disassembly_flavor(struct asm_handle *asm_handle, int syntax);
-int                 asm_get_arch(struct asm_handle *asm_handle);
-void                asm_set_mode(struct asm_handle *asm_handle, int mode);
-int                 asm_get_mode(struct asm_handle *asm_handle);
-bool                asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos,
-						struct asm_instruction *_inst);
+struct asm_handle *asm_initialize(cs_arch arch, cs_mode mode);
+void               asm_destroy(struct asm_handle *asm_handle);
+void               asm_set_disassembly_flavor(struct asm_handle *asm_handle, int syntax);
+int                asm_get_arch(struct asm_handle *asm_handle);
+void               asm_set_mode(struct asm_handle *asm_handle, int mode);
+int                asm_get_mode(struct asm_handle *asm_handle);
+bool               asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos,
+                       struct asm_instruction *_inst);
 
 #endif
