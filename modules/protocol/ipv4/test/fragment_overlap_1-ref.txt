@@ -2,3 +2,4 @@ info test: received ip packet data=16
 info test: received ip packet data=8
 info test: received ip packet data=8
 info test: received icmp packet data=20
+debug lua: closing state

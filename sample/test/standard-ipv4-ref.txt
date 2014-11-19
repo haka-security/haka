@@ -12,3 +12,4 @@ alert: id = = <>
 	sources = {
 		address: 192.168.20.1
 	}
+debug lua: closing state

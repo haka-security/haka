@@ -25,8 +25,8 @@ traffic monitoring. It is available in ``/usr/share/haka/hakabana``
 
     .. code-block:: console
 
-        cd /usr/local/share/haka/hakabana
-        haka -c haka.conf
+        cd /usr/share/haka/hakabana
+        sudo haka -c haka.conf
 
     * visit the url: http://localhost/kibana/ and load hakabana dashboard
       from ``/usr/share/haka/hakabana/dashboard/``

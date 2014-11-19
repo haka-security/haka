@@ -22,3 +22,4 @@ alert: id = = <>
 	}
 alert: update id = = <>
 	completion = failed
+debug lua: closing state

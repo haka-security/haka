@@ -4,3 +4,4 @@ alert: id = = <>
 alert: id = = <>
 	severity = low
 	description = Filtering IP 192.168.10.30
+debug lua: closing state

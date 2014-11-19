@@ -193,7 +193,7 @@ bool engine_thread_remote_launch(struct engine_thread *thread, void (*callback)(
 	semaphore_wait(&new.sync);
 
 	if (new.error) {
-		error(new.error);
+		error("%s", new.error);
 
 		if (new.own_error) {
 			free((void *)new.error);

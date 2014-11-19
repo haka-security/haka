@@ -28,4 +28,9 @@ const char *haka_path(void);
  */
 void haka_exit(void);
 
+/**
+ * Get current process memory information.
+ */
+bool get_memory_size(size_t *vmsize, size_t *rss);
+
 #endif /* _HAKA_SYSTEM_H */

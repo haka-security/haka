@@ -4,24 +4,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 set -e
 
+CURSOR_SAVE="\033[s"
+CURSOR_RESTORE="\033[u"
 PAD=".................................................."
-AWK_RESULT='$0 ~ /^info  benchmark: processing/ { print $4" "$7" "$10; }'
+AWK_RESULT='$0 ~ /^info  benchmark: processing/ { print $4" "$7" "$10" "$13" "$16; }'
 AWK_PROGRESS='$0 ~ /^info  benchmark: progress/ {
-	printf " %5s %%\033[8D", $4
+	printf "'$CURSOR_RESTORE'%6s %%", $4
 	fflush()
 }
 $0 ~ /^info  benchmark: processing/ {
-	printf "Passed %13s Mib/s\033[K\n", $10
+	printf "'$CURSOR_RESTORE'Passed %13s Mib/s, %18s packets/s\033[K\n", $13, $16
 }'
 
 _usage() {
-	echo "Usage: $1 [-vjkh] <dir|pcap file>"
+	echo "Usage: $1 [-djkrhvpl] <dir|pcap file>"
 	echo "Options:"
 	echo "\t-j <thread count>:  Run haka on <thread count> threads"
-	echo "\t-o <output file>:   Output benchmark results to <output file>"
-	echo "\t-v:                 Display debug output"
+	echo "\t-o <output dir>:    Output benchmark results to <output dir>"
+	echo "\t-d:                 Display debug output"
 	echo "\t-k:                 Keep configuration files"
+	echo "\t-r <repeat>:        Repeat pcap <repeat> times. Default use last part of pcap file name"
 	echo "\t-h:                 Display this help"
+	echo "\t-v:                 Profile with valgrind/callgrind"
+	echo "\t-p:                 Profile with perf"
+	echo "\t-l:                 Profile with LuaJit perf"
 }
 
 _error() {
@@ -39,14 +45,14 @@ _debug() {
 }
 
 _bench_dir() {
-	for TARGET in $1/*.pcap; do
-		_do_bench $TARGET
+	for target in $1/*.pcap; do
+		_bench_file $target
 	done
 }
 
 _gen_conf() {
-	CONF=`mktemp $1`
-	cat > $CONF <<EOF
+	local conf=`mktemp $1`
+	cat > $conf <<EOF
 [general]
 configuration = "$2"
 
@@ -63,56 +69,88 @@ module = "log/syslog"
 [alert]
 module = "alert/syslog"
 EOF
-	echo "$CONF"
+	echo "$conf"
+}
+
+_bench_file() {
+	local pcap="$1"
+	local test_path="${pcap%-*}"
+	local name="${test_path##*/}"
+	local rule="$test_path.lua"
+	if [ -z "$REPEAT" ]; then
+		local repeat="${pcap##*-}"
+		local repeat="${repeat%.*}"
+	else
+		local repeat="$REPEAT"
+	fi
+
+	local conf=`_gen_conf "$name.XXXXX.conf" $rule $pcap $THREAD $repeat`
+
+	if $BENCHMARK; then
+		_do_bench "$name" "$conf"
+	fi
+	if $VALGRIND; then
+		_do_bench "$name-valgrind" "$conf" "`printf "$VALGRIND_WRAPPER" "$RESULT_DIR/valgrind-$name.out"`"
+	fi
+	if $PERF; then
+		_do_bench "$name-perf" "$conf" "`printf "$PERF_WRAPPER" "$RESULT_DIR/perf-$name.out"`"
+	fi
+	if $LUAJITPERF; then
+		_do_bench "$name-luajit-perf" "$conf" $LUAJITPERF_WRAPPER
+	fi
+
+	if $RM_CONFIG; then
+		rm $conf
+	fi
 }
 
 _do_bench() {
-	PCAP="$1"
-	TEST_PATH="${PCAP%-*}"
-	NAME="${TEST_PATH##*/}"
-	RULE="$TEST_PATH.lua"
-	OUT="$NAME.txt"
-	REPEAT="${PCAP##*-}"
-	REPEAT="${REPEAT%.*}"
+	local name="$1"
+	local conf="$2"
+	local wrapper="$3"
+	local out="$name.txt"
+	local res=""
 
-	CONF=`_gen_conf "$NAME.XXXXX.conf" $RULE $PCAP $THREAD $REPEAT`
-
-	_info "%s %0.*s" "$NAME" `expr ${#PAD} - ${#NAME}` "$PAD"
+	_info "%s %0.*s $CURSOR_SAVE  0.00 %%" "$name" `expr ${#PAD} - ${#name}` "$PAD"
 	_debug "\n"
-	_debug "haka -c $CONF --pid-file ./haka.pid --ctl-file ./haka.sock --no-daemon\n"
-	_debug "output at $OUT\n"
+	_debug "$wrapper $HAKA -c $conf --pid-file ./haka.pid --ctl-file ./haka.sock --no-daemon\n"
+	_debug "output at $out\n"
 
 	set +e
 	stdbuf -oL \
-	haka -c $CONF \
+	$wrapper $HAKA -c $conf \
 		--pid-file /tmp/haka.pid --ctl-file /tmp/haka.sock \
 		--no-daemon \
-		2>&1 | tee $OUT | gawk "$AWK_PROGRESS"
-	RET=$?
+		2>&1 | tee $out | gawk "$AWK_PROGRESS"
+	local ret=$?
 	set -e
 
-	if $RM_CONFIG; then
-		rm $CONF
-	fi
-
-	if [ $RET -ne 0 ]; then
+	if [ $ret -ne 0 ]; then
 		_info "\033[KFailed\n"
-		RESULT="$RESULT$NAME Failed\n"
+		RESULT="$RESULT$name Failed\n"
 		return
 	fi
 
-	RES=`gawk "$AWK_RESULT" $OUT`
-	RESULT="$RESULT$NAME $THREAD $RES\n"
+	res=`gawk "$AWK_RESULT" $out`
+	RESULT="$RESULT$name $THREAD $res\n"
 }
 
 THREAD=`nproc`
 DEBUG=false
 RM_CONFIG=true
-RESULT_FILE="hakabench-result-`date +%FT%T`.txt"
+BENCHMARK=true
+VALGRIND=false
+PERF=false
+LUAJITPERF=false
+DATE=`date +%FT%T`
+RESULT_DIR="hakabench-result-$DATE"
+VALGRIND_WRAPPER="valgrind --tool=callgrind --collect-bus=yes --dump-instr=yes --collect-jumps=yes --cache-sim=yes --branch-sim=yes --callgrind-out-file=%s"
+PERF_WRAPPER="perf record -e cycles,instructions,cache-misses,branch-misses,cs,migrations,faults -g -v -F 100 --output=%s"
+[ -z "$HAKA" ] && HAKA="haka"
 
-while getopts "vkhj:o:" OPT; do
+while getopts "dkr:hj:o:vpl" OPT; do
 	case $OPT in
-	v)
+	d)
 		DEBUG=true
 	;;
 	j)
@@ -122,11 +160,26 @@ while getopts "vkhj:o:" OPT; do
 		RM_CONFIG=false
 	;;
 	o)
-		RESULT_FILE="$OPTARG"
+		RESULT_DIR="$OPTARG"
+	;;
+	r)
+		REPEAT="$OPTARG"
 	;;
 	h|\?)
 		_usage $0
 		exit 0
+	;;
+	v)
+		BENCHMARK=false
+		VALGRIND=true
+	;;
+	p)
+		BENCHMARK=false
+		PERF=true
+	;;
+	l)
+		BENCHMARK=false
+		LUAJITPERF=true
 	;;
 	esac
 done
@@ -139,17 +192,19 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
+mkdir -p $RESULT_DIR
 for TARGET in "$@"; do
 	if [ -d $TARGET ]; then
 		_bench_dir $TARGET
 	elif [ -f $TARGET ]; then
-		_do_bench $TARGET
+		_bench_file $TARGET
 	else
 		_error "invalid target $TARGET\n"
 	fi
 done
 
 # Save result
+RESULT_FILE="$RESULT_DIR/summary.txt"
 echo -n $RESULT > $RESULT_FILE
 
 _info "\nResults (also in $RESULT_FILE):\n"

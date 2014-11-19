@@ -12,3 +12,4 @@ info mymodule: myfunc
 info mymodule: myfunc
 info mymodule: myfunc
 info mymodule: myfunc
+debug lua: closing state

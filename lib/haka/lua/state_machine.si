@@ -46,6 +46,12 @@ struct state *lua_transition_callback(struct state_machine_instance *state_machi
 
 	lua_ref_push(L, &data->function);
 	lua_ref_push(L, &context->states);
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 3);
+		LUA_STACK_CHECK(L, 0);
+		return NULL;
+	}
+
 	if (lua_pcall(L, 1, 1, h)) {
 		/* If the value on the stack is nil, we are in case of an abort,
 		 * otherwise it is an error. */
@@ -213,7 +219,7 @@ struct state_machine {
 			state_machine_compile($self);
 		}
 
-		struct state_machine_instance *instanciate(struct lua_ref states)
+		struct state_machine_instance *instanciate(struct lua_ref WEAK)
 		{
 			struct lua_state_machine_context *context = malloc(sizeof(struct lua_state_machine_context));
 			if (!context) {
@@ -222,7 +228,7 @@ struct state_machine {
 			}
 
 			context->super.destroy = lua_state_machine_context_destroy;
-			context->states = states;
+			context->states = WEAK;
 
 			return state_machine_instance($self, &context->super);
 		}

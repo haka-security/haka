@@ -5,4 +5,5 @@ debug http: selecting http dissector on flow
 --> splitting uri
 /
 Table are the same
-debug cnx: closing connection 10.2.96.127:57794 -> 10.2.104.129:80
+debug lua: closing state
+debug cnx: <cleanup> connection

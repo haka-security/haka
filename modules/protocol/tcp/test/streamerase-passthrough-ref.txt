@@ -1,4 +1,92 @@
 debug cnx: opening connection 10.2.96.127:45034 -> 10.2.104.129:4444
 error tcp_connection: read only buffer
-debug cnx: dropping connection 10.2.96.127:45034 -> 10.2.104.129:4444
 debug cnx: closing connection 10.2.96.127:45034 -> 10.2.104.129:4444
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.104.129
+		service: tcp/4444
+	}
+	targets = {
+		address: 10.2.96.127
+		service: tcp/45034
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.96.127
+		service: tcp/45034
+	}
+	targets = {
+		address: 10.2.104.129
+		service: tcp/4444
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.104.129
+		service: tcp/4444
+	}
+	targets = {
+		address: 10.2.96.127
+		service: tcp/45034
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.96.127
+		service: tcp/45034
+	}
+	targets = {
+		address: 10.2.104.129
+		service: tcp/4444
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.104.129
+		service: tcp/4444
+	}
+	targets = {
+		address: 10.2.96.127
+		service: tcp/45034
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.96.127
+		service: tcp/45034
+	}
+	targets = {
+		address: 10.2.104.129
+		service: tcp/4444
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.104.129
+		service: tcp/4444
+	}
+	targets = {
+		address: 10.2.96.127
+		service: tcp/45034
+	}
+alert: id = = <>
+	severity = low
+	description = no connection found for tcp packet
+	sources = {
+		address: 10.2.96.127
+		service: tcp/45034
+	}
+	targets = {
+		address: 10.2.104.129
+		service: tcp/4444
+	}
+debug lua: closing state

@@ -56,12 +56,26 @@ struct cnx_table *cnx_table_new(void (*cnx_release)(struct cnx *, bool))
 	return table;
 }
 
+static void cnx_log(struct cnx_table_elem *elem, const char *msg)
+{
+	char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
+
+	ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
+	ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
+	messagef(HAKA_LOG_DEBUG, "cnx", "%s connection %s:%u -> %s:%u",
+			msg, srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
+
+}
+
 void cnx_table_release(struct cnx_table *table)
 {
 	struct cnx_table_elem *elem, *tmp;
 
 	HASH_ITER(hh, table->head, elem, tmp) {
 		HASH_DEL(table->head, elem);
+
+		cnx_log(elem, "release");
+
 		cnx_release(table, elem, true);
 	}
 
@@ -176,14 +190,7 @@ struct cnx *cnx_new(struct cnx_table *table, struct cnx_key *key)
 
 	cnx_insert(table, elem);
 
-	{
-		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
-
-		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
-		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
-		messagef(HAKA_LOG_DEBUG, "cnx", "opening connection %s:%u -> %s:%u",
-				srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
-	}
+	cnx_log(elem, "opening");
 
 	return &elem->cnx;
 }
@@ -252,15 +259,7 @@ void cnx_close(struct cnx* cnx)
 	struct cnx_table_elem *elem = CNX_ELEM(cnx);
 	assert(cnx);
 
-	{
-		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
-
-		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
-		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
-
-		messagef(HAKA_LOG_DEBUG, "cnx", "closing connection %s:%u -> %s:%u",
-				srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
-	}
+	cnx_log(elem, "closing");
 
 	cnx_remove(elem->table, elem);
 	cnx_release(elem->table, elem, true);
@@ -271,15 +270,7 @@ void cnx_drop(struct cnx *cnx)
 	struct cnx_table_elem *elem = CNX_ELEM(cnx);
 	assert(cnx);
 
-	{
-		char srcip[IPV4_ADDR_STRING_MAXLEN+1], dstip[IPV4_ADDR_STRING_MAXLEN+1];
-
-		ipv4_addr_to_string(elem->cnx.key.srcip, srcip, IPV4_ADDR_STRING_MAXLEN+1);
-		ipv4_addr_to_string(elem->cnx.key.dstip, dstip, IPV4_ADDR_STRING_MAXLEN+1);
-
-		messagef(HAKA_LOG_DEBUG, "cnx", "dropping connection %s:%u -> %s:%u",
-				srcip, elem->cnx.key.srcport, dstip, elem->cnx.key.dstport);
-	}
+	cnx_log(elem, "dropping");
 
 	cnx_release(elem->table, elem, false);
 	elem->cnx.dropped = true;

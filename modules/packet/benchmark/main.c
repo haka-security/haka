@@ -45,6 +45,7 @@ struct packet_module_state {
 	struct pcap_packet  *received_tail;
 	int                  repeated;
 	size_t               size;
+	long long            packet_count;
 	bool                 started;
 	struct time          start;
 	struct time          end;
@@ -58,20 +59,23 @@ static mutex_t       stats_lock = MUTEX_INIT;
 static struct time   start = INVALID_TIME;
 static struct time   end = INVALID_TIME;
 static size_t        size;
+static long long     packet_count;
 
 static void cleanup()
 {
 	struct time difftime;
 	double duration;
 	double bandwidth;
+	double packets_per_s;
 
 	time_diff(&difftime, &end, &start);
 	duration = time_sec(&difftime);
 	bandwidth = size * 8 / duration / MEBI;
+	packets_per_s = packet_count / duration;
 
 	messagef(HAKA_LOG_INFO, MODULE,
-			"processing %zd bytes took %lld.%.9u seconds being %02f Mib/s",
-			size, (int64)difftime.secs, difftime.nsecs, bandwidth);
+			"processing %zd bytes in %lld packets took %lld.%.9u seconds being %02f Mib/s and %02f packets/s",
+			size, packet_count, (int64)difftime.secs, difftime.nsecs, bandwidth, packets_per_s);
 
 	free(input_file);
 }
@@ -111,10 +115,13 @@ static void cleanup_state(struct packet_module_state *state)
 	if (!time_isvalid(&start) || time_cmp(&state->start, &start) < 0) {
 		start = state->start;
 	}
+
+	time_gettimestamp(&state->end);
 	if (!time_isvalid(&end) || time_cmp(&state->end, &end) > 0) {
 		end = state->end;
 	}
 	size += state->size * state->repeated;
+	packet_count += state->packet_count * state->repeated;
 	mutex_unlock(&stats_lock);
 
 	free(state);
@@ -184,6 +191,7 @@ static bool load_packet(struct packet_module_state *state)
 		}
 
 		state->size += header->caplen - data_offset;
+		state->packet_count++;
 
 		/* Finally insert packet in list */
 		list_init(packet);
@@ -272,6 +280,7 @@ static struct packet_module_state *init_state(int thread_id)
 	state->packet_id = 0;
 	state->repeated = 0;
 	state->size = 0;
+	state->packet_count = 0;
 	state->started = false;
 
 	bzero(state, sizeof(struct packet_module_state));
@@ -326,8 +335,6 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 static void packet_verdict(struct packet *orig_pkt, filter_result result)
 {
-	struct pcap_packet *pkt = (struct pcap_packet*)orig_pkt;
-	time_gettimestamp(&pkt->state->end);
 }
 
 static const char *packet_get_dissector(struct packet *orig_pkt)

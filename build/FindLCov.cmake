@@ -9,8 +9,4 @@ find_program(LCOV_EXECUTABLE NAMES lcov
 	DOC "Lcov coverage tool"
 )
 
-if(LCOV_EXECUTABLE)
-	set(LCOV_FOUND)
-endif(LCOV_EXECUTABLE)
-
 find_package_handle_standard_args(LCov REQUIRED_VARS LCOV_EXECUTABLE)

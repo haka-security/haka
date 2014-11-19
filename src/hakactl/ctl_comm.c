@@ -104,7 +104,7 @@ int ctl_recv_status(int fd)
 			return -1;
 		}
 
-		error(err);
+		error("%s", err);
 		free(err);
 	}
 

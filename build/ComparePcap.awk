@@ -28,6 +28,10 @@ $0 ~ /^[ ]+\[Response time: .*\]$/ {
 	next;
 }
 
+$0 ~ /.*\[iRTT: / {
+	next;
+}
+
 {
 	print;
 }

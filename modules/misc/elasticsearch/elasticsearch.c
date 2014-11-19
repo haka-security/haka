@@ -173,8 +173,15 @@ static size_t write_callback_string(char *ptr, size_t size, size_t nmemb, void *
 static bool start_request_thread(struct elasticsearch_connector *connector)
 {
 	if (!connector->started) {
-		if (!thread_create(&connector->request_thread, &elasticsearch_request_thread, connector)) {
-			return false;
+		mutex_lock(&connector->request_mutex);
+		if (!connector->started) {
+			connector->started = true;
+			mutex_unlock(&connector->request_mutex);
+			if (!thread_create(&connector->request_thread, &elasticsearch_request_thread, connector)) {
+				return false;
+			}
+		} else {
+			mutex_unlock(&connector->request_mutex);
 		}
 	}
 	return true;
@@ -385,9 +392,7 @@ static void *elasticsearch_request_thread(void *_connector)
 	char url[BUFFER_SIZE];
 	int lasterror = 0;
 
-	connector->started = true;
-
-	while (!connector->exit) {
+	while (true) {
 		struct list2 copy;
 		list2_iter iter, end;
 		int code;
@@ -401,6 +406,7 @@ static void *elasticsearch_request_thread(void *_connector)
 		mutex_lock(&connector->request_mutex);
 		if (list2_empty(&connector->request)) {
 			mutex_unlock(&connector->request_mutex);
+			if (connector->exit) break;
 			continue;
 		}
 

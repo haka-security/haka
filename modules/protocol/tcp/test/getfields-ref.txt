@@ -20,3 +20,4 @@ TCP Checksum: 0x54e8
     [Bad: False]
 TCP Urgent Pointer: 0x0000
 
+debug lua: closing state

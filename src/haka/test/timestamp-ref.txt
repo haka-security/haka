@@ -118,3 +118,4 @@ info timestamp: packet timestamp is Mon Jan 20 17:45:06 2014
 info timestamp: packet timestamp is 1390236306s 750070000ns
 info timestamp: packet timestamp is 1390236306.7501 seconds
 info timestamp: packet timestamp is Mon Jan 20 17:45:06 2014
+debug lua: closing state

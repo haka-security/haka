@@ -30,4 +30,5 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug cnx: closing connection 127.0.0.1:42075 -> 127.0.0.1:80
+debug lua: closing state
+debug cnx: <cleanup> connection

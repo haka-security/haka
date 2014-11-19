@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 
@@ -88,4 +89,33 @@ const char *haka_path()
 void haka_exit()
 {
 	kill(getpid(), SIGTERM);
+}
+
+bool get_memory_size(size_t *vmsize, size_t *rss)
+{
+	FILE *fp;
+	static size_t page_size = 0;
+
+	if (!page_size) {
+		page_size = (size_t)sysconf( _SC_PAGESIZE);
+	}
+
+	if ((fp = fopen("/proc/self/statm", "r")) == NULL) {
+		error("cannot get memory information");
+		return false;
+	}
+
+	if (fscanf(fp, "%zd%zd", vmsize, rss) != 2) {
+		error("cannot get memory information");
+		fclose(fp);
+		*vmsize = 0;
+		*rss = 0;
+		return false;
+	}
+
+	*vmsize = (*vmsize * page_size) / 1024;
+	*rss = (*rss * page_size) / 1024;
+
+	fclose(fp);
+	return true;
 }

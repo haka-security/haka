@@ -58,6 +58,7 @@ Fedora
     $ sudo yum install gcc gcc-c++ make cmake python-sphinx wireshark check doxygen
     $ sudo yum install check-devel rsync libpcap-devel gawk libedit-devel pcre-devel
     $ sudo yum install git cppcheck libnetfilter_queue-devel rpm-build valgrind valgrind-devel
+    $ sudo yum install autoconf automake flex bison
 
 The *swig* package in Fedora is broken and will not be usable to compile Haka.
 You will need to get a swig build from upstream.
@@ -66,7 +67,7 @@ You will need to get a swig build from upstream.
 
     $ git clone https://github.com/swig/swig.git
     $ cd swig
-    $ git co rel-2.0.11
+    $ git checkout rel-2.0.11
     $ ./autogen.sh
     $ ./configure
     $ make

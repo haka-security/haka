@@ -10,6 +10,10 @@ else()
 	message(FATAL_ERROR "Invalid Lua version")
 endif()
 
+
+set(LUAC "yes" CACHE BOOL "precompile lua files during build")
+
+
 include_directories(${LUA_INCLUDE_DIR})
 
 macro(LUA_COMPILE)
@@ -29,25 +33,29 @@ macro(LUA_COMPILE)
 
 	set(LUA_COMPILE_COMPILED_FILES)
 
-	foreach(it ${LUA_COMPILE_FILES})
-		get_filename_component(lua_source_file_path "${it}" ABSOLUTE)
-		get_filename_component(lua_source_file_name "${it}" NAME_WE)
-		set(lua_source_outfile_path "${lua_source_file_name}.bc")
+	if(LUAC)
+		foreach(it ${LUA_COMPILE_FILES})
+			get_filename_component(lua_source_file_path "${it}" ABSOLUTE)
+			get_filename_component(lua_source_file_name "${it}" NAME_WE)
+			set(lua_source_outfile_path "${lua_source_file_name}.bc")
 
-		add_custom_command(
-			OUTPUT "${lua_source_outfile_path}"
-			COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_source_outfile_path} ${lua_source_file_path}
-			MAIN_DEPENDENCY "${lua_source_file_path}"
-			COMMENT "Building Lua file ${it}"
-			DEPENDS ${LUA_DEPENDENCY}
-			VERBATIM)
+			add_custom_command(
+				OUTPUT "${lua_source_outfile_path}"
+				COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_source_outfile_path} ${lua_source_file_path}
+				MAIN_DEPENDENCY "${lua_source_file_path}"
+				COMMENT "Building Lua file ${it}"
+				DEPENDS ${LUA_DEPENDENCY}
+				VERBATIM)
 
-		SET_SOURCE_FILES_PROPERTIES("${lua_source_outfile_path}" PROPERTIES GENERATED 1)
-		LIST(APPEND LUA_COMPILE_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_source_outfile_path}")
-	endforeach(it)
+			SET_SOURCE_FILES_PROPERTIES("${lua_source_outfile_path}" PROPERTIES GENERATED 1)
+			LIST(APPEND LUA_COMPILE_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_source_outfile_path}")
+		endforeach(it)
 
-	get_directory_property(lua_extra_clean_files ADDITIONAL_MAKE_CLEAN_FILES)
-	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${lua_extra_clean_files};${LUA_COMPILE_COMPILED_FILES}")
+		get_directory_property(lua_extra_clean_files ADDITIONAL_MAKE_CLEAN_FILES)
+		set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${lua_extra_clean_files};${LUA_COMPILE_COMPILED_FILES}")
+	else()
+		set(LUA_COMPILE_COMPILED_FILES ${LUA_COMPILE_FILES})
+	endif()
 
 	if(TARGET ${LUA_COMPILE_NAME})
 		get_target_property(ID ${LUA_COMPILE_NAME} LUA_ID)
