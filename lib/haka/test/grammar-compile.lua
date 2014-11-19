@@ -52,6 +52,30 @@ function TestGrammarCompilation:test_new_grammar_create_so_module()
 	assert(io.open("test_grammar.so", "r"))
 end
 
+function TestGrammarCompilation:test_new_grammar_create_multiple_parsers()
+	-- Given
+	os.remove("test_grammar.so")
+	local grammar = function ()
+		foo = record{
+			field("num", number(8)),
+		}
+
+		bar = record{
+			field("num", number(8)),
+		}
+
+		export(foo)
+		export(bar)
+	end
+
+	-- When
+	local grammar = haka.grammar.new("test", grammar, true)
+
+	-- Then
+	assert(grammar.foo)
+	assert(grammar.bar)
+end
+
 function TestGrammarCompilation:test_apply_on_record()
 	-- Given
 	local buf = haka.vbuffer_from("\x42")
