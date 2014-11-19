@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <linux/if_ether.h>
 #include <pcap.h>
+#include <pcap/vlan.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -35,6 +36,33 @@ int get_link_type_offset(int link_type)
 	return size;
 }
 
+static int get_eth_protocol(int proto, struct vbuffer *packet_buffer, size_t *data_offset)
+{
+	size_t len, size;
+	struct vbuffer_sub sub;
+
+	switch (proto)
+	{
+	case ETH_P_8021Q:
+		{
+			struct vlan_tag *vt;
+			size = sizeof(struct vlan_tag);
+			vbuffer_sub_create(&sub, packet_buffer, *data_offset, size);
+			vt = (struct vlan_tag *)vbuffer_sub_flatten(&sub, &len);
+
+			if (vt == NULL || len < size) {
+				return -1;
+			}
+
+			*data_offset += size;
+
+			return get_eth_protocol(ntohs(vt->vlan_tci), packet_buffer, data_offset);
+		}
+	default:
+		return proto;
+	}
+}
+
 int get_protocol(int link_type, struct vbuffer *packet_buffer, size_t *data_offset)
 {
 	size_t len, size;
@@ -48,7 +76,7 @@ int get_protocol(int link_type, struct vbuffer *packet_buffer, size_t *data_offs
 		vbuffer_sub_create(&sub, packet_buffer, 0, size);
 		data = vbuffer_sub_flatten(&sub, &len);
 
-		if (len < *data_offset) {
+		if (data == NULL || len < *data_offset) {
 			return -1;
 		}
 
@@ -60,16 +88,24 @@ int get_protocol(int link_type, struct vbuffer *packet_buffer, size_t *data_offs
 	case DLT_LINUX_SLL:
 		{
 			struct linux_sll_header *eh = (struct linux_sll_header *)data;
-			if (eh) return ntohs(eh->protocol);
-			else return 0;
+			if (eh) {
+				return get_eth_protocol(ntohs(eh->protocol), packet_buffer, data_offset);
+			}
+			else {
+				return 0;
+			}
 		}
 		break;
 
 	case DLT_EN10MB:
 		{
 			struct ethhdr *eh = (struct ethhdr *)data;
-			if (eh) return ntohs(eh->h_proto);
-			else return 0;
+			if (eh) {
+				return get_eth_protocol(ntohs(eh->h_proto), packet_buffer, data_offset);
+			}
+			else {
+				return 0;
+			}
 		}
 		break;
 
