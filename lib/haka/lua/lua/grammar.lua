@@ -283,6 +283,26 @@ function grammar_int.Sequence.method:__init(entities)
 	self.entities = entities
 end
 
+function grammar_int.Sequence.method:do_c_compile(env, rule, id)
+	local ent
+
+	ent = grammar_dg.RecordStart:new(rule, id, self.named, self.resultclass)
+	self:property_setup(ent)
+	env._ccomp:apply_entity(self.named, ent)
+
+	for i, entity in ipairs(self.entities) do
+		if entity.named then
+			log.warning("named element '%s' are not supported in sequence", entity.named)
+		end
+
+		entity:compile(env, self.rule or rule, i)
+	end
+
+	local pop = grammar_dg.RecordFinish:new(self.named ~= nil)
+	self:post_setup(pop)
+	env._ccomp:apply_entity(self.named, pop)
+end
+
 function grammar_int.Sequence.method:do_compile(env, rule, id)
 	local iter, ret
 
@@ -317,6 +337,17 @@ grammar_int.Union = class.class('Union', grammar_int.Compound)
 
 function grammar_int.Union.method:__init(entities)
 	self.entities = entities
+end
+
+function grammar_int.Union.method:do_c_compile(env, rule, id)
+	env._ccomp:apply_entity(self.named, grammar_dg.UnionStart:new(rule, id, self.named, self.resultclass))
+
+	for i, entity in ipairs(self.entities) do
+		entity:compile(env, self.rule or rule, i)
+		env._ccomp:apply_entity(self.named, grammar_dg.UnionRestart:new())
+	end
+
+	env._ccomp:apply_entity(self.named, grammar_dg.UnionFinish:new(self.named))
 end
 
 function grammar_int.Union.method:do_compile(env, rule, id)
@@ -878,7 +909,6 @@ local function new_c_grammar(name, def)
 	local module_name = tmpl:compile()
 
 	local c_grammar = require(module_name)
-	debug.pprint(c_grammar)
 
 	for _, parser in pairs(tmpl._parsers) do
 		g._exports[parser.name] = {
