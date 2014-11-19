@@ -20,9 +20,8 @@ grammar.result = require("parse_result")
 
 local GrammarEnv = class.class("GrammarEnv")
 
-function GrammarEnv.method:__init(grammar, ccomp)
+function GrammarEnv.method:__init(grammar)
 	self._grammar = grammar
-	self._ccomp = ccomp
 	self._compiled = {}
 end
 
@@ -94,15 +93,7 @@ function grammar_int.Entity.method:_as(name)
 end
 
 function grammar_int.Entity.method:compile(env, rule, id)
-	if env._ccomp then
-		if self.do_c_compile then
-			return self:do_c_compile(env, rule, id)
-		else
-			return env._ccomp:apply_entity(self.named, self:do_compile(env, rule, id))
-		end
-	else
-		return self:do_compile(env, rule, id)
-	end
+	return self:do_compile(env, rule, id)
 end
 
 function grammar_int.Entity.method:convert(converter, memoize)
@@ -179,12 +170,6 @@ function grammar_int.Compound.method:result(resultclass)
 end
 
 function grammar_int.Compound.method:compile(env, rule, id)
-	if env._ccomp then
-		assert(self.do_c_compile, "compound element must redefine their do_c_compile")
-		-- TODO handle recursive case
-		return self:do_c_compile(env, rule, id)
-	end
-
 	local compiled = env:get(self)
 	if compiled then
 		return grammar_dg.Recurs:new(rule, id, compiled)
@@ -218,30 +203,6 @@ function grammar_int.Record.method:extra(functions)
 	end
 
 	return self
-end
-
-function grammar_int.Record.method:do_c_compile(env, rule, id)
-	local ent
-
-	ent = grammar_dg.Retain:new(haka.packet_mode() == 'passthrough')
-	env._ccomp:apply_entity(self.named, ent)
-
-	ent = grammar_dg.RecordStart:new(rule, id, self.named, self.resultclass)
-	self:property_setup(ent)
-	env._ccomp:apply_entity(self.named, ent)
-
-	for i, entity in ipairs(self.entities) do
-		entity:compile(env, self.rule or rule, i)
-	end
-
-	local pop = grammar_dg.RecordFinish:new(self.named ~= nil)
-	self:post_setup(pop)
-
-	for name, f in pairs(self.extra_entities) do
-		pop:extra(name, f)
-	end
-	env._ccomp:apply_entity(self.named, pop)
-	env._ccomp:apply_entity(self.named, grammar_dg.Release:new())
 end
 
 function grammar_int.Record.method:do_compile(env, rule, id)
@@ -283,26 +244,6 @@ function grammar_int.Sequence.method:__init(entities)
 	self.entities = entities
 end
 
-function grammar_int.Sequence.method:do_c_compile(env, rule, id)
-	local ent
-
-	ent = grammar_dg.RecordStart:new(rule, id, self.named, self.resultclass)
-	self:property_setup(ent)
-	env._ccomp:apply_entity(self.named, ent)
-
-	for i, entity in ipairs(self.entities) do
-		if entity.named then
-			log.warning("named element '%s' are not supported in sequence", entity.named)
-		end
-
-		entity:compile(env, self.rule or rule, i)
-	end
-
-	local pop = grammar_dg.RecordFinish:new(self.named ~= nil)
-	self:post_setup(pop)
-	env._ccomp:apply_entity(self.named, pop)
-end
-
 function grammar_int.Sequence.method:do_compile(env, rule, id)
 	local iter, ret
 
@@ -337,17 +278,6 @@ grammar_int.Union = class.class('Union', grammar_int.Compound)
 
 function grammar_int.Union.method:__init(entities)
 	self.entities = entities
-end
-
-function grammar_int.Union.method:do_c_compile(env, rule, id)
-	env._ccomp:apply_entity(self.named, grammar_dg.UnionStart:new(rule, id, self.named, self.resultclass))
-
-	for i, entity in ipairs(self.entities) do
-		entity:compile(env, self.rule or rule, i)
-		env._ccomp:apply_entity(self.named, grammar_dg.UnionRestart:new())
-	end
-
-	env._ccomp:apply_entity(self.named, grammar_dg.UnionFinish:new(self.named))
 end
 
 function grammar_int.Union.method:do_compile(env, rule, id)
@@ -885,12 +815,10 @@ local function new_c_grammar(name, def)
 			error("exported rule must be registered in the grammar: "..name)
 		end
 
-		tmpl:start_parser(name)
+		local genv = GrammarEnv:new(g)
+		local dgraph = value:compile(genv)
 
-		local genv = GrammarEnv:new(g, tmpl)
-		value:compile(genv)
-
-		tmpl:end_parser()
+		tmpl:create_parser(name, dgraph)
 
 		no_export = false
 	end

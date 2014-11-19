@@ -34,7 +34,19 @@ function module.method:__init(name)
 ]]
 end
 
-function module.method:start_parser(name)
+function module.method:create_parser(name, dgraph)
+	self:_start_parser(name)
+
+	local iter = dgraph
+
+	while iter do
+		iter = iter:ccomp(self)
+	end
+
+	self:_end_parser()
+end
+
+function module.method:_start_parser(name)
 	assert(not self._parser_started, "parser already started")
 	self._parser = { name = name, fname = "parse_"..name, store = {} }
 	self._parsers[#self._parsers + 1] = self._parser
@@ -58,24 +70,42 @@ int parse_%s(lua_State *L)
 ]], name)
 end
 
-function module.method:write_entity_header(name, entity)
+function module.method:_end_parser()
+	assert(self._parser, "parser not started")
+	self._parser = nil
+	self:write[[
+
+	lua_getfield(L, PARSE_CTX, "_results"); /* get ctx._results */
+	lua_rawgeti(L, -1, 1);                 /* result stand first in table */
+	lua_remove(L, -2);                     /* remove ctx._results */
+
+	return 1;
+}
+]]
+end
+
+function module.method:write_entity_header(entity)
+	local rule = entity.rule or "<unknown>"
+	local field = entity.id
+	if entity.name then
+		field = string.format("'%s'", entity.name)
+	end
 	local type = class.classof(entity).name
-	name = name or "anonymous"
 
 	self:write([[
 
-	/* %s <%s> */
-]], name, type)
+	/* in rule '%s' field %s <%s> */
+]], rule, field, type)
 end
 
-function module.method:apply_entity(name, entity)
+function module.method:apply_entity(entity)
 	assert(self._parser, "cannot add entity apply without started parser")
 	assert(entity)
 
 	local id = #self._parser.store + 1
 
 	self._parser.store[id] = entity
-	self:write_entity_header(name, entity)
+	self:write_entity_header(entity)
 	self:write([[
 	lua_rawgeti(L, PARSE_ENTITIES, %d);       /* get entity */
 	lua_getfield(L, -1, "_trace");            /* entity:_trace */
@@ -99,20 +129,6 @@ function module.method:apply_entity(name, entity)
 	lua_remove(L, -1);                        /* remove entity from stack */
 
 ]], id)
-end
-
-function module.method:end_parser()
-	assert(self._parser, "parser not started")
-	self._parser = nil
-	self:write[[
-
-	lua_getfield(L, PARSE_CTX, "_results"); /* get ctx._results */
-	lua_rawgeti(L, -1, 1);                 /* result stand first in table */
-	lua_remove(L, -2);                     /* remove ctx._results */
-
-	return 1;
-}
-]]
 end
 
 function module.method:compile()

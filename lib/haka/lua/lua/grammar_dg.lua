@@ -21,6 +21,11 @@ function dg.Entity.method:__init(rule, id)
 	self.id = id
 end
 
+function dg.Entity.method:ccomp(ccomp)
+	ccomp:apply_entity(self)
+	return self._next
+end
+
 function dg.Entity.method:next(ctx)
 	return self._next
 end
