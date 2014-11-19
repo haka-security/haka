@@ -189,8 +189,9 @@ bool asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos, st
 	vbuffer_iterator_copy(pos, &iter);
 
 	while (status == NEEDMOREDATA) {
-		code = vbuffer_iterator_mmap(pos, ALL, &size, 0);
+		code = vbuffer_iterator_mmap(&iter, ALL, &size, 0);
 		if (!code) {
+			vbuffer_iterator_copy(&iter, pos);
 			return false;
 		}
 		status = asm_disas(asm_handle, &code, &size, inst);
@@ -207,7 +208,6 @@ bool asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos, st
 		pending->size = -diff;
 	}
 
-	vbuffer_iterator_copy(&iter, pos);
 	pending_skip = vbuffer_iterator_advance(pos, skip);
 	if (pending_skip != skip) {
 		pending->advance = skip - pending_skip;

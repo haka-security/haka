@@ -188,7 +188,7 @@ inst)
                 if self:_disas(iter, inst) then
                     return true
                 end
-            until not pos:wait() or iter:available() == 0
+            until not pos:wait()
         else
             error("invalid parameters")
         end
