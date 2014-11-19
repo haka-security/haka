@@ -191,7 +191,7 @@ bool asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos, st
 	while (status == NEEDMOREDATA) {
 		code = vbuffer_iterator_mmap(&iter, ALL, &size, 0);
 		if (!code) {
-			vbuffer_iterator_copy(&iter, pos);
+			vbuffer_iterator_move(pos, &iter);
 			return false;
 		}
 		status = asm_disas(asm_handle, &code, &size, inst);

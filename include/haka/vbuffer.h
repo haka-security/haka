@@ -241,6 +241,11 @@ bool          vbuffer_iterator_isvalid(const struct vbuffer_iterator *position);
 void          vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_iterator *dst);
 
 /**
+ * Move an iterator to the position of another one.
+ */
+void          vbuffer_iterator_move(struct vbuffer_iterator *iter, const struct vbuffer_iterator *pos);
+
+/**
  * Clear an iterator.
  */
 void          vbuffer_iterator_clear(struct vbuffer_iterator *position);
