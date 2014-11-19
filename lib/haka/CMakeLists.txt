@@ -30,6 +30,7 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/parse_result.lua
 	lua/lua/grammar.lua
 	lua/lua/grammar_dg.lua
+	lua/lua/ccomp.lua
 	lua/lua/state_machine.lua
 	lua/lua/state.lua
 	lua/lua/utils.lua

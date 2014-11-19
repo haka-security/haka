@@ -140,10 +140,7 @@ function parse.Context.method:create(entity)
 	return self:_traverse(entity, "_create", false)
 end
 
-function parse.Context.method:_traverse(entity, f, all)
-	local iter = entity
-	local err
-
+function parse.Context.method:init(entity, all)
 	if entity.resultclass then
 		self:push(entity.resultclass:new())
 	else
@@ -156,6 +153,13 @@ function parse.Context.method:_traverse(entity, f, all)
 
 	self._level_exit = 0
 	self._error = nil
+end
+
+function parse.Context.method:_traverse(entity, f, all)
+	local iter = entity
+	local err
+
+	self:init(entity, all)
 
 	while iter do
 		-- This flag is updated when starting a recursion.

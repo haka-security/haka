@@ -46,4 +46,37 @@ function TestGrammarCompilation:test_new_grammar_create_so_module()
 	assert(io.open("test_grammar.so", "r"))
 end
 
+function TestGrammarCompilation:test_compile_number_element()
+	-- Given
+	os.remove("test_grammar.so")
+	local grammar = function ()
+		elem = number(8)
+
+		export(elem)
+	end
+
+	-- When
+	haka.grammar.new("test", grammar, true)
+
+	-- Then
+	assert(io.open("test_grammar.so", "r"))
+end
+
+function TestGrammarCompilation:test_apply_on_number()
+	-- Given
+	local buf = haka.vbuffer_from("\x42")
+	local grammar = haka.grammar.new("test", function ()
+		elem = record{
+			field("num", number(8))
+		}
+		export(elem)
+	end, true)
+
+	-- When
+	local result = grammar.elem:parse(buf:pos('begin'))
+	debug.pprint(result)
+
+	assertEquals(result.num, 0x42)
+end
+
 addTestSuite('TestGrammarCompilation')
