@@ -285,8 +285,8 @@ function dg.Recurs.method:_dump_graph_edges(file, ref)
 end
 
 function dg.Recurs.method:ccomp(ccomp)
-	ccomp:jumpto(self._recurs)
-	return {}
+	ccomp:apply_edge(self)
+	return { self._recurs, self._next }
 end
 
 function dg.Recurs.method:next()
@@ -624,21 +624,24 @@ end
 function dg.Branch.method:ccomp(ccomp)
 	ccomp:start_edge(self)
 
-	local nexts = {}
 	local cases = {}
 	local cases_map = {}
 	for name, entity in pairs(self.cases) do
-		local id = #cases+1
-		cases[id] = { entity = entity, name = name }
+		cases[name] = entity
+	end
+	cases["default"] = self._next
+
+	for name, case in pairs(cases) do
+		local id = ccomp:register(case)
 		cases_map[name] = id
-		table.insert(nexts, entity)
 	end
 
 	ccomp:push_stored(ccomp:store(function()
-		-- Will return nil if no branch
-		-- nil will be converted to 0 by lua_tointeger
-		-- so switch will fall into default case
-		return cases_map[self.selector()]
+		local case = cases_map[self.selector()]
+		if not case then
+			case = cases_map["default"]
+		end
+		return case
 	end), "selector")
 
 	ccomp:write([[
@@ -651,32 +654,13 @@ function dg.Branch.method:ccomp(ccomp)
 ]])
 	ccomp:pcall(2, 1, "self.selector(ctx:result(), ctx)");
 	ccomp:write([[
-		lua_Integer branch = lua_tointeger(L, -1);
-
-		switch(branch) {
+		edge = lua_tointeger(L, -1);
+		break;
 ]])
 
-	for id, case in pairs(cases) do
-		ccomp:register(case.entity)
-		ccomp:write([[
-			case %d: /* case '%s' */
-]], id, case.name)
-		ccomp:jumpto(case.entity)
-	end
-
-	ccomp:register(self._next)
-	ccomp:write[[
-			default:
-]]
-	ccomp:jumpto(self._next)
-	ccomp:write[[
-		}
-]]
-	cases[#cases+1] = self._next
 	ccomp:finish_edge()
 
-	table.insert(nexts, self._next)
-	return nexts
+	return cases
 end
 
 function dg.Branch.method:next(ctx)

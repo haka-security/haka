@@ -29,8 +29,10 @@ function module.method:__init(name)
 #include <haka/lua/state.h>
 
 #define PARSE_STORE 1
-#define PARSE_CTX 2
+#define PARSE_CTX   2
 #define PARSE_INPUT 3
+
+#define FINISH 0
 ]]
 end
 
@@ -78,6 +80,8 @@ int parse_%s(lua_State *L)
 	 * arg2 = parse context
 	 * arg3 = input
 	 */
+	bool run = true;
+	int edge = 1;
 	int top, error_formater;
 	top = lua_gettop(L);
 
@@ -86,14 +90,19 @@ int parse_%s(lua_State *L)
 
 	lua_pushcfunction(L, lua_state_error_formater);
 	error_formater = lua_gettop(L);
+
+	while(run) { switch(edge) {
 ]], name)
 end
 
 function module.method:_end_parser()
 	assert(self._parser, "parser not started")
 	self:write([[
+		default: /* edge 0 is default and is also exit */
+			run = false;
 
-%s_end:
+	} }
+
 	lua_getfield(L, PARSE_CTX, "_results"); /* get ctx._results */
 	lua_rawgeti(L, -1, 1);                  /* result stand first in table */
 	lua_remove(L, -2);                      /* remove ctx._results */
@@ -145,10 +154,9 @@ function module.method:start_edge(edge)
 
 	self:write([[
 
-%s_%d:
+	case %d: /* in rule '%s' field %s <%s> */
 	{
-		/* in rule '%s' field %s <%s> */
-]], self._parser.name, id, rule, field, type)
+]], id, rule, field, type)
 end
 
 function module.method:finish_edge()
@@ -173,15 +181,15 @@ function module.method:jumpto(edge)
 	assert(self._parser, "parser not started")
 	assert(self._parser.edges[edge], "unknown edge to jump to")
 	self:write([[
-	goto %s_%d;
-]], self._parser.name, self._parser.edges[edge])
+		edge = %d; break;
+]], self._parser.edges[edge])
 end
 
 function module.method:jumptoend(edge)
 	assert(self._parser, "parser not started")
-	self:write([[
-	goto %s_end;
-]], self._parser.name)
+	self:write[[
+		edge = FINISH; break;
+]]
 end
 
 function module.method:apply_edge(edge)
@@ -239,7 +247,7 @@ int luaopen_%s(lua_State *L)
 	self._fd:close()
 
 	-- Compile c grammar
-	local compile_command = "gcc -shared -g -Wall -Wno-unused-label -Werror -o "..self._sofile.." -fPIC "..self._cfile
+	local compile_command = "gcc -shared -g -Wall -Werror -o "..self._sofile.." -fPIC "..self._cfile
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
 	os.execute(compile_command)
 
