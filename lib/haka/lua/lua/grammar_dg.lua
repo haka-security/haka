@@ -628,8 +628,12 @@ function dg.Branch.method:ccomp(ccomp)
 	end
 
 	ccomp:push_stored(ccomp:store(function()
+		-- Will return nil if no branch
+		-- nil will be converted to 0 by lua_tointeger
+		-- so switch will fall into default case
 		return cases_map[self.selector()]
 	end), "selector")
+
 	ccomp:write([[
 		lua_getfield(L, PARSE_CTX, "result");       /* parse_ctx.result */
 		lua_pushvalue(L, PARSE_CTX);                /* parse_ctx */
@@ -655,6 +659,10 @@ function dg.Branch.method:ccomp(ccomp)
 ]]
 	end
 
+	ccomp:write[[
+			default:
+]]
+	self._next:ccomp(ccomp)
 	ccomp:write[[
 		}
 ]]

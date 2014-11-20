@@ -150,4 +150,25 @@ function TestGrammarCompilation:test_apply_on_branch()
 	assertEquals(result.num, 0x4)
 end
 
+function TestGrammarCompilation:test_apply_on_branch_with_default()
+	-- Given
+	local buf = haka.vbuffer_from("\x42")
+	local grammar = haka.grammar.new("test_apply_on_branch_with_default", function ()
+		my_branch = branch({
+			foo = field("num", number(8)),
+			default = field("num", number(4)),
+		}, function(result, context)
+			return "bar"
+		end)
+
+		export(my_branch)
+	end, true)
+
+	-- When
+	local result = grammar.my_branch:parse(buf:pos('begin'))
+
+	-- Then
+	assertEquals(result.num, 0x4)
+end
+
 addTestSuite('TestGrammarCompilation')
