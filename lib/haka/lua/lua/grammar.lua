@@ -817,6 +817,7 @@ local function new_c_grammar(name, def)
 
 		local genv = GrammarEnv:new(g)
 		local dgraph = value:compile(genv)
+		g._exports[name] = dgraph
 
 		tmpl:create_parser(name, dgraph)
 

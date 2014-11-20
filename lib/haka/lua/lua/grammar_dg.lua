@@ -22,8 +22,8 @@ function dg.Entity.method:__init(rule, id)
 end
 
 function dg.Entity.method:ccomp(ccomp)
-	ccomp:apply_entity(self)
-	return self._next
+	ccomp:apply_edge(self)
+	return { self._next }
 end
 
 function dg.Entity.method:next(ctx)
@@ -286,6 +286,7 @@ end
 
 function dg.Recurs.method:ccomp(ccomp)
 	ccomp:jumpto(self._recurs)
+	return {}
 end
 
 function dg.Recurs.method:next()
@@ -621,14 +622,16 @@ function dg.Branch.method:_dump_graph_edges(file, ref)
 end
 
 function dg.Branch.method:ccomp(ccomp)
-	ccomp:write_entity_header(self)
+	ccomp:start_edge(self)
 
+	local nexts = {}
 	local cases = {}
 	local cases_map = {}
 	for name, entity in pairs(self.cases) do
 		local id = #cases+1
 		cases[id] = { entity = entity, name = name }
 		cases_map[name] = id
+		table.insert(nexts, entity)
 	end
 
 	ccomp:push_stored(ccomp:store(function()
@@ -654,23 +657,26 @@ function dg.Branch.method:ccomp(ccomp)
 ]])
 
 	for id, case in pairs(cases) do
+		ccomp:register(case.entity)
 		ccomp:write([[
 			case %d: /* case '%s' */
 ]], id, case.name)
-		case.entity:ccomp(ccomp)
-		ccomp:write[[
-			break;
-]]
+		ccomp:jumpto(case.entity)
 	end
 
+	ccomp:register(self._next)
 	ccomp:write[[
 			default:
 ]]
-	self._next:ccomp(ccomp)
+	ccomp:jumpto(self._next)
 	ccomp:write[[
 		}
 ]]
-	ccomp:write_entity_footer(self)
+	cases[#cases+1] = self._next
+	ccomp:finish_edge()
+
+	table.insert(nexts, self._next)
+	return nexts
 end
 
 function dg.Branch.method:next(ctx)

@@ -34,16 +34,74 @@ function module.method:__init(name)
 ]]
 end
 
+local function traverse(ccomp, edge)
+	if ccomp._parser.written_edges[edge] then
+		ccomp:jumpto(edge)
+		return
+	end
+
+	local nexts = edge:ccomp(ccomp)
+	if #nexts == 0 then
+		-- Reach one end of the graph
+		ccomp:jumptoend()
+	end
+	for _, iter in pairs(nexts) do
+		traverse(ccomp, iter)
+	end
+end
+
 function module.method:create_parser(name, dgraph)
 	self:_start_parser(name)
 
-	local iter = dgraph
-
-	while iter do
-		iter = iter:ccomp(self)
-	end
+	traverse(self, dgraph)
 
 	self:_end_parser()
+end
+
+function module.method:_start_parser(name)
+	assert(not self._parser, "parser already started")
+	self._parser = {
+		name = name,
+		fname = "parse_"..name,
+		store = {}, -- Store some lua object to access it from c
+		edges = {}, -- Store all encountered edges
+		edges_count = 0, -- Count of encountered edges
+		written_edges = {}, -- Store written edges
+	}
+	self._parsers[#self._parsers + 1] = self._parser
+	self:write([[
+
+int parse_%s(lua_State *L)
+{
+	/**
+	 * arg1 = store table
+	 * arg2 = parse context
+	 * arg3 = input
+	 */
+	int top, error_formater;
+	top = lua_gettop(L);
+
+	assert(top == 3);
+	assert(lua_istable(L, PARSE_STORE));
+
+	lua_pushcfunction(L, lua_state_error_formater);
+	error_formater = lua_gettop(L);
+]], name)
+end
+
+function module.method:_end_parser()
+	assert(self._parser, "parser not started")
+	self:write([[
+
+%s_end:
+	lua_getfield(L, PARSE_CTX, "_results"); /* get ctx._results */
+	lua_rawgeti(L, -1, 1);                  /* result stand first in table */
+	lua_remove(L, -2);                      /* remove ctx._results */
+
+	return 1;
+}
+]], self._parser.name)
+	self._parser = nil
 end
 
 function module.method:store(obj)
@@ -62,66 +120,46 @@ function module.method:push_stored(id, name)
 ]], id, name)
 end
 
-function module.method:_start_parser(name)
-	assert(not self._parser, "parser already started")
-	self._parser = { name = name, fname = "parse_"..name, store = {} }
-	self._parsers[#self._parsers + 1] = self._parser
-	self:write([[
-
-int parse_%s(lua_State *L)
-{
-	/**
-	 * arg1 = _entities table
-	 * arg2 = parse context
-	 * arg3 = input
-	 */
-	int top, error_formater;
-	top = lua_gettop(L);
-
-	assert(top == 3);
-	assert(lua_istable(L, PARSE_STORE));
-
-	lua_pushcfunction(L, lua_state_error_formater);
-	error_formater = lua_gettop(L);
-]], name)
+function module.method:register(edge)
+	self._parser.edges_count = self._parser.edges_count + 1
+	self._parser.edges[edge] = self._parser.edges_count
+	return self._parser.edges_count
 end
 
-function module.method:_end_parser()
+function module.method:start_edge(edge)
 	assert(self._parser, "parser not started")
-	self._parser = nil
-	self:write[[
-
-	lua_getfield(L, PARSE_CTX, "_results"); /* get ctx._results */
-	lua_rawgeti(L, -1, 1);                  /* result stand first in table */
-	lua_remove(L, -2);                      /* remove ctx._results */
-
-	return 1;
-}
-]]
-end
-
-function module.method:write_entity_header(entity)
-	local rule = entity.rule or "<unknown>"
-	local field = entity.id
-	if entity.name then
-		field = string.format("'%s'", entity.name)
+	local rule = edge.rule or "<unknown>"
+	local field = edge.id
+	if edge.name then
+		field = string.format("'%s'", edge.name)
 	end
-	local type = class.classof(entity).name
+	local type = class.classof(edge).name
+	-- Register edge if it is not
+	local id = self._parser.edges[edge]
+	if not id then
+		id = self:register(edge)
+	end
+
+	-- Mark as written
+	self._parser.written_edges[edge] = true
 
 	self:write([[
 
+%s_%d:
 	{
 		/* in rule '%s' field %s <%s> */
-]], rule, field, type)
+]], self._parser.name, id, rule, field, type)
 end
 
-function module.method:write_entity_footer()
+function module.method:finish_edge()
+	assert(self._parser, "parser not started")
 	self:write[[
 	}
 ]]
 end
 
 function module.method:pcall(nargs, nresults, fname)
+	assert(self._parser, "parser not started")
 	fname = fname or "anonymous function"
 	self:write([[
 		if (lua_pcall(L, %d, %d, error_formater)) { /* %s */
@@ -131,33 +169,48 @@ function module.method:pcall(nargs, nresults, fname)
 ]], nargs, nresults, fname)
 end
 
-function module.method:apply_entity(entity)
-	assert(self._parser, "cannot add entity apply without started parser")
-	assert(entity)
+function module.method:jumpto(edge)
+	assert(self._parser, "parser not started")
+	assert(self._parser.edges[edge], "unknown edge to jump to")
+	self:write([[
+	goto %s_%d;
+]], self._parser.name, self._parser.edges[edge])
+end
 
-	self:write_entity_header(entity)
+function module.method:jumptoend(edge)
+	assert(self._parser, "parser not started")
+	self:write([[
+	goto %s_end;
+]], self._parser.name)
+end
 
-	self:push_stored(self:store(entity), "entity")
+function module.method:apply_edge(edge)
+	assert(self._parser, "cannot apply edge without started parser")
+	assert(edge)
+
+	self:start_edge(edge)
+
+	self:push_stored(self:store(edge), "edge")
 	self:write[[
-		lua_getfield(L, -1, "_trace");            /* entity:_trace */
-		lua_pushvalue(L, -2);                     /* pass entity as self */
+		lua_getfield(L, -1, "_trace");            /* edge:_trace */
+		lua_pushvalue(L, -2);                     /* pass edge as self */
 		lua_getfield(L, PARSE_CTX, "iter");       /* parse_ctx.iter */
 ]]
-	self:pcall(2, 0, "entity:_trace(parse_ctx.iter)")
+	self:pcall(2, 0, "edge:_trace(parse_ctx.iter)")
 
 	self:write[[
-		lua_getfield(L, -1, "_apply");            /* entity:_apply */
-		lua_pushvalue(L, -2);                     /* pass entity as self */
+		lua_getfield(L, -1, "_apply");            /* edge:_apply */
+		lua_pushvalue(L, -2);                     /* pass edge as self */
 		lua_pushvalue(L, PARSE_CTX);              /* parse_ctx */
 ]]
 
-	self:pcall(2, 0, "entity:_apply(parse_ctx)")
+	self:pcall(2, 0, "edge:_apply(parse_ctx)")
 
 	self:write[[
-		lua_remove(L, -1);                        /* remove entity from stack */
+		lua_remove(L, -1);                        /* remove edge from stack */
 
 ]]
-	self:write_entity_footer()
+	self:finish_edge()
 end
 
 function module.method:compile()
@@ -186,7 +239,7 @@ int luaopen_%s(lua_State *L)
 	self._fd:close()
 
 	-- Compile c grammar
-	local compile_command = "gcc -shared -g -Wall -Werror -o "..self._sofile.." -fPIC "..self._cfile
+	local compile_command = "gcc -shared -g -Wall -Wno-unused-label -Werror -o "..self._sofile.." -fPIC "..self._cfile
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
 	os.execute(compile_command)
 

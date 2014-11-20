@@ -171,4 +171,56 @@ function TestGrammarCompilation:test_apply_on_branch_with_default()
 	assertEquals(result.num, 0x4)
 end
 
+function TestGrammarCompilation:test_apply_on_branch_with_multiple_elements()
+	-- Given
+	local buf = haka.vbuffer_from("\x42")
+	local grammar = haka.grammar.new("test_apply_on_branch_with_multiple_elements", function ()
+		my_branch = branch({
+			foo = field("num", number(8)),
+			bar = record{
+				field("first", number(4)),
+				field("second", number(4)),
+			}
+		}, function(result, context)
+			return "bar"
+		end)
+
+		export(my_branch)
+	end, true)
+
+	-- When
+	local result = grammar.my_branch:parse(buf:pos('begin'))
+
+	-- Then
+	assertEquals(result.first, 0x4)
+	assertEquals(result.second, 0x2)
+end
+
+function TestGrammarCompilation:test_apply_on_recurs()
+	-- Given
+	local buf = haka.vbuffer_from("\x02\x01\x00\x00")
+	local done = false
+	local grammar = haka.grammar.new("test_apply_on_recurs", function ()
+		define("root")
+
+		root = record{
+			field("count", number(8)),
+			field("child", array(root)
+				:count(function (self, ctx)
+					return ctx:result(-2).count
+				end)
+			),
+		}
+
+		export(root)
+	end, true)
+
+	-- When
+	local result = grammar.root:parse(buf:pos('begin'))
+
+	-- Then
+	debug.pprint(result)
+	assertEquals(result.out, 0x2)
+end
+
 addTestSuite('TestGrammarCompilation')
