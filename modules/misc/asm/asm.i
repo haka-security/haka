@@ -50,12 +50,32 @@ struct asm_instruction {
             *TEMP_SIZE = size;
         }
 
+        void op_str(const char **TEMP_OUTPUT)
+        {
+            char *buffer = malloc(sizeof(char) * INSTRUCTION_OPERANDS);
+            if (!buffer) {
+                error("memory error");
+                return;
+            }
+            snprintf(buffer, 160, "%s", instruction_get_operands($self));
+            *TEMP_OUTPUT = buffer;
+        }
+
+        void mnemonic(const char **TEMP_OUTPUT)
+        {
+            char *buffer = malloc(sizeof(char) * INSTRUCTION_MNEMONIC);
+            if (!buffer) {
+                error("memory error");
+                return;
+            }
+            snprintf(buffer, 32, "%s", instruction_get_mnemonic($self));
+            *TEMP_OUTPUT = buffer;
+        }
+
         %immutable;
         unsigned int id;
         unsigned long address;
         unsigned short size;
-        char *mnemonic;
-        char *op_str;
     }
 };
 
@@ -90,28 +110,6 @@ unsigned long asm_instruction_address_get(struct asm_instruction *inst)
 unsigned short asm_instruction_size_get(struct asm_instruction *inst)
 {
     return instruction_get_size(inst);
-}
-
-char *asm_instruction_mnemonic_get(struct asm_instruction *inst)
-{
-    char *buffer = malloc(sizeof(char) * INSTRUCTION_MNEMONIC);
-    if (!buffer) {
-        error("memory error");
-        return NULL;
-    }
-    snprintf(buffer, 32, "%s", instruction_get_mnemonic(inst));
-    return buffer;
-}
-
-char *asm_instruction_op_str_get(struct asm_instruction *inst)
-{
-    char *buffer = malloc(sizeof(char) * INSTRUCTION_OPERANDS);
-    if (!buffer) {
-        error("memory error");
-        return NULL;
-    }
-    snprintf(buffer, 160, "%s", instruction_get_operands(inst));
-    return buffer;
 }
 %}
 

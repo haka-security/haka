@@ -35,7 +35,7 @@ function TestAsmModule:test_disas_should_succeed_when_valid_single_byte_inst ()
 	local ret = self.asm:disassemble(start, self.inst)
 	-- Then
 	assertTrue(ret)
-	assertEquals(self.inst.mnemonic, "nop")
+	assertEquals(self.inst:mnemonic(), "nop")
 	assertEquals(self.inst.size, 1)
 
 end
@@ -47,8 +47,8 @@ function TestAsmModule:test_disas_should_succeed_when_valid_multiple_byte_inst (
 	local ret = self.asm:disassemble(start, self.inst)
 	-- Then
 	assertTrue(ret)
-	assertEquals(self.inst.mnemonic, "mov")
-	assertEquals(self.inst.op_str, "eax, dword ptr [0x606013b8]")
+	assertEquals(self.inst:mnemonic(), "mov")
+	assertEquals(self.inst:op_str(), "eax, dword ptr [0x606013b8]")
 	assertEquals(self.inst.size, 6)
 end
 
@@ -67,8 +67,8 @@ function TestAsmModule:test_disas_should_succeed_when_inst_overlaps_on_multiple_
 	end
 	-- Then
 	assertEquals(count, 5)
-	assertEquals(self.inst.mnemonic, "mov")
-	assertEquals(self.inst.op_str, "byte ptr [0x43424190], al")
+	assertEquals(self.inst:mnemonic(), "mov")
+	assertEquals(self.inst:op_str(), "byte ptr [0x43424190], al")
 	assertEquals(self.inst.size, 6)
 end
 
@@ -78,12 +78,12 @@ function TestAsmModule:test_disas_should_skip_bad_inst ()
 	local start = code:pos('begin')
 	self.asm:disassemble(start, self.inst)
 	-- Then
-	assertEquals(self.inst.mnemonic, "(bad)")
+	assertEquals(self.inst:mnemonic(), "(bad)")
 	-- And when
 	self.asm:disassemble(start, self.inst)
 	-- Then
-	assertEquals(self.inst.mnemonic, "or")
-	assertEquals(self.inst.op_str, "dl, byte ptr [eax + 0x90909090]")
+	assertEquals(self.inst:mnemonic(), "or")
+	assertEquals(self.inst:op_str(), "dl, byte ptr [eax + 0x90909090]")
 	assertEquals(self.inst.size, 6)
 end
 
@@ -94,13 +94,13 @@ function TestAsmModule:test_can_disas_on_blocking_iterator ()
 		local ret = self.asm:disassemble(iter, self.inst)
 		-- Then
 		assertTrue(ret)
-		assertEquals(self.inst.mnemonic, "mov")
-		assertEquals(self.inst.op_str, "byte ptr [0x41414141], al")
+		assertEquals(self.inst:mnemonic(), "mov")
+		assertEquals(self.inst:op_str(), "byte ptr [0x41414141], al")
 		assertEquals(self.inst.size, 6)
 		ret = self.asm:disassemble(iter, self.inst)
 
 		assertTrue(ret)
-		assertEquals(self.inst.mnemonic, "nop")
+		assertEquals(self.inst:mnemonic(), "nop")
 	end)
 end
 
@@ -112,12 +112,12 @@ function TestAsmModule:test_disas_should_skip_bad_inst_on_blocking_iterator ()
 		local ret = self.asm:disassemble(iter, self.inst)
 		-- Then
 		assertTrue(ret)
-		assertEquals(self.inst.mnemonic, "(bad)")
+		assertEquals(self.inst:mnemonic(), "(bad)")
 		assertEquals(self.inst.size, 4)
 		ret = self.asm:disassemble(iter, self.inst)
 
 		assertTrue(ret)
-		assertEquals(self.inst.mnemonic, "mov")
+		assertEquals(self.inst:mnemonic(), "mov")
 	end)
 end
 
@@ -129,8 +129,8 @@ function TestAsmModule:test_disas_should_succeed_on_arm_arch ()
 	local ret = self.asm:disassemble(start, self.inst)
 	-- Then
 	assertTrue(ret)
-	assertEquals(self.inst.mnemonic, "mov")
-	assertEquals(self.inst.op_str, "r0, r3")
+	assertEquals(self.inst:mnemonic(), "mov")
+	assertEquals(self.inst:op_str(), "r0, r3")
 	assertEquals(self.inst.size, 4)
 end
 
