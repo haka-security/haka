@@ -7,7 +7,7 @@
 
 #include <haka/types.h>
 #include <haka/vbuffer_stream.h>
-#include <capstone/capstone.h>
+#include <capstone.h>
 
 #define INSTRUCTION_BYTES    16
 #define INSTRUCTION_OPERANDS 160
