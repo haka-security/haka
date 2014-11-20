@@ -284,6 +284,10 @@ function dg.Recurs.method:_dump_graph_edges(file, ref)
 	end
 end
 
+function dg.Recurs.method:ccomp(ccomp)
+	ccomp:jumpto(self._recurs)
+end
+
 function dg.Recurs.method:next()
 	return self._recurs
 end
@@ -638,11 +642,11 @@ function dg.Branch.method:ccomp(ccomp)
 		lua_getfield(L, PARSE_CTX, "result");       /* parse_ctx.result */
 		lua_pushvalue(L, PARSE_CTX);                /* parse_ctx */
 ]])
-	ccomp:write_pcall(1, 1, "ctx:result()");
+	ccomp:pcall(1, 1, "ctx:result()");
 	ccomp:write([[
 		lua_pushvalue(L, PARSE_CTX);                /* parse_ctx */
 ]])
-	ccomp:write_pcall(2, 1, "self.selector(ctx:result(), ctx)");
+	ccomp:pcall(2, 1, "self.selector(ctx:result(), ctx)");
 	ccomp:write([[
 		lua_Integer branch = lua_tointeger(L, -1);
 

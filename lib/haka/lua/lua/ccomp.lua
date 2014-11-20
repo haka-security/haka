@@ -121,7 +121,7 @@ function module.method:write_entity_footer()
 ]]
 end
 
-function module.method:write_pcall(nargs, nresults, fname)
+function module.method:pcall(nargs, nresults, fname)
 	fname = fname or "anonymous function"
 	self:write([[
 		if (lua_pcall(L, %d, %d, error_formater)) { /* %s */
@@ -143,7 +143,7 @@ function module.method:apply_entity(entity)
 		lua_pushvalue(L, -2);                     /* pass entity as self */
 		lua_getfield(L, PARSE_CTX, "iter");       /* parse_ctx.iter */
 ]]
-	self:write_pcall(2, 0, "entity:_trace(parse_ctx.iter)")
+	self:pcall(2, 0, "entity:_trace(parse_ctx.iter)")
 
 	self:write[[
 		lua_getfield(L, -1, "_apply");            /* entity:_apply */
@@ -151,7 +151,7 @@ function module.method:apply_entity(entity)
 		lua_pushvalue(L, PARSE_CTX);              /* parse_ctx */
 ]]
 
-	self:write_pcall(2, 0, "entity:_apply(parse_ctx)")
+	self:pcall(2, 0, "entity:_apply(parse_ctx)")
 
 	self:write[[
 		lua_remove(L, -1);                        /* remove entity from stack */
