@@ -97,20 +97,17 @@ Supported mode
 
         Instruction Address.
 
-    .. haka:attribute:: AsmInstruction:mnemonic
+    .. haka:function:: AsmInstruction:mnemonic() -> mnemonic
 
-        :type: string
+        :return mnemonic: Instruction mnemonic.
+        :rtype mnemonic: string
 
-        Instruction mnemonic.
+        .. note:: The mnemonic is set to ``(bad)`` when the disassembler encounters an invalid opcode.
 
-        .. note:: The mnemonic is set to ``(bad)`` when the disassembler
-        encounters an invalid opcode.
+    .. haka:function:: AsmInstruction:op_str() -> operands
 
-    .. haka:attribute:: AsmInstruction:op_str
-
-        :type: string
-
-        Instruction operands.
+        :return operands: Instruction operands.
+        :rtype operands: string
 
     .. haka:attribute:: AsmInstruction:size
 
@@ -122,7 +119,6 @@ Supported mode
 
         :return bytes: Instruction byte sequence.
         :rtype bytes: string
-
 
 Example
 -------
@@ -140,7 +136,7 @@ Example
 
     local size, bytes
     while asm:disassemble(start, inst) do
-        io.write(string.format("0x%08x %-8s %-16s ", inst.address, inst.mnemonic, inst.op_str))
+        io.write(string.format("0x%08x %-8s %-16s ", inst.address, inst:mnemonic(), inst:op_str()))
         size = inst.size
         bytes = inst:bytes()
         for i = 1,inst.size do
