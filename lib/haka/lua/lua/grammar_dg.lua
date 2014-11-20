@@ -616,6 +616,51 @@ function dg.Branch.method:_dump_graph_edges(file, ref)
 	end
 end
 
+function dg.Branch.method:ccomp(ccomp)
+	ccomp:write_entity_header(self)
+
+	local cases = {}
+	local cases_map = {}
+	for name, entity in pairs(self.cases) do
+		local id = #cases+1
+		cases[id] = { entity = entity, name = name }
+		cases_map[name] = id
+	end
+
+	ccomp:push_stored(ccomp:store(function()
+		return cases_map[self.selector()]
+	end), "selector")
+	ccomp:write([[
+		lua_getfield(L, PARSE_CTX, "result");       /* parse_ctx.result */
+		lua_pushvalue(L, PARSE_CTX);                /* parse_ctx */
+]])
+	ccomp:write_pcall(1, 1, "ctx:result()");
+	ccomp:write([[
+		lua_pushvalue(L, PARSE_CTX);                /* parse_ctx */
+]])
+	ccomp:write_pcall(2, 1, "self.selector(ctx:result(), ctx)");
+	ccomp:write([[
+		lua_Integer branch = lua_tointeger(L, -1);
+
+		switch(branch) {
+]])
+
+	for id, case in pairs(cases) do
+		ccomp:write([[
+			case %d: /* case '%s' */
+]], id, case.name)
+		case.entity:ccomp(ccomp)
+		ccomp:write[[
+			break;
+]]
+	end
+
+	ccomp:write[[
+		}
+]]
+	ccomp:write_entity_footer(self)
+end
+
 function dg.Branch.method:next(ctx)
 	local case = self.selector(ctx:result(), ctx)
 

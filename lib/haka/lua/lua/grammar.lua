@@ -834,9 +834,7 @@ local function new_c_grammar(name, def)
 		f:close()
 	end
 
-	local module_name = tmpl:compile()
-
-	local c_grammar = require(module_name)
+	local c_grammar = require(tmpl:compile())
 
 	for _, parser in pairs(tmpl._parsers) do
 		g._exports[parser.name] = {

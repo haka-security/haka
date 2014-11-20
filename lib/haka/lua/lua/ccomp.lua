@@ -28,7 +28,7 @@ function module.method:__init(name)
 #include <haka/lua/lua.h>
 #include <haka/lua/state.h>
 
-#define PARSE_ENTITIES 1
+#define PARSE_STORE 1
 #define PARSE_CTX 2
 #define PARSE_INPUT 3
 ]]
@@ -46,8 +46,24 @@ function module.method:create_parser(name, dgraph)
 	self:_end_parser()
 end
 
+function module.method:store(obj)
+	assert(self._parser, "parser not started")
+	assert(obj, "cannot store nil")
+	local id = #self._parser.store + 1
+
+	self._parser.store[id] = obj
+	return id
+end
+
+function module.method:push_stored(id, name)
+	name = name or "anonymous stored object"
+	self:write([[
+		lua_rawgeti(L, PARSE_STORE, %d);           /* get %s */
+]], id, name)
+end
+
 function module.method:_start_parser(name)
-	assert(not self._parser_started, "parser already started")
+	assert(not self._parser, "parser already started")
 	self._parser = { name = name, fname = "parse_"..name, store = {} }
 	self._parsers[#self._parsers + 1] = self._parser
 	self:write([[
@@ -63,7 +79,7 @@ int parse_%s(lua_State *L)
 	top = lua_gettop(L);
 
 	assert(top == 3);
-	assert(lua_istable(L, PARSE_ENTITIES));
+	assert(lua_istable(L, PARSE_STORE));
 
 	lua_pushcfunction(L, lua_state_error_formater);
 	error_formater = lua_gettop(L);
@@ -76,8 +92,8 @@ function module.method:_end_parser()
 	self:write[[
 
 	lua_getfield(L, PARSE_CTX, "_results"); /* get ctx._results */
-	lua_rawgeti(L, -1, 1);                 /* result stand first in table */
-	lua_remove(L, -2);                     /* remove ctx._results */
+	lua_rawgeti(L, -1, 1);                  /* result stand first in table */
+	lua_remove(L, -2);                      /* remove ctx._results */
 
 	return 1;
 }
@@ -94,41 +110,54 @@ function module.method:write_entity_header(entity)
 
 	self:write([[
 
-	/* in rule '%s' field %s <%s> */
+	{
+		/* in rule '%s' field %s <%s> */
 ]], rule, field, type)
+end
+
+function module.method:write_entity_footer()
+	self:write[[
+	}
+]]
+end
+
+function module.method:write_pcall(nargs, nresults, fname)
+	fname = fname or "anonymous function"
+	self:write([[
+		if (lua_pcall(L, %d, %d, error_formater)) { /* %s */
+			lua_state_print_error(L, "_parse");
+			return 0;
+		}
+]], nargs, nresults, fname)
 end
 
 function module.method:apply_entity(entity)
 	assert(self._parser, "cannot add entity apply without started parser")
 	assert(entity)
 
-	local id = #self._parser.store + 1
-
-	self._parser.store[id] = entity
 	self:write_entity_header(entity)
-	self:write([[
-	lua_rawgeti(L, PARSE_ENTITIES, %d);       /* get entity */
-	lua_getfield(L, -1, "_trace");            /* entity:_trace */
-	lua_pushvalue(L, -2);                     /* pass entity as self */
-	lua_getfield(L, PARSE_CTX, "iter");       /* parse_ctx.iter */
 
-	if (lua_pcall(L, 2, 0, error_formater)) { /* entity:_trace(parse_ctx.iter) */
-		lua_state_print_error(L, "_parse");
-		return 0;
-	}
+	self:push_stored(self:store(entity), "entity")
+	self:write[[
+		lua_getfield(L, -1, "_trace");            /* entity:_trace */
+		lua_pushvalue(L, -2);                     /* pass entity as self */
+		lua_getfield(L, PARSE_CTX, "iter");       /* parse_ctx.iter */
+]]
+	self:write_pcall(2, 0, "entity:_trace(parse_ctx.iter)")
 
-	lua_getfield(L, -1, "_apply");            /* entity:_apply */
-	lua_pushvalue(L, -2);                     /* pass entity as self */
-	lua_pushvalue(L, PARSE_CTX);              /* parse_ctx */
+	self:write[[
+		lua_getfield(L, -1, "_apply");            /* entity:_apply */
+		lua_pushvalue(L, -2);                     /* pass entity as self */
+		lua_pushvalue(L, PARSE_CTX);              /* parse_ctx */
+]]
 
-	if (lua_pcall(L, 2, 0, error_formater)) { /* entity:_apply(parse_ctx) */
-		lua_state_print_error(L, "_parse");
-		return 0;
-	}
+	self:write_pcall(2, 0, "entity:_apply(parse_ctx)")
 
-	lua_remove(L, -1);                        /* remove entity from stack */
+	self:write[[
+		lua_remove(L, -1);                        /* remove entity from stack */
 
-]], id)
+]]
+	self:write_entity_footer()
 end
 
 function module.method:compile()
@@ -157,7 +186,7 @@ int luaopen_%s(lua_State *L)
 	self._fd:close()
 
 	-- Compile c grammar
-	local compile_command = "gcc -shared -g -Wall -o "..self._sofile.." -fPIC "..self._cfile
+	local compile_command = "gcc -shared -g -Wall -Werror -o "..self._sofile.." -fPIC "..self._cfile
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
 	os.execute(compile_command)
 
