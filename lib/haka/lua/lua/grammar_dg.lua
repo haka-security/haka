@@ -636,8 +636,8 @@ function dg.Branch.method:ccomp(ccomp)
 		cases_map[name] = id
 	end
 
-	ccomp:push_stored(ccomp:store(function()
-		local case = cases_map[self.selector()]
+	ccomp:push_stored(ccomp:store(function(...)
+		local case = cases_map[self.selector(...)]
 		if not case then
 			case = cases_map["default"]
 		end
