@@ -207,6 +207,7 @@ function TestGrammarCompilation:test_apply_on_recurs()
 			field("count", number(8)),
 			field("child", array(root)
 				:count(function (self, ctx)
+					debug.breakpoint()
 					return ctx:result(-2).count
 				end)
 			),
@@ -216,11 +217,13 @@ function TestGrammarCompilation:test_apply_on_recurs()
 	end, true)
 
 	-- When
-	local result = grammar.root:parse(buf:pos('begin'))
+	local ret = grammar.root:parse(buf:pos('begin'))
 
 	-- Then
-	debug.pprint(result)
-	assertEquals(result.out, 0x2)
+	assertEquals(ret.count, 2)
+	assertEquals(ret.child[1].count, 1)
+	assertEquals(ret.child[1].child[1].count, 0)
+	assertEquals(ret.child[2].count, 0)
 end
 
 addTestSuite('TestGrammarCompilation')

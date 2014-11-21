@@ -22,7 +22,9 @@ function dg.Entity.method:__init(rule, id)
 end
 
 function dg.Entity.method:ccomp(ccomp)
+	ccomp:start_edge(self)
 	ccomp:apply_edge(self)
+	ccomp:finish_edge()
 	return { self._next }
 end
 
@@ -215,14 +217,14 @@ function dg.Entity.method:dump_graph(file)
 end
 
 function dg.Entity.method:trace(position, msg, ...)
-	if self.id then
+	if self.id or true then
 		local id = self.id
 		if self.name then
 			id = string.format("'%s'", self.name)
 		end
 
 		log.debug("in rule '%s' field %s: %s\n\tat byte %d: %s...",
-			self.rule or "<unknown>", id,
+			self.rule or "<unknown>", id or "<unknown>",
 			string.format(msg, ...), position.meter,
 			safe_string(position:copy():sub(20):asstring()))
 	end
@@ -253,11 +255,38 @@ function dg.CompoundStart.method:__init(rule, id, resultclass)
 	self.resultclass = resultclass or parseResult.Result
 end
 
+function dg.CompoundStart.method:ccomp(ccomp)
+	ccomp:start_edge(self)
+	ccomp:write[[
+		compound_level++;
+]]
+	ccomp:apply_edge(self)
+	ccomp:finish_edge()
+	return {self._next}
+end
+
 function dg.CompoundStart.method:_apply(ctx)
 	ctx:pushlevel()
 end
 
 dg.CompoundFinish = class.class('DGCompoundFinish', dg.Control)
+
+function dg.CompoundFinish.method:ccomp(ccomp)
+	ccomp:start_edge(self)
+	ccomp:write[[
+		compound_level--;
+		if (recurs_finish_level == compound_level && recurs_count > 0) {
+			/* pop recursion */
+			recurs_count--;
+			edge = recurs[recurs_count][RECURS_EDGE];
+			recurs_finish_level = recurs[recurs_count][RECURS_LEVEL];
+			break;
+		}
+]]
+	ccomp:apply_edge(self)
+	ccomp:finish_edge()
+	return {self._next}
+end
 
 function dg.CompoundFinish.method:_apply(ctx)
 	ctx:poplevel()
@@ -285,7 +314,19 @@ function dg.Recurs.method:_dump_graph_edges(file, ref)
 end
 
 function dg.Recurs.method:ccomp(ccomp)
-	ccomp:apply_edge(self)
+	local id = ccomp:register(self._next)
+	ccomp:start_edge(self)
+	ccomp:write([[
+		if (recurs_count >= RECURS_MAX) {
+			error("max recursion reached");
+		}
+		recurs[recurs_count][RECURS_EDGE] = %d;
+		/* Store laste recursion level so we can reuse it later */
+		recurs[recurs_count][RECURS_LEVEL] = recurs_finish_level;
+		recurs_finish_level = compound_level;
+		recurs_count++;
+]], id)
+	ccomp:finish_edge()
 	return { self._recurs, self._next }
 end
 
@@ -593,7 +634,16 @@ end
 
 dg.Release = class.class('DGRelease', dg.Control)
 
+local pfcount = 0
+
+function dg.Release.method:__init(rule, id)
+	class.super(dg.Release).__init(self, rule, id)
+	self.count = pfcount + 1
+	pfcount = self.count
+end
+
 function dg.Release.method:_apply(ctx)
+	self:trace(ctx.iter, "release #%d", self.count)
 	ctx:unmark()
 end
 
@@ -636,9 +686,13 @@ function dg.Branch.method:ccomp(ccomp)
 		cases_map[name] = id
 	end
 
-	ccomp:push_stored(ccomp:store(function(...)
-		local case = cases_map[self.selector(...)]
-		if not case then
+	ccomp:push_stored(ccomp:store(function(result, ctx)
+		local branch = self.selector(result, ctx)
+		local case = cases_map[branch]
+		if case then
+			self:trace(ctx.iter, "select branch '%s'", case)
+		else
+			self:trace(ctx.iter, "select branch 'default'")
 			case = cases_map["default"]
 		end
 		return case
