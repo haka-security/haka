@@ -81,7 +81,18 @@ Supported mode
         :return ret: true in case of succesfful dissassembly; false otherwise (e.g. broken instruction).
         :rtype ret: bool
 
+        Disassemble code into instructions.
+
         .. note:: Disassembly skips bad instructions. Whenever a bad instruction is encountered, the mnemonic instruction field is set to ``(bad)``. Disasembly stops when it reaches the end of the stream or when it encounters a broken instruction.
+
+    .. haka:function:: AsmHandle:dump_instructions(code, inst)
+
+        :param code: Code to disassemble.
+        :ptype code: :haka:class:`vbuffer_iterator`
+        :param inst: Instruction.
+        :ptype inst: AsmInstruction.
+
+        Disassemble and dump instructions.
 
 .. haka:class:: AsmInstruction
 

@@ -167,23 +167,21 @@ struct asm_instruction *new_instruction(unsigned long addr = 0);
         return self:_setsyntax(syntax)
     end
 
-
     local iter = swig.getclassmetatable('vbuffer_iterator')
     local iter_block = swig.getclassmetatable('vbuffer_iterator_blocking')
 
-    swig.getclassmetatable('asm_handle')['.fn'].disassemble = function (self, pos,
-inst)
+    local function disas(handle, pos, inst)
         if not inst then
             error("invalid instruction")
             return false
         end
         local meta = getmetatable(pos)
         if meta == iter then
-            return self:_disas(pos, inst)
+            return handle:_disas(pos, inst)
         elseif meta == iter_block then
             local iter = pos._iter
             repeat
-                if self:_disas(iter, inst) then
+                if handle:_disas(iter, inst) then
                     return true
                 end
             until not pos:wait()
@@ -191,5 +189,24 @@ inst)
             error("invalid iterator")
         end
         return false
+    end
+
+    swig.getclassmetatable('asm_handle')['.fn'].disassemble = function (self, pos,
+inst)
+        return disas(self, pos, inst)
+    end
+
+    swig.getclassmetatable('asm_handle')['.fn'].dump_instructions = function (self, pos,
+inst)
+        while disas(self, pos, inst) do
+            io.write(string.format("\t0x%08x %-8s %-32s ",
+                inst.address, inst:mnemonic(), inst:op_str()))
+            bytes = inst:bytes()
+            size = inst.size
+            for i = 1, size do
+                io.write(string.format('%02x ', bytes:byte(i)))
+            end
+            print("")
+        end
     end
 }
