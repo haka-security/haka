@@ -174,7 +174,7 @@ struct asm_instruction *new_instruction(unsigned long addr = 0);
     swig.getclassmetatable('asm_handle')['.fn'].disassemble = function (self, pos,
 inst)
         if not inst then
-            error("invalid instruction parameter")
+            error("invalid instruction")
             return false
         end
         local meta = getmetatable(pos)
@@ -188,7 +188,7 @@ inst)
                 end
             until not pos:wait()
         else
-            error("invalid parameters")
+            error("invalid iterator")
         end
         return false
     end

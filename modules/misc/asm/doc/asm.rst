@@ -34,7 +34,7 @@ Disassembler syntax
 
     Initialize the disassembler module with selected architecture and mode.
 
-.. haka:function:: AsmHandle:new_instruction(address = 0) -> asm_inst
+.. haka:function:: new_instruction(address = 0) -> asm_inst
 
     :param address: Instruction address.
     :ptype address: int
