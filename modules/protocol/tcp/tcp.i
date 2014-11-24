@@ -47,6 +47,7 @@ LUA_OBJECT(struct tcp_stream);
 
 %newobject tcp_stream::_push;
 %newobject tcp_stream::_pop;
+%delobject tcp_stream::_clear;
 
 struct tcp_stream
 {
