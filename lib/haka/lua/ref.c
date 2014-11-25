@@ -23,7 +23,6 @@
 #define WEAKREF_TABLE     "__weak_ref"
 #define WEAKREF_ID_TABLE  "__weak_ref_id"
 
-
 void lua_ref_init_state(lua_State *L)
 {
 	LUA_STACK_MARK(L);

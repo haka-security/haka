@@ -17,12 +17,11 @@
  */
 
 struct lua_object {
-	void            **owner;
 	struct lua_ref    ref;
 	bool              keep:1;
 };
 
-#define LUA_OBJECT_INIT        { NULL, ref: LUA_REF_INIT, keep: false }
+#define LUA_OBJECT_INIT        { ref: LUA_REF_INIT, keep: false }
 extern const struct lua_object lua_object_init;
 
 void lua_object_initialize(struct lua_State *L);
@@ -30,7 +29,7 @@ void lua_object_release(struct lua_object *obj);
 
 struct lua_State;
 
-void lua_object_register(struct lua_State *L, struct lua_object *obj, void **owner, int index, bool disown);
+void lua_object_register(struct lua_State *L, struct lua_object *obj, int index, bool disown);
 bool lua_object_push(struct lua_State *L, void *ptr, struct lua_object *obj, bool owner);
 
 #ifdef HAKA_FFI

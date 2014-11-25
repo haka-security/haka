@@ -22,6 +22,12 @@
 
 #define OBJECT_TABLE "__c_obj_ref"
 
+typedef struct {
+  void   *type;
+  int     own;  /* 1 if owned & must be destroyed */
+  void        *ptr;
+} swig_lua_userdata;
+
 
 void lua_object_initialize(lua_State *L)
 {
@@ -57,12 +63,6 @@ void lua_object_release(struct lua_object *obj)
 {
 	assert(obj);
 
-	if (obj->owner) {
-		assert(obj->ref.state);
-		*obj->owner = NULL;
-		obj->owner = NULL;
-	}
-
 	if (obj->ref.state && lua_state_isvalid(obj->ref.state)) {
 #ifdef HAKA_FFI
 		struct lua_object *obj_copy = malloc(sizeof(struct lua_object));
@@ -89,6 +89,11 @@ void lua_object_release(struct lua_object *obj)
 			lua_pop(L, 1);
 		}
 
+		lua_ref_push(L, &obj->ref);
+		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, -1);
+		if (usr) usr->ptr = NULL;
+		lua_pop(L, 1);
+
 		lua_ref_clear(L, &obj->ref);
 
 		LUA_STACK_CHECK(L, 0);
@@ -98,7 +103,7 @@ void lua_object_release(struct lua_object *obj)
 	}
 }
 
-void lua_object_register(lua_State *L, struct lua_object *obj, void **owner, int index, bool disown)
+void lua_object_register(lua_State *L, struct lua_object *obj, int index, bool disown)
 {
 	LUA_STACK_MARK(L);
 
@@ -126,11 +131,6 @@ void lua_object_register(lua_State *L, struct lua_object *obj, void **owner, int
 		obj->keep = true;
 	}
 
-	if (owner && !obj->owner) {
-		obj->owner = owner;
-	}
-
-	assert(obj->owner == owner);
 	assert(obj->ref.state == lua_state_get(L));
 
 	LUA_STACK_CHECK(L, 0);

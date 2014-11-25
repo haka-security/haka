@@ -15,8 +15,7 @@ UNUSED static bool lua_object_push_swig(lua_State *L, void *ptr, struct lua_obje
 	if (!lua_object_push(L, ptr, obj, owner)) {
 		SWIG_NewPointerObj(L, ptr, type_info, owner);
 
-		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, -1);
-		lua_object_register(L, obj, &usr->ptr, -1, !owner);
+		lua_object_register(L, obj, -1, !owner);
 	}
 	else {
 		if (ptr && owner) {
@@ -44,8 +43,7 @@ UNUSED static bool lua_object_push_swig(lua_State *L, void *ptr, struct lua_obje
 		}
 
 		if ($1) {
-			assert(usr);
-			lua_object_register(L, &((casttype*)$1)->name, &usr->ptr, $input, disown);
+			lua_object_register(L, &((casttype*)$1)->name, $input, disown);
 		}
 	}
 %enddef
@@ -220,8 +218,7 @@ UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_objec
 
 		lua_remove(L, -2);
 
-		void **owner = (void **)lua_topointer(L, -1);
-		lua_object_register(L, obj, owner, -1, !own);
+		lua_object_register(L, obj, -1, !own);
 		if (own) {
 			lua_object_ffi_update_ownership(L, -1, true);
 		}
@@ -248,7 +245,7 @@ UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_objec
 	$1 = *obj;
 
 	if ($1) {
-		lua_object_register(L, &($1)->name, (void**)obj, $input, $disown);
+		lua_object_register(L, &($1)->name, $input, $disown);
 
 		if ($disown) {
 			lua_object_ffi_update_ownership(L, $input, false);
@@ -264,7 +261,7 @@ UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_objec
 	$1 = *obj;
 
 	if ($1) {
-		lua_object_register(L, &($1)->name, (void**)obj, $input, true);
+		lua_object_register(L, &($1)->name, $input, true);
 		lua_object_ffi_update_ownership(L, $input, false);
 	}
 }
