@@ -103,7 +103,7 @@ void lua_object_release(struct lua_object *obj)
 	}
 }
 
-void lua_object_register(lua_State *L, struct lua_object *obj, int index, bool disown)
+void lua_object_register(lua_State *L, struct lua_object *obj, int index, bool lua_own)
 {
 	LUA_STACK_MARK(L);
 
@@ -115,7 +115,7 @@ void lua_object_register(lua_State *L, struct lua_object *obj, int index, bool d
 		lua_ref_get(L, &obj->ref, index, true);
 	}
 
-	if (disown) {
+	if (!lua_own) {
 		lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
 
 #ifdef HAKA_DEBUG
@@ -136,7 +136,7 @@ void lua_object_register(lua_State *L, struct lua_object *obj, int index, bool d
 	LUA_STACK_CHECK(L, 0);
 }
 
-bool lua_object_push(lua_State *L, struct lua_object *obj, bool owner)
+bool lua_object_push(lua_State *L, struct lua_object *obj, bool lua_own)
 {
 	LUA_STACK_MARK(L);
 
@@ -149,7 +149,7 @@ bool lua_object_push(lua_State *L, struct lua_object *obj, bool owner)
 		lua_ref_push(L, &obj->ref);
 		assert(!lua_isnil(L, -1));
 
-		if (owner) {
+		if (lua_own) {
 			lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
 
 #ifdef HAKA_DEBUG

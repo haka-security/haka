@@ -15,7 +15,7 @@ UNUSED static bool lua_object_push_swig(lua_State *L, void *ptr, struct lua_obje
 	if (!lua_object_push(L, ptr ? obj : NULL, owner)) {
 		SWIG_NewPointerObj(L, ptr, type_info, owner);
 
-		lua_object_register(L, obj, -1, !owner);
+		lua_object_register(L, obj, -1, owner);
 	}
 	else {
 		if (ptr && owner) {
@@ -43,7 +43,7 @@ UNUSED static bool lua_object_push_swig(lua_State *L, void *ptr, struct lua_obje
 		}
 
 		if ($1) {
-			lua_object_register(L, &((casttype*)$1)->name, $input, disown);
+			lua_object_register(L, &((casttype*)$1)->name, $input, !disown);
 		}
 	}
 %enddef
@@ -186,9 +186,9 @@ UNUSED static bool lua_object_ffi_update_ownership(lua_State *L, int index, bool
 	return true;
 }
 
-UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_object *obj, const char *type_info, bool own)
+UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_object *obj, const char *type_info, bool owner)
 {
-	if (!lua_object_push(L, ptr ? obj : NULL, own)) {
+	if (!lua_object_push(L, ptr ? obj : NULL, owner)) {
 		int h;
 		LUA_STACK_MARK(L);
 		lua_pushcfunction(L, lua_state_error_formater);
@@ -218,15 +218,15 @@ UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_objec
 
 		lua_remove(L, -2);
 
-		lua_object_register(L, obj, -1, !own);
-		if (own) {
+		lua_object_register(L, obj, -1, owner);
+		if (owner) {
 			lua_object_ffi_update_ownership(L, -1, true);
 		}
 
 		LUA_STACK_CHECK(L, 1);
 	}
 	else {
-		if (ptr && own) {
+		if (ptr && owner) {
 			lua_object_ffi_update_ownership(L, -1, true);
 		}
 	}

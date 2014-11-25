@@ -29,8 +29,8 @@ void lua_object_release(struct lua_object *obj);
 
 struct lua_State;
 
-void lua_object_register(struct lua_State *L, struct lua_object *obj, int index, bool disown);
-bool lua_object_push(struct lua_State *L, struct lua_object *obj, bool owner);
+void lua_object_register(struct lua_State *L, struct lua_object *obj, int index, bool lua_own);
+bool lua_object_push(struct lua_State *L, struct lua_object *obj, bool lua_own);
 
 #ifdef HAKA_FFI
 struct ffi_object {
