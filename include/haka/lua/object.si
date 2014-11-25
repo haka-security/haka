@@ -31,12 +31,14 @@ UNUSED static bool lua_object_push_swig(lua_State *L, void *ptr, struct lua_obje
 
 %define _LUA_OBJECT_IN(typeptr, casttype, name, disown)
 	{
+#ifdef HAKA_DEBUG
 		swig_lua_userdata *usr = NULL;
 
 		if (!lua_isnil(L, $input)) {
 			usr = (swig_lua_userdata*)lua_touserdata(L, $input);
 			assert(!disown || usr->own == 1);
 		}
+#endif
 
 		if (!SWIG_IsOK(SWIG_ConvertPtr(L, $input, (void**)&$1, $descriptor, disown))){
 			SWIG_fail_ptr("$symname", $argnum, $descriptor);
