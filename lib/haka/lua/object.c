@@ -20,7 +20,9 @@
 #include <lauxlib.h>
 
 
+#ifdef HAKA_DEBUG
 #define OBJECT_TABLE "__c_obj_ref"
+#endif
 
 typedef struct {
   void   *type;
@@ -31,8 +33,10 @@ typedef struct {
 
 void lua_object_initialize(lua_State *L)
 {
+#ifdef HAKA_DEBUG
 	lua_newtable(L);
 	lua_setfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
+#endif
 }
 
 const struct lua_object lua_object_init = LUA_OBJECT_INIT;
@@ -44,13 +48,6 @@ static int lua_object_delay_release(lua_State *L)
 
 	assert(lua_islightuserdata(L, 1));
 	struct lua_object *obj = lua_touserdata(L, 1);
-
-	if (obj->keep) {
-		lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
-		lua_pushnil(L);
-		lua_rawseti(L, -2, obj->ref.ref);
-		lua_pop(L, 1);
-	}
 
 	lua_ref_clear(L, &obj->ref);
 
@@ -82,13 +79,6 @@ void lua_object_release(struct lua_object *obj)
 
 		LUA_STACK_MARK(L);
 
-		if (obj->keep) {
-			lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
-			lua_pushnil(L);
-			lua_rawseti(L, -2, obj->ref.ref);
-			lua_pop(L, 1);
-		}
-
 		lua_ref_push(L, &obj->ref);
 		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, -1);
 		if (usr) usr->ptr = NULL;
@@ -96,6 +86,16 @@ void lua_object_release(struct lua_object *obj)
 
 		lua_ref_clear(L, &obj->ref);
 
+#ifdef HAKA_DEBUG
+		lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
+
+		/* Erase object address */
+		lua_pushlightuserdata(L, obj);
+		lua_pushnil(L);
+		lua_rawset(L, -3);
+
+		lua_pop(L, 1); /* pop OBJECT_TABLE */
+#endif
 		LUA_STACK_CHECK(L, 0);
 #endif
 
@@ -111,27 +111,33 @@ void lua_object_register(lua_State *L, struct lua_object *obj, int index, bool l
 		index = lua_gettop(L)+index+1;
 	}
 
-	if (!lua_ref_isvalid(&obj->ref)) {
-		lua_ref_get(L, &obj->ref, index, true);
-	}
-
-	if (!lua_own) {
-		lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
-
 #ifdef HAKA_DEBUG
-		assert(!obj->keep);
-		lua_rawgeti(L, -1, obj->ref.ref);
-		assert(lua_isnil(L, -1));
-		lua_pop(L, 1);
+	lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
+
+	/* Ensure we are not registering the object twice */
+	lua_pushlightuserdata(L, obj);
+	lua_rawget(L, -2);
+	assert(lua_rawequal(L, -1, index) || lua_isnil(L, -1));
+	lua_pop(L, 1);
+
+	/* Save object address so we can do the above assert later */
+	lua_pushlightuserdata(L, obj);
+	lua_pushvalue(L, index);
+	lua_rawset(L, -3);
+
+	lua_pop(L, 1); /* pop OBJECT_TABLE */
 #endif
 
-		lua_pushvalue(L, index);
-		lua_rawseti(L, -2, obj->ref.ref);
-		lua_pop(L, 1);
-		obj->keep = true;
+
+	if (!lua_own) {
+		if (!lua_ref_isvalid(&obj->ref)) {
+			lua_ref_get(L, &obj->ref, index, false);
+			obj->keep = true;
+		}
+
+		assert(obj->ref.state == lua_state_get(L));
 	}
 
-	assert(obj->ref.state == lua_state_get(L));
 
 	LUA_STACK_CHECK(L, 0);
 }
@@ -150,18 +156,7 @@ bool lua_object_push(lua_State *L, struct lua_object *obj, bool lua_own)
 		assert(!lua_isnil(L, -1));
 
 		if (lua_own) {
-			lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
-
-#ifdef HAKA_DEBUG
-			assert(obj->keep);
-			lua_rawgeti(L, -1, obj->ref.ref);
-			assert(!lua_isnil(L, -1));
-			lua_pop(L, 1);
-#endif
-
-			lua_pushnil(L);
-			lua_rawseti(L, -2, obj->ref.ref);
-			lua_pop(L, 1);
+			lua_ref_clear(L, &obj->ref);
 			obj->keep = false;
 		}
 
