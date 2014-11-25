@@ -132,7 +132,6 @@ void lua_object_register(lua_State *L, struct lua_object *obj, int index, bool l
 	if (!lua_own) {
 		if (!lua_ref_isvalid(&obj->ref)) {
 			lua_ref_get(L, &obj->ref, index, false);
-			obj->keep = true;
 		}
 
 		assert(obj->ref.state == lua_state_get(L));
@@ -157,7 +156,6 @@ bool lua_object_push(lua_State *L, struct lua_object *obj, bool lua_own)
 
 		if (lua_own) {
 			lua_ref_clear(L, &obj->ref);
-			obj->keep = false;
 		}
 
 		LUA_STACK_CHECK(L, 1);
