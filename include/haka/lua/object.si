@@ -12,7 +12,7 @@
 
 UNUSED static bool lua_object_push_swig(lua_State *L, void *ptr, struct lua_object *obj, swig_type_info *type_info, bool owner)
 {
-	if (!lua_object_push(L, ptr, obj, owner)) {
+	if (!lua_object_push(L, ptr ? obj : NULL, owner)) {
 		SWIG_NewPointerObj(L, ptr, type_info, owner);
 
 		lua_object_register(L, obj, -1, !owner);
@@ -188,7 +188,7 @@ UNUSED static bool lua_object_ffi_update_ownership(lua_State *L, int index, bool
 
 UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_object *obj, const char *type_info, bool own)
 {
-	if (!lua_object_push(L, ptr, obj, own)) {
+	if (!lua_object_push(L, ptr ? obj : NULL, own)) {
 		int h;
 		LUA_STACK_MARK(L);
 		lua_pushcfunction(L, lua_state_error_formater);

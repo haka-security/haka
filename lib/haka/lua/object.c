@@ -136,40 +136,39 @@ void lua_object_register(lua_State *L, struct lua_object *obj, int index, bool d
 	LUA_STACK_CHECK(L, 0);
 }
 
-bool lua_object_push(lua_State *L, void *ptr, struct lua_object *obj, bool owner)
+bool lua_object_push(lua_State *L, struct lua_object *obj, bool owner)
 {
 	LUA_STACK_MARK(L);
 
-	if (ptr) {
-		if (lua_ref_isvalid(&obj->ref)) {
-			lua_ref_push(L, &obj->ref);
-			assert(!lua_isnil(L, -1));
-
-			if (owner) {
-				lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
-
-#ifdef HAKA_DEBUG
-				assert(obj->keep);
-				lua_rawgeti(L, -1, obj->ref.ref);
-				assert(!lua_isnil(L, -1));
-				lua_pop(L, 1);
-#endif
-
-				lua_pushnil(L);
-				lua_rawseti(L, -2, obj->ref.ref);
-				lua_pop(L, 1);
-				obj->keep = false;
-			}
-
-			LUA_STACK_CHECK(L, 1);
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-	else {
+	if (!obj) {
 		lua_pushnil(L);
 		return true;
+	}
+
+	if (lua_ref_isvalid(&obj->ref)) {
+		lua_ref_push(L, &obj->ref);
+		assert(!lua_isnil(L, -1));
+
+		if (owner) {
+			lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
+
+#ifdef HAKA_DEBUG
+			assert(obj->keep);
+			lua_rawgeti(L, -1, obj->ref.ref);
+			assert(!lua_isnil(L, -1));
+			lua_pop(L, 1);
+#endif
+
+			lua_pushnil(L);
+			lua_rawseti(L, -2, obj->ref.ref);
+			lua_pop(L, 1);
+			obj->keep = false;
+		}
+
+		LUA_STACK_CHECK(L, 1);
+		return true;
+	}
+	else {
+		return false;
 	}
 }
