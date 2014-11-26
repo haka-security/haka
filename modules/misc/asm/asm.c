@@ -16,28 +16,6 @@ enum instruction_status {
 	NEEDMOREDATA,
 };
 
-static size_t update_pending_bytes(const char *buffer, size_t size, size_t offset, uint16_t current, void *user_data)
-{
-	struct asm_instruction_pending *pending = (struct asm_instruction_pending *)user_data;
-	pending->skip = true;
-	assert(current <= INSTRUCTION_MAX_LEN);
-
-	if (pending->size == 0) {
-		memcpy(pending->code, buffer, current);
-		pending->size = current;
-	}
-
-	/* invalid instruction */
-	if (current < size) {
-		pending->status = 0;
-	}
-	/* broken instruction */
-	else {
-		pending->status = 1;
-	}
-	return 0;
-}
-
 struct asm_handle *asm_initialize(cs_arch arch, cs_mode mode)
 {
 	struct asm_handle *asm_handle = malloc(sizeof(struct asm_handle));
@@ -48,12 +26,7 @@ struct asm_handle *asm_initialize(cs_arch arch, cs_mode mode)
 	}
 
 	asm_handle->pending.size = 0;
-	asm_handle->pending.skip = false;
-	asm_handle->pending.status = true;
 	asm_handle->pending.advance = 0;
-
-	asm_handle->skipdata.callback = (cs_skipdata_cb_t)update_pending_bytes;
-	asm_handle->skipdata.user_data = &asm_handle->pending;
 
 	if (cs_open(arch, mode, &asm_handle->handle) != CS_ERR_OK) {
 		error("cannot initialize asm module");
@@ -63,9 +36,6 @@ struct asm_handle *asm_initialize(cs_arch arch, cs_mode mode)
 
 	asm_handle->arch = arch;
 	asm_handle->mode = mode;
-
-	cs_option(asm_handle->handle, CS_OPT_SKIPDATA_SETUP, (size_t)&asm_handle->skipdata);
-	cs_option(asm_handle->handle, CS_OPT_SKIPDATA, CS_OPT_ON);
 
 	cs_option(asm_handle->handle, CS_OPT_DETAIL, CS_OPT_ON);
 
@@ -93,72 +63,80 @@ int asm_get_arch(struct asm_handle *asm_handle) {
 	return asm_handle->arch;
 }
 
+uint8 instruction_get_max_length(cs_arch arch, cs_mode mode)
+{
+	if (arch == CS_ARCH_X86) return 15;
+	else if (arch == CS_ARCH_ARM && mode == CS_MODE_THUMB) return 2;
+	else return 4;
+}
+
 static int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t *size,
-	struct asm_instruction *inst)
+	struct asm_instruction *inst, bool eos)
 {
 	csh *handle;
 	cs_insn *instruction;
 	cs_arch arch;
 	cs_mode mode;
-	int skip;
 	bool ret = true;
 	const uint8_t *ptr_code;
 	struct asm_instruction_pending *pending;
-	size_t tmp;
-	enum instruction_status status;
+	size_t length;
 
 	handle = &asm_handle->handle;
 	pending = &asm_handle->pending;
-	pending->skip = false;
 
 	if (pending->size == 0) {
+		ptr_code = *code;
+		length = *size;
 		ret = cs_disasm_iter(*handle, code, size, &inst->addr, &inst->inst);
 	}
 	else {
+		size_t tmp;
 		const uint16_t len = (*size <=  INSTRUCTION_MAX_LEN - pending->size)
 			? *size :  INSTRUCTION_MAX_LEN - pending->size;
 		memcpy(pending->code + pending->size, *code, len);
 		pending->size += len;
 		tmp = pending->size;
 		ptr_code = pending->code;
+		length = tmp;
 		ret = cs_disasm_iter(*handle, &ptr_code, &tmp, &inst->addr, &inst->inst);
-		if (!pending->skip) {
-			pending->size = 0;
-		}
 	}
 
 	/* check disas result */
-	if (!ret && pending->status) {
-		update_pending_bytes((const char *)*code, *size, 0, *size , pending);
-	}
-
-	if (!pending->status) {
+	if (!ret) {
 		mode = asm_handle->mode;
 		arch = asm_handle->arch;
-		if (arch == CS_ARCH_X86) skip = 1;
-		else if (arch == CS_ARCH_ARM && mode == CS_MODE_THUMB) skip = 2;
-		else skip = 4;
 
-		inst->addr += skip;
-		instruction = &inst->inst;
-		strcpy(instruction->mnemonic, "(bad)");
-		memcpy(instruction->bytes, pending->code, skip);
-		instruction->size = skip;
-		instruction->op_str[0] = '\0';
-
-		status = FAIL;
-		pending->status = 1;
-	}
-	else {
-		if (pending->skip) {
-			status = NEEDMOREDATA;
+		/* broken instruction */
+		if (length < instruction_get_max_length(arch, mode) && !eos) {
+			if (pending->size == 0) {
+				memcpy(pending->code, *code, length);
+				pending->size = length;
+			}
+			return NEEDMOREDATA;
 		}
+
+		/* invalid instruction */
 		else {
-			status = SUCCESS;
+			int skip;
+			if (arch == CS_ARCH_X86) skip = 1;
+			else if (arch == CS_ARCH_ARM && mode == CS_MODE_THUMB) skip = 2;
+			else skip = 4;
+
+			if (eos && length < skip) {
+				skip = length;
+			}
+
+			inst->addr += skip;
+			instruction = &inst->inst;
+			strcpy(instruction->mnemonic, "(bad)");
+			memcpy(instruction->bytes, ptr_code, skip);
+			instruction->size = skip;
+			instruction->op_str[0] = '\0';
+			return FAIL;
 		}
 	}
-
-	return status;
+	return SUCCESS;
 }
 
 bool asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos, struct asm_instruction *inst)
@@ -168,6 +146,7 @@ bool asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos, st
 	struct vbuffer_iterator iter;
 	struct asm_instruction_pending *pending;
 	enum instruction_status status = NEEDMOREDATA;
+	bool eos;
 
 	if (!vbuffer_iterator_isvalid(pos)) {
 		error("invalid vbuffer iterator");
@@ -194,7 +173,8 @@ bool asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos, st
 			vbuffer_iterator_move(pos, &iter);
 			return false;
 		}
-		status = asm_disas(asm_handle, &code, &size, inst);
+		eos =  vbuffer_iterator_iseof(&iter);
+		status = asm_disas(asm_handle, &code, &size, inst, eos);
 	}
 
 	int diff = inst->inst.size - remaining;

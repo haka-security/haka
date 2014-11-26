@@ -105,8 +105,8 @@ function TestAsmModule:test_can_disas_on_blocking_iterator ()
 end
 
 function TestAsmModule:test_disas_should_skip_bad_inst_on_blocking_iterator ()
-	self.asm = self.module.new_disassembler('arm', 'arm')
-	local code = { "\xca\xfe\xba", "\xbe" , "\x03\x00\xa0\xe1" }
+	self.asm = self.module.new_disassembler('ppc', '32')
+	local code = { "\x00\x00", "\x00\x00", "\x50\x40\x30\x20" }
 	self:gen_stream(code, function (iter)
 		-- When
 		local ret = self.asm:disassemble(iter, self.inst)
@@ -117,9 +117,10 @@ function TestAsmModule:test_disas_should_skip_bad_inst_on_blocking_iterator ()
 		ret = self.asm:disassemble(iter, self.inst)
 
 		assertTrue(ret)
-		assertEquals(self.inst:mnemonic(), "mov")
+		assertEquals(self.inst:mnemonic(), "subfic")
 	end)
 end
+
 
 function TestAsmModule:test_disas_should_succeed_on_arm_arch ()
 	-- When

@@ -21,8 +21,6 @@
 
 struct asm_instruction_pending {
 	uint8_t                        code[INSTRUCTION_MAX_LEN];
-	bool                           skip;
-	bool                           status;
 	uint16_t                       size;
 	size_t                         advance;
 };
@@ -31,7 +29,6 @@ struct asm_handle {
 	csh                            handle;
 	int                            arch;
 	int                            mode;
-	cs_opt_skipdata                skipdata;
 	struct asm_instruction_pending pending;
 };
 
