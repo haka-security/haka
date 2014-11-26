@@ -165,10 +165,7 @@ static int lua_register_object(lua_State *L)
 	obj = (struct lua_object *)((char*)ref-offsetof(struct lua_object, ref));
 	assert(&obj->ref == ref);
 
-	void **owner = (void **)lua_topointer(L, 2);
-	assert(owner);
-
-	lua_object_register(L, obj, owner, 2, false);
+	lua_object_register(L, obj, 2, false);
 
 	return 0;
 }

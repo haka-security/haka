@@ -108,7 +108,7 @@ function module.create_type(cdef, prop, meth, mt, destroy)
 				return tmp.ref:get()
 			else
 				local ret = tmp.ptr
-				haka.C.register_object(tmp.ref, ret)
+				tmp.ref:set(ret, false)
 				return ret
 			end
 		end
@@ -129,21 +129,17 @@ end
 function module.own(cdata)
 	ffi.gc(cdata, destroy)
 	local ref = cdata.__ref
+	assert(ref ~= nil)
 	assert(ref:isvalid(), "invalid object")
-	if not cdata.__ref.weak then
-		cdata.__ref:clear()
-		cdata.__ref:set(cdata, true)
-	end
+	ref:clear()
 end
 
 function module.disown(cdata)
 	ffi.gc(cdata, nil)
 	local ref = cdata.__ref
-	assert(ref:isvalid(), "invalid object")
-	if cdata.__ref.weak then
-		cdata.__ref:clear()
-		cdata.__ref:set(cdata, false)
-	end
+	assert(ref ~= nil)
+	assert(not ref:isvalid(), "invalid object")
+	ref:set(cdata, false)
 end
 
 return module

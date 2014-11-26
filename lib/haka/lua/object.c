@@ -7,6 +7,7 @@
 #include <haka/types.h>
 #include <haka/compiler.h>
 #include <haka/error.h>
+#include <haka/log.h>
 #include <haka/lua/object.h>
 #include <haka/lua/state.h>
 #include <haka/lua/luautils.h>
@@ -19,7 +20,6 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-
 #ifdef HAKA_DEBUG
 #define OBJECT_TABLE "__c_obj_ref"
 #endif
@@ -30,6 +30,19 @@ typedef struct {
   void        *ptr;
 } swig_lua_userdata;
 
+static void lua_clear_swigdata(lua_State *L, int idx)
+{
+	swig_lua_userdata *usr = lua_touserdata(L, idx);
+	if (usr) usr->ptr = NULL;
+}
+
+#ifdef HAKA_FFI
+static void lua_clear_luaref(lua_State *L, int idx)
+{
+	void **cdata = (void **)lua_topointer(L, idx);
+	*cdata = NULL;
+}
+#endif
 
 void lua_object_initialize(lua_State *L)
 {
@@ -41,47 +54,25 @@ void lua_object_initialize(lua_State *L)
 
 const struct lua_object lua_object_init = LUA_OBJECT_INIT;
 
-#ifdef HAKA_FFI
-static int lua_object_delay_release(lua_State *L)
-{
-	LUA_STACK_MARK(L);
-
-	assert(lua_islightuserdata(L, 1));
-	struct lua_object *obj = lua_touserdata(L, 1);
-
-	lua_ref_clear(L, &obj->ref);
-
-	LUA_STACK_CHECK(L, 0);
-	return 0;
-}
-#endif
-
 void lua_object_release(struct lua_object *obj)
 {
 	assert(obj);
 
 	if (obj->ref.state && lua_state_isvalid(obj->ref.state)) {
-#ifdef HAKA_FFI
-		struct lua_object *obj_copy = malloc(sizeof(struct lua_object));
-		if (!obj_copy) {
-			error("memory error");
-			return;
-		}
-
-		*obj_copy = *obj;
-
-		if (!lua_state_interrupt(obj->ref.state, lua_object_delay_release, obj_copy, free)) {
-			free(obj_copy);
-			return;
-		}
-#else
 		lua_State *L = obj->ref.state->L;
 
 		LUA_STACK_MARK(L);
 
 		lua_ref_push(L, &obj->ref);
-		swig_lua_userdata *usr = (swig_lua_userdata*)lua_touserdata(L, -1);
-		if (usr) usr->ptr = NULL;
+#ifdef HAKA_FFI
+		if (lua_iscdata(L, -1)) {
+			lua_clear_luaref(L, -1);
+		} else {
+			lua_clear_swigdata(L, -1);
+		}
+#else
+		lua_clear_swigdata(L, -1);
+#endif
 		lua_pop(L, 1);
 
 		lua_ref_clear(L, &obj->ref);
@@ -97,7 +88,6 @@ void lua_object_release(struct lua_object *obj)
 		lua_pop(L, 1); /* pop OBJECT_TABLE */
 #endif
 		LUA_STACK_CHECK(L, 0);
-#endif
 
 		*obj = lua_object_init;
 	}
@@ -127,7 +117,6 @@ void lua_object_register(lua_State *L, struct lua_object *obj, int index, bool l
 
 	lua_pop(L, 1); /* pop OBJECT_TABLE */
 #endif
-
 
 	if (!lua_own) {
 		if (!lua_ref_isvalid(&obj->ref)) {

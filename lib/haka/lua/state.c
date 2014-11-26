@@ -699,6 +699,14 @@ bool lua_state_require(struct lua_State *L, const char *module, int result)
 	return true;
 }
 
+bool lua_iscdata(lua_State *L, int idx)
+{
+	/**
+	 *  cdata is type 10
+	 *  \see external/luajit/src/src/lj_obj.h
+	 */
+	return lua_type(L, idx) == 10;
+}
 
 /*
  * Debugging utility functions

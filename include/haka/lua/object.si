@@ -8,6 +8,7 @@
 
 %{
 #include <haka/lua/object.h>
+#include <haka/lua/state.h>
 #include <haka/config.h>
 
 UNUSED static bool lua_object_push_swig(lua_State *L, void *ptr, struct lua_object *obj, swig_type_info *type_info, bool owner)
@@ -190,7 +191,7 @@ UNUSED static bool lua_object_ffi_update_ownership(lua_State *L, int index, bool
 
 UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_object *obj, const char *type_info, bool owner)
 {
-	if (!lua_object_push(L, ptr ? obj : NULL, owner)) {
+	if (!lua_object_push(L, ptr ? obj : NULL, false)) {
 		int h;
 		LUA_STACK_MARK(L);
 		lua_pushcfunction(L, lua_state_error_formater);
@@ -220,7 +221,7 @@ UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_objec
 
 		lua_remove(L, -2);
 
-		lua_object_register(L, obj, -1, owner);
+		lua_object_register(L, obj, -1, false);
 		if (owner) {
 			lua_object_ffi_update_ownership(L, -1, true);
 		}
@@ -240,8 +241,7 @@ UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_objec
 %define _FFI_OBJECT(typeptr, name)
 
 %typemap(in) typeptr * {
-	/* cdata is type 10 */
-	assert(lua_type(L, $input) == 10);
+	assert(lua_iscdata(L, $input));
 
 	typeptr **obj = (typeptr **)lua_topointer(L, $input);
 	$1 = *obj;
@@ -256,8 +256,7 @@ UNUSED static bool lua_object_push_ffi(lua_State *L, void *ptr, struct lua_objec
 }
 
 %typemap(in) typeptr *DISOWN {
-	/* cdata is type 10 */
-	assert(lua_type(L, $input) == 10);
+	assert(lua_iscdata(L, $input));
 
 	typeptr **obj = (typeptr **)lua_topointer(L, $input);
 	$1 = *obj;
