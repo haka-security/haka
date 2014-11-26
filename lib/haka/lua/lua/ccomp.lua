@@ -268,7 +268,10 @@ int luaopen_%s(lua_State *L)
 	end
 	local compile_command = string.format("gcc %s -o %s %s", cflags, self._sofile, self._cfile)
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
-	os.execute(compile_command)
+	local ret = os.execute(compile_command)
+	if ret ~= 0 then
+		error("grammar compilation failed `"..compile_command.."`")
+	end
 
 	return self._name
 end
