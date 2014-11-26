@@ -119,29 +119,57 @@ struct asm_handle *asm_initialize(int arch, int mode);
 %newobject new_instruction;
 struct asm_instruction *new_instruction(unsigned long addr = 0);
 
+enum {
+    CS_ARCH_ARM,
+    CS_ARCH_ARM64,
+    CS_ARCH_MIPS,
+    CS_ARCH_X86,
+    CS_ARCH_PPC,
+    CS_ARCH_SPARC,
+    CS_ARCH_SYSZ,
+    CS_ARCH_XCORE,
+};
+
+enum {
+    CS_MODE_ARM,
+    CS_MODE_16,
+    CS_MODE_32,
+    CS_MODE_64,
+    CS_MODE_THUMB,
+};
+
+enum {
+    CS_OPT_SYNTAX_INTEL,
+    CS_OPT_SYNTAX_ATT,
+};
+
 %luacode {
+    local this = unpack({...})
+
     local asm_arch = {
-        ["arm"] = 0,
-        ["arm64"] = 1,
-        ["mips"] = 2,
-        ["x86"] = 3,
-        ["ppc"] = 4,
+        ["arm"] = this.CS_ARCH_ARM,
+        ["arm64"] = this.CS_ARCH_ARM64,
+        ["mips"] = this.CS_ARCH_MIPS,
+        ["x86"] = this.CS_ARCH_X86,
+        ["ppc"] = this.CS_ARCH_PPC,
+        ["sparc"] = this.CS_ARCH_SPARC,
+        ["sysz"] = this.CS_ARCH_SYSZ,
+        ["xcore"] = this.CS_ARCH_XCORE,
     }
 
     local asm_mode = {
-        ["arm"] = 0,
-        ["16"] = 2,
-        ["32"] = 4,
-        ["64"] = 8,
-        ["thumb"] = 16,
+        ["arm"] = this.CS_MODE_ARM,
+        ["16"] = this.CS_MODE_16,
+        ["32"] = this.CS_MODE_32,
+        ["64"] = this.CS_MODE_64,
+        ["thumb"] = this.CS_MODE_THUMB,
     }
 
     local asm_syntax = {
-        ["intel"] = 1, 
-        ["att"] = 2,
+        ["intel"] = this.CS_OPT_SYNTAX_INTEL,
+        ["att"] = this.CS_OPT_SYNTAX_ATT,
     }
 
-    local this = unpack({...})
     local asm_initialize = this.asm_initialize
     this.asm_initialize = nil
 
