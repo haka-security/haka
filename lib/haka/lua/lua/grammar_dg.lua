@@ -217,7 +217,7 @@ function dg.Entity.method:dump_graph(file)
 end
 
 function dg.Entity.method:trace(position, msg, ...)
-	if self.id or true then
+	if self.id then
 		local id = self.id
 		if self.name then
 			id = string.format("'%s'", self.name)
@@ -634,16 +634,11 @@ end
 
 dg.Release = class.class('DGRelease', dg.Control)
 
-local pfcount = 0
-
 function dg.Release.method:__init(rule, id)
 	class.super(dg.Release).__init(self, rule, id)
-	self.count = pfcount + 1
-	pfcount = self.count
 end
 
 function dg.Release.method:_apply(ctx)
-	self:trace(ctx.iter, "release #%d", self.count)
 	ctx:unmark()
 end
 

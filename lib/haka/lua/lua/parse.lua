@@ -105,14 +105,12 @@ function parse.Context.method:result(idx)
 end
 
 function parse.Context.method:mark(readonly)
-	debug.pprint("mark")
 	local mark = self.iter:copy()
 	mark:mark(readonly)
 	table.insert(self._retain_mark, mark)
 end
 
 function parse.Context.method:unmark()
-	debug.pprint("unmark")
 	local mark = self.retain_mark
 	self._retain_mark[#self._retain_mark] = nil
 	mark:unmark()
