@@ -336,9 +336,8 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		}
 	}
 
-	*pkt = &state->current->core_packet;
-	lua_object_release(&(*pkt)->lua_object);
-	lua_ref_clear(NULL, &(*pkt)->luadata);
+	*pkt = malloc(sizeof(struct pcap_packet));
+	memcpy(*pkt, state->current, sizeof(struct pcap_packet));
 
 	state->current = list_next(state->current);
 	return 0;
@@ -372,6 +371,7 @@ static uint64 packet_get_id(struct packet *orig_pkt)
 
 static void packet_do_release(struct packet *orig_pkt)
 {
+	free(orig_pkt);
 }
 
 static enum packet_status packet_getstate(struct packet *orig_pkt)
