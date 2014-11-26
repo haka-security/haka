@@ -843,7 +843,7 @@ local function new_c_grammar(name, def)
 		f:close()
 	end
 
-	local c_grammar = require(tmpl:compile())
+	local c_grammar = require(tmpl:compile(grammar.debug))
 
 	for _, parser in pairs(tmpl._parsers) do
 		g._exports[parser.name] = {

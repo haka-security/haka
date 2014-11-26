@@ -234,7 +234,7 @@ function module.method:apply_node(node)
 ]]
 end
 
-function module.method:compile()
+function module.method:compile(debug)
 	assert(not self._parser, "unfinished parser ", self._parsers[#self._parsers].name)
 
 	-- Luaopen
@@ -260,7 +260,13 @@ int luaopen_%s(lua_State *L)
 	self._fd:close()
 
 	-- Compile c grammar
-	local compile_command = "gcc -shared -g -Wall -Werror -o "..self._sofile.." -fPIC "..self._cfile
+	local cflags = "-Wall -Werror -shared -fPIC"
+	if debug then
+		cflags = cflags.." -g"
+	else
+		cflags = cflags.." -Wl,-s"
+	end
+	local compile_command = string.format("gcc %s -o %s %s", cflags, self._sofile, self._cfile)
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
 	os.execute(compile_command)
 
