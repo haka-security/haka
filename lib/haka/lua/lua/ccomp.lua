@@ -36,18 +36,18 @@ function module.method:__init(name)
 #define FINISH 0
 
 #define RECURS_MAX   200
-#define RECURS_EDGE  0
+#define RECURS_NODE  0
 #define RECURS_LEVEL 1
 ]]
 end
 
-local function traverse(ccomp, edge)
-	if ccomp._parser.written_edges[edge] then
-		ccomp:jumpto(edge)
+local function traverse(ccomp, node)
+	if ccomp._parser.written_nodes[node] then
+		ccomp:jumpto(node)
 		return
 	end
 
-	local nexts = edge:ccomp(ccomp)
+	local nexts = node:ccomp(ccomp)
 	if #nexts == 0 then
 		-- Reach one end of the graph
 		ccomp:jumptoend()
@@ -71,9 +71,9 @@ function module.method:_start_parser(name)
 		name = name,
 		fname = "parse_"..name,
 		store = {}, -- Store some lua object to access it from c
-		edges = {}, -- Store all encountered edges
-		edges_count = 0, -- Count of encountered edges
-		written_edges = {}, -- Store written edges
+		nodes = {}, -- Store all encountered nodes
+		nodes_count = 0, -- Count of encountered nodes
+		written_nodes = {}, -- Store written nodes
 	}
 	self._parsers[#self._parsers + 1] = self._parser
 	self:write([[
@@ -86,7 +86,7 @@ int parse_%s(lua_State *L)
 	 * arg3 = input
 	 */
 	bool run = true;
-	int edge = 1;
+	int node = 1;
 	int top, error_formater;
 	/**
 	 * recurs_finish_level is the current compound level when a recursion
@@ -103,14 +103,14 @@ int parse_%s(lua_State *L)
 	lua_pushcfunction(L, lua_state_error_formater);
 	error_formater = lua_gettop(L);
 
-	while(run) { switch(edge) {
+	while(run) { switch(node) {
 ]], name)
 end
 
 function module.method:_end_parser()
 	assert(self._parser, "parser not started")
 	self:write([[
-	default: /* edge 0 is default and is also exit */
+	default: /* node 0 is default and is also exit */
 	{
 		run = false;
 	}
@@ -142,28 +142,28 @@ function module.method:push_stored(id, name)
 ]], id, name)
 end
 
-function module.method:register(edge)
-	self._parser.edges_count = self._parser.edges_count + 1
-	self._parser.edges[edge] = self._parser.edges_count
-	return self._parser.edges_count
+function module.method:register(node)
+	self._parser.nodes_count = self._parser.nodes_count + 1
+	self._parser.nodes[node] = self._parser.nodes_count
+	return self._parser.nodes_count
 end
 
-function module.method:start_edge(edge)
+function module.method:start_node(node)
 	assert(self._parser, "parser not started")
-	local rule = edge.rule or "<unknown>"
-	local field = edge.id
-	if edge.name then
-		field = string.format("'%s'", edge.name)
+	local rule = node.rule or "<unknown>"
+	local field = node.id
+	if node.name then
+		field = string.format("'%s'", node.name)
 	end
-	local type = class.classof(edge).name
-	-- Register edge if it is not
-	local id = self._parser.edges[edge]
+	local type = class.classof(node).name
+	-- Register node if it is not
+	local id = self._parser.nodes[node]
 	if not id then
-		id = self:register(edge)
+		id = self:register(node)
 	end
 
 	-- Mark as written
-	self._parser.written_edges[edge] = true
+	self._parser.written_nodes[node] = true
 
 	self:write([[
 
@@ -172,7 +172,7 @@ function module.method:start_edge(edge)
 ]], id, rule, field, type)
 end
 
-function module.method:finish_edge()
+function module.method:finish_node()
 	assert(self._parser, "parser not started")
 	self:write[[
 	}
@@ -190,44 +190,44 @@ function module.method:pcall(nargs, nresults, fname)
 ]], nargs, nresults, fname)
 end
 
-function module.method:jumpto(edge)
+function module.method:jumpto(node)
 	assert(self._parser, "parser not started")
-	assert(self._parser.edges[edge], "unknown edge to jump to")
+	assert(self._parser.nodes[node], "unknown node to jump to")
 	self:write([[
-		edge = %d; break;
-]], self._parser.edges[edge])
+		node = %d; break;
+]], self._parser.nodes[node])
 end
 
-function module.method:jumptoend(edge)
+function module.method:jumptoend(node)
 	assert(self._parser, "parser not started")
 	self:write[[
-		edge = FINISH; break;
+		node = FINISH; break;
 ]]
 end
 
-function module.method:apply_edge(edge)
-	assert(self._parser, "cannot apply edge without started parser")
-	assert(edge)
+function module.method:apply_node(node)
+	assert(self._parser, "cannot apply node without started parser")
+	assert(node)
 
 
-	self:push_stored(self:store(edge), "edge")
+	self:push_stored(self:store(node), "node")
 	self:write[[
-		lua_getfield(L, -1, "_trace");            /* edge:_trace */
-		lua_pushvalue(L, -2);                     /* pass edge as self */
+		lua_getfield(L, -1, "_trace");            /* node:_trace */
+		lua_pushvalue(L, -2);                     /* pass node as self */
 		lua_getfield(L, PARSE_CTX, "iter");       /* parse_ctx.iter */
 ]]
-	self:pcall(2, 0, "edge:_trace(parse_ctx.iter)")
+	self:pcall(2, 0, "node:_trace(parse_ctx.iter)")
 
 	self:write[[
-		lua_getfield(L, -1, "_apply");            /* edge:_apply */
-		lua_pushvalue(L, -2);                     /* pass edge as self */
+		lua_getfield(L, -1, "_apply");            /* node:_apply */
+		lua_pushvalue(L, -2);                     /* pass node as self */
 		lua_pushvalue(L, PARSE_CTX);              /* parse_ctx */
 ]]
 
-	self:pcall(2, 0, "edge:_apply(parse_ctx)")
+	self:pcall(2, 0, "node:_apply(parse_ctx)")
 
 	self:write[[
-		lua_remove(L, -1);                        /* remove edge from stack */
+		lua_remove(L, -1);                        /* remove node from stack */
 
 ]]
 end

@@ -22,9 +22,9 @@ function dg.Entity.method:__init(rule, id)
 end
 
 function dg.Entity.method:ccomp(ccomp)
-	ccomp:start_edge(self)
-	ccomp:apply_edge(self)
-	ccomp:finish_edge()
+	ccomp:start_node(self)
+	ccomp:apply_node(self)
+	ccomp:finish_node()
 	return { self._next }
 end
 
@@ -256,12 +256,12 @@ function dg.CompoundStart.method:__init(rule, id, resultclass)
 end
 
 function dg.CompoundStart.method:ccomp(ccomp)
-	ccomp:start_edge(self)
+	ccomp:start_node(self)
 	ccomp:write[[
 		compound_level++;
 ]]
-	ccomp:apply_edge(self)
-	ccomp:finish_edge()
+	ccomp:apply_node(self)
+	ccomp:finish_node()
 	return {self._next}
 end
 
@@ -272,19 +272,19 @@ end
 dg.CompoundFinish = class.class('DGCompoundFinish', dg.Control)
 
 function dg.CompoundFinish.method:ccomp(ccomp)
-	ccomp:start_edge(self)
+	ccomp:start_node(self)
 	ccomp:write[[
 		compound_level--;
 		if (recurs_finish_level == compound_level && recurs_count > 0) {
 			/* pop recursion */
 			recurs_count--;
-			edge = recurs[recurs_count][RECURS_EDGE];
+			node = recurs[recurs_count][RECURS_NODE];
 			recurs_finish_level = recurs[recurs_count][RECURS_LEVEL];
 			break;
 		}
 ]]
-	ccomp:apply_edge(self)
-	ccomp:finish_edge()
+	ccomp:apply_node(self)
+	ccomp:finish_node()
 	return {self._next}
 end
 
@@ -315,18 +315,18 @@ end
 
 function dg.Recurs.method:ccomp(ccomp)
 	local id = ccomp:register(self._next)
-	ccomp:start_edge(self)
+	ccomp:start_node(self)
 	ccomp:write([[
 		if (recurs_count >= RECURS_MAX) {
 			error("max recursion reached");
 		}
-		recurs[recurs_count][RECURS_EDGE] = %d;
+		recurs[recurs_count][RECURS_NODE] = %d;
 		/* Store laste recursion level so we can reuse it later */
 		recurs[recurs_count][RECURS_LEVEL] = recurs_finish_level;
 		recurs_finish_level = compound_level;
 		recurs_count++;
 ]], id)
-	ccomp:finish_edge()
+	ccomp:finish_node()
 	return { self._recurs, self._next }
 end
 
@@ -667,7 +667,7 @@ function dg.Branch.method:_dump_graph_edges(file, ref)
 end
 
 function dg.Branch.method:ccomp(ccomp)
-	ccomp:start_edge(self)
+	ccomp:start_node(self)
 
 	local cases = {}
 	local cases_map = {}
@@ -703,11 +703,11 @@ function dg.Branch.method:ccomp(ccomp)
 ]])
 	ccomp:pcall(2, 1, "self.selector(ctx:result(), ctx)");
 	ccomp:write([[
-		edge = lua_tointeger(L, -1);
+		node = lua_tointeger(L, -1);
 		break;
 ]])
 
-	ccomp:finish_edge()
+	ccomp:finish_node()
 
 	return cases
 end
