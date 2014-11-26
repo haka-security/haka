@@ -83,7 +83,7 @@ function TestAsmModule:test_disas_should_skip_bad_inst ()
 	self.asm:disassemble(start, self.inst)
 	-- Then
 	assertEquals(self.inst:mnemonic(), "or")
-	assertEquals(self.inst:op_str(), "dl, byte ptr [eax + 0x90909090]")
+	assertEquals(self.inst:op_str(), "dl, byte ptr [eax - 0x6f6f6f70]")
 	assertEquals(self.inst.size, 6)
 end
 
@@ -135,4 +135,3 @@ function TestAsmModule:test_disas_should_succeed_on_arm_arch ()
 end
 
 addTestSuite('TestAsmModule')
-
