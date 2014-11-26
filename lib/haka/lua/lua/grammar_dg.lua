@@ -16,7 +16,8 @@ local log = haka.log_section("grammar")
 
 dg.Entity = class.class('DGEntity')
 
-function dg.Entity.method:__init(rule, id)
+function dg.Entity.method:__init(debug_id, rule, id)
+	self.debug_id = debug_id
 	self.rule = rule
 	self.id = id
 end
@@ -176,10 +177,11 @@ end
 function dg.Entity.method:_dump_graph_node(file, ref)
 	local label, extlabel
 
+	label = string.format("%d: ", self.debug_id)
 	if self.name then
-		label = string.format("%s: %s", class.classof(self).name, self.name)
+		label = string.format("%s%s: %s", label, class.classof(self).name, self.name)
 	else
-		label = class.classof(self).name
+		label = label..class.classof(self).name
 	end
 
 	extlabel = self:_dump_graph_descr()
@@ -223,8 +225,8 @@ function dg.Entity.method:trace(position, msg, ...)
 			id = string.format("'%s'", self.name)
 		end
 
-		log.debug("in rule '%s' field %s: %s\n\tat byte %d: %s...",
-			self.rule or "<unknown>", id or "<unknown>",
+		log.debug("in rule '%s' field %s debug_id %d: %s\n\tat byte %d: %s...",
+			self.rule or "<unknown>", id or "<unknown>", self.debug_id,
 			string.format(msg, ...), position.meter,
 			safe_string(position:copy():sub(20):asstring()))
 	end
@@ -250,8 +252,8 @@ end
 
 dg.CompoundStart = class.class('DGCompoundStart', dg.Control)
 
-function dg.CompoundStart.method:__init(rule, id, resultclass)
-	class.super(dg.CompoundStart).__init(self, rule, id)
+function dg.CompoundStart.method:__init(debug_id, rule, id, resultclass)
+	class.super(dg.CompoundStart).__init(self, debug_id, rule, id)
 	self.resultclass = resultclass or parseResult.Result
 end
 
@@ -296,8 +298,8 @@ dg.Recurs = class.class('DGRecurs', dg.Control)
 
 dg.Recurs.trace_name = 'recursion'
 
-function dg.Recurs.method:__init(rule, id, recurs)
-	class.super(dg.Recurs).__init(self, rule, id)
+function dg.Recurs.method:__init(debug_id, rule, id, recurs)
+	class.super(dg.Recurs).__init(self, debug_id, rule, id)
 	self._recurs = recurs
 end
 
@@ -340,8 +342,8 @@ end
 
 dg.ResultPop = class.class('DGResultPop', dg.Control)
 
-function dg.ResultPop.method:__init()
-	class.super(dg.ResultPop).__init(self)
+function dg.ResultPop.method:__init(debug_id)
+	class.super(dg.ResultPop).__init(self, debug_id)
 end
 
 function dg.ResultPop.method:_apply(ctx)
@@ -352,8 +354,8 @@ dg.RecordStart = class.class('DGRecordStart', dg.CompoundStart)
 
 dg.RecordStart.trace_name = 'record'
 
-function dg.RecordStart.method:__init(rule, id, name, resultclass)
-	class.super(dg.RecordStart).__init(self, rule, id, resultclass)
+function dg.RecordStart.method:__init(debug_id, rule, id, name, resultclass)
+	class.super(dg.RecordStart).__init(self, debug_id, rule, id, resultclass)
 	self.name = name
 end
 
@@ -377,8 +379,8 @@ end
 
 dg.RecordFinish = class.class('DGRecordFinish', dg.CompoundFinish)
 
-function dg.RecordFinish.method:__init(pop)
-	class.super(dg.RecordFinish).__init(self)
+function dg.RecordFinish.method:__init(debug_id, pop)
+	class.super(dg.RecordFinish).__init(self, debug_id)
 	self._extra = {}
 	self._pop = pop
 end
@@ -405,8 +407,8 @@ dg.UnionStart = class.class('DGUnionStart', dg.CompoundStart)
 
 dg.UnionStart.trace_name = 'union'
 
-function dg.UnionStart.method:__init(rule, id, name, resultclass)
-	class.super(dg.UnionStart).__init(self, rule, id, resultclass)
+function dg.UnionStart.method:__init(debug_id, rule, id, name, resultclass)
+	class.super(dg.UnionStart).__init(self, debug_id, rule, id, resultclass)
 	self.name = name
 end
 
@@ -428,8 +430,8 @@ end
 
 dg.UnionFinish = class.class('DGUnionFinish', dg.CompoundFinish)
 
-function dg.UnionFinish.method:__init(pop)
-	class.super(dg.UnionFinish).__init(self)
+function dg.UnionFinish.method:__init(debug_id, pop)
+	class.super(dg.UnionFinish).__init(self, debug_id)
 	self._pop = pop
 end
 
@@ -448,8 +450,8 @@ end
 
 dg.TryStart = class.class('DGTryStart', dg.CompoundStart)
 
-function dg.TryStart.method:__init(rule, id, name, resultclass)
-	class.super(dg.TryStart).__init(self, rule, id, resultclass)
+function dg.TryStart.method:__init(debug_id, rule, id, name, resultclass)
+	class.super(dg.TryStart).__init(self, debug_id, rule, id, resultclass)
 	self.name = name
 	self._catch = nil
 end
@@ -474,8 +476,8 @@ end
 
 dg.TryFinish = class.class('DGTryFinish', dg.CompoundFinish)
 
-function dg.TryFinish.method:__init(rule, id, name)
-	class.super(dg.TryFinish).__init(self, rule, id)
+function dg.TryFinish.method:__init(debug_id, rule, id, name)
+	class.super(dg.TryFinish).__init(self, debug_id, rule, id)
 	self.name = name
 end
 
@@ -508,8 +510,8 @@ dg.ArrayStart = class.class('DGArrayStart', dg.CompoundStart)
 
 dg.ArrayStart.trace_name = 'array'
 
-function dg.ArrayStart.method:__init(rule, id, name, create, resultclass)
-	class.super(dg.ArrayStart).__init(self, rule, id, resultclass or parseResult.ArrayResult)
+function dg.ArrayStart.method:__init(debug_id, rule, id, name, create, resultclass)
+	class.super(dg.ArrayStart).__init(self, debug_id, rule, id, resultclass or parseResult.ArrayResult)
 	self.name = name
 	self.create = create
 end
@@ -539,8 +541,8 @@ end
 
 dg.ArrayFinish = class.class('DGArrayFinish', dg.CompoundFinish)
 
-function dg.ArrayFinish.method:__init()
-	class.super(dg.ArrayFinish).__init(self)
+function dg.ArrayFinish.method:__init(debug_id)
+	class.super(dg.ArrayFinish).__init(self, debug_id)
 end
 
 function dg.ArrayFinish.method:apply(ctx)
@@ -552,8 +554,8 @@ end
 
 dg.ArrayPush = class.class('DGArrayPush', dg.Control)
 
-function dg.ArrayPush.method:__init(rule, id)
-	class.super(dg.ArrayPush).__init(self, rule, id)
+function dg.ArrayPush.method:__init(debug_id, rule, id)
+	class.super(dg.ArrayPush).__init(self, debug_id, rule, id)
 end
 
 function dg.ArrayPush.method:_apply(ctx)
@@ -569,8 +571,8 @@ end
 
 dg.ArrayPop = class.class('DGArrayPop', dg.Control)
 
-function dg.ArrayPop.method:__init()
-	class.super(dg.ArrayPop).__init(self)
+function dg.ArrayPop.method:__init(debug_id)
+	class.super(dg.ArrayPop).__init(self, debug_id)
 end
 
 function dg.ArrayPop.method:_apply(ctx)
@@ -593,8 +595,8 @@ end
 
 dg.Error = class.class('DGError', dg.Control)
 
-function dg.Error.method:__init(id, msg)
-	class.super(dg.Error).__init(self, nil, id)
+function dg.Error.method:__init(debug_id, id, msg)
+	class.super(dg.Error).__init(self, debug_id, nil, id)
 	self.msg = msg
 end
 
@@ -608,8 +610,8 @@ end
 
 dg.Execute = class.class('DGExecute', dg.Control)
 
-function dg.Execute.method:__init(rule, id, callback)
-	class.super(dg.Error).__init(self, rule, id)
+function dg.Execute.method:__init(debug_id, rule, id, callback)
+	class.super(dg.Error).__init(self, debug_id, rule, id)
 	self.callback = callback
 end
 
@@ -619,8 +621,8 @@ end
 
 dg.Retain = class.class('DGRetain', dg.Control)
 
-function dg.Retain.method:__init(readonly)
-	class.super(dg.Error).__init(self)
+function dg.Retain.method:__init(debug_id, readonly)
+	class.super(dg.Error).__init(self, debug_id)
 	self.readonly = readonly
 end
 
@@ -634,8 +636,8 @@ end
 
 dg.Release = class.class('DGRelease', dg.Control)
 
-function dg.Release.method:__init(rule, id)
-	class.super(dg.Release).__init(self, rule, id)
+function dg.Release.method:__init(debug_id, rule, id)
+	class.super(dg.Release).__init(self, debug_id, rule, id)
 end
 
 function dg.Release.method:_apply(ctx)
@@ -644,8 +646,8 @@ end
 
 dg.Branch = class.class('DGBranch', dg.Control)
 
-function dg.Branch.method:__init(rule, id, selector)
-	class.super(dg.Branch).__init(self, rule, id)
+function dg.Branch.method:__init(debug_id, rule, id, selector)
+	class.super(dg.Branch).__init(self, debug_id, rule, id)
 	self.selector = selector
 	self.cases = {}
 end
@@ -748,8 +750,8 @@ dg.Number = class.class('DGNumber', dg.Primitive)
 
 dg.Number.trace_name = 'number'
 
-function dg.Number.method:__init(rule, id, size, endian, name)
-	class.super(dg.Number).__init(self, rule, id)
+function dg.Number.method:__init(debug_id, rule, id, size, endian, name)
+	class.super(dg.Number).__init(self, debug_id, rule, id)
 	self.size = size
 	self.endian = endian
 	self.name = name
@@ -821,8 +823,8 @@ end
 
 dg.Bits = class.class('DGBits', dg.Primitive)
 
-function dg.Bits.method:__init(rule, id, size)
-	class.super(dg.Bits).__init(self, rule, id)
+function dg.Bits.method:__init(debug_id, rule, id, size)
+	class.super(dg.Bits).__init(self, debug_id, rule, id)
 	self.size = size
 end
 
@@ -844,8 +846,8 @@ end
 
 dg.Bytes = class.class('DGBytes', dg.Primitive)
 
-function dg.Bytes.method:__init(rule, id, size, untilre, name, chunked_callback)
-	class.super(dg.Bytes).__init(self, rule, id)
+function dg.Bytes.method:__init(debug_id, rule, id, size, untilre, name, chunked_callback)
+	class.super(dg.Bytes).__init(self, debug_id, rule, id)
 	self.size = size
 	self.name = name
 	self.untilre = untilre
@@ -987,8 +989,8 @@ dg.Token = class.class('DGToken', dg.Primitive)
 
 dg.Token.trace_name = 'token'
 
-function dg.Token.method:__init(rule, id, pattern, re, name, raw)
-	class.super(dg.Token).__init(self, rule, id)
+function dg.Token.method:__init(debug_id, rule, id, pattern, re, name, raw)
+	class.super(dg.Token).__init(self, debug_id, rule, id)
 	self.pattern = pattern
 	self.re = re
 	self.name = name
@@ -1083,8 +1085,8 @@ end
 
 dg.Empty = class.class('DGEmpty', dg.Control)
 
-function dg.Empty.method:__init(rule, id)
-	class.super(dg.Empty):__init(rule, id)
+function dg.Empty.method:__init(debug_id, rule, id)
+	class.super(dg.Empty).__init(self, debug_id, rule, id)
 end
 
 function dg.Token.method:_init(res, input, ctx, init)

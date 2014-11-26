@@ -167,9 +167,10 @@ function module.method:start_node(node)
 
 	self:write([[
 
+	/* debug_id %d */
 	case %d: /* in rule '%s' field %s <%s> */
 	{
-]], id, rule, field, type)
+]], node.debug_id, id, rule, field, type)
 end
 
 function module.method:finish_node()
@@ -194,8 +195,9 @@ function module.method:jumpto(node)
 	assert(self._parser, "parser not started")
 	assert(self._parser.nodes[node], "unknown node to jump to")
 	self:write([[
+		/* jump to debug_id %d */
 		node = %d; break;
-]], self._parser.nodes[node])
+]], node.debug_id, self._parser.nodes[node])
 end
 
 function module.method:jumptoend(node)
