@@ -8,4 +8,4 @@
 #include <haka/cnx.h>
 %}
 
-LUA_OBJECT_EX(struct cnx, lua_object);
+LUA_OBJECT(struct cnx);
