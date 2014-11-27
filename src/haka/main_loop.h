@@ -14,6 +14,6 @@ struct receive_result {
 	bool stop;
 };
 
-void packet_receive_wrapper_wrap(struct ffi_object *pkt, void *_state, struct receive_result *res);
+bool packet_receive_wrapper_wrap(struct ffi_object *pkt, void *_state, struct receive_result *res);
 
 #endif

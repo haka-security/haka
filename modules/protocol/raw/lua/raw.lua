@@ -64,7 +64,7 @@ end
 local ffibinding = require("ffibinding")
 local lib = ffibinding.load[[
 	struct lua_ref *packet_get_luadata(struct packet *pkt);
-	int packet_new_ffi(struct packet_object *packet, size_t size);
+	bool packet_new_ffi(struct packet_object *packet, size_t size);
 ]]
 
 local ffi = require('ffi')

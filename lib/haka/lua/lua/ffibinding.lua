@@ -117,9 +117,9 @@ function module.create_type(arg)
 
 	object_wrapper[arg.cdef] = function (f, own)
 		return function (...)
-			f(tmp, ...)
-
-			if tmp.ref == nil then return nil end
+			if not f(tmp, ...) then
+				return nil
+			end
 
 			local ret
 			if tmp.ref:isvalid() then

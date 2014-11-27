@@ -11,7 +11,7 @@ local module = {}
 local ffibinding = require('ffibinding')
 local ffi = require('ffi')
 ffi.cdef[[
-	void packet_receive_wrapper_wrap(struct packet_object *pkt, void *state, struct receive_result *result);
+	bool packet_receive_wrapper_wrap(struct packet_object *pkt, void *state, struct receive_result *result);
 	void packet_drop(struct packet *pkt);
 
 	struct receive_result {
