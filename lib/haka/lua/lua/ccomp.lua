@@ -87,7 +87,7 @@ int parse_%s(lua_State *L)
 	 */
 	bool run = true;
 	int node = 1;
-	int top, error_formater;
+	int error_formater;
 	/**
 	 * recurs_finish_level is the current compound level when a recursion
 	 * is started. The recursion will continue when we get back to this
@@ -95,9 +95,7 @@ int parse_%s(lua_State *L)
 	 */
 	int compound_level = 0, recurs_finish_level = 0;
 	int recurs_count = 0, recurs[RECURS_MAX][2];
-	top = lua_gettop(L);
 
-	assert(top == 3);
 	assert(lua_istable(L, PARSE_STORE));
 
 	lua_pushcfunction(L, lua_state_error_formater);
@@ -234,7 +232,7 @@ function module.method:apply_node(node)
 ]]
 end
 
-function module.method:compile(debug)
+function module.method:compile()
 	assert(not self._parser, "unfinished parser ", self._parsers[#self._parsers].name)
 
 	-- Luaopen
@@ -260,16 +258,10 @@ int luaopen_%s(lua_State *L)
 	self._fd:close()
 
 	-- Compile c grammar
-	local cflags = "-Wall -Werror -shared -fPIC"
-	if debug then
-		cflags = cflags.." -g"
-	else
-		cflags = cflags.." -Wl,-s"
-	end
-	local compile_command = string.format("gcc %s -o %s %s", cflags, self._sofile, self._cfile)
+	local compile_command = string.format("gcc %s -o %s %s", haka.config.ccomp.flags, self._sofile, self._cfile)
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
 	local ret = os.execute(compile_command)
-	if ret ~= 0 then
+	if not ret and ret ~= 0 then
 		error("grammar compilation failed `"..compile_command.."`")
 	end
 

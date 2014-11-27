@@ -178,6 +178,7 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 %include "lua/packet.si"
 %include "lua/alert.si"
 %include "lua/state_machine.si"
+%include "lua/config.si"
 
 %luacode {
 	require('context')

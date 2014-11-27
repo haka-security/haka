@@ -9,6 +9,8 @@ include_directories(.)
 include_directories(${INIPARSER_INCLUDE_DIR})
 include_directories(${EDITLINE_INCLUDE_DIR})
 
+configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
 # Haka library shared between runtime and modules
 
 binding_compile(NAME haka LUA lua/lua/haka.lua)

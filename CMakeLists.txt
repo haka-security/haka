@@ -244,6 +244,17 @@ endif(SIZEOF_INT EQUAL 8)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
+# Haka ccomp
+set(HAKA_CCOMP_FLAGS "${CMAKE_C_FLAGS} -shared -fPIC")
+set(HAKA_CCOMP_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+set(HAKA_CCOMP_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+if (HAKA_DEBUG EQUAL 1)
+        set(HAKA_CCOMP_FLAGS "${HAKA_CCOMP_FLAGS} ${HAKA_CCOMP_FLAGS_DEBUG}")
+else()
+        set(HAKA_CCOMP_FLAGS "${HAKA_CCOMP_FLAGS} ${HAKA_CCOMP_FLAGS_RELEASE}")
+endif()
+
+
 # Setup globals
 include_directories(include)
 
