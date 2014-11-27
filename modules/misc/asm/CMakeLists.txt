@@ -7,7 +7,7 @@ swig_process(asm lua asm.i)
 add_library(asm MODULE asm.c
 	${SWIG_asm_FILES})
 
-SWIG_FIX_ENTRYPOINT(asm misc)
+MODULE_FIX_LUA_ENTRYPOINT(asm misc)
 
 include_directories(${LIBCAPSTONE_INCLUDE_DIR})
 target_link_libraries(asm LINK_PRIVATE ${LIBCAPSTONE_LIBRARY})
