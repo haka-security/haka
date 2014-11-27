@@ -15,26 +15,26 @@ ffi.cdef[[
 	double time_sec(const struct time *t);
 ]]
 
-local prop = {
-	seconds = { get = ffi.C.time_sec },
-}
 
-local meth = {
-}
 
 local tmp_str = ffi.new[[
 	char[27] /* \see TIME_BUFSIZE */
 ]]
 
-local mt = {
-	__tostring = function (self)
-		if not ffi.C.time_tostring(self, tmp_str, 27) then
-			return nil
-		end
 
-		return ffi.string(tmp_str)
-	end,
+ffibinding.create_type{
+	cdef = "struct time",
+	prop = {
+		seconds = { get = ffi.C.time_sec },
+	},
+	mt = {
+		__tostring = function (self)
+			if not ffi.C.time_tostring(self, tmp_str, 27) then
+				return nil
+			end
+
+			return ffi.string(tmp_str)
+		end,
+	}
 }
-
-ffibinding.create_type("struct time", prop, meth, mt)
 #endif

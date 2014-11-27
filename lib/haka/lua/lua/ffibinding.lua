@@ -2,6 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local check = require("check")
 local ffi = require("ffi")
 local color = require("color")
 
@@ -52,22 +53,38 @@ end
 
 local object_wrapper = {}
 
-function module.create_type(cdef, prop, meth, mt, destroy)
+local function destroy(cdata)
+	if cdata ~= nil then
+		local gc = cdata.__gc
+		if gc then gc(cdata) end
+	end
+end
+
+function module.create_type(arg)
+	-- arg = { cdef, prop, meth, mt, destroy }
+	check.type(1, arg.cdef, 'string')
+
 	local fn = {
 		__ref = ffi.C.lua_object_get_ref,
-		__gc = function () return destroy end,
-		[".meta"] = function() return { prop = prop, meth = meth, mt = mt } end
+		__gc = function () return arg.destroy end,
+		[".meta"] = function() return arg end
 	}
 	local set = {}
 
-	for key, value in pairs(prop) do
-		fn[key] = value.get
-		set[key] = value.set
+	if arg.prop then
+		for key, value in pairs(arg.prop) do
+			fn[key] = value.get
+			set[key] = value.set
+		end
 	end
 
-	for key, value in pairs(meth) do
-		fn[key] = function(self) return value end
+	if arg.meth then
+		for key, value in pairs(arg.meth) do
+			fn[key] = function(self) return value end
+		end
 	end
+
+	local mt = arg.mt or {}
 
 	mt.__index = function (table, key)
 		local res = fn[key]
@@ -87,18 +104,18 @@ function module.create_type(cdef, prop, meth, mt, destroy)
 		end
 	end
 
-	local ctype = ffi.metatype(cdef, mt)
+	local ctype = ffi.metatype(arg.cdef, mt)
 
 	ffi.cdef(string.format([[
 		%s_object {
 			struct lua_ref  *ref;
 			 %s             *ptr;
 		};
-	]], cdef, cdef))
+	]], arg.cdef, arg.cdef))
 
-	local tmp = ffi.new(string.format("%s_object", cdef))
+	local tmp = ffi.new(string.format("%s_object", arg.cdef))
 
-	object_wrapper[cdef] = function (f, own)
+	object_wrapper[arg.cdef] = function (f, own)
 		return function (...)
 			f(tmp, ...)
 
@@ -127,13 +144,6 @@ end
 
 function module.object_wrapper(cdef, f, own)
 	return object_wrapper[cdef](f, own)
-end
-
-local function destroy(cdata)
-	if cdata ~= nil then
-		local gc = cdata.__gc
-		if gc then gc(cdata) end
-	end
 end
 
 function module.own(cdata)

@@ -102,43 +102,45 @@ end
 
 packet_send = ffi.C.packet_send
 
-local prop = {
-	timestamp = { get = ffibinding.handle_error(ffi.C.packet_timestamp) },
-	payload = { get = haka.C.packet_payload },
-	id = { get = function(self) return tonumber(ffibinding.handle_error(ffi.C.packet_id)(self)) end },
-	state = { get = ffibinding.handle_error(ffi.C.packet_state) },
-	data = {
-		get = function(self)
-			local ref = lib.packet_get_luadata(self)
-			if ref:isvalid() then
-				return ref:get()
-			else
-				local data = {}
-				ref:set(data, false)
-				return data
-			end
-		end,
-	},
-}
-
 local inject = ffibinding.handle_error(ffi.C.packet_inject)
 
-local meth = {
-	drop = ffibinding.handle_error(ffi.C.packet_drop),
-	inject = function (pkt)
-		inject(pkt)
-		ffibinding.disown(pkt)
-	end,
-	send = raw_dissector.method.send,
-	receive = raw_dissector.method.receive,
-	continue = haka.helper.Dissector.method.continue,
-	can_continue = raw_dissector.method.can_continue,
-	error = ffibinding.handle_error(ffi.C.packet_drop),
-	name = "raw",
-	issent = function(pkt) return ffibinding.handle_error(ffi.C.packet_state)(pkt) == "sent" end,
-}
 
-ffibinding.create_type("struct packet", prop, meth, {}, ffi.C.packet_release)
+ffibinding.create_type{
+	cdef = "struct packet",
+	prop = {
+		timestamp = { get = ffibinding.handle_error(ffi.C.packet_timestamp) },
+		payload = { get = haka.C.packet_payload },
+		id = { get = function(self) return tonumber(ffibinding.handle_error(ffi.C.packet_id)(self)) end },
+		state = { get = ffibinding.handle_error(ffi.C.packet_state) },
+		data = {
+			get = function(self)
+				local ref = lib.packet_get_luadata(self)
+				if ref:isvalid() then
+					return ref:get()
+				else
+					local data = {}
+					ref:set(data, false)
+					return data
+				end
+			end,
+		},
+	},
+	meth = {
+		drop = ffibinding.handle_error(ffi.C.packet_drop),
+		inject = function (pkt)
+			inject(pkt)
+			ffibinding.disown(pkt)
+		end,
+		send = raw_dissector.method.send,
+		receive = raw_dissector.method.receive,
+		continue = haka.helper.Dissector.method.continue,
+		can_continue = raw_dissector.method.can_continue,
+		error = ffibinding.handle_error(ffi.C.packet_drop),
+		name = "raw",
+		issent = function(pkt) return ffibinding.handle_error(ffi.C.packet_state)(pkt) == "sent" end,
+	},
+	destroy = ffi.C.packet_release
+}
 packet_new = ffibinding.object_wrapper("struct packet", ffibinding.handle_error(lib.packet_new_ffi), true)
 
 #endif

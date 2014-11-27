@@ -94,41 +94,39 @@ ffi.cdef[[
 	};
 ]]
 
-local prop = {
+ffibinding.create_type{
+	cdef = "struct lua_ref",
+	meth = {
+		set = function(self, obj, weak)
+			if weak then
+				self.ref = weakref(obj)
+				self.weak = true
+			else
+				self.ref = ref(obj)
+				self.weak = false
+			end
+			self.state = haka.state
+		end,
+		get = function(self)
+			if self.weak then
+				return weakrefget(self.ref)
+			else
+				return refget(self.ref)
+			end
+		end,
+		clear = function(self)
+			if self.weak then
+				unweakref(self.ref)
+			else
+				unref(self.ref)
+			end
+			self.ref = LUA_NOREF
+			self.state = nil
+		end,
+		isvalid = function(self)
+			return self.state ~= nil and self.ref ~= LUA_NOREF
+		end
+	},
 }
-
-local meth = {
-	set = function(self, obj, weak)
-		if weak then
-			self.ref = weakref(obj)
-			self.weak = true
-		else
-			self.ref = ref(obj)
-			self.weak = false
-		end
-		self.state = haka.state
-	end,
-	get = function(self)
-		if self.weak then
-			return weakrefget(self.ref)
-		else
-			return refget(self.ref)
-		end
-	end,
-	clear = function(self)
-		if self.weak then
-			unweakref(self.ref)
-		else
-			unref(self.ref)
-		end
-		self.ref = LUA_NOREF
-		self.state = nil
-	end,
-	isvalid = function(self)
-		return self.state ~= nil and self.ref ~= LUA_NOREF
-	end
-}
-
-ffibinding.create_type("struct lua_ref", prop, meth, {})
 
 #endif
