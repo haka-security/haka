@@ -64,7 +64,7 @@ function module.run(state, run_extra)
 		if stop then
 			break
 		end
-		if pkt ~= nil then
+		if pkt then
 			local ret = pcall(filter, pkt)
 			if not ret then
 				module.error(pkt)
