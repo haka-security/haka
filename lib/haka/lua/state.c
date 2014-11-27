@@ -340,7 +340,7 @@ static int lua_setfenv_wrapper(lua_State *L)
 }
 #endif
 
-static void lua_state_save(lua_State *L, struct lua_state *state)
+static void lua_export_state(lua_State *L, struct lua_state *state)
 {
 	/* Save lua_state in registry */
 	lua_pushlightuserdata(L, state);
@@ -405,7 +405,7 @@ struct lua_state *lua_state_init()
 
 	lua_object_initialize(L);
 
-	lua_state_save(L, &ret->state);
+	lua_export_state(L, &ret->state);
 
 	lua_ref_init_state(L);
 
