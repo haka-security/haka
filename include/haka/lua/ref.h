@@ -32,6 +32,4 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 bool lua_ref_clear(struct lua_ref *ref);
 void lua_ref_push(struct lua_State *state, struct lua_ref *ref);
 
-struct lua_ref *lua_object_get_ref(void *_obj);
-
 #endif /* HAKA_LUA_REF_H */

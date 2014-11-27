@@ -208,6 +208,12 @@ bool packet_release(struct packet *pkt)
 	return true;
 }
 
+struct lua_ref *packet_get_ref(void *_packet)
+{
+	struct packet *packet = (struct packet *)_packet;
+	return &packet->lua_object.ref;
+}
+
 struct packet *packet_new(size_t size)
 {
 	struct packet *pkt;

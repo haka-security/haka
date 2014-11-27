@@ -43,6 +43,7 @@ struct lua_ref *packet_get_luadata(struct packet *pkt)
 {
 	return &pkt->luadata;
 }
+
 static int init(struct parameters *args)
 {
 	return 0;

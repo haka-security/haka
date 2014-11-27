@@ -61,11 +61,11 @@ local function destroy(cdata)
 end
 
 function module.create_type(arg)
-	-- arg = { cdef, prop, meth, mt, destroy }
+	-- arg = { cdef, prop, meth, mt, destroy, ref }
 	check.type(1, arg.cdef, 'string')
 
 	local fn = {
-		__ref = ffi.C.lua_object_get_ref,
+		__ref = arg.ref,
 		__gc = function () return arg.destroy end,
 		[".meta"] = function() return arg end
 	}

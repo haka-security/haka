@@ -88,6 +88,7 @@ ffi.cdef[[
 	uint64_t packet_id(struct packet *pkt);
 	enum packet_status packet_state(struct packet *pkt);
 	void packet_release(struct packet *pkt);
+	struct lua_ref *packet_get_ref(void *pkt);
 
 	struct packet { };
 ]]
@@ -139,7 +140,8 @@ ffibinding.create_type{
 		name = "raw",
 		issent = function(pkt) return ffibinding.handle_error(ffi.C.packet_state)(pkt) == "sent" end,
 	},
-	destroy = ffi.C.packet_release
+	destroy = ffi.C.packet_release,
+	ref = ffi.C.packet_get_ref,
 }
 packet_new = ffibinding.object_wrapper("struct packet", ffibinding.handle_error(lib.packet_new_ffi), true)
 

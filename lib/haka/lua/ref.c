@@ -153,9 +153,3 @@ void lua_ref_push(struct lua_State *state, struct lua_ref *ref)
 
 	LUA_STACK_CHECK(state, 1);
 }
-
-struct lua_ref *lua_object_get_ref(void *_obj)
-{
-	struct lua_object *obj = (struct lua_object *)_obj;
-	return &obj->ref;
-}
