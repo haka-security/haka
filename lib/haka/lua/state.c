@@ -699,6 +699,7 @@ bool lua_state_require(struct lua_State *L, const char *module, int result)
 	return true;
 }
 
+#ifdef HAKA_FFI
 bool lua_iscdata(lua_State *L, int idx)
 {
 	/**
@@ -707,6 +708,7 @@ bool lua_iscdata(lua_State *L, int idx)
 	 */
 	return lua_type(L, idx) == 10;
 }
+#endif
 
 /*
  * Debugging utility functions

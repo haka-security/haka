@@ -35,7 +35,9 @@ bool lua_state_setdebugger_hook(struct lua_state *state, lua_hook hook);
 bool lua_state_run_file(struct lua_state *L, const char *filename, int argc, char *argv[]);
 void lua_state_trigger_haka_event(struct lua_state *state, const char *event);
 void lua_state_pushcfunction(lua_State *L, lua_CFunction f, const char *name);
+#ifdef HAKA_FFI
 bool lua_iscdata(lua_State *L, int idx);
+#endif
 
 int lua_state_error_formater(struct lua_State *L);
 void lua_state_print_error(struct lua_State *L, const char *msg);
