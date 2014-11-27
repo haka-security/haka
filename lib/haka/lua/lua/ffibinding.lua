@@ -66,45 +66,10 @@ function module.create_type(arg)
 
 	local fn = {
 		__ref = arg.ref,
-		__gc = function () return arg.destroy end,
 		[".meta"] = function() return arg end
 	}
 	local set = {}
-
-	if arg.prop then
-		for key, value in pairs(arg.prop) do
-			fn[key] = value.get
-			set[key] = value.set
-		end
-	end
-
-	if arg.meth then
-		for key, value in pairs(arg.meth) do
-			fn[key] = function(self) return value end
-		end
-	end
-
-	local mt = arg.mt or {}
-
-	mt.__index = function (table, key)
-		local res = fn[key]
-		if res then
-			return res(table)
-		else
-			return nil
-		end
-	end
-
-	mt.__newindex = function (table, key, value)
-		local res = set[key]
-		if res then
-			res(table, value)
-		else
-			rawset(table, key, value)
-		end
-	end
-
-	local ctype = ffi.metatype(arg.cdef, mt)
+	arg.meth = arg.meth or {}
 
 	ffi.cdef(string.format([[
 		%s_object {
@@ -115,31 +80,95 @@ function module.create_type(arg)
 
 	local tmp = ffi.new(string.format("%s_object", arg.cdef))
 
-	object_wrapper[arg.cdef] = function (f, own)
-		return function (...)
-			if not f(tmp, ...) then
-				return nil
-			end
+	if arg.destroy then
+		local __gc = arg.destroy
 
-			local ret
-			if tmp.ref:isvalid() then
-				ret = tmp.ref:get()
-				if own then
-					ffi.gc(ret, destroy)
-					tmp.ref:clear()
+		object_wrapper[arg.cdef] = function (f, own)
+			return function (...)
+				if not f(tmp, ...) then
+					return nil
 				end
-			else
-				ret = tmp.ptr
-				if not own then
-					tmp.ref:set(ret, false)
+
+				local ret
+				if tmp.ref:isvalid() then
+					ret = tmp.ref:get()
+					if own then
+						ffi.gc(ret, __gc)
+						tmp.ref:clear()
+					end
 				else
-					ffi.gc(ret, destroy)
+					ret = tmp.ptr
+					if not own then
+						tmp.ref:set(ret, false)
+					else
+						ffi.gc(ret, __gc)
+					end
 				end
-			end
 
-			return ret
+				return ret
+			end
+		end
+
+		arg.meth.__own = function (self)
+			ffi.gc(self, __gc)
+		end
+	else
+		object_wrapper[arg.cdef] = function (f, own)
+			return function (...)
+				if not f(tmp, ...) then
+					return nil
+				end
+
+				local ret
+				if tmp.ref:isvalid() then
+					ret = tmp.ref:get()
+					if own then
+						tmp.ref:clear()
+					end
+				else
+					ret = tmp.ptr
+					if not own then
+						tmp.ref:set(ret, false)
+					end
+				end
+
+				return ret
+			end
 		end
 	end
+
+	if arg.prop then
+		for key, value in pairs(arg.prop) do
+			fn[key] = value.get
+			set[key] = value.set
+		end
+	end
+
+	for key, value in pairs(arg.meth) do
+		fn[key] = function(self) return value end
+	end
+
+	local mt = arg.mt or {}
+
+	mt.__index = function (self, key)
+		local res = fn[key]
+		if res then
+			return res(self)
+		else
+			return nil
+		end
+	end
+
+	mt.__newindex = function (self, key, value)
+		local res = set[key]
+		if res then
+			res(self, value)
+		else
+			rawset(self, key, value)
+		end
+	end
+
+	ffi.metatype(arg.cdef, mt)
 end
 
 function module.object_wrapper(cdef, f, own)
@@ -147,7 +176,7 @@ function module.object_wrapper(cdef, f, own)
 end
 
 function module.own(cdata)
-	ffi.gc(cdata, destroy)
+	cdata:__own()
 	local ref = cdata.__ref
 	assert(ref ~= nil)
 	assert(ref:isvalid(), "invalid object")

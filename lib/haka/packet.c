@@ -201,10 +201,13 @@ void packet_send(struct packet *pkt)
 bool packet_release(struct packet *pkt)
 {
 	assert(packet_module);
-	assert(pkt);
-	lua_ref_clear(&pkt->luadata);
-	lua_object_release(&pkt->lua_object);
-	packet_module->release_packet(pkt);
+
+	if (pkt) {
+		lua_ref_clear(&pkt->luadata);
+		lua_object_release(&pkt->lua_object);
+		packet_module->release_packet(pkt);
+	}
+
 	return true;
 }
 
