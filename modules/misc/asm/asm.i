@@ -224,8 +224,8 @@ inst)
         return disas(self, pos, inst)
     end
 
-    swig.getclassmetatable('asm_handle')['.fn'].dump_instructions = function (self, pos,
-inst)
+    swig.getclassmetatable('asm_handle')['.fn'].dump_instructions = function (self, pos)
+        local inst = this.new_instruction()
         while disas(self, pos, inst) do
             io.write(string.format("\t0x%08x %-8s %-32s ",
                 inst.address, inst:mnemonic(), inst:op_str()))
