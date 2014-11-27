@@ -148,7 +148,7 @@ static void cnx_release(struct cnx_table *table, struct cnx_table_elem *elem, bo
 	}
 
 	if (freemem) {
-		lua_ref_clear(NULL, &elem->cnx.lua_priv);
+		lua_ref_clear(&elem->cnx.lua_priv);
 		lua_object_release(&elem->cnx.lua_object);
 		free(elem);
 	}

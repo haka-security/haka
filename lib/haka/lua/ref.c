@@ -64,7 +64,7 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 		index = lua_gettop(state)+index+1;
 	}
 
-	lua_ref_clear(state, ref);
+	lua_ref_clear(ref);
 
 	if (!lua_isnil(state, index)) {
 		ref->state = lua_state_get(state);
@@ -96,60 +96,33 @@ void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool w
 	LUA_STACK_CHECK(state, 0);
 }
 
-static int lua_ref_delay_clear(lua_State *L)
-{
-	assert(lua_islightuserdata(L, 1));
-	struct lua_ref *ref = lua_touserdata(L, 1);
-	lua_ref_clear(L, ref);
-	return 0;
-}
-
-bool lua_ref_clear(struct lua_State *L, struct lua_ref *ref)
+bool lua_ref_clear(struct lua_ref *ref)
 {
 	if (lua_ref_isvalid(ref)) {
 		if (lua_state_isvalid(ref->state)) {
-#ifndef HAKA_FFI
-			/* In FFI, it is not possible to use the state L, but it is possible
-			 * otherwise. */
-			if (!L) {
-				L = ref->state->L;
-			}
-#endif
+			/* In FFI, it is normally not possible to use the state L,
+			 * but we are very careful and the way we use it
+			 * should not break */
+			lua_State *L = ref->state->L;
 
-			if (L && lua_state_get(L) == ref->state) {
-				LUA_STACK_MARK(L);
+			LUA_STACK_MARK(L);
 
-				if (ref->weak) {
-					lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
-					lua_pushnil(L);
-					lua_rawseti(L, -2, ref->ref);
-					lua_pop(L, 1);
-
-					lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
-				}
-				else {
-					lua_getfield(L, LUA_REGISTRYINDEX, REF_TABLE);
-				}
-
-				luaL_unref(L, -1, ref->ref);
+			if (ref->weak) {
+				lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_TABLE);
+				lua_pushnil(L);
+				lua_rawseti(L, -2, ref->ref);
 				lua_pop(L, 1);
 
-				LUA_STACK_CHECK(L, 0);
+				lua_getfield(L, LUA_REGISTRYINDEX, WEAKREF_ID_TABLE);
 			}
 			else {
-				struct lua_ref *ref_copy = malloc(sizeof(struct lua_ref));
-				if (!ref_copy) {
-					error("memory error");
-					return false;
-				}
-
-				*ref_copy = *ref;
-
-				if (!lua_state_interrupt(ref->state, lua_ref_delay_clear, ref_copy, free)) {
-					free(ref_copy);
-					return false;
-				}
+				lua_getfield(L, LUA_REGISTRYINDEX, REF_TABLE);
 			}
+
+			luaL_unref(L, -1, ref->ref);
+			lua_pop(L, 1);
+
+			LUA_STACK_CHECK(L, 0);
 		}
 
 		ref->ref = LUA_NOREF;

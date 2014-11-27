@@ -25,7 +25,7 @@ struct lua_state_machine_context {
 void lua_state_machine_context_destroy(struct state_machine_context *_context)
 {
 	struct lua_state_machine_context *context = (struct lua_state_machine_context *)_context;
-	lua_ref_clear(NULL, &context->states);
+	lua_ref_clear(&context->states);
 	free(context);
 }
 
@@ -98,7 +98,7 @@ struct state *lua_transition_callback(struct state_machine_instance *state_machi
 static void lua_transition_data_destroy(struct transition_data *_data)
 {
 	struct lua_transition_data *data = (struct lua_transition_data *)_data;
-	lua_ref_clear(NULL, &data->function);
+	lua_ref_clear(&data->function);
 	free(_data);
 }
 

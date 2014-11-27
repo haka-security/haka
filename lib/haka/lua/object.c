@@ -66,7 +66,7 @@ void lua_object_release(struct lua_object *obj)
 #endif
 		lua_pop(L, 1);
 
-		lua_ref_clear(L, &obj->ref);
+		lua_ref_clear(&obj->ref);
 
 #ifdef HAKA_DEBUG
 		lua_getfield(L, LUA_REGISTRYINDEX, OBJECT_TABLE);
@@ -135,7 +135,7 @@ bool lua_object_push(lua_State *L, struct lua_object *obj, bool lua_own)
 		assert(!lua_isnil(L, -1));
 
 		if (lua_own) {
-			lua_ref_clear(L, &obj->ref);
+			lua_ref_clear(&obj->ref);
 		}
 
 		LUA_STACK_CHECK(L, 1);

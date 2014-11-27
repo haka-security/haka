@@ -29,7 +29,7 @@ void lua_ref_init_state(struct lua_State *L);
 
 bool lua_ref_isvalid(struct lua_ref *ref);
 void lua_ref_get(struct lua_State *state, struct lua_ref *ref, int index, bool weak);
-bool lua_ref_clear(struct lua_State *state, struct lua_ref *ref);
+bool lua_ref_clear(struct lua_ref *ref);
 void lua_ref_push(struct lua_State *state, struct lua_ref *ref);
 
 struct lua_ref *lua_object_get_ref(void *_obj);
