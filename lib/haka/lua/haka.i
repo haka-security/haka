@@ -173,6 +173,7 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 }
 
 %include "lua/vbuffer.si"
+%include "lua/object.si"
 %include "lua/regexp.si"
 %include "lua/packet.si"
 %include "lua/alert.si"

@@ -24,21 +24,12 @@
 #define OBJECT_TABLE "__c_obj_ref"
 #endif
 
-typedef struct {
-  void   *type;
-  int     own;  /* 1 if owned & must be destroyed */
-  void        *ptr;
-} swig_lua_userdata;
-
-static void lua_clear_swigdata(lua_State *L, int idx)
-{
-	swig_lua_userdata *usr = lua_touserdata(L, idx);
-	if (usr) usr->ptr = NULL;
-}
+extern void lua_clear_swigdata(lua_State *L, int idx);
 
 #ifdef HAKA_FFI
-static void lua_clear_luaref(lua_State *L, int idx)
+static void lua_clear_cdata(lua_State *L, int idx)
 {
+	assert(lua_iscdata(L, idx));
 	void **cdata = (void **)lua_topointer(L, idx);
 	*cdata = NULL;
 }
@@ -66,7 +57,7 @@ void lua_object_release(struct lua_object *obj)
 		lua_ref_push(L, &obj->ref);
 #ifdef HAKA_FFI
 		if (lua_iscdata(L, -1)) {
-			lua_clear_luaref(L, -1);
+			lua_clear_cdata(L, -1);
 		} else {
 			lua_clear_swigdata(L, -1);
 		}
