@@ -24,7 +24,7 @@ local res = ffi.new[[
 	struct receive_result[1]
 ]]
 
-local receive = ffibinding.object_wrapper('struct packet')(ffi.C.packet_receive_wrapper_wrap)
+local receive = ffibinding.object_wrapper('struct packet', ffi.C.packet_receive_wrapper_wrap, true)
 
 local ffi_state
 
@@ -34,9 +34,6 @@ end
 
 function module.receive(state)
 	local pkt = receive(ffi_state, res)
-
-	if pkt ~= nil then ffibinding.own(pkt)
-	else pkt = nil end
 
 	return pkt, res[0].has_extra, res[0].stop
 end

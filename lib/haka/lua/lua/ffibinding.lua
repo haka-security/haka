@@ -98,25 +98,35 @@ function module.create_type(cdef, prop, meth, mt, destroy)
 
 	local tmp = ffi.new(string.format("%s_object", cdef))
 
-	object_wrapper[cdef] = function (f)
+	object_wrapper[cdef] = function (f, own)
 		return function (...)
 			f(tmp, ...)
 
 			if tmp.ref == nil then return nil end
 
+			local ret
 			if tmp.ref:isvalid() then
-				return tmp.ref:get()
+				ret = tmp.ref:get()
+				if own then
+					ffi.gc(ret, destroy)
+					tmp.ref:clear()
+				end
 			else
-				local ret = tmp.ptr
-				tmp.ref:set(ret, false)
-				return ret
+				ret = tmp.ptr
+				if not own then
+					tmp.ref:set(ret, false)
+				else
+					ffi.gc(ret, destroy)
+				end
 			end
+
+			return ret
 		end
 	end
 end
 
-function module.object_wrapper(cdef)
-	return object_wrapper[cdef]
+function module.object_wrapper(cdef, f, own)
+	return object_wrapper[cdef](f, own)
 end
 
 local function destroy(cdata)

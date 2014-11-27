@@ -139,15 +139,7 @@ local meth = {
 }
 
 ffibinding.create_type("struct packet", prop, meth, {}, ffi.C.packet_release)
-local object_wrapper = ffibinding.object_wrapper("struct packet")
-
-local packet_new_check_error = object_wrapper(ffibinding.handle_error(lib.packet_new_ffi))
-
-packet_new = function (size)
-	local pkt = packet_new_check_error(size)
-	ffibinding.own(pkt)
-	return pkt
-end
+packet_new = ffibinding.object_wrapper("struct packet", ffibinding.handle_error(lib.packet_new_ffi), true)
 
 #endif
 
