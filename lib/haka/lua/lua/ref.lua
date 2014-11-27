@@ -40,6 +40,7 @@ local function _unref(ref_table, ref)
 end
 
 local function _refget(ref_table, ref)
+	-- if ref is NOREF or REFNIL then we return nil
 	return ref_table[ref]
 end
 
@@ -74,6 +75,7 @@ local function unweakref(ref)
 end
 
 local function weakrefget(ref)
+	-- if ref is NOREF or REFNIL then we return nil
 	return weak_ref_table[ref]
 end
 
