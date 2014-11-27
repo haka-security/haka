@@ -495,6 +495,17 @@ void vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_it
 	dst->meter = src->meter;
 }
 
+void vbuffer_iterator_move(struct vbuffer_iterator *iter, const struct vbuffer_iterator *pos)
+{
+	if (!_vbuffer_iterator_check(iter) ||
+	    !_vbuffer_iterator_check(pos)) {
+		return;
+	}
+
+	vbuffer_iterator_update(iter, pos->chunk, pos->offset);
+	iter->meter = pos->meter;
+}
+
 void vbuffer_iterator_clear(struct vbuffer_iterator *position)
 {
 	assert(position);

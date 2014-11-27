@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-add_subdirectory("iniparser")
-add_subdirectory("uthash")
-add_subdirectory("luaunit")
-add_subdirectory("capstone")
+# Tests
+include(TestUnitLua)
+
+TEST_UNIT_LUA(MODULE asm NAME disas FILES disas.lua)

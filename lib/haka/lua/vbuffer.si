@@ -163,9 +163,7 @@ struct vbuffer_iterator {
 				return;
 			}
 
-			vbuffer_iterator_clear($self);
-			vbuffer_iterator_copy(iter, $self);
-			vbuffer_iterator_register($self);
+			vbuffer_iterator_move($self, iter);
 		}
 
 		void move_to(struct vbuffer_iterator_blocking *iter)
