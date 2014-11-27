@@ -12,7 +12,7 @@ SWIG_FIX_ENTRYPOINT(asm misc)
 include_directories(${LIBCAPSTONE_INCLUDE_DIR})
 target_link_libraries(asm ${LIBCAPSTONE_LIBRARY})
 
-if (${LIBCAPSTONE_DEPENDENCY}) 
+if(LIBCAPSTONE_DEPENDENCY)
 	add_dependencies(asm ${LIBCAPSTONE_DEPENDENCY})
 endif()
 
