@@ -186,6 +186,9 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	require('grammar')
 
 	haka.mode = 'normal'
+
+	-- Add config specific paths
+	package.cpath = package.cpath..";"..haka.config.ccomp.runtime_dir.."?.so"
 }
 
 %insert("init") {

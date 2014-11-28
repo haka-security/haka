@@ -12,8 +12,8 @@ local suffix = "_grammar"
 
 function module.method:__init(name)
 	self._name = name..suffix
-	self._cfile = self._name..".c"
-	self._sofile = self._name..".so"
+	self._cfile = haka.config.ccomp.runtime_dir..self._name..".c"
+	self._sofile = haka.config.ccomp.runtime_dir..self._name..".so"
 	self._parser = nil -- Current parser
 	self._parsers = {}
 
@@ -258,7 +258,8 @@ int luaopen_%s(lua_State *L)
 	self._fd:close()
 
 	-- Compile c grammar
-	local compile_command = string.format("%s %s -o %s %s", haka.config.ccomp.cc, haka.config.ccomp.flags, self._sofile, self._cfile)
+	local flags = string.format("%s -I%s", haka.config.ccomp.flags, haka.config.ccomp.include_path)
+	local compile_command = string.format("%s %s -o %s %s", haka.config.ccomp.cc, flags, self._sofile, self._cfile)
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
 	local ret = os.execute(compile_command)
 	if not ret then

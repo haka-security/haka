@@ -7,36 +7,56 @@
 
 #include "../config.h"
 
-static void config_get(const char *src, char **TEMP_OUTPUT, size_t *TEMP_SIZE)
-{
-        *TEMP_SIZE = strlen(src);
+char *ccomp_flags = HAKA_CCOMP_FLAGS;
+char *ccomp_cc = HAKA_CCOMP_CC;
+char *ccomp_runtime_dir = HAKA_CCOMP_RUNTIME_DIR;
+char *ccomp_include_path = HAKA_CCOMP_INCLUDE_PATH;
 
-        *TEMP_OUTPUT = strdup(src);
-        if (!*TEMP_OUTPUT) error("memory error");
-}
-
-static void config_get_ccomp_flags(char **TEMP_OUTPUT, size_t *TEMP_SIZE)
+static void config_get(const char *src, const char *_env, char **TEMP_OUTPUT, size_t *TEMP_SIZE)
 {
-        config_get(HAKA_CCOMP_FLAGS, TEMP_OUTPUT, TEMP_SIZE);
-}
+	const char *env = getenv(_env);
+	if (env) src = env;
 
-static void config_get_ccomp_cc(char **TEMP_OUTPUT, size_t *TEMP_SIZE)
-{
-        config_get(HAKA_CCOMP_CC, TEMP_OUTPUT, TEMP_SIZE);
+	*TEMP_SIZE = strlen(src);
+
+	*TEMP_OUTPUT = strdup(src);
+	if (!*TEMP_OUTPUT) error("memory error");
 }
 
 %}
 
-void config_get_ccomp_flags(char **TEMP_OUTPUT, size_t *TEMP_SIZE);
-void config_get_ccomp_cc(char **TEMP_OUTPUT, size_t *TEMP_SIZE);
+static void config_get(const char *src, const char *_env, char **TEMP_OUTPUT, size_t *TEMP_SIZE);
+
+%immutable;
+char *ccomp_flags;
+char *ccomp_cc;
+char *ccomp_runtime_dir;
+char *ccomp_include_path;
+%mutable;
 
 %luacode {
 
-        haka.config = {}
-        haka.config.ccomp = {}
-        haka.config.ccomp.flags = haka.config_get_ccomp_flags()
-        haka.config_get_ccomp_flags = nil
-        haka.config.ccomp.cc = haka.config_get_ccomp_cc()
-        haka.config_get_ccomp_cc = nil
+	haka.config = {}
+	haka.config.ccomp = {
+		flags = haka.config_get(haka.ccomp_flags, "HAKA_CCOMP_FLAGS"),
+		cc = haka.config_get(haka.ccomp_cc, "HAKA_CCOMP_CC"),
+		runtime_dir = haka.config_get(haka.ccomp_runtime_dir, "HAKA_CCOMP_RUNTIME_DIR"),
+		include_path = haka.config_get(haka.ccomp_include_path, "HAKA_CCOMP_INCLUDE_PATH"),
+	}
+
+	local mt = getmetatable(haka)
+	local set = rawget(mt, ".set")
+	local get = rawget(mt, ".get")
+	local function clean_config(name)
+		set[name] = nil
+		get[name] = nil
+	end
+
+	clean_config("ccomp_flags")
+	clean_config("ccomp_cc")
+	clean_config("ccomp_runtime_dir")
+	clean_config("ccomp_include_path")
+
+	haka.config_get = nil
 
 }

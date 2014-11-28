@@ -145,6 +145,7 @@ add_custom_target(localinstall
 	COMMAND $(MAKE) install DESTDIR=${LOCALINSTALL}
 	COMMAND echo "export LD_LIBRARY_PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/protocol:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/packet:${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/lib/haka/modules/misc\"" > ${ENV_SH}
 	COMMAND echo "export HAKA_PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}\"" >> ${ENV_SH}
+        COMMAND echo "export HAKA_CCOMP_INCLUDE_PATH=\"${LOCALINSTALL}${HAKA_CCOMP_INCLUDE_PATH}\"" >> ${ENV_SH}
 	COMMAND echo "export PATH=\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/bin\":\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/sbin\":\"${LOCALINSTALL}${CMAKE_INSTALL_PREFIX}/share/haka/scripts/\":$PATH" >> ${ENV_SH}
 	COMMAND echo "export LUA_PATH=\"\$(realpath \$HAKA_PATH/share/haka/lua/share/luajit* | head -n 1)/?.lua\"" >> ${ENV_SH}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -253,7 +254,9 @@ if (HAKA_DEBUG EQUAL 1)
 else()
         set(HAKA_CCOMP_FLAGS "${HAKA_CCOMP_FLAGS} ${HAKA_CCOMP_FLAGS_RELEASE}")
 endif()
-set(HAKA_CCOMP_CC "${CMAKE_C_COMPILER}")
+set(HAKA_CCOMP_CC           "${CMAKE_C_COMPILER}")
+set(HAKA_CCOMP_RUNTIME_DIR  "/var/run/haka/")
+set(HAKA_CCOMP_INCLUDE_PATH "${CMAKE_INSTALL_PREFIX}/usr/include/")
 
 
 # Setup globals
@@ -261,7 +264,8 @@ include_directories(include)
 
 # Tests
 enable_testing()
-set(TEST_RUNDIR ${CMAKE_BINARY_DIR}/test/${CMAKE_INSTALL_PREFIX})
+set(TEST_ROOT ${CMAKE_BINARY_DIR}/test/)
+set(TEST_RUNDIR ${TEST_ROOT}/${CMAKE_INSTALL_PREFIX})
 
 add_custom_target(pretests-build
 	COMMAND $(MAKE) all
