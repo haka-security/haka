@@ -3,3 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define HAKA_CCOMP_FLAGS         "${HAKA_CCOMP_FLAGS}"
+#define HAKA_CCOMP_CC            "${HAKA_CCOMP_CC}"

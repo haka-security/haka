@@ -7,19 +7,30 @@
 
 #include "../config.h"
 
-void config_get_ccomp_flags(char **TEMP_OUTPUT, size_t *TEMP_SIZE)
+static void config_get(const char *src, char **TEMP_OUTPUT, size_t *TEMP_SIZE)
 {
-        *TEMP_SIZE = strlen(HAKA_CCOMP_FLAGS);
+        *TEMP_SIZE = strlen(src);
 
         *TEMP_OUTPUT = malloc(*TEMP_SIZE);
         if (!*TEMP_OUTPUT) error("memory error");
 
-        strncpy(*TEMP_OUTPUT, HAKA_CCOMP_FLAGS, *TEMP_SIZE);
+        strncpy(*TEMP_OUTPUT, src, *TEMP_SIZE);
+}
+
+static void config_get_ccomp_flags(char **TEMP_OUTPUT, size_t *TEMP_SIZE)
+{
+        config_get(HAKA_CCOMP_FLAGS, TEMP_OUTPUT, TEMP_SIZE);
+}
+
+static void config_get_ccomp_cc(char **TEMP_OUTPUT, size_t *TEMP_SIZE)
+{
+        config_get(HAKA_CCOMP_CC, TEMP_OUTPUT, TEMP_SIZE);
 }
 
 %}
 
 void config_get_ccomp_flags(char **TEMP_OUTPUT, size_t *TEMP_SIZE);
+void config_get_ccomp_cc(char **TEMP_OUTPUT, size_t *TEMP_SIZE);
 
 %luacode {
 
@@ -27,5 +38,7 @@ void config_get_ccomp_flags(char **TEMP_OUTPUT, size_t *TEMP_SIZE);
         haka.config.ccomp = {}
         haka.config.ccomp.flags = haka.config_get_ccomp_flags()
         haka.config_get_ccomp_flags = nil
+        haka.config.ccomp.cc = haka.config_get_ccomp_cc()
+        haka.config_get_ccomp_cc = nil
 
 }

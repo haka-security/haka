@@ -253,6 +253,7 @@ if (HAKA_DEBUG EQUAL 1)
 else()
         set(HAKA_CCOMP_FLAGS "${HAKA_CCOMP_FLAGS} ${HAKA_CCOMP_FLAGS_RELEASE}")
 endif()
+set(HAKA_CCOMP_CC "${CMAKE_C_COMPILER}")
 
 
 # Setup globals
