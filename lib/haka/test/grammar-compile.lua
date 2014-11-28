@@ -11,12 +11,12 @@ TestGrammarCompilation = {}
 -- Also ensure to assert for so file because grammar fallbacks on full lua if compile fails
 
 function TestGrammarCompilation:setUp(test_name)
-	os.remove(test_name.."_grammar.c")
 	os.remove(test_name.."_grammar.so")
 end
 
 function TestGrammarCompilation:test_new_grammar_create_c_file(fname)
 	-- Given
+	os.remove(fname.."_grammar.c")
 	local grammar = function ()
 		elem = record{
 			field("num", number(8)),
@@ -219,7 +219,6 @@ function TestGrammarCompilation:test_apply_on_recurs(fname)
 			field("count", number(8)),
 			field("child", array(root)
 				:count(function (self, ctx)
-					debug.breakpoint()
 					return ctx:result(-2).count
 				end)
 			),
