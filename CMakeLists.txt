@@ -256,7 +256,7 @@ else()
 endif()
 set(HAKA_CCOMP_CC           "${CMAKE_C_COMPILER}")
 set(HAKA_CCOMP_RUNTIME_DIR  "/var/run/haka/")
-set(HAKA_CCOMP_INCLUDE_PATH "${CMAKE_INSTALL_PREFIX}/usr/include/")
+set(HAKA_CCOMP_INCLUDE_PATH "${CMAKE_INSTALL_PREFIX}/include/")
 
 
 # Setup globals

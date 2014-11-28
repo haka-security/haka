@@ -258,7 +258,7 @@ int luaopen_%s(lua_State *L)
 	self._fd:close()
 
 	-- Compile c grammar
-	local flags = string.format("%s -I%s", haka.config.ccomp.flags, haka.config.ccomp.include_path)
+	local flags = string.format("%s -I%s -I%s/haka/lua/", haka.config.ccomp.flags, haka.config.ccomp.include_path, haka.config.ccomp.include_path)
 	local compile_command = string.format("%s %s -o %s %s", haka.config.ccomp.cc, flags, self._sofile, self._cfile)
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
 	local ret = os.execute(compile_command)
