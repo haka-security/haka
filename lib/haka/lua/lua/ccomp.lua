@@ -261,7 +261,7 @@ int luaopen_%s(lua_State *L)
 	local compile_command = string.format("gcc %s -o %s %s", haka.config.ccomp.flags, self._sofile, self._cfile)
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
 	local ret = os.execute(compile_command)
-	if not ret and ret ~= 0 then
+	if not ret then
 		error("grammar compilation failed `"..compile_command.."`")
 	end
 
