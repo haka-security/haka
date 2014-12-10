@@ -803,6 +803,7 @@ local function new_c_grammar(name, def)
 	assert(type(def) == 'function', "grammar definition must be a function")
 
 	local g = Grammar:new(name)
+	local parse_ctx = require("parse_ctx")
 
 	-- Add a metatable to the environment only during the definition
 	-- of the grammar.
@@ -848,7 +849,7 @@ local function new_c_grammar(name, def)
 	for _, parser in pairs(tmpl._parsers) do
 		g._exports[parser.name] = {
 			parse = function(self, input, context)
-				local ctx = parse.Context:new(input)
+				local ctx = parse_ctx:new(input)
 				ctx.user = context
 				ctx:init(parser.store[1], true) -- ctx init require head of DG for now
 				return c_grammar[parser.fname](parser.store, ctx, input)

@@ -87,7 +87,8 @@ int parse_%s(lua_State *L)
 	 * arg3 = input
 	 */
 	int error_formater;
-	struct parse_ctx ctx = PARSE_CTX_INIT;
+	struct parse_ctx ctx;
+	parse_ctx_init(&ctx);
 
 	assert(lua_istable(L, PARSE_STORE));
 
@@ -110,6 +111,8 @@ function module.method:_end_parser()
 	lua_getfield(L, PARSE_CTX, "_results"); /* get ctx._results */
 	lua_rawgeti(L, -1, 1);                  /* result stand first in table */
 	lua_remove(L, -2);                      /* remove ctx._results */
+
+	parse_ctx_free(&ctx);
 
 	return 1;
 }

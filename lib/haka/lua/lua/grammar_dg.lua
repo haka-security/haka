@@ -280,8 +280,8 @@ function dg.CompoundFinish.method:ccomp(ccomp)
 		if (ctx.recurs_finish_level == ctx.compound_level && ctx.recurs_count > 0) {
 			/* pop recursion */
 			ctx.recurs_count--;
-			ctx.node = ctx.recurs[ctx.recurs_count][RECURS_NODE];
-			ctx.recurs_finish_level = ctx.recurs[ctx.recurs_count][RECURS_LEVEL];
+			ctx.node = ctx.recurs[ctx.recurs_count].node;
+			ctx.recurs_finish_level = ctx.recurs[ctx.recurs_count].level;
 			break;
 		}
 ]]
@@ -322,9 +322,9 @@ function dg.Recurs.method:ccomp(ccomp)
 		if (ctx.recurs_count >= RECURS_MAX) {
 			error("max recursion reached");
 		}
-		ctx.recurs[ctx.recurs_count][RECURS_NODE] = %d;
+		ctx.recurs[ctx.recurs_count].node = %d;
 		/* Store laste recursion level so we can reuse it later */
-		ctx.recurs[ctx.recurs_count][RECURS_LEVEL] = ctx.recurs_finish_level;
+		ctx.recurs[ctx.recurs_count].level = ctx.recurs_finish_level;
 		ctx.recurs_finish_level = ctx.compound_level;
 		ctx.recurs_count++;
 ]], id)
