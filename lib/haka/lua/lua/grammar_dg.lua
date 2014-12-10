@@ -259,12 +259,15 @@ end
 
 function dg.CompoundStart.method:ccomp(ccomp)
 	ccomp:start_node(self)
+	self:_capply(ccomp)
+	ccomp:finish_node()
+	return {self._next}
+end
+
+function dg.CompoundStart.method:_capply(ccomp)
 	ccomp:write[[
 		ctx.compound_level++;
 ]]
-	ccomp:apply_node(self)
-	ccomp:finish_node()
-	return {self._next}
 end
 
 function dg.CompoundStart.method:_apply(ctx)
@@ -275,6 +278,12 @@ dg.CompoundFinish = class.class('DGCompoundFinish', dg.Control)
 
 function dg.CompoundFinish.method:ccomp(ccomp)
 	ccomp:start_node(self)
+	self:_capply(ccomp)
+	ccomp:finish_node()
+	return {self._next}
+end
+
+function dg.CompoundFinish.method:_capply(ccomp)
 	ccomp:write[[
 		ctx.compound_level--;
 		if (ctx.recurs_finish_level == ctx.compound_level && ctx.recurs_count > 0) {
@@ -285,9 +294,6 @@ function dg.CompoundFinish.method:ccomp(ccomp)
 			break;
 		}
 ]]
-	ccomp:apply_node(self)
-	ccomp:finish_node()
-	return {self._next}
 end
 
 function dg.CompoundFinish.method:_apply(ctx)
@@ -359,6 +365,11 @@ function dg.RecordStart.method:__init(gid, rule, id, name, resultclass)
 	self.name = name
 end
 
+function dg.RecordStart.method:_capply(ccomp)
+	class.super(dg.RecordStart)._capply(self, ccomp)
+	ccomp:apply_node(self)
+end
+
 function dg.RecordStart.method:_apply(ctx)
 	if self.name then
 		local res = ctx:result()
@@ -383,6 +394,11 @@ function dg.RecordFinish.method:__init(gid, pop)
 	class.super(dg.RecordFinish).__init(self, gid)
 	self._extra = {}
 	self._pop = pop
+end
+
+function dg.RecordFinish.method:_capply(ccomp)
+	class.super(dg.RecordFinish)._capply(self, ccomp)
+	ccomp:apply_node(self)
 end
 
 function dg.RecordFinish.method:extra(name, f)
@@ -412,6 +428,11 @@ function dg.UnionStart.method:__init(gid, rule, id, name, resultclass)
 	self.name = name
 end
 
+function dg.UnionStart.method:_capply(ccomp)
+	class.super(dg.UnionStart)._capply(self, ccomp)
+	ccomp:apply_node(self)
+end
+
 function dg.UnionStart.method:_apply(ctx)
 	if self.name then
 		local res = ctx:result()
@@ -435,6 +456,11 @@ function dg.UnionFinish.method:__init(gid, pop)
 	self._pop = pop
 end
 
+function dg.UnionFinish.method:_capply(ccomp)
+	class.super(dg.UnionFinish)._capply(self, ccomp)
+	ccomp:apply_node(self)
+end
+
 function dg.UnionFinish.method:_apply(ctx)
 	local res = ctx:result()
 
@@ -454,6 +480,11 @@ function dg.TryStart.method:__init(gid, rule, id, name, resultclass)
 	class.super(dg.TryStart).__init(self, gid, rule, id, resultclass)
 	self.name = name
 	self._catch = nil
+end
+
+function dg.TryStart.method:_capply(ccomp)
+	class.super(dg.TryStart)._capply(self, ccomp)
+	ccomp:apply_node(self)
 end
 
 function dg.TryStart.method:catch(catch)
@@ -479,6 +510,11 @@ dg.TryFinish = class.class('DGTryFinish', dg.CompoundFinish)
 function dg.TryFinish.method:__init(gid, rule, id, name)
 	class.super(dg.TryFinish).__init(self, gid, rule, id)
 	self.name = name
+end
+
+function dg.TryFinish.method:_capply(ccomp)
+	class.super(dg.TryFinish)._capply(self, ccomp)
+	ccomp:apply_node(self)
 end
 
 function dg.TryFinish.method:_apply(ctx)
@@ -516,6 +552,11 @@ function dg.ArrayStart.method:__init(gid, rule, id, name, create, resultclass)
 	self.create = create
 end
 
+function dg.ArrayStart.method:_capply(ccomp)
+	class.super(dg.ArrayStart)._capply(self, ccomp)
+	ccomp:apply_node(self)
+end
+
 function dg.ArrayStart.method:set_entity(entity)
 	self.entity = entity
 end
@@ -543,6 +584,11 @@ dg.ArrayFinish = class.class('DGArrayFinish', dg.CompoundFinish)
 
 function dg.ArrayFinish.method:__init(gid)
 	class.super(dg.ArrayFinish).__init(self, gid)
+end
+
+function dg.ArrayFinish.method:_capply(ccomp)
+	class.super(dg.ArrayFinish)._capply(self, ccomp)
+	ccomp:apply_node(self)
 end
 
 function dg.ArrayFinish.method:apply(ctx)

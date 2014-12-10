@@ -851,7 +851,7 @@ local function new_c_grammar(name, def)
 			parse = function(self, input, context)
 				local ctx = parse_ctx:new(input)
 				ctx.user = context
-				ctx:init(parser.store[1], true) -- ctx init require head of DG for now
+				ctx:init(g._rules[parser.name], true) -- ctx init require head of DG for now
 				return c_grammar[parser.fname](parser.store, ctx, input)
 			end
 		}
