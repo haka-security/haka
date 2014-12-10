@@ -260,7 +260,7 @@ end
 function dg.CompoundStart.method:ccomp(ccomp)
 	ccomp:start_node(self)
 	ccomp:write[[
-		compound_level++;
+		ctx.compound_level++;
 ]]
 	ccomp:apply_node(self)
 	ccomp:finish_node()
@@ -276,12 +276,12 @@ dg.CompoundFinish = class.class('DGCompoundFinish', dg.Control)
 function dg.CompoundFinish.method:ccomp(ccomp)
 	ccomp:start_node(self)
 	ccomp:write[[
-		compound_level--;
-		if (recurs_finish_level == compound_level && recurs_count > 0) {
+		ctx.compound_level--;
+		if (ctx.recurs_finish_level == ctx.compound_level && ctx.recurs_count > 0) {
 			/* pop recursion */
-			recurs_count--;
-			node = recurs[recurs_count][RECURS_NODE];
-			recurs_finish_level = recurs[recurs_count][RECURS_LEVEL];
+			ctx.recurs_count--;
+			ctx.node = ctx.recurs[ctx.recurs_count][RECURS_NODE];
+			ctx.recurs_finish_level = ctx.recurs[ctx.recurs_count][RECURS_LEVEL];
 			break;
 		}
 ]]
@@ -319,14 +319,14 @@ function dg.Recurs.method:ccomp(ccomp)
 	local id = ccomp:register(self._next)
 	ccomp:start_node(self)
 	ccomp:write([[
-		if (recurs_count >= RECURS_MAX) {
+		if (ctx.recurs_count >= RECURS_MAX) {
 			error("max recursion reached");
 		}
-		recurs[recurs_count][RECURS_NODE] = %d;
+		ctx.recurs[ctx.recurs_count][RECURS_NODE] = %d;
 		/* Store laste recursion level so we can reuse it later */
-		recurs[recurs_count][RECURS_LEVEL] = recurs_finish_level;
-		recurs_finish_level = compound_level;
-		recurs_count++;
+		ctx.recurs[ctx.recurs_count][RECURS_LEVEL] = ctx.recurs_finish_level;
+		ctx.recurs_finish_level = ctx.compound_level;
+		ctx.recurs_count++;
 ]], id)
 	ccomp:finish_node()
 	return { self._recurs, self._next }
@@ -705,7 +705,7 @@ function dg.Branch.method:ccomp(ccomp)
 ]])
 	ccomp:pcall(2, 1, "self.selector(ctx:result(), ctx)");
 	ccomp:write([[
-		node = lua_tointeger(L, -1);
+		ctx.node = lua_tointeger(L, -1);
 		break;
 ]])
 

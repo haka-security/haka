@@ -28,6 +28,7 @@ function module.method:__init(name)
 #include <haka/error.h>
 #include <haka/lua/lua.h>
 #include <haka/lua/state.h>
+#include <haka/lua/parse_ctx.h>
 
 #define PARSE_STORE 1
 #define PARSE_CTX   2
@@ -85,23 +86,15 @@ int parse_%s(lua_State *L)
 	 * arg2 = parse context
 	 * arg3 = input
 	 */
-	bool run = true;
-	int node = 1;
 	int error_formater;
-	/**
-	 * recurs_finish_level is the current compound level when a recursion
-	 * is started. The recursion will continue when we get back to this
-	 * compound level.
-	 */
-	int compound_level = 0, recurs_finish_level = 0;
-	int recurs_count = 0, recurs[RECURS_MAX][2];
+	struct parse_ctx ctx = PARSE_CTX_INIT;
 
 	assert(lua_istable(L, PARSE_STORE));
 
 	lua_pushcfunction(L, lua_state_error_formater);
 	error_formater = lua_gettop(L);
 
-	while(run) { switch(node) {
+	while(ctx.run) { switch(ctx.node) {
 ]], name)
 end
 
@@ -110,7 +103,7 @@ function module.method:_end_parser()
 	self:write([[
 	default: /* node 0 is default and is also exit */
 	{
-		run = false;
+		ctx.run = false;
 	}
 	} }
 
@@ -194,14 +187,14 @@ function module.method:jumpto(node)
 	assert(self._parser.nodes[node], "unknown node to jump to")
 	self:write([[
 		/* jump to gid %d */
-		node = %d; break;
+		ctx.node = %d; break;
 ]], node.gid, self._parser.nodes[node])
 end
 
 function module.method:jumptoend(node)
 	assert(self._parser, "parser not started")
 	self:write[[
-		node = FINISH; break;
+		ctx.node = FINISH; break;
 ]]
 end
 
