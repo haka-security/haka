@@ -266,7 +266,7 @@ end
 
 function dg.CompoundStart.method:_capply(ccomp)
 	ccomp:write[[
-		ctx.compound_level++;
+			ctx->compound_level++;
 ]]
 end
 
@@ -285,14 +285,14 @@ end
 
 function dg.CompoundFinish.method:_capply(ccomp)
 	ccomp:write[[
-		ctx.compound_level--;
-		if (ctx.recurs_finish_level == ctx.compound_level && ctx.recurs_count > 0) {
-			/* pop recursion */
-			ctx.recurs_count--;
-			ctx.node = ctx.recurs[ctx.recurs_count].node;
-			ctx.recurs_finish_level = ctx.recurs[ctx.recurs_count].level;
-			break;
-		}
+			ctx->compound_level--;
+			if (ctx->recurs_finish_level == ctx->compound_level && ctx->recurs_count > 0) {
+				/* pop recursion */
+				ctx->recurs_count--;
+				ctx->node = ctx->recurs[ctx->recurs_count].node;
+				ctx->recurs_finish_level = ctx->recurs[ctx->recurs_count].level;
+				break;
+			}
 ]]
 end
 
@@ -325,14 +325,14 @@ function dg.Recurs.method:ccomp(ccomp)
 	local id = ccomp:register(self._next)
 	ccomp:start_node(self)
 	ccomp:write([[
-		if (ctx.recurs_count >= RECURS_MAX) {
-			error("max recursion reached");
-		}
-		ctx.recurs[ctx.recurs_count].node = %d;
-		/* Store laste recursion level so we can reuse it later */
-		ctx.recurs[ctx.recurs_count].level = ctx.recurs_finish_level;
-		ctx.recurs_finish_level = ctx.compound_level;
-		ctx.recurs_count++;
+			if (ctx->recurs_count >= RECURS_MAX) {
+				error("max recursion reached");
+			}
+			ctx->recurs[ctx->recurs_count].node = %d;
+			/* Store laste recursion level so we can reuse it later */
+			ctx->recurs[ctx->recurs_count].level = ctx->recurs_finish_level;
+			ctx->recurs_finish_level = ctx->compound_level;
+			ctx->recurs_count++;
 ]], id)
 	ccomp:finish_node()
 	return { self._recurs, self._next }
@@ -729,8 +729,8 @@ function dg.Branch.method:ccomp(ccomp)
 		cases_map[name] = id
 	end
 
-	ccomp:push_stored(ccomp:store(function(result, ctx)
-		local branch = self.selector(result, ctx)
+	ccomp:call(ccomp:store(function(ctx)
+		local branch = self.selector(ctx:result(), ctx)
 		local case = cases_map[branch]
 		if case then
 			self:trace(ctx.iter, "select branch '%s'", case)
@@ -738,22 +738,8 @@ function dg.Branch.method:ccomp(ccomp)
 			self:trace(ctx.iter, "select branch 'default'")
 			case = cases_map["default"]
 		end
-		return case
+		ctx._ctx.node = case
 	end), "selector")
-
-	ccomp:write([[
-		lua_getfield(L, PARSE_CTX, "result");       /* parse_ctx.result */
-		lua_pushvalue(L, PARSE_CTX);                /* parse_ctx */
-]])
-	ccomp:pcall(1, 1, "ctx:result()");
-	ccomp:write([[
-		lua_pushvalue(L, PARSE_CTX);                /* parse_ctx */
-]])
-	ccomp:pcall(2, 1, "self.selector(ctx:result(), ctx)");
-	ccomp:write([[
-		ctx.node = lua_tointeger(L, -1);
-		break;
-]])
 
 	ccomp:finish_node()
 

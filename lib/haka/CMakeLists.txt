@@ -74,6 +74,7 @@ add_library(libhaka SHARED
 	lua/lua.c
 	lua/marshal.c
 	lua/object.c
+	lua/parse_ctx.c
 	luadebug/interactive.c
 	luadebug/complete.c
 	luadebug/debugger.c

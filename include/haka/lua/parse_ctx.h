@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <haka/types.h>
+
 #define INIT_MARKS_SIZE     20
 #define INIT_CATCHES_SIZE   20
 #define INIT_VALIDATES_SIZE 20
@@ -41,6 +43,7 @@ struct result {
 struct parse_ctx {
 	bool            run;
 	int             node;
+	int             bitoffset;
 	int             compound_level;
 	/**
 	 * recurs_finish_level is the current compound level when a recursion
@@ -50,7 +53,6 @@ struct parse_ctx {
 	int             recurs_finish_level;
 	int             recurs_count;
 	struct recurs   recurs[RECURS_MAX];
-	int             bitoffset;
 	struct mark     *marks;
 	int             mark_count;
 	struct catch    *catches;
@@ -63,52 +65,7 @@ struct parse_ctx {
 	int             result_count;
 };
 
-#define PARSE_CTX_INIT { true, 1, 0, 0, 0, { { 0 } }, bitoffset }
-
-inline void parse_ctx_init(struct parse_ctx *ctx)
-{
-	ctx->run                 = true;
-	ctx->node                = 1;
-	ctx->compound_level      = 0;
-	ctx->recurs_finish_level = 0;
-	ctx->recurs_count        = 0;
-	ctx->bitoffset           = 0;
-
-	memset(ctx->recurs, 0, RECURS_MAX*sizeof(struct recurs));
-
-	ctx->marks = calloc(INIT_MARKS_SIZE, sizeof(struct mark));
-	if (!ctx->marks) error("memory error");
-	memset(ctx->marks, 0, INIT_MARKS_SIZE*sizeof(struct mark));
-	ctx->mark_count = 0;
-
-	ctx->catches = calloc(INIT_CATCHES_SIZE, sizeof(struct catch));
-	if (!ctx->catches) error("memory error");
-	memset(ctx->catches, 0, INIT_CATCHES_SIZE*sizeof(struct catch));
-	ctx->catch_count = 0;
-
-	ctx->validates = calloc(INIT_VALIDATES_SIZE, sizeof(struct validate));
-	if (!ctx->validates) error("memory error");
-	memset(ctx->validates, 0, INIT_VALIDATES_SIZE*sizeof(struct validate));
-	ctx->validate_count = 0;
-
-	ctx->retains = calloc(INIT_RETAINS_SIZE, sizeof(struct retain));
-	if (!ctx->retains) error("memory error");
-	memset(ctx->retains, 0, INIT_RETAINS_SIZE*sizeof(struct retain));
-	ctx->retain_count = 0;
-
-	ctx->results = calloc(INIT_RESULTS_SIZE, sizeof(struct result));
-	if (!ctx->results) error("memory error");
-	memset(ctx->results, 0, INIT_RESULTS_SIZE*sizeof(struct result));
-	ctx->result_count = 0;
-}
-
-inline void parse_ctx_free(struct parse_ctx *ctx)
-{
-	free(ctx->marks);
-	free(ctx->catches);
-	free(ctx->validates);
-	free(ctx->retains);
-	free(ctx->results);
-}
+struct parse_ctx *parse_ctx_init(void *_iter);
+void parse_ctx_free(struct parse_ctx *ctx);
 
 #endif /* _HAKA_LUA_PARSE_CTX_H */
