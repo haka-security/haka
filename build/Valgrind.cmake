@@ -15,7 +15,7 @@ endif()
 
 macro(RUN_VALGRIND name reachable)
 	if (DO_VALGRIND)
-		execute_process(COMMAND ${VALGRIND_COMMAND} --leak-check=full --gen-suppressions=all
+		execute_process(COMMAND ${VALGRIND_COMMAND} --leak-check=full --gen-suppressions=all --track-origins=yes
 			--suppressions=${CTEST_MODULE_DIR}/Valgrind.sup
 			--suppressions=${CTEST_MODULE_DIR}/Valgrind-check.sup
 			--show-reachable=${reachable} --log-file=${name}-valgrind.txt ${ARGN})
