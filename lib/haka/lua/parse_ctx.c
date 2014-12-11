@@ -22,9 +22,10 @@ void parse_ctx_init(struct parse_ctx *ctx, struct vbuffer_iterator *iter)
 {
 	assert(ctx);
 
-	ctx->lua_object          = lua_object_init;
 	ctx->run                 = true;
 	ctx->node                = 1;
+	ctx->lua_object          = lua_object_init;
+	ctx->iter                = iter;
 	ctx->compound_level      = 0;
 	ctx->recurs_finish_level = 0;
 	ctx->recurs_count        = 0;
@@ -69,9 +70,12 @@ void parse_ctx_free(struct parse_ctx *ctx)
 }
 
 #ifdef HAKA_FFI
+
+extern void *lua_get_swigdata(void *ptr);
+
 bool parse_ctx_new_ffi(struct ffi_object *parse_ctx, void *_iter)
 {
-	struct parse_ctx *ctx = parse_ctx_new(NULL);
+	struct parse_ctx *ctx = parse_ctx_new((struct vbuffer_iterator *)lua_get_swigdata(_iter));
 	if (!ctx) {
 		return false;
 	}

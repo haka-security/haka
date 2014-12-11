@@ -8,4 +8,10 @@ void lua_clear_swigdata(lua_State *L, int idx)
 	swig_lua_userdata *usr = lua_touserdata(L, idx);
 	if (usr) usr->ptr = NULL;
 }
+
+void *lua_get_swigdata(void *ptr)
+{
+	swig_lua_userdata *usr = (swig_lua_userdata *)ptr;
+	return usr->ptr;
+}
 %}
