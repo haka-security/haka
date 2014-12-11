@@ -11,7 +11,6 @@ local __path = nil
 
 ffi.cdef[[
 	const char *clear_error();
-	struct lua_ref *lua_object_get_ref(void *_obj);
 ]]
 
 function module.load(ct)
@@ -31,7 +30,7 @@ end
 
 function module.preload(path)
 	if __path then
-		error("already preloading library")
+		error("already preloading library "..__path)
 	end
 	__path = path
 end

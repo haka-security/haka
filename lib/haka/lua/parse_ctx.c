@@ -2,14 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <assert.h>
+
+#include <haka/config.h>
 #include <haka/lua/parse_ctx.h>
 #include <haka/error.h>
 
-struct parse_ctx *parse_ctx_init(void *_iter)
+struct parse_ctx *parse_ctx_new(struct vbuffer_iterator *iter)
 {
 	struct parse_ctx *ctx = malloc(sizeof(struct parse_ctx));
 	if (!ctx) error("memory error");
 
+	parse_ctx_init(ctx, iter);
+
+	return ctx;
+}
+
+void parse_ctx_init(struct parse_ctx *ctx, struct vbuffer_iterator *iter)
+{
+	assert(ctx);
+
+	ctx->lua_object          = lua_object_init;
 	ctx->run                 = true;
 	ctx->node                = 1;
 	ctx->compound_level      = 0;
@@ -43,8 +56,6 @@ struct parse_ctx *parse_ctx_init(void *_iter)
 	if (!ctx->results) error("memory error");
 	memset(ctx->results, 0, INIT_RESULTS_SIZE*sizeof(struct result));
 	ctx->result_count = 0;
-
-	return ctx;
 }
 
 void parse_ctx_free(struct parse_ctx *ctx)
@@ -56,3 +67,24 @@ void parse_ctx_free(struct parse_ctx *ctx)
 	free(ctx->results);
 	free(ctx);
 }
+
+#ifdef HAKA_FFI
+bool parse_ctx_new_ffi(struct ffi_object *parse_ctx, void *_iter)
+{
+	struct parse_ctx *ctx = parse_ctx_new(NULL);
+	if (!ctx) {
+		return false;
+	}
+	else {
+		parse_ctx->ref = &ctx->lua_object.ref;
+		parse_ctx->ptr = ctx;
+		return true;
+	}
+}
+
+struct lua_ref *parse_ctx_get_ref(void *_ctx)
+{
+	struct parse_ctx *ctx = (struct parse_ctx *)_ctx;
+	return &ctx->lua_object.ref;
+}
+#endif /* HAKA_FFI */

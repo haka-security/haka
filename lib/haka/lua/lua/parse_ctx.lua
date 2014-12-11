@@ -6,8 +6,12 @@ local class = require('class')
 local parseResult = require('parse_result')
 
 local ffi = require('ffi')
+local ffibinding = require('ffibinding')
+
 ffi.cdef[[
-	struct parse_ctx *parse_ctx_init(void *iter);
+	bool parse_ctx_new_ffi(struct parse_ctx_object *parse_ctx, void *iter);
+	void parse_ctx_free(struct parse_ctx *ctx);
+	struct lua_ref *parse_ctx_get_ref(void *ctx);
 
 	struct parse_ctx {
 		int run;
@@ -15,6 +19,17 @@ ffi.cdef[[
 	};
 ]]
 
+ffibinding.create_type{
+	cdef = "struct parse_ctx",
+	prop = {
+	},
+	meth = {
+	},
+	destroy = ffi.C.parse_ctx_free,
+	ref = ffi.C.parse_ctx_get_ref,
+}
+
+local parse_ctx_new = ffibinding.object_wrapper("struct parse_ctx", ffibinding.handle_error(ffi.C.parse_ctx_new_ffi), true)
 
 --
 -- Parse C Context
@@ -49,7 +64,7 @@ local function revalidate(self)
 end
 
 function CContext.method:__init(iter, init)
-	self._ctx = ffi.C.parse_ctx_init(iter)
+	self._ctx = parse_ctx_new(iter)
 	self.iter = iter
 	self._bitoffset = 0
 	self._marks = {}
