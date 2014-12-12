@@ -31,8 +31,6 @@ function module.method:__init(name)
 #include <haka/lua/parse_ctx.h>
 #include <haka/luabinding.h>
 
-#define FINISH 0
-
 ]], self._name, self._name, self._name, self._name, self._name)
 end
 
@@ -183,6 +181,19 @@ function module.method:apply_node(node)
 		node:_trace(ctx.iter)
 		node:_apply(ctx)
 	end), "node:_apply(ctx)")
+end
+
+function module.method:mark(readonly)
+	readonly = readonly and "true" or "false"
+	self:write([[
+			parse_ctx_mark(ctx, %s);
+]], readonly)
+end
+
+function module.method:unmark()
+	self:write([[
+			parse_ctx_unmark(ctx);
+]])
 end
 
 local numtab={}

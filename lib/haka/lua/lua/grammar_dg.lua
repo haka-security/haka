@@ -24,9 +24,13 @@ end
 
 function dg.Entity.method:ccomp(ccomp)
 	ccomp:start_node(self)
-	ccomp:apply_node(self)
+	self:_capply(ccomp)
 	ccomp:finish_node()
 	return { self._next }
+end
+
+function dg.Entity.method:_capply(ccomp)
+	ccomp:apply_node(self)
 end
 
 function dg.Entity.method:next(ctx)
@@ -257,13 +261,6 @@ function dg.CompoundStart.method:__init(gid, rule, id, resultclass)
 	self.resultclass = resultclass or parseResult.Result
 end
 
-function dg.CompoundStart.method:ccomp(ccomp)
-	ccomp:start_node(self)
-	self:_capply(ccomp)
-	ccomp:finish_node()
-	return {self._next}
-end
-
 function dg.CompoundStart.method:_capply(ccomp)
 	ccomp:write[[
 			ctx->compound_level++;
@@ -275,13 +272,6 @@ function dg.CompoundStart.method:_apply(ctx)
 end
 
 dg.CompoundFinish = class.class('DGCompoundFinish', dg.Control)
-
-function dg.CompoundFinish.method:ccomp(ccomp)
-	ccomp:start_node(self)
-	self:_capply(ccomp)
-	ccomp:finish_node()
-	return {self._next}
-end
 
 function dg.CompoundFinish.method:_capply(ccomp)
 	ccomp:write[[
@@ -444,6 +434,13 @@ function dg.UnionStart.method:_apply(ctx)
 end
 
 dg.UnionRestart = class.class('DGUnionRestart', dg.Control)
+
+function dg.UnionRestart.method:_capply(ccomp)
+	ccomp:write[[
+			parse_ctx_seekmark(ctx);
+]]
+
+end
 
 function dg.UnionRestart.method:_apply(ctx)
 	ctx:seekmark()
@@ -672,6 +669,11 @@ function dg.Retain.method:__init(gid, readonly)
 	self.readonly = readonly
 end
 
+function dg.Retain.method:_capply(ccomp)
+	-- TODO iter wait but it's in vbuffer.si
+	ccomp:mark(self.readonly)
+end
+
 function dg.Retain.method:_apply(ctx)
 	-- We try to mark the incoming data, so wait for them
 	-- to arrive before marking the end of a previous chunk
@@ -684,6 +686,10 @@ dg.Release = class.class('DGRelease', dg.Control)
 
 function dg.Release.method:__init(gid, rule, id)
 	class.super(dg.Release).__init(self, gid, rule, id)
+end
+
+function dg.Release.method:_capply(ccomp)
+	ccomp:unmark()
 end
 
 function dg.Release.method:_apply(ctx)

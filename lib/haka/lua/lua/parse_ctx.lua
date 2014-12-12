@@ -13,9 +13,16 @@ ffi.cdef[[
 	void parse_ctx_free(struct parse_ctx *ctx);
 	struct lua_ref *parse_ctx_get_ref(void *ctx);
 
+	void parse_ctx_mark(struct parse_ctx *ctx, bool readonly);
+	void parse_ctx_unmark(struct parse_ctx *ctx);
+	void parse_ctx_pushmark(struct parse_ctx *ctx);
+	void parse_ctx_popmark(struct parse_ctx *ctx, bool seek);
+	void parse_ctx_seekmark(struct parse_ctx *ctx);
+
 	struct parse_ctx {
 		int run;
 		int node;
+		int bitoffset;
 	};
 ]]
 
@@ -24,6 +31,11 @@ ffibinding.create_type{
 	prop = {
 	},
 	meth = {
+		mark = ffi.C.parse_ctx_mark,
+		unmark = ffi.C.parse_ctx_unmark,
+		pushmark = ffi.C.parse_ctx_pushmark,
+		popmark = ffi.C.parse_ctx_popmark,
+		seekmark = ffi.C.parse_ctx_seekmark,
 	},
 	destroy = ffi.C.parse_ctx_free,
 	ref = ffi.C.parse_ctx_get_ref,
@@ -55,6 +67,15 @@ CContext.property.retain_mark = {
 	end
 }
 
+CContext.property._bitoffset = {
+	get = function (self)
+		return self._ctx.bitoffset
+	end,
+	set = function (self, val)
+		self._ctx.bitoffset = val
+	end
+}
+
 local function revalidate(self)
 	local validate = self._validate
 	self._validate = {}
@@ -66,18 +87,36 @@ end
 function CContext.method:__init(iter, init)
 	self._ctx = parse_ctx_new(iter)
 	self.iter = iter
-	self._bitoffset = 0
-	self._marks = {}
 	self._catches = {}
 	self._results = {}
 	self._validate = {}
-	self._retain_mark = {}
 
 	if init then
 		self._initresults = { init }
 	end
 
 	self.iter.meter = 0
+end
+
+function CContext.method:mark(readonly)
+	return self._ctx:mark(readonly)
+end
+
+function CContext.method:unmark()
+	return self._ctx:unmark()
+end
+
+function CContext.method:pushmark()
+	return self._ctx:pushmark()
+end
+
+function CContext.method:popmark(seek)
+	local seek = seek or false
+	return self._ctx:popmark(seek)
+end
+
+function CContext.method:seekmark()
+	return self._ctx:seekmark()
 end
 
 function CContext.method:result(idx)
@@ -99,18 +138,6 @@ function CContext.method:result(idx)
 	end
 
 	return self._results[idx]
-end
-
-function CContext.method:mark(readonly)
-	local mark = self.iter:copy()
-	mark:mark(readonly)
-	table.insert(self._retain_mark, mark)
-end
-
-function CContext.method:unmark()
-	local mark = self.retain_mark
-	self._retain_mark[#self._retain_mark] = nil
-	mark:unmark()
 end
 
 function CContext.method:update(iter)
@@ -167,98 +194,6 @@ function CContext.method:push(result, name)
 		end
 	end
 	return new
-end
-
-function CContext.method:pushmark()
-	self._marks[#self._marks+1] = {
-		iter = self.iter:copy(),
-		bitoffset = self._bitoffset,
-		max_meter = 0,
-		max_iter = self.iter:copy(),
-		max_bitoffset = self._bitoffset
-	}
-end
-
-function CContext.method:popmark(seek)
-	local seek = seek or false
-	local mark = self._marks[#self._marks]
-
-	if seek then
-		self.iter:move_to(mark.max_iter)
-		self._bitoffset = mark.max_bitoffset
-	end
-
-	self._marks[#self._marks] = nil
-end
-
-function CContext.method:seekmark()
-	local mark = self._marks[#self._marks]
-	local len = self.iter.meter - mark.iter.meter
-	if len >= mark.max_meter then
-		mark.max_iter = self.iter:copy()
-		mark.max_meter = len
-		if self._bitoffset > mark.max_bitoffset then
-			mark.max_bitoffset = self._bitoffset
-		end
-	end
-	self.iter:move_to(mark.iter)
-	self._bitoffset = mark.bitoffset
-end
-
-function CContext.method:pushcatch(entity)
-	-- Should have created a ctx result
-	self:mark(false)
-	self:pushmark()
-
-	self._catches[#self._catches+1] = {
-		entity = entity,
-		retain_count = #self._retain_mark,
-		mark_count = #self._marks,
-		result_count = #self._results,
-	}
-end
-
-function CContext.method:catch()
-	if #self._catches == 0 then
-		return nil
-	end
-
-	local catch = self._catches[#self._catches]
-
-	-- Unmark each retain started in failing case
-	while #self._retain_mark > catch.retain_count do
-		self:unmark()
-	end
-
-	-- remove all marks done in failing case
-	while #self._marks > catch.mark_count do
-		self:popmark(false)
-	end
-
-	-- remove all result ctx
-	while #self._results > catch.result_count do
-		self:pop()
-	end
-
-	-- Also remove result created by Try
-	-- Should be done in Try entity but we can't
-	self:pop()
-
-	self:seekmark()
-	self:popcatch()
-
-	return catch.entity
-end
-
-function CContext.method:popcatch(entity)
-	assert(#self._catches)
-	local catch = self._catches[#self._catches]
-
-	self:popmark(false)
-	self:unmark()
-	self._catches[#self._catches] = nil
-
-	return catch
 end
 
 function CContext.method:error(description, ...)

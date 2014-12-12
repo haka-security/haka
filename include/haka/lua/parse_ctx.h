@@ -22,16 +22,24 @@
 #define RECURS_NODE  0
 #define RECURS_LEVEL 1
 
-struct mark {
-};
+#define FINISH 0
 
 struct catch {
+	int node;
+	int retain_count;
+	int mark_count;
+	int result_count;
 };
 
 struct validate {
 };
 
-struct retain {
+struct mark {
+	struct vbuffer_iterator iter;
+	int                     bitoffset;
+	int                     max_meter;
+	struct vbuffer_iterator max_iter;
+	int                     max_bitoffset;
 };
 
 struct recurs {
@@ -45,9 +53,9 @@ struct result {
 struct parse_ctx {
 	bool                     run;
 	int                      node;
+	int                      bitoffset;
 	struct lua_object        lua_object;
 	struct vbuffer_iterator *iter;
-	int                      bitoffset;
 	int                      compound_level;
 	/**
 	 * recurs_finish_level is the current compound level when a recursion
@@ -63,7 +71,7 @@ struct parse_ctx {
 	int                      catch_count;
 	struct validate         *validates;
 	int                      validate_count;
-	struct retain           *retains;
+	struct vbuffer_iterator *retains;
 	int                      retain_count;
 	struct result           *results;
 	int                      result_count;
@@ -72,6 +80,15 @@ struct parse_ctx {
 struct parse_ctx *parse_ctx_new(struct vbuffer_iterator *iter);
 void              parse_ctx_init(struct parse_ctx *ctx, struct vbuffer_iterator *iter);
 void              parse_ctx_free(struct parse_ctx *ctx);
+
+void              parse_ctx_mark(struct parse_ctx *ctx, bool readonly);
+void              parse_ctx_unmark(struct parse_ctx *ctx);
+void              parse_ctx_pushmark(struct parse_ctx *ctx);
+void              parse_ctx_popmark(struct parse_ctx *ctx, bool seek);
+void              parse_ctx_seekmark(struct parse_ctx *ctx);
+void              parse_ctx_pushcatch(struct parse_ctx *ctx, int node);
+void              parse_ctx_catch(struct parse_ctx *ctx);
+void              parse_ctx_popcatch(struct parse_ctx *ctx);
 
 #ifdef HAKA_FFI
 bool parse_ctx_new_ffi(struct ffi_object *parse_ctx, void *_iter);
