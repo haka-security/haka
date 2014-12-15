@@ -24,14 +24,18 @@
 
 #define FINISH 0
 
+#define POOL(elem) struct {                                                    \
+	elem  *el;                                                             \
+	int    count;                                                          \
+	int    alloc;                                                          \
+	size_t size;                                                           \
+}
+
 struct catch {
 	int node;
 	int retain_count;
 	int mark_count;
 	int result_count;
-};
-
-struct validate {
 };
 
 struct mark {
@@ -47,34 +51,24 @@ struct recurs {
 	int level;
 };
 
-struct result {
-};
-
 struct parse_ctx {
-	bool                     run;
-	int                      node;
-	int                      bitoffset;
-	struct lua_object        lua_object;
-	struct vbuffer_iterator *iter;
-	int                      compound_level;
+	bool                          run;
+	int                           node;
+	int                           bitoffset;
+	struct lua_object             lua_object;
+	struct vbuffer_iterator      *iter;
+	int                           compound_level;
 	/**
 	 * recurs_finish_level is the current compound level when a recursion
 	 * is started. The recursion will continue when we get back to this
 	 * compound level.
 	 */
-	int                      recurs_finish_level;
-	int                      recurs_count;
-	struct recurs            recurs[RECURS_MAX];
-	struct mark             *marks;
-	int                      mark_count;
-	struct catch            *catches;
-	int                      catch_count;
-	struct validate         *validates;
-	int                      validate_count;
-	struct vbuffer_iterator *retains;
-	int                      retain_count;
-	struct result           *results;
-	int                      result_count;
+	int                           recurs_finish_level;
+	int                           recurs_count;
+	struct recurs                 recurs[RECURS_MAX];
+	POOL(struct mark)             marks;
+	POOL(struct catch)            catches;
+	POOL(struct vbuffer_iterator) retains;
 };
 
 struct parse_ctx *parse_ctx_new(struct vbuffer_iterator *iter);

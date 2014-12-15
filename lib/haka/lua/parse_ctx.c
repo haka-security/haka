@@ -8,6 +8,39 @@
 #include <haka/lua/parse_ctx.h>
 #include <haka/error.h>
 
+#ifdef HAKA_DEBUG
+#define POOL_MEM_GUARD(pool) do {                                              \
+	memset(&(pool)->el[(pool)->count], 0,                                  \
+			((pool)->alloc - (pool)->count) * (pool)->size);       \
+} while(0)
+#else
+#define POOL_MEM_GUARD do { } while(0)
+#endif
+
+#define POOL_INIT(elem, pool, init) do {                                       \
+	(pool)->alloc = init;                                                  \
+	(pool)->size = sizeof(elem);                                           \
+	(pool)->el = calloc((pool)->alloc, (pool)->size);                      \
+	if (!(pool)->el) error("memory error");                                \
+	(pool)->count = 0;                                                     \
+	POOL_MEM_GUARD(pool);                                                  \
+} while(0)
+
+#define POOL_FREE(pool) do {                                                   \
+	(pool)->alloc = 0;                                                     \
+	free((pool)->el);                                                      \
+	(pool)->count = 0;                                                     \
+} while(0)
+
+#define POOL_REALLOC(pool) do {                                                \
+	if((pool)->count >= (pool)->alloc) {                                   \
+		(pool)->alloc *= 2;                                            \
+		(pool)->el = realloc((pool)->el, (pool)->alloc * (pool)->size);\
+		if (!(pool)->el) error("memory error");                        \
+		POOL_MEM_GUARD(pool);                                          \
+	}                                                                      \
+} while(0)
+
 struct parse_ctx *parse_ctx_new(struct vbuffer_iterator *iter)
 {
 	struct parse_ctx *ctx = malloc(sizeof(struct parse_ctx));
@@ -33,67 +66,40 @@ void parse_ctx_init(struct parse_ctx *ctx, struct vbuffer_iterator *iter)
 
 	memset(ctx->recurs, 0, RECURS_MAX*sizeof(struct recurs));
 
-	ctx->marks = calloc(INIT_MARKS_SIZE, sizeof(struct mark));
-	if (!ctx->marks) error("memory error");
-	memset(ctx->marks, 0, INIT_MARKS_SIZE*sizeof(struct mark));
-	ctx->mark_count = 0;
-
-	ctx->catches = calloc(INIT_CATCHES_SIZE, sizeof(struct catch));
-	if (!ctx->catches) error("memory error");
-	memset(ctx->catches, 0, INIT_CATCHES_SIZE*sizeof(struct catch));
-	ctx->catch_count = 0;
-
-	ctx->validates = calloc(INIT_VALIDATES_SIZE, sizeof(struct validate));
-	if (!ctx->validates) error("memory error");
-	memset(ctx->validates, 0, INIT_VALIDATES_SIZE*sizeof(struct validate));
-	ctx->validate_count = 0;
-
-	ctx->retains = calloc(INIT_RETAINS_SIZE, sizeof(struct vbuffer_iterator));
-	if (!ctx->retains) error("memory error");
-	memset(ctx->retains, 0, INIT_RETAINS_SIZE*sizeof(struct vbuffer_iterator));
-	ctx->retain_count = 0;
-
-	ctx->results = calloc(INIT_RESULTS_SIZE, sizeof(struct result));
-	if (!ctx->results) error("memory error");
-	memset(ctx->results, 0, INIT_RESULTS_SIZE*sizeof(struct result));
-	ctx->result_count = 0;
+	POOL_INIT(struct mark, &ctx->marks, INIT_MARKS_SIZE);
+	POOL_INIT(struct catch, &ctx->catches, INIT_CATCHES_SIZE);
+	POOL_INIT(struct vbuffer_iterator, &ctx->retains, INIT_RETAINS_SIZE);
 }
 
 void parse_ctx_free(struct parse_ctx *ctx)
 {
-	free(ctx->marks);
-	free(ctx->catches);
-	free(ctx->validates);
-	free(ctx->retains);
-	free(ctx->results);
+	POOL_FREE(&ctx->marks);
+	POOL_FREE(&ctx->catches);
+	POOL_FREE(&ctx->retains);
 	free(ctx);
 }
 
 void parse_ctx_mark(struct parse_ctx *ctx, bool readonly)
 {
-	vbuffer_iterator_copy(ctx->iter, &ctx->retains[ctx->retain_count]);
-	vbuffer_iterator_mark(&ctx->retains[ctx->retain_count], readonly);
-	ctx->retain_count++;
+	vbuffer_iterator_copy(ctx->iter, &ctx->retains.el[ctx->retains.count]);
+	vbuffer_iterator_mark(&ctx->retains.el[ctx->retains.count], readonly);
+	ctx->retains.count++;
+	POOL_REALLOC(&ctx->retains);
 }
 
 void parse_ctx_unmark(struct parse_ctx *ctx)
 {
-	ctx->retain_count--;
-	vbuffer_iterator_unmark(&ctx->retains[ctx->retain_count]);
+	ctx->retains.count--;
+	vbuffer_iterator_unmark(&ctx->retains.el[ctx->retains.count]);
 
 #ifdef HAKA_DEBUG
-	memset(&ctx->retains[ctx->retain_count], 0, sizeof(struct vbuffer_iterator));
+	memset(&ctx->retains.el[ctx->retains.count], 0, sizeof(struct vbuffer_iterator));
 #endif /* HAKA_DEBUG */
-}
-
-void parse_ctx_getmark(struct parse_ctx *ctx)
-{
-	/* TODO */
 }
 
 void parse_ctx_pushmark(struct parse_ctx *ctx)
 {
-	struct mark *mark = &ctx->marks[ctx->mark_count];
+	struct mark *mark = &ctx->marks.el[ctx->marks.count];
 
 	vbuffer_iterator_copy(ctx->iter, &mark->iter);
 	mark->bitoffset = ctx->bitoffset;
@@ -101,27 +107,28 @@ void parse_ctx_pushmark(struct parse_ctx *ctx)
 	vbuffer_iterator_copy(ctx->iter, &mark->max_iter);
 	mark->max_bitoffset = ctx->bitoffset;
 
-	ctx->mark_count++;
+	ctx->marks.count++;
+	POOL_REALLOC(&ctx->marks);
 }
 
 void parse_ctx_popmark(struct parse_ctx *ctx, bool seek)
 {
-	ctx->mark_count--;
+	ctx->marks.count--;
 
 	if (seek) {
-		struct mark *mark = &ctx->marks[ctx->mark_count];
+		struct mark *mark = &ctx->marks.el[ctx->marks.count];
 		vbuffer_iterator_move(ctx->iter, &mark->max_iter);
 		ctx->bitoffset = mark->max_bitoffset;
 	}
 
 #ifdef HAKA_DEBUG
-	memset(&ctx->marks[ctx->mark_count], 0, sizeof(struct mark));
+	memset(&ctx->marks.el[ctx->marks.count], 0, sizeof(struct mark));
 #endif /* HAKA_DEBUG */
 }
 
 void parse_ctx_seekmark(struct parse_ctx *ctx)
 {
-	struct mark *mark = &ctx->marks[ctx->mark_count-1];
+	struct mark *mark = &ctx->marks.el[ctx->marks.count-1];
 	int len = ctx->iter->meter - mark->iter.meter;
 
 	if (len >= mark->max_meter) {
@@ -140,18 +147,18 @@ void parse_ctx_seekmark(struct parse_ctx *ctx)
 
 void parse_ctx_pushcatch(struct parse_ctx *ctx, int node)
 {
-	struct catch *catch = &ctx->catches[ctx->catch_count];
+	struct catch *catch = &ctx->catches.el[ctx->catches.count];
 
 	/* Should have created a ctx result */
 	parse_ctx_mark(ctx, false);
 	parse_ctx_pushmark(ctx);
 
 	catch->node = node;
-	catch->retain_count = ctx->retain_count;
-	catch->mark_count = ctx->mark_count;
-	catch->result_count = ctx->result_count;
+	catch->retain_count = ctx->retains.count;
+	catch->mark_count = ctx->marks.count;
 
-	ctx->catch_count++;
+	ctx->catches.count++;
+	POOL_REALLOC(&ctx->catches);
 }
 
 void parse_ctx_catch(struct parse_ctx *ctx)
@@ -159,31 +166,33 @@ void parse_ctx_catch(struct parse_ctx *ctx)
 	struct catch *catch;
 	int i;
 
-	if (ctx->catch_count == 0) {
+	if (ctx->catches.count == 0) {
 		ctx->node = FINISH;
 		return;
 	}
 
-	catch = &ctx->catches[--ctx->catch_count];
+	catch = &ctx->catches.el[--ctx->catches.count];
 
 	/* Unmark each retain started in failing case */
-	for(i = ctx->retain_count; i > catch->retain_count; i--) {
+	for(i = ctx->retains.count; i > catch->retain_count; i--) {
 		parse_ctx_unmark(ctx);
 	}
 
 	/* remove all marks done in failing case */
-	for (i = ctx->mark_count; i > catch->mark_count; i--) {
+	for (i = ctx->marks.count; i > catch->mark_count; i--) {
 		parse_ctx_popmark(ctx, false);
 	}
 
+
+	assert(!"Not Yet Implemented");
 	/* remove all result ctx */
-	for (i = ctx->result_count; i > catch->result_count; i--) {
+	/* for (i = ctx->result_count; i > catch->result_count; i--) {
 		// TODO parse_ctx_pop();
-	}
+	} */
 
 	/* Also remove result created by Try */
 	/* Should be done in Try entity but we can't */
-	// TODO parse_ctx_pop();
+	// parse_ctx_pop();
 
 	parse_ctx_seekmark(ctx);
 	parse_ctx_popcatch(ctx);
@@ -193,13 +202,13 @@ void parse_ctx_catch(struct parse_ctx *ctx)
 
 void parse_ctx_popcatch(struct parse_ctx *ctx)
 {
-	ctx->catch_count--;
+	ctx->catches.count--;
 
 	parse_ctx_popmark(ctx, false);
 	parse_ctx_unmark(ctx);
 
 #ifdef HAKA_DEBUG
-	memset(&ctx->catches[ctx->catch_count], 0, sizeof(struct catch));
+	memset(&ctx->catches.el[ctx->catches.count], 0, sizeof(struct catch));
 #endif /* HAKA_DEBUG */
 
 }
