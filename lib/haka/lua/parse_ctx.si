@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%import "haka/lua/config.si"
+
+%include "haka/lua/swig.si"
+
+#ifdef HAKA_SWIG
+
+%{
+#include <haka/lua/parse_ctx.h>
+%}
+
+struct parse_ctx {
+	int run;
+	int node;
+	int bitoffset;
+
+	%extend {
+		parse_ctx(struct vbuffer_iterator *iter) {
+			return parse_ctx_new(iter);
+		}
+
+		~parse_ctx() {
+			parse_ctx_free($self);
+		}
+
+		void mark(bool readonly);
+		void unmark();
+		void pushmark();
+		void popmark(bool seek = false);
+		void seekmark();
+	}
+};
+
+#endif

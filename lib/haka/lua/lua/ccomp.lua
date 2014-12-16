@@ -11,6 +11,7 @@ local module = class.class("CComp")
 local suffix = "_grammar"
 
 function module.method:__init(name)
+	self._swig = haka.config.ccomp.swig
 	self._name = name..suffix
 	self._cfile = haka.config.ccomp.runtime_dir..self._name..".c"
 	self._sofile = haka.config.ccomp.runtime_dir..self._name..".so"
@@ -32,6 +33,12 @@ function module.method:__init(name)
 #include <haka/luabinding.h>
 
 ]], self._name, self._name, self._name, self._name, self._name)
+
+	if self._swig then
+		self:write[[
+extern void *lua_get_swigdata(void *ptr);
+]]
+	end
 end
 
 local function traverse(ccomp, node)
@@ -69,31 +76,54 @@ function module.method:_start_parser(name)
 	}
 	self._store = {} -- Store some lua object to access it from c
 	self._parsers[#self._parsers + 1] = self._parser
-	self:write([[
-
-int parse_%s(struct parse_ctx *ctx)
+	if self._swig then
+		self:write([[
+int parse_%s(lua_State *L)
 {
+	void *_ctx;
+	struct parse_ctx *ctx;
+	assert(lua_isuserdata(L, 1));
+	_ctx = lua_touserdata(L, 1);
+	ctx = (struct parse_ctx *)lua_get_swigdata(_ctx);
+]], name)
+	else
+		self:write([[
+int parse_%s(struct parse_ctx *ctx)
+{]], name)
+	end
+
+	self:write[[
 	int call = 0;
 	while(ctx->run) {
-		if (call != 0) return call;
+		if (call != 0) break;
 
 		switch(ctx->node) {
-]], name)
+]]
 end
 
 function module.method:_end_parser()
 	assert(self._parser, "parser not started")
-	self:write([[
+	self:write[[
 		default: /* node 0 is default and is also exit */
 		{
 			ctx->run = false;
 		}
 		}
 	}
+]]
 
-	return 0;
+	if self._swig then
+		self:write[[
+	lua_pushinteger(L, call);
+	return 1;
 }
-]], self._parser.name)
+]]
+	else
+		self:write[[
+	return call;
+}
+]]
+	end
 	self._parser = nil
 end
 
@@ -144,7 +174,7 @@ function module.method:start_node(node)
 			/* Register current node */
 			ctx->node = %d;
 			/* Call required lua */
-			if (call != 0) return call;
+			if (call != 0) break;
 
 			/* Node start */
 ]], node.gid, id, rule, field, type, id)
@@ -212,16 +242,26 @@ function module.method:compile()
 
 	local binding = [[
 local parse_ctx = require("parse_ctx")
+]]
+	if haka.config.ccomp.ffi then
+
+		binding = binding..[[
 local ffibinding = require("ffibinding")
 local lib = ffibinding.load[[
 ]]
 
-	-- Expose all parser
-	for _, value in pairs(self._parsers) do
-		binding = binding..string.format("int parse_%s(struct parse_ctx *ctx);\n", value.name)
+		-- Expose all parser
+		for _, value in pairs(self._parsers) do
+			binding = binding..string.format("int parse_%s(struct parse_ctx *ctx);\n", value.name)
+		end
+
+		binding = binding.."]]"
+	else
+		binding = binding..[[
+local lib = unpack({...})
+]]
 	end
 
-	binding = binding.."]]"
 	binding = binding..[[
 
 return { ctx = parse_ctx, grammar = lib }
@@ -250,11 +290,36 @@ inline void lua_load_%s(lua_State *L)
 LUA_BIND_INIT(%s)
 {
 	LUA_LOAD(%s, L);
+]], binding, self._name, luacode, self._name, self._name, self._name, self._name, self._name, self._name)
+
+	if self._swig then
+		self:write[[
+	lua_newtable(L);
+]]
+
+		-- Expose all parser
+		for _, value in pairs(self._parsers) do
+			self:write([[
+	lua_pushstring(L, "parse_%s");
+	lua_pushcfunction(L, parse_%s);
+	lua_settable(L, -3);
+]], value.name, value.name)
+		end
+		self:write[[
+	lua_call(L, 1, 1);
+
+	return 1;
+}
+]]
+
+	else
+		self:write[[
 	lua_call(L, 0, 1);
 
 	return 1;
 }
-]], binding, self._name, luacode, self._name, self._name, self._name, self._name, self._name, self._name)
+]]
+	end
 
 	self._fd:close()
 

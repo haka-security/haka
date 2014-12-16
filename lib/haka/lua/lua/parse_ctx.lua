@@ -2,8 +2,15 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <haka/config.h>
+
+
 local class = require('class')
 local parseResult = require('parse_result')
+
+local parse_ctx_new
+
+#ifdef HAKA_FFI
 
 local ffi = require('ffi')
 local ffibinding = require('ffibinding')
@@ -41,7 +48,14 @@ ffibinding.create_type{
 	ref = ffi.C.parse_ctx_get_ref,
 }
 
-local parse_ctx_new = ffibinding.object_wrapper("struct parse_ctx", ffibinding.handle_error(ffi.C.parse_ctx_new_ffi), true)
+parse_ctx_new = ffibinding.object_wrapper("struct parse_ctx", ffibinding.handle_error(ffi.C.parse_ctx_new_ffi), true)
+
+#else
+
+parse_ctx_new = haka.parse_ctx
+haka.parse_ctx = nil
+
+#endif
 
 --
 -- Parse C Context

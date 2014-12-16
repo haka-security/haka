@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%import "haka/lua/config.si"
+
 %{
 #include <haka/error.h>
 
@@ -60,3 +62,19 @@ char *ccomp_include_path;
 	haka.config_get = nil
 
 }
+
+#ifdef HAKA_SWIG
+
+%luacode {
+	haka.config.ccomp.swig = true
+	haka.config.ccomp.ffi = false
+}
+
+#else
+
+%luacode {
+	haka.config.ccomp.swig = false
+	haka.config.ccomp.ffi = true
+}
+
+#endif

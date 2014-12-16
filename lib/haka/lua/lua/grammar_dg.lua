@@ -439,7 +439,6 @@ function dg.UnionRestart.method:_capply(ccomp)
 	ccomp:write[[
 			parse_ctx_seekmark(ctx);
 ]]
-
 end
 
 function dg.UnionRestart.method:_apply(ctx)

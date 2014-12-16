@@ -911,7 +911,7 @@ local function new_lua_grammar(name, def)
 end
 
 function grammar.new(name, def, ccomp)
-	if ccomp then
+	if true then
 		return new_c_grammar(name, def)
 	else
 		return new_lua_grammar(name, def)

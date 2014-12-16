@@ -41,10 +41,11 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/check.lua
 	lua/lua/ffibinding.lua
 )
+
 lua_compile(NAME libhakalua FILES
 	lua/lua/parse_ctx.lua
-	PREPROCESS
-)
+	PREPROCESS)
+
 lua_install(TARGET libhakalua DESTINATION share/haka/core)
 
 add_library(libhaka SHARED
