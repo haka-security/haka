@@ -912,16 +912,11 @@ end
 
 function grammar.new(name, def, ccomp)
 	if ccomp then
-		local ret, grammar = pcall(new_c_grammar, name, def)
-		if ret then
-			return grammar
-		end
-
-		log.warning("cannot compile grammar %s: %s", name, grammar)
-		log.warning("fallbacking to full lua grammar")
+		return new_c_grammar(name, def)
+	else
+		return new_lua_grammar(name, def)
 	end
 
-	return new_lua_grammar(name, def)
 end
 
 grammar.debug = false
