@@ -242,4 +242,24 @@ function TestGrammarCompilation:test_apply_on_recurs(fname)
 	assertEquals(ret.child[2].count, 0)
 end
 
+function TestGrammarCompilation:test_apply_on_token(fname)
+	-- Given
+	local buf = haka.vbuffer_from("GET toto")
+	local done = false
+	local grammar = haka.grammar.new(fname, function ()
+		elem = record{
+			field("foo", token('[^()<>@,;:%\\"/%[%]?={}[:blank:]]+')),
+		}
+
+		export(elem)
+	end, true)
+
+	-- When
+	local ret = grammar.elem:parse(buf:pos('begin'))
+
+	-- Then
+	ensure_used_c_grammar(fname)
+	assertEquals(ret.foo, "GET")
+end
+
 addTestSuite('TestGrammarCompilation')
