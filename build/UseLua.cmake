@@ -19,9 +19,10 @@ set(LUAC "yes" CACHE BOOL "precompile lua files during build")
 include_directories(${LUA_INCLUDE_DIR})
 
 macro(LUA_COMPILE)
+	set(options PREPROCESS)
 	set(oneValueArgs NAME)
 	set(multiValueArgs FILES FLAGS)
-	cmake_parse_arguments(LUA_COMPILE "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+	cmake_parse_arguments(LUA_COMPILE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
 	set(ARGS_LIST "${ARGN}")
 	list(FIND ARGS_LIST "FLAGS" LUA_COMPILE_HAS_FLAGS)
@@ -35,29 +36,49 @@ macro(LUA_COMPILE)
 
 	set(LUA_COMPILE_COMPILED_FILES)
 
-	if(LUAC)
-		foreach(it ${LUA_COMPILE_FILES})
-			get_filename_component(lua_source_file_path "${it}" ABSOLUTE)
-			get_filename_component(lua_source_file_name "${it}" NAME_WE)
-			set(lua_source_outfile_path "${lua_source_file_name}.bc")
+	foreach(it ${LUA_COMPILE_FILES})
+		get_filename_component(lua_source_file_path "${it}" ABSOLUTE)
+		get_filename_component(lua_source_file_name "${it}" NAME_WE)
+		get_filename_component(lua_source_file_dir  "${it}" PATH)
 
+		set(lua_source_outfile_path "${lua_source_file_name}.bc")
+
+		if(LUA_COMPILE_PREPROCESS)
+			get_directory_property(inc INCLUDE_DIRECTORIES)
+			if (inc)
+				foreach(dir ${inc})
+					list(APPEND inc_flags "-I${dir}")
+				endforeach()
+			endif()
+			set(lua_preprocessed_file "${CMAKE_CURRENT_BINARY_DIR}/${lua_source_file_dir}/${lua_source_file_name}.lua")
+			add_custom_command(
+				OUTPUT "${lua_preprocessed_file}"
+				COMMAND mkdir -p ${lua_source_file_dir}
+				COMMAND ${CMAKE_C_COMPILER} ${inc_flags} -E -P -x c ${lua_source_file_path} -o ${lua_preprocessed_file}
+				COMMENT "Preprocessing Lua file ${it}"
+				DEPENDS "${lua_source_file_path}"
+				IMPLICIT_DEPENDS C ${lua_source_file_path}
+				VERBATIM)
+		else()
+			set(lua_preprocessed_file "${lua_source_file_path}")
+		endif()
+
+		if(LUAC)
 			add_custom_command(
 				OUTPUT "${lua_source_outfile_path}"
-				COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_source_outfile_path} ${lua_source_file_path}
-				MAIN_DEPENDENCY "${lua_source_file_path}"
+				COMMAND ${LUA_COMPILER} ${LUA_FLAGS} -o ${lua_source_outfile_path} ${lua_preprocessed_file}
+				MAIN_DEPENDENCY "${lua_preprocessed_file}"
 				COMMENT "Building Lua file ${it}"
 				DEPENDS ${LUA_DEPENDENCY}
 				VERBATIM)
+		endif()
 
-			SET_SOURCE_FILES_PROPERTIES("${lua_source_outfile_path}" PROPERTIES GENERATED 1)
-			LIST(APPEND LUA_COMPILE_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_source_outfile_path}")
-		endforeach(it)
+		SET_SOURCE_FILES_PROPERTIES("${lua_source_outfile_path}" PROPERTIES GENERATED 1)
+		LIST(APPEND LUA_COMPILE_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_source_outfile_path}")
+	endforeach(it)
 
-		get_directory_property(lua_extra_clean_files ADDITIONAL_MAKE_CLEAN_FILES)
-		set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${lua_extra_clean_files};${LUA_COMPILE_COMPILED_FILES}")
-	else()
-		set(LUA_COMPILE_COMPILED_FILES ${LUA_COMPILE_FILES})
-	endif()
+	get_directory_property(lua_extra_clean_files ADDITIONAL_MAKE_CLEAN_FILES)
+	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${lua_extra_clean_files};${LUA_COMPILE_COMPILED_FILES}")
 
 	if(TARGET ${LUA_COMPILE_NAME})
 		get_target_property(ID ${LUA_COMPILE_NAME} LUA_ID)

@@ -29,7 +29,6 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/events.lua
 	lua/lua/context.lua
 	lua/lua/parse.lua
-	lua/lua/parse_ctx.lua
 	lua/lua/parse_result.lua
 	lua/lua/grammar.lua
 	lua/lua/grammar_dg.lua
@@ -41,6 +40,10 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/list.lua
 	lua/lua/check.lua
 	lua/lua/ffibinding.lua
+)
+lua_compile(NAME libhakalua FILES
+	lua/lua/parse_ctx.lua
+	PREPROCESS
 )
 lua_install(TARGET libhakalua DESTINATION share/haka/core)
 
