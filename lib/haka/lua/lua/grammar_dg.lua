@@ -24,6 +24,7 @@ end
 
 function dg.Entity.method:ccomp(ccomp)
 	ccomp:start_node(self)
+	self:_ctrace(ccomp)
 	self:_capply(ccomp)
 	ccomp:finish_node()
 	return { self._next }
@@ -220,6 +221,46 @@ function dg.Entity.method:dump_graph(file)
 	self:_dump_graph(file, ref)
 
 	file:write("}\n")
+end
+
+function dg.Entity.method:ctrace(ccomp, msg, ...)
+	local id = tostring(self.id)
+	if self.name then
+		id = string.format("'%s'", self.name)
+	end
+
+	ccomp:write[[
+#ifdef HAKA_DEBUG
+			{
+				char dump[21];
+				char dump_safe[81];
+				struct vbuffer_sub sub;
+				vbuffer_sub_create_from_position(&sub, ctx->iter, 20);
+				safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 20));
+
+]]
+	ccomp:log("DEBUG", "in rule '%s' field %s gid %d: %s\\n\\tat byte %d: %s...",
+		self.rule or "<unknown>", id or "<unknown>", self.gid, string.format(msg, ...), { raw = "ctx->iter->meter" }, { raw = "dump_safe" })
+	ccomp:write[[
+			}
+#endif
+]]
+end
+
+function dg.Entity.method:_ctrace(ccomp)
+	local name = class.classof(self).trace_name
+	if not name or not self.id then
+		-- skip trace
+		return
+	end
+
+	local descr = self:_dump_graph_descr()
+	if descr then
+		self:ctrace(ccomp, "parsing %s %s", name, descr)
+	else
+		self:ctrace(ccomp, "parsing %s", name)
+	end
+
 end
 
 function dg.Entity.method:trace(position, msg, ...)

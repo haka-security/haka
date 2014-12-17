@@ -73,6 +73,7 @@ add_library(libhaka SHARED
 	container/list.c
 	container/list2.c
 	container/vector.c
+	utils.c
 	lua/state.c
 	lua/ref.c
 	lua/lua.c

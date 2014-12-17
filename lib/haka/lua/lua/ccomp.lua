@@ -27,10 +27,14 @@ function module.method:__init(name)
 #include <assert.h>
 
 #include <haka/error.h>
+#include <haka/log.h>
+#include <haka/utils.h>
 #include <haka/lua/lua.h>
 #include <haka/lua/state.h>
 #include <haka/lua/parse_ctx.h>
 #include <haka/luabinding.h>
+
+static REGISTER_LOG_SECTION(grammar);
 
 ]], self._name, self._name, self._name, self._name, self._name)
 
@@ -208,7 +212,6 @@ function module.method:apply_node(node)
 	assert(node)
 
 	self:call(self:store(function (ctx)
-		node:_trace(ctx.iter)
 		node:_apply(ctx)
 	end), "node:_apply(ctx)")
 end
@@ -224,6 +227,26 @@ function module.method:unmark()
 	self:write([[
 			parse_ctx_unmark(ctx);
 ]])
+end
+
+function module.method:log(lvl, msg, ...)
+	self:write([[
+			LOG_%s(grammar, "%s"]], lvl, msg);
+
+	local args = {...}
+	for _, v in pairs(args) do
+		local t = type(v)
+		if t == "string" then
+			self:write(", \"%s\"", v)
+		elseif t == "number" then
+			self:write(", %d", v)
+		elseif t == "table" then
+			self:write(", %s", v.raw)
+		end
+	end
+
+	self:write[[);
+]]
 end
 
 local numtab={}
