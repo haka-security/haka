@@ -249,6 +249,8 @@ function TestGrammarCompilation:test_apply_on_token(fname)
 	local grammar = haka.grammar.new(fname, function ()
 		elem = record{
 			field("foo", token('[^()<>@,;:%\\"/%[%]?={}[:blank:]]+')),
+			token('[[:blank:]]+'),
+			field("bar", token('toto')),
 		}
 
 		export(elem)
@@ -260,6 +262,7 @@ function TestGrammarCompilation:test_apply_on_token(fname)
 	-- Then
 	ensure_used_c_grammar(fname)
 	assertEquals(ret.foo, "GET")
+	assertEquals(ret.bar, "toto")
 end
 
 addTestSuite('TestGrammarCompilation')
