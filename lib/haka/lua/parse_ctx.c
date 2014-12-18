@@ -104,6 +104,14 @@ void parse_ctx_unmark(struct parse_ctx *ctx)
 #endif /* HAKA_DEBUG */
 }
 
+bool parse_ctx_get_mark(struct parse_ctx *ctx, struct vbuffer_iterator *iter)
+{
+	if (ctx->retains.count == 0) return false;
+
+	vbuffer_iterator_copy(&ctx->retains.el[ctx->retains.count-1], iter);
+	return true;
+}
+
 void parse_ctx_pushmark(struct parse_ctx *ctx)
 {
 	struct mark *mark = &ctx->marks.el[ctx->marks.count];
@@ -255,6 +263,11 @@ bool parse_ctx_new_ffi(struct ffi_object *parse_ctx, void *_iter)
 		parse_ctx->ptr = ctx;
 		return true;
 	}
+}
+
+bool parse_ctx_get_mark_ffi(struct parse_ctx *ctx, void *_iter)
+{
+	return parse_ctx_get_mark(ctx, (struct vbuffer_iterator *)lua_get_swigdata(_iter));
 }
 
 struct lua_ref *parse_ctx_get_ref(void *_ctx)

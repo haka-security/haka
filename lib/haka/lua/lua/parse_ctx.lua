@@ -22,6 +22,7 @@ ffi.cdef[[
 
 	void parse_ctx_mark(struct parse_ctx *ctx, bool readonly);
 	void parse_ctx_unmark(struct parse_ctx *ctx);
+	bool parse_ctx_get_mark_ffi(struct parse_ctx *ctx, void *iter);
 	void parse_ctx_pushmark(struct parse_ctx *ctx);
 	void parse_ctx_popmark(struct parse_ctx *ctx, bool seek);
 	void parse_ctx_seekmark(struct parse_ctx *ctx);
@@ -47,6 +48,14 @@ ffibinding.create_type{
 		seekmark = ffi.C.parse_ctx_seekmark,
 		update_error = ffi.C.parse_ctx_update_error,
 		error = ffi.C.parse_ctx_error,
+		retain_mark = function (self)
+			local iter = haka.vbuffer_iterator()
+			if ffi.C.parse_ctx_get_mark_ffi(self, iter) then
+				return iter
+			else
+				return nil
+			end
+		end,
 	},
 	destroy = ffi.C.parse_ctx_free,
 	ref = ffi.C.parse_ctx_get_ref,
@@ -81,7 +90,7 @@ CContext.property.init = {
 
 CContext.property.retain_mark = {
 	get = function (self)
-		return self._retain_mark[#self._retain_mark]
+		return self._ctx:retain_mark()
 	end
 }
 

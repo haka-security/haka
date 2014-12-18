@@ -85,6 +85,7 @@ void              parse_ctx_free(struct parse_ctx *ctx);
 
 void              parse_ctx_mark(struct parse_ctx *ctx, bool readonly);
 void              parse_ctx_unmark(struct parse_ctx *ctx);
+bool              parse_ctx_get_mark(struct parse_ctx *ctx, struct vbuffer_iterator *iter);
 void              parse_ctx_pushmark(struct parse_ctx *ctx);
 void              parse_ctx_popmark(struct parse_ctx *ctx, bool seek);
 void              parse_ctx_seekmark(struct parse_ctx *ctx);
@@ -95,8 +96,9 @@ void              parse_ctx_update_error(struct parse_ctx *ctx, const char id[],
 void              parse_ctx_error(struct parse_ctx *ctx, const char desc[]);
 
 #ifdef HAKA_FFI
-bool parse_ctx_new_ffi(struct ffi_object *parse_ctx, void *_iter);
-struct lua_ref *parse_ctx_get_ref(void *_ctx);
+bool              parse_ctx_new_ffi(struct ffi_object *parse_ctx, void *_iter);
+bool              parse_ctx_get_mark_ffi(struct parse_ctx *ctx, void *_iter);
+struct lua_ref   *parse_ctx_get_ref(void *_ctx);
 #endif /* HAKA_FFI */
 
 #endif /* _HAKA_LUA_PARSE_CTX_H */
