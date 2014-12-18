@@ -98,6 +98,33 @@ int parse_%s(struct parse_ctx *ctx)
 	end
 
 	self:write[[
+	if (ctx->error.isset) {
+		if (parse_ctx_catch(ctx)) {
+#ifdef HAKA_DEBUG
+			char dump[101];
+			char dump_safe[401];
+			struct vbuffer_sub sub;
+			vbuffer_sub_create_from_position(&sub, &ctx->error.iter, 100);
+			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 100));
+
+			LOG_DEBUG(grammar, "catched: parse error at byte %%d for field %%s in %%s: %%s",
+			ctx->error.iter.meter, ctx->error.id, ctx->error.rule, ctx->error.desc);
+			LOG_DEBUG(grammar, "parse error context: %%s...", dump_safe);
+#endif
+		} else {
+			char dump[101];
+			char dump_safe[401];
+			struct vbuffer_sub sub;
+			vbuffer_sub_create_from_position(&sub, &ctx->error.iter, 100);
+			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 100));
+
+			LOG_DEBUG(grammar, "parse error at byte %%d for field %%s in %%s: %%s",
+			ctx->error.iter.meter, ctx->error.id, ctx->error.rule, ctx->error.desc);
+			LOG_DEBUG(grammar, "parse error context: %%s...", dump_safe);
+			ctx->run = false;
+		}
+	}
+
 	int call = 0;
 	while(ctx->run) {
 		if (call != 0) break;
@@ -213,6 +240,7 @@ function module.method:apply_node(node)
 	assert(node)
 
 	self:call(self:store(function (ctx)
+		ctx:update_error(tostring(node.id), tostring(node.rule))
 		node:_apply(ctx)
 	end), "node:_apply(ctx)")
 end

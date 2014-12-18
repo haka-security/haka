@@ -63,6 +63,10 @@ void parse_ctx_init(struct parse_ctx *ctx, struct vbuffer_iterator *iter)
 	ctx->recurs_finish_level = 0;
 	ctx->recurs_count        = 0;
 	ctx->bitoffset           = 0;
+	ctx->error.isset         = false;
+	ctx->error.desc          = NULL;
+	ctx->error.id            = NULL;
+	ctx->error.rule          = NULL;
 
 	memset(ctx->recurs, 0, RECURS_MAX*sizeof(struct recurs));
 
@@ -76,6 +80,9 @@ void parse_ctx_free(struct parse_ctx *ctx)
 	POOL_FREE(&ctx->marks);
 	POOL_FREE(&ctx->catches);
 	POOL_FREE(&ctx->retains);
+	free(ctx->error.desc);
+	free(ctx->error.id);
+	free(ctx->error.rule);
 	free(ctx);
 }
 
@@ -161,14 +168,14 @@ void parse_ctx_pushcatch(struct parse_ctx *ctx, int node)
 	POOL_REALLOC(&ctx->catches);
 }
 
-void parse_ctx_catch(struct parse_ctx *ctx)
+bool parse_ctx_catch(struct parse_ctx *ctx)
 {
 	struct catch *catch;
 	int i;
 
 	if (ctx->catches.count == 0) {
 		ctx->node = FINISH;
-		return;
+		return false;
 	}
 
 	catch = &ctx->catches.el[--ctx->catches.count];
@@ -198,6 +205,8 @@ void parse_ctx_catch(struct parse_ctx *ctx)
 	parse_ctx_popcatch(ctx);
 
 	ctx->node = catch->node;
+
+	return true;
 }
 
 void parse_ctx_popcatch(struct parse_ctx *ctx)
@@ -211,6 +220,24 @@ void parse_ctx_popcatch(struct parse_ctx *ctx)
 	memset(&ctx->catches.el[ctx->catches.count], 0, sizeof(struct catch));
 #endif /* HAKA_DEBUG */
 
+}
+
+void parse_ctx_update_error(struct parse_ctx *ctx, const char id[], const char rule[])
+{
+	/* This should be removed when no more element of the graph will be in lua */
+	free(ctx->error.id);
+	free(ctx->error.rule);
+	ctx->error.id = strdup(id);
+	ctx->error.rule = strdup(rule);
+}
+
+void parse_ctx_error(struct parse_ctx *ctx, const char desc[])
+{
+	if (ctx->error.isset) error("multiple parse errors raised");
+
+	ctx->error.isset = true;
+	vbuffer_iterator_copy(ctx->iter, &ctx->error.iter);
+	ctx->error.desc = strdup(desc);
 }
 
 #ifdef HAKA_FFI

@@ -25,6 +25,8 @@ ffi.cdef[[
 	void parse_ctx_pushmark(struct parse_ctx *ctx);
 	void parse_ctx_popmark(struct parse_ctx *ctx, bool seek);
 	void parse_ctx_seekmark(struct parse_ctx *ctx);
+	void parse_ctx_update_error(struct parse_ctx *ctx, const char id[], const char rule[]);
+	void parse_ctx_error(struct parse_ctx *ctx, const char desc[]);
 
 	struct parse_ctx {
 		int run;
@@ -43,6 +45,8 @@ ffibinding.create_type{
 		pushmark = ffi.C.parse_ctx_pushmark,
 		popmark = ffi.C.parse_ctx_popmark,
 		seekmark = ffi.C.parse_ctx_seekmark,
+		update_error = ffi.C.parse_ctx_update_error,
+		error = ffi.C.parse_ctx_error,
 	},
 	destroy = ffi.C.parse_ctx_free,
 	ref = ffi.C.parse_ctx_get_ref,
@@ -133,6 +137,17 @@ function CContext.method:seekmark()
 	return self._ctx:seekmark()
 end
 
+function CContext.method:error(desc, ...)
+	local desc = string.format(desc, ...)
+	return self._ctx:error(desc)
+end
+
+function CContext.method:update_error(id, rule)
+	local id = id or "<unknown>"
+	local rule = rule or "<unknown>"
+	return self._ctx:update_error(id, rule)
+end
+
 function CContext.method:result(idx)
 	idx = idx or -1
 
@@ -208,16 +223,6 @@ function CContext.method:push(result, name)
 		end
 	end
 	return new
-end
-
-function CContext.method:error(description, ...)
-	if self._error then
-		error("multiple parse errors raised")
-	end
-
-	local context = {}
-	description = string.format(description, ...)
-	self._error = ParseError:new(self.iter, nil, description)
 end
 
 return CContext

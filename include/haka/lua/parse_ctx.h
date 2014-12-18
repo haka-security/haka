@@ -69,6 +69,14 @@ struct parse_ctx {
 	POOL(struct mark)             marks;
 	POOL(struct catch)            catches;
 	POOL(struct vbuffer_iterator) retains;
+
+	struct {
+		bool                     isset;
+		struct vbuffer_iterator  iter;
+		char                    *desc;
+		char                    *id;
+		char                    *rule;
+	}                             error;
 };
 
 struct parse_ctx *parse_ctx_new(struct vbuffer_iterator *iter);
@@ -81,8 +89,10 @@ void              parse_ctx_pushmark(struct parse_ctx *ctx);
 void              parse_ctx_popmark(struct parse_ctx *ctx, bool seek);
 void              parse_ctx_seekmark(struct parse_ctx *ctx);
 void              parse_ctx_pushcatch(struct parse_ctx *ctx, int node);
-void              parse_ctx_catch(struct parse_ctx *ctx);
+bool              parse_ctx_catch(struct parse_ctx *ctx);
 void              parse_ctx_popcatch(struct parse_ctx *ctx);
+void              parse_ctx_update_error(struct parse_ctx *ctx, const char id[], const char rule[]);
+void              parse_ctx_error(struct parse_ctx *ctx, const char desc[]);
 
 #ifdef HAKA_FFI
 bool parse_ctx_new_ffi(struct ffi_object *parse_ctx, void *_iter);
