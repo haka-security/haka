@@ -16,6 +16,7 @@ function module.method:__init(name, debug)
 	self._debug = debug or false
 	self._cfile = haka.config.ccomp.runtime_dir..self._name..".c"
 	self._sofile = haka.config.ccomp.runtime_dir..self._name..".so"
+	self._store = {} -- Store some lua object to access it from c
 	self._parser = nil -- Current parser
 	self._parsers = {}
 
@@ -79,7 +80,6 @@ function module.method:_start_parser(name)
 		nodes_count = 0, -- Count of encountered nodes
 		written_nodes = {}, -- Store written nodes
 	}
-	self._store = {} -- Store some lua object to access it from c
 	self._parsers[#self._parsers + 1] = self._parser
 	if self._swig then
 		self:write([[
