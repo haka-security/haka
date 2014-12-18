@@ -12,7 +12,7 @@ struct thread_pool;
 
 void packet_receive_wrapper(struct thread_state *state, struct packet **pkt, bool *has_interrupts, bool *stop);
 struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module,
-		bool attach_debugger, bool dissector_graph);
+		bool attach_debugger, bool dissector_graph, bool grammar_debug);
 int  thread_pool_count(struct thread_pool *pool);
 void thread_pool_cleanup(struct thread_pool *pool);
 void thread_pool_wait(struct thread_pool *pool);

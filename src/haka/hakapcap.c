@@ -46,6 +46,7 @@ static void help(const char *program)
 	fprintf(stdout, "\t                          (debug, info, warning, error or fatal)\n");
 	fprintf(stdout, "\t-a,--alert-to <file>:   Redirect alerts to given file\n");
 	fprintf(stdout, "\t--debug-lua:            Activate lua debugging\n");
+	fprintf(stdout, "\t--debug-grammar:        Activate debug output for grammar\n");
 	fprintf(stdout, "\t--dump-dissector-graph: Dump dissector internals (grammar and state machine) in file <name>.dot\n");
 	fprintf(stdout, "\t--no-pass-through, --pass-through:\n");
 	fprintf(stdout, "\t                        Select pass-through mode (default: true)\n");
@@ -55,6 +56,7 @@ static void help(const char *program)
 static char *output = NULL, *alert_to = NULL;
 static bool pass_through = true;
 static bool lua_debugger = false;
+static bool grammar_debug = false;
 static bool dissector_graph = false;
 
 static int parse_cmdline(int *argc, char ***argv)
@@ -72,6 +74,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "loglevel",             required_argument, 0, 'l' },
 		{ "alert-to",             required_argument, 0, 'a' },
 		{ "debug-lua",            no_argument,       0, 'L' },
+		{ "debug-grammar",        no_argument,       0, 'M' },
 		{ "dump-dissector-graph", no_argument,       0, 'G' },
 		{ "no-pass-through",      no_argument,       0, 'p' },
 		{ "pass-through",         no_argument,       0, 'P' },
@@ -125,6 +128,10 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'L':
 			lua_debugger = true;
+			break;
+
+		case 'M':
+			grammar_debug = true;
 			break;
 
 		case 'G':
@@ -249,7 +256,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Main loop */
-	prepare(1, lua_debugger, dissector_graph);
+	prepare(1, lua_debugger, dissector_graph, grammar_debug);
 	start();
 
 	clean_exit();

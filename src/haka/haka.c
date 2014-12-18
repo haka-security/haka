@@ -57,6 +57,7 @@ static void help(const char *program)
 	fprintf(stdout, "\t-l,--loglevel <level>:    Set the log level\n");
 	fprintf(stdout, "\t                            (debug, info, warning, error or fatal)\n");
 	fprintf(stdout, "\t--debug-lua:              Activate lua debugging (and keep haka in foreground)\n");
+	fprintf(stdout, "\t--debug-grammar:          Activate debug output for grammar\n");
 	fprintf(stdout, "\t--dump-dissector-graph:   Dump dissector internals (grammar and state machine) in file <name>.dot\n");
 	fprintf(stdout, "\t--no-daemon:              Do no run in the background\n");
 	fprintf(stdout, "\t--pid-file <pid-file>     Full path to pid file\n"
@@ -67,6 +68,7 @@ static void help(const char *program)
 
 static bool  daemonize = true;
 static char *config = NULL;
+static bool  grammar_debug = false;
 static bool  lua_debugger = false;
 static bool  dissector_graph = false;
 static char *pid_file_path = NULL;
@@ -117,6 +119,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		{ "debug",                no_argument,       0, 'd' },
 		{ "loglevel",             required_argument, 0, 'l' },
 		{ "debug-lua",            no_argument,       0, 'L' },
+		{ "debug-grammar",        no_argument,       0, 'M' },
 		{ "dump-dissector-graph", no_argument,       0, 'G' },
 		{ "no-daemon",            no_argument,       0, 'D' },
 		{ "opt",                  required_argument, 0, 'o' },
@@ -172,6 +175,9 @@ static int parse_cmdline(int *argc, char ***argv)
 			lua_debugger = true;
 			daemonize = false;
 			break;
+
+		case 'M':
+			grammar_debug = true;
 
 		case 'G':
 			dissector_graph = true;
@@ -561,7 +567,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	prepare(-1, lua_debugger, dissector_graph);
+	prepare(-1, lua_debugger, dissector_graph, grammar_debug);
 
 	pid_file = fopen(pid_file_path, "w");
 	if (!pid_file) {

@@ -230,7 +230,7 @@ function dg.Entity.method:ctrace(ccomp, msg, ...)
 	end
 
 	ccomp:write[[
-#ifdef HAKA_DEBUG
+#ifdef HAKA_DEBUG_GRAMMAR
 			{
 				char dump[21];
 				char dump_safe[81];

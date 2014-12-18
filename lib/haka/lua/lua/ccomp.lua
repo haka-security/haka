@@ -10,9 +10,10 @@ local module = class.class("CComp")
 
 local suffix = "_grammar"
 
-function module.method:__init(name)
+function module.method:__init(name, debug)
 	self._swig = haka.config.ccomp.swig
 	self._name = name..suffix
+	self._debug = debug or false
 	self._cfile = haka.config.ccomp.runtime_dir..self._name..".c"
 	self._sofile = haka.config.ccomp.runtime_dir..self._name..".so"
 	self._parser = nil -- Current parser
@@ -348,6 +349,9 @@ LUA_BIND_INIT(%s)
 
 	-- Compile c grammar
 	local flags = string.format("%s -I%s -I%s/haka/lua/", haka.config.ccomp.flags, haka.config.ccomp.include_path, haka.config.ccomp.include_path)
+	if self._debug then
+		flags = flags.." -DHAKA_DEBUG_GRAMMAR"
+	end
 	local compile_command = string.format("%s %s -o %s %s", haka.config.ccomp.cc, flags, self._sofile, self._cfile)
 	log.info("compiling grammar '%s': %s", self._name, compile_command)
 	local ret = os.execute(compile_command)

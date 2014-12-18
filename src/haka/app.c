@@ -114,7 +114,7 @@ void initialize()
 	}
 }
 
-void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
+void prepare(int threadcount, bool attach_debugger, bool dissector_graph, bool grammar_debug)
 {
 	struct packet_module *packet_module = get_packet_module();
 	assert(packet_module);
@@ -162,7 +162,7 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 	}
 
 	thread_states = thread_pool_create(threadcount, packet_module,
-			attach_debugger, dissector_graph);
+			attach_debugger, dissector_graph, grammar_debug);
 	if (!thread_states) {
 		assert(check_error());
 		LOG_FATAL(core, "%s", clear_error());

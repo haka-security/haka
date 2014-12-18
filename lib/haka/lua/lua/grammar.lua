@@ -812,7 +812,7 @@ local function new_c_grammar(name, def)
 	def()
 	setmetatable(env, nil)
 
-	local tmpl = ccomp:new(name)
+	local tmpl = ccomp:new(name, grammar.debug)
 
 	-- Compile exported entities
 	local no_export = true
@@ -836,7 +836,7 @@ local function new_c_grammar(name, def)
 		log.warning("grammar '%s' does not have any exported element", g._name)
 	end
 
-	if grammar.debug then
+	if grammar.graph then
 		log.warning("dumping '%s' grammar graph to %s-grammar.dot", g._name, g._name)
 		local f = io.open(string.format("%s-grammar.dot", g._name), "w+")
 		g:dump_graph(f)
@@ -900,7 +900,7 @@ local function new_lua_grammar(name, def)
 		log.warning("grammar '%s' does not have any exported element", g._name)
 	end
 
-	if grammar.debug then
+	if grammar.graph then
 		log.warning("dumping '%s' grammar graph to %s-grammar.dot", g._name, g._name)
 		local f = io.open(string.format("%s-grammar.dot", g._name), "w+")
 		g:dump_graph(f)
@@ -920,5 +920,6 @@ function grammar.new(name, def, ccomp)
 end
 
 grammar.debug = false
+grammar.graph = false
 
 haka.grammar = grammar

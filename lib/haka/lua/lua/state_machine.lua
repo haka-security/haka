@@ -245,7 +245,7 @@ function state_machine.new(name, def)
 
 	sm:compile()
 
-	if state_machine.debug then
+	if state_machine.graph then
 		log.warning("dumping '%s' state_machine graph to %s-state-machine.dot", sm.name, sm.name)
 		f = io.open(string.format("%s-state-machine.dot", sm.name), "w+")
 		sm:dump_graph(f)
@@ -255,6 +255,6 @@ function state_machine.new(name, def)
 	return sm
 end
 
-state_machine.debug = false
+state_machine.graph = false
 
 haka.state_machine = state_machine
