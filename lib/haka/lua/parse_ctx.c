@@ -14,7 +14,7 @@
 			((pool)->alloc - (pool)->count) * (pool)->size);       \
 } while(0)
 #else
-#define POOL_MEM_GUARD do { } while(0)
+#define POOL_MEM_GUARD(pool) do { } while(0)
 #endif
 
 #define POOL_INIT(elem, pool, init) do {                                       \
