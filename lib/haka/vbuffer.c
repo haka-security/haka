@@ -1538,7 +1538,7 @@ bool vbuffer_sub_isflat(struct vbuffer_sub *data)
 	offset = _vbuffer_iterator_fix(&data->begin, &iter);
 
 	if (data->use_size) {
-		return iter->size <= offset + data->length;
+		return iter->size >= offset + data->length;
 	}
 	else {
 		struct vbuffer_chunk *enditer;
