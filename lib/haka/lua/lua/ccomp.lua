@@ -279,7 +279,6 @@ function module.method:log(lvl, msg, ...)
 end
 
 local numtab={}
-local i
 for i=0,255 do
 	numtab[string.char(i)]=("%3d,"):format(i)
 end
