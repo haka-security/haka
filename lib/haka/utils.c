@@ -16,8 +16,7 @@ size_t safe_string(char dst[], const char src[], size_t size)
 			dst[j] = src[i];
 			j++;
 		} else {
-			snprintf(&dst[j], 4, "\\x%.2x", src[i]);
-			j += 4;
+			j += snprintf(&dst[j], 5, "\\x%.2hhx", src[i]);
 		}
 	}
 
