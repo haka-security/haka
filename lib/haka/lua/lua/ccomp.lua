@@ -175,7 +175,7 @@ static const struct node_debug node_debug_%s_init[] = {
 	for node, id in pairs(self._parser.nodes) do
 		self:write([[
 	{ .id = "%s", .rule = "%s" }, /* id: %d, gid: %d */
-]], node.id or "<unknown>", node.rule or "<unknown>", id, node.gid)
+]], node.name or node.id or "<unknown>", node.rule or "<unknown>", id, node.gid)
 	end
 
 	self:write[[
@@ -246,6 +246,23 @@ function module.method:finish_node()
 ]]
 end
 
+function module.method:trace_node(node, desc)
+	self:write([[
+#ifdef HAKA_DEBUG_GRAMMAR
+			{
+				char dump[21];
+				char dump_safe[81];
+				struct vbuffer_sub sub;
+				vbuffer_sub_create_from_position(&sub, ctx->iter, 20);
+				safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 20));
+
+				LOG_DEBUG(grammar, "in rule '%%s' field %%s gid %d: %%s\n\tat byte %%d: %%s...",
+					node_debug_%s[ctx->current].rule, node_debug_%s[ctx->current].id, "%s", ctx->iter->meter, dump_safe);
+			}
+#endif
+]], node.gid, self._parser.name, self._parser.name, desc)
+end
+
 function module.method:_jumpto(node)
 	assert(self._parser, "parser not started")
 	assert(self._parser.nodes[node], "unknown node to jump to")
@@ -282,26 +299,6 @@ function module.method:unmark()
 	self:write([[
 			parse_ctx_unmark(ctx);
 ]])
-end
-
-function module.method:log(lvl, msg, ...)
-	self:write([[
-			LOG_%s(grammar, "%s"]], lvl, msg);
-
-	local args = {...}
-	for _, v in pairs(args) do
-		local t = type(v)
-		if t == "string" then
-			self:write(", \"%s\"", v)
-		elseif t == "number" then
-			self:write(", %d", v)
-		elseif t == "table" then
-			self:write(", %s", v.raw)
-		end
-	end
-
-	self:write[[);
-]]
 end
 
 local numtab={}
