@@ -21,7 +21,10 @@
 	(pool)->alloc = init;                                                  \
 	(pool)->size = sizeof(elem);                                           \
 	(pool)->el = calloc((pool)->alloc, (pool)->size);                      \
-	if (!(pool)->el) error("memory error");                                \
+	if (!(pool)->el) {                                                     \
+		error("memory error");                                         \
+		return;                                                        \
+	}                                                                      \
 	(pool)->count = 0;                                                     \
 	POOL_MEM_GUARD(pool);                                                  \
 } while(0)
@@ -36,7 +39,10 @@
 	if((pool)->count >= (pool)->alloc) {                                   \
 		(pool)->alloc *= 2;                                            \
 		(pool)->el = realloc((pool)->el, (pool)->alloc * (pool)->size);\
-		if (!(pool)->el) error("memory error");                        \
+		if (!(pool)->el) {                                             \
+			error("memory error");                                 \
+			return;                                                \
+		}                                                              \
 		POOL_MEM_GUARD(pool);                                          \
 	}                                                                      \
 } while(0)
@@ -44,7 +50,10 @@
 struct parse_ctx *parse_ctx_new(struct vbuffer_iterator *iter)
 {
 	struct parse_ctx *ctx = malloc(sizeof(struct parse_ctx));
-	if (!ctx) error("memory error");
+	if (!ctx) {
+		error("memory error");
+		return NULL;
+	}
 
 	parse_ctx_init(ctx, iter);
 
@@ -241,7 +250,10 @@ void parse_ctx_update_error(struct parse_ctx *ctx, const char id[], const char r
 
 void parse_ctx_error(struct parse_ctx *ctx, const char desc[])
 {
-	if (ctx->error.isset) error("multiple parse errors raised");
+	if (ctx->error.isset) {
+		error("multiple parse errors raised");
+		return;
+	}
 
 	ctx->error.isset = true;
 	vbuffer_iterator_copy(ctx->iter, &ctx->error.iter);

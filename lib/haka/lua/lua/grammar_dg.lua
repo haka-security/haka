@@ -358,6 +358,7 @@ function dg.Recurs.method:ccomp(ccomp)
 	ccomp:write([[
 			if (ctx->recurs_count >= RECURS_MAX) {
 				error("max recursion reached");
+				return 0;
 			}
 			ctx->recurs[ctx->recurs_count].node = %d;
 			/* Store laste recursion level so we can reuse it later */
