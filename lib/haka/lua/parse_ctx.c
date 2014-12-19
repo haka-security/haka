@@ -65,7 +65,8 @@ void parse_ctx_init(struct parse_ctx *ctx, struct vbuffer_iterator *iter)
 	assert(ctx);
 
 	ctx->run                 = true;
-	ctx->node                = 1;
+	ctx->current             = 1;
+	ctx->next                = 1;
 	ctx->lua_object          = lua_object_init;
 	ctx->iter                = iter;
 	ctx->compound_level      = 0;
@@ -74,8 +75,7 @@ void parse_ctx_init(struct parse_ctx *ctx, struct vbuffer_iterator *iter)
 	ctx->bitoffset           = 0;
 	ctx->error.isset         = false;
 	ctx->error.desc          = NULL;
-	ctx->error.id            = NULL;
-	ctx->error.rule          = NULL;
+	ctx->error.node          = 0;
 
 	memset(ctx->recurs, 0, RECURS_MAX*sizeof(struct recurs));
 
@@ -90,8 +90,6 @@ void parse_ctx_free(struct parse_ctx *ctx)
 	POOL_FREE(&ctx->catches);
 	POOL_FREE(&ctx->retains);
 	free(ctx->error.desc);
-	free(ctx->error.id);
-	free(ctx->error.rule);
 	free(ctx);
 }
 
@@ -191,7 +189,7 @@ bool parse_ctx_catch(struct parse_ctx *ctx)
 	int i;
 
 	if (ctx->catches.count == 0) {
-		ctx->node = FINISH;
+		ctx->next = FINISH;
 		return false;
 	}
 
@@ -221,7 +219,7 @@ bool parse_ctx_catch(struct parse_ctx *ctx)
 	parse_ctx_seekmark(ctx);
 	parse_ctx_popcatch(ctx);
 
-	ctx->node = catch->node;
+	ctx->next = catch->node;
 
 	return true;
 }
@@ -239,15 +237,6 @@ void parse_ctx_popcatch(struct parse_ctx *ctx)
 
 }
 
-void parse_ctx_update_error(struct parse_ctx *ctx, const char id[], const char rule[])
-{
-	/* This should be removed when no more element of the graph will be in lua */
-	free(ctx->error.id);
-	free(ctx->error.rule);
-	ctx->error.id = strdup(id);
-	ctx->error.rule = strdup(rule);
-}
-
 void parse_ctx_error(struct parse_ctx *ctx, const char desc[])
 {
 	if (ctx->error.isset) {
@@ -255,6 +244,7 @@ void parse_ctx_error(struct parse_ctx *ctx, const char desc[])
 		return;
 	}
 
+	ctx->error.node = ctx->current;
 	ctx->error.isset = true;
 	vbuffer_iterator_copy(ctx->iter, &ctx->error.iter);
 	ctx->error.desc = strdup(desc);

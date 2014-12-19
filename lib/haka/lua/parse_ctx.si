@@ -17,7 +17,7 @@
 
 struct parse_ctx {
 	int run;
-	int node;
+	int next;
 	int bitoffset;
 
 	%extend {
@@ -38,7 +38,6 @@ struct parse_ctx {
 		void pushmark();
 		void popmark(bool seek = false);
 		void seekmark();
-		void update_error(const char id[], const char rule[]);
 		void error(const char desc[]);
 
 		struct vbuffer_iterator *retain_mark() {

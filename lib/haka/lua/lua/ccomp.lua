@@ -38,6 +38,11 @@ function module.method:__init(name, debug)
 
 static REGISTER_LOG_SECTION(grammar);
 
+struct node_debug {
+	char *id;
+	char *rule;
+};
+
 ]], self._name, self._name, self._name, self._name, self._name)
 
 	if self._swig then
@@ -81,6 +86,11 @@ function module.method:_start_parser(name)
 		written_nodes = {}, -- Store written nodes
 	}
 	self._parsers[#self._parsers + 1] = self._parser
+
+	self:write([[
+	static const struct node_debug *node_debug_%s;
+]], self._parser.name)
+
 	if self._swig then
 		self:write([[
 int parse_%s(lua_State *L)
@@ -97,7 +107,7 @@ int parse_%s(struct parse_ctx *ctx)
 {]], name)
 	end
 
-	self:write[[
+	self:write([[
 	if (ctx->error.isset) {
 		if (parse_ctx_catch(ctx)) {
 #ifdef HAKA_DEBUG
@@ -108,7 +118,7 @@ int parse_%s(struct parse_ctx *ctx)
 			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 100));
 
 			LOG_DEBUG(grammar, "catched: parse error at byte %%d for field %%s in %%s: %%s",
-			ctx->error.iter.meter, ctx->error.id, ctx->error.rule, ctx->error.desc);
+			ctx->error.iter.meter, node_debug_%s[ctx->error.node].id, node_debug_%s[ctx->error.node].rule, ctx->error.desc);
 			LOG_DEBUG(grammar, "parse error context: %%s...", dump_safe);
 #endif
 		} else {
@@ -119,7 +129,7 @@ int parse_%s(struct parse_ctx *ctx)
 			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 100));
 
 			LOG_DEBUG(grammar, "parse error at byte %%d for field %%s in %%s: %%s",
-			ctx->error.iter.meter, ctx->error.id, ctx->error.rule, ctx->error.desc);
+			ctx->error.iter.meter, node_debug_%s[ctx->error.node].id, node_debug_%s[ctx->error.node].rule, ctx->error.desc);
 			LOG_DEBUG(grammar, "parse error context: %%s...", dump_safe);
 			ctx->run = false;
 		}
@@ -129,8 +139,8 @@ int parse_%s(struct parse_ctx *ctx)
 	while(ctx->run) {
 		if (call != 0) break;
 
-		switch(ctx->node) {
-]]
+		switch(ctx->next) {
+]], self._parser.name, self._parser.name, self._parser.name, self._parser.name)
 end
 
 function module.method:_end_parser()
@@ -156,6 +166,22 @@ function module.method:_end_parser()
 }
 ]]
 	end
+
+	-- Expose node debug information
+	self:write([[
+static const struct node_debug node_debug_%s_init[] = {
+]], self._parser.name)
+
+	for node, id in pairs(self._parser.nodes) do
+		self:write([[
+	{ .id = "%s", .rule = "%s" }, /* id: %d, gid: %d */
+]], node.id or "<unknown>", node.rule or "<unknown>", id, node.gid)
+	end
+
+	self:write[[
+};
+]]
+
 	self._parser = nil
 end
 
@@ -203,13 +229,14 @@ function module.method:start_node(node)
 		/* gid %d */
 		case %d: /* in rule '%s' field %s <%s> */
 		{
-			/* Register current node */
-			ctx->node = %d;
+			/* Register next node */
+			ctx->next = %d;
 			/* Call required lua */
 			if (call != 0) break;
 
 			/* Node start */
-]], node.gid, id, rule, field, type, id)
+			ctx->current = %d;
+]], node.gid, id, rule, field, type, id, id)
 end
 
 function module.method:finish_node()
@@ -224,14 +251,14 @@ function module.method:_jumpto(node)
 	assert(self._parser.nodes[node], "unknown node to jump to")
 	self:write([[
 		/* jump to gid %d */
-		ctx->node = %d; break;
+		ctx->next = %d; break;
 ]], node.gid, self._parser.nodes[node])
 end
 
 function module.method:jumptoend(node)
 	assert(self._parser, "parser not started")
 	self:write[[
-			ctx->node = FINISH; break;
+			ctx->next = FINISH; break;
 ]]
 end
 
@@ -240,7 +267,6 @@ function module.method:apply_node(node)
 	assert(node)
 
 	self:call(self:store(function (ctx)
-		ctx:update_error(tostring(node.id), tostring(node.rule))
 		node:_apply(ctx)
 	end), "node:_apply(ctx)")
 end
@@ -342,6 +368,12 @@ LUA_BIND_INIT(%s)
 {
 	LUA_LOAD(%s, L);
 ]], binding, self._name, luacode, self._name, self._name, self._name, self._name, self._name, self._name)
+
+	for _, value in pairs(self._parsers) do
+		self:write([[
+	node_debug_%s = node_debug_%s_init;
+]], value.name, value.name)
+	end
 
 	if self._swig then
 		self:write[[

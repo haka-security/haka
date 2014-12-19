@@ -54,9 +54,10 @@ struct recurs {
 
 struct parse_ctx {
 	bool                          run;
-	int                           node;
+	int                           next;
 	int                           bitoffset;
 	struct lua_object             lua_object;
+	int                           current;
 	struct vbuffer_iterator      *iter;
 	int                           compound_level;
 	/**
@@ -72,11 +73,10 @@ struct parse_ctx {
 	POOL(struct vbuffer_iterator) retains;
 
 	struct {
+		int                      node;
 		bool                     isset;
 		struct vbuffer_iterator  iter;
 		char                    *desc;
-		char                    *id;
-		char                    *rule;
 	}                             error;
 };
 
@@ -93,7 +93,6 @@ void              parse_ctx_seekmark(struct parse_ctx *ctx);
 void              parse_ctx_pushcatch(struct parse_ctx *ctx, int node);
 bool              parse_ctx_catch(struct parse_ctx *ctx);
 void              parse_ctx_popcatch(struct parse_ctx *ctx);
-void              parse_ctx_update_error(struct parse_ctx *ctx, const char id[], const char rule[]);
 void              parse_ctx_error(struct parse_ctx *ctx, const char desc[]);
 
 #ifdef HAKA_FFI

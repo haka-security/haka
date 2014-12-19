@@ -320,7 +320,7 @@ function dg.CompoundFinish.method:_capply(ccomp)
 			if (ctx->recurs_finish_level == ctx->compound_level && ctx->recurs_count > 0) {
 				/* pop recursion */
 				ctx->recurs_count--;
-				ctx->node = ctx->recurs[ctx->recurs_count].node;
+				ctx->next = ctx->recurs[ctx->recurs_count].node;
 				ctx->recurs_finish_level = ctx->recurs[ctx->recurs_count].level;
 				break;
 			}
@@ -785,7 +785,7 @@ function dg.Branch.method:ccomp(ccomp)
 			self:trace(ctx.iter, "select branch 'default'")
 			case = cases_map["default"]
 		end
-		ctx._ctx.node = case
+		ctx._ctx.next = case
 	end), "selector")
 
 	ccomp:finish_node()
