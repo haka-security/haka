@@ -12,6 +12,7 @@
 #include <haka/vbuffer.h>
 #include <haka/lua/object.h>
 
+/* TODO make all these values option */
 #define INIT_MARKS_SIZE     20
 #define INIT_CATCHES_SIZE   20
 #define INIT_VALIDATES_SIZE 20
