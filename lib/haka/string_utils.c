@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <haka/utils.h>
+#include <haka/string_utils.h>
 
 size_t safe_string(char dst[], const char src[], size_t size)
 {

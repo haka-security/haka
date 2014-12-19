@@ -30,7 +30,7 @@ function module.method:__init(name, debug)
 
 #include <haka/error.h>
 #include <haka/log.h>
-#include <haka/utils.h>
+#include <haka/string_utils.h>
 #include <haka/lua/lua.h>
 #include <haka/lua/state.h>
 #include <haka/lua/parse_ctx.h>
