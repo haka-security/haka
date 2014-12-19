@@ -6,6 +6,7 @@
 
 %{
 #include <haka/error.h>
+#include <haka/lua/config.h>
 
 #include "../config.h"
 
@@ -28,6 +29,20 @@ static void config_get(const char *src, const char *_env, char **TEMP_OUTPUT, si
 %}
 
 static void config_get(const char *src, const char *_env, char **TEMP_OUTPUT, size_t *TEMP_SIZE);
+struct haka_lua_config {
+	bool  lua_debugger;
+	struct {
+		bool  debug;
+		bool  graph;
+	} ccomp;
+
+	%extend {
+		haka_lua_config()
+		{
+			return &haka_lua_config;
+		}
+	}
+};
 
 %immutable;
 char *ccomp_flags;
@@ -38,8 +53,12 @@ char *ccomp_include_path;
 
 %luacode {
 
+	local lua_config = haka.haka_lua_config()
 	haka.config = {}
+
 	haka.config.ccomp = {
+		debug = lua_config.ccomp.debug,
+		graph = lua_config.ccomp.graph,
 		flags = haka.config_get(haka.ccomp_flags, "HAKA_CCOMP_FLAGS"),
 		cc = haka.config_get(haka.ccomp_cc, "HAKA_CCOMP_CC"),
 		runtime_dir = haka.config_get(haka.ccomp_runtime_dir, "HAKA_CCOMP_RUNTIME_DIR"),
@@ -58,6 +77,7 @@ char *ccomp_include_path;
 	clean_config("ccomp_cc")
 	clean_config("ccomp_runtime_dir")
 	clean_config("ccomp_include_path")
+	clean_config("haka_lua_config")
 
 	haka.config_get = nil
 

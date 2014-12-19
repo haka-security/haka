@@ -19,12 +19,12 @@
 #include <haka/log.h>
 #include <haka/error.h>
 #include <haka/module.h>
+#include <haka/lua/config.h>
 #include <haka/luadebug/user.h>
 
 #include "config.h"
 #include "ctl_comm.h"
 #include "commands.h"
-
 
 enum {
 	ERROR_INVALID_OPTIONS = 100,

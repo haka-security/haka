@@ -18,6 +18,7 @@
 #include <haka/alert.h>
 #include <haka/alert_module.h>
 #include <haka/version.h>
+#include <haka/lua/config.h>
 #include <haka/lua/state.h>
 #include <haka/luadebug/debugger.h>
 #include <haka/luadebug/interactive.h>
@@ -28,7 +29,6 @@
 #include "thread.h"
 #include "ctl.h"
 #include "config.h"
-
 
 #define HAKA_CONFIG "/etc/haka/haka.conf"
 
@@ -68,9 +68,6 @@ static void help(const char *program)
 
 static bool  daemonize = true;
 static char *config = NULL;
-static bool  grammar_debug = false;
-static bool  lua_debugger = false;
-static bool  dissector_graph = false;
 static char *pid_file_path = NULL;
 static char *ctl_file_path = NULL;
 
@@ -172,15 +169,15 @@ static int parse_cmdline(int *argc, char ***argv)
 			break;
 
 		case 'L':
-			lua_debugger = true;
+			haka_lua_config.lua_debugger = true;
 			daemonize = false;
 			break;
 
 		case 'M':
-			grammar_debug = true;
+			haka_lua_config.ccomp.debug = true;
 
 		case 'G':
-			dissector_graph = true;
+			haka_lua_config.ccomp.graph = true;
 			break;
 
 		case 'o':
@@ -567,7 +564,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	prepare(-1, lua_debugger, dissector_graph, grammar_debug);
+	prepare(-1);
 
 	pid_file = fopen(pid_file_path, "w");
 	if (!pid_file) {

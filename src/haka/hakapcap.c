@@ -17,6 +17,7 @@
 #include <haka/error.h>
 #include <haka/version.h>
 #include <haka/parameters.h>
+#include <haka/lua/config.h>
 #include <haka/lua/state.h>
 #include <haka/luadebug/user.h>
 #include <haka/luadebug/debugger.h>
@@ -24,7 +25,6 @@
 
 #include "app.h"
 #include "thread.h"
-
 
 static void usage(FILE *output, const char *program)
 {
@@ -55,9 +55,6 @@ static void help(const char *program)
 
 static char *output = NULL, *alert_to = NULL;
 static bool pass_through = true;
-static bool lua_debugger = false;
-static bool grammar_debug = false;
-static bool dissector_graph = false;
 
 static int parse_cmdline(int *argc, char ***argv)
 {
@@ -127,15 +124,15 @@ static int parse_cmdline(int *argc, char ***argv)
 			break;
 
 		case 'L':
-			lua_debugger = true;
+			haka_lua_config.lua_debugger = true;
 			break;
 
 		case 'M':
-			grammar_debug = true;
+			haka_lua_config.ccomp.debug = true;
 			break;
 
 		case 'G':
-			dissector_graph = true;
+			haka_lua_config.ccomp.graph = true;
 			break;
 
 		default:
@@ -256,7 +253,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Main loop */
-	prepare(1, lua_debugger, dissector_graph, grammar_debug);
+	prepare(1);
 	start();
 
 	clean_exit();
