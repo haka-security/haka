@@ -29,6 +29,7 @@ ffi.cdef[[
 	void parse_ctx_update_error(struct parse_ctx *ctx, const char id[], const char rule[]);
 	void parse_ctx_error(struct parse_ctx *ctx, const char desc[]);
 
+	/* Must be sync with real struct */
 	struct parse_ctx {
 		int run;
 		int node;
