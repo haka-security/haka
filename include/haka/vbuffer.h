@@ -445,6 +445,11 @@ bool          vbuffer_sub_compact(struct vbuffer_sub *data);
 bool          vbuffer_sub_isflat(struct vbuffer_sub *data);
 
 /**
+ * Copy a sub buffer.
+ */
+void          vbuffer_sub_copy(const struct vbuffer_sub *src, struct vbuffer_sub *dst);
+
+/**
  * Clone the content of the sub buffer.
  */
 bool          vbuffer_sub_clone(struct vbuffer_sub *data, struct vbuffer *buffer, clone_mode mode);

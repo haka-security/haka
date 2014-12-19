@@ -1516,6 +1516,18 @@ bool vbuffer_replace(struct vbuffer_sub *data, struct vbuffer *buffer)
 	return true;
 }
 
+void vbuffer_sub_copy(const struct vbuffer_sub *src, struct vbuffer_sub *dst)
+{
+	vbuffer_iterator_copy(&src->begin, &dst->begin);
+	dst->use_size = src->use_size;
+	if (src->use_size) {
+		dst->length = src->length;
+	}
+	else {
+		vbuffer_iterator_copy(&src->end, &dst->end);
+	}
+}
+
 bool vbuffer_sub_isflat(struct vbuffer_sub *data)
 {
 	size_t offset;
