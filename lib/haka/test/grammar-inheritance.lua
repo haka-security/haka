@@ -28,7 +28,7 @@ function TestGrammarInheritance:test_inheritance_compile()
 
 	-- Then
 	assertTrue(superman.body)
-	assertEquals(class.classof(superman.body).name, "DGToken")
+	assertTrue(superman.head)
 end
 
 function TestGrammarInheritance:test_inheritance_override()
@@ -36,8 +36,8 @@ function TestGrammarInheritance:test_inheritance_override()
 	local human = haka.grammar.new("human", function ()
 		finger = token("finger")
 
-		hand = sequence{
-			finger,
+		hand = record{
+			field("finger", finger),
 		}
 
 		export(hand)
@@ -50,23 +50,29 @@ function TestGrammarInheritance:test_inheritance_override()
 		finger = bytes(28)
 	end)
 
+	local ret = superman.hand:parse(haka.vbuffer_from("abcdefghijklmnopqrstuvwxyz0123456789"):pos('begin'))
+
 	-- Then
-	assertEquals(class.classof(superman.hand._next._next).name, "DGBytes")
+	assertTrue(ret.finger)
+	assertEquals(class.classof(ret.finger)['.type'], "vbuffer_sub")
 end
 
 function TestGrammarInheritance:test_proxy()
 	-- Given
 	local human = haka.grammar.new("human", function ()
-		finger = token("finger")
+		define("finger")
 
 		hand = record{
 			field("finger", finger),
 		}
 
+		finger = token("finger")
+
 		export(hand)
 	end)
+
 	-- Then
-	assertEquals(human.hand._next._next._next.name, "finger")
+	assertTrue(human)
 end
 
 function TestGrammarInheritance:test_proxy_error()
@@ -74,11 +80,11 @@ function TestGrammarInheritance:test_proxy_error()
 	assertError("undefined entity: finger", function ()
 		local human = haka.grammar.new("human", function ()
 			define("finger")
-	
+
 			hand = record{
 				field("finger", finger),
 			}
-	
+
 			export(hand)
 		end)
 	end)
@@ -89,9 +95,8 @@ function TestGrammarInheritance:test_inheritance_multiple()
 	local human = haka.grammar.new("human", function ()
 		finger = token("finger")
 
-		hand = sequence{
-			finger,
-
+		hand = record{
+			field("finger", finger),
 		}
 
 		export(hand)
@@ -106,12 +111,15 @@ function TestGrammarInheritance:test_inheritance_multiple()
 
 	local superwoman = haka.grammar.new("superwoman", function ()
 		extend(superman)
-	
+
 		finger = bytes(32)
 	end)
 
+	local ret = superwoman.hand:parse(haka.vbuffer_from("abcdefghijklmnopqrstuvwxyz0123456789"):pos('begin'))
+
 	-- Then
-	assertEquals(class.classof(superwoman.hand._next._next).name, "DGBytes")
+	assertTrue(ret.finger)
+	assertEquals(class.classof(ret.finger)['.type'], "vbuffer_sub")
 end
 
 function TestGrammarInheritance:test_recursion()
