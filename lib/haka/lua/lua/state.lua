@@ -127,8 +127,8 @@ module.BidirectionalState = class.class('BidirectionalState', module.State)
 module.BidirectionalState._events = { 'up', 'down', 'parse_error', 'missing_grammar' }
 
 function module.BidirectionalState.method:__init(gup, gdown)
-	check.assert(not gup or class.isa(gup, dg.Entity), "bidirectionnal state expect an exported element of a grammar", 1)
-	check.assert(not gdown or class.isa(gdown, dg.Entity), "bidirectionnal state expect an exported element of a grammar", 1)
+	check.assert(not gup or gup.parse, "bidirectionnal state expect an exported element of a grammar", 1)
+	check.assert(not gdown or gdown.parse, "bidirectionnal state expect an exported element of a grammar", 1)
 
 	class.super(module.BidirectionalState).__init(self)
 
