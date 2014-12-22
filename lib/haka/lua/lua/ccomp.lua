@@ -253,6 +253,11 @@ function module.method:finish_node()
 ]]
 end
 
+local function escape_string(str)
+	local esc = str:gsub("([\\%%\'\"])", "\\%1")
+	return esc
+end
+
 function module.method:trace_node(node, desc)
 	local id = self._parser.nodes[node]
 
