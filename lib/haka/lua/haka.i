@@ -23,6 +23,15 @@
 
 #include "lua/haka.h"
 
+static int get_random_seed()
+{
+	int seed = 0;
+	seed ^= getpid();
+	seed ^= time(NULL);
+	seed ^= thread_getid();
+	return seed;
+}
+
 %}
 
 %include "haka/lua/swig.si"
@@ -32,6 +41,8 @@
 
 %rename(current_thread) thread_getid;
 int thread_getid();
+
+int get_random_seed();
 
 %rename(exit) haka_exit;
 void haka_exit();
@@ -148,6 +159,8 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 %include "lua/log.si"
 
 %luacode {
+	math.randomseed(haka.get_random_seed());
+
 	require('class')
 	require('utils')
 	require('events')

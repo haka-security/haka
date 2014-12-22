@@ -13,9 +13,10 @@ local suffix = "_grammar"
 function module.method:__init(name, debug)
 	self._swig = haka.config.ccomp.swig
 	self._name = name..suffix
+	self._nameid = self._name.."_"..math.random(1000000000)
 	self._debug = debug or false
-	self._cfile = haka.config.ccomp.runtime_dir..self._name..".c"
-	self._sofile = haka.config.ccomp.runtime_dir..self._name..".so"
+	self._cfile = haka.config.ccomp.runtime_dir..self._nameid..".c"
+	self._sofile = haka.config.ccomp.runtime_dir..self._nameid..".so"
 	self._store = {} -- Store some lua object to access it from c
 	self._parser = nil -- Current parser
 	self._parsers = {}
@@ -372,7 +373,7 @@ inline void lua_load_%s(lua_State *L)
 LUA_BIND_INIT(%s)
 {
 	LUA_LOAD(%s, L);
-]], binding, self._name, luacode, self._name, self._name, self._name, self._name, self._name, self._name)
+]], binding, self._name, luacode, self._name, self._name, self._name, self._name, self._nameid, self._name)
 
 	for _, value in pairs(self._parsers) do
 		self:write([[
@@ -424,7 +425,7 @@ LUA_BIND_INIT(%s)
 		error("grammar compilation failed `"..compile_command.."`")
 	end
 
-	return self._name
+	return self._nameid
 end
 
 function module.method:write(string, ...)
