@@ -197,11 +197,12 @@ void lua_luadebug_debugger_break();
 		title = table.concat({title, color.cyan, color.bold, "class", color.clear})
 
 		title = table.concat({title, " ", tostring(meta.name)})
+		local mtpprint = rawget(obj, '__pprint')
 
 		if depth == 0 then
 			out(title)
-		elseif obj.__pprint then
-			obj:__pprint(indent, out)
+		elseif mtpprint then
+			mtpprint(obj, indent, out)
 		else
 			out(title, "{")
 
