@@ -179,11 +179,17 @@ void type ## ___setitem(struct type *self, char *KEY, void *ANY) {
 %typemap(argout) const char **OUTPUT
 %{ lua_pushstring(L, *$1); SWIG_arg++;%}
 
+%typemap(freearg) const char **OUTPUT
+%{ %}
+
 %typemap(in, numinputs=0) char **TEMP_OUTPUT (char *temp)
 %{ temp = NULL; $1 = &temp; %}
 
 %typemap(argout) char **TEMP_OUTPUT
 %{ lua_pushstring(L, *$1); SWIG_arg++; free(*$1); %}
+
+%typemap(freearg) char **TEMP_OUTPUT
+%{ %}
 
 %typemap(in, numinputs=0) (char **TEMP_OUTPUT, size_t *TEMP_SIZE) (char *temp, size_t temp_size)
 %{ temp = NULL; temp_size = -1; $1 = &temp; $2 = &temp_size; %}
