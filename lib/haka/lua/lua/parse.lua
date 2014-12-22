@@ -4,34 +4,13 @@
 
 local class = require('class')
 local parseResult = require('parse_result')
+local parseError = require('parse_error')
 
 local parse = {}
 local log = haka.log_section("grammar")
+local ParseError = parseError.ParseError
 
 parse.max_recursion = 10
-
---
--- Parsing Error
---
-
-local ParseError = class.class("ParseError")
-
-function ParseError.method:__init(position, field, description, ...)
-	self.position = position
-	self.field = field
-	self.description = description
-end
-
-function ParseError.method:context()
-	local iter = self.position:copy()
-	return string.format("parse error context: %s...", safe_string(iter:sub(100):asstring()))
-end
-
-function ParseError.method:__tostring()
-	return string.format("parse error at byte %d for field %s in %s: %s",
-		self.position.meter, self.field.id or "<unknown>", self.field.rule or "<unknown>",
-		self.description)
-end
 
 --
 -- Parse Context
@@ -169,7 +148,8 @@ function parse.Context.method:_traverse(entity, f, all)
 		iter[f](iter, self)
 
 		if self._error then
-			self._error.field = iter
+			self._error.id = iter.name or iter.id
+			self._error.rule = iter.rule
 
 			iter = self:catch()
 			if not iter then
@@ -357,7 +337,7 @@ function parse.Context.method:error(description, ...)
 
 	local context = {}
 	description = string.format(description, ...)
-	self._error = ParseError:new(self.iter, nil, description)
+	self._error = ParseError:new(self.iter, nil, nil, description)
 end
 
 return parse

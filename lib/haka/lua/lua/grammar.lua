@@ -856,7 +856,7 @@ local function new_c_grammar(name, def)
 					tmpl._store[ret](ctx)
 					ret = cparser.grammar[parser.fname](ctx._ctx)
 				end
-				return ctx._results[1]
+				return ctx._results[1], ctx:get_error()
 			end
 		}
 	end

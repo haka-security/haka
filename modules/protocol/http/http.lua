@@ -388,7 +388,7 @@ http_dissector.state_machine = haka.state_machine.new("http", function ()
 		event = events.parse_error,
 		execute = function (self, err)
 			haka.alert{
-				description = string.format("invalid http %s", err.field.rule),
+				description = string.format("invalid http %s", err.rule),
 				severity = 'low'
 			}
 		end,

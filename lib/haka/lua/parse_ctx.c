@@ -250,6 +250,11 @@ void parse_ctx_error(struct parse_ctx *ctx, const char desc[])
 	ctx->error.desc = strdup(desc);
 }
 
+bool parse_ctx_haserror(struct parse_ctx *ctx)
+{
+	return ctx->error.isset;
+}
+
 #ifdef HAKA_FFI
 
 extern void *lua_get_swigdata(void *ptr);

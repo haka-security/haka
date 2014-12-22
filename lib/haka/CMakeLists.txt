@@ -29,6 +29,7 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/events.lua
 	lua/lua/context.lua
 	lua/lua/parse.lua
+	lua/lua/parse_error.lua
 	lua/lua/parse_result.lua
 	lua/lua/grammar.lua
 	lua/lua/grammar_dg.lua

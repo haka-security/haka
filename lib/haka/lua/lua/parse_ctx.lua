@@ -7,6 +7,9 @@
 
 local class = require('class')
 local parseResult = require('parse_result')
+local parseError = require('parse_error')
+
+local ParseError = parseError.ParseError
 
 local parse_ctx_new
 
@@ -27,6 +30,7 @@ ffi.cdef[[
 	void parse_ctx_popmark(struct parse_ctx *ctx, bool seek);
 	void parse_ctx_seekmark(struct parse_ctx *ctx);
 	void parse_ctx_error(struct parse_ctx *ctx, const char desc[]);
+	bool parse_ctx_haserror(struct parse_ctx *ctx);
 
 	/* Must be sync with real struct */
 	struct parse_ctx {
@@ -55,6 +59,13 @@ ffibinding.create_type{
 				return nil
 			end
 		end,
+		get_error = function (self)
+			if ffi.C.parse_ctx_haserror(self) then
+				return haka.C.parse_ctx_geterror(self)
+			else
+				return false
+			end
+		end
 	},
 	destroy = ffi.C.parse_ctx_free,
 	ref = ffi.C.parse_ctx_get_ref,
@@ -225,6 +236,13 @@ function CContext.method:push(result, name)
 		end
 	end
 	return new
+end
+
+function CContext.method:get_error()
+	local err, iter, id, rule, desc = self._ctx:get_error()
+	if err then
+		return ParseError:new(iter, id, rule, desc)
+	end
 end
 
 return CContext

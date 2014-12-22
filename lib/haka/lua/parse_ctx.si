@@ -6,12 +6,35 @@
 
 %include "haka/lua/swig.si"
 
-#ifdef HAKA_SWIG
-
 %{
 #include <haka/vbuffer.h>
 #include <haka/lua/parse_ctx.h>
+
+bool parse_ctx_geterror(struct parse_ctx *ctx, struct vbuffer_iterator **OUTPUT, const char **OUTPUT1, const char **OUTPUT2, const char **OUTPUT3)
+{
+	if (!ctx->error.isset) return false;
+
+	*OUTPUT = malloc(sizeof(struct vbuffer_iterator));
+	if (!(*OUTPUT)) {
+		error("Memory error");
+		return false;
+	}
+	vbuffer_iterator_copy(&ctx->error.iter, *OUTPUT);
+	vbuffer_iterator_register(*OUTPUT);
+
+	*OUTPUT1 = ctx->node_debug_data[ctx->error.node-1].id;
+	*OUTPUT2 = ctx->node_debug_data[ctx->error.node-1].rule;
+	*OUTPUT3 = ctx->error.desc;
+	return true;
+}
+
 %}
+
+%include "haka/lua/swig.si"
+%include "haka/lua/object.si"
+%include "haka/lua/vbuffer.si"
+
+#ifdef HAKA_SWIG
 
 %newobject parse_ctx::retain_mark;
 
@@ -54,7 +77,20 @@ struct parse_ctx {
 				return NULL;
 			}
 		}
+
+		bool geterror(struct parse_ctx *ctx, struct vbuffer_iterator **OUTPUT, const char **OUTPUT1, const char **OUTPUT2, const char **OUTPUT3);
 	}
 };
+
+#else
+
+FFI_OBJECT(struct parse_ctx);
+
+bool parse_ctx_geterror(struct parse_ctx *ctx, struct vbuffer_iterator **OUTPUT, const char **OUTPUT1, const char **OUTPUT2, const char **OUTPUT3);
+
+%luacode{
+	haka.C.parse_ctx_geterror = haka.parse_ctx_geterror
+	haka.parse_ctx_geterror = nil
+}
 
 #endif
