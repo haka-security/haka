@@ -52,6 +52,11 @@ struct recurs {
 	int level;
 };
 
+struct node_debug {
+	char *id;
+	char *rule;
+};
+
 struct parse_ctx {
 	bool                          run;
 	int                           next;
@@ -78,6 +83,7 @@ struct parse_ctx {
 		struct vbuffer_iterator  iter;
 		char                    *desc;
 	}                             error;
+	const struct node_debug      *node_debug_data;
 };
 
 struct parse_ctx *parse_ctx_new(struct vbuffer_iterator *iter);

@@ -38,11 +38,6 @@ function module.method:__init(name, debug)
 
 static REGISTER_LOG_SECTION(grammar);
 
-struct node_debug {
-	char *id;
-	char *rule;
-};
-
 ]], self._name, self._name, self._name, self._name, self._name)
 
 	if self._swig then
@@ -108,6 +103,8 @@ int parse_%s(struct parse_ctx *ctx)
 	end
 
 	self:write([[
+	ctx->node_debug_data = node_debug_%s;
+
 	if (ctx->error.isset) {
 		if (parse_ctx_catch(ctx)) {
 #ifdef HAKA_DEBUG
@@ -118,7 +115,7 @@ int parse_%s(struct parse_ctx *ctx)
 			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 100));
 
 			LOG_DEBUG(grammar, "catched: parse error at byte %%d for field %%s in %%s: %%s",
-			ctx->error.iter.meter, node_debug_%s[ctx->error.node].id, node_debug_%s[ctx->error.node].rule, ctx->error.desc);
+			ctx->error.iter.meter, ctx->node_debug_data[ctx->error.node-1].id, ctx->node_debug_data[ctx->error.node-1].rule, ctx->error.desc);
 			LOG_DEBUG(grammar, "parse error context: %%s...", dump_safe);
 #endif
 		} else {
@@ -129,7 +126,7 @@ int parse_%s(struct parse_ctx *ctx)
 			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 100));
 
 			LOG_DEBUG(grammar, "parse error at byte %%d for field %%s in %%s: %%s",
-			ctx->error.iter.meter, node_debug_%s[ctx->error.node].id, node_debug_%s[ctx->error.node].rule, ctx->error.desc);
+			ctx->error.iter.meter, ctx->node_debug_data[ctx->error.node-1].id, ctx->node_debug_data[ctx->error.node-1].rule, ctx->error.desc);
 			LOG_DEBUG(grammar, "parse error context: %%s...", dump_safe);
 			ctx->run = false;
 		}
@@ -140,7 +137,7 @@ int parse_%s(struct parse_ctx *ctx)
 		if (call != 0) break;
 
 		switch(ctx->next) {
-]], self._parser.name, self._parser.name, self._parser.name, self._parser.name)
+]], self._parser.name)
 end
 
 function module.method:_end_parser()
@@ -172,7 +169,15 @@ function module.method:_end_parser()
 static const struct node_debug node_debug_%s_init[] = {
 ]], self._parser.name)
 
+	local id2node = {}
+
 	for node, id in pairs(self._parser.nodes) do
+		id2node[id] = node
+	end
+
+	for id=1,self._parser.nodes_count do
+		local node = id2node[id]
+
 		self:write([[
 	{ .id = "%s", .rule = "%s" }, /* id: %d, gid: %d */
 ]], node.name or node.id or "<unknown>", node.rule or "<unknown>", id, node.gid)
@@ -247,6 +252,8 @@ function module.method:finish_node()
 end
 
 function module.method:trace_node(node, desc)
+	local id = self._parser.nodes[node]
+
 	self:write([[
 #ifdef HAKA_DEBUG_GRAMMAR
 			{
@@ -257,10 +264,10 @@ function module.method:trace_node(node, desc)
 				safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 20));
 
 				LOG_DEBUG(grammar, "in rule '%%s' field %%s gid %d: %%s\n\tat byte %%d: %%s...",
-					node_debug_%s[ctx->current].rule, node_debug_%s[ctx->current].id, "%s", ctx->iter->meter, dump_safe);
+					node_debug_%s[%d-1].rule, node_debug_%s[%d-1].id, "%s", ctx->iter->meter, dump_safe);
 			}
 #endif
-]], node.gid, self._parser.name, self._parser.name, desc)
+]], node.gid, self._parser.name, id, self._parser.name, id, escape_string(desc))
 end
 
 function module.method:_jumpto(node)
