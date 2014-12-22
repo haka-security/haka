@@ -114,7 +114,7 @@ int parse_%s(struct parse_ctx *ctx)
 			char dump_safe[401];
 			struct vbuffer_sub sub;
 			vbuffer_sub_create_from_position(&sub, &ctx->error.iter, 100);
-			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 100));
+			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 101));
 
 			LOG_DEBUG(grammar, "catched: parse error at byte %%d for field %%s in %%s: %%s",
 			ctx->error.iter.meter, ctx->node_debug_data[ctx->error.node-1].id, ctx->node_debug_data[ctx->error.node-1].rule, ctx->error.desc);
@@ -125,7 +125,7 @@ int parse_%s(struct parse_ctx *ctx)
 			char dump_safe[401];
 			struct vbuffer_sub sub;
 			vbuffer_sub_create_from_position(&sub, &ctx->error.iter, 100);
-			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 100));
+			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 101));
 
 			LOG_DEBUG(grammar, "parse error at byte %%d for field %%s in %%s: %%s",
 			ctx->error.iter.meter, ctx->node_debug_data[ctx->error.node-1].id, ctx->node_debug_data[ctx->error.node-1].rule, ctx->error.desc);
@@ -268,7 +268,7 @@ function module.method:trace_node(node, desc)
 				char dump_safe[81];
 				struct vbuffer_sub sub;
 				vbuffer_sub_create_from_position(&sub, ctx->iter, 20);
-				safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 20));
+				safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 21));
 
 				LOG_DEBUG(grammar, "in rule '%%s' field %%s gid %d: %%s\n\tat byte %%d: %%s...",
 					node_debug_%s[%d-1].rule, node_debug_%s[%d-1].id, "%s", ctx->iter->meter, dump_safe);
