@@ -878,7 +878,6 @@ local function new_lua_grammar(name, def)
 	setmetatable(env, nil)
 
 	local file_name = name.."_grammar"
-	local c_file_name = file_name..".c"
 	local f
 
 	-- Compile exported entities

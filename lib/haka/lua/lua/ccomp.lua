@@ -21,6 +21,7 @@ function module.method:__init(name, debug)
 	self._parsers = {}
 
 	-- Open and init c file
+	log.debug("generating c code at '%s'", self._cfile)
 	self._fd = assert(io.open(self._cfile, "w"))
 
 	-- Create c grammar
@@ -416,7 +417,8 @@ LUA_BIND_INIT(%s)
 		flags = flags.." -DHAKA_DEBUG_GRAMMAR"
 	end
 	local compile_command = string.format("%s %s -o %s %s", haka.config.ccomp.cc, flags, self._sofile, self._cfile)
-	log.info("compiling grammar '%s': %s", self._name, compile_command)
+	log.info("compiling grammar '%s'", self._name)
+	log.debug(compile_command)
 	local ret = os.execute(compile_command)
 	if not ret then
 		error("grammar compilation failed `"..compile_command.."`")
