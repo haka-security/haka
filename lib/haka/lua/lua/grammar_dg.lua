@@ -695,11 +695,6 @@ function dg.Retain.method:__init(gid, readonly)
 	self.readonly = readonly
 end
 
-function dg.Retain.method:_capply(ccomp)
-	-- TODO iter wait but it's in vbuffer.si
-	ccomp:mark(self.readonly)
-end
-
 function dg.Retain.method:_apply(ctx)
 	-- We try to mark the incoming data, so wait for them
 	-- to arrive before marking the end of a previous chunk
