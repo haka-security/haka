@@ -846,6 +846,8 @@ local function new_c_grammar(name, def)
 	local cparser = require(tmpl:compile())
 
 	for _, parser in pairs(tmpl._parsers) do
+		local gdentity = g._exports[parser.name]
+
 		g._exports[parser.name] = {
 			parse = function(self, input, context)
 				local ctx = cparser.ctx:new(input)
@@ -857,6 +859,10 @@ local function new_c_grammar(name, def)
 					ret = cparser.grammar[parser.fname](ctx._ctx)
 				end
 				return ctx._results[1], ctx:get_error()
+			end,
+			create = function(self, input, init)
+				-- Fallback to lua parser for now
+				return gdentity:create(input, init)
 			end
 		}
 	end
