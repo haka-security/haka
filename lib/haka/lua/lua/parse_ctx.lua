@@ -59,7 +59,7 @@ ffibinding.create_type{
 				return nil
 			end
 		end,
-		get_error = function (self)
+		geterror = function (self)
 			if ffi.C.parse_ctx_haserror(self) then
 				return haka.C.parse_ctx_geterror(self)
 			else
@@ -239,7 +239,7 @@ function CContext.method:push(result, name)
 end
 
 function CContext.method:get_error()
-	local err, iter, id, rule, desc = self._ctx:get_error()
+	local err, iter, id, rule, desc = self._ctx:geterror()
 	if err then
 		return ParseError:new(iter, id, rule, desc)
 	end

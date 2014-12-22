@@ -12,6 +12,11 @@
 
 bool parse_ctx_geterror(struct parse_ctx *ctx, struct vbuffer_iterator **OUTPUT, const char **OUTPUT1, const char **OUTPUT2, const char **OUTPUT3)
 {
+	*OUTPUT = NULL;
+	*OUTPUT1 = NULL;
+	*OUTPUT2 = NULL;
+	*OUTPUT3 = NULL;
+
 	if (!ctx->error.isset) return false;
 
 	*OUTPUT = malloc(sizeof(struct vbuffer_iterator));
@@ -78,7 +83,7 @@ struct parse_ctx {
 			}
 		}
 
-		bool geterror(struct parse_ctx *ctx, struct vbuffer_iterator **OUTPUT, const char **OUTPUT1, const char **OUTPUT2, const char **OUTPUT3);
+		bool geterror(struct vbuffer_iterator **OUTPUT, const char **OUTPUT1, const char **OUTPUT2, const char **OUTPUT3);
 	}
 };
 
