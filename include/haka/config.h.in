@@ -31,6 +31,12 @@
 #cmakedefine HAKA_SWIG       @HAKA_SWIG@
 
 #define PREFIX                "@CMAKE_INSTALL_PREFIX@"
+#define HAKA_PATH             PREFIX
+
+#define HAKA_CCOMP_FLAGS         "${HAKA_CCOMP_FLAGS}"
+#define HAKA_CCOMP_CC            "${HAKA_CCOMP_CC}"
+#define HAKA_CCOMP_RUNTIME_DIR   "${HAKA_CCOMP_RUNTIME_DIR}"
+#define HAKA_CCOMP_INCLUDE_PATH  "${HAKA_CCOMP_INCLUDE_PATH}"
 
 #cmakedefine HAKA_DEBUG
 #cmakedefine HAKA_NDEBUG

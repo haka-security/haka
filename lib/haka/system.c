@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <haka/system.h>
 #include <haka/error.h>
@@ -80,10 +82,15 @@ void fatal_exit(int rc)
 	_exit(rc);
 }
 
+const char *_get_config_value(const char *name, const char *def)
+{
+	const char *env = getenv(name);
+	return env ? env : def;
+}
+
 const char *haka_path()
 {
-	const char *haka_path = getenv("HAKA_PATH");
-	return haka_path ? haka_path : PREFIX;
+	return GET_CONFIG_VALUE(HAKA_PATH);
 }
 
 void haka_exit()
@@ -118,4 +125,38 @@ bool get_memory_size(size_t *vmsize, size_t *rss)
 
 	fclose(fp);
 	return true;
+}
+
+bool mkdir_path(const char *_path, int mode)
+{
+	struct stat st;
+	char *path = strdup(_path);
+	char *cur = path;
+	bool ret = true;
+
+	while (true)
+	{
+		char *sep = strchr(cur, '/');
+		if (cur != sep) {
+			if (sep) *sep = '\0';
+
+			if (stat(path, &st) != 0) {
+				if (mkdir(path, mode) != 0 && errno != EEXIST) {
+					ret = false;
+				}
+			}
+			else if (!S_ISDIR(st.st_mode)) {
+				ret = false;
+			}
+
+			if (sep) *sep = '/';
+
+			if (!sep || !ret) break;
+		}
+
+		cur = sep+1;
+	}
+
+	free(path);
+	return ret;
 }

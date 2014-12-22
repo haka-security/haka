@@ -15,20 +15,18 @@ char *ccomp_cc = HAKA_CCOMP_CC;
 char *ccomp_runtime_dir = HAKA_CCOMP_RUNTIME_DIR;
 char *ccomp_include_path = HAKA_CCOMP_INCLUDE_PATH;
 
-static void config_get(const char *src, const char *_env, char **TEMP_OUTPUT, size_t *TEMP_SIZE)
+static void config_get(const char *src, const char *_env, char **TEMP_OUTPUT)
 {
-	const char *env = getenv(_env);
-	if (env) src = env;
+	const char *value = _get_config_value(_env, src);
 
-	*TEMP_SIZE = strlen(src);
-
-	*TEMP_OUTPUT = strdup(src);
+	*TEMP_OUTPUT = strdup(value);
 	if (!*TEMP_OUTPUT) error("memory error");
 }
 
 %}
 
-static void config_get(const char *src, const char *_env, char **TEMP_OUTPUT, size_t *TEMP_SIZE);
+static void config_get(const char *src, const char *_env, char **TEMP_OUTPUT);
+
 struct haka_lua_config {
 	bool  lua_debugger;
 	struct {

@@ -1,8 +1,3 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-#define HAKA_CCOMP_FLAGS         "${HAKA_CCOMP_FLAGS}"
-#define HAKA_CCOMP_CC            "${HAKA_CCOMP_CC}"
-#define HAKA_CCOMP_RUNTIME_DIR   "${HAKA_CCOMP_RUNTIME_DIR}"
-#define HAKA_CCOMP_INCLUDE_PATH  "${HAKA_CCOMP_INCLUDE_PATH}"
+ *  * License, v. 2.0. If a copy of the MPL was not distributed with this
+ *   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */

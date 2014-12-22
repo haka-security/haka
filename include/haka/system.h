@@ -33,4 +33,16 @@ void haka_exit(void);
  */
 bool get_memory_size(size_t *vmsize, size_t *rss);
 
+/**
+ * Create a folder and all its parents if needed.
+ */
+bool mkdir_path(const char *path, int mode);
+
+/**
+ * Get a configuration value.
+ */
+const char *_get_config_value(const char *name, const char *def);
+
+#define GET_CONFIG_VALUE(name) _get_config_value(#name, name)
+
 #endif /* HAKA_SYSTEM_H */

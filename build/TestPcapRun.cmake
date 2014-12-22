@@ -19,7 +19,6 @@ include(Valgrind)
 
 message("Executing TZ=\"Europe/Paris\" LANG=\"C\" LC_ALL=\"C\" LUA_PATH=\"$ENV{LUA_PATH}\" HAKA_PATH=\"$ENV{HAKA_PATH}\" LD_LIBRARY_PATH=\"$ENV{LD_LIBRARY_PATH}\" HAKA_CCOMP_INCLUDE_PATH=\"$ENV{HAKA_CCOMP_INCLUDE_PATH}\" HAKA_CCOMP_RUNTIME_DIR=\"$ENV{HAKA_CCOMP_RUNTIME_DIR}\" ${EXE} -d --no-pass-through --debug-grammar ${EXE_OPTIONS} -o ${DST}.pcap ${CONF} ${SRC}")
 
-execute_process(COMMAND mkdir -p $ENV{HAKA_CCOMP_RUNTIME_DIR})
 VALGRIND_FULL(${DST} ${EXE} -d --no-pass-through --debug-grammar ${EXE_OPTIONS} -o ${DST}.pcap ${CONF} ${SRC}
 	RESULT_VARIABLE HAD_ERROR OUTPUT_FILE ${DST}-tmp.txt)
 

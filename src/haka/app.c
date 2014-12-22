@@ -112,6 +112,14 @@ void initialize()
 		clean_exit();
 		exit(1);
 	}
+
+	/* Create needed folder */
+	const char *ccomp_dir = GET_CONFIG_VALUE(HAKA_CCOMP_RUNTIME_DIR);
+	if (!mkdir_path(ccomp_dir, 0777)) {
+		LOG_FATAL(core, "cannot create folder: %s", ccomp_dir);
+		clean_exit();
+		exit(1);
+	}
 }
 
 void prepare(int threadcount)
