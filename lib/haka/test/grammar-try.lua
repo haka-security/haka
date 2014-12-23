@@ -29,7 +29,7 @@ function TestGrammarTry:test_try_catch_error()
 		}
 
 		export(elem)
-	end)
+	end, true)
 	-- When
 	local res = gr.elem:parse(vbuf:pos("begin"))
 	-- Then
@@ -48,7 +48,7 @@ function TestGrammarTry:test_try_dual()
 			field("bar", token("bar"))
 		}
 		export(elem)
-	end)
+	end, true)
 	-- When
 	local res = gr.elem:parse(vbuf:pos("begin"))
 	-- Then
@@ -73,7 +73,7 @@ function TestGrammarTry:test_try_does_not_leave_result_on_fail()
 		}
 
 		export(elem)
-	end)
+	end, true)
 	-- When
 	local res = gr.elem:parse(vbuf:pos("begin"))
 	-- Then

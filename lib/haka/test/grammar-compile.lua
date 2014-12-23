@@ -22,7 +22,7 @@ function TestGrammarCompilation:test_new_grammar_compile(fname)
 	end
 
 	-- When
-	local grammar = haka.grammar.new(fname, grammar, true)
+	local grammar = haka.grammar.new(fname, grammar)
 
 	-- Then
 	assertNotEquals(grammar, nil)
@@ -44,7 +44,7 @@ function TestGrammarCompilation:test_new_grammar_create_multiple_parsers(fname)
 	end
 
 	-- When
-	local grammar = haka.grammar.new(fname, grammar, true)
+	local grammar = haka.grammar.new(fname, grammar)
 
 	-- Then
 	assert(grammar.foo)
@@ -59,7 +59,7 @@ function TestGrammarCompilation:test_apply_on_record(fname)
 			field("num", number(8)),
 		}
 		export(elem)
-	end, true)
+	end)
 
 	-- When
 	local result = grammar.elem:parse(buf:pos('begin'))
@@ -79,7 +79,7 @@ function TestGrammarCompilation:test_apply_on_sequence(fname)
 			},
 		}
 		export(elem)
-	end, true)
+	end)
 
 	-- When
 	local result = grammar.elem:parse(buf:pos('begin'))
@@ -97,7 +97,7 @@ function TestGrammarCompilation:test_apply_on_union(fname)
 			field("bar", number(8)),
 		}
 		export(elem)
-	end, true)
+	end)
 
 	-- When
 	local result = grammar.elem:parse(buf:pos('begin'))
@@ -119,7 +119,7 @@ function TestGrammarCompilation:test_apply_on_branch(fname)
 		end)
 
 		export(my_branch)
-	end, true)
+	end)
 
 	-- When
 	local result = grammar.my_branch:parse(buf:pos('begin'))
@@ -140,7 +140,7 @@ function TestGrammarCompilation:test_apply_on_branch_with_default(fname)
 		end)
 
 		export(my_branch)
-	end, true)
+	end)
 
 	-- When
 	local result = grammar.my_branch:parse(buf:pos('begin'))
@@ -164,7 +164,7 @@ function TestGrammarCompilation:test_apply_on_branch_with_multiple_elements(fnam
 		end)
 
 		export(my_branch)
-	end, true)
+	end)
 
 	-- When
 	local result = grammar.my_branch:parse(buf:pos('begin'))
@@ -191,7 +191,7 @@ function TestGrammarCompilation:test_apply_on_recurs(fname)
 		}
 
 		export(root)
-	end, true)
+	end)
 
 	-- When
 	local ret = grammar.root:parse(buf:pos('begin'))
@@ -215,7 +215,7 @@ function TestGrammarCompilation:test_apply_on_token(fname)
 		}
 
 		export(elem)
-	end, true)
+	end)
 
 	-- When
 	local ret = grammar.elem:parse(buf:pos('begin'))
@@ -232,7 +232,7 @@ function TestGrammarCompilation:test_number_needing_wait(fname)
 			field("num", number(32)),
 		}
 		export(elem)
-	end, true)
+	end)
 
 	-- When
 	local stream = haka.vbuffer_stream()
