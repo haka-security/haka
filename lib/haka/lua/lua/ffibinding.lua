@@ -162,8 +162,6 @@ function module.create_type(arg)
 		local res = set[key]
 		if res then
 			res(self, value)
-		else
-			rawset(self, key, value)
 		end
 	end
 
