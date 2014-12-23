@@ -258,6 +258,13 @@ bool parse_ctx_haserror(struct parse_ctx *ctx)
 	return ctx->error.isset;
 }
 
+char parse_ctx_lookahead(struct parse_ctx *ctx)
+{
+	struct vbuffer_iterator iter;
+	vbuffer_iterator_copy(ctx->iter, &iter);
+	return vbuffer_iterator_getbyte(&iter);
+}
+
 #ifdef HAKA_FFI
 
 extern void *lua_get_swigdata(void *ptr);

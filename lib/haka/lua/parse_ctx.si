@@ -85,6 +85,7 @@ struct parse_ctx {
 		void popmark(bool seek = false);
 		void seekmark();
 		void error(const char desc[]);
+		int  lookahead();
 
 		struct vbuffer_iterator *retain_mark() {
 			struct vbuffer_iterator *ret = malloc(sizeof(struct vbuffer_iterator));

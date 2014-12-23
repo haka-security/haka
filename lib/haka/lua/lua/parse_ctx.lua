@@ -31,6 +31,7 @@ ffi.cdef[[
 	void parse_ctx_seekmark(struct parse_ctx *ctx);
 	void parse_ctx_error(struct parse_ctx *ctx, const char desc[]);
 	bool parse_ctx_haserror(struct parse_ctx *ctx);
+	char parse_ctx_lookahead(struct parse_ctx *ctx);
 
 	/* Must be sync with real struct */
 	struct parse_ctx {
@@ -69,7 +70,8 @@ ffibinding.create_type{
 			else
 				return false
 			end
-		end
+		end,
+		lookahead = ffi.C.parse_ctx_lookahead,
 	},
 	destroy = ffi.C.parse_ctx_free,
 	ref = ffi.C.parse_ctx_get_ref,
@@ -191,15 +193,8 @@ function CContext.method:update(iter)
 end
 
 function CContext.method:lookahead()
-	local iter = self.iter:copy()
-	local sub = self.iter:sub(1)
-	if sub then
-		local la = sub:asnumber()
-		self:update(iter)
-		return la
-	else
-		return -1
-	end
+	self.iter:wait()
+	return self._ctx:lookahead()
 end
 
 function CContext.method:init(entity, all)

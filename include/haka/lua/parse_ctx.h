@@ -110,6 +110,7 @@ bool              parse_ctx_catch(struct parse_ctx *ctx);
 void              parse_ctx_popcatch(struct parse_ctx *ctx);
 void              parse_ctx_error(struct parse_ctx *ctx, const char desc[]);
 bool              parse_ctx_haserror(struct parse_ctx *ctx);
+char              parse_ctx_lookahead(struct parse_ctx *ctx);
 
 #ifdef HAKA_FFI
 bool              parse_ctx_new_ffi(struct ffi_object *parse_ctx, void *_iter);
