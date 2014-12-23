@@ -34,15 +34,19 @@ ffi.cdef[[
 
 	/* Must be sync with real struct */
 	struct parse_ctx {
-		int run;
-		int next;
-		int bitoffset;
+		bool      run;
+		int       next;
+		int       bitoffset;
+		int       reg0_int;
+		int       reg1_int;
+		long long reg0_long;
 	};
 ]]
 
 ffibinding.create_type{
 	cdef = "struct parse_ctx",
 	prop = {
+		reg0_sub = { get = haka.C.parse_ctx_get_reg0_sub },
 	},
 	meth = {
 		mark = ffi.C.parse_ctx_mark,

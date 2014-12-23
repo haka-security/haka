@@ -77,6 +77,9 @@ void parse_ctx_init(struct parse_ctx *ctx, struct vbuffer_iterator *iter)
 	ctx->error.desc          = NULL;
 	ctx->error.node          = 0;
 
+	ctx->reg0_iter = vbuffer_iterator_init;
+	ctx->reg0_sub = vbuffer_sub_init;
+
 	memset(ctx->recurs, 0, RECURS_MAX*sizeof(struct recurs));
 
 	POOL_INIT(struct mark, &ctx->marks, INIT_MARKS_SIZE);

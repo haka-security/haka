@@ -5,6 +5,7 @@
 %import "haka/lua/config.si"
 
 %include "haka/lua/swig.si"
+%include "haka/lua/vbuffer.si"
 
 %{
 #include <haka/vbuffer.h>
@@ -33,6 +34,19 @@ bool parse_ctx_geterror(struct parse_ctx *ctx, struct vbuffer_iterator **OUTPUT,
 	return true;
 }
 
+struct vbuffer_sub *parse_ctx_get_reg0_sub(struct parse_ctx *ctx)
+{
+	struct vbuffer_sub *sub = malloc(sizeof(struct vbuffer_sub));
+	if (!sub) {
+		error("Memory error");
+		return NULL;
+	}
+
+	vbuffer_sub_copy(&ctx->reg0_sub, sub);
+	vbuffer_sub_register(sub);
+	return sub;
+}
+
 %}
 
 %include "haka/lua/swig.si"
@@ -42,11 +56,15 @@ bool parse_ctx_geterror(struct parse_ctx *ctx, struct vbuffer_iterator **OUTPUT,
 #ifdef HAKA_SWIG
 
 %newobject parse_ctx::retain_mark;
+%newobject parse_ctx::reg0_sub;
 
 struct parse_ctx {
 	int run;
 	int next;
 	int bitoffset;
+	int reg0_int;
+	int reg1_int;
+	int reg0_long;
 
 	%extend {
 		parse_ctx(struct vbuffer_iterator_blocking *iter) {
@@ -84,6 +102,11 @@ struct parse_ctx {
 		}
 
 		bool geterror(struct vbuffer_iterator **OUTPUT, const char **OUTPUT1, const char **OUTPUT2, const char **OUTPUT3);
+
+		%immutable;
+		struct vbuffer_sub *reg0_sub {
+			return parse_ctx_get_reg0_sub($self);
+		}
 	}
 };
 
@@ -93,9 +116,14 @@ FFI_OBJECT(struct parse_ctx);
 
 bool parse_ctx_geterror(struct parse_ctx *ctx, struct vbuffer_iterator **OUTPUT, const char **OUTPUT1, const char **OUTPUT2, const char **OUTPUT3);
 
+%newobject parse_ctx_get_reg0_sub;
+struct vbuffer_sub *parse_ctx_get_reg0_sub(struct parse_ctx *ctx);
+
 %luacode{
 	haka.C.parse_ctx_geterror = haka.parse_ctx_geterror
 	haka.parse_ctx_geterror = nil
+	haka.C.parse_ctx_get_reg0_sub = haka.parse_ctx_get_reg0_sub
+	haka.parse_ctx_get_reg0_sub = nil
 }
 
 #endif

@@ -58,9 +58,18 @@ struct node_debug {
 };
 
 struct parse_ctx {
+	/* First values are directly accessed from Lua */
 	bool                          run;
 	int                           next;
 	int                           bitoffset;
+	int                           reg0_int;
+	int                           reg1_int;
+	int64                         reg0_long;
+	/* End of Lua values */
+
+	struct vbuffer_sub            reg0_sub;
+	struct vbuffer_iterator       reg0_iter;
+
 	struct lua_object             lua_object;
 	int                           current;
 	struct vbuffer_iterator      *iter;

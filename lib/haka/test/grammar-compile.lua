@@ -225,4 +225,40 @@ function TestGrammarCompilation:test_apply_on_token(fname)
 	assertEquals(ret.bar, "toto")
 end
 
+function TestGrammarCompilation:test_number_needing_wait(fname)
+	-- Given
+	local grammar = haka.grammar.new(fname, function ()
+		elem = record{
+			field("num", number(32)),
+		}
+		export(elem)
+	end, true)
+
+	-- When
+	local stream = haka.vbuffer_stream()
+	local manager = haka.vbuffer_stream_comanager:new(stream)
+	local result
+
+	manager:start(0, function (iter)
+		result = grammar.elem:parse(iter)
+	end)
+
+	local current = stream:push(haka.vbuffer_from("\xde"))
+	manager:process_all(current)
+
+	current = stream:push(haka.vbuffer_from("\xad"))
+	manager:process_all(current)
+
+	current = stream:push(haka.vbuffer_from("\xbe"))
+	manager:process_all(current)
+
+	current = stream:push(haka.vbuffer_from("\xef"))
+	stream:finish()
+	manager:process_all(current)
+
+	-- Then
+	-- the value take into account the signed/unisged conversion issue
+	assertEquals(result.num, -559038737)
+end
+
 addTestSuite('TestGrammarCompilation')

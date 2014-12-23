@@ -47,6 +47,10 @@ static REGISTER_LOG_SECTION(grammar);
 extern void *lua_get_swigdata(void *ptr);
 ]]
 	end
+
+	self.waitcall = self:store(function (ctx)
+		ctx.iter:wait()
+	end)
 end
 
 local function traverse(ccomp, node)
@@ -193,7 +197,6 @@ static const struct node_debug node_debug_%s_init[] = {
 end
 
 function module.method:store(func)
-	assert(self._parser, "parser not started")
 	assert(func, "cannot store nil")
 	assert(type(func) == 'function', "cannot store non function type")
 	local id = #self._store + 1

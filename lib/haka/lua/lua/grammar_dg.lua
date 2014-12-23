@@ -820,6 +820,108 @@ function dg.Number.method:_dump_graph_descr()
 	return string.format("%d bits (%s endian)", self.size, self.endian or 'big')
 end
 
+function dg.Number.method:_capply(ccomp)
+	ccomp:write([[
+			const int size = (ctx->bitoffset + %d + 7) >> 3;
+			const int bit = (ctx->bitoffset + %d) & 0x7;
+			const bool iscontinue = vbuffer_iterator_isvalid(&ctx->reg0_iter);
+
+			struct vbuffer_iterator *iter = iscontinue ? &ctx->reg0_iter : ctx->iter;
+
+			if (!vbuffer_iterator_check_available(iter, size, NULL) ) {
+				if (vbuffer_iterator_iseof(iter)) {
+					error("Not enought data");
+					ctx->next = FINISH;
+					break;
+				}
+
+				/* Need to wait for more data */
+				if (!iscontinue) {
+					vbuffer_iterator_copy(iter, &ctx->reg0_iter);
+
+					/*if (ctx->retains.count == 0)*/ {
+						vbuffer_iterator_mark(&ctx->reg0_iter, true);
+					}
+				}
+
+				/* Move the iterator to the end */
+				vbuffer_iterator_advance(ctx->iter, ALL);
+
+				/* We now need to wait for more data */
+]], self.size, self.size)
+
+	ccomp:call(ccomp.waitcall)
+
+	ccomp:write([[
+				break;
+			}
+			else {
+				if (iscontinue) {
+					vbuffer_iterator_unmark(iter);
+				}
+
+				vbuffer_sub_create_from_position(&ctx->reg0_sub, iter, size);
+				vbuffer_iterator_advance(iter, size - (bit != 0 ? 1 : 0));
+
+				if (iscontinue) {
+					vbuffer_iterator_move(ctx->iter, iter);
+					vbuffer_iterator_clear(&ctx->reg0_iter);
+				}
+
+				ctx->reg0_int = (ctx->bitoffset == 0 && bit == 0);
+				ctx->reg1_int = ctx->bitoffset;
+				ctx->bitoffset = bit;
+]])
+
+	if self._post_apply then
+		ccomp:write([[
+			if (ctx->reg0_int) {
+				ctx->reg0_long = vbuffer_asnumber(ctx->reg0_sub, %d);
+			}
+			else {
+				ctx->reg0_long = vbuffer_asbits(ctx->reg0_sub, ctx->reg1_int, %d, %d);
+			}
+]], self.endian == 'big', self.size, self.endian == 'big')
+	end
+
+	if self._post_apply or self.name then
+		ccomp:call(ccomp:store(function (ctx)
+			local sub = ctx._ctx.reg0_sub
+			local aligned = ctx._ctx.reg0_int ~= 0
+			local bitoffset = ctx._ctx.reg1_int
+			local res = ctx:result()
+
+			if self.name then
+				if aligned then
+					self:genproperty(res, self.name,
+						function (this) return sub:asnumber(self.endian) end,
+						function (this, newvalue) return sub:setnumber(newvalue, self.endian) end
+					)
+				else
+					self:genproperty(res, self.name,
+						function (this)
+							return sub:asbits(bitoffset, self.size, self.endian)
+						end,
+						function (this, newvalue)
+							return sub:setbits(bitoffset, self.size, newvalue, self.endian)
+						end
+					)
+				end
+			end
+
+			if self._post_apply then
+				local value = ctx._ctx.reg0_long;
+				self:do_apply(value, ctx)
+			end
+		end), "apply")
+	end
+
+	ccomp:write[[
+		}
+]]
+
+end
+
 function dg.Number.method:_parse(res, input, ctx)
 	local bitoffset = ctx._bitoffset
 	local size, bit = math.ceil((bitoffset + self.size) / 8), (bitoffset + self.size) % 8
