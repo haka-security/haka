@@ -162,6 +162,8 @@ function module.create_type(arg)
 		local res = set[key]
 		if res then
 			res(self, value)
+		else
+			error("unknown property", 2)
 		end
 	end
 
