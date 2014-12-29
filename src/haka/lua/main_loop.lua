@@ -39,7 +39,7 @@ function module.receive(state)
 end
 
 function module.error(pkt)
-	C.packet_drop(pkt)
+	ffi.C.packet_drop(pkt)
 end
 
 #else
@@ -65,8 +65,9 @@ function module.run(state, run_extra)
 			break
 		end
 		if pkt then
-			local ret = pcall(filter, pkt)
+			local ret, msg = pcall(filter, pkt)
 			if not ret then
+				haka.log.error(msg)
 				module.error(pkt)
 			end
 		end
