@@ -130,9 +130,16 @@ bool get_memory_size(size_t *vmsize, size_t *rss)
 bool mkdir_path(const char *_path, int mode)
 {
 	struct stat st;
-	char *path = strdup(_path);
-	char *cur = path;
+	char *cur;
 	bool ret = true;
+	char *path = strdup(_path);
+
+	if (!path) {
+		error("Memory error");
+		return false;
+	}
+
+	cur = path;
 
 	while (true)
 	{
