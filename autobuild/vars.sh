@@ -6,6 +6,7 @@
 export PATH=/bin:/usr/bin:/usr/local/bin
 export ROOT=$(pwd)
 export MAKEDIR="$ROOT/workspace/"
+export JOBS=${JOBS:=1}
 
 echo $HAKA_LUA $HAKA_BUILD
 

@@ -8,7 +8,7 @@ source autobuild/includes.sh
 
 _build() {
 	cd "$MAKEDIR/$1-$2"
-	_run make all
+	_run make -j$JOBS all
 }
 
 _runeach _build

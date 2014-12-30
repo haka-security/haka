@@ -8,10 +8,13 @@ include(TestBigEndian)
 include(CheckTypeSize)
 include(ProcessorCount OPTIONAL)
 
-if(COMMAND ProcessorCount)
-	ProcessorCount(CPU_COUNT)
-else()
-	set(CPU_COUNT 1)
+set(JOBS "" CACHE STRING "Parallel jobs to use when possible")
+if(JOBS STREQUAL "")
+	if(COMMAND ProcessorCount)
+		ProcessorCount(JOBS)
+	else()
+		set(JOBS 1)
+	endif()
 endif()
 
 # Warn in source build
@@ -283,7 +286,7 @@ add_custom_target(pretests
 )
 
 add_custom_target(tests
-	COMMAND ctest -j${CPU_COUNT} $(CTEST_ARGS)
+	COMMAND ctest -j${JOBS} $(CTEST_ARGS)
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 	COMMENT "Run all tests" VERBATIM
 	DEPENDS pretests
