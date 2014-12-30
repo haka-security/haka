@@ -4,10 +4,12 @@
 
 find_package(DL REQUIRED)
 find_package(Editline REQUIRED)
+find_package(LibUuid REQUIRED)
 
 include_directories(.)
 include_directories(${INIPARSER_INCLUDE_DIR})
 include_directories(${EDITLINE_INCLUDE_DIR})
+include_directories(${LIBUUID_INCLUDE_DIR})
 
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
@@ -107,6 +109,7 @@ target_link_libraries(libhaka LINK_PRIVATE ${INIPARSER_LIBRARY})
 target_link_libraries(libhaka LINK_PRIVATE rt)
 target_link_libraries(libhaka LINK_PRIVATE m)
 target_link_libraries(libhaka LINK_PRIVATE ${EDITLINE_LIBRARY})
+target_link_libraries(libhaka LINK_PRIVATE ${LIBUUID_LIBRARY})
 
 target_link_libraries(libhaka LINK_PRIVATE  ${LUA_LIBRARIES})
 add_dependencies(libhaka ${LUA_DEPENDENCY})

@@ -13,7 +13,7 @@ local suffix = "_grammar"
 function module.method:__init(name, debug)
 	self._swig = haka.config.ccomp.swig
 	self._name = name..suffix
-	self._nameid = self._name.."_"..math.random(1000000000)
+	self._nameid = self._name.."_"..haka.genuuid():gsub('-', '_')
 	self._debug = debug or false
 	self._cfile = haka.config.ccomp.runtime_dir..self._nameid..".c"
 	self._sofile = haka.config.ccomp.runtime_dir..self._nameid..".so"
