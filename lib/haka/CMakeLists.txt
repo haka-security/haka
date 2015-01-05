@@ -25,7 +25,11 @@ swig_process(libhakaswig lua
 	lua/swig.i
 	luadebug/luadebug.i)
 
+template_compile(NAME grammar FILES
+	lua/lua/grammar.c)
+
 lua_compile(NAME libhakalua FILES
+	${TEMPLATE_grammar_FILES}
 	lua/lua/color.lua
 	lua/lua/class.lua
 	lua/lua/events.lua
@@ -43,6 +47,7 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/list.lua
 	lua/lua/check.lua
 	lua/lua/ffibinding.lua
+	lua/lua/template.lua
 )
 
 lua_compile(NAME libhakalua FILES
@@ -50,6 +55,7 @@ lua_compile(NAME libhakalua FILES
 	PREPROCESS)
 
 lua_install(TARGET libhakalua DESTINATION share/haka/core)
+
 
 add_library(libhaka SHARED
 	packet.c

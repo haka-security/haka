@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include(UseBc2c)
+include(UseLuaTemplate)
 
 if(CMAKE_LUA STREQUAL "luajit")
 	include(external/luajit/luajit.cmake)
@@ -112,6 +113,8 @@ macro(BINDING_COMPILE)
 	set(multiValueArgs FILES LUA)
 	cmake_parse_arguments(BINDING "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+	set(BINDING_COMPILED_FILES)
+
 	foreach(file ${BINDING_LUA})
 		get_filename_component(file_dir "${file}" PATH)
 		get_filename_component(file_path "${file}" ABSOLUTE)
@@ -154,9 +157,35 @@ macro(BINDING_COMPILE)
 			COMMENT "Building C header from Lua file ${lua_bytecode_file}"
 			VERBATIM)
 
-		LIST(APPEND LUA_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_header_file}")
+		LIST(APPEND BINDING_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${lua_header_file}")
 	endforeach(file)
 
 	include_directories(${CMAKE_CURRENT_BINARY_DIR})
-	set(BINDING_${BINDING_NAME}_FILES ${BINDING_FILES} ${LUA_FILES})
+	set(BINDING_${BINDING_NAME}_FILES ${BINDING_FILES} ${BINDING_COMPILED_FILES})
 endmacro(BINDING_COMPILE)
+
+macro(TEMPLATE_COMPILE)
+	set(oneValueArgs NAME)
+	set(multiValueArgs FILES)
+	cmake_parse_arguments(TEMPLATE "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+	set(TEMPLATE_COMPILED_FILES)
+
+	foreach(file ${TEMPLATE_FILES})
+		get_filename_component(file_dir "${file}" PATH)
+		get_filename_component(file_path "${file}" ABSOLUTE)
+		get_filename_component(file_fullname "${file}" NAME)
+		get_filename_component(file_name "${file}" NAME_WE)
+
+		set(precompiled_file "${file_dir}/${file_name}_c.lua")
+		add_custom_command(
+			OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}"
+			COMMAND mkdir -p ${file_dir}
+			COMMAND ${LUA_BIN} ${LUA_TEMPLATE_COMPILER} "${file_path}" "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}"
+			COMMENTS "Precompile template file ${file}"
+			VERBATIM)
+		LIST(APPEND TEMPLATE_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}")
+	endforeach(file)
+
+	set(TEMPLATE_${TEMPLATE_NAME}_FILES ${TEMPLATE_COMPILED_FILES})
+endmacro(TEMPLATE_COMPILE)
