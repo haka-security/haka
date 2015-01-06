@@ -6,6 +6,6 @@ compiler:
 before_script:
   - mkdir workspace
   - cd workspace
-  - cmake
+  - cmake ../
 
 script: make
