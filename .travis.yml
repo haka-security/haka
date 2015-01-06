@@ -4,6 +4,8 @@ compiler:
   - gcc
 
 before_script:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y swig2.0 tshark check rsync libpcap-dev gawk libedit-dev libpcre3-dev
   - mkdir workspace
   - cd workspace
   - cmake ../
