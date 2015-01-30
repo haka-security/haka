@@ -122,7 +122,7 @@ UNUSED static bool ctl_start_client_thread(struct ctl_client_state *state, void 
 	state->data = data;
 
 	if (!thread_create(&state->thread, ctl_client_process_thread, state)) {
-		messagef(HAKA_LOG_DEBUG, MODULE, "failed to create thread: %s", clear_error(errno));
+		messagef(HAKA_LOG_DEBUG, MODULE, "failed to create thread: %s", clear_error());
 		return false;
 	}
 
