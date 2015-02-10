@@ -147,7 +147,11 @@ function module.create_type(arg)
 		fn[key] = function(self) return value end
 	end
 
-	local mt = arg.mt or {}
+	if not arg.mt then
+		arg.mt = {}
+	end
+
+	local mt = arg.mt
 
 	mt.__index = function (self, key)
 		local res = fn[key]
