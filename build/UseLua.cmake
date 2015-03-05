@@ -182,8 +182,9 @@ macro(TEMPLATE_COMPILE)
 			OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}"
 			COMMAND mkdir -p ${file_dir}
 			COMMAND ${LUA_BIN} ${LUA_TEMPLATE_COMPILER} "${file_path}" "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}"
-			COMMENTS "Precompile template file ${file}"
-			VERBATIM)
+			DEPENDS "${file_path}"
+			IMPLICIT_DEPENDS C "${file_path}"
+			COMMENT "Precompile template file ${file}")
 		LIST(APPEND TEMPLATE_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}")
 	endforeach(file)
 
