@@ -40,7 +40,7 @@ function parse(view)
 		if t == "{" then
 			local e = string.find(view, "}}", p, true)
 			if e then
-				d = table.concat{"___[#___+1]=", string.sub(view, p, e - 1), "\n" }
+				d = table.concat{"___[#___+1]=tostring(", string.sub(view, p, e - 1), ")\n" }
 				z = e + 1
 			end
 		elseif t == "*" then
