@@ -47,7 +47,6 @@ lua_compile(NAME libhakalua FILES
 	lua/lua/list.lua
 	lua/lua/check.lua
 	lua/lua/ffibinding.lua
-	lua/lua/template.lua
 )
 
 lua_compile(NAME libhakalua FILES
