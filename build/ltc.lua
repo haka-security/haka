@@ -17,6 +17,18 @@ local output = assert(io.open(arg[2], "w"))
 local content = input:read("*a")
 input:close()
 
+local function rpos(view, s)
+	while s > 0 do
+		local c = string.sub(view, s, s)
+		if c == " " or c == "\t" or c == "\0" or c == "\x0B" then
+			s = s - 1
+		else
+			break;
+		end
+	end
+	return s
+end
+
 function parse(view)
 	local c = {[[
 	context=... or {}
