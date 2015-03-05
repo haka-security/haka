@@ -827,7 +827,7 @@ local function new_c_grammar(name, def)
 		local dgraph = value:compile(genv)
 		g._exports[name] = dgraph
 
-		tmpl:create_parser(name, dgraph)
+		tmpl:add_parser(name, dgraph)
 
 		no_export = false
 	end
@@ -845,7 +845,7 @@ local function new_c_grammar(name, def)
 
 	local cparser = require(tmpl:compile())
 
-	for _, parser in pairs(tmpl._parsers) do
+	for _, parser in pairs(tmpl._ctx._parsers) do
 		local gdentity = g._exports[parser.name]
 
 		g._exports[parser.name] = {

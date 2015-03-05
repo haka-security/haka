@@ -27,6 +27,10 @@ function dg.Entity.method:ccomp(ccomp)
 	self:_ctrace(ccomp)
 	self:_capply(ccomp)
 	ccomp:finish_node()
+	return self:getnexts()
+end
+
+function dg.Entity.method:getnexts()
 	return { self._next }
 end
 
@@ -352,6 +356,10 @@ function dg.Recurs.method:ccomp(ccomp)
 			ctx->recurs_count++;
 ]], id)
 	ccomp:finish_node()
+	return self:getnexts()
+end
+
+function dg.Recurs.method:getnexts()
 	return { self._recurs, self._next }
 end
 
@@ -770,6 +778,16 @@ function dg.Branch.method:ccomp(ccomp)
 
 	ccomp:finish_node()
 
+	return cases
+end
+
+function dg.Recurs.method:getnexts()
+	local cases = {}
+	local cases_map = {}
+	for name, entity in pairs(self.cases) do
+		cases[name] = entity
+	end
+	cases["default"] = self._next
 	return cases
 end
 

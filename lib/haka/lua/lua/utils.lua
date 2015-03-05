@@ -52,9 +52,11 @@ function table.append(dst, src)
 	end
 end
 
-function table.append(dst, src)
+function table.prepend(dst, src)
+	local i = 1
 	for _,v in ipairs(src) do
-		table.insert(dst, v)
+		table.insert(dst, i, v)
+		i = i + 1
 	end
 end
 
