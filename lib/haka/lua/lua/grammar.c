@@ -45,9 +45,9 @@ int parse_{{ parser.name }}
 			vbuffer_sub_create_from_position(&sub, &ctx->error.iter, 100);
 			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 101));
 
-			LOG_DEBUG(grammar, "catched: parse error at byte %%d for field %%s in %%s: %%s",
+			LOG_DEBUG(grammar, "catched: parse error at byte %d for field %s in %s: %s",
 			ctx->error.iter.meter, ctx->node_debug_data[ctx->error.node-1].id, ctx->node_debug_data[ctx->error.node-1].rule, ctx->error.desc);
-			LOG_DEBUG(grammar, "parse error context: %%s...", dump_safe);
+			LOG_DEBUG(grammar, "parse error context: %s...", dump_safe);
 #endif
 		} else {
 			char dump[101];
@@ -56,9 +56,9 @@ int parse_{{ parser.name }}
 			vbuffer_sub_create_from_position(&sub, &ctx->error.iter, 100);
 			safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 101));
 
-			LOG_DEBUG(grammar, "parse error at byte %%d for field %%s in %%s: %%s",
+			LOG_DEBUG(grammar, "parse error at byte %d for field %s in %s: %s",
 			ctx->error.iter.meter, ctx->node_debug_data[ctx->error.node-1].id, ctx->node_debug_data[ctx->error.node-1].rule, ctx->error.desc);
-			LOG_DEBUG(grammar, "parse error context: %%s...", dump_safe);
+			LOG_DEBUG(grammar, "parse error context: %s...", dump_safe);
 			ctx->run = false;
 		}
 	}
@@ -75,17 +75,17 @@ local stack = { node }
 while node do
 	table.remove(stack, 1)
 	local gid = node.gid
-%}
 
-{% if parser.written_nodes[gid] then %}
-{% assert(parser.nodes[node], "unknown node to jump to") %}
+	if parser.written_nodes[gid] then
+		assert(parser.nodes[node], "unknown node to jump to")
+%}
 		/* jump to gid {{ gid }} */
 		ctx->next = {{ parser.nodes[node] }};
 		break;
-{% else %}
 {%
-local id = parser:register(node)
-parser.written_nodes[gid] = true
+	else
+		local id = parser:register(node)
+		parser.written_nodes[gid] = true
 %}
 		/* gid {{ gid }} */
 		case {{ id }}: /* in rule '{{ node.rule or "<unknown>"}}' field '{{ node.name or node.id }}' <{{ class.classof(node).name }}> */
@@ -97,23 +97,175 @@ parser.written_nodes[gid] = true
 
 			/* Node start */
 			ctx->current = {{ id }};
-{% end %}
-		/* TODO */
+
+			{%
+				local msg = node:_ctrace()
+				if msg then
+					msg = escape_string(msg)
+					local id = parser.nodes[node]
+			%}
+#ifdef HAKA_DEBUG_GRAMMAR
+			{
+				char dump[21];
+				char dump_safe[81];
+				struct vbuffer_sub sub;
+				vbuffer_sub_create_from_position(&sub, ctx->iter, 20);
+				safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 21));
+
+				LOG_DEBUG(grammar, "in rule '%s' field %s gid {{ node.gid }}: %s\n\tat byte %d: %s...",
+					node_debug_{{ parser.name }}[{{ id }}-1].rule,
+					node_debug_{{ parser.name }}[{{ id }}-1].id,
+					"{{ msg }}", ctx->iter->meter, dump_safe);
+			}
+#endif
+			{% end %}
+
+			{%
+				local type = class.classof(node).name
+				local ccall_lua = false
+			%}
+
+			{% if type == "DGCompoundStart" or type == "DGRecordStart" or
+				  type == "DGTryStart" or type == "DGArrayStart" then %}
+
+			ctx->compound_level++;
+
+			{% if type ~= "DGCompoundStart" then ccall_lua = true end %}
+
+			{% elseif type == "DGCompoundFinish" or type == "DGRecordFinish" or
+					  type == "DGUnionFinish" or type == "DGTryFinish" or
+					  type == "DGArrayFinish" then %}
+
+			ctx->compound_level--;
+			if (ctx->recurs_finish_level == ctx->compound_level && ctx->recurs_count > 0) {
+				/* pop recursion */
+				ctx->recurs_count--;
+				ctx->next = ctx->recurs[ctx->recurs_count].node;
+				ctx->recurs_finish_level = ctx->recurs[ctx->recurs_count].level;
+				break;
+			}
+
+			{% if type ~= "DGCompoundFinish" then ccall_lua = true end %}
+
+			{% elseif type == "DGUnionRestart" then %}
+
+			parse_ctx_seekmark(ctx);
+
+			{% elseif type == "DGRelease" then %}
+
+			parse_ctx_unmark(ctx);
+
+			{% elseif type == "DGBranch" then %}
+
+			call = {{ ccomp:store(node:capply(ccomp, parser)) }};    /* selector */
+
+			{% elseif type == "DGRecurs" then %}
+
+			{% local id = parser:register(node._next) %}
+
+			if (ctx->recurs_count >= RECURS_MAX) {
+				error("max recursion reached");
+				return 0;
+			}
+			ctx->recurs[ctx->recurs_count].node = {{ id }};
+			/* Store laste recursion level so we can reuse it later */
+			ctx->recurs[ctx->recurs_count].level = ctx->recurs_finish_level;
+			ctx->recurs_finish_level = ctx->compound_level;
+			ctx->recurs_count++;
+
+			{% elseif type == "DGNumber" then %}
+
+			{% local endian = node.endian == 'big' and 1 or 0 %}
+
+			const int size = (ctx->bitoffset + {{ node.size }} + 7) >> 3;
+			const int bit = (ctx->bitoffset + {{ node.size }}) & 0x7;
+			const bool iscontinue = vbuffer_iterator_isvalid(&ctx->reg0_iter);
+
+			struct vbuffer_iterator *iter = iscontinue ? &ctx->reg0_iter : ctx->iter;
+
+			if (!vbuffer_iterator_check_available(iter, size, NULL) ) {
+				if (vbuffer_iterator_iseof(iter)) {
+					error("Not enought data");
+					ctx->next = FINISH;
+					break;
+				}
+
+				/* Need to wait for more data */
+				if (!iscontinue) {
+					vbuffer_iterator_copy(iter, &ctx->reg0_iter);
+
+					/*if (ctx->retains.count == 0)*/ {
+						vbuffer_iterator_mark(&ctx->reg0_iter, true);
+					}
+				}
+
+				/* Move the iterator to the end */
+				vbuffer_iterator_advance(ctx->iter, ALL);
+
+				/* We now need to wait for more data */
+				call = {{ ccomp.waitcall }};   /* waitcall(ctx) */
+				break;
+			}
+
+			if (iscontinue) {
+				vbuffer_iterator_unmark(iter);
+			}
+
+			vbuffer_sub_create_from_position(&ctx->reg0_sub, iter, size);
+			vbuffer_iterator_advance(iter, size - (bit != 0 ? 1 : 0));
+
+			if (iscontinue) {
+				vbuffer_iterator_move(ctx->iter, iter);
+				vbuffer_iterator_clear(&ctx->reg0_iter);
+			}
+
+			ctx->reg0_int = (ctx->bitoffset == 0 && bit == 0);
+			ctx->reg1_int = ctx->bitoffset;
+			ctx->bitoffset = bit;
+
+			{% if node._post_apply then %}
+				if (ctx->reg0_int) {
+					ctx->reg0_long = vbuffer_asnumber(ctx->reg0_sub, {{ endian }});
+				}
+				else {
+					ctx->reg0_long = vbuffer_asbits(ctx->reg0_sub, ctx->reg1_int,
+							{{ node.size }}, {{ endian }});
+				}
+			{% end %}
+
+			{% if node._post_apply or node.name then %}
+				call = {{ ccomp:store(node:capply()) }};
+			{% end %}
+
+			{% else
+				ccall_lua = true
+			end %}
+
+			{# Default: Token, Bytes, Bits, Retain, Execute, Error, ArrayPop, ArrayPush #}
+
+			{% if ccall_lua then
+				local node = node
+				%}
+				call = {{ ccomp:store(function (ctx) node:_apply(ctx) end) }}; /* node:_apply(ctx) */
+			{% end %}
 		}
 
 {%
-local nexts = node:getnexts()
-if #nexts == 0 then
+		local nexts = node:getnexts()
+		if #nexts == 0 then
 %}
-		ctx->next = FINISH; break;
+			ctx->next = FINISH; break;
 {%
-end
+		end
 
-	table.prepend(stack, nexts)
+		table.prepend(stack, nexts)
+
+	end
+
 	node = stack[1]
-%}
 
-{% end %}
+end
+%}
 		default: /* node 0 is default and is also exit */
 		{
 			ctx->run = false;

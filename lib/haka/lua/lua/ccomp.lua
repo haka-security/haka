@@ -10,6 +10,11 @@ local module = class.class("CComp")
 
 local suffix = "_grammar"
 
+local function escape_string(str)
+	local esc = str:gsub("([\\%%\'\"])", "\\%1")
+	return esc
+end
+
 function module.method:__init(name, _debug)
 	self._swig = haka.config.ccomp.swig
 	self._name = name..suffix
@@ -28,11 +33,13 @@ function module.method:__init(name, _debug)
 	self._ctx = {
 		-- Expose some of our upvalue
 		class = class,
+		escape_string = escape_string,
 		-- Configure current template
 		name = name,
 		nameid = self._nameid,
 		_swig = haka.config.ccomp.swig,
 		_parsers = {},
+		ccomp = self,
 	}
 
 	self.waitcall = self:store(function (ctx)
@@ -75,11 +82,6 @@ function module.method:call(id, name)
 	self:write([[
 			call = %d;                                /* %s */
 ]], id, name)
-end
-
-local function escape_string(str)
-	local esc = str:gsub("([\\%%\'\"])", "\\%1")
-	return esc
 end
 
 function module.method:trace_node(node, desc)
@@ -163,7 +165,7 @@ return { ctx = parse_ctx, grammar = lib }
 
 	self._ctx.binding_code = binding
 	self._ctx.binding_bytecode = lua2c(binding)
-	self:write(self._tmpl.render(self._ctx))
+	self._fd:write(self._tmpl.render(self._ctx))
 	self._fd:close()
 
 	-- Compile c grammar

@@ -227,16 +227,7 @@ function dg.Entity.method:dump_graph(file)
 	file:write("}\n")
 end
 
-function dg.Entity.method:ctrace(ccomp, msg, ...)
-	local id = tostring(self.id)
-	if self.name then
-		id = string.format("'%s'", self.name)
-	end
-
-	ccomp:trace_node(self, string.format(msg, ...))
-end
-
-function dg.Entity.method:_ctrace(ccomp)
+function dg.Entity.method:_ctrace()
 	local name = class.classof(self).trace_name
 	if not name or not self.id then
 		-- skip trace
@@ -245,9 +236,9 @@ function dg.Entity.method:_ctrace(ccomp)
 
 	local descr = self:_dump_graph_descr()
 	if descr then
-		self:ctrace(ccomp, "parsing %s %s", name, descr)
+		return string.format("parsing %s %s", name, descr)
 	else
-		self:ctrace(ccomp, "parsing %s", name)
+		return string.format("parsing %s", name)
 	end
 
 end
@@ -749,6 +740,32 @@ function dg.Branch.method:_dump_graph_edges(file, ref)
 	end
 end
 
+function dg.Branch.method:capply(ccomp, parser)
+	local cases = {}
+	local cases_map = {}
+	for name, entity in pairs(self.cases) do
+		cases[name] = entity
+	end
+	cases["default"] = self._next
+
+	for name, case in pairs(cases) do
+		local id = parser:register(case)
+		cases_map[name] = id
+	end
+
+	return function(ctx)
+		local branch = self.selector(ctx:result(), ctx)
+		local case = cases_map[branch]
+		if case then
+			self:trace(ctx.iter, "select branch '%s'", case)
+		else
+			self:trace(ctx.iter, "select branch 'default'")
+			case = cases_map["default"]
+		end
+		ctx._ctx.next = case
+	end
+end
+
 function dg.Branch.method:ccomp(ccomp)
 	ccomp:start_node(self)
 
@@ -781,13 +798,13 @@ function dg.Branch.method:ccomp(ccomp)
 	return cases
 end
 
-function dg.Recurs.method:getnexts()
+function dg.Branch.method:getnexts()
 	local cases = {}
-	local cases_map = {}
-	for name, entity in pairs(self.cases) do
-		cases[name] = entity
+	for _, entity in pairs(self.cases) do
+		cases[#cases + 1] = entity
 	end
-	cases["default"] = self._next
+	cases[#cases + 1] = self._next
+
 	return cases
 end
 
@@ -938,6 +955,38 @@ function dg.Number.method:_capply(ccomp)
 		}
 ]]
 
+end
+
+function dg.Number.method:capply()
+	return function (ctx)
+		local sub = ctx._ctx.reg0_sub
+		local aligned = ctx._ctx.reg0_int ~= 0
+		local bitoffset = ctx._ctx.reg1_int
+		local res = ctx:result()
+
+		if self.name then
+			if aligned then
+				self:genproperty(res, self.name,
+					function (this) return sub:asnumber(self.endian) end,
+					function (this, newvalue) return sub:setnumber(newvalue, self.endian) end
+				)
+			else
+				self:genproperty(res, self.name,
+					function (this)
+						return sub:asbits(bitoffset, self.size, self.endian)
+					end,
+					function (this, newvalue)
+						return sub:setbits(bitoffset, self.size, newvalue, self.endian)
+					end
+				)
+			end
+		end
+
+		if self._post_apply then
+			local value = ctx._ctx.reg0_long;
+			self:do_apply(value, ctx)
+		end
+	end
 end
 
 function dg.Number.method:_parse(res, input, ctx)
