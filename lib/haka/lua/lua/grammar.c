@@ -245,7 +245,7 @@ while node do
 
 			{% if ccall_lua then
 				local node = node
-				%}
+			%}
 				call = {{ ccomp:store(function (ctx) node:_apply(ctx) end) }}; /* node:_apply(ctx) */
 			{% end %}
 		}

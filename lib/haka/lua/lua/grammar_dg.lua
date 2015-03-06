@@ -22,14 +22,6 @@ function dg.Entity.method:__init(gid, rule, id)
 	self.id = id
 end
 
-function dg.Entity.method:ccomp(ccomp)
-	ccomp:start_node(self)
-	self:_ctrace(ccomp)
-	self:_capply(ccomp)
-	ccomp:finish_node()
-	return self:getnexts()
-end
-
 function dg.Entity.method:getnexts()
 	return { self._next }
 end
@@ -330,24 +322,6 @@ function dg.Recurs.method:_dump_graph_edges(file, ref)
 		file:write(string.format('%s -> end [label="finish"];\n', ref[self]))
 		file:write('end [fillcolor="#ff0000",style="filled"];\n')
 	end
-end
-
-function dg.Recurs.method:ccomp(ccomp)
-	local id = ccomp:register(self._next)
-	ccomp:start_node(self)
-	ccomp:write([[
-			if (ctx->recurs_count >= RECURS_MAX) {
-				error("max recursion reached");
-				return 0;
-			}
-			ctx->recurs[ctx->recurs_count].node = %d;
-			/* Store laste recursion level so we can reuse it later */
-			ctx->recurs[ctx->recurs_count].level = ctx->recurs_finish_level;
-			ctx->recurs_finish_level = ctx->compound_level;
-			ctx->recurs_count++;
-]], id)
-	ccomp:finish_node()
-	return self:getnexts()
 end
 
 function dg.Recurs.method:getnexts()
@@ -764,38 +738,6 @@ function dg.Branch.method:capply(ccomp, parser)
 		end
 		ctx._ctx.next = case
 	end
-end
-
-function dg.Branch.method:ccomp(ccomp)
-	ccomp:start_node(self)
-
-	local cases = {}
-	local cases_map = {}
-	for name, entity in pairs(self.cases) do
-		cases[name] = entity
-	end
-	cases["default"] = self._next
-
-	for name, case in pairs(cases) do
-		local id = ccomp:register(case)
-		cases_map[name] = id
-	end
-
-	ccomp:call(ccomp:store(function(ctx)
-		local branch = self.selector(ctx:result(), ctx)
-		local case = cases_map[branch]
-		if case then
-			self:trace(ctx.iter, "select branch '%s'", case)
-		else
-			self:trace(ctx.iter, "select branch 'default'")
-			case = cases_map["default"]
-		end
-		ctx._ctx.next = case
-	end), "selector")
-
-	ccomp:finish_node()
-
-	return cases
 end
 
 function dg.Branch.method:getnexts()

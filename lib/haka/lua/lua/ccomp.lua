@@ -84,25 +84,6 @@ function module.method:call(id, name)
 ]], id, name)
 end
 
-function module.method:trace_node(node, desc)
-	local id = self._parser.nodes[node]
-
-	self:write([[
-#ifdef HAKA_DEBUG_GRAMMAR
-			{
-				char dump[21];
-				char dump_safe[81];
-				struct vbuffer_sub sub;
-				vbuffer_sub_create_from_position(&sub, ctx->iter, 20);
-				safe_string(dump_safe, dump, vbuffer_asstring(&sub, dump, 21));
-
-				LOG_DEBUG(grammar, "in rule '%%s' field %%s gid %d: %%s\n\tat byte %%d: %%s...",
-					node_debug_%s[%d-1].rule, node_debug_%s[%d-1].id, "%s", ctx->iter->meter, dump_safe);
-			}
-#endif
-]], node.gid, self._parser.name, id, self._parser.name, id, escape_string(desc))
-end
-
 function module.method:apply_node(node)
 	assert(self._parser, "cannot apply node without started parser")
 	assert(node)
