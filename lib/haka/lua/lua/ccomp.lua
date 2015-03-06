@@ -78,34 +78,6 @@ function module.method:store(func)
 	return id
 end
 
-function module.method:call(id, name)
-	self:write([[
-			call = %d;                                /* %s */
-]], id, name)
-end
-
-function module.method:apply_node(node)
-	assert(self._parser, "cannot apply node without started parser")
-	assert(node)
-
-	self:call(self:store(function (ctx)
-		node:_apply(ctx)
-	end), "node:_apply(ctx)")
-end
-
-function module.method:mark(readonly)
-	readonly = readonly and "true" or "false"
-	self:write([[
-			parse_ctx_mark(ctx, %s);
-]], readonly)
-end
-
-function module.method:unmark()
-	self:write([[
-			parse_ctx_unmark(ctx);
-]])
-end
-
 local numtab={}
 for i=0,255 do
 	numtab[string.char(i)]=("%3d,"):format(i)

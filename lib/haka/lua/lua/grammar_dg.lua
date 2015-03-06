@@ -26,10 +26,6 @@ function dg.Entity.method:getnexts()
 	return { self._next }
 end
 
-function dg.Entity.method:_capply(ccomp)
-	ccomp:apply_node(self)
-end
-
 function dg.Entity.method:next(ctx)
 	return self._next
 end
@@ -274,30 +270,11 @@ function dg.CompoundStart.method:__init(gid, rule, id, resultclass)
 	self.resultclass = resultclass or parseResult.Result
 end
 
-function dg.CompoundStart.method:_capply(ccomp)
-	ccomp:write[[
-			ctx->compound_level++;
-]]
-end
-
 function dg.CompoundStart.method:_apply(ctx)
 	ctx:pushlevel()
 end
 
 dg.CompoundFinish = class.class('DGCompoundFinish', dg.Control)
-
-function dg.CompoundFinish.method:_capply(ccomp)
-	ccomp:write[[
-			ctx->compound_level--;
-			if (ctx->recurs_finish_level == ctx->compound_level && ctx->recurs_count > 0) {
-				/* pop recursion */
-				ctx->recurs_count--;
-				ctx->next = ctx->recurs[ctx->recurs_count].node;
-				ctx->recurs_finish_level = ctx->recurs[ctx->recurs_count].level;
-				break;
-			}
-]]
-end
 
 function dg.CompoundFinish.method:_apply(ctx)
 	ctx:poplevel()
@@ -355,11 +332,6 @@ function dg.RecordStart.method:__init(gid, rule, id, name, resultclass)
 	self.name = name
 end
 
-function dg.RecordStart.method:_capply(ccomp)
-	class.super(dg.RecordStart)._capply(self, ccomp)
-	ccomp:apply_node(self)
-end
-
 function dg.RecordStart.method:_apply(ctx)
 	if self.name then
 		local res = ctx:result()
@@ -384,11 +356,6 @@ function dg.RecordFinish.method:__init(gid, pop)
 	class.super(dg.RecordFinish).__init(self, gid)
 	self._extra = {}
 	self._pop = pop
-end
-
-function dg.RecordFinish.method:_capply(ccomp)
-	class.super(dg.RecordFinish)._capply(self, ccomp)
-	ccomp:apply_node(self)
 end
 
 function dg.RecordFinish.method:extra(name, f)
@@ -418,11 +385,6 @@ function dg.UnionStart.method:__init(gid, rule, id, name, resultclass)
 	self.name = name
 end
 
-function dg.UnionStart.method:_capply(ccomp)
-	class.super(dg.UnionStart)._capply(self, ccomp)
-	ccomp:apply_node(self)
-end
-
 function dg.UnionStart.method:_apply(ctx)
 	if self.name then
 		local res = ctx:result()
@@ -435,12 +397,6 @@ end
 
 dg.UnionRestart = class.class('DGUnionRestart', dg.Control)
 
-function dg.UnionRestart.method:_capply(ccomp)
-	ccomp:write[[
-			parse_ctx_seekmark(ctx);
-]]
-end
-
 function dg.UnionRestart.method:_apply(ctx)
 	ctx:seekmark()
 end
@@ -450,11 +406,6 @@ dg.UnionFinish = class.class('DGUnionFinish', dg.CompoundFinish)
 function dg.UnionFinish.method:__init(gid, pop)
 	class.super(dg.UnionFinish).__init(self, gid)
 	self._pop = pop
-end
-
-function dg.UnionFinish.method:_capply(ccomp)
-	class.super(dg.UnionFinish)._capply(self, ccomp)
-	ccomp:apply_node(self)
 end
 
 function dg.UnionFinish.method:_apply(ctx)
@@ -476,11 +427,6 @@ function dg.TryStart.method:__init(gid, rule, id, name, resultclass)
 	class.super(dg.TryStart).__init(self, gid, rule, id, resultclass)
 	self.name = name
 	self._catch = nil
-end
-
-function dg.TryStart.method:_capply(ccomp)
-	class.super(dg.TryStart)._capply(self, ccomp)
-	ccomp:apply_node(self)
 end
 
 function dg.TryStart.method:catch(catch)
@@ -506,11 +452,6 @@ dg.TryFinish = class.class('DGTryFinish', dg.CompoundFinish)
 function dg.TryFinish.method:__init(gid, rule, id, name)
 	class.super(dg.TryFinish).__init(self, gid, rule, id)
 	self.name = name
-end
-
-function dg.TryFinish.method:_capply(ccomp)
-	class.super(dg.TryFinish)._capply(self, ccomp)
-	ccomp:apply_node(self)
 end
 
 function dg.TryFinish.method:_apply(ctx)
@@ -548,11 +489,6 @@ function dg.ArrayStart.method:__init(gid, rule, id, name, create, resultclass)
 	self.create = create
 end
 
-function dg.ArrayStart.method:_capply(ccomp)
-	class.super(dg.ArrayStart)._capply(self, ccomp)
-	ccomp:apply_node(self)
-end
-
 function dg.ArrayStart.method:set_entity(entity)
 	self.entity = entity
 end
@@ -580,11 +516,6 @@ dg.ArrayFinish = class.class('DGArrayFinish', dg.CompoundFinish)
 
 function dg.ArrayFinish.method:__init(gid)
 	class.super(dg.ArrayFinish).__init(self, gid)
-end
-
-function dg.ArrayFinish.method:_capply(ccomp)
-	class.super(dg.ArrayFinish)._capply(self, ccomp)
-	ccomp:apply_node(self)
 end
 
 function dg.ArrayFinish.method:apply(ctx)
@@ -680,10 +611,6 @@ dg.Release = class.class('DGRelease', dg.Control)
 
 function dg.Release.method:__init(gid, rule, id)
 	class.super(dg.Release).__init(self, gid, rule, id)
-end
-
-function dg.Release.method:_capply(ccomp)
-	ccomp:unmark()
 end
 
 function dg.Release.method:_apply(ctx)
@@ -795,108 +722,6 @@ end
 
 function dg.Number.method:_dump_graph_descr()
 	return string.format("%d bits (%s endian)", self.size, self.endian or 'big')
-end
-
-function dg.Number.method:_capply(ccomp)
-	ccomp:write([[
-			const int size = (ctx->bitoffset + %d + 7) >> 3;
-			const int bit = (ctx->bitoffset + %d) & 0x7;
-			const bool iscontinue = vbuffer_iterator_isvalid(&ctx->reg0_iter);
-
-			struct vbuffer_iterator *iter = iscontinue ? &ctx->reg0_iter : ctx->iter;
-
-			if (!vbuffer_iterator_check_available(iter, size, NULL) ) {
-				if (vbuffer_iterator_iseof(iter)) {
-					error("Not enought data");
-					ctx->next = FINISH;
-					break;
-				}
-
-				/* Need to wait for more data */
-				if (!iscontinue) {
-					vbuffer_iterator_copy(iter, &ctx->reg0_iter);
-
-					/*if (ctx->retains.count == 0)*/ {
-						vbuffer_iterator_mark(&ctx->reg0_iter, true);
-					}
-				}
-
-				/* Move the iterator to the end */
-				vbuffer_iterator_advance(ctx->iter, ALL);
-
-				/* We now need to wait for more data */
-]], self.size, self.size)
-
-	ccomp:call(ccomp.waitcall)
-
-	ccomp:write([[
-				break;
-			}
-			else {
-				if (iscontinue) {
-					vbuffer_iterator_unmark(iter);
-				}
-
-				vbuffer_sub_create_from_position(&ctx->reg0_sub, iter, size);
-				vbuffer_iterator_advance(iter, size - (bit != 0 ? 1 : 0));
-
-				if (iscontinue) {
-					vbuffer_iterator_move(ctx->iter, iter);
-					vbuffer_iterator_clear(&ctx->reg0_iter);
-				}
-
-				ctx->reg0_int = (ctx->bitoffset == 0 && bit == 0);
-				ctx->reg1_int = ctx->bitoffset;
-				ctx->bitoffset = bit;
-]])
-
-	if self._post_apply then
-		ccomp:write([[
-			if (ctx->reg0_int) {
-				ctx->reg0_long = vbuffer_asnumber(ctx->reg0_sub, %d);
-			}
-			else {
-				ctx->reg0_long = vbuffer_asbits(ctx->reg0_sub, ctx->reg1_int, %d, %d);
-			}
-]], self.endian == 'big', self.size, self.endian == 'big')
-	end
-
-	if self._post_apply or self.name then
-		ccomp:call(ccomp:store(function (ctx)
-			local sub = ctx._ctx.reg0_sub
-			local aligned = ctx._ctx.reg0_int ~= 0
-			local bitoffset = ctx._ctx.reg1_int
-			local res = ctx:result()
-
-			if self.name then
-				if aligned then
-					self:genproperty(res, self.name,
-						function (this) return sub:asnumber(self.endian) end,
-						function (this, newvalue) return sub:setnumber(newvalue, self.endian) end
-					)
-				else
-					self:genproperty(res, self.name,
-						function (this)
-							return sub:asbits(bitoffset, self.size, self.endian)
-						end,
-						function (this, newvalue)
-							return sub:setbits(bitoffset, self.size, newvalue, self.endian)
-						end
-					)
-				end
-			end
-
-			if self._post_apply then
-				local value = ctx._ctx.reg0_long;
-				self:do_apply(value, ctx)
-			end
-		end), "apply")
-	end
-
-	ccomp:write[[
-		}
-]]
-
 end
 
 function dg.Number.method:capply()
