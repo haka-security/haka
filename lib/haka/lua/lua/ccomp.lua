@@ -165,9 +165,4 @@ return { ctx = parse_ctx, grammar = lib }
 	return self._nameid
 end
 
-function module.method:write(string, ...)
-	assert(self._fd, "uninitialized template")
-	assert(self._fd:write(string.format(string, ...)))
-end
-
 return module
