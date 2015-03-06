@@ -118,13 +118,12 @@ while node do
 					"{{ msg }}", ctx->iter->meter, dump_safe);
 			}
 #endif
-			{% end %}
+			{% end
 
-			{%
-				local type = class.classof(node).name
-				local ccall_lua = false
+			local type = class.classof(node).name
+			local ccall_lua = false
+
 			%}
-
 			{% if type == "DGCompoundStart" or type == "DGRecordStart" or
 				  type == "DGTryStart" or type == "DGArrayStart" then %}
 
@@ -234,19 +233,17 @@ while node do
 			{% end %}
 
 			{% if node._post_apply or node.name then %}
-				call = {{ ccomp:store(node:capply()) }};
+			call = {{ ccomp:store(node:capply()) }};
 			{% end %}
 
 			{% else
-				ccall_lua = true
+			ccall_lua = true
 			end %}
-
-			{# Default: Token, Bytes, Bits, Retain, Execute, Error, ArrayPop, ArrayPush #}
 
 			{% if ccall_lua then
 				local node = node
 			%}
-				call = {{ ccomp:store(function (ctx) node:_apply(ctx) end) }}; /* node:_apply(ctx) */
+			call = {{ ccomp:store(function (ctx) node:_apply(ctx) end) }}; /* node:_apply(ctx) */
 			{% end %}
 		}
 
