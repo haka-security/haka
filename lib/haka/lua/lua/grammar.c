@@ -71,9 +71,8 @@ int parse_{{ parser.name }}
 
 {%
 local node = parser.dgraph
-local stack = { node }
+local stack = {}
 while node do
-	table.remove(stack, 1)
 	local gid = node.gid
 
 	if parser.written_nodes[gid] then
@@ -167,7 +166,7 @@ while node do
 				return 0;
 			}
 			ctx->recurs[ctx->recurs_count].node = {{ id }};
-			/* Store laste recursion level so we can reuse it later */
+			/* Store last recursion level so we can reuse it later */
 			ctx->recurs[ctx->recurs_count].level = ctx->recurs_finish_level;
 			ctx->recurs_finish_level = ctx->compound_level;
 			ctx->recurs_count++;
@@ -255,11 +254,11 @@ while node do
 {%
 		end
 
-		table.prepend(stack, nexts)
+		table.append(stack, nexts)
 
 	end
 
-	node = stack[1]
+	node = table.remove(stack)
 
 end
 %}

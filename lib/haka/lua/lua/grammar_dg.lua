@@ -325,7 +325,7 @@ function dg.Recurs.method:_dump_graph_edges(file, ref)
 end
 
 function dg.Recurs.method:getnexts()
-	return { self._recurs, self._next }
+	return { self._next, self._recurs }
 end
 
 function dg.Recurs.method:next()
