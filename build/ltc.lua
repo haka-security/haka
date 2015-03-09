@@ -123,11 +123,23 @@ function module.render(...)
 
 end
 
-local mt = {
-	__index = function(t, k)
-		return t.context[k] or _G[k]
-	end
-}
+local mt
+
+if _VERSION == "Lua 5.1" then
+	mt = {
+		__index = function(t, k)
+			return t.context[k] or _G[k]
+		end
+	}
+else
+	local _ENV = _ENV
+	mt = {
+		__index = function(t, k)
+			return t.context[k] or _ENV[k]
+		end
+	}
+end
+
 local env = setmetatable({}, mt)
 debug.setfenv(module.render, env)
 
