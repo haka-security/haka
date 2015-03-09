@@ -180,7 +180,7 @@ macro(TEMPLATE_COMPILE)
 			OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}"
 			COMMAND mkdir -p ${file_dir}
 			COMMAND ${LUA_BIN} ${LUA_TEMPLATE_COMPILER} "${file_path}" "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}"
-			DEPENDS "${file_path}"
+			DEPENDS "${file_path}" "${LUA_TEMPLATE_COMPILER}"
 			IMPLICIT_DEPENDS C "${file_path}"
 			COMMENT "Precompile Lua template file ${file}")
 		LIST(APPEND TEMPLATE_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}")
