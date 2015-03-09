@@ -15,6 +15,16 @@ local function escape_string(str)
 	return esc
 end
 
+local function debug_symbols(parser)
+	local id2node = {}
+
+	for node, id in pairs(parser.nodes) do
+		id2node[id] = node
+	end
+
+	return id2node
+end
+
 function module.method:__init(name, _debug)
 	self._swig = haka.config.ccomp.swig
 	self._name = name..suffix
@@ -40,6 +50,7 @@ function module.method:__init(name, _debug)
 		_swig = haka.config.ccomp.swig,
 		_parsers = {},
 		ccomp = self,
+		debug_symbols = debug_symbols,
 	}
 
 	self.waitcall = self:store(function (ctx)

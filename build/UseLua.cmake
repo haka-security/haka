@@ -174,17 +174,15 @@ macro(TEMPLATE_COMPILE)
 	foreach(file ${TEMPLATE_FILES})
 		get_filename_component(file_dir "${file}" PATH)
 		get_filename_component(file_path "${file}" ABSOLUTE)
-		get_filename_component(file_fullname "${file}" NAME)
-		get_filename_component(file_name "${file}" NAME_WE)
 
-		set(precompiled_file "${file_dir}/${file_name}_c.lua")
+		string(REGEX REPLACE ".([^.]+).tmpl$" "_\\1.lua" precompiled_file "${file}")
 		add_custom_command(
 			OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}"
 			COMMAND mkdir -p ${file_dir}
 			COMMAND ${LUA_BIN} ${LUA_TEMPLATE_COMPILER} "${file_path}" "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}"
 			DEPENDS "${file_path}"
 			IMPLICIT_DEPENDS C "${file_path}"
-			COMMENT "Precompile template file ${file}")
+			COMMENT "Precompile Lua template file ${file}")
 		LIST(APPEND TEMPLATE_COMPILED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${precompiled_file}")
 	endforeach(file)
 

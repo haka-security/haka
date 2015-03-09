@@ -26,7 +26,7 @@ swig_process(libhakaswig lua
 	luadebug/luadebug.i)
 
 template_compile(NAME grammar FILES
-	lua/lua/grammar.c)
+	lua/lua/grammar.c.tmpl)
 
 lua_compile(NAME libhakalua FILES
 	${TEMPLATE_grammar_FILES}

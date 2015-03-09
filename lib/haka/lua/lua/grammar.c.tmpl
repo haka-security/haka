@@ -279,14 +279,8 @@ end
 
 static const struct node_debug node_debug_{{ parser.name }}_init[] = {
 {%
-local id2node = {}
-
-for node, id in pairs(parser.nodes) do
-	id2node[id] = node
-end
-
-for id=1, parser.nodes_count do
-	local node = id2node[id]
+local symbols = debug_symbols(parser)
+for _, node in ipairs(symbols) do
 %}
 	{ .id = "{{ node.name or node.id or "<unknown>" }}", .rule = "{{ node.rule or "<unknown>" }}" }, /* id: {{ id }}, gid: {{ node.gid }} */
 {% end %}
