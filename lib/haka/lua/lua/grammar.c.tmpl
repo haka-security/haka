@@ -123,16 +123,13 @@ while node do
 			local ccall_lua = false
 
 			%}
-			{% if type == "DGCompoundStart" or type == "DGRecordStart" or
-				  type == "DGTryStart" or type == "DGArrayStart" then %}
+			{% if class.isa(node, grammar_dg.CompoundStart) then %}
 
 			ctx->compound_level++;
 
-			{% if type ~= "DGCompoundStart" then ccall_lua = true end %}
+			{% if class.classof(node) ~= grammar_dg.CompoundStart then ccall_lua = true end %}
 
-			{% elseif type == "DGCompoundFinish" or type == "DGRecordFinish" or
-					  type == "DGUnionFinish" or type == "DGTryFinish" or
-					  type == "DGArrayFinish" then %}
+			{% elseif class.isa(node, grammar_dg.CompoundFinish) then %}
 
 			ctx->compound_level--;
 			if (ctx->recurs_finish_level == ctx->compound_level && ctx->recurs_count > 0) {
@@ -143,21 +140,21 @@ while node do
 				break;
 			}
 
-			{% if type ~= "DGCompoundFinish" then ccall_lua = true end %}
+			{% if class.classof(node) ~= grammar_dg.CompoundFinish then ccall_lua = true end %}
 
-			{% elseif type == "DGUnionRestart" then %}
+			{% elseif class.isa(node, grammar_dg.UnionRestart) then %}
 
 			parse_ctx_seekmark(ctx);
 
-			{% elseif type == "DGRelease" then %}
+			{% elseif class.isa(node, grammar_dg.Release) then %}
 
 			parse_ctx_unmark(ctx);
 
-			{% elseif type == "DGBranch" then %}
+			{% elseif class.isa(node, grammar_dg.Branch) then %}
 
 			call = {{ ccomp:store(node:capply(ccomp, parser)) }};    /* selector */
 
-			{% elseif type == "DGRecurs" then %}
+			{% elseif class.isa(node, grammar_dg.Recurs) then %}
 
 			{% local id = parser:register(node._next) %}
 
@@ -171,7 +168,7 @@ while node do
 			ctx->recurs_finish_level = ctx->compound_level;
 			ctx->recurs_count++;
 
-			{% elseif type == "DGNumber" then %}
+			{% elseif class.isa(node, grammar_dg.Number) then %}
 
 			{% local endian = node.endian == 'big' and 1 or 0 %}
 

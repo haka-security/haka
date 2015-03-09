@@ -44,6 +44,7 @@ function module.method:__init(name, _debug)
 		-- Expose some of our upvalue
 		class = class,
 		escape_string = escape_string,
+		grammar_dg = require('grammar_dg'),
 		-- Configure current template
 		name = name,
 		nameid = self._nameid,
