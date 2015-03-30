@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_LUA_PARSE_CTX_H
-#define _HAKA_LUA_PARSE_CTX_H
+#ifndef HAKA_LUA_PARSE_CTX_H
+#define HAKA_LUA_PARSE_CTX_H
 
 #include <stdlib.h>
 #include <string.h>
@@ -118,4 +118,4 @@ bool              parse_ctx_get_mark_ffi(struct parse_ctx *ctx, void *_iter);
 struct lua_ref   *parse_ctx_get_ref(void *_ctx);
 #endif /* HAKA_FFI */
 
-#endif /* _HAKA_LUA_PARSE_CTX_H */
+#endif /* HAKA_LUA_PARSE_CTX_H */

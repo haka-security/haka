@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_LUABINDING_H
-#define _HAKA_LUABINDING_H
+#ifndef HAKA_LUABINDING_H
+#define HAKA_LUABINDING_H
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -37,4 +37,4 @@ static inline void lua_ffi_preload(lua_State *L, void *addr)
 #endif /* HAKA_FFI */
 }
 
-#endif /* _HAKA_LUABINDING_H */
+#endif /* HAKA_LUABINDING_H */
