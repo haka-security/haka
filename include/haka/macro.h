@@ -5,10 +5,10 @@
 #ifndef HAKA_MACRO_H
 #define HAKA_MACRO_H
 
-#define _STR(v)		#v
-#define STR(v)		_STR(v)
+#define STR_(v)         #v
+#define STR(v)          STR_(v)
 
-#define _CONCAT(a, b)   a ## b
-#define CONCAT(a, b)    _CONCAT(a, b)
+#define CONCAT_(a, b)   a ## b
+#define CONCAT(a, b)    CONCAT_(a, b)
 
 #endif /* HAKA_MACRO_H */

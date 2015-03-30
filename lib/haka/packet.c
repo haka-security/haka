@@ -23,13 +23,13 @@ struct time_realm network_time;
 static bool is_realtime = false;
 static bool network_time_inited = false;
 
-INIT static void __init()
+INIT static void _init()
 {
 	UNUSED const bool ret = local_storage_init(&capture_state, NULL);
 	assert(ret);
 }
 
-FINI static void __fini()
+FINI static void _fini()
 {
 	UNUSED bool ret = local_storage_destroy(&capture_state);
 	assert(ret);

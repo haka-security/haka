@@ -66,7 +66,7 @@ section_id register_log_section(const char *name);
 
 #define REGISTER_LOG_SECTION(name) \
 	int _##name##_section = LOG_SECTION(external); \
-	INIT static void __init_log_section_##name() { _##name##_section = register_log_section(#name); }
+	INIT static void _init_log_section_##name() { _##name##_section = register_log_section(#name); }
 
 #define LOG_SECTION(name)     _##name##_section
 

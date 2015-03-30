@@ -13,10 +13,10 @@
 #ifndef NDEBUG
 
 #define LUA_STACK_MARK(L) \
-	const int __stackmark = lua_gettop((L))
+	const int _stackmark = lua_gettop((L))
 
 #define LUA_STACK_CHECK(L, offset) \
-	assert(lua_gettop((L)) == __stackmark+(offset))
+	assert(lua_gettop((L)) == _stackmark+(offset))
 
 #else
 
