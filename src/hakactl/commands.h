@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _COMMANDS_H
-#define _COMMANDS_H
+#ifndef COMMANDS_H
+#define COMMANDS_H
 
 enum {
 	COMMAND_SUCCESS       = 0,
@@ -27,4 +27,4 @@ extern struct command command_console;
 
 extern bool use_colors;
 
-#endif /* _COMMANDS_H */
+#endif /* COMMANDS_H */

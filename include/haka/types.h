@@ -7,8 +7,8 @@
  * Basic types used all along Haka.
  */
 
-#ifndef _HAKA_TYPES_H
-#define _HAKA_TYPES_H
+#ifndef HAKA_TYPES_H
+#define HAKA_TYPES_H
 
 #include <haka/config.h>
 #include <byteswap.h>
@@ -122,4 +122,4 @@ typedef unsigned HAKA_64BIT_TYPE   uint64; /**< Unsigned 8 byte integer type. */
  */
 #define SET_BITS(v, i, j, x)    (((v) & ~(_GET_BITS_MASK(i, j))) | (((x) << (i)) & _GET_BITS_MASK(i, j)))
 
-#endif /* _HAKA_TYPES_H */
+#endif /* HAKA_TYPES_H */

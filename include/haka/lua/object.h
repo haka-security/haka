@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_LUA_OBJECT_H
-#define _HAKA_LUA_OBJECT_H
+#ifndef HAKA_LUA_OBJECT_H
+#define HAKA_LUA_OBJECT_H
 
 #include <haka/types.h>
 
@@ -29,4 +29,4 @@ void lua_object_initialize(struct lua_State *L);
 bool lua_object_ownedbylua(struct lua_object *obj);
 void lua_object_release(void *ptr, struct lua_object *obj);
 
-#endif /* _HAKA_LUA_OBJECT_H */
+#endif /* HAKA_LUA_OBJECT_H */

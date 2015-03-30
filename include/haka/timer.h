@@ -7,8 +7,8 @@
  * Timer functions.
  */
 
-#ifndef _HAKA_TIMER_H
-#define _HAKA_TIMER_H
+#ifndef HAKA_TIMER_H
+#define HAKA_TIMER_H
 
 #include <haka/types.h>
 #include <haka/time.h>
@@ -97,4 +97,4 @@ bool timer_repeat(struct timer *timer, struct time *delay);
  */
 bool timer_stop(struct timer *timer);
 
-#endif /* _HAKA_TIMER_H */
+#endif /* HAKA_TIMER_H */

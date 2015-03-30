@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_VBUFFER_DATA_H
-#define _HAKA_VBUFFER_DATA_H
+#ifndef HAKA_VBUFFER_DATA_H
+#define HAKA_VBUFFER_DATA_H
 
 #include <haka/thread.h>
 
@@ -57,4 +57,4 @@ struct vbuffer_data_ctl_mark   *vbuffer_data_ctl_mark(bool readonly);
 
 #define vbuffer_data_cast(data, type)   ((data) ? ((data)->ops == &type ## _ops ? (struct type*)(data) : NULL) : NULL)
 
-#endif /* _HAKA_VBUFFER_DATA_H */
+#endif /* HAKA_VBUFFER_DATA_H */

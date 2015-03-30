@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_CONTAINER_LIST2_H
-#define _HAKA_CONTAINER_LIST2_H
+#ifndef HAKA_CONTAINER_LIST2_H
+#define HAKA_CONTAINER_LIST2_H
 
 #include <haka/compiler.h>
 #include <haka/types.h>
@@ -65,4 +65,4 @@ INLINE void      *_list2_getuserptr(struct list2_elem *l, size_t offset)
 #define list2_first(l, type, list)           ((type*)(list2_empty((l)) ? NULL : _list2_getuserptr(list2_begin(l), offsetof(type, list))))
 #define list2_last(l, type, list)            ((type*)(list2_empty((l)) ? NULL : _list2_getuserptr(list2_prev(list2_end(l)), offsetof(type, list))))
 
-#endif /* _HAKA_CONTAINER_LIST2_H */
+#endif /* HAKA_CONTAINER_LIST2_H */

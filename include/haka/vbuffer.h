@@ -7,8 +7,8 @@
  * Virtual buffer abstraction.
  */
 
-#ifndef _HAKA_VBUFFER_H
-#define _HAKA_VBUFFER_H
+#ifndef HAKA_VBUFFER_H
+#define HAKA_VBUFFER_H
 
 #include <haka/types.h>
 #include <haka/container/list2.h>
@@ -581,4 +581,4 @@ INLINE bool   vbuffer_clone(struct vbuffer *data, struct vbuffer *buffer, bool c
 	return vbuffer_sub_clone(&sub, buffer, copy);
 }
 
-#endif /* _HAKA_VBUFFER_H */
+#endif /* HAKA_VBUFFER_H */

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_CONTAINER_BITFIELD_H
-#define _HAKA_CONTAINER_BITFIELD_H
+#ifndef HAKA_CONTAINER_BITFIELD_H
+#define HAKA_CONTAINER_BITFIELD_H
 
 #include <haka/compiler.h>
 #include <haka/types.h>
@@ -52,4 +52,4 @@ INLINE void bitfield_set(struct bitfield *bf, int off, bool val)
 	*ptr = (*ptr & ~(1L << mask)) | (val << mask);
 }
 
-#endif /* _HAKA_CONTAINER_BITFIELD_H */
+#endif /* HAKA_CONTAINER_BITFIELD_H */

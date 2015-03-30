@@ -7,8 +7,8 @@
  * Sub buffer stream.
  */
 
-#ifndef _HAKA_VBUFFER_SUB_STREAM_H
-#define _HAKA_VBUFFER_SUB_STREAM_H
+#ifndef HAKA_VBUFFER_SUB_STREAM_H
+#define HAKA_VBUFFER_SUB_STREAM_H
 
 #include <haka/vbuffer_stream.h>
 
@@ -36,4 +36,4 @@ bool vbuffer_sub_stream_push(struct vbuffer_sub_stream *stream, struct vbuffer_s
  */
 bool vbuffer_sub_stream_pop(struct vbuffer_sub_stream *stream, struct vbuffer_sub *sub);
 
-#endif /* _HAKA_VBUFFER_SUB_STREAM_H */
+#endif /* HAKA_VBUFFER_SUB_STREAM_H */

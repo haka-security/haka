@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_VBUFFER_PRIVATE_H
-#define _HAKA_VBUFFER_PRIVATE_H
+#ifndef HAKA_VBUFFER_PRIVATE_H
+#define HAKA_VBUFFER_PRIVATE_H
 
 #include <haka/vbuffer.h>
 
@@ -44,4 +44,4 @@ struct vbuffer_chunk *vbuffer_chunk_remove_ctl(struct vbuffer_chunk *chunk);
 void                  vbuffer_iterator_build(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, vbsize_t offset, vbsize_t meter);
 void                  vbuffer_iterator_update(struct vbuffer_iterator *position, struct vbuffer_chunk *chunk, size_t offset);
 
-#endif /* _HAKA_VBUFFER_PRIVATE_H */
+#endif /* HAKA_VBUFFER_PRIVATE_H */

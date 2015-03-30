@@ -7,8 +7,8 @@
  * Alert module back-end.
  */
 
-#ifndef _HAKA_ALERT_MODULE_H
-#define _HAKA_ALERT_MODULE_H
+#ifndef HAKA_ALERT_MODULE_H
+#define HAKA_ALERT_MODULE_H
 
 #include <wchar.h>
 #include <haka/module.h>
@@ -48,4 +48,4 @@ struct alert_module {
  */
 struct alerter *alert_module_alerter(struct module *module, struct parameters *args);
 
-#endif /* _HAKA_ALERT_MODULE_H */
+#endif /* HAKA_ALERT_MODULE_H */

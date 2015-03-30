@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _ELASTICSEARCH_H_
-#define _ELASTICSEARCH_H_
+#ifndef ELASTICSEARCH_H_
+#define ELASTICSEARCH_H_
 
 #define ELASTICSEARCH_ID_LENGTH 24
 
@@ -27,4 +27,4 @@ bool                            elasticsearch_insert(struct elasticsearch_connec
 bool                            elasticsearch_update(struct elasticsearch_connector *connector,
 		const char *index, const char *type, const char *id, json_t *doc);
 
-#endif /* _ELASTICSEARCH_H_ */
+#endif /* ELASTICSEARCH_H_ */

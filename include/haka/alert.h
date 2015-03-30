@@ -7,8 +7,8 @@
  * Security alerts.
  */
 
-#ifndef _HAKA_ALERT_H
-#define _HAKA_ALERT_H
+#ifndef HAKA_ALERT_H
+#define HAKA_ALERT_H
 
 #include <haka/types.h>
 #include <haka/time.h>
@@ -196,4 +196,4 @@ bool remove_alerter(struct alerter *alerter);
  */
 void remove_all_alerter();
 
-#endif /* _HAKA_ALERT_H */
+#endif /* HAKA_ALERT_H */

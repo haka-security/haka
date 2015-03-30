@@ -7,8 +7,8 @@
  * Logging API.
  */
 
-#ifndef _HAKA_LOG_H
-#define _HAKA_LOG_H
+#ifndef HAKA_LOG_H
+#define HAKA_LOG_H
 
 #include <haka/types.h>
 #include <haka/compiler.h>
@@ -175,4 +175,4 @@ bool remove_logger(struct logger *logger);
  */
 void remove_all_logger();
 
-#endif /* _HAKA_LOG_H */
+#endif /* HAKA_LOG_H */

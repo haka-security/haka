@@ -7,8 +7,8 @@
  * Error handling functions.
  */
 
-#ifndef _HAKA_ERROR_H
-#define _HAKA_ERROR_H
+#ifndef HAKA_ERROR_H
+#define HAKA_ERROR_H
 
 #include <haka/types.h>
 #include <haka/compiler.h>
@@ -42,4 +42,4 @@ bool check_error();
  */
 const char *clear_error();
 
-#endif /* _HAKA_ERROR_H */
+#endif /* HAKA_ERROR_H */

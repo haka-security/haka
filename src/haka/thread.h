@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _THREAD_H
-#define _THREAD_H
+#ifndef THREAD_H
+#define THREAD_H
 
 #include <haka/packet_module.h>
 
@@ -22,5 +22,5 @@ void thread_pool_attachdebugger(struct thread_pool *pool);
 bool thread_pool_issingle(struct thread_pool *pool);
 struct engine_thread *thread_pool_thread(struct thread_pool *pool, int index);
 
-#endif /* _THREAD_H */
+#endif /* THREAD_H */
 

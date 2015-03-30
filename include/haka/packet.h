@@ -7,8 +7,8 @@
  * Packet manipulation utilities.
  */
 
-#ifndef _HAKA_PACKET_H
-#define _HAKA_PACKET_H
+#ifndef HAKA_PACKET_H
+#define HAKA_PACKET_H
 
 #include <stddef.h>
 #include <haka/types.h>
@@ -128,4 +128,4 @@ enum packet_mode   packet_mode();
 
 extern struct time_realm network_time;
 
-#endif /* _HAKA_PACKET_H */
+#endif /* HAKA_PACKET_H */

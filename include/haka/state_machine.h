@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _STATE_MACHINE_H
-#define _STATE_MACHINE_H
+#ifndef STATE_MACHINE_H
+#define STATE_MACHINE_H
 
 #include <haka/container/vector.h>
 #include <haka/time.h>
@@ -53,4 +53,4 @@ struct state         *state_machine_instance_state(struct state_machine_instance
 bool                  state_machine_instance_isfinished(struct state_machine_instance *instance);
 bool                  state_machine_instance_isfailed(struct state_machine_instance *instance);
 
-#endif /* _STATE_MACHINE_H */
+#endif /* STATE_MACHINE_H */

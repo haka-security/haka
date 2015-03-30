@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_PROTO_IPV4_CNX_H
-#define _HAKA_PROTO_IPV4_CNX_H
+#ifndef HAKA_PROTO_IPV4_CNX_H
+#define HAKA_PROTO_IPV4_CNX_H
 
 #include <haka/types.h>
 #include <haka/ipv4.h>
@@ -50,4 +50,4 @@ void cnx_close(struct cnx *cnx);
 void cnx_drop(struct cnx *cnx);
 void cnx_update_stat(struct cnx *cnx, int direction, size_t size);
 
-#endif /* _HAKA_PROTO_IPV4_CNX_H */
+#endif /* HAKA_PROTO_IPV4_CNX_H */
