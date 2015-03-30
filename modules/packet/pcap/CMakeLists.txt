@@ -8,7 +8,7 @@ if(PCAP_FOUND)
 	set_target_properties(packet-pcap PROPERTIES OUTPUT_NAME pcap)
 
 	include_directories(${PCAP_INCLUDE_DIR})
-	target_link_libraries(packet-pcap ${PCAP_LIBRARY})
+	target_link_libraries(packet-pcap LINK_PRIVATE ${PCAP_LIBRARY})
 
 	INSTALL_MODULE(packet-pcap packet)
 endif()
