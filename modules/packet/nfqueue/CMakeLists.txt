@@ -36,7 +36,7 @@ int main()
 	set_target_properties(packet-nfqueue PROPERTIES COMPILE_DEFINITIONS IPTABLES_PATH="${IPTABLES_PATH}")
 
 	include_directories(${NETFILTERQUEUE_INCLUDE_DIR} ${PCAP_INCLUDE_DIR})
-	target_link_libraries(packet-nfqueue ${NETFILTERQUEUE_LIBRARIES} ${PCAP_LIBRARY})
+	target_link_libraries(packet-nfqueue LINK_PRIVATE ${NETFILTERQUEUE_LIBRARIES} ${PCAP_LIBRARY})
 
 	if(NFQ_GET_PAYLOAD_UNSIGNED_CHAR)
 		set_property(TARGET packet-nfqueue APPEND PROPERTY COMPILE_DEFINITIONS NFQ_GET_PAYLOAD_UNSIGNED_CHAR)
