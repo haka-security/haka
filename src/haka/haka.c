@@ -241,7 +241,7 @@ int read_configuration(const char *file)
 {
 	struct parameters *config = parameters_open(file);
 	if (check_error()) {
-		message(HAKA_LOG_FATAL, "core", clear_error());
+		messagef(HAKA_LOG_FATAL, "core", "%s", clear_error());
 		return 2;
 	}
 
@@ -282,7 +282,7 @@ int read_configuration(const char *file)
 			}
 
 			if (!setup_loglevel(level)) {
-				message(HAKA_LOG_FATAL, "core", clear_error());
+				messagef(HAKA_LOG_FATAL, "core", "%s", clear_error());
 				clean_exit();
 				exit(1);
 			}
