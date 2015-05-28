@@ -6,8 +6,8 @@
 #define CTL_H
 
 
-bool prepare_ctl_server();
-bool start_ctl_server();
-void stop_ctl_server();
+bool prepare_ctl_server(const char *ctl_socket_file);
+bool start_ctl_server(void);
+void stop_ctl_server(void);
 
 #endif /* CTL_H */

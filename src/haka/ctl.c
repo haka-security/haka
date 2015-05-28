@@ -97,13 +97,13 @@ static void *ctl_client_process_thread(void *param)
 	/* Block all signal to let the main thread handle them */
 	sigfillset(&set);
 	if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
-		LOG_ERROR(MODULE, clear_error());
+		LOG_ERROR(MODULE, "%s", clear_error());
 		ctl_client_cleanup(state);
 		return NULL;
 	}
 
 	if (!thread_setcanceltype(THREAD_CANCEL_ASYNCHRONOUS)) {
-		LOG_ERROR(MODULE, clear_error());
+		LOG_ERROR(MODULE, "%s", clear_error());
 		ctl_client_cleanup(state);
 		return NULL;
 	}
@@ -122,7 +122,7 @@ UNUSED static bool ctl_start_client_thread(struct ctl_client_state *state, void 
 	state->data = data;
 
 	if (!thread_create(&state->thread, ctl_client_process_thread, state)) {
-		LOG_DEBUG(MODULE, "failed to create thread: %s", clear_error(errno));
+		LOG_DEBUG(MODULE, "failed to create thread: %s", clear_error());
 		return false;
 	}
 
@@ -342,7 +342,7 @@ static void *ctl_server_coreloop(void *param)
 	/* Block all signal to let the main thread handle them */
 	sigfillset(&set);
 	if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
-		LOG_FATAL(core, clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		return NULL;
 	}
 
@@ -564,7 +564,7 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 	else if (strcmp(command, "LOGLEVEL") == 0) {
 		char *level = ctl_recv_chars(state->fd, NULL);
 		if (check_error()) {
-			LOG_ERROR(MODULE, clear_error());
+			LOG_ERROR(MODULE, "%s", clear_error());
 			return CTL_CLIENT_DONE;
 		}
 

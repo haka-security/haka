@@ -7,7 +7,7 @@ if(TARGET libelasticsearch)
 	set_target_properties(alert-elasticsearch PROPERTIES OUTPUT_NAME elasticsearch)
 
 	INCLUDE_MODULE(elasticsearch misc)
-	target_link_libraries(alert-elasticsearch libelasticsearch)
+	target_link_libraries(alert-elasticsearch LINK_PRIVATE libelasticsearch)
 
 	DEPENDS_MODULE(alert-elasticsearch geoip misc)
 	DEPENDS_MODULE(alert-elasticsearch ipv4 protocol)

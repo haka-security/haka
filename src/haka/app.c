@@ -145,7 +145,7 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 
 		module_add_path(module_path, false);
 		if (check_error()) {
-			LOG_FATAL(core, clear_error());
+			LOG_FATAL(core, "%s", clear_error());
 			free(module_path);
 			clean_exit();
 			exit(1);
@@ -159,7 +159,7 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 			attach_debugger, dissector_graph);
 	if (!thread_states) {
 		assert(check_error());
-		LOG_FATAL(core, clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		clean_exit();
 		exit(1);
 	}
@@ -176,7 +176,7 @@ void start()
 {
 	thread_pool_start(thread_states);
 	if (check_error()) {
-		LOG_FATAL(core, clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		clean_exit();
 		exit(1);
 	}

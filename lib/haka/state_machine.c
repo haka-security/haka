@@ -407,7 +407,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 				for (i=tcount; i<count; ++i) {
 					struct timeout_data *timer = vector_push(&instance->timers, struct timeout_data);
 					if (!timer) {
-						LOG_ERROR(MODULE, clear_error());
+						LOG_ERROR(MODULE, "%s", clear_error());
 						state_machine_leave_state(instance);
 						return;
 					}
@@ -419,7 +419,7 @@ static void state_machine_enter_state(struct state_machine_instance *instance, s
 					if (!timer->timer) {
 						vector_pop(&instance->timers);
 						assert(check_error());
-						LOG_ERROR(MODULE, clear_error());
+						LOG_ERROR(MODULE, "%s", clear_error());
 						state_machine_leave_state(instance);
 						return;
 					}

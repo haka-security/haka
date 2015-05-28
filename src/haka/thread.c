@@ -248,14 +248,14 @@ static void *thread_main_loop(void *_state)
 		sigdelset(&set, SIGFPE);
 
 		if (!thread_sigmask(SIG_BLOCK, &set, NULL)) {
-			LOG_FATAL(core, clear_error());
+			LOG_FATAL(core, "%s", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
 			return NULL;
 		}
 
 		if (!timer_init_thread()) {
-			LOG_FATAL(core, clear_error());
+			LOG_FATAL(core, "%s", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
 			return NULL;
@@ -264,7 +264,7 @@ static void *thread_main_loop(void *_state)
 		/* To make sure we can still cancel even if some thread are locked in
 		 * infinite loops */
 		if (!thread_setcanceltype(THREAD_CANCEL_ASYNCHRONOUS)) {
-			LOG_FATAL(core, clear_error());
+			LOG_FATAL(core, "%s", clear_error());
 			barrier_wait(&state->pool->thread_start_sync);
 			state->state = STATE_ERROR;
 			return NULL;
@@ -284,7 +284,7 @@ static void *thread_main_loop(void *_state)
 
 	if (!state->pool->single) {
 		if (!barrier_wait(&state->pool->thread_start_sync)) {
-			LOG_FATAL(core, clear_error());
+			LOG_FATAL(core, "%s", clear_error());
 			state->state = STATE_ERROR;
 			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
@@ -293,7 +293,7 @@ static void *thread_main_loop(void *_state)
 
 	if (!state->pool->single) {
 		if (!barrier_wait(&state->pool->thread_sync)) {
-			LOG_FATAL(core, clear_error());
+			LOG_FATAL(core, "%s", clear_error());
 			state->state = STATE_ERROR;
 			engine_thread_update_status(state->engine, THREAD_DEFUNC);
 			return NULL;
@@ -474,7 +474,7 @@ void thread_pool_wait(struct thread_pool *pool)
 		    pool->threads[i]->state != STATE_JOINED) {
 			void *ret;
 			if (!thread_join(pool->threads[i]->thread, &ret)) {
-				LOG_FATAL(core, clear_error());
+				LOG_FATAL(core, "%s", clear_error());
 			}
 			pool->threads[i]->state = STATE_JOINED;
 		}
@@ -489,7 +489,7 @@ void thread_pool_cancel(struct thread_pool *pool)
 		for (i=0; i<pool->count; ++i) {
 			if (pool->threads[i] && pool->threads[i]->state == STATE_RUNNING) {
 				if (!thread_cancel(pool->threads[i]->thread)) {
-					LOG_FATAL(core, clear_error());
+					LOG_FATAL(core, "%s", clear_error());
 				}
 				pool->threads[i]->state = STATE_CANCELED;
 			}

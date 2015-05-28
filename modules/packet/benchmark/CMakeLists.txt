@@ -9,7 +9,7 @@ if(PCAP_FOUND)
 	add_library(benchmark MODULE main.c)
 
 	include_directories(${PCAP_INCLUDE_DIR})
-	target_link_libraries(benchmark ${PCAP_LIBRARY})
+	target_link_libraries(benchmark LINK_PRIVATE ${PCAP_LIBRARY})
 
 	DEPENDS_MODULE(benchmark packet-pcap packet)
 	INSTALL_MODULE(benchmark packet)

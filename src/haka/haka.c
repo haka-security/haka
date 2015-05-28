@@ -253,7 +253,7 @@ int read_configuration(const char *file)
 {
 	struct parameters *config = parameters_open(file);
 	if (check_error()) {
-		LOG_FATAL(core, clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		return 2;
 	}
 
@@ -294,7 +294,7 @@ int read_configuration(const char *file)
 			}
 
 			if (!setup_loglevel(level)) {
-				LOG_FATAL(core, clear_error());
+				LOG_FATAL(core, "%s", clear_error());
 				clean_exit();
 				exit(1);
 			}

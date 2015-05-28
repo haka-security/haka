@@ -92,7 +92,7 @@ static int parse_cmdline(int *argc, char ***argv)
 
 		case 'l':
 			if (!setup_loglevel(optarg)) {
-				LOG_FATAL(core, clear_error());
+				LOG_FATAL(core, "%s", clear_error());
 				clean_exit();
 				exit(1);
 			}

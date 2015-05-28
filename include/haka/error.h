@@ -35,11 +35,11 @@ const char *errno_error(int err);
 /**
  * Check if an error has occurred. This function does not clear error flag.
  */
-bool check_error();
+bool check_error(void);
 
 /**
  * Get the error message and clear the error state.
  */
-const char *clear_error();
+const char *clear_error(void);
 
 #endif /* HAKA_ERROR_H */
