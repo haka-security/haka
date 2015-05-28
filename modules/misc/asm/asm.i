@@ -72,6 +72,11 @@ struct asm_instruction {
             *TEMP_OUTPUT = buffer;
         }
 
+        void pprint() {
+            if ($self) {
+                instruction_print($self);
+            }
+        }
         %immutable;
         unsigned int id;
         unsigned long address;
@@ -224,17 +229,13 @@ inst)
         return disas(self, pos, inst)
     end
 
-    swig.getclassmetatable('asm_handle')['.fn'].dump_instructions = function (self, pos)
+    swig.getclassmetatable('asm_handle')['.fn'].dump_instructions = function
+(self, pos, nb)
         local inst = this.new_instruction()
-        while disas(self, pos, inst) do
-            io.write(string.format("\t0x%08x %-8s %-32s ",
-                inst.address, inst:mnemonic(), inst:op_str()))
-            bytes = inst:bytes()
-            size = inst.size
-            for i = 1, size do
-                io.write(string.format('%02x ', bytes:byte(i)))
-            end
-            print("")
+        nb = nb or 10000
+        while disas(self, pos, inst) and nb > 0 do
+            inst:pprint()
+            nb = nb - 1
         end
     end
 }

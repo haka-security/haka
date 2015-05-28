@@ -45,6 +45,7 @@ uint16             instruction_get_size(struct asm_instruction *inst);
 const uint8       *instruction_get_bytes(struct asm_instruction *inst);
 const char        *instruction_get_mnemonic(struct asm_instruction *inst);
 const char        *instruction_get_operands(struct asm_instruction *inst);
+void               instruction_print(struct asm_instruction *inst);
 
 struct asm_handle *asm_initialize(cs_arch arch, cs_mode mode);
 void               asm_destroy(struct asm_handle *asm_handle);

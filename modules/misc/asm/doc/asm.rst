@@ -43,8 +43,6 @@ Disassembler syntax
 
     Create a new instruction.
 
-
-
 Supported architecture
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -85,10 +83,12 @@ Supported mode
 
         .. note:: Disassembly skips bad instructions. Whenever a bad instruction is encountered, the mnemonic instruction field is set to ``(bad)``. Disasembly stops when it reaches the end of the stream or when it encounters a broken instruction.
 
-    .. haka:function:: AsmHandle:dump_instructions(code)
+    .. haka:function:: AsmHandle:dump_instructions(code [, nb])
 
         :param code: Code to disassemble.
         :ptype code: :haka:class:`vbuffer_iterator`
+        :param nb: Number of instructions to dump.
+        :ptype nb: number
 
         Disassemble and dump instructions.
 
@@ -104,7 +104,7 @@ Supported mode
 
         :type: number
 
-        Instruction Address.
+        Instruction address.
 
     .. haka:function:: AsmInstruction:mnemonic() -> mnemonic
 
@@ -128,6 +128,10 @@ Supported mode
 
         :return bytes: Instruction byte sequence.
         :rtype bytes: string
+
+    .. haka:function:: AsmInstruction:pprint()
+
+        Dump instruction.
 
 Example
 -------

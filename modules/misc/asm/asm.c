@@ -3,10 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string.h>
+#include <inttypes.h>
 
 #include <haka/module.h>
 #include <haka/error.h>
 #include <haka/log.h>
+#include <haka/colors.h>
+
 
 #include "asm.h"
 
@@ -15,6 +18,8 @@ enum instruction_status {
 	SUCCESS,
 	NEEDMOREDATA,
 };
+
+static bool stdout_use_colors = 0;
 
 struct asm_handle *asm_initialize(cs_arch arch, cs_mode mode)
 {
@@ -39,7 +44,9 @@ struct asm_handle *asm_initialize(cs_arch arch, cs_mode mode)
 
 	cs_option(asm_handle->handle, CS_OPT_DETAIL, CS_OPT_ON);
 
-	return asm_handle;
+	stdout_use_colors = colors_supported(fileno(stdout));
+
+    return asm_handle;
 }
 
 void asm_destroy(struct asm_handle *asm_handle) {
@@ -239,6 +246,28 @@ const char *instruction_get_operands(struct asm_instruction *inst)
 {
 	cs_insn *instruction = &inst->inst;
 	return instruction->op_str;
+}
+
+void instruction_print(struct asm_instruction *inst)
+{
+    cs_insn *instruction = &inst->inst;
+    if (stdout_use_colors) {
+        printf("\t%s0x%08"PRIx64"%s", c(BOLD, true), instruction->address,
+            c(CLEAR, true));
+        printf(" %s%-8s%s", c(BOLD RED, true), instruction->mnemonic,
+            c(CLEAR, true));
+    }
+    else {
+        printf("\t0x%08"PRIx64" %-8s", instruction->address, instruction->mnemonic);
+    }
+    printf(" %-32s", instruction->op_str);
+
+    int i;
+    uint16 size = instruction->size;
+    for (i = 0; i < size; i++) {
+        printf("%02x ", instruction->bytes[i]);
+    }
+    printf("\n");
 }
 
 static int init(struct parameters *args)
