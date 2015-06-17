@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _LUADEBUG_USER_H
-#define _LUADEBUG_USER_H
+#ifndef LUADEBUG_USER_H
+#define LUADEBUG_USER_H
 
 #include <haka/types.h>
 #include <haka/thread.h>
@@ -33,4 +33,4 @@ struct luadebug_user *luadebug_user_readline();
 struct luadebug_user *luadebug_user_remote(int fd);
 void                  luadebug_user_remote_server(int fd, struct luadebug_user *user);
 
-#endif /* _LUADEBUG_USER_H */
+#endif /* LUADEBUG_USER_H */

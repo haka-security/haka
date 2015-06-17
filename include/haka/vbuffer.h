@@ -7,8 +7,8 @@
  * Virtual buffer abstraction.
  */
 
-#ifndef _HAKA_VBUFFER_H
-#define _HAKA_VBUFFER_H
+#ifndef HAKA_VBUFFER_H
+#define HAKA_VBUFFER_H
 
 #include <haka/types.h>
 #include <haka/container/list2.h>
@@ -203,7 +203,7 @@ bool          vbuffer_append(struct vbuffer *buf, struct vbuffer *buffer);
  * Compute the size of the buffer.
  * \note This function needs to process all memory block.
  */
-INLINE size_t vbuffer_size(struct vbuffer *buf);
+size_t        vbuffer_size(struct vbuffer *buf);
 
 /**
  * Check if the buffer is larger than a given size.
@@ -239,6 +239,11 @@ bool          vbuffer_iterator_isvalid(const struct vbuffer_iterator *position);
  * Create a copy of an iterator.
  */
 void          vbuffer_iterator_copy(const struct vbuffer_iterator *src, struct vbuffer_iterator *dst);
+
+/**
+ * Move an iterator to the position of another one.
+ */
+void          vbuffer_iterator_move(struct vbuffer_iterator *iter, const struct vbuffer_iterator *pos);
 
 /**
  * Clear an iterator.
@@ -548,13 +553,6 @@ INLINE void   vbuffer_end(const struct vbuffer *buf, struct vbuffer_iterator *po
 	vbuffer_position(buf, position, ALL);
 }
 
-INLINE size_t vbuffer_size(struct vbuffer *buf)
-{
-	struct vbuffer_sub sub;
-	vbuffer_sub_create(&sub, buf, 0, ALL);
-	return vbuffer_sub_size(&sub);
-}
-
 INLINE bool   vbuffer_check_size(struct vbuffer *buf, size_t minsize, size_t *size)
 {
 	struct vbuffer_sub sub;
@@ -583,4 +581,4 @@ INLINE bool   vbuffer_clone(struct vbuffer *data, struct vbuffer *buffer, bool c
 	return vbuffer_sub_clone(&sub, buffer, copy);
 }
 
-#endif /* _HAKA_VBUFFER_H */
+#endif /* HAKA_VBUFFER_H */

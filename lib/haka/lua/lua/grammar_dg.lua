@@ -8,6 +8,7 @@ local parseResult = require("parse_result")
 local parse = require("parse")
 
 local dg = {}
+local log = haka.log_section("grammar")
 
 --
 -- Grammar direct graph
@@ -215,7 +216,7 @@ function dg.Entity.method:trace(position, msg, ...)
 			id = string.format("'%s'", self.name)
 		end
 
-		haka.log.debug("grammar", "in rule '%s' field %s: %s\n\tat byte %d: %s...",
+		log.debug("in rule '%s' field %s: %s\n\tat byte %d: %s...",
 			self.rule or "<unknown>", id,
 			string.format(msg, ...), position.meter,
 			safe_string(position:copy():sub(20):asstring()))

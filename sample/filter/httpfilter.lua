@@ -14,7 +14,7 @@ haka.rule{
 		if pkt.dstport == 80 then
 			http.dissect(flow)
 		else
-			haka.log("Filter", "Dropping TCP connection: tcp dstpport=%d",
+			haka.log("Dropping TCP connection: tcp dstpport=%d",
 				pkt.dstport)
 			pkt:reset() -- Send a TCP RST packet to both sides: client and server
 		end
@@ -26,9 +26,9 @@ haka.rule{
 	hook = http.events.request,
 	eval = function (http, request)
 		if string.match(request.headers['User-Agent'], 'Mozilla') then
-			haka.log("Filter", "User-Agent Mozilla detected")
+			haka.log("User-Agent Mozilla detected")
 		else
-			haka.log("Filter", "Only Mozilla User-Agent authorized")
+			haka.log("Only Mozilla User-Agent authorized")
 			http:drop()
 		end
 	end

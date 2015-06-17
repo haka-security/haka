@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_DEBUG_H
-#define _HAKA_DEBUG_H
+#ifndef HAKA_DEBUG_H
+#define HAKA_DEBUG_H
 
 #include <haka/config.h>
 
@@ -14,4 +14,4 @@
 	#define BREAKPOINT
 #endif
 
-#endif /* _HAKA_DEBUG_H */
+#endif /* HAKA_DEBUG_H */

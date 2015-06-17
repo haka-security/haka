@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_CONTAINER_HASH_H
-#define _HAKA_CONTAINER_HASH_H
+#ifndef HAKA_CONTAINER_HASH_H
+#define HAKA_CONTAINER_HASH_H
 
 #include <haka/compiler.h>
 #include <stddef.h>
@@ -12,4 +12,4 @@
 
 typedef UT_hash_handle hash_head_t;
 
-#endif /* _HAKA_CONTAINER_HASH_H */
+#endif /* HAKA_CONTAINER_HASH_H */

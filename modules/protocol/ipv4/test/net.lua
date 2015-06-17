@@ -10,12 +10,12 @@ haka.rule {
 		local addr = ipv4.addr("192.168.10.0");
 		local net10 = ipv4.network(addr, 24);
 		local net20 = ipv4.network("192.168.20.0/24");
-		
+
 		if net10:contains(pkt.src) then
-			haka.log.debug("filter", "net=%s/%s ; host=%s", net10.net, net10.mask, pkt.src);
+			haka.log.debug("net=%s/%s ; host=%s", net10.net, net10.mask, pkt.src);
 		end
 		if net20:contains(pkt.src) then
-			haka.log.debug("filter", "net=%s/%s ; host=%s", net20.net, net20.mask, pkt.src);
+			haka.log.debug("net=%s/%s ; host=%s", net20.net, net20.mask, pkt.src);
 		end
 	end
 }

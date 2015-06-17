@@ -49,6 +49,9 @@ static void help(const char *program)
 			"\t                           (default: " HAKA_CONFIG ")\n");
 	fprintf(stdout, "\t-r,--rule <rule>:        Override the rule configuration file\n");
 	fprintf(stdout, "\t-d,--debug:              Display debug output\n");
+#ifdef HAKA_DEBUG
+	fprintf(stdout, "\t                   (Repeat twice for trace output)\n");
+#endif
 	fprintf(stdout, "\t--opt <section>:<key>[=<value>]:\n");
 	fprintf(stdout, "\t                          Override configuration parameter\n");
 	fprintf(stdout, "\t-l,--loglevel <level>:    Set the log level\n");
@@ -86,14 +89,14 @@ static void add_override(const char *key, const char *value)
 {
 	struct config_override *override = vector_push(&config_overrides, struct config_override);
 	if (!override) {
-		message(HAKA_LOG_FATAL, "core", "memory error");
+		LOG_FATAL(core, "memory error");
 		exit(2);
 	}
 
 	override->key = strdup(key);
 	override->value = strdup(value);
 	if (!override->key || !override->value) {
-		message(HAKA_LOG_FATAL, "core", "memory error");
+		LOG_FATAL(core, "memory error");
 		clean_exit();
 		exit(2);
 	}
@@ -103,6 +106,9 @@ static int parse_cmdline(int *argc, char ***argv)
 {
 	int c;
 	int index = 0;
+#ifdef HAKA_DEBUG
+	int debug_count = 0;
+#endif
 
 	static struct option long_options[] = {
 		{ "version",              no_argument,       0, 'v' },
@@ -123,6 +129,12 @@ static int parse_cmdline(int *argc, char ***argv)
 	while ((c = getopt_long(*argc, *argv, "dl:hc:r:P:S:", long_options, &index)) != -1) {
 		switch (c) {
 		case 'd':
+#ifdef HAKA_DEBUG
+			if (debug_count++ > 0) {
+				add_override("log:level", "trace");
+				break;
+			}
+#endif
 			add_override("log:level", "debug");
 			break;
 
@@ -146,7 +158,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		case 'c':
 			config = strdup(optarg);
 			if (!config) {
-				message(HAKA_LOG_FATAL, "core", "memory error");
+				LOG_FATAL(core, "memory error");
 				clean_exit();
 				exit(2);
 			}
@@ -179,7 +191,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		case 'P':
 			pid_file_path = strdup(optarg);
 			if (!pid_file_path) {
-				message(HAKA_LOG_FATAL, "core", "memory error");
+				LOG_FATAL(core, "memory error");
 				clean_exit();
 				exit(2);
 			}
@@ -188,7 +200,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		case 'S':
 			ctl_file_path = strdup(optarg);
 			if (!ctl_file_path) {
-				message(HAKA_LOG_FATAL, "core", "memory error");
+				LOG_FATAL(core, "memory error");
 				clean_exit();
 				exit(2);
 			}
@@ -208,7 +220,7 @@ static int parse_cmdline(int *argc, char ***argv)
 	if (!config) {
 		config = strdup(HAKA_CONFIG);
 		if (!config) {
-			message(HAKA_LOG_FATAL, "core", "memory error");
+			LOG_FATAL(core, "memory error");
 			clean_exit();
 			exit(2);
 		}
@@ -217,7 +229,7 @@ static int parse_cmdline(int *argc, char ***argv)
 	if (!pid_file_path) {
 		pid_file_path = strdup(HAKA_PID_FILE);
 		if (!pid_file_path) {
-			message(HAKA_LOG_FATAL, "core", "memory error");
+			LOG_FATAL(core, "memory error");
 			clean_exit();
 			exit(2);
 		}
@@ -226,7 +238,7 @@ static int parse_cmdline(int *argc, char ***argv)
 	if (!ctl_file_path) {
 		ctl_file_path = strdup(HAKA_CTL_SOCKET_FILE);
 		if (!ctl_file_path) {
-			message(HAKA_LOG_FATAL, "core", "memory error");
+			LOG_FATAL(core, "memory error");
 			clean_exit();
 			exit(2);
 		}
@@ -241,7 +253,7 @@ int read_configuration(const char *file)
 {
 	struct parameters *config = parameters_open(file);
 	if (check_error()) {
-		messagef(HAKA_LOG_FATAL, "core", "%s", clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		return 2;
 	}
 
@@ -276,13 +288,13 @@ int read_configuration(const char *file)
 		if (_level) {
 			char *level = strdup(_level);
 			if (!level) {
-				message(HAKA_LOG_FATAL, "core", "memory error");
+				LOG_FATAL(core, "memory error");
 				clean_exit();
 				exit(1);
 			}
 
 			if (!setup_loglevel(level)) {
-				messagef(HAKA_LOG_FATAL, "core", "%s", clear_error());
+				LOG_FATAL(core, "%s", clear_error());
 				clean_exit();
 				exit(1);
 			}
@@ -303,21 +315,21 @@ int read_configuration(const char *file)
 
 			struct module *logger_module = module_load(module, config);
 			if (!logger_module) {
-				messagef(HAKA_LOG_FATAL, "core", "cannot load logging module: %s", clear_error());
+				LOG_FATAL(core, "cannot load logging module: %s", clear_error());
 				clean_exit();
 				return 1;
 			}
 
 			logger = log_module_logger(logger_module, config);
 			if (!logger) {
-				messagef(HAKA_LOG_FATAL, "core", "cannot initialize logging module: %s", clear_error());
+				LOG_FATAL(core, "cannot initialize logging module: %s", clear_error());
 				module_release(logger_module);
 				clean_exit();
 				return 1;
 			}
 
 			if (!add_logger(logger)) {
-				messagef(HAKA_LOG_FATAL, "core", "cannot install logging module: %s", clear_error());
+				LOG_FATAL(core, "cannot install logging module: %s", clear_error());
 				logger->destroy(logger);
 				module_release(logger_module);
 				clean_exit();
@@ -339,21 +351,21 @@ int read_configuration(const char *file)
 
 			struct module *alerter_module = module_load(module, config);
 			if (!alerter_module) {
-				messagef(HAKA_LOG_FATAL, "core", "cannot load alert module: %s", clear_error());
+				LOG_FATAL(core, "cannot load alert module: %s", clear_error());
 				clean_exit();
 				return 1;
 			}
 
 			alerter = alert_module_alerter(alerter_module, config);
 			if (!alerter) {
-				messagef(HAKA_LOG_FATAL, "core", "cannot initialize alert module: %s", clear_error());
+				LOG_FATAL(core, "cannot initialize alert module: %s", clear_error());
 				module_release(alerter_module);
 				clean_exit();
 				return 1;
 			}
 
 			if (!add_alerter(alerter)) {
-				messagef(HAKA_LOG_FATAL, "core", "cannot install alert module: %s", clear_error());
+				LOG_FATAL(core, "cannot install alert module: %s", clear_error());
 				alerter->destroy(alerter);
 				module_release(alerter_module);
 				clean_exit();
@@ -374,7 +386,7 @@ int read_configuration(const char *file)
 
 			module = module_load("alert/file", NULL);
 			if (!module) {
-				messagef(HAKA_LOG_FATAL, "core", "cannot load default alert module: %s", clear_error());
+				LOG_FATAL(core, "cannot load default alert module: %s", clear_error());
 				clean_exit();
 				return 1;
 			}
@@ -394,7 +406,7 @@ int read_configuration(const char *file)
 		if (module) {
 			struct module *packet = module_load(module, config);
 			if (!packet) {
-				messagef(HAKA_LOG_FATAL, "core", "cannot load packet module: %s", clear_error());
+				LOG_FATAL(core, "cannot load packet module: %s", clear_error());
 				clean_exit();
 				return 1;
 			}
@@ -403,7 +415,7 @@ int read_configuration(const char *file)
 			module_release(packet);
 		}
 		else {
-			message(HAKA_LOG_FATAL, "core", "no packet module specified");
+			LOG_FATAL(core, "no packet module specified");
 			clean_exit();
 			return 1;
 		}
@@ -415,7 +427,7 @@ int read_configuration(const char *file)
 	{
 		const char *configuration = parameters_get_string(config, "configuration", NULL);
 		if (!configuration) {
-			message(HAKA_LOG_FATAL, "core", "no configuration specified");
+			LOG_FATAL(core, "no configuration specified");
 			clean_exit();
 			return 1;
 		}
@@ -453,7 +465,7 @@ bool check_running_haka()
 	}
 
 	if (fscanf(pid_file, "%i", &pid) != 1) {
-		message(HAKA_LOG_WARNING, "core", "malformed pid file");
+		LOG_WARNING(core, "malformed pid file");
 		return false;
 	}
 
@@ -461,7 +473,7 @@ bool check_running_haka()
 		return false;
 	}
 
-	message(HAKA_LOG_FATAL, "core", "an instance of haka is already running");
+	LOG_FATAL(core, "an instance of haka is already running");
 	return true;
 }
 
@@ -516,7 +528,7 @@ int main(int argc, char *argv[])
 	{
 		struct luadebug_user *user = luadebug_user_readline();
 		if (!user) {
-			message(HAKA_LOG_FATAL, "core", "cannot create readline handler");
+			LOG_FATAL(core, "cannot create readline handler");
 			clean_exit();
 			return 2;
 		}
@@ -531,7 +543,7 @@ int main(int argc, char *argv[])
 
 		child = fork();
 		if (child == -1) {
-			message(HAKA_LOG_FATAL, "core", "failed to daemonize");
+			LOG_FATAL(core, "failed to daemonize");
 			clean_exit();
 			return 1;
 		}
@@ -553,7 +565,7 @@ int main(int argc, char *argv[])
 
 	pid_file = fopen(pid_file_path, "w");
 	if (!pid_file) {
-		message(HAKA_LOG_FATAL, "core", "cannot create pid file");
+		LOG_FATAL(core, "cannot create pid file");
 		clean_exit();
 		return 1;
 	}
@@ -574,12 +586,12 @@ int main(int argc, char *argv[])
 		luadebug_debugger_user(NULL);
 		luadebug_interactive_user(NULL);
 
-		message(HAKA_LOG_INFO, "core", "switch to background");
+		LOG_INFO(core, "switch to background");
 
 		{
 			const int nullfd = open("/dev/null", O_RDWR);
 			if (nullfd == -1) {
-				message(HAKA_LOG_FATAL, "core", "failed to daemonize");
+				LOG_FATAL(core, "failed to daemonize");
 				fclose(pid_file);
 				clean_exit();
 				return 1;
@@ -597,7 +609,7 @@ int main(int argc, char *argv[])
 
 	start();
 
-	message(HAKA_LOG_INFO, "core", "stopping haka");
+	LOG_INFO(core, "stopping haka");
 
 	clean_exit();
 	return 0;

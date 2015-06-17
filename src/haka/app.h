@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _APP_H
-#define _APP_H
+#ifndef APP_H
+#define APP_H
 
 #include <haka/packet_module.h>
 #include <haka/log_module.h>
@@ -37,5 +37,5 @@ void dump_stat(FILE *file);
 
 bool setup_loglevel(char *level);
 
-#endif /* _APP_H */
+#endif /* APP_H */
 

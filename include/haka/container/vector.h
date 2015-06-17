@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_CONTAINER_VECTOR_H
-#define _HAKA_CONTAINER_VECTOR_H
+#ifndef HAKA_CONTAINER_VECTOR_H
+#define HAKA_CONTAINER_VECTOR_H
 
 #include <haka/compiler.h>
 #include <haka/types.h>
@@ -41,4 +41,4 @@ bool _vector_create(struct vector *v, size_t elemsize, size_t reservecount, void
 void *_vector_get(struct vector *v, size_t elemsize, int index);
 void *_vector_push(struct vector *v, size_t elemsize);
 
-#endif /* _HAKA_CONTAINER_VECTOR_H */
+#endif /* HAKA_CONTAINER_VECTOR_H */

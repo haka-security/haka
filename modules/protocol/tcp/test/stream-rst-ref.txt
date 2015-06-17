@@ -1,26 +1,26 @@
-debug cnx: opening connection 127.0.0.1:34001 -> 127.0.0.1:4444
-debug filter: received stream len=6
-debug filter: received stream len=9
-debug filter: received stream len=8
-debug filter: received stream len=7
-debug filter: received stream len=28
-debug cnx: dropping connection 127.0.0.1:34001 -> 127.0.0.1:4444
-debug cnx: opening connection 127.0.0.1:34003 -> 127.0.0.1:4444
-debug filter: received stream len=8
-debug filter: received stream len=9
-debug filter: received stream len=5
-debug filter: received stream len=7
-debug filter: received stream len=5
-debug filter: received stream len=7
-debug filter: received stream len=5
-debug filter: received stream len=22
-debug cnx: dropping connection 127.0.0.1:34003 -> 127.0.0.1:4444
-debug cnx: opening connection 127.0.0.1:34004 -> 127.0.0.1:4444
-debug filter: received stream len=7
-debug filter: received stream len=7
-debug filter: received stream len=11
-debug cnx: dropping connection 127.0.0.1:34004 -> 127.0.0.1:4444
+debug conn: opening connection 127.0.0.1:34001 -> 127.0.0.1:4444
+debug external: received stream len=6
+debug external: received stream len=9
+debug external: received stream len=8
+debug external: received stream len=7
+debug external: received stream len=28
+debug conn: dropping connection 127.0.0.1:34001 -> 127.0.0.1:4444
+debug conn: opening connection 127.0.0.1:34003 -> 127.0.0.1:4444
+debug external: received stream len=8
+debug external: received stream len=9
+debug external: received stream len=5
+debug external: received stream len=7
+debug external: received stream len=5
+debug external: received stream len=7
+debug external: received stream len=5
+debug external: received stream len=22
+debug conn: dropping connection 127.0.0.1:34003 -> 127.0.0.1:4444
+debug conn: opening connection 127.0.0.1:34004 -> 127.0.0.1:4444
+debug external: received stream len=7
+debug external: received stream len=7
+debug external: received stream len=11
+debug conn: dropping connection 127.0.0.1:34004 -> 127.0.0.1:4444
 debug lua: closing state
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection
+debug conn: <cleanup> connection

@@ -9,7 +9,7 @@ local tcp_connection = require("protocol/tcp_connection")
 haka.rule {
 	hook = tcp_connection.events.receive_data,
 	eval = function (flow, data)
-		haka.log.debug("filter", "received stream len=%d", #data)
+		haka.log.debug("received stream len=%d", #data)
 		print(data:asstring())
 	end
 }

@@ -7,8 +7,8 @@
  * IPv4 protocol API.
  */
 
-#ifndef _HAKA_PROTO_IPV4_IPV4_H
-#define _HAKA_PROTO_IPV4_IPV4_H
+#ifndef HAKA_PROTO_IPV4_IPV4_H
+#define HAKA_PROTO_IPV4_IPV4_H
 
 #include <haka/packet.h>
 #include <haka/types.h>
@@ -186,4 +186,4 @@ IPV4_GETSET_FLAG(mf, IPV4_FLAG_MF);
 IPV4_GETSET_FLAG(rb, IPV4_FLAG_RB);
 /** \endcond */
 
-#endif /* _HAKA_PROTO_IPV4_IPV4_H */
+#endif /* HAKA_PROTO_IPV4_IPV4_H */

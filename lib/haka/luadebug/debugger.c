@@ -27,7 +27,7 @@
 #include "debugger.h"
 #include "utils.h"
 
-#define MODULE    "debugger"
+#define MODULE   lua
 
 
 struct luadebug_debugger {
@@ -804,7 +804,7 @@ static bool prepare_debugger(struct luadebug_debugger *session)
 
 	if (!session->user) {
 		mutex_unlock(&current_user_mutex);
-		message(HAKA_LOG_ERROR, MODULE, "no input/output handler");
+		LOG_ERROR(MODULE, "no input/output handler");
 		on_user_error(session);
 		return false;
 	}
@@ -988,7 +988,7 @@ static void luadebug_debugger_activate(struct luadebug_debugger *session)
 
 		session->active = true;
 
-		message(HAKA_LOG_INFO, MODULE, "lua debugger activated");
+		LOG_INFO(MODULE, "lua debugger activated");
 	}
 }
 
@@ -1054,7 +1054,7 @@ static void luadebug_debugger_deactivate(struct luadebug_debugger *session, bool
 
 		session->active = false;
 
-		message(HAKA_LOG_INFO, MODULE, "lua debugger deactivated");
+		LOG_INFO(MODULE, "lua debugger deactivated");
 	}
 }
 

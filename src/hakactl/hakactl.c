@@ -103,7 +103,7 @@ static int parse_cmdline(int *argc, char ***argv)
 		case 'S':
 			ctl_file_path = strdup(optarg);
 			if (!ctl_file_path) {
-				message(HAKA_LOG_FATAL, "core", "memory error");
+				LOG_FATAL(core, "memory error");
 				clean_exit();
 				exit(2);
 			}
@@ -123,7 +123,7 @@ static int parse_cmdline(int *argc, char ***argv)
 	if (!ctl_file_path) {
 		ctl_file_path = strdup(HAKA_CTL_SOCKET_FILE);
 		if (!ctl_file_path) {
-			message(HAKA_LOG_FATAL, "core", "memory error");
+			LOG_FATAL(core, "memory error");
 			clean_exit();
 			exit(2);
 		}

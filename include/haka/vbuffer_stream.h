@@ -7,8 +7,8 @@
  * Stream based on vbuffer.
  */
 
-#ifndef _HAKA_VBUFFER_STREAM_H
-#define _HAKA_VBUFFER_STREAM_H
+#ifndef HAKA_VBUFFER_STREAM_H
+#define HAKA_VBUFFER_STREAM_H
 
 #include <haka/vbuffer.h>
 
@@ -67,4 +67,4 @@ bool            vbuffer_stream_pop(struct vbuffer_stream *stream, struct vbuffer
  */
 struct vbuffer *vbuffer_stream_data(struct vbuffer_stream *stream);
 
-#endif /* _HAKA_VBUFFER_STREAM_H */
+#endif /* HAKA_VBUFFER_STREAM_H */

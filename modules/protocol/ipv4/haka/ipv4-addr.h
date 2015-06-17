@@ -7,8 +7,8 @@
  * IPv4 address API.
  */
 
-#ifndef _HAKA_PROTO_IPV4_ADDR_H
-#define _HAKA_PROTO_IPV4_ADDR_H
+#ifndef HAKA_PROTO_IPV4_ADDR_H
+#define HAKA_PROTO_IPV4_ADDR_H
 
 #include <haka/types.h>
 #include <stddef.h>
@@ -48,4 +48,4 @@ ipv4addr ipv4_addr_from_bytes(uint8 a, uint8 b, uint8 c, uint8 d);
 #define TOSTR_ipv4addr(obj, str) ipv4_addr_to_string((obj), (str), IPV4_ADDR_STRING_MAXLEN)
 /** \endcond */
 
-#endif /* _HAKA_PROTO_IPV4_ADDR_H */
+#endif /* HAKA_PROTO_IPV4_ADDR_H */

@@ -20,15 +20,16 @@ static struct packet_module *packet_module = NULL;
 static enum packet_mode global_packet_mode = MODE_NORMAL;
 static local_storage_t capture_state;
 struct time_realm network_time;
+static bool is_realtime = false;
 static bool network_time_inited = false;
 
-INIT static void __init()
+INIT static void _init()
 {
 	UNUSED const bool ret = local_storage_init(&capture_state, NULL);
 	assert(ret);
 }
 
-FINI static void __fini()
+FINI static void _fini()
 {
 	UNUSED bool ret = local_storage_destroy(&capture_state);
 	assert(ret);
@@ -69,6 +70,7 @@ int set_packet_module(struct module *module)
 		time_realm_initialize(&network_time,
 				packet_module->is_realtime() ? TIME_REALM_REALTIME : TIME_REALM_STATIC);
 		network_time_inited = true;
+		is_realtime = packet_module->is_realtime();
 	}
 
 	return 0;
@@ -110,7 +112,7 @@ struct vbuffer *packet_payload(struct packet *pkt)
 	return &pkt->payload;
 }
 
-int packet_receive(struct packet **pkt)
+int packet_receive(struct engine_thread *engine, struct packet **pkt)
 {
 	int ret;
 	assert(packet_module);
@@ -122,16 +124,11 @@ int packet_receive(struct packet **pkt)
 		lua_ref_init(&(*pkt)->userdata);
 		atomic_set(&(*pkt)->ref, 1);
 		assert(vbuffer_isvalid(&(*pkt)->payload));
-		messagef(HAKA_LOG_DEBUG, "packet", "received packet id=%lli",
+		LOG_DEBUG(packet, "received packet id=%lli",
 				packet_module->get_id(*pkt));
 
-		if (!packet_module->is_realtime()) {
-			time_realm_update(&network_time,
-					packet_module->get_timestamp(*pkt));
-		}
-
 		{
-			volatile struct packet_stats *stats = engine_thread_statistics(engine_thread_current());
+			volatile struct packet_stats *stats = engine_thread_statistics(engine);
 			if (stats) {
 				++stats->recv_packets;
 				stats->recv_bytes += vbuffer_size(packet_payload(*pkt));
@@ -139,7 +136,13 @@ int packet_receive(struct packet **pkt)
 		}
 	}
 
-	time_realm_check(&network_time);
+	if (*pkt && !is_realtime) {
+		time_realm_update_and_check(&network_time,
+					packet_module->get_timestamp(*pkt));
+	}
+	else {
+		time_realm_check(&network_time);
+	}
 
 	return ret;
 }
@@ -148,7 +151,7 @@ void packet_drop(struct packet *pkt)
 {
 	assert(packet_module);
 	assert(pkt);
-	messagef(HAKA_LOG_DEBUG, "packet", "dropping packet id=%lli",
+	LOG_DEBUG(packet, "dropping packet id=%lli",
 			packet_module->get_id(pkt));
 
 	packet_module->verdict(pkt, FILTER_DROP);
@@ -164,7 +167,7 @@ void packet_accept(struct packet *pkt)
 	assert(packet_module);
 	assert(pkt);
 
-	messagef(HAKA_LOG_DEBUG, "packet", "accepting packet id=%lli",
+	LOG_DEBUG(packet, "accepting packet id=%lli",
 			packet_module->get_id(pkt));
 
 	{
@@ -238,7 +241,7 @@ bool packet_send(struct packet *pkt)
 		return false;
 	}
 
-	messagef(HAKA_LOG_DEBUG, "packet", "sending packet id=%lli",
+	LOG_DEBUG(packet, "sending packet id=%lli",
 		packet_module->get_id(pkt));
 
 	{

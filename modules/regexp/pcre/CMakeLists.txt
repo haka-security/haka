@@ -11,7 +11,7 @@ if(PCRE_FOUND)
 	SWIG_FIX_ENTRYPOINT(pcre regexp)
 
 	include_directories(${PCRE_INCLUDE_DIR})
-	target_link_libraries(pcre ${PCRE_LIBRARY})
+	target_link_libraries(pcre LINK_PRIVATE ${PCRE_LIBRARY})
 
 	INSTALL_MODULE(pcre regexp)
 

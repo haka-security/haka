@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_MACRO_H
-#define _HAKA_MACRO_H
+#ifndef HAKA_MACRO_H
+#define HAKA_MACRO_H
 
-#define _STR(v)		#v
-#define STR(v)		_STR(v)
+#define STR_(v)         #v
+#define STR(v)          STR_(v)
 
-#define _CONCAT(a, b)   a ## b
-#define CONCAT(a, b)    _CONCAT(a, b)
+#define CONCAT_(a, b)   a ## b
+#define CONCAT(a, b)    CONCAT_(a, b)
 
-#endif /* _HAKA_MACRO_H */
+#endif /* HAKA_MACRO_H */

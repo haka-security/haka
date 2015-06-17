@@ -20,7 +20,7 @@ haka.rule{
 	eval = function (pkt)
 		-- All fields are accessible through pkt variable.
 		-- See the Haka documentation for a complete list.
-		haka.log("Hello", "packet from %s to %s", pkt.src, pkt.dst)
+		haka.log("packet from %s to %s", pkt.src, pkt.dst)
 
 		haka.alert{
 			description = string.format("packet from %s to %s", pkt.src, pkt.dst),

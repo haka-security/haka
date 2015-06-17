@@ -7,8 +7,8 @@
  * Logging back-end module.
  */
 
-#ifndef _HAKA_LOG_MODULE_H
-#define _HAKA_LOG_MODULE_H
+#ifndef HAKA_LOG_MODULE_H
+#define HAKA_LOG_MODULE_H
 
 #include <wchar.h>
 #include <haka/module.h>
@@ -47,4 +47,4 @@ struct log_module {
  */
 struct logger *log_module_logger(struct module *module, struct parameters *args);
 
-#endif /* _HAKA_LOG_MODULE_H */
+#endif /* HAKA_LOG_MODULE_H */

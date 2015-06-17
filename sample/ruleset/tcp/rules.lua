@@ -8,7 +8,7 @@ local server_network = ipv4.network("192.168.20.0/25");
 local group = haka.rule_group {
 	hook = tcp_connection.events.new_connection,
 	init = function (flow, pkt)
-		haka.log.debug("filter", "entering packet filtering rules : %d --> %d",
+		haka.log.debug("entering packet filtering rules : %d --> %d",
 			pkt.srcport, pkt.dstport)
 	end,
 	final = function (flow, pkt)
@@ -30,7 +30,7 @@ group:rule{
 		if client_network:contains(tcp.ip.src) and
 		    server_network:contains(tcp.ip.dst) and
 		    tcp.dstport == 80 then
-			haka.log.warning("filter", "authorizing http traffic")
+			haka.log.warning("authorizing http traffic")
 			http.dissect(flow)
 			return true
 		end
@@ -42,8 +42,8 @@ group:rule{
 		if client_network:contains(tcp.ip.src) and
 		    server_network:contains(tcp.ip.dst) and
 		    tcp.dstport == 22 then
-			haka.log.warning("filter", "authorizing ssh traffic")
-			haka.log.warning("filter", "no available dissector for ssh")
+			haka.log.warning("authorizing ssh traffic")
+			haka.log.warning("no available dissector for ssh")
 			return true
 		end
 	end

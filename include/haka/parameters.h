@@ -9,8 +9,8 @@
  * It is mainly used to give generic parameters to modules.
  */
 
-#ifndef _HAKA_PARAMETERS_H
-#define _HAKA_PARAMETERS_H
+#ifndef HAKA_PARAMETERS_H
+#define HAKA_PARAMETERS_H
 
 #include <stddef.h>
 #include <haka/types.h>
@@ -75,4 +75,4 @@ bool               parameters_set_boolean(struct parameters *params, const char 
 bool               parameters_set_integer(struct parameters *params, const char *key, int value);
 
 
-#endif /* _HAKA_PARAMETERS_H */
+#endif /* HAKA_PARAMETERS_H */

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_COMPILER_H
-#define _HAKA_COMPILER_H
+#ifndef HAKA_COMPILER_H
+#define HAKA_COMPILER_H
 
 #define INLINE static inline
 
@@ -22,4 +22,4 @@
 
 #define STATIC_ASSERT(COND, MSG) typedef char static_assertion_##MSG[(COND)?1:-1]
 
-#endif /* _HAKA_COMPILER_H */
+#endif /* HAKA_COMPILER_H */

@@ -13,3 +13,6 @@
 [submodule "external/breathe"]
 	path = external/breathe
 	url = https://github.com/haka-security/breathe.git
+[submodule "external/capstone/src"]
+	path = external/capstone/src
+	url = https://github.com/haka-security/capstone.git

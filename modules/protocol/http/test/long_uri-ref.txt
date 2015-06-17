@@ -1,5 +1,5 @@
-debug cnx: opening connection 127.0.0.1:42075 -> 127.0.0.1:80
-debug http: selecting http dissector on flow
+debug conn: opening connection 127.0.0.1:42075 -> 127.0.0.1:80
+debug tcp: selecting http dissector on flow
 HTTP REQUEST
 class HttpRequestResult {
   headers : class HeaderResult {
@@ -31,4 +31,4 @@ class HttpResponseResult {
   }
 }
 debug lua: closing state
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection

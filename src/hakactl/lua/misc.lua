@@ -4,13 +4,13 @@
 
 function console.setloglevel(level, module)
 	hakactl.remote('any', function ()
-		return haka.log.setlevel(level, module)
+		return haka.setloglevel(level, module)
 	end)
 end
 
 function console.stop()
 	hakactl.remote('any', function ()
-		haka.log("core", "request to stop haka received")
+		haka.log("request to stop haka received")
 		return haka.exit()
 	end)
 

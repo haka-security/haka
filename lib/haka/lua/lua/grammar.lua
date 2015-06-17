@@ -9,6 +9,7 @@ local grammar_dg = require('grammar_dg')
 
 local grammar_int = {}
 local grammar = {}
+local log = haka.log_section("grammar")
 
 grammar.result = require("parse_result")
 
@@ -251,7 +252,7 @@ function grammar_int.Sequence.method:do_compile(env, rule, id)
 
 	for i, entity in ipairs(self.entities) do
 		if entity.named then
-			haka.log.warning("grammar", "named element '%s' are not supported in sequence", entity.named)
+			log.warning("named element '%s' are not supported in sequence", entity.named)
 		end
 
 		local next = entity:compile(env, self.rule or rule, i)
@@ -818,11 +819,11 @@ function grammar.new(name, def)
 	end
 
 	if no_export then
-		haka.log.warning("grammar", "grammar '%s' does not have any exported element", g._name)
+		log.warning("grammar '%s' does not have any exported element", g._name)
 	end
 
 	if grammar.debug then
-		haka.log.warning("grammar", "dumping '%s' grammar graph to %s-grammar.dot", g._name, g._name)
+		log.warning("dumping '%s' grammar graph to %s-grammar.dot", g._name, g._name)
 		f = io.open(string.format("%s-grammar.dot", g._name), "w+")
 		g:dump_graph(f)
 		f:close()

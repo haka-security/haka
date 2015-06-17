@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_PROTO_TCP_STREAM_H
-#define _HAKA_PROTO_TCP_STREAM_H
+#ifndef HAKA_PROTO_TCP_STREAM_H
+#define HAKA_PROTO_TCP_STREAM_H
 
 #include <haka/types.h>
 #include <haka/container/list2.h>
@@ -69,4 +69,4 @@ void        tcp_stream_seq(struct tcp_stream *stream, struct tcp *tcp);
  */
 uint32      tcp_stream_lastseq(struct tcp_stream *stream);
 
-#endif /* _HAKA_PROTO_TCP_STREAM_H */
+#endif /* HAKA_PROTO_TCP_STREAM_H */

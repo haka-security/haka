@@ -7,8 +7,8 @@
  * Packet manipulation utilities.
  */
 
-#ifndef _HAKA_PACKET_H
-#define _HAKA_PACKET_H
+#ifndef HAKA_PACKET_H
+#define HAKA_PACKET_H
 
 #include <stddef.h>
 #include <haka/types.h>
@@ -30,6 +30,7 @@ struct packet {
 
 /** \cond */
 struct packet_module_state;
+struct engine_thread;
 /** \endcond */
 
 /**
@@ -100,7 +101,7 @@ bool               packet_send(struct packet *pkt);
 /**
  * Wait for some packet to be availabe.
  */
-int                packet_receive(struct packet **pkt);
+int                packet_receive(struct engine_thread *engine, struct packet **pkt);
 
 /**
  * Get the packet mtu.
@@ -127,4 +128,4 @@ enum packet_mode   packet_mode();
 
 extern struct time_realm network_time;
 
-#endif /* _HAKA_PACKET_H */
+#endif /* HAKA_PACKET_H */

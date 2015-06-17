@@ -1,10 +1,10 @@
-debug cnx: opening connection 192.168.10.10:56748 -> 192.168.20.1:80
-debug http: selecting http dissector on flow
-info bluring: received request for / on server
-info bluring: bluring:       bluring response
-info bluring: received request for /twiki/ on server
-info bluring: bluring:       bluring response
-info bluring: received request for /twiki/TWikiDocumentation.html on server
-info bluring: bluring:       bluring response
+debug conn: opening connection 192.168.10.10:56748 -> 192.168.20.1:80
+debug tcp: selecting http dissector on flow
+info external: received request for / on server
+info external: bluring response
+info external: received request for /twiki/ on server
+info external: bluring response
+info external: received request for /twiki/TWikiDocumentation.html on server
+info external: bluring response
 debug lua: closing state
-debug cnx: <cleanup> connection
+debug conn: <cleanup> connection

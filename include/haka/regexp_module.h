@@ -7,8 +7,8 @@
  * Regular expression module
  */
 
-#ifndef _HAKA_REGEXP_MODULE_H
-#define _HAKA_REGEXP_MODULE_H
+#ifndef HAKA_REGEXP_MODULE_H
+#define HAKA_REGEXP_MODULE_H
 
 #include <haka/module.h>
 #include <haka/thread.h>
@@ -63,4 +63,4 @@ struct regexp_sink {
 struct regexp_module *regexp_module_load(const char *module_name, struct parameters *args);
 void regexp_module_release(struct regexp_module *module);
 
-#endif /* _HAKA_LOG_MODULE_H */
+#endif /* HAKA_LOG_MODULE_H */

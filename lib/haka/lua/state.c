@@ -47,17 +47,15 @@ static void lua_dispatcher_hook(lua_State *L, lua_Debug *ar);
 
 static int panic(lua_State *L)
 {
-	messagef(HAKA_LOG_FATAL, "lua", "lua panic: %s", lua_tostring(L, -1));
+	LOG_FATAL(lua, "lua panic: %s", lua_tostring(L, -1));
 	raise(SIGQUIT);
 	return 0;
 }
 
 void lua_state_print_error(struct lua_State *L, const char *msg)
 {
-	if (msg)
-		messagef(HAKA_LOG_ERROR, "lua", "%s: %s", msg, lua_tostring(L, -1));
-	else
-		messagef(HAKA_LOG_ERROR, "lua", "%s", lua_tostring(L, -1));
+	if (msg) LOG_ERROR(lua, "%s: %s", msg, lua_tostring(L, -1));
+	else LOG_ERROR(lua, "%s", lua_tostring(L, -1));
 
 	lua_pop(L, 1);
 }
@@ -70,7 +68,7 @@ int lua_state_error_formater(lua_State *L)
 		lua_state_error_hook(L);
 	}
 
-	if (getlevel("lua") >= HAKA_LOG_DEBUG) {
+	if (SHOULD_LOG_DEBUG(lua)) {
 		if (!lua_isstring(L, -1)) {
 			return 0;
 		}
@@ -427,7 +425,7 @@ void lua_state_trigger_haka_event(struct lua_state *state, const char *event)
 	lua_pushnil(state->L);                /* emitter */
 	lua_getfield(state->L, -5, event);    /* event */
 	if (lua_isnil(state->L, -1)) {
-		messagef(HAKA_LOG_ERROR, "lua", "invalid haka event: %s", event);
+		LOG_ERROR(lua, "invalid haka event: %s", event);
 	}
 	else {
 		if (lua_pcall(state->L, 3, 0, h)) {
@@ -444,7 +442,7 @@ void lua_state_close(struct lua_state *_state)
 {
 	struct lua_state_ext *state = (struct lua_state_ext *)_state;
 
-	messagef(HAKA_LOG_DEBUG, "lua", "closing state");
+	LOG_DEBUG(lua, "closing state");
 
 	lua_state_trigger_haka_event(_state, "exiting");
 

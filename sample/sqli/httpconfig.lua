@@ -18,11 +18,11 @@ httplib.install_tcp_rule(80)
 -----------------------------------
 
 function dump_request(request)
-	haka.log("sqli", "receiving http request")
+	haka.log("receiving http request")
 	local uri = request.uri
-	haka.log("sqli", "    uri: %s", uri)
+	haka.log("    uri: %s", uri)
 	local cookies = request.headers['Cookie']
 	if cookies then
-		haka.log("sqli", "    cookies: %s", cookies)
+		haka.log("    cookies: %s", cookies)
 	end
 end

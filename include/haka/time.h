@@ -7,8 +7,8 @@
  * Time representation.
  */
 
-#ifndef _HAKA_TIME_H
-#define _HAKA_TIME_H
+#ifndef HAKA_TIME_H
+#define HAKA_TIME_H
 
 #include <haka/types.h>
 
@@ -87,4 +87,4 @@ bool       time_format(const struct time *t, const char *format, char *buffer, s
  */
 bool       time_isvalid(const struct time *t);
 
-#endif /* _HAKA_TIME_H */
+#endif /* HAKA_TIME_H */

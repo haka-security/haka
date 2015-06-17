@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_ENGINE_H
-#define _HAKA_ENGINE_H
+#ifndef HAKA_ENGINE_H
+#define HAKA_ENGINE_H
 
 #include <haka/types.h>
 #include <stdlib.h>
@@ -47,4 +47,4 @@ void                           engine_thread_interrupt_begin(struct engine_threa
 void                           engine_thread_interrupt_end(struct engine_thread *thread);
 int                            engine_thread_interrupt_fd();
 
-#endif /* _HAKA_ENGINE_H */
+#endif /* HAKA_ENGINE_H */

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_COLORS_H
-#define _HAKA_COLORS_H
+#ifndef HAKA_COLORS_H
+#define HAKA_COLORS_H
 
 #include <haka/types.h>
 
@@ -22,4 +22,4 @@
 bool        colors_supported(int fd);
 const char *c(const char *color, bool supported);
 
-#endif /* _HAKA_COLORS_H */
+#endif /* HAKA_COLORS_H */

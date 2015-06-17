@@ -7,8 +7,8 @@
  * Thread utilities functions.
  */
 
-#ifndef _HAKA_THREAD_H
-#define _HAKA_THREAD_H
+#ifndef HAKA_THREAD_H
+#define HAKA_THREAD_H
 
 #include <stddef.h>
 #include <errno.h>
@@ -352,4 +352,4 @@ void atomic64_set(atomic64_t *v, uint64 x);
 
 /**@}*/
 
-#endif /* _HAKA_THREAD_H */
+#endif /* HAKA_THREAD_H */

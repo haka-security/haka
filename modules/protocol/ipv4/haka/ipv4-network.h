@@ -7,8 +7,8 @@
  * IPv4 network API.
  */
 
-#ifndef _HAKA_PROTO_IPV4_NETWORK_H
-#define _HAKA_PROTO_IPV4_NETWORK_H
+#ifndef HAKA_PROTO_IPV4_NETWORK_H
+#define HAKA_PROTO_IPV4_NETWORK_H
 
 #include <haka/types.h>
 
@@ -53,4 +53,4 @@ ipv4network ipv4_network_from_string(const char *string);
  */
 uint8 ipv4_network_contains(ipv4network network, ipv4addr addr);
 
-#endif /* _HAKA_PROTO_IPV4_NETWORK_H */
+#endif /* HAKA_PROTO_IPV4_NETWORK_H */

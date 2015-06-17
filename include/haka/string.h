@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_STRING_H
-#define _HAKA_STRING_H
+#ifndef HAKA_STRING_H
+#define HAKA_STRING_H
 
 #include <haka/types.h>
 #include <wchar.h>
@@ -20,4 +20,4 @@
 		swprintf(name, TOSTR_##type##_size, L"%s", tmp); \
 	}
 
-#endif /* _HAKA_STRING_H */
+#endif /* HAKA_STRING_H */

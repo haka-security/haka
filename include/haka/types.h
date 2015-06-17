@@ -7,8 +7,8 @@
  * Basic types used all along Haka.
  */
 
-#ifndef _HAKA_TYPES_H
-#define _HAKA_TYPES_H
+#ifndef HAKA_TYPES_H
+#define HAKA_TYPES_H
 
 #include <haka/config.h>
 #include <byteswap.h>
@@ -109,17 +109,17 @@ typedef unsigned HAKA_64BIT_TYPE   uint64; /**< Unsigned 8 byte integer type. */
 #define SET_BIT(v, i, x)        ((x) ? ((v) | (1 << (i))) : ((v) & ~(1 << (i))))
 
 /** \cond */
-#define _GET_BITS_MASK(i, j)    (((1<<((j)-(i)))-1)<<(i))
+#define GET_BITS_MASK(i, j)    (((1<<((j)-(i)))-1)<<(i))
 /** \endcond */
 
 /**
  * Get the bits in range [`i` ; `j`] from an integer `v`.
  */
-#define GET_BITS(v, i, j)       (((v) & _GET_BITS_MASK(i, j)) >> (i))
+#define GET_BITS(v, i, j)       (((v) & GET_BITS_MASK(i, j)) >> (i))
 
 /**
  * Set the bits in range [`i` ; `j`] from an integer `v` to `x`.
  */
-#define SET_BITS(v, i, j, x)    (((v) & ~(_GET_BITS_MASK(i, j))) | (((x) << (i)) & _GET_BITS_MASK(i, j)))
+#define SET_BITS(v, i, j, x)    (((v) & ~(GET_BITS_MASK(i, j))) | (((x) << (i)) & GET_BITS_MASK(i, j)))
 
-#endif /* _HAKA_TYPES_H */
+#endif /* HAKA_TYPES_H */

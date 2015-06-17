@@ -42,8 +42,8 @@
 
 	#define SWIG_lua_always(L, a) 1
 
-	#define _STR_TO_WCS(str)   L##str
-	#define STR_TO_WCS(str)   _STR_TO_WCS(str)
+	#define STR_TO_WCS_(str)   L##str
+	#define STR_TO_WCS(str)    STR_TO_WCS_(str)
 
 	/* We need to override SWIG to avoid overriding a struct metatable. We let user dynamically
 	 * add Lua function in this metatable. This is going to be lost if it gets overwritten.

@@ -7,8 +7,8 @@
  * Generic module.
  */
 
-#ifndef _HAKA_MODULE_H
-#define _HAKA_MODULE_H
+#ifndef HAKA_MODULE_H
+#define HAKA_MODULE_H
 
 #include <wchar.h>
 #include <haka/thread.h>
@@ -98,4 +98,4 @@ void           module_add_path(const char *path, bool c);
  */
 const char    *module_get_path(bool c);
 
-#endif /* _HAKA_MODULE_H */
+#endif /* HAKA_MODULE_H */

@@ -5,13 +5,13 @@
 haka.rule{
 	hook = haka.events.exiting,
 	eval = function ()
-		haka.log.info("test", "exiting")
+		haka.log.info("exiting")
 	end
 }
 
 haka.rule{
 	hook = haka.events.started,
 	eval = function ()
-		haka.log.info("test", "started")
+		haka.log.info("started")
 	end
 }

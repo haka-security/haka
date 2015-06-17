@@ -6,6 +6,7 @@ local class = require('class')
 local check = require('check')
 
 local module = {}
+local log = haka.log_section("core")
 
 module.rules = {}
 
@@ -13,14 +14,14 @@ function haka.rule_summary()
 	local total = 0
 
 	for event, listeners in pairs(haka.context.connections) do
-		haka.log.info("core", "%d rule(s) on event '%s'", #listeners, event.name)
+		log.info("%d rule(s) on event '%s'", #listeners, event.name)
 		total = total + #listeners
 	end
 
 	if total == 0 then
-		haka.log.warning("core", "no registered rule\n")
+		log.warning("no registered rule\n")
 	else
-		haka.log.info("core", "%d rule(s) registered\n", total)
+		log.info("%d rule(s) registered\n", total)
 	end
 end
 

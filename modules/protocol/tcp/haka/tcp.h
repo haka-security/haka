@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _HAKA_PROTO_TCP_H
-#define _HAKA_PROTO_TCP_H
+#ifndef HAKA_PROTO_TCP_H
+#define HAKA_PROTO_TCP_H
 
 #include <haka/types.h>
 #include <haka/ipv4.h>
@@ -142,4 +142,4 @@ TCP_GETSET_FLAG(ecn);
 TCP_GETSET_FLAG(cwr);
 /** \endcond */
 
-#endif /* _HAKA_PROTO_TCP_H */
+#endif /* HAKA_PROTO_TCP_H */

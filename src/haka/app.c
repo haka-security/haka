@@ -99,7 +99,7 @@ void initialize()
 	if (sigaction(SIGTERM, &sa, NULL) ||
 	    sigaction(SIGINT, &sa, NULL) ||
 	    sigaction(SIGQUIT, &sa, NULL)) {
-		messagef(HAKA_LOG_FATAL, "core", "%s", errno_error(errno));
+		LOG_FATAL(core, "%s", errno_error(errno));
 		clean_exit();
 		exit(1);
 	}
@@ -127,25 +127,31 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 	}
 
 	if (packet_module->pass_through()) {
-		messagef(HAKA_LOG_INFO, "core", "setting packet mode to pass-through\n");
+		LOG_INFO(core, "setting packet mode to pass-through\n");
 		packet_set_mode(MODE_PASSTHROUGH);
 	}
 
-	messagef(HAKA_LOG_INFO, "core", "loading rule file '%s'", configuration_file);
+	LOG_INFO(core, "loading rule file '%s'", configuration_file);
 
 	/* Add module path to the configuration folder */
 	{
-		char *module_path;
+		char *module_path, *dname;
 
 		module_path = malloc(strlen(configuration_file) + 3);
-		assert(module_path);
+		if (!module_path) {
+			LOG_FATAL(core, "memory error");
+			clean_exit();
+			exit(1);
+		}
+
 		strcpy(module_path, configuration_file);
-		dirname(module_path);
+		dname = dirname(module_path);
+		if (dname != module_path) strcpy(module_path, dname);
 		strcat(module_path, "/*");
 
 		module_add_path(module_path, false);
 		if (check_error()) {
-			messagef(HAKA_LOG_FATAL, "core", "%s", clear_error());
+			LOG_FATAL(core, "%s", clear_error());
 			free(module_path);
 			clean_exit();
 			exit(1);
@@ -159,16 +165,16 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 			attach_debugger, dissector_graph);
 	if (!thread_states) {
 		assert(check_error());
-		messagef(HAKA_LOG_FATAL, "core", "%s", clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		clean_exit();
 		exit(1);
 	}
 
 	if (threadcount > 1) {
-		messagef(HAKA_LOG_INFO, "core", "starting multi-threaded processing on %i threads\n", threadcount);
+		LOG_INFO(core, "starting multi-threaded processing on %i threads\n", threadcount);
 	}
 	else {
-		message(HAKA_LOG_INFO, "core", "starting single threaded processing\n");
+		LOG_INFO(core, "starting single threaded processing\n");
 	}
 }
 
@@ -176,7 +182,7 @@ void start()
 {
 	thread_pool_start(thread_states);
 	if (check_error()) {
-		messagef(HAKA_LOG_FATAL, "core", "%s", clear_error());
+		LOG_FATAL(core, "%s", clear_error());
 		clean_exit();
 		exit(1);
 	}

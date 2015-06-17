@@ -5,3 +5,4 @@
 add_subdirectory("iniparser")
 add_subdirectory("uthash")
 add_subdirectory("luaunit")
+add_subdirectory("capstone")

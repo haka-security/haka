@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _LUADEBUG_UTILS_H
-#define _LUADEBUG_UTILS_H
+#ifndef LUADEBUG_UTILS_H
+#define LUADEBUG_UTILS_H
 
 #include <haka/colors.h>
 
@@ -14,4 +14,4 @@ void pprint(struct lua_State *L, struct luadebug_user *user, int index, bool ful
 int execute_print(struct lua_State *L, struct luadebug_user *user, bool full, const char *hide);
 int capture_env(struct lua_State *L, int frame);
 
-#endif /* _LUADEBUG_UTILS_H */
+#endif /* LUADEBUG_UTILS_H */

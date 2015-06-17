@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _LUADEBUG_DEBUGGER_H
-#define _LUADEBUG_DEBUGGER_H
+#ifndef LUADEBUG_DEBUGGER_H
+#define LUADEBUG_DEBUGGER_H
 
 #include <haka/types.h>
 
@@ -18,4 +18,4 @@ bool luadebug_debugger_interrupt(struct lua_State *L, const char *reason);
 bool luadebug_debugger_breakall();
 bool luadebug_debugger_shutdown();
 
-#endif /* _LUADEBUG_DEBUGGER_H */
+#endif /* LUADEBUG_DEBUGGER_H */

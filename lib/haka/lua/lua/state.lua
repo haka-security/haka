@@ -7,6 +7,7 @@ local dg = require('grammar_dg')
 local check = require('check')
 
 local module = {}
+local log = haka.log_section("states")
 
 --
 -- Actions collection
@@ -66,7 +67,7 @@ function module.ActionCollection.method:_register_events(events)
 
 	for _, event in pairs(events) do
 		if self._actions[event] then
-			haka.log.warning("state_machine", "cannot redefine event: %s", event)
+			log.warning("cannot redefine event: %s", event)
 		else
 			self._actions[event] = {}
 		end

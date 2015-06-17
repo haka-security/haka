@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _LUADEBUG_COMPLETE_H
-#define _LUADEBUG_COMPLETE_H
+#ifndef LUADEBUG_COMPLETE_H
+#define LUADEBUG_COMPLETE_H
 
 #include <haka/types.h>
 
@@ -52,4 +52,4 @@ char *complete_callback_fenv(struct lua_State *L, struct luadebug_complete *cont
 
 char *complete_addchar(const char *str, char c);
 
-#endif /* _LUADEBUG_COMPLETE_H */
+#endif /* LUADEBUG_COMPLETE_H */

@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
-#define MODULE_NAME           "nfqueue"
+#include <haka/log.h>
 
-#endif /* _CONFIG_H */
+extern DECLARE_LOG_SECTION(nfqueue);
+
+#endif /* CONFIG_H */

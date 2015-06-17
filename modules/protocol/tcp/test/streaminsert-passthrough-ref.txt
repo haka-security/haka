@@ -1,7 +1,7 @@
-debug cnx: opening connection 10.2.96.127:45034 -> 10.2.104.129:4444
-debug filter: received stream len=58
-error tcp_connection: read only buffer
-debug cnx: closing connection 10.2.96.127:45034 -> 10.2.104.129:4444
+debug conn: opening connection 10.2.96.127:45034 -> 10.2.104.129:4444
+debug external: received stream len=58
+error tcp: read only buffer
+debug conn: closing connection 10.2.96.127:45034 -> 10.2.104.129:4444
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet

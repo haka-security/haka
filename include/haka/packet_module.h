@@ -7,8 +7,8 @@
  * Packet capture module.
  */
 
-#ifndef _HAKA_PACKET_MODULE_H
-#define _HAKA_PACKET_MODULE_H
+#ifndef HAKA_PACKET_MODULE_H
+#define HAKA_PACKET_MODULE_H
 
 #include <haka/module.h>
 #include <haka/packet.h>
@@ -119,4 +119,4 @@ struct packet_module {
 	const struct time *(*get_timestamp)(struct packet *pkt);
 };
 
-#endif /* _HAKA_PACKET_MODULE_H */
+#endif /* HAKA_PACKET_MODULE_H */

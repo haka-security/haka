@@ -7,6 +7,8 @@ local check = require('check')
 
 local type = {}
 local dissector = {}
+local log = haka.log_section("dissector")
+local log_lua = haka.log_section("lua")
 
 
 --
@@ -89,7 +91,7 @@ function dissector.pcall(self, f)
 
 	if not ret then
 		if err then
-			haka.log.error(self.name, "%s", err)
+			log_lua.error("%s: %s", self.name, err)
 			return self:error()
 		end
 	end
@@ -108,13 +110,19 @@ type.PacketDissector = class.class('PacketDissector', type.Dissector)
 type.PacketDissector:register_event('receive_packet')
 type.PacketDissector:register_event('send_packet')
 
+local npkt
+
+local function preceive()
+	npkt:receive()
+end
+
 function type.PacketDissector:receive(pkt)
-	local npkt = self:new(pkt)
+	npkt = self:new(pkt)
 	if not npkt then
 		return
 	end
 
-	return dissector.pcall(npkt, function () npkt:receive() return npkt end)
+	return dissector.pcall(npkt, preceive)
 end
 
 function type.PacketDissector.method:receive()
@@ -304,7 +312,7 @@ function dissector.new(args)
 	check.assert(args.type, string.format("no type defined for dissector '%s'", args.name))
 
 	if haka.mode ~= 'console' then
-		haka.log.info("dissector", "register new dissector '%s'", args.name)
+		log("register new dissector '%s'", args.name)
 	end
 
 	local d = class.class(args.name, args.type)
