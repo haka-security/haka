@@ -27,7 +27,7 @@ if(JANSSON_FOUND AND LIBCURL_FOUND AND LIBUUID_FOUND)
 		${SWIG_elasticsearchswig_FILES}
 	)
 
-	target_link_libraries(elasticsearch libelasticsearch)
+	target_link_libraries(elasticsearch LINK_PUBLIC libelasticsearch)
 
 	SWIG_FIX_ENTRYPOINT(elasticsearch misc)
 
