@@ -3,5 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 set(HAKA_VERSION_MAJOR 0)
-set(HAKA_VERSION_MINOR 2)
-set(HAKA_VERSION_PATCH 2)
+set(HAKA_VERSION_MINOR 3)
+set(HAKA_VERSION_PATCH 0)

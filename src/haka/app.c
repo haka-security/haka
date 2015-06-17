@@ -135,12 +135,18 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 
 	/* Add module path to the configuration folder */
 	{
-		char *module_path;
+		char *module_path, *dname;
 
 		module_path = malloc(strlen(configuration_file) + 3);
-		assert(module_path);
+		if (!module_path) {
+			LOG_FATAL(core, "memory error");
+			clean_exit();
+			exit(1);
+		}
+
 		strcpy(module_path, configuration_file);
-		dirname(module_path);
+		dname = dirname(module_path);
+		if (dname != module_path) strcpy(module_path, dname);
 		strcat(module_path, "/*");
 
 		module_add_path(module_path, false);
