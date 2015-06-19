@@ -68,114 +68,47 @@ page.
 Modifying http response
 -----------------------
 
-Request
-^^^^^^^
+Our goal is to inject data inside a HTML page.
 
-Our goal is to insert data inside the HTTP page, to be able to do it correctly,
-a rule on the event ``http.events.response`` need to be added. It must call the
-function :haka:func:`<HttpDissector>.enable_data_modification()`. This will enable
-our next rule to insert its data without having to take care of updating the
-*Content-Length* header value for instance.
+.. admonition:: Exercise
 
-CSS
-^^^
+    The script :download:`blurring-the-web-attempt.lua` enables data
+    modification on http responses and inject a CSS snippet code that blurs HTML
+    web pages. Run the script and test it by visiting http://localhost/
 
-To blur the web, we will need to add the following snippet:
+.. note::
 
-.. code-block:: css
+    The streamed option turns on the streamed mode. Consequently the eval function will be
+    called once, and only once. It will automatically wait for data when needed
+    if it uses `stream functions`.
 
-    * {
-        color: transparent !important;
-        text-shadow: 0 0 3px black !important;
-    }
+As may have noticed, the script has no effect on page
+http://localhost/blur.html. The next step is to look for the right place in the
+stream to insert our css snippet. Namely in the ``<head></head>`` section. In
+order to find where is this section in the response, data we can use a regular
+expression.
 
-We can define a simple variable to save it:
-
-.. code-block:: lua
-
-    local css = '<style type="text/css" media="screen"> * { color: transparent !important; text-shadow: 0 0 3px black !important; } </style>'
-
-
-Stream
-^^^^^^
-
-In order to add the css snippet on every html page we can use the
-``http.events.response_data`` event of the HTTP dissector.
-
-This event will be triggered each time response data will be available. This
-event have a very interesting and powerful option, namely ``streamed``.
-
-.. code-block:: lua
-
-    haka.rule{
-        hook = http.events.response_data,
-        options = {
-            streamed = true,
-        },
-        eval = function (flow, iter)
-            -- Eval function
-        end
-    }
-
-This option turn on the streamed mode. Consequently the eval function will be
-called once, and only once. It will automatically wait for data when needed
-if it uses `stream functions`.
-
-Next step is to look for the right place in the stream to insert our css
-snippet. Namely in the ``<head></head>`` section.  In order to find where is
-this section in the response data we can use a regular expression.
-
-Regular expression
-^^^^^^^^^^^^^^^^^^
-
-Regular expression are available through modules in Haka. Currently Haka provide
-only one regular expression module : ``pcre``.
+The following code snippet loads the ``pcre`` module, then compiles a pattern: 
 
 .. code-block:: lua
 
     local rem = require('regexp/pcre')
-
-Then we have to compile a new regexp.
-
-.. code-block:: lua
-
     local regexp = rem.re:compile("</head>", rem.re.CASE_INSENSITIVE)
 
-It is important to note that regexp module is stream aware, and so, it can read
-an entire stream looking for a given pattern before returning.
-
-vbuffer iterator
-^^^^^^^^^^^^^^^^
-
-Both the eval function of the ``http.events.response_data`` event and the
-``match()`` function of the regexp module use a special object called an
-`iterator`. This iterator represent a point on the data stream. It can advance
-on the stream and it can be used to manipulate (insert, remove, replace) it.
-
-For example, finding the right place to insert our css snippet is as simple as:
-
+Then, we rely on ``match`` function to check if data stream pointed to by an
+iterator ``iter`` matches a pattern. 
+ 
 .. code-block:: lua
 
-    local result = regexp:match(iter, true)
-
-``result`` will be a sub-buffer representing the matching part of our regexp in
-the data stream.
-
-Finally if we want to insert our snippet we can use the vbuffer API:
-
-.. code-block:: lua
-
-    result:pos('begin'):insert(haka.vbuffer_from(css))
+    local result = regexp:match(iter):
 
 .. admonition:: Exercise
 
-    Bring all the pieces together in one rule and test it on live traffic.
-
-    Test it on http traffic not on https. http://www.haka-security.org might be
-    a good candidate for it.
+    Modify the script by using the regexp module in order to inject the css code
+    at the end of the <head> section. Test it on http traffic not on https.
+    http://www.haka-security.org might be a good candidate for it.
 
 Full script
 -----------
 
 You will find the full script here :download:`blurring-the-web.lua`.
-
