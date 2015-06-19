@@ -93,10 +93,11 @@ The following code snippet loads the ``pcre`` module, then compiles a pattern:
 .. code-block:: lua
 
     local rem = require('regexp/pcre')
-    local regexp = rem.re:compile("</head>", rem.re.CASE_INSENSITIVE)
+    local regexp = rem.re:compile("<head>", rem.re.CASE_INSENSITIVE)
 
 Then, we rely on ``match`` function to check if data stream pointed to by an
-iterator ``iter`` matches a pattern. 
+iterator ``iter`` matches a pattern. If there is a match, the position of
+``iter`` is updated and points right after the matching part in the data stream.
  
 .. code-block:: lua
 
