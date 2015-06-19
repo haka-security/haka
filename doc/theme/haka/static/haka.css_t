@@ -275,7 +275,7 @@ div.admonition-optional > p.admonition-title + p {
 div.admonition-optional> p.admonition-title {
 	position: relative;
 	margin-left: 0px;
-	margin-bottom: 0px;
+	margin-bottom: 10px;
 }
 
 div.admonition-optional> p.admonition-title:before {
