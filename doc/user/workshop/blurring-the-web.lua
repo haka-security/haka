@@ -37,10 +37,10 @@ haka.rule{
 		streamed = true,
 	},
 	eval = function (flow, iter)
-		local result = regexp:match(iter, true)
+		local result = regexp:match(iter)
 		if result then
 			haka.log("bluring response")
-			result:pos('begin'):insert(haka.vbuffer_from(css))
+			iter:insert(haka.vbuffer_from(css))
 		end
 	end
 }
