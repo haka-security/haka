@@ -257,6 +257,38 @@ div.admonition-exercise > p.admonition-title:after {
     content: "";
 }
 
+/* Optional */
+div.admonition-optional {
+	background: none repeat scroll 0 0 #f5f5e2;
+    border: 1px solid #99CC66;
+    border-radius: 5px;
+}
+
+div.admonition-optional > p,
+div.admonition-optional > div,
+div.admonition-optional > p.admonition-title + p {
+	margin-left: 1em;
+	margin-right: 1em;
+	display: block;
+}
+
+div.admonition-optional> p.admonition-title {
+	position: relative;
+	margin-left: 0px;
+	margin-bottom: 0px;
+}
+
+div.admonition-optional> p.admonition-title:before {
+    content: "\0231B\0a0";
+	font-size: 150%;
+	position: relative;
+	top: 5px;
+}
+
+div.admonition-optional> p.admonition-title:after {
+    content: " Workshop Exercice";
+}
+
 div#going-further > img {
     float: left;
 }
