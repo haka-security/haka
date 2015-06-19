@@ -78,7 +78,7 @@ script by adding the following line in the eval function inside the rule:
 
 .. code-block:: lua
 
-    haka.log("Hello", "packet from %s to %s", pkt.src, pkt.dst)
+    haka.log("packet from %s to %s", pkt.src, pkt.dst)
 
 Additionally you can throw an alert with ``haka.alert``. For example the
 following code will throw an alert of low severity:

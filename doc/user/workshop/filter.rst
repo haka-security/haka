@@ -198,9 +198,9 @@ Interactive rule debugging
         \x1b[33m  16:  \x1b[0m        -- The next line will generate a lua error:
         \x1b[33m  17:  \x1b[0m        -- there is no 'destport' field. replace 'destport' by 'dstport'
         \x1b[31m  18\x1b[1m=> \x1b[0m        if pkt.destport == 80 or pkt.srcport == 80 then
-        \x1b[33m  19:  \x1b[0m            haka.log("Filter", "Authorizing trafic on port 80")
+        \x1b[33m  19:  \x1b[0m            haka.log("Authorizing trafic on port 80")
         \x1b[33m  20:  \x1b[0m        else
-        \x1b[33m  21:  \x1b[0m            haka.log("Filter", "Trafic not authorized on port %d", pkt.dstport)
+        \x1b[33m  21:  \x1b[0m            haka.log("Trafic not authorized on port %d", pkt.dstport)
         \x1b[33m  22:  \x1b[0m            pkt:drop()
         \x1b[33m  23:  \x1b[0m        end
 

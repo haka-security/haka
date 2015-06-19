@@ -62,7 +62,7 @@ Geo localization
             hook = ipv4.events.receive_packet,
             eval = function (pkt)
                 local dst = pkt.dst
-                haka.log("geoip", "ip %s from %s",dst, geoip:country(dst))
+                haka.log("ip %s from %s",dst, geoip:country(dst))
             end
         }
 
