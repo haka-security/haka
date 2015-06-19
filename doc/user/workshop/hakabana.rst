@@ -46,26 +46,28 @@ Your goal here is to customize the security rules in order to export extra data.
 Geo localization
 ^^^^^^^^^^^^^^^^
 
-Hakabana features a `geoip` module allowing to get the country code associated to an ip
-address. Here is an example using it:
+.. admonition:: Optional
 
-.. code-block:: lua
+    Hakabana features a `geoip` module allowing to get the country code associated to an ip
+    address. Here is an example using it:
 
-    local ipv4 = require('protocol/ipv4')
+    .. code-block:: lua
 
-    local geoip_module = require('misc/geoip')
-    local geoip = geoip_module.open('/usr/share/GeoIP/GeoIP.dat')
+        local ipv4 = require('protocol/ipv4')
 
-    haka.rule {
-        hook = ipv4.events.receive_packet,
-        eval = function (pkt)
-            local dst = pkt.dst
-            haka.log("geoip", "ip %s from %s",dst, geoip:country(dst))
-        end
-    }
+        local geoip_module = require('misc/geoip')
+        local geoip = geoip_module.open('/usr/share/GeoIP/GeoIP.dat')
 
-.. admonition:: Exercise
+        haka.rule {
+            hook = ipv4.events.receive_packet,
+            eval = function (pkt)
+                local dst = pkt.dst
+                haka.log("geoip", "ip %s from %s",dst, geoip:country(dst))
+            end
+        }
 
-    * update the ``flow.lua`` file in order to exclude traffic addressed to a given
-      country.
+    .. admonition:: Exercise
+
+        * update the ``flow.lua`` file in order to exclude traffic addressed to a given
+          country.
 

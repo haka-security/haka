@@ -113,82 +113,84 @@ Full script
 
 For ease of simplicity you can download the full script here :download:`hellopacket.lua`.
 
-Optional: Interactive rule
---------------------------
+Interactive rule
+----------------
 
-Now you should have all the prerequisite to have some fun with Haka. But soon
-you will complain that it can be quite boring to go back and forth between your
-script and the documentation.
+.. admonition:: Optional
 
-In order to ease the development steps of your script Haka provides a magic eval
-function named ``interactive_rule``. If you use it, Haka will stop and you will
-see a prompt which allow to enter Lua commands.
 
-Here is an example of an interactive rule:
+    Now you should have all the prerequisite to have some fun with Haka. But soon
+    you will complain that it can be quite boring to go back and forth between your
+    script and the documentation.
 
-.. code-block:: lua
+    In order to ease the development steps of your script Haka provides a magic eval
+    function named ``interactive_rule``. If you use it, Haka will stop and you will
+    see a prompt which allow to enter Lua commands.
 
-    local ipv4 = require('protocol/ipv4')
+    Here is an example of an interactive rule:
 
-    haka.rule{
-        hook = ipv4.events.receive_packet,
-        eval = haka.interactive_rule("my_interactive_rule_on_ip")
-    }
+    .. code-block:: lua
 
-It is strongly recommended to use interactive rules on pcap. If you try to use
-it on real traffic and if you are not fast enough you will encounter lots of
-retransmit packets.
+        local ipv4 = require('protocol/ipv4')
 
-.. ansi-block::
-    :string_escape:
+        haka.rule{
+            hook = ipv4.events.receive_packet,
+            eval = haka.interactive_rule("my_interactive_rule_on_ip")
+        }
 
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mload module 'packet/pcap.ho', Pcap Module
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mload module 'alert/file.ho', File alert
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0msetting packet mode to pass-through
+    It is strongly recommended to use interactive rules on pcap. If you try to use
+    it on real traffic and if you are not fast enough you will encounter lots of
+    retransmit packets.
 
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mloading rule file 'sample.lua'
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0minitializing thread 0
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'raw'
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mpcap:\x1b[0m \x1b[0m     opening file '/usr/share/haka/sample/smtp_dissector/smtp.pcap'
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'ipv4'
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m      1 rule(s) on event 'ipv4:receive_packet'
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m      1 rule(s) registered
+    .. ansi-block::
+        :string_escape:
 
-    \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m     starting single threaded processing
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mload module 'packet/pcap.ho', Pcap Module
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mload module 'alert/file.ho', File alert
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0msetting packet mode to pass-through
 
-    \x1b[0m\x1b[32minteractive rule:\x1b[0m
-    inputs = table {
-      1 : userdata ipv4 {
-        checksum : 58353
-        dst : userdata addr 192.168.20.1
-        flags : userdata ipv4_flags
-        frag_offset : 0
-        hdr_len : 20
-        id : 47214
-        len : 60
-        name : "ipv4"
-        payload : userdata vbuffer
-        proto : 6
-        raw : userdata packet
-        src : userdata addr 192.168.10.10
-        tos : 0
-        ttl : 63
-        version : 4
-      }
-    }
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mloading rule file 'sample.lua'
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0minitializing thread 0
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'raw'
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mpcap:\x1b[0m \x1b[0m     opening file '/usr/share/haka/sample/smtp_dissector/smtp.pcap'
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'ipv4'
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m      1 rule(s) on event 'ipv4:receive_packet'
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m      1 rule(s) registered
 
-    Hit ^D to end the interactive session
-    my_interactive_rule_on_ip>
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m     starting single threaded processing
 
-Once you have your prompt you can simply use the ``inputs`` variable to see what
-kind of arguments is passed to your evaluation function.
+        \x1b[0m\x1b[32minteractive rule:\x1b[0m
+        inputs = table {
+          1 : userdata ipv4 {
+            checksum : 58353
+            dst : userdata addr 192.168.20.1
+            flags : userdata ipv4_flags
+            frag_offset : 0
+            hdr_len : 20
+            id : 47214
+            len : 60
+            name : "ipv4"
+            payload : userdata vbuffer
+            proto : 6
+            raw : userdata packet
+            src : userdata addr 192.168.10.10
+            tos : 0
+            ttl : 63
+            version : 4
+          }
+        }
 
-.. ansi-block::
-    :string_escape:
+        Hit ^D to end the interactive session
+        my_interactive_rule_on_ip>
 
-    my_interactive_rule_on_ip> inputs[1].ttl
-      #1    64
-    my_interactive_rule_on_ip>
+    Once you have your prompt you can simply use the ``inputs`` variable to see what
+    kind of arguments is passed to your evaluation function.
 
-.. note:: You can use `tab` to auto-complete your commands
+    .. ansi-block::
+        :string_escape:
 
+        my_interactive_rule_on_ip> inputs[1].ttl
+          #1    64
+        my_interactive_rule_on_ip>
+
+    .. note:: You can use `tab` to auto-complete your commands
