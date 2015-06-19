@@ -131,115 +131,117 @@ instead of syslog.
     You can also change the listening interface to *eth0* to check haka on some
     real servers.
 
-Optional: Interactive rule debugging
-------------------------------------
+Interactive rule debugging
+--------------------------
 
-Haka allows to interactively debug Haka script file. A script containing a lua error
-is provided as :download:`erroneousrule.lua`.
+.. admonition:: Optional
 
-This script will authorize only packets from/to port 80.
+    Haka allows to interactively debug Haka script file. A script containing a lua error
+    is provided as :download:`erroneousrule.lua`.
 
-.. literalinclude:: erroneousrule.lua
-   :language: lua
-   :tab-width: 4
+    This script will authorize only packets from/to port 80.
 
-To run this example, use the following commands:
+    .. literalinclude:: erroneousrule.lua
+       :language: lua
+       :tab-width: 4
 
-.. code-block:: console
+    To run this example, use the following commands:
 
-    $ hakapcap erroneousrule.lua tcpfilter.pcap
+    .. code-block:: console
 
-When running this script, Haka will output a high number of errors, complaining
-that the field ``destport`` doesn't exist. We will use Haka's debug facilities
-to find out precisely where the error occurs.
+        $ hakapcap erroneousrule.lua tcpfilter.pcap
 
-.. seealso:: `Debugging <../debug.html>`_ contains documentation on Haka's debugging facilities.
+    When running this script, Haka will output a high number of errors, complaining
+    that the field ``destport`` doesn't exist. We will use Haka's debug facilities
+    to find out precisely where the error occurs.
 
-To start Haka in debugging mode, add ``--debug-lua`` at the end of the command line:
+    .. seealso:: `Debugging <../debug.html>`_ contains documentation on Haka's debugging facilities.
 
-.. code-block:: console
+    To start Haka in debugging mode, add ``--debug-lua`` at the end of the command line:
 
-    $ hakapcap erroneousrule.lua tcpfilter.pcap --debug-lua
+    .. code-block:: console
 
-When a Lua error code occurs, the debugger breaks and outputs the error and a backtrace.
+        $ hakapcap erroneousrule.lua tcpfilter.pcap --debug-lua
 
-.. ansi-block::
-    :string_escape:
+    When a Lua error code occurs, the debugger breaks and outputs the error and a backtrace.
 
-       \x1b[0m\x1b[32mentering debugger\x1b[0m: unknown field 'destport'
-        thread: 0
-        Backtrace
-        \x1b[31m\x1b[1m=>\x1b[0m0     \x1b[36m[C]\x1b[0m: in function '\x1b[35m(null)\x1b[0m'
-          #1    \x1b[36m[C]\x1b[0m: in function '\x1b[35m(null)\x1b[0m'
-          #2    \x1b[36m[C]\x1b[0m: in function '\x1b[35m__index\x1b[0m'
-          #3    \x1b[36merroneousrule.lua:18\x1b[0m: in function '\x1b[35msignal\x1b[0m'
-          #4    \x1b[36m/usr/share/haka/core/events.bc:0\x1b[0m: in the main chunk
-          #5    \x1b[36m/usr/share/haka/core/events.bc:0\x1b[0m: in the main chunk
-          #6    \x1b[36m/usr/share/haka/core/context.bc:0\x1b[0m: in the main chunk
-          #7    \x1b[36m[string "tcp"]:14\x1b[0m: in function '\x1b[35mreceive\x1b[0m'
-          #8    \x1b[36m/usr/share/haka/core/dissector.bc:0\x1b[0m: in the main chunk
-          #9    \x1b[36m[C]\x1b[0m: in function '\x1b[35mxpcall\x1b[0m'
-         ...
+    .. ansi-block::
+        :string_escape:
 
-The general syntax of the debugger is close to the syntax of gdb.
+           \x1b[0m\x1b[32mentering debugger\x1b[0m: unknown field 'destport'
+            thread: 0
+            Backtrace
+            \x1b[31m\x1b[1m=>\x1b[0m0     \x1b[36m[C]\x1b[0m: in function '\x1b[35m(null)\x1b[0m'
+              #1    \x1b[36m[C]\x1b[0m: in function '\x1b[35m(null)\x1b[0m'
+              #2    \x1b[36m[C]\x1b[0m: in function '\x1b[35m__index\x1b[0m'
+              #3    \x1b[36merroneousrule.lua:18\x1b[0m: in function '\x1b[35msignal\x1b[0m'
+              #4    \x1b[36m/usr/share/haka/core/events.bc:0\x1b[0m: in the main chunk
+              #5    \x1b[36m/usr/share/haka/core/events.bc:0\x1b[0m: in the main chunk
+              #6    \x1b[36m/usr/share/haka/core/context.bc:0\x1b[0m: in the main chunk
+              #7    \x1b[36m[string "tcp"]:14\x1b[0m: in function '\x1b[35mreceive\x1b[0m'
+              #8    \x1b[36m/usr/share/haka/core/dissector.bc:0\x1b[0m: in the main chunk
+              #9    \x1b[36m[C]\x1b[0m: in function '\x1b[35mxpcall\x1b[0m'
+             ...
 
-Here we are interested in the third frame which is the one in the Lua script itself.
+    The general syntax of the debugger is close to the syntax of gdb.
 
-To set the debugger to focus on that particular frame, type ``frame 3``. We can now use the ``list`` command to display the faulty source code:
+    Here we are interested in the third frame which is the one in the Lua script itself.
 
-.. ansi-block::
-    :string_escape:
+    To set the debugger to focus on that particular frame, type ``frame 3``. We can now use the ``list`` command to display the faulty source code:
 
-    \x1b[32mdebug\x1b[1m>  \x1b[0mlist
-	\x1b[33m  14:  \x1b[0m    hook = haka.event('tcp', 'receive_packet'),
-	\x1b[33m  15:  \x1b[0m    eval = function (pkt)
-	\x1b[33m  16:  \x1b[0m        -- The next line will generate a lua error:
-	\x1b[33m  17:  \x1b[0m        -- there is no 'destport' field. replace 'destport' by 'dstport'
-	\x1b[31m  18\x1b[1m=> \x1b[0m        if pkt.destport == 80 or pkt.srcport == 80 then
-	\x1b[33m  19:  \x1b[0m            haka.log("Filter", "Authorizing trafic on port 80")
-	\x1b[33m  20:  \x1b[0m        else
-	\x1b[33m  21:  \x1b[0m            haka.log("Filter", "Trafic not authorized on port %d", pkt.dstport)
-	\x1b[33m  22:  \x1b[0m            pkt:drop()
-	\x1b[33m  23:  \x1b[0m        end
+    .. ansi-block::
+        :string_escape:
 
-We now see that Lua is complaining about an unknown field ``destport`` on the line testing the destination port of the packet.
+        \x1b[32mdebug\x1b[1m>  \x1b[0mlist
+        \x1b[33m  14:  \x1b[0m    hook = haka.event('tcp', 'receive_packet'),
+        \x1b[33m  15:  \x1b[0m    eval = function (pkt)
+        \x1b[33m  16:  \x1b[0m        -- The next line will generate a lua error:
+        \x1b[33m  17:  \x1b[0m        -- there is no 'destport' field. replace 'destport' by 'dstport'
+        \x1b[31m  18\x1b[1m=> \x1b[0m        if pkt.destport == 80 or pkt.srcport == 80 then
+        \x1b[33m  19:  \x1b[0m            haka.log("Filter", "Authorizing trafic on port 80")
+        \x1b[33m  20:  \x1b[0m        else
+        \x1b[33m  21:  \x1b[0m            haka.log("Filter", "Trafic not authorized on port %d", pkt.dstport)
+        \x1b[33m  22:  \x1b[0m            pkt:drop()
+        \x1b[33m  23:  \x1b[0m        end
 
-Packets, like all structures provided by Haka, can be printed easily using the debugger.
+    We now see that Lua is complaining about an unknown field ``destport`` on the line testing the destination port of the packet.
 
-To see the content of the packet, type ``print pkt``:
+    Packets, like all structures provided by Haka, can be printed easily using the debugger.
 
-.. ansi-block::
-    :string_escape:
+    To see the content of the packet, type ``print pkt``:
 
-    \x1b[32mdebug\x1b[1m>  \x1b[0mprint pkt
-	  #1	\x1b[36;1muserdata\x1b[0m tcp {
-	    	  \x1b[34;1mack_seq\x1b[0m : 0
-	    	  \x1b[34;1mchecksum\x1b[0m : 417
-	    	  \x1b[34;1mdstport\x1b[0m : 80
-	    	  \x1b[34;1mflags\x1b[0m : \x1b[36;1muserdata\x1b[0m tcp_flags {
-	    	    \x1b[34;1mack\x1b[0m : \x1b[35;1mfalse\x1b[0m
-	    	    \x1b[34;1mall\x1b[0m : 2
-	    	    \x1b[34;1mcwr\x1b[0m : \x1b[35;1mfalse\x1b[0m
-	    	    \x1b[34;1mecn\x1b[0m : \x1b[35;1mfalse\x1b[0m
-	    	    \x1b[34;1mfin\x1b[0m : \x1b[35;1mfalse\x1b[0m
-	    	    \x1b[34;1mpsh\x1b[0m : \x1b[35;1mfalse\x1b[0m
-	    	    \x1b[34;1mrst\x1b[0m : \x1b[35;1mfalse\x1b[0m
-	    	    \x1b[34;1msyn\x1b[0m : \x1b[35;1mtrue\x1b[0m
-	    	    \x1b[34;1murg\x1b[0m : \x1b[35;1mfalse\x1b[0m
-	    	  }
-	    	  \x1b[34;1mhdr_len\x1b[0m : 40
-	    	  \x1b[34;1mip\x1b[0m : \x1b[36;1muserdata\x1b[0m ipv4 {
-	    	      ...
-	    	  }
-	    	  ...
-	    	  \x1b[34;1msrcport\x1b[0m : 37542
-	    	  \x1b[34;1murgent_pointer\x1b[0m : 0
-	    	  \x1b[34;1mwindow_size\x1b[0m : 14600
-	    	}
+    .. ansi-block::
+        :string_escape:
 
-You can notice that there is no field called ``destport``. The correct name for the field is ``dstport``. Once this typo is corrected, the script will run properly
+        \x1b[32mdebug\x1b[1m>  \x1b[0mprint pkt
+          #1	\x1b[36;1muserdata\x1b[0m tcp {
+                  \x1b[34;1mack_seq\x1b[0m : 0
+                  \x1b[34;1mchecksum\x1b[0m : 417
+                  \x1b[34;1mdstport\x1b[0m : 80
+                  \x1b[34;1mflags\x1b[0m : \x1b[36;1muserdata\x1b[0m tcp_flags {
+                    \x1b[34;1mack\x1b[0m : \x1b[35;1mfalse\x1b[0m
+                    \x1b[34;1mall\x1b[0m : 2
+                    \x1b[34;1mcwr\x1b[0m : \x1b[35;1mfalse\x1b[0m
+                    \x1b[34;1mecn\x1b[0m : \x1b[35;1mfalse\x1b[0m
+                    \x1b[34;1mfin\x1b[0m : \x1b[35;1mfalse\x1b[0m
+                    \x1b[34;1mpsh\x1b[0m : \x1b[35;1mfalse\x1b[0m
+                    \x1b[34;1mrst\x1b[0m : \x1b[35;1mfalse\x1b[0m
+                    \x1b[34;1msyn\x1b[0m : \x1b[35;1mtrue\x1b[0m
+                    \x1b[34;1murg\x1b[0m : \x1b[35;1mfalse\x1b[0m
+                  }
+                  \x1b[34;1mhdr_len\x1b[0m : 40
+                  \x1b[34;1mip\x1b[0m : \x1b[36;1muserdata\x1b[0m ipv4 {
+                      ...
+                  }
+                  ...
+                  \x1b[34;1msrcport\x1b[0m : 37542
+                  \x1b[34;1murgent_pointer\x1b[0m : 0
+                  \x1b[34;1mwindow_size\x1b[0m : 14600
+                }
 
-Press CTRL-C to quit or type ``help`` to get the list of available commands.
+    You can notice that there is no field called ``destport``. The correct name for the field is ``dstport``. Once this typo is corrected, the script will run properly
 
-.. note:: You can use `tab` to auto-complete your commands
+    Press CTRL-C to quit or type ``help`` to get the list of available commands.
+
+    .. note:: You can use `tab` to auto-complete your commands
 
