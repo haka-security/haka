@@ -278,11 +278,22 @@ div.admonition-optional> p.admonition-title {
 	margin-bottom: 10px;
 }
 
+div.admonition-optional> p.admonition-title.last {
+	margin-bottom: 5px;
+}
+
 div.admonition-optional> p.admonition-title:before {
     content: "\0231B\0a0";
 	font-size: 150%;
 	position: relative;
 	top: 5px;
+}
+
+div.admonition-optional.closed > p.admonition-title:before {
+	content: "\025B6\0a0";
+	font-size: 150%;
+	position: relative;
+	top: 2px;
 }
 
 div.admonition-optional> p.admonition-title:after {
