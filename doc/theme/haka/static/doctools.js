@@ -91,6 +91,28 @@ jQuery.fn.highlightText = function(text, className) {
   });
 };
 
+/*
+ * backward compatibility for jQuery.browser
+ * This will be supported until firefox bug is fixed.
+ */
+if (!jQuery.browser) {
+	jQuery.uaMatch = function(ua) {
+		ua = ua.toLowerCase();
+		var match = /(chrome)[ \/]([\w.]+)/.exec(ua) ||
+			/(webkit)[ \/]([\w.]+)/.exec(ua) ||
+			/(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) ||
+			/(msie) ([\w.]+)/.exec(ua) ||
+			ua.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua) ||
+			[];
+		return {
+			browser: match[ 1 ] || "",
+				version: match[ 2 ] || "0"
+		};
+	};
+	jQuery.browser = {};
+	jQuery.browser[jQuery.uaMatch(navigator.userAgent).browser] = true;
+}
+
 /**
  * Small JavaScript module for the documentation.
  */
