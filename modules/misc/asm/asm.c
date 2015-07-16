@@ -77,7 +77,7 @@ uint8 instruction_get_max_length(cs_arch arch, cs_mode mode)
 	else return 4;
 }
 
-static int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t *size,
+int asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t *size,
 	struct asm_instruction *inst, bool eos)
 {
 	csh *handle;

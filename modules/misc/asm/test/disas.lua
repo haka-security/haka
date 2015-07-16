@@ -28,6 +28,18 @@ function TestAsmModule:gen_stream(code, f)
 	end
 end
 
+function TestAsmModule:test_disas_should_succeed_on_string_input ()
+	-- When
+	local code = '\x8b\x05\xb8\x13\x60\x60'
+	local ret = self.asm:disassemble(code, self.inst)
+	-- Then
+	assertTrue(ret)
+	assertEquals(self.inst:mnemonic(), "mov")
+	assertEquals(self.inst:op_str(), "eax, dword ptr [0x606013b8]")
+	assertEquals(self.inst.size, 6)
+
+end
+
 function TestAsmModule:test_disas_should_succeed_when_valid_single_byte_inst ()
 	-- When
 	local code = haka.vbuffer_from('\x90')
@@ -83,7 +95,7 @@ function TestAsmModule:test_disas_should_skip_bad_inst ()
 	self.asm:disassemble(start, self.inst)
 	-- Then
 	assertEquals(self.inst:mnemonic(), "or")
-	assertEquals(self.inst:op_str(), "dl, byte ptr [eax - 0x6f6f6f70]")
+	assertEquals(self.inst:op_str(), "dl, byte ptr [eax + 0x90909090]")
 	assertEquals(self.inst.size, 6)
 end
 
@@ -120,7 +132,6 @@ function TestAsmModule:test_disas_should_skip_bad_inst_on_blocking_iterator ()
 		assertEquals(self.inst:mnemonic(), "subfic")
 	end)
 end
-
 
 function TestAsmModule:test_disas_should_succeed_on_arm_arch ()
 	-- When

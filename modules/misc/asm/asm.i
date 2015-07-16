@@ -94,9 +94,12 @@ struct asm_handle {
             asm_set_disassembly_flavor($self, syntax);
         }
 
-        bool _disas(struct vbuffer_iterator *pos, struct asm_instruction
-*inst) {
+        bool _disas(struct vbuffer_iterator *pos, struct asm_instruction *inst) {
             return asm_vbdisas($self, pos, inst);
+        }
+
+        bool _disas(const char *pos, struct asm_instruction *inst, size_t size) {
+            return asm_disas($self, (const uint8_t **)&pos, &size, inst, true);
         }
     }
 };
@@ -203,11 +206,7 @@ enum {
     local iter = swig.getclassmetatable('vbuffer_iterator')
     local iter_block = swig.getclassmetatable('vbuffer_iterator_blocking')
 
-    local function disas(handle, pos, inst)
-        if not inst then
-            error("invalid instruction")
-            return false
-        end
+    local function vbdisas(handle, pos, inst)
         local meta = getmetatable(pos)
         if meta == iter then
             return handle:_disas(pos, inst)
@@ -224,18 +223,41 @@ enum {
         return false
     end
 
+    local function disas(handle, pos, inst, len)
+        return handle:_disas(pos, inst, len)
+    end
+
     swig.getclassmetatable('asm_handle')['.fn'].disassemble = function (self, pos,
 inst)
-        return disas(self, pos, inst)
+        if not inst then
+            error("invalid instruction")
+            return false
+        end
+        if swig_type(pos) == 'string' then
+            return disas(self, pos, inst, pos:len())
+        else
+            return vbdisas(self, pos, inst)
+        end
     end
 
     swig.getclassmetatable('asm_handle')['.fn'].dump_instructions = function
 (self, pos, nb)
         local inst = this.new_instruction()
-        nb = nb or 10000
-        while disas(self, pos, inst) and nb > 0 do
-            inst:pprint()
-            nb = nb - 1
+        local nb = nb or 10000
+        if swig_type(pos) == 'string' then
+            local index = 1
+            local size = pos:len()
+            while disas(self, pos:sub(index), inst, size) and nb > 0 do
+                inst:pprint()
+                nb = nb - 1
+                index = index + inst.size
+                size = size - inst.size
+            end
+        else
+            while vbdisas(self, pos, inst, pos) and nb > 0 do
+                inst:pprint()
+                nb = nb - 1
+            end
         end
     end
 }

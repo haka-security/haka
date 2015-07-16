@@ -73,7 +73,7 @@ Supported mode
     .. haka:function:: AsmHandle:disassemble(code, inst) -> ret
 
         :param code: Code to disassemble.
-        :ptype code: :haka:class:`vbuffer_iterator`
+        :ptype code: :haka:class:`vbuffer_iterator` or string
         :param inst: Instruction.
         :ptype inst: AsmInstruction.
         :return ret: true in case of succesfful dissassembly; false otherwise (e.g. broken instruction).
@@ -86,7 +86,7 @@ Supported mode
     .. haka:function:: AsmHandle:dump_instructions(code [, nb])
 
         :param code: Code to disassemble.
-        :ptype code: :haka:class:`vbuffer_iterator`
+        :ptype code: :haka:class:`vbuffer_iterator` or string
         :param nb: Number of instructions to dump.
         :ptype nb: number
 
@@ -144,11 +144,10 @@ Example
     asm = asm_module.new_disassembler('x86', '32')
     asm:setsyntax('att')
 
-    local code = haka.vbuffer_from("\x41\x42\x48\x8b\x05\xb8\x13\x60\x60")
-    local start = code:pos('begin')
+    local code = "\x41\x42\x48\x8b\x05\xb8\x13\x60\x60"
 
     local size, bytes
-    while asm:disassemble(start, inst) do
+    while asm:disassemble(code, inst) do
         io.write(string.format("0x%08x %-8s %-16s ", inst.address, inst:mnemonic(), inst:op_str()))
         size = inst.size
         bytes = inst:bytes()

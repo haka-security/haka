@@ -54,5 +54,7 @@ int                asm_get_arch(struct asm_handle *asm_handle);
 int                asm_get_mode(struct asm_handle *asm_handle);
 bool               asm_vbdisas(struct asm_handle *asm_handle, struct vbuffer_iterator *pos,
                        struct asm_instruction *_inst);
+int                asm_disas(struct asm_handle *asm_handle, const uint8_t **code, size_t *size,
+                       struct asm_instruction *inst, bool eos);
 
 #endif
