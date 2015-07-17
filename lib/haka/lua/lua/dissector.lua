@@ -227,6 +227,11 @@ end
 
 type.FlowDissector = class.class('FlowDissector', type.Dissector)
 
+function type.FlowDissector.__class_init(self, cls)
+	self.super:__class_init(cls)
+	cls.connections = haka.event.StaticEventConnections:new()
+end
+
 function type.FlowDissector.stream_wrapper(f, options, self, stream, current, ...)
 	if options and options.streamed then
 		self:streamed(stream, f, self, current, ...)
