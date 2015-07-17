@@ -662,7 +662,11 @@ function dg.Number.method:_parse(res, input, ctx)
 	local bitoffset = ctx._bitoffset
 	local size, bit = math.ceil((bitoffset + self.size) / 8), (bitoffset + self.size) % 8
 
-	local sub = input:copy():sub(size)
+	local begin = input:copy()
+
+	local sub = input:sub(size)
+
+	input:move_to(begin)
 	if bit ~= 0 then
 		input:advance(size-1)
 	else
