@@ -86,7 +86,7 @@ end
 
 function TestAsmModule:test_disas_should_skip_bad_inst ()
 	-- When
-	local code = haka.vbuffer_from('\x0f\x0a\x90\x90\x90\x90\x90')
+	local code = haka.vbuffer_from('\x0f\x41')
 	local start = code:pos('begin')
 	self.asm:disassemble(start, self.inst)
 	-- Then
@@ -94,9 +94,9 @@ function TestAsmModule:test_disas_should_skip_bad_inst ()
 	-- And when
 	self.asm:disassemble(start, self.inst)
 	-- Then
-	assertEquals(self.inst:mnemonic(), "or")
-	assertEquals(self.inst:op_str(), "dl, byte ptr [eax + 0x90909090]")
-	assertEquals(self.inst.size, 6)
+	assertEquals(self.inst:mnemonic(), "inc")
+	assertEquals(self.inst:op_str(), "ecx")
+	assertEquals(self.inst.size, 1)
 end
 
 function TestAsmModule:test_can_disas_on_blocking_iterator ()
