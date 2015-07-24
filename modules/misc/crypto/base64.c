@@ -67,7 +67,7 @@ static size_t _crypto_base64_calc_length(const char *data, size_t len)
 
 char *crypto_base64_decode(const char *data, size_t size, size_t *outsize)
 {
-	BIO *bio, *b64;
+	BIO *bio=NULL, *b64;
 	char *result = NULL;
 	const size_t len = _crypto_base64_calc_length(data, size);
 	int check_len;
