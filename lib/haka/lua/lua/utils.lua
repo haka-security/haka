@@ -21,15 +21,20 @@ function sorted_pairs(t, f)
 	return iter
 end
 
-function safe_string(str)
+-- String extras
+
+function string.safe_format(str, eol)
 	local len = #str
 	local sstr = {}
+	eol = eol or false
 
 	for i=1,len do
 		local b = str:byte(i)
 
 		if b >= 0x20 and b <= 0x7e then
 			sstr[i] = string.char(b)
+		elseif eol and b == 0x0a then
+			sstr[i] = '\n'
 		else
 			sstr[i] = string.format('\\x%.2x', b)
 		end

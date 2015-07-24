@@ -24,7 +24,7 @@ end
 
 function ParseError.method:context()
 	local iter = self.position:copy()
-	return string.format("parse error context: %s...", safe_string(iter:sub(100):asstring()))
+	return string.format("parse error context: %s...", string.safe_format(iter:sub(100):asstring()))
 end
 
 function ParseError.method:__tostring()

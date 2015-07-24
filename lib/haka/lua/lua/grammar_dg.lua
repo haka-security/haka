@@ -219,7 +219,7 @@ function dg.Entity.method:trace(position, msg, ...)
 		log.debug("in rule '%s' field %s: %s\n\tat byte %d: %s...",
 			self.rule or "<unknown>", id,
 			string.format(msg, ...), position.meter,
-			safe_string(position:copy():sub(20):asstring()))
+			string.safe_format(position:copy():sub(20):asstring()))
 	end
 end
 
@@ -899,7 +899,7 @@ function dg.Token.method:__init(rule, id, pattern, re, name, raw)
 end
 
 function dg.Token.method:_dump_graph_descr()
-	return string.format("/%s/", safe_string(self.pattern))
+	return string.format("/%s/", string.safe_format(self.pattern))
 end
 
 function dg.Token.method:_parse(res, iter, ctx)

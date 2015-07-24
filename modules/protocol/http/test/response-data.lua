@@ -14,7 +14,7 @@ haka.rule {
 	eval = function (http, iter)
 		print("== RESPONSE DATA ==")
 		for sub in iter:foreach_available() do
-			print(safe_string(sub:asstring()))
+			print(string.safe_format(sub:asstring()))
 		end
 	end
 }
