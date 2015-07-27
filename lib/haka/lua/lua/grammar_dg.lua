@@ -343,8 +343,14 @@ function dg.RecordFinish.method:_apply(ctx)
 		ctx:pop()
 	end
 
-	for name, func in pairs(self._extra) do
-		res:addproperty(name, func(res), nil)
+	for name, prop in pairs(self._extra) do
+		if type(prop) == 'function' then
+			res:addproperty(name, prop, nil)
+		elseif type(prop) == 'table' then
+			res:addproperty(name, prop.get, prop.set, nil)
+		else
+			error(string.format("invalid extra property '%s'", name))
+		end
 	end
 
 	self:do_apply(res, ctx)
