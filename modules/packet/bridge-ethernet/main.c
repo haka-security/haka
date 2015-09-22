@@ -142,6 +142,12 @@ static int init(struct parameters *args)
 	    in = NULL;
 	}
 
+	if (nb_inputs == 0) {
+	    LOG_ERROR(bridge_ethernet, "Please specifiy one or two ethernet interface (e.g: eth0)");
+	    cleanup();
+	    return 1;
+	}
+
 	return 0;
 }
 
