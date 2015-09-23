@@ -46,11 +46,13 @@ struct packet_module_state {
 
 /* Init parameters */
 static int              nb_inputs = 0;
-static const char      *interfaces[2]; // At most two interfaces
+static char            *interfaces[2] = { NULL, NULL}; // At most two interfaces
 static int              max_size = 0;
 
 static void cleanup()
 {
+	free(interfaces[0]);
+	free(interfaces[1]);
 }
 
 static int ethernet_open(const char *interface)
@@ -122,11 +124,13 @@ static int init(struct parameters *args)
 {
 	const char *if_s;
 
-	if_s = parameters_get_string(args, "devices", NULL); // Get devices list
+	assert(args);
+
+	if_s = parameters_get_string(args, "interfaces", NULL); // Get devices list
 
 	// Inputs
 	if (if_s == NULL) {
-	    LOG_ERROR(bridge_ethernet, "Please specifiy one or two ethernet interface (e.g: eth0)");
+	    LOG_ERROR(bridge_ethernet, "Please specify 'interfaces' parameter in configuration file.");
 	    cleanup();
 	    return 1;
 	}
@@ -136,14 +140,14 @@ static int init(struct parameters *args)
 	while(nb_inputs < 2) {
 	    char *token = strtok_r(in, ", \t", &save);
 	    if (token == NULL) break;
-	    interfaces[nb_inputs++] = (const char*)strdup(token);
+	    interfaces[nb_inputs++] = strdup(token);
 	    LOG_INFO(bridge_ethernet, "Using ethernet interface %s", token);
 	    free(in);
 	    in = NULL;
 	}
 
 	if (nb_inputs == 0) {
-	    LOG_ERROR(bridge_ethernet, "Please specifiy one or two ethernet interface (e.g: eth0)");
+	    LOG_ERROR(bridge_ethernet, "Please specifiy one or two ethernet interfaces (e.g: eth0)");
 	    cleanup();
 	    return 1;
 	}
@@ -163,6 +167,9 @@ static bool pass_through()
 
 static void cleanup_state(struct packet_module_state *state)
 {
+	free(state->buffer);
+	close(state->if_fd[0]);
+	close(state->if_fd[1]);
 	free(state);
 }
 
