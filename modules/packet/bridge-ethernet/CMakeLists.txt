@@ -6,3 +6,6 @@ add_library(packet-bridge-ethernet SHARED main.c)
 set_target_properties(packet-bridge-ethernet PROPERTIES OUTPUT_NAME bridge-ethernet)
 
 INSTALL_MODULE(packet-bridge-ethernet packet)
+
+# Tests
+add_subdirectory(test)
