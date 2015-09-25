@@ -45,9 +45,10 @@ struct packet_module_state {
 };
 
 /* Init parameters */
-static int              nb_inputs = 0;
-static char            *interfaces[2] = { NULL, NULL}; // At most two interfaces
-static int              max_size = 0;
+static int       nb_inputs = 0;
+static char     *interfaces[2] = { NULL, NULL}; // At most two interfaces
+static int       max_size = 0;
+static int       bypass = 0; // If 1 everything received is immediately sent to other end. Implies two interfaces
 
 static void cleanup()
 {
@@ -246,42 +247,63 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		if (FD_ISSET(engine_thread_interrupt_fd(), &read_set))
 			return 0;
 
-		// Check inputs
-		for(i = 0; i < nb_inputs; i++) {
-			if (FD_ISSET(state->if_fd[i], &read_set)) {
-				int length;
-
-				// Read ETH packet
-				length = recvfrom(state->if_fd[i], &state->buffer[0], max_size, 0, NULL, NULL);
-				if (length < 0) {
-					LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
-					return 1;
+		// Check bypass first
+		if (bypass && nb_inputs == 2) {
+			for(i = 0; i < nb_inputs; i++) {
+				if (FD_ISSET(state->if_fd[i], &read_set)) {
+					int length;
+					// Read from one IF
+					length = recvfrom(state->if_fd[i], &state->buffer[0], max_size, 0, NULL, NULL);
+					if (length < 0) {
+						LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+						return 1;
+					}
+					// Forward to the other (only 2)
+					if (sendto(state->if_fd[i^1], &state->buffer[0], length, 0, NULL, 0) < 0) {
+						LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+						return 1;
+					}
 				}
-
-				// Create packet
-				struct ethernet_packet *packet = malloc(sizeof(struct ethernet_packet));
-				if (!packet) {
-					return ENOMEM;
-				}
-
-				memset(packet, 0, sizeof(struct ethernet_packet));
-
-				time_gettimestamp(&packet->timestamp);
-
-				if (!vbuffer_create_from(&packet->data, (char *)state->buffer, length)) {
-					free(packet);
-					return ENOMEM;
-				}
-
-				packet->state     = state;
-				packet->orig      = i; // Remember where we came from
-				packet->id        = state->id++;
-
-				*pkt = (struct packet *)packet;
-				return 0;
 			}
 		}
-	}
+		else {
+			// Check inputs
+			for(i = 0; i < nb_inputs; i++) {
+				if (FD_ISSET(state->if_fd[i], &read_set)) {
+					int length;
+
+					// Read ETH packet
+					length = recvfrom(state->if_fd[i], &state->buffer[0], max_size, 0, NULL, NULL);
+					if (length < 0) {
+						LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+						return 1;
+					}
+
+					// Create packet
+					struct ethernet_packet *packet = malloc(sizeof(struct ethernet_packet));
+					if (!packet) {
+						return ENOMEM;
+					}
+
+					memset(packet, 0, sizeof(struct ethernet_packet));
+
+					time_gettimestamp(&packet->timestamp);
+
+					if (!vbuffer_create_from(&packet->data, (char *)state->buffer, length)) {
+						free(packet);
+						return ENOMEM;
+					}
+
+					packet->state     = state;
+					packet->orig      = i; // Remember where we came from
+					packet->id        = state->id++;
+
+					*pkt = (struct packet *)packet;
+					return 0;
+				}
+			} // end for
+		} // end else
+	} // end while
 
 	return 0;
 }
