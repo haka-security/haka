@@ -379,6 +379,33 @@ static bool send_packet(struct packet *orig_pkt)
 	    error("sending is not supported in pass-through");
 	    return false;
 	}
+
+	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
+
+	if (vbuffer_isvalid(&pkt->data)) {
+		// We send data to both ends. Currently we have no mean from lua
+		// level to specify where to send the forged packet.
+		const uint8 *data;
+		size_t len;
+
+		data = vbuffer_flatten(&pkt->data, &len);
+		if (!data) {
+			assert(check_error());
+			vbuffer_clear(&pkt->data);
+			return false;
+		}
+
+		if (sendto(pkt->state->if_fd[0], data, len, 0, NULL, 0) < 0) {
+			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+			return false;
+		}
+
+		if (sendto(pkt->state->if_fd[1], data, len, 0, NULL, 0) < 0) {
+			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+			return false;
+		}
+		return true;
+	}
 	return false;
 }
 
