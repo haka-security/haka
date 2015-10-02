@@ -34,7 +34,6 @@ struct ethernet_packet {
 	struct time                 timestamp;
 	uint64                      id;
 	struct packet_module_state *state;
-	struct vbuffer              data;
 	int                         orig;
 };
 
@@ -289,7 +288,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 					time_gettimestamp(&packet->timestamp);
 
-					if (!vbuffer_create_from(&packet->data, (char *)state->buffer, length)) {
+					if (!vbuffer_create_from(&packet->core_packet.payload, (char *)state->buffer, length)) {
 						free(packet);
 						return ENOMEM;
 					}
@@ -312,17 +311,17 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 {
 	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
 
-	if (vbuffer_isvalid(&pkt->data)) {
+	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
 	    // If packet accepted and we need to forward to the other port
 	    if (nb_inputs > 1 && result == FILTER_ACCEPT) {
 	        const uint8 *data;
 	        size_t len;
 	        int out;
 
-	        data = vbuffer_flatten(&pkt->data, &len);
+	        data = vbuffer_flatten(&pkt->core_packet.payload, &len);
 	        if (!data) {
 	            assert(check_error());
-	            vbuffer_clear(&pkt->data);
+	            vbuffer_clear(&pkt->core_packet.payload);
 	            return;
 	        }
 
@@ -334,7 +333,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	        }
 	    }
 
-	    vbuffer_clear(&pkt->data);
+	    vbuffer_clear(&pkt->core_packet.payload);
 	}
 }
 
@@ -352,12 +351,11 @@ static void packet_do_release(struct packet *orig_pkt)
 {
 	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
 
-	if (vbuffer_isvalid(&pkt->data)) {
+	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
 	    packet_verdict(orig_pkt, FILTER_DROP);
 	}
 
 	vbuffer_release(&pkt->core_packet.payload);
-	vbuffer_release(&pkt->data);
 	free(pkt);
 }
 
@@ -365,7 +363,7 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 {
 	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
 
-	if (vbuffer_isvalid(&pkt->data)) {
+	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
 	    return STATUS_NORMAL;
 	} else {
 	    return STATUS_SENT;
@@ -386,7 +384,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	packet->id = state->id++;
 	time_gettimestamp(&packet->timestamp);
 
-	if (!vbuffer_create_new(&packet->data, size, true)) {
+	if (!vbuffer_create_new(&packet->core_packet.payload, size, true)) {
 	    assert(check_error());
 	    free(packet);
 	    return NULL;
@@ -404,16 +402,16 @@ static bool send_packet(struct packet *orig_pkt)
 
 	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
 
-	if (vbuffer_isvalid(&pkt->data)) {
+	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
 		// We send data to both ends. Currently we have no mean from lua
 		// level to specify where to send the forged packet.
 		const uint8 *data;
 		size_t len;
 
-		data = vbuffer_flatten(&pkt->data, &len);
+		data = vbuffer_flatten(&pkt->core_packet.payload, &len);
 		if (!data) {
 			assert(check_error());
-			vbuffer_clear(&pkt->data);
+			vbuffer_clear(&pkt->core_packet.payload);
 			return false;
 		}
 
