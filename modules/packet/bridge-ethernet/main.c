@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <linux/if_ether.h>
+#include <linux/if_packet.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -73,21 +74,24 @@ static int ethernet_open(const char *interface)
 
 	int ret;
 
-	ret = setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr));
+	ret = ioctl(fd, SIOCGIFINDEX, &ifr);
+
+	struct sockaddr_ll sock_address;
+
+	memset(&sock_address, 0, sizeof(sock_address));
+	sock_address.sll_family = AF_PACKET;
+	sock_address.sll_protocol = htons(ETH_P_ALL);
+	sock_address.sll_ifindex = ifr.ifr_ifindex;
+
+	ret = bind(fd, (struct sockaddr*) &sock_address, sizeof(sock_address));
 
 	if (ret < 0) {
-	    LOG_ERROR(bridge_ethernet, "Failed to open ethernet interface (%s). %s", interface, errno_error(errno));
+	    LOG_ERROR(bridge_ethernet, "Failed to bind to interface (%s). %s", interface, errno_error(errno));
 	    return -1;
 	}
 
 	// Get IFF flags
 	ret = ioctl(fd, SIOCGIFFLAGS, &ifr);
-
-	// Check if interface is what we asked for
-	if (strcmp(interface, ifr.ifr_name)) {
-	    LOG_ERROR(bridge_ethernet, "Failed to actually open ethernet interface (%s). %s", interface, errno_error(errno));
-	    return -1;
-	}
 
 	// Promiscuous mode
 	ifr.ifr_flags |= IFF_PROMISC;
@@ -136,13 +140,12 @@ static int init(struct parameters *args)
 	}
 
 	char *save = NULL;
-	char *in = strdup(if_s);
+	char *in = (char *)if_s;
 	while(nb_inputs < 2) {
 	    char *token = strtok_r(in, ", \t", &save);
 	    if (token == NULL) break;
 	    interfaces[nb_inputs++] = strdup(token);
 	    LOG_INFO(bridge_ethernet, "Using ethernet interface %s", token);
-	    free(in);
 	    in = NULL;
 	}
 
@@ -238,7 +241,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			return 0;
 		}
 		else {
-			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+			LOG_ERROR(bridge_ethernet, "select: %s (%d)", errno_error(errno), errno);
 			return 1;
 		}
 	} else {
@@ -254,12 +257,12 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 					// Read from one IF
 					length = recvfrom(state->if_fd[i], &state->buffer[0], max_size, 0, NULL, NULL);
 					if (length < 0) {
-						LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+						LOG_ERROR(bridge_ethernet, "recvfrom: %s @ %d", errno_error(errno), __LINE__);
 						return 1;
 					}
 					// Forward to the other (only 2)
 					if (sendto(state->if_fd[i^1], &state->buffer[0], length, 0, NULL, 0) < 0) {
-						LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+						LOG_ERROR(bridge_ethernet, "sendto: %s @ %d", errno_error(errno), __LINE__);
 						return 1;
 					}
 				}
@@ -274,7 +277,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 					// Read ETH packet
 					length = recvfrom(state->if_fd[i], &state->buffer[0], max_size, 0, NULL, NULL);
 					if (length < 0) {
-						LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+						LOG_ERROR(bridge_ethernet, "recvfrom: %s @ %d", errno_error(errno), __LINE__);
 						return 1;
 					}
 
@@ -329,7 +332,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	        else                out = pkt->state->if_fd[0];
 
 	        if (sendto(out, data, len, 0, NULL, 0) < 0) {
-	            LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+	            LOG_ERROR(bridge_ethernet, "write: %s (%d)", errno_error(errno), __LINE__);
 	        }
 	    }
 
@@ -416,12 +419,12 @@ static bool send_packet(struct packet *orig_pkt)
 		}
 
 		if (sendto(pkt->state->if_fd[0], data, len, 0, NULL, 0) < 0) {
-			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+			LOG_ERROR(bridge_ethernet, "%s @ %d", errno_error(errno), __LINE__);
 			return false;
 		}
 
 		if (sendto(pkt->state->if_fd[1], data, len, 0, NULL, 0) < 0) {
-			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+			LOG_ERROR(bridge_ethernet, "%s @ %d", errno_error(errno), __LINE__);
 			return false;
 		}
 		return true;
