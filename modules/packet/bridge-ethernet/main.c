@@ -110,8 +110,8 @@ static int ethernet_open(const char *interface)
 	    return -1;
 	}
 
-// Ethernet header is not included in MTU size. 16 = 2 MAC + (802.1Q) + EtherType
-#define ETHER_HEADERSIZE 16
+// Ethernet header is not included in MTU size. 22 = Max than VLan can accept
+#define ETHER_HEADERSIZE 22
 
 	if (max_size) {
 		// Check if MTU matches the one from the other interface, if any
