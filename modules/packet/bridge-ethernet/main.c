@@ -110,14 +110,17 @@ static int ethernet_open(const char *interface)
 	    return -1;
 	}
 
+// Ethernet header is not included in MTU size. 16 = 2 MAC + (802.1Q) + EtherType
+#define ETHER_HEADERSIZE 16
+
 	if (max_size) {
 		// Check if MTU matches the one from the other interface, if any
-		if (max_size != ifr.ifr_mtu) {
+		if (max_size != ifr.ifr_mtu + ETHER_HEADERSIZE) {
 			// It is just a warning, it may cause unexpected packet structured if sent packet is larger than output MTU
 			LOG_INFO(bridge_ethernet, "Warning: MTU values don't match between interfaces.");
 		}
 	} else {
-		max_size = ifr.ifr_mtu;
+		max_size = ifr.ifr_mtu + ETHER_HEADERSIZE;
 		LOG_INFO(bridge_ethernet, "Max frame size: %d bytes", max_size);
 	}
 
@@ -332,7 +335,8 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	        else                out = pkt->state->if_fd[0];
 
 	        if (sendto(out, data, len, 0, NULL, 0) < 0) {
-	            LOG_ERROR(bridge_ethernet, "write: %s (%d)", errno_error(errno), __LINE__);
+	            LOG_ERROR(bridge_ethernet, "sendto: %s (@%d)", errno_error(errno), __LINE__);
+	            LOG_INFO(bridge_ethernet,  "        length=%ld" , len);
 	        }
 	    }
 
