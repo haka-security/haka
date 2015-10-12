@@ -127,6 +127,35 @@ static int ethernet_open(const char *interface)
 	return fd;
 }
 
+static void ethernet_close(struct packet_module_state *state, int i) {
+	struct ifreq ifr;
+	int ret;
+
+	if (state->if_fd[i] < 0) return;
+
+	// Get IFF flags
+	memset(&ifr,0,sizeof(ifr));
+	strncpy(ifr.ifr_ifrn.ifrn_name, interfaces[i], IFNAMSIZ);
+
+	ret = ioctl(state->if_fd[i], SIOCGIFFLAGS, &ifr);
+
+	if (ret < 0) {
+	    LOG_ERROR(bridge_ethernet, "Failed to get IFF Flags on %s. %s", interfaces[i], errno_error(errno));
+	    return;
+	}
+
+	// Reset promiscuous mode
+	ifr.ifr_flags &= ~IFF_PROMISC;
+	ret = ioctl(state->if_fd[i], SIOCSIFFLAGS, &ifr);
+
+	if (ret < 0) {
+	    LOG_ERROR(bridge_ethernet, "Failed to set IFF Flags on %s. %s", interfaces[i], errno_error(errno));
+	    return;
+	}
+
+	close(state->if_fd[i]);
+}
+
 static int init(struct parameters *args)
 {
 	const char *if_s;
@@ -174,8 +203,8 @@ static bool pass_through()
 static void cleanup_state(struct packet_module_state *state)
 {
 	free(state->buffer);
-	close(state->if_fd[0]);
-	close(state->if_fd[1]);
+	ethernet_close(state, 0);
+	ethernet_close(state, 1);
 	free(state);
 }
 
