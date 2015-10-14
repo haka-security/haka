@@ -17,7 +17,6 @@
 #include <linux/if_packet.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
 #include <unistd.h>
 
 #include <haka/packet_module.h>
@@ -46,7 +45,7 @@ struct packet_module_state {
 
 /* Init parameters */
 static int       nb_inputs = 0;
-static char     *interfaces[2] = { NULL, NULL}; // At most two interfaces
+static char     *interfaces[2] = { NULL, NULL }; // At most two interfaces
 static int       max_size = 0;
 static int       bypass = 0; // If 1 everything received is immediately sent to other end. Implies two interfaces
 
@@ -69,12 +68,17 @@ static int ethernet_open(const char *interface)
 
 	struct ifreq ifr;
 
-	memset(&ifr,0,sizeof(ifr));
+	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_ifrn.ifrn_name, interface, IFNAMSIZ);
 
 	int ret;
 
 	ret = ioctl(fd, SIOCGIFINDEX, &ifr);
+
+	if (ret < 0) {
+	    LOG_ERROR(bridge_ethernet, "Failed to retrieve interface index for %s. %s", interface, errno_error(errno));
+	    goto bailout;
+	}
 
 	struct sockaddr_ll sock_address;
 
@@ -87,7 +91,7 @@ static int ethernet_open(const char *interface)
 
 	if (ret < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to bind to interface (%s). %s", interface, errno_error(errno));
-	    return -1;
+	    goto bailout;
 	}
 
 	// Get IFF flags
@@ -99,7 +103,7 @@ static int ethernet_open(const char *interface)
 
 	if (ret < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to set ethernet interface (%s) to promiscuous mode. %s", interface, errno_error(errno));
-	    return -1;
+	    goto bailout;
 	}
 
 	// Retrieve MTU
@@ -107,17 +111,17 @@ static int ethernet_open(const char *interface)
 
 	if (ret < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to get MTU on (%s). %s", interface, errno_error(errno));
-	    return -1;
+	    goto bailout;
 	}
 
-// Ethernet header is not included in MTU size. 22 = Max than VLan can accept
+// Ethernet header is not included in MTU size. 22 = Max that VLan can accept
 #define ETHER_HEADERSIZE 22
 
 	if (max_size) {
 		// Check if MTU matches the one from the other interface, if any
 		if (max_size != ifr.ifr_mtu + ETHER_HEADERSIZE) {
 			// It is just a warning, it may cause unexpected packet structured if sent packet is larger than output MTU
-			LOG_INFO(bridge_ethernet, "Warning: MTU values don't match between interfaces.");
+			LOG_WARNING(bridge_ethernet, "MTU values don't match between interfaces.");
 		}
 	} else {
 		max_size = ifr.ifr_mtu + ETHER_HEADERSIZE;
@@ -125,23 +129,30 @@ static int ethernet_open(const char *interface)
 	}
 
 	return fd;
+
+bailout:
+	close(fd);
+	return -1;
 }
 
-static void ethernet_close(struct packet_module_state *state, int i) {
+static void ethernet_close(struct packet_module_state *state, int i)
+{
 	struct ifreq ifr;
 	int ret;
+
+	assert(i >= 0 && i < 2);
 
 	if (state->if_fd[i] < 0) return;
 
 	// Get IFF flags
-	memset(&ifr,0,sizeof(ifr));
+	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_ifrn.ifrn_name, interfaces[i], IFNAMSIZ);
 
 	ret = ioctl(state->if_fd[i], SIOCGIFFLAGS, &ifr);
 
 	if (ret < 0) {
-	    LOG_ERROR(bridge_ethernet, "Failed to get IFF Flags on %s. %s", interfaces[i], errno_error(errno));
-	    return;
+	    LOG_WARNING(bridge_ethernet, "Failed to get IFF Flags on %s. %s", interfaces[i], errno_error(errno));
+	    goto end;
 	}
 
 	// Reset promiscuous mode
@@ -149,11 +160,13 @@ static void ethernet_close(struct packet_module_state *state, int i) {
 	ret = ioctl(state->if_fd[i], SIOCSIFFLAGS, &ifr);
 
 	if (ret < 0) {
-	    LOG_ERROR(bridge_ethernet, "Failed to set IFF Flags on %s. %s", interfaces[i], errno_error(errno));
-	    return;
+	    LOG_WARNING(bridge_ethernet, "Failed to reset promiscuous mode on %s. %s", interfaces[i], errno_error(errno));
+	    goto end;
 	}
 
+end:
 	close(state->if_fd[i]);
+	state->if_fd[i] = -1;
 }
 
 static int init(struct parameters *args)
@@ -173,7 +186,7 @@ static int init(struct parameters *args)
 
 	char *save = NULL;
 	char *in = (char *)if_s;
-	while(nb_inputs < 2) {
+	while (nb_inputs < 2) {
 	    char *token = strtok_r(in, ", \t", &save);
 	    if (token == NULL) break;
 	    interfaces[nb_inputs++] = strdup(token);
@@ -283,18 +296,18 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 
 		// Check bypass first
 		if (bypass && nb_inputs == 2) {
-			for(i = 0; i < nb_inputs; i++) {
+			for (i = 0; i < nb_inputs; i++) {
 				if (FD_ISSET(state->if_fd[i], &read_set)) {
 					int length;
 					// Read from one IF
 					length = recvfrom(state->if_fd[i], &state->buffer[0], max_size, 0, NULL, NULL);
 					if (length < 0) {
-						LOG_ERROR(bridge_ethernet, "recvfrom: %s @ %d", errno_error(errno), __LINE__);
+						LOG_ERROR(bridge_ethernet, "recvfrom: %s", errno_error(errno));
 						return 1;
 					}
 					// Forward to the other (only 2)
 					if (sendto(state->if_fd[i^1], &state->buffer[0], length, 0, NULL, 0) < 0) {
-						LOG_ERROR(bridge_ethernet, "sendto: %s @ %d", errno_error(errno), __LINE__);
+						LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
 						return 1;
 					}
 				}
@@ -302,14 +315,14 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 		}
 		else {
 			// Check inputs
-			for(i = 0; i < nb_inputs; i++) {
+			for (i = 0; i < nb_inputs; i++) {
 				if (FD_ISSET(state->if_fd[i], &read_set)) {
 					int length;
 
 					// Read ETH packet
 					length = recvfrom(state->if_fd[i], &state->buffer[0], max_size, 0, NULL, NULL);
 					if (length < 0) {
-						LOG_ERROR(bridge_ethernet, "recvfrom: %s @ %d", errno_error(errno), __LINE__);
+						LOG_ERROR(bridge_ethernet, "recvfrom: %s", errno_error(errno));
 						return 1;
 					}
 
@@ -348,7 +361,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 
 	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
 	    // If packet accepted and we need to forward to the other port
-	    if (nb_inputs > 1 && result == FILTER_ACCEPT) {
+	    if (nb_inputs > 1 && result == FILTER_ACCEPT && pkt->orig != -1) {
 	        const uint8 *data;
 	        size_t len;
 	        int out;
@@ -364,8 +377,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 	        else                out = pkt->state->if_fd[0];
 
 	        if (sendto(out, data, len, 0, NULL, 0) < 0) {
-	            LOG_ERROR(bridge_ethernet, "sendto: %s (@%d)", errno_error(errno), __LINE__);
-	            LOG_INFO(bridge_ethernet,  "        length=%ld" , len);
+	            LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
 	        }
 	    }
 
@@ -416,6 +428,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 	memset(packet, 0, sizeof(struct ethernet_packet));
 
+	packet->orig  = -1; // Unknown origin
 	packet->state = state;
 	packet->id = state->id++;
 	time_gettimestamp(&packet->timestamp);
@@ -452,14 +465,15 @@ static bool send_packet(struct packet *orig_pkt)
 		}
 
 		if (sendto(pkt->state->if_fd[0], data, len, 0, NULL, 0) < 0) {
-			LOG_ERROR(bridge_ethernet, "%s @ %d", errno_error(errno), __LINE__);
+			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
 			return false;
 		}
 
 		if (sendto(pkt->state->if_fd[1], data, len, 0, NULL, 0) < 0) {
-			LOG_ERROR(bridge_ethernet, "%s @ %d", errno_error(errno), __LINE__);
+			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
 			return false;
 		}
+		vbuffer_clear(&pkt->core_packet.payload);
 		return true;
 	}
 	return false;
