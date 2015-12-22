@@ -412,7 +412,11 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
 
 	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
-	    return STATUS_NORMAL;
+	    if (pkt->id == -1) {
+		return STATUS_FORGED;
+	    } else {
+		return STATUS_NORMAL;
+	    }
 	} else {
 	    return STATUS_SENT;
 	}
@@ -430,7 +434,7 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 	packet->orig  = -1; // Unknown origin
 	packet->state = state;
-	packet->id = state->id++;
+	packet->id = -1;
 	time_gettimestamp(&packet->timestamp);
 
 	if (!vbuffer_create_new(&packet->core_packet.payload, size, true)) {
@@ -444,11 +448,6 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 
 static bool send_packet(struct packet *orig_pkt)
 {
-	if (nb_inputs < 2) {
-	    error("sending is not supported in pass-through");
-	    return false;
-	}
-
 	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
 
 	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
@@ -469,7 +468,8 @@ static bool send_packet(struct packet *orig_pkt)
 			return false;
 		}
 
-		if (sendto(pkt->state->if_fd[1], data, len, 0, NULL, 0) < 0) {
+		if (nb_inputs > 1 &&
+		    sendto(pkt->state->if_fd[1], data, len, 0, NULL, 0) < 0) {
 			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
 			return false;
 		}
