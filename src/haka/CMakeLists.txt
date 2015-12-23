@@ -9,6 +9,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 lua_compile(NAME haka-lua FILES
 	lua/rule.lua
 	lua/rule_group.lua
+	lua/policy.lua
 )
 lua_compile(NAME haka-lua FILES lua/interactive.lua FLAGS ${LUA_FLAGS_DEBUG})
 lua_install(TARGET haka-lua DESTINATION share/haka/core)

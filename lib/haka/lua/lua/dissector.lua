@@ -72,6 +72,10 @@ function type.Dissector.method:drop()
 	error("not implemented")
 end
 
+function type.Dissector.method:alert(alert)
+	haka.alert(alert)
+end
+
 function type.Dissector.method:can_continue()
 	error("not implemented")
 end

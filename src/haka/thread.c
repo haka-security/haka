@@ -172,6 +172,7 @@ static struct thread_state *init_thread_state(struct packet_module *packet_modul
 	/* Load Lua sources */
 	lua_state_require(state->lua, "rule");
 	lua_state_require(state->lua, "rule_group");
+	lua_state_require(state->lua, "policy");
 	lua_state_require(state->lua, "interactive");
 	lua_state_require(state->lua, "protocol/raw");
 
