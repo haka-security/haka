@@ -29,12 +29,12 @@ end
 
 function Policy.method:apply(values, actions, ctx)
 	local qualified_policy
-	debug.breakpoint()
 	for _, policy in pairs(self.policies) do
 		local eligible = true
 		for index, criterion in pairs(policy.criteria) do
 			if values[index] ~= criterion then
 				eligible = false
+				break
 			end
 		end
 		if eligible then
@@ -43,7 +43,7 @@ function Policy.method:apply(values, actions, ctx)
 	end
 	if qualified_policy then
 		log.info("applying policy %s", qualified_policy.name)
-		qualified_policy.action(ctx)
+		qualified_policy.action(ctx,values)
 	else
 		log.info("no matching policy")
 	end
