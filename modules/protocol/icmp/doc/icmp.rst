@@ -58,7 +58,7 @@ Dissector
 Events
 ------
 
-.. haka:function:: tcp.events.receive_packet(pkt)
+.. haka:function:: icmp.events.receive_packet(pkt)
     :module:
     :objtype: event
 
@@ -67,7 +67,7 @@ Events
 
     Event that is triggered whenever a new packet is received.
 
-.. haka:function:: tcp.events.send_packet(pkt)
+.. haka:function:: icmp.events.send_packet(pkt)
     :module:
     :objtype: event
 
