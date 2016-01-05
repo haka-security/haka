@@ -23,16 +23,47 @@ end
 
 function Policy.method:insert(name, criteria, action)
 	log.info("register policy '%s' on '%s'", name, self.name)
-	debug.breakpoint()
 	table.insert(self.policies, {name = name, criteria = criteria, action = action})
+end
+
+function policy.set(list)
+	local set = {}
+	for _,m in pairs(list) do
+		set[m] = true
+	end
+	return set
+end
+
+function policy.range(min,max)
+	return { min = min, max = max }
+end
+
+function policy.outofrange(min, max)
+	return { lessthan = min, morethan = max }
 end
 
 function Policy.method:apply(values, actions, ctx)
 	local qualified_policy
+	-- Evaluate in given order and take action on the *last* eligible policy
 	for _, policy in pairs(self.policies) do
 		local eligible = true
 		for index, criterion in pairs(policy.criteria) do
-			if values[index] ~= criterion then
+			if type(criterion) == 'table' then
+			    if criterion.min ~= nil and criterion.max ~= nil then
+				if values[index] < criterion.min or values[index] > criterion.max then
+				    eligible = false
+				    break
+			    end
+			    elseif criterion.lessthan ~= nil and criterion.morethan ~= nil then
+			        if values[index] > criterion.lessthan and values[index] < criterion.morethan then
+				    eligible = false
+				    break
+				end
+			    elseif criterion[values[index]] == nil then
+				eligible = false
+				break
+			    end
+			elseif values[index] ~= criterion then
 				eligible = false
 				break
 			end
@@ -44,8 +75,6 @@ function Policy.method:apply(values, actions, ctx)
 	if qualified_policy then
 		log.info("applying policy %s", qualified_policy.name)
 		qualified_policy.action(ctx,values)
-	else
-		log.info("no matching policy")
 	end
 end
 
@@ -79,6 +108,12 @@ end
 function policy.drop_with_alert(alert)
 	return function(ctx)
 		ctx:drop()
+		haka.alert(alert)
+	end
+end
+
+function policy.alert(alert)
+	return function()
 		haka.alert(alert)
 	end
 end
