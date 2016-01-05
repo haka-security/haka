@@ -60,12 +60,12 @@ struct vbuffer_iterator {
 
 			if (!data) {
 				error("missing data parameter");
-				return;
+				return NULL;
 			}
 
 			if (!vbuffer_iterator_isinsertable($self, data)) {
 				error("circular buffer insertion");
-				return;
+				return NULL;
 			}
 
 			sub = malloc(sizeof(struct vbuffer_sub));
