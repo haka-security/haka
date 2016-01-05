@@ -454,7 +454,7 @@ void redirect_logger_destroy(struct logger *_logger)
 	free(logger);
 }
 
-struct redirect_logger *redirect_logger_create(d)
+struct redirect_logger *redirect_logger_create(void)
 {
 	struct redirect_logger *logger = malloc(sizeof(struct redirect_logger));
 	if (!logger) {
@@ -508,7 +508,7 @@ void redirect_alerter_destroy(struct alerter *_alerter)
 	free(alerter);
 }
 
-struct redirect_alerter *redirect_alerter_create(d)
+struct redirect_alerter *redirect_alerter_create(void)
 {
 	struct redirect_alerter *alerter = malloc(sizeof(struct redirect_alerter));
 	if (!alerter) {
@@ -539,8 +539,8 @@ static enum clt_client_rc ctl_client_process_command(struct ctl_client_state *st
 		return CTL_CLIENT_DONE;
 	}
 	else if (strcmp(command, "LOGS") == 0) {
-		struct redirect_logger *logger = redirect_logger_create(state->fd);
-		struct redirect_alerter *alerter = redirect_alerter_create(state->fd);
+		struct redirect_logger *logger = redirect_logger_create();
+		struct redirect_alerter *alerter = redirect_alerter_create();
 		if (!logger || !alerter) {
 			ctl_send_status(state->fd, -1, clear_error());
 			if (logger) logger->logger.destroy(&logger->logger);
