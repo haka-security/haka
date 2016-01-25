@@ -9,19 +9,19 @@ local testPolicy = haka.policy.new("test_policy")
 haka.rule {
 	hook = ipv4.events.receive_packet,
 	eval = function (pkt)
-		testPolicy:apply(
-			{
+		testPolicy:apply{
+			values = {
 				ip_src = pkt.src,
 				ip_dst = pkt.dst
 			},
-			{
+			desc = {
 				start_time = pkt.raw.timestamp,
 				end_time = pkt.raw.timestamp,
 				sources = { haka.alert.address(pkt.src) },
 				targets = { haka.alert.address(pkt.dst) },
 			},
-			pkt
-		)
+			ctx = pkt
+		}
 	end
 }
 

@@ -42,7 +42,18 @@ function policy.outofrange(min, max)
 	return { lessthan = min, morethan = max }
 end
 
-function Policy.method:apply(values, actions, ctx)
+function Policy.method:apply(p)
+	check.assert(type(p) == 'table', "policy parameter must be a table")
+	check.assert(p.ctx, "no context defined for policy")
+	if p.values then
+		check.assert(type(p.values) == 'table', "values must be a table")
+	end
+	if p.desc then
+		check.assert(type(p.desc) == 'table', "description must be a table")
+	else
+		p.desc = {}
+	end
+
 	local qualified_policy
 	-- Evaluate in given order and take action on the *last* eligible policy
 	for _, policy in pairs(self.policies) do
@@ -50,20 +61,20 @@ function Policy.method:apply(values, actions, ctx)
 		for index, criterion in pairs(policy.criteria) do
 			if type(criterion) == 'table' then
 			    if criterion.min ~= nil and criterion.max ~= nil then
-				if values[index] < criterion.min or values[index] > criterion.max then
+				if p.values[index] < criterion.min or p.values[index] > criterion.max then
 				    eligible = false
 				    break
 			    end
 			    elseif criterion.lessthan ~= nil and criterion.morethan ~= nil then
-			        if values[index] > criterion.lessthan and values[index] < criterion.morethan then
+			        if p.values[index] > criterion.lessthan and p.values[index] < criterion.morethan then
 				    eligible = false
 				    break
 				end
-			    elseif criterion[values[index]] == nil then
+			    elseif criterion[p.values[index]] == nil then
 				eligible = false
 				break
 			    end
-			elseif values[index] ~= criterion then
+			elseif p.values[index] ~= criterion then
 				eligible = false
 				break
 			end
@@ -74,7 +85,7 @@ function Policy.method:apply(values, actions, ctx)
 	end
 	if qualified_policy then
 		log.info("applying policy %s", qualified_policy.name)
-		qualified_policy.action(ctx,values)
+		qualified_policy.action(self, p.ctx, p.values, p.desc)
 	end
 end
 
@@ -106,14 +117,30 @@ function policy.drop(el)
 end
 
 function policy.drop_with_alert(alert)
-	return function(ctx)
+	return function(policy, ctx, values, desc)
+		for k, v in pairs(desc) do
+			if not alert[k] then
+				alert[k] = v
+			end
+		end
+		if not alert.description then
+			alert.description = policy.name
+		end
 		ctx:drop()
 		haka.alert(alert)
 	end
 end
 
 function policy.alert(alert)
-	return function()
+	return function(policy, ctx, values, desc)
+		for k, v in pairs(desc) do
+			if not alert[k] then
+				alert[k] = v
+			end
+		end
+		if not alert.description then
+			alert.description = policy.name
+		end
 		haka.alert(alert)
 	end
 end
