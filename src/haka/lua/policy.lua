@@ -48,10 +48,10 @@ function Policy.method:apply(p)
 	if p.values then
 		check.assert(type(p.values) == 'table', "values must be a table")
 	end
-	if p.desc then
-		check.assert(type(p.desc) == 'table', "description must be a table")
+	if p.description then
+		check.assert(type(p.description) == 'table', "description must be a table")
 	else
-		p.desc = {}
+		p.description = {}
 	end
 
 	local qualified_policy
@@ -85,7 +85,7 @@ function Policy.method:apply(p)
 	end
 	if qualified_policy then
 		log.info("applying policy %s", qualified_policy.name)
-		qualified_policy.action(self, p.ctx, p.values, p.desc)
+		qualified_policy.action(self, p.ctx, p.values, p.description)
 	end
 end
 
@@ -117,8 +117,8 @@ function policy.drop(el)
 end
 
 function policy.drop_with_alert(alert)
-	return function(policy, ctx, values, desc)
-		for k, v in pairs(desc) do
+	return function(policy, ctx, values, description)
+		for k, v in pairs(description) do
 			if not alert[k] then
 				alert[k] = v
 			end
@@ -132,8 +132,8 @@ function policy.drop_with_alert(alert)
 end
 
 function policy.alert(alert)
-	return function(policy, ctx, values, desc)
-		for k, v in pairs(desc) do
+	return function(policy, ctx, values, description)
+		for k, v in pairs(description) do
 			if not alert[k] then
 				alert[k] = v
 			end
