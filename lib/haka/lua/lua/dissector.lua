@@ -218,8 +218,7 @@ function types.Dissector.method:streamed(stream, f, this, current, ...)
 	local cur
 	if current then cur = current:copy() end
 
-	local comanager = self:get_comanager(stream, ...)
-
+	local comanager = stream:getcomanager()
 	-- unique id for the function to execute
 	local id = comanager.hash(f, this)
 
@@ -229,18 +228,6 @@ function types.Dissector.method:streamed(stream, f, this, current, ...)
 	end
 
 	comanager:process(id, cur)
-end
-
-function types.Dissector.method:get_comanager(stream)
-	if not self._costream then
-		self._costream = {}
-	end
-
-	if not self._costream[stream] then
-		self._costream[stream] = haka.vbuffer_stream_comanager:new(stream)
-	end
-
-	return self._costream[stream]
 end
 
 function dissector.pcall(self, f)

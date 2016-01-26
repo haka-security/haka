@@ -76,6 +76,7 @@ bool vbuffer_stream_init(struct vbuffer_stream *stream, void (*userdata_cleanup)
 	stream->data.chunks->flags.eof = false;
 	list2_init(&stream->chunks);
 	list2_init(&stream->read_chunks);
+	lua_ref_init(&stream->comanager);
 	stream->userdata_cleanup = userdata_cleanup;
 	return true;
 }
@@ -86,6 +87,7 @@ void vbuffer_stream_clear(struct vbuffer_stream *stream)
 	_vbuffer_stream_free_chunks(stream, &stream->read_chunks);
 
 	vbuffer_release(&stream->data);
+	lua_ref_clear(&stream->comanager);
 	lua_object_release(stream, &stream->lua_object);
 }
 
