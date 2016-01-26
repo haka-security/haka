@@ -22,7 +22,11 @@ function Policy.method:__init(name, actions)
 end
 
 function Policy.method:insert(name, criteria, action)
-	log.info("register policy '%s' on '%s'", name, self.name)
+	if name then
+		log.info("register policy '%s' on '%s'", name, self.name)
+	else
+		log.info("register anonymous policy on '%s'", self.name)
+	end
 	table.insert(self.policies, {name = name, criteria = criteria, action = action})
 end
 
@@ -84,7 +88,11 @@ function Policy.method:apply(p)
 		end
 	end
 	if qualified_policy then
-		log.info("applying policy %s", qualified_policy.name)
+		if qualified_policy.name then
+			log.info("applying policy %s", qualified_policy.name)
+		else
+			log.info("applying anonymous policy for %s", self.name)
+		end
 		qualified_policy.action(self, p.ctx, p.values, p.description)
 	end
 end
@@ -102,7 +110,7 @@ local mt = {
 		p.name = nil
 		local action = p['action']
 		p.action = nil
-		policy:insert(name or '', p, action)
+		policy:insert(name, p, action)
 	end
 }
 
