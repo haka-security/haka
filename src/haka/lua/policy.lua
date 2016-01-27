@@ -124,9 +124,13 @@ function policy.drop(el)
 	ctx:drop()
 end
 
-function policy.drop_with_alert(alert)
-	return function(policy, ctx, values, description)
-		for k, v in pairs(description) do
+function policy.drop_with_alert(_alert)
+	return function(policy, ctx, values, desc)
+		local alert = {}
+		for k, v in pairs(_alert) do
+			alert[k] = v
+		end
+		for k, v in pairs(desc) do
 			if not alert[k] then
 				alert[k] = v
 			end
@@ -139,9 +143,13 @@ function policy.drop_with_alert(alert)
 	end
 end
 
-function policy.alert(alert)
-	return function(policy, ctx, values, description)
-		for k, v in pairs(description) do
+function policy.alert(_alert)
+	return function(policy, ctx, values, desc)
+		local alert = {}
+		for k, v in pairs(_alert) do
+			alert[k] = v
+		end
+		for k, v in pairs(desc) do
 			if not alert[k] then
 				alert[k] = v
 			end
