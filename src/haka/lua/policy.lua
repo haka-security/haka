@@ -52,10 +52,10 @@ function Policy.method:apply(p)
 	if p.values then
 		check.assert(type(p.values) == 'table', "values must be a table")
 	end
-	if p.description then
-		check.assert(type(p.description) == 'table', "description must be a table")
+	if p.desc then
+		check.assert(type(p.desc) == 'table', "desc must be a table")
 	else
-		p.description = {}
+		p.desc = {}
 	end
 
 	local qualified_policy
@@ -93,7 +93,7 @@ function Policy.method:apply(p)
 		else
 			log.info("applying anonymous policy for %s", self.name)
 		end
-		qualified_policy.action(self, p.ctx, p.values, p.description)
+		qualified_policy.action(self, p.ctx, p.values, p.desc)
 	end
 end
 
