@@ -347,7 +347,7 @@ function dg.RecordFinish.method:_apply(ctx)
 		if type(prop) == 'function' then
 			res:addproperty(name, prop, nil)
 		elseif type(prop) == 'table' then
-			res:addproperty(name, prop.get, prop.set, nil)
+			res:addproperty(name, prop.get, prop.set)
 		else
 			error(string.format("invalid extra property '%s'", name))
 		end
