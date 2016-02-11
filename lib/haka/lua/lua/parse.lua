@@ -123,7 +123,7 @@ end
 function parse.Context.method:lookahead()
 	local iter = self.iter:copy()
 	local sub = self.iter:sub(1)
-	if sub then
+	if sub and #sub == 1 then
 		local la = sub:asnumber()
 		self:update(iter)
 		return la
