@@ -3,7 +3,7 @@ language: c
 compiler:
   - gcc
 
-before_script:
+install:
   - wget http://heanet.dl.sourceforge.net/project/swig/swig/swig-2.0.11/swig-2.0.11.tar.gz
   - tar xzf swig-2.0.11.tar.gz
   - cd swig-2.0.11/ && ./configure --prefix=/usr && make && sudo make install
