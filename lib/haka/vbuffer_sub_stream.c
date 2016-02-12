@@ -51,6 +51,8 @@ bool vbuffer_sub_stream_push(struct vbuffer_sub_stream *stream, struct vbuffer_s
 		return false;
 	}
 
+	vbuffer_iterator_register(&chunk->select);
+
 	return vbuffer_stream_push(&stream->stream, &extract, chunk, current);
 }
 
