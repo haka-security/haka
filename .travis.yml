@@ -14,4 +14,4 @@ before_script:
   - cd workspace
   - cmake ../
 
-script: make tests
+script: CTEST_OUTPUT_ON_FAILURE=1 make tests
