@@ -347,7 +347,7 @@ function dg.RecordFinish.method:_apply(ctx)
 		if type(prop) == 'function' then
 			res:addproperty(name, prop, nil)
 		elseif type(prop) == 'table' then
-			res:addproperty(name, prop.get, prop.set, nil)
+			res:addproperty(name, prop.get, prop.set)
 		else
 			error(string.format("invalid extra property '%s'", name))
 		end
@@ -782,7 +782,14 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 			if self.converter then
 				res:addproperty(self.name,
 					function (this) return self.converter.get(sub) end,
-					function (this, newvalue) sub = self.converter.set(newvalue) end
+					function (this, newvalue)
+						local value = self.converter.set(newvalue)
+						if type(value) == 'string' then
+							sub:setstring(value)
+						else
+							sub:replace(value)
+						end
+					end
 				)
 			else
 				res[self.name] = sub

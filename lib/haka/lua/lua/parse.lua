@@ -213,7 +213,14 @@ end
 
 function parse.Context.method:push(result, name)
 	local new = result or parseResult.Result:new()
+
 	rawset(new, '_validate', self._validate)
+	rawset(new, '_user', self.user)
+
+	if #self._results > 0 then
+		rawset(new, '_parent', self._results[#self._results])
+	end
+
 	self._results[#self._results+1] = new
 	if self._initresults then
 		local curinit = self._initresults[#self._initresults]
