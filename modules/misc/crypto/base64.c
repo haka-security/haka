@@ -39,10 +39,10 @@ char *crypto_base64_encode(const char *data, size_t size, size_t *outsize)
 		goto err;
 	}
 
-	BIO_flush(bio);
+	(void)BIO_flush(bio);
 
 	BIO_get_mem_ptr(bio, &buffer_ptr);
-	BIO_set_close(bio, BIO_NOCLOSE);
+	(void)BIO_set_close(bio, BIO_NOCLOSE);
 
 	BIO_free_all(bio);
 
