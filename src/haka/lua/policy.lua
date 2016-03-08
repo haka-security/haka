@@ -120,7 +120,7 @@ function policy.new(...)
 	return Policy:new(...)
 end
 
-function policy.drop(el)
+function policy.drop(ctx)
 	ctx:drop()
 end
 
