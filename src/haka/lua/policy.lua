@@ -64,20 +64,20 @@ function Policy.method:apply(p)
 		local eligible = true
 		for index, criterion in pairs(policy.criteria) do
 			if type(criterion) == 'table' then
-			    if criterion.min ~= nil and criterion.max ~= nil then
-				if p.values[index] < criterion.min or p.values[index] > criterion.max then
-				    eligible = false
-				    break
-			    end
-			    elseif criterion.lessthan ~= nil and criterion.morethan ~= nil then
-			        if p.values[index] > criterion.lessthan and p.values[index] < criterion.morethan then
-				    eligible = false
-				    break
+				if criterion.min ~= nil and criterion.max ~= nil then
+					if p.values[index] < criterion.min or p.values[index] > criterion.max then
+						eligible = false
+						break
+					end
+				elseif criterion.lessthan ~= nil and criterion.morethan ~= nil then
+					if p.values[index] > criterion.lessthan and p.values[index] < criterion.morethan then
+						eligible = false
+						break
+					end
+				elseif criterion[p.values[index]] == nil then
+					eligible = false
+					break
 				end
-			    elseif criterion[p.values[index]] == nil then
-				eligible = false
-				break
-			    end
 			elseif p.values[index] ~= criterion then
 				eligible = false
 				break
