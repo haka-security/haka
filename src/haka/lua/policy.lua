@@ -120,7 +120,7 @@ function policy.new(...)
 	return Policy:new(...)
 end
 
-function policy.drop(ctx)
+function policy.drop(policy, ctx, values, desc)
 	ctx:drop()
 end
 
@@ -161,7 +161,7 @@ function policy.alert(_alert)
 	end
 end
 
-function policy.accept
+function policy.accept(policy, ctx, values, desc)
 	-- Nothing to do
 end
 
