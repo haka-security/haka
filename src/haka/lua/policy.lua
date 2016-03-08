@@ -161,6 +161,10 @@ function policy.alert(_alert)
 	end
 end
 
+function policy.accept
+	-- Nothing to do
+end
+
 haka.policy = policy
 
 return {}
