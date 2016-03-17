@@ -32,7 +32,7 @@ if(SPHINX_FOUND AND DOXYGEN_FOUND)
 				set(dest_path "${CMAKE_CURRENT_SOURCE_DIR}/genimages/${source_file_path}")
 				set(dest_file "${dest_path}/${source_file_name}.png")
 
-				if("${generate_images_EXECUTABLE}" STREQUAL "INKSCAPE_EXECUTABLE")
+				if("${generate_images_TOOL_UPPER}" STREQUAL "INKSCAPE")
 					add_custom_command(
 						OUTPUT "${dest_file}"
 						COMMAND mkdir -p ${dest_path}
