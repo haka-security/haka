@@ -366,6 +366,11 @@ function dg.UnionStart.method:__init(rule, id, name, resultclass)
 end
 
 function dg.UnionStart.method:_apply(ctx)
+	ctx._union = {
+		start = ctx.iter.meter,
+		meter = ctx.iter.meter,
+		bitoffset = ctx._bitoffset
+	}
 	if self.name then
 		local res = ctx:result()
 		local new = ctx:push(self.resultclass:new(), self.name)
@@ -378,6 +383,12 @@ end
 dg.UnionRestart = class.class('DGUnionRestart', dg.Control)
 
 function dg.UnionRestart.method:_apply(ctx)
+	if ctx.iter.meter == ctx._union.meter then
+		ctx._union.bitoffset = math.max(ctx._bitoffset, ctx._union.bitoffset)
+	elseif ctx.iter.meter > ctx._union.meter then
+		ctx._union.meter = ctx.iter.meter
+		ctx._union.bitoffset = ctx._bitoffset
+	end
 	ctx:seekmark()
 end
 
@@ -399,6 +410,8 @@ function dg.UnionFinish.method:_apply(ctx)
 
 	ctx:popmark()
 	ctx:unmark()
+	ctx.iter:advance(ctx._union.meter - ctx._union.start)
+	ctx._bitoffset = ctx._union.bitoffset
 end
 
 dg.TryStart = class.class('DGTryStart', dg.CompoundStart)
