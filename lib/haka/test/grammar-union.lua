@@ -6,11 +6,15 @@ TestGrammarUnion = {}
 
 function TestGrammarUnion:test_union()
 	-- Given
-	local buf = haka.vbuffer_from("\xC1")
+	local buf = haka.vbuffer_from("\x42\xC1\xAA")
 	local grammar = haka.grammar.new("test", function ()
-		elem = union{
-			field('a', number(2)),
-			field('b', number(8))
+		elem = record{
+			field('a', number(7)),
+			union{
+				field('b', number(8)),
+				field('c', number(3))
+			},
+			field('d', number(9))
 		}
 
 		export(elem)
@@ -19,8 +23,10 @@ function TestGrammarUnion:test_union()
 	-- When
 	local result = grammar.elem:parse(buf:pos('begin'))
 
-	assertEquals(result.a, 3)
-	assertEquals(result.b, 193)
+	assertEquals(result.a, 0x21)
+	assertEquals(result.b, 96)
+	assertEquals(result.c, 3)
+	assertEquals(result.d, 0x1AA)
 end
 
 addTestSuite('TestGrammarUnion')
