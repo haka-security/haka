@@ -387,7 +387,7 @@ static void packet_verdict(struct packet *orig_pkt, filter_result result)
 
 static const char *packet_get_dissector(struct packet *orig_pkt)
 {
-	return "ethernet"; // ?
+	return "ethernet";
 }
 
 static uint64 packet_get_id(struct packet *orig_pkt)
