@@ -412,6 +412,7 @@ function dg.UnionFinish.method:_apply(ctx)
 	ctx:unmark()
 	ctx.iter:advance(ctx._union.meter - ctx._union.start)
 	ctx._bitoffset = ctx._union.bitoffset
+	ctx._union = nil
 end
 
 dg.TryStart = class.class('DGTryStart', dg.CompoundStart)
