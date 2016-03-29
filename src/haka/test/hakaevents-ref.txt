@@ -1,3 +1,108 @@
 info external: started
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
+info core: applying policy default action
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 debug lua: closing state
 info external: exiting

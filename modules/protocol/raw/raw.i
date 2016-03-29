@@ -33,7 +33,19 @@ const char *packet_dissector(struct packet *pkt);
 		dissectors[name] = dissector
 	end
 
-	raw_dissector.options.drop_unknown_dissector = false
+	this.policies = {}
+	this.policies.unknown_dissector = haka.policy.new('unknown dissector')
+
+	haka.policy {
+		on = this.policies.unknown_dissector,
+		name = "default action",
+		action = function (policy, ctx, values, desc)
+			haka.alert{
+				description = string.format("dropping unknown dissector '%s'", values.name)
+			}
+			return ctx:drop()
+		end
+	}
 
 	function raw_dissector.method:receive()
 		haka.context:signal(self, raw_dissector.events.receive_packet)
@@ -44,10 +56,13 @@ const char *packet_dissector(struct packet *pkt);
 			if next_dissector then
 				return next_dissector:receive(self)
 			else
-				if raw_dissector.options.drop_unknown_dissector then
-					haka.log.error("dissector '%s' is unknown", dissector)
-					return self:drop()
-				else
+				this.policies.unknown_dissector:apply{
+					ctx = self,
+					values = {
+						name = dissector
+					}
+				}
+				if self:can_continue() then
 					return self:send()
 				end
 			end
@@ -90,5 +105,4 @@ const char *packet_dissector(struct packet *pkt);
 	end
 
 	this.events = raw_dissector.events
-	this.options = raw_dissector.options
 }
