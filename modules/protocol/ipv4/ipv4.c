@@ -319,6 +319,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 
 	ip->packet = packet;
 	ip->invalid_checksum = false;
+	ip->dont_reassemble = false;
 	ip->reassembled = false;
 	list2_elem_init(&ip->frag_list);
 
@@ -367,6 +368,10 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 
 struct ipv4 *ipv4_reassemble(struct ipv4 *ip)
 {
+	if (ip->dont_reassemble) {
+		return ip;
+	}
+
 	if (!ipv4_get_flags_mf(ip) && ipv4_get_frag_offset(ip) == 0) {
 		return ip;
 	}
@@ -448,6 +453,7 @@ struct ipv4 *ipv4_create(struct packet *packet)
 
 	ip->packet = packet;
 	ip->invalid_checksum = true;
+	ip->dont_reassemble = false;
 	ip->reassembled = false;
 	list2_elem_init(&ip->frag_list);
 

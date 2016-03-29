@@ -7,14 +7,14 @@
 local raw = require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 
-ipv4.options.enable_reassembly = false
-
 -- just to be safe, to avoid the test to run in an infinite loop
 local counter = 10
 
 haka.rule {
 	hook = ipv4.events.receive_packet,
 	eval = function (pkt)
+		pkt.dont_reassemble = true
+
 		if pkt.proto ~= 20 then
 			if counter == 0 then
 				error("loop detected")

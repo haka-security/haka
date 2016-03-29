@@ -295,6 +295,8 @@ struct ipv4 {
 		struct ipv4_addr *src;
 		struct ipv4_addr *dst;
 
+		bool dont_reassemble;
+
 		%immutable;
 		const char *name { return "ipv4"; }
 		struct packet *raw { IPV4_CHECK($self, NULL); return $self->packet; }
@@ -369,6 +371,10 @@ int lua_inet_checksum(struct vbuffer *buf);
 	struct ipv4_addr *ipv4_network_net_get(struct ipv4_network *network) { return ipv4_addr_new(network->net.net); }
 
 	unsigned char ipv4_network_mask_get(struct ipv4_network *network) { return network->net.mask; }
+
+	bool ipv4_dont_reassemble_get(struct ipv4 *ip) { return ip->dont_reassemble; }
+	void ipv4_dont_reassemble_set(struct ipv4 *ip, bool v) { ip->dont_reassemble = v; }
+
 %}
 
 %luacode {
@@ -397,7 +403,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 		name = 'ipv4'
 	}
 
-	ipv4_dissector.options.enable_reassembly = true
+	ipv4_dissector:register_event('receive_packet_reassembled')
 
 	function ipv4_dissector:new(pkt)
 		return this._dissect(pkt)
@@ -409,13 +415,14 @@ int lua_inet_checksum(struct vbuffer *buf);
 
 	function ipv4_dissector.method:receive()
 		local pkt
-
 		haka.context:signal(self, ipv4_dissector.events['receive_packet'])
 
-		if ipv4_dissector.options.enable_reassembly then pkt = self:reassemble()
-		else pkt = self end
+		if self.dont_reassemble then pkt = self
+		else pkt = self:reassemble() end
 
 		if pkt then
+			haka.context:signal(pkt, ipv4_dissector.events['receive_packet_reassembled'])
+
 			local next_dissector = ipv4_protocol_dissectors[pkt.proto]
 			if next_dissector then
 				return next_dissector:receive(pkt)
@@ -450,7 +457,6 @@ int lua_inet_checksum(struct vbuffer *buf);
 	swig.getclassmetatable('ipv4')['.fn'].error = swig.getclassmetatable('ipv4')['.fn'].drop
 
 	this.events = ipv4_dissector.events
-	this.options = ipv4_dissector.options
 
 	function this.create(pkt)
 		return ipv4_dissector:create(pkt)
