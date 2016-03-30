@@ -14,17 +14,27 @@ local function class_hierarchy(cls)
 end
 
 
-local BaseClassView = {}
-function BaseClassView.__index(self, key)
+local BaseClassImmutableMethodView = {}
+function BaseClassImmutableMethodView.__index(self, key)
 	local v
 	for c in class_hierarchy(rawget(self, '__class')) do
-		v = rawget(c, 'method')[key]
+		v = rawget(c, '__method')[key]
 		if v then return v end
 	end
 end
 
-function BaseClassView.__tostring(self)
+function BaseClassImmutableMethodView.__newindex(self, key, value)
+	error("immutable class")
+end
+
+function BaseClassImmutableMethodView.__tostring(self)
 	return string.format("<class view: %s>", rawget(self, '__class').name)
+end
+
+local BaseClassMethodView = table.copy(BaseClassImmutableMethodView)
+function BaseClassMethodView.__newindex(self, key, value)
+	local cls = rawget(self, '__class')
+	cls.__method[key] = value
 end
 
 local BaseClass = {}
@@ -58,7 +68,7 @@ end
 
 function BaseClass.view(cls)
 	local view = { __class = cls }
-	setmetatable(view, BaseClassView)
+	setmetatable(view, BaseClassImmutableMethodView)
 	return view
 end
 
@@ -76,7 +86,7 @@ local BaseObject = {
 	name = 'BaseObject',
 	new = module.new_instance,
 	__class_init = function (self, cls) end,
-	method = {
+	__method = {
 		__init = function (self) end,
 		clone = function (self)
 			local c = {}
@@ -116,7 +126,7 @@ local function build_index_table(cls)
 	local index
 
 	for c in class_hierarchy(cls) do
-		for name, method in pairs(rawget(c, 'method')) do
+		for name, method in pairs(rawget(c, '__method')) do
 			if name == '__index' then
 				if not index then
 					index = method
@@ -163,7 +173,7 @@ local function build_newindex_table(cls)
 
 	for c in class_hierarchy(cls) do
 		if not newindex then
-			newindex = rawget(c, 'method').__newindex
+			newindex = rawget(c, '__method').__newindex
 		end
 
 		for name, prop in pairs(rawget(c, 'property')) do
@@ -213,7 +223,8 @@ function module.class(name, super)
 		end
 	end
 
-	cls.method = {}
+	cls.__method = {}
+	cls.method = setmetatable({ __class = cls }, BaseClassMethodView)
 	cls.property = {}
 	cls.__index = function (self, key)
 		cls.__index = build_index_table(cls)
