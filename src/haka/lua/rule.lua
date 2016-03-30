@@ -26,19 +26,25 @@ function haka.rule_summary()
 end
 
 function haka.rule(r)
+	local loc = debug.getinfo(2, 'nSl')
+	r.location = string.format("%s:%d", loc.short_src, loc.currentline)
+
+	if r.hook then
+		log.warning("rule at %s uses 'hook' keyword which deprecated and should be replaced by 'on'", r.location)
+		r.on = r.hook
+	end
+
 	check.assert(type(r) == 'table', "rule parameter must be a table")
-	check.assert(r.hook, "no hook defined for rule")
-	check.assert(class.isa(r.hook, haka.event.Event), "rule hook must be an event")
+	check.assert(r.on, "no event defined for rule")
+	check.assert(class.isa(r.on, haka.event.Event), "rule must bind on an event")
 	check.assert(type(r.eval) == 'function', "rule eval function expected")
 	check.assert(not r.options or type(r.options) == 'table', "rule options should be table")
 
-	local loc = debug.getinfo(2, 'nSl')
-	r.location = string.format("%s:%d", loc.short_src, loc.currentline)
 	r.type = 'simple'
 
 	table.insert(module.rules, r)
 
-	haka.context.connections:register(r.hook, r.eval, r.options or {})
+	haka.context.connections:register(r.on, r.eval, r.options or {})
 end
 
 function haka.console.rules()

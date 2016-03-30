@@ -6,10 +6,12 @@ local class = require('class')
 local check = require('check')
 local rule = require('rule')
 
+local log = haka.log_section("core")
+
 local rule_group = class.class('RuleGroup')
 
 function rule_group.method:__init(args)
-	self.hook = args.hook
+	self.on = args.on
 	self.name = args.name
 	self.rules = {}
 	self.init = args.init or function () end
@@ -49,6 +51,14 @@ end
 
 
 function haka.rule_group(args)
+	local loc = debug.getinfo(2, 'nSl')
+	args.location = string.format("%s:%d", loc.short_src, loc.currentline)
+
+	if args.hook then
+		log.warning("rule groupe at %s uses 'hook' keyword which deprecated and should be replaced by 'on'", args.location)
+		args.on = args.hook
+	end
+
 	check.assert(type(args) == 'table', "rule parameter must be a table")
 	check.assert(args.hook, "not hook defined for rule group")
 	check.assert(class.isa(args.hook, haka.event.Event), "rule hook must be an event")
