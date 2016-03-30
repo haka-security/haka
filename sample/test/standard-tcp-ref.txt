@@ -9,6 +9,7 @@ alert: id = = <>
 		address: 192.168.20.1, 443
 	}
 debug conn: dropping connection 192.168.10.1:52110 -> 192.168.20.1:443
+info core: applying policy default action
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet

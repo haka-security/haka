@@ -24,6 +24,17 @@ tcp_connection_dissector:register_event('receive_packet')
 tcp_connection_dissector:register_streamed_event('receive_data')
 tcp_connection_dissector:register_event('end_connection')
 
+module.policies = {}
+module.policies.no_connection_found = haka.policy.new("no connection found for tcp packet")
+module.policies.unexpected_packet = haka.policy.new("unexpected tcp packet")
+module.policies.invalid_handshake = haka.policy.new("invalid tcp handshake")
+
+haka.policy {
+	on = module.policies.no_connection_found,
+	name = "default action",
+	action = haka.policy.drop_with_alert{ severity = 'low' }
+}
+
 local function tcp_get_key(pkt)
 	return pkt.ip.src, pkt.ip.dst, pkt.srcport, pkt.dstport
 end
@@ -62,20 +73,28 @@ function tcp_connection_dissector:receive(pkt)
 			connection.data:createnamespace('tcp_connection', self)
 		else
 			if not dropped then
-				haka.alert{
-					severity = 'low',
-					description = "no connection found for tcp packet",
-					sources = {
-						haka.alert.address(pkt.ip.src),
-						haka.alert.service(string.format("tcp/%d", pkt.srcport))
-					},
-					targets = {
-						haka.alert.address(pkt.ip.dst),
-						haka.alert.service(string.format("tcp/%d", pkt.dstport))
+				module.policies.no_connection_found:apply{
+					ctx = pkt,
+					desc = {
+						sources = {
+							haka.alert.address(pkt.ip.src),
+							haka.alert.service(string.format("tcp/%d", pkt.srcport))
+						},
+						targets = {
+							haka.alert.address(pkt.ip.dst),
+							haka.alert.service(string.format("tcp/%d", pkt.dstport))
+						}
 					}
 				}
+				if not pkt:can_continue() then
+					-- packet was dropped by policy
+					return
+				else
+					pkt:send()
+				end
+			else
+				return pkt:drop()
 			end
-			return pkt:drop()
 		end
 	end
 
@@ -98,6 +117,18 @@ function tcp_connection_dissector:receive(pkt)
 		end
 	end
 end
+
+haka.policy {
+	on = module.policies.unexpected_packet,
+	name = "default action",
+	action = haka.policy.drop_with_alert()
+}
+
+haka.policy {
+	on = module.policies.invalid_handshake,
+	name = "default action",
+	action = haka.policy.drop_with_alert()
+}
 
 tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function ()
 	state_type{
@@ -129,14 +160,37 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	timed_wait   = state()
 
 	local function unexpected_packet(self, pkt)
-		log.error("unexpected tcp packet")
-		pkt:drop()
+		module.policies.unexpected_packet:apply{
+			ctx = pkt,
+			desc = {
+				sources = {
+					haka.alert.address(pkt.ip.src),
+					haka.alert.service(string.format("tcp/%d", pkt.srcport))
+				},
+				targets = {
+					haka.alert.address(pkt.ip.dst),
+					haka.alert.service(string.format("tcp/%d", pkt.dstport))
+				}
+			}
+		}
 	end
 
 	local function invalid_handshake(type)
 		return function (self, pkt)
-			log.error("invalid tcp %s handshake", type)
-			pkt:drop()
+			module.policies.unexpected_packet:apply{
+				ctx = pkt,
+				desc = {
+					description = string.format("invalid tcp %s handshake", type),
+					sources = {
+						haka.alert.address(pkt.ip.src),
+						haka.alert.service(string.format("tcp/%d", pkt.srcport))
+					},
+					targets = {
+						haka.alert.address(pkt.ip.dst),
+						haka.alert.service(string.format("tcp/%d", pkt.dstport))
+					}
+				}
+			}
 		end
 	end
 

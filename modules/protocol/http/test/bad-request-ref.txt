@@ -6,6 +6,7 @@ alert: id = = <>
 	severity = low
 	description = invalid http request_line
 debug conn: dropping connection 10.2.96.127:57861 -> 10.2.104.129:80
+info core: applying policy default action
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -17,6 +18,7 @@ alert: id = = <>
 		address: 10.2.96.127
 		service: tcp/57859
 	}
+info core: applying policy default action
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
