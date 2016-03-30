@@ -20,7 +20,7 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 		field('class',       number(2)),
 		field('number',      number(5)),
 	}
-	
+
 	local option_data = record{
 		field('len',         number(8))
 			:validate(function (self) self.len = #self.data+2 end),
@@ -28,7 +28,7 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 			:count(function (self) return self.len-2 end)
 		)
 	}
-	
+
 	local option = record{
 		union{
 			option_header,
@@ -38,7 +38,7 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 			function (self) return self.type ~= 0 and self.type ~= 1 end
 		)
 	}
-	
+
 	local header = record{
 		field('version',     number(4))
 			:validate(function (self) self.version = 4 end),
