@@ -25,7 +25,7 @@ function Policy.method:insert(name, criteria, action)
 	if name then
 		log.info("register policy '%s' on '%s'", name, self.name)
 	else
-		log.info("register anonymous policy on '%s'", self.name)
+		log.info("register policy on '%s'", self.name)
 	end
 	table.insert(self.policies, {name = name, criteria = criteria, action = action})
 end
@@ -89,9 +89,9 @@ function Policy.method:apply(p)
 	end
 	if qualified_policy then
 		if qualified_policy.name then
-			log.info("applying policy %s", qualified_policy.name)
+			log.debug("applying policy %s for %s", qualified_policy.name, self.name)
 		else
-			log.info("applying anonymous policy for %s", self.name)
+			log.debug("applying policy for %s", self.name)
 		end
 		qualified_policy.action(self, p.ctx, p.values, p.desc)
 	end

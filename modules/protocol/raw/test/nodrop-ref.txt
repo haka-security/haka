@@ -7,7 +7,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:27 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -17,7 +17,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:27 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -27,7 +27,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:28 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -37,7 +37,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:28 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -47,7 +47,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:31 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -57,7 +57,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:31 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -67,7 +67,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:36 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -77,7 +77,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:36 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -105,7 +105,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:46 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -115,7 +115,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:46 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -125,7 +125,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:50 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -135,7 +135,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:50 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -145,7 +145,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:51 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }
@@ -155,7 +155,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:51 2013
 }
-info core: applying policy don't drop
+debug core: applying policy don't drop for unknown dissector
 userdata packet {
   data : table {
   }

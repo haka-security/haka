@@ -7,7 +7,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:27 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -19,7 +19,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:27 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -31,7 +31,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:28 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -43,7 +43,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:28 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -55,7 +55,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:31 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -67,7 +67,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:31 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -79,7 +79,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:36 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -91,7 +91,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:36 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -121,7 +121,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:46 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -133,7 +133,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:46 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -145,7 +145,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:50 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -157,7 +157,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:50 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -169,7 +169,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:51 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {
@@ -181,7 +181,7 @@ userdata packet {
   }
   timestamp : userdata time Mon Nov  4 15:49:51 2013
 }
-info core: applying policy default action
+debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 userdata packet {

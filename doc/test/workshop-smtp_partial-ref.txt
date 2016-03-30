@@ -9,7 +9,7 @@ alert: id = = <>
 debug conn: dropping connection 192.168.10.10:41155 -> 192.168.20.1:25
 debug conn: closing connection 192.168.10.10:56704 -> 192.168.20.1:80
 debug conn: closing connection 192.168.10.10:41155 -> 192.168.20.1:25
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -21,7 +21,7 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/25
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -33,7 +33,7 @@ alert: id = = <>
 		address: 192.168.10.10
 		service: tcp/41155
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -45,7 +45,7 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/25
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -57,7 +57,7 @@ alert: id = = <>
 		address: 192.168.10.10
 		service: tcp/41155
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -69,7 +69,7 @@ alert: id = = <>
 		address: 192.168.10.10
 		service: tcp/41155
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -81,7 +81,7 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/25
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -93,7 +93,7 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/25
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -105,7 +105,7 @@ alert: id = = <>
 		address: 192.168.10.10
 		service: tcp/41155
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -117,7 +117,7 @@ alert: id = = <>
 		address: 192.168.10.10
 		service: tcp/41155
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -129,7 +129,7 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/25
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -141,7 +141,7 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/25
 	}
-info core: applying policy default action
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
