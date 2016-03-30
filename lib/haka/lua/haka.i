@@ -133,8 +133,6 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 %include "lua/log.si"
 
 %luacode {
-	require('class')
-	require('utils')
 	require('events')
 
 	haka.events = {}
