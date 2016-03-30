@@ -60,7 +60,7 @@ function Context.method:register_connections(connections)
 		if self.scope then
 			table.insert(self.scope._connections, connections)
 		else
-			error("invalid scope")
+			error("scope required to register dynamic event connections")
 		end
 	end
 end

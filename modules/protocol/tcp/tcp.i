@@ -267,12 +267,18 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 
 	swig.getclassmetatable('tcp')['.fn'].send = tcp_dissector.method.send
 	swig.getclassmetatable('tcp')['.fn'].receive = tcp_dissector.method.receive
+	swig.getclassmetatable('tcp')['.fn'].preceive = tcp_dissector.method.preceive
 	swig.getclassmetatable('tcp')['.fn'].inject = tcp_dissector.method.inject
 	swig.getclassmetatable('tcp')['.fn'].continue = haka.helper.Dissector.method.continue
 	swig.getclassmetatable('tcp')['.fn'].error = swig.getclassmetatable('tcp')['.fn'].drop
 
 	local ipv4 = require("protocol/ipv4")
-	ipv4.register_protocol(6, tcp_dissector)
+	haka.policy {
+		name = "tcp",
+		on = ipv4.policies.install,
+		proto = 6,
+		action = haka.policy.select_next_dissector(tcp_dissector)
+	}
 
 	this.events = tcp_dissector.events
 

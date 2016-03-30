@@ -4,6 +4,8 @@
 
 local ipv4 = require("protocol/ipv4")
 
+local module = {}
+
 local function compute_checksum(pkt)
 	local checksum = ipv4.inet_checksum()
 
@@ -50,10 +52,6 @@ udp_dissector.grammar = haka.grammar.new("udp", function ()
 	export(packet)
 end)
 
-function udp_dissector.method:next_dissector()
-	return udp_dissector.next_dissector
-end
-
 function udp_dissector.method:parse_payload(pkt, payload)
 	self.ip = pkt
 	local res = udp_dissector.grammar.packet:parse(payload:pos("begin"))
@@ -89,14 +87,21 @@ function udp_dissector:create(pkt, init)
 	return udp
 end
 
-ipv4.register_protocol(17, udp_dissector)
+function udp_dissector.method:install_criterion()
+	return { port = self.port }
+end
 
-return {
-	events = udp_dissector.events,
-	create = function (pkt, init)
-		return udp_dissector:create(pkt, init)
-	end,
-	select_next_dissector = function (dissector)
-		udp_dissector.next_dissector = dissector
-	end
+haka.policy {
+	name = "udp",
+	on = ipv4.policies.install,
+	proto = 17,
+	action = haka.policy.select_next_dissector(udp_dissector)
 }
+
+module.events = udp_dissector.events
+module.policies = udp_dissector.policies
+function module.create(pkt, init)
+	return udp_dissector:create(pkt, init)
+end
+
+return module

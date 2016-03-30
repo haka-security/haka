@@ -33,11 +33,10 @@ const char *packet_dissector(struct packet *pkt);
 		dissectors[name] = dissector
 	end
 
-	this.policies = {}
-	this.policies.unknown_dissector = haka.policy.new('unknown dissector')
+	raw_dissector.policies.unknown_dissector = haka.policy.new('unknown dissector')
 
 	haka.policy {
-		on = this.policies.unknown_dissector,
+		on = raw_dissector.policies.unknown_dissector,
 		name = "default action",
 		action = function (policy, ctx, values, desc)
 			haka.alert{
@@ -54,9 +53,9 @@ const char *packet_dissector(struct packet *pkt);
 		if dissector then
 			local next_dissector = dissectors[dissector]
 			if next_dissector then
-				return next_dissector:receive(self)
+				return next_dissector:new(self):preceive()
 			else
-				this.policies.unknown_dissector:apply{
+				raw_dissector.policies.unknown_dissector:apply{
 					ctx = self,
 					values = {
 						name = dissector
@@ -97,7 +96,7 @@ const char *packet_dissector(struct packet *pkt);
 	swig.getclassmetatable('packet')['.fn'].error = swig.getclassmetatable('packet')['.fn'].drop
 
 	function haka.filter(pkt)
-		raw_dissector:receive(pkt)
+		pkt:receive()
 	end
 
 	function this.create(size)
@@ -105,4 +104,5 @@ const char *packet_dissector(struct packet *pkt);
 	end
 
 	this.events = raw_dissector.events
+        this.policies = raw_dissector.policies
 }

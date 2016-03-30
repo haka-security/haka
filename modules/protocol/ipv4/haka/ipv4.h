@@ -75,6 +75,7 @@ struct ipv4 {
 	bool                    invalid_checksum:1;
 	bool                    dont_reassemble:1;
 	bool                    reassembled:1;
+	struct lua_ref          next_dissector;
 };
 
 /** \cond */

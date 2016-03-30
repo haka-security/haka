@@ -29,6 +29,9 @@ function type.Dissector.__class_init(self, cls)
 	setmetatable(cls.events, event_mt)
 	self.inherit_events(cls)
 	cls.options = {}
+	cls.connections = haka.event.StaticEventConnections:new()
+	cls.policies = {}
+	cls.policies.install = haka.policy.new(string.format("%s next dissector", cls.name))
 end
 
 function type.Dissector.register_event(cls, name, continue, signal, options)
@@ -54,6 +57,9 @@ function type.Dissector.method:__init()
 	if cls.state_machine and cls.auto_state_machine then
 		self.state = cls.state_machine:instanciate(self)
 	end
+	self.scope = nil
+	self._old_scope = nil
+	haka.context:register_connections(self:connections())
 end
 
 type.Dissector.property.name = {
@@ -86,12 +92,43 @@ function type.Dissector.method:continue()
 	end
 end
 
+function type.Dissector.method:connections()
+	local connections = class.classof(self).connections
+	if #connections > 0 then
+		return haka.event.ObjectEventConnections:new(self, connections)
+	end
+end
+
+function type.Dissector.activate(cls, parent)
+	-- Default create a new instance for each receive
+	-- Could create a scope here
+	return cls:new(parent)
+end
+
+function type.Dissector.method:activate_next_dissector()
+	-- Should change scope if next dissector has one
+	if self._next_dissector then
+		if class.isclass(self._next_dissector) then
+			self._next_dissector = self._next_dissector:activate(self)
+		end
+		return self._next_dissector
+	else
+		return nil
+	end
+end
+
+function type.Dissector.method:select_next_dissector(dissector)
+	self._next_dissector = dissector
+end
+
 function type.Dissector.method:error()
 	self:drop()
 end
 
 function dissector.pcall(self, f)
 	local ret, err = xpcall(f, debug.format_error)
+
+	-- Should restore scope if next dissector has scope
 
 	if not ret then
 		if err then
@@ -120,12 +157,9 @@ local function preceive()
 	npkt:receive()
 end
 
-function type.PacketDissector:receive(pkt)
-	npkt = self:new(pkt)
-	if not npkt then
-		return
-	end
-
+function type.PacketDissector.method:preceive()
+	-- JIT optim
+	npkt = self
 	return dissector.pcall(npkt, preceive)
 end
 
@@ -150,7 +184,25 @@ type.EncapsulatedPacketDissector = class.class('EncapsulatedPacketDissector', ty
 
 function type.EncapsulatedPacketDissector.method:receive()
 	self:parse(self._parent)
-	return self:emit()
+
+	self:trigger('receive_packet')
+
+	class.classof(self).policies.install:apply{
+		values = self:install_criterion(),
+		ctx = self,
+	}
+
+	-- Dirty workaround to avoid changing {tcp,udp}_connection right now
+	if self._next_dissector and self._next_dissector.receive then
+		return self._next_dissector:receive(self)
+	else
+		local next_dissector = self:activate_next_dissector()
+		if next_dissector then
+			return next_dissector:preceive()
+		else
+			return self:send()
+		end
+	end
 end
 
 function type.EncapsulatedPacketDissector.method:__init(parent)
@@ -187,27 +239,16 @@ function type.EncapsulatedPacketDissector.method:forge_payload(pkt, payload)
 	error("not implemented")
 end
 
+function type.EncapsulatedPacketDissector.method:install_criterion()
+	return {}
+end
+
 function type.EncapsulatedPacketDissector.method:can_continue()
 	return self._parent:can_continue()
 end
 
 function type.EncapsulatedPacketDissector.method:drop()
 	return self._parent:drop()
-end
-
-function type.EncapsulatedPacketDissector.method:next_dissector()
-	return nil
-end
-
-function type.EncapsulatedPacketDissector.method:emit()
-	self:trigger('receive_packet')
-
-	local next_dissector = self:next_dissector()
-	if next_dissector then
-		return next_dissector:receive(self)
-	else
-		return self:send()
-	end
 end
 
 function type.EncapsulatedPacketDissector.method:send()
@@ -231,11 +272,6 @@ end
 
 type.FlowDissector = class.class('FlowDissector', type.Dissector)
 
-function type.FlowDissector.__class_init(self, cls)
-	self.super:__class_init(cls)
-	cls.connections = haka.event.StaticEventConnections:new()
-end
-
 function type.FlowDissector.stream_wrapper(f, options, self, stream, current, ...)
 	if options and options.streamed then
 		self:streamed(stream, f, self, current, ...)
@@ -256,13 +292,6 @@ end
 
 function type.FlowDissector.register_streamed_event(cls, name, continue, options)
 	type.Dissector.register_event(cls, name, continue, type.FlowDissector.stream_wrapper, options)
-end
-
-function type.FlowDissector.method:connections()
-	local connections = class.classof(self).connections
-	if connections then
-		return haka.event.ObjectEventConnections:new(self, connections)
-	end
 end
 
 function type.FlowDissector.method:send(pkt)
@@ -301,15 +330,6 @@ function type.FlowDissector.method:get_comanager(stream)
 	end
 
 	return self._costream[stream]
-end
-
-function type.FlowDissector.method:next_dissector()
-	return self._next_dissector
-end
-
-function type.FlowDissector.method:select_next_dissector(dissector)
-	haka.context:register_connections(dissector:connections())
-	self._next_dissector = dissector
 end
 
 --

@@ -57,7 +57,12 @@ function icmp_dissector:create(pkt, init)
 	return icmp
 end
 
-ipv4.register_protocol(1, icmp_dissector)
+haka.policy {
+	name = "icmp",
+	on = ipv4.policies.install,
+	proto = 1,
+	action = haka.policy.select_next_dissector(icmp_dissector)
+}
 
 return {
 	events = icmp_dissector.events,
