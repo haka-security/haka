@@ -465,6 +465,12 @@ int lua_inet_checksum(struct vbuffer *buf);
 	local raw = require('protocol/raw')
 	raw.register('ipv4', ipv4_dissector)
 
+	haka.policy.ipv4 = {}
+	haka.policy.ipv4.in_network = haka.policy.new_criterion(
+		function (net) return { network=net } end,
+		function (self, value) return self.network:contains(value) end
+	)
+
 	-- ipv4 Lua full dissector, uncomment to enable
 	--[[ipv4 = this
 	ipv4.ipv4_protocol_dissectors = ipv4_protocol_dissectors

@@ -30,21 +30,44 @@ function Policy.method:insert(name, criteria, action)
 	table.insert(self.policies, {name = name, criteria = criteria, action = action})
 end
 
-function policy.set(list)
-	local set = {}
-	for _,m in pairs(list) do
-		set[m] = true
+function policy.new_criterion(create, compare)
+	local mt = {
+		__call = compare
+	}
+
+	return function (...)
+		return setmetatable(create(...), mt)
 	end
-	return set
 end
 
-function policy.range(min,max)
-	return { min = min, max = max }
-end
+policy.set = policy.new_criterion(
+	function (list)
+		local set = {}
+		for _, m in pairs(list) do
+			set[m] = true
+		end
+		return set
+	end,
+	function (self, value)
+		return self[value] == true
+	end
+)
 
-function policy.outofrange(min, max)
-	return { lessthan = min, morethan = max }
-end
+policy.range = policy.new_criterion(
+	function (min, max)
+		check.assert(min <= max, "invalid bounds")
+		return { min=min, max=max }
+	end,
+	function (self, value) return value >= self.min and value <= self.max end
+)
+
+policy.outofrange = policy.new_criterion(
+	function (min, max)
+		check.assert(min <= max, "invalid bounds")
+		return { min=min, max=max }
+	end,
+	function (self, value) return value < self.min or value > self.max end
+)
 
 function Policy.method:apply(p)
 	check.assert(type(p) == 'table', "policy parameter must be a table")
@@ -64,17 +87,7 @@ function Policy.method:apply(p)
 		local eligible = true
 		for index, criterion in pairs(policy.criteria) do
 			if type(criterion) == 'table' then
-				if criterion.min ~= nil and criterion.max ~= nil then
-					if p.values[index] < criterion.min or p.values[index] > criterion.max then
-						eligible = false
-						break
-					end
-				elseif criterion.lessthan ~= nil and criterion.morethan ~= nil then
-					if p.values[index] > criterion.lessthan and p.values[index] < criterion.morethan then
-						eligible = false
-						break
-					end
-				elseif criterion[p.values[index]] == nil then
+				if not criterion(p.values[index]) then
 					eligible = false
 					break
 				end
@@ -85,6 +98,8 @@ function Policy.method:apply(p)
 		end
 		if eligible then
 			qualified_policy = policy
+		else
+			log.debug("rejected policy %s", policy.name or "<unnamed>")
 		end
 	end
 	if qualified_policy then
@@ -163,6 +178,13 @@ end
 
 function policy.accept(policy, ctx, values, desc)
 	-- Nothing to do
+end
+
+function policy.log(section, level, message, ...)
+	local args = {...}
+	return function (policy, ctx, values, desc)
+		section[level](message, unpack(args))
+	end
 end
 
 haka.policy = policy

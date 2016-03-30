@@ -28,6 +28,7 @@ module.policies = {}
 module.policies.no_connection_found = haka.policy.new("no connection found for tcp packet")
 module.policies.unexpected_packet = haka.policy.new("unexpected tcp packet")
 module.policies.invalid_handshake = haka.policy.new("invalid tcp handshake")
+module.policies.new_connection = haka.policy.new("new connection")
 
 haka.policy {
 	on = module.policies.no_connection_found,
@@ -75,6 +76,12 @@ function tcp_connection_dissector:receive(pkt)
 			if not dropped then
 				module.policies.no_connection_found:apply{
 					ctx = pkt,
+					values = {
+						srcip = pkt.ip.src,
+						srcport = pkt.srcport,
+						dstip = pkt.ip.dst,
+						dstport = pkt.dstport
+					},
 					desc = {
 						sources = {
 							haka.alert.address(pkt.ip.src),
@@ -679,6 +686,31 @@ function tcp_connection_dissector.method:halfreset()
 end
 
 tcp.select_next_dissector(tcp_connection_dissector)
+
+haka.rule {
+	on = tcp_connection_dissector.events.new_connection,
+	eval = function (flow, pkt)
+		module.policies.new_connection:apply{
+			ctx = flow,
+			values = {
+				srcip = pkt.ip.src,
+				srcport = pkt.srcport,
+				dstip = pkt.ip.dst,
+				dstport = pkt.dstport
+			},
+			desc = {
+				sources = {
+					haka.alert.address(pkt.ip.src),
+					haka.alert.service(string.format("tcp/%d", pkt.srcport))
+				},
+				targets = {
+					haka.alert.address(pkt.ip.dst),
+					haka.alert.service(string.format("tcp/%d", pkt.dstport))
+				}
+			}
+		}
+	end
+}
 
 module.events = tcp_connection_dissector.events
 
