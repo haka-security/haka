@@ -50,10 +50,13 @@ enum alert_node_type { HAKA_ALERT_NODE_ADDRESS, HAKA_ALERT_NODE_SERVICE };
 %typemap(in) char ** {
 	if (lua_istable(L, $input)) {
 		int i, size = lua_rawlen(L, $input);
+		const char *str;
 		$1 = malloc((size+1)*sizeof(char *));
 		for (i = 0; i < size; ++i) {
 			lua_rawgeti(L, $input, i+1);
-			$1[i] = strdup(lua_tostring(L, -1));
+			str = lua_tostring(L, -1);
+			if (str) $1[i] = strdup(str);
+			else $1[i] = strdup("null");
 			lua_pop(L, 1);
 		}
 		$1[i] = NULL;
