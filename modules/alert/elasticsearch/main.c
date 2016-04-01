@@ -28,7 +28,7 @@ static bool json_insert_string(json_t *obj, const char *key, const char *string)
 		error("json string creation error");
 		return false;
 	}
-	if (json_object_set_new(obj, key, json_str)) {
+	if (json_object_set_new(obj, key, json_str) < 0) {
 		error("json object insertion error");
 		return false;
 	}
@@ -42,7 +42,7 @@ static bool json_insert_double(json_t *obj, const char *key, double val)
 		error("json real creation error");
 		return false;
 	}
-	if (json_object_set_new(obj, key, json_val)) {
+	if (json_object_set_new(obj, key, json_val) < 0) {
 		error("json object insertion error");
 		return false;
 	}
@@ -114,7 +114,7 @@ static bool json_insert_list(json_t *obj, const char *key, char **array)
 		}
 	}
 
-	if (json_object_set_new(obj, key, nodes)) {
+	if (json_object_set_new(obj, key, nodes) < 0) {
 		error("json object insertion error");
 		return false;
 	}
@@ -304,7 +304,7 @@ json_t *alert_tojson(const struct time *time, const struct alert *alert, struct 
 			}
 		}
 
-		if (!json_object_set_new(ret, "sources", sources) < 0) {
+		if (json_object_set_new(ret, "sources", sources) < 0) {
 			error("json object insertion error");
 			json_decref(ret);
 			return NULL;
@@ -334,7 +334,7 @@ json_t *alert_tojson(const struct time *time, const struct alert *alert, struct 
 			}
 		}
 
-		if (!json_object_set_new(ret, "targets", targets) < 0) {
+		if (json_object_set_new(ret, "targets", targets) < 0) {
 			error("json object insertion error");
 			json_decref(ret);
 			return NULL;
