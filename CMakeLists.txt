@@ -253,8 +253,8 @@ include_directories(${UTHASH_INCLUDE})
 add_subdirectory(include)
 add_subdirectory(doc)
 add_subdirectory(src)
-add_subdirectory(modules)
 add_subdirectory(lib)
+add_subdirectory(modules)
 add_subdirectory(sample)
 
 # add a target to run cppcheck on the sources

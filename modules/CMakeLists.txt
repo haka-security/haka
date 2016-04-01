@@ -50,8 +50,13 @@ endforeach(subdir)
 set(MODULES_BINARY_DIRS "${MODULES_BINARY_DIRS}" CACHE INTERNAL "list of build directories for the modules")
 set(MODULES_SOURCE_DIRS "${MODULES_SOURCE_DIRS}" CACHE INTERNAL "list of source directories for the modules")
 
+# Add special module first (due to some dependency order)
+add_subdirectory(misc/elasticsearch)
+
 # Add all sub directories
 foreach(subdir ${SUBDIRS})
 	get_filename_component(DIR ${CMAKE_CURRENT_SOURCE_DIR}/${subdir} PATH)
-	add_subdirectory(${DIR})
+	if (NOT "${DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/misc/elasticsearch")
+		add_subdirectory(${DIR})
+	endif()
 endforeach(subdir)
