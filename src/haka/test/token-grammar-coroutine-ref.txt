@@ -1,7 +1,23 @@
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 127.0.0.1:59430 -> 127.0.0.1:2888
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 hello_world= hello world
 header1: lol
 header2: bar
 header3: foo
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug lua: closing state
 debug conn: <cleanup> connection

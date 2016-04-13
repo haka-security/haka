@@ -1,4 +1,8 @@
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 10.2.96.127:45034 -> 10.2.104.129:4444
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug external: received stream len=58
 0000000000
 0000000000
@@ -7,6 +11,8 @@ debug external: received stream len=58
 0000000000
 0000000
 
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug external: received stream len=58
 1111111111
 1111111111
@@ -15,6 +21,8 @@ debug external: received stream len=58
 1111111111
 1111111
 
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug external: received stream len=58
 2222222222
 2222222222
@@ -23,5 +31,9 @@ debug external: received stream len=58
 2222222222
 2222222
 
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug lua: closing state
 debug conn: <cleanup> connection

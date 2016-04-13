@@ -1,12 +1,35 @@
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 10.2.96.128:51520 -> 10.2.104.130:80
 debug tcp: selecting http dissector on flow
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug external: /
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 10.2.96.128:51521 -> 10.2.104.130:80
 debug tcp: selecting http dissector on flow
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug external: /404notfoud.html
 debug conn: dropping connection 10.2.96.128:51521 -> 10.2.104.130:80
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 10.2.96.128:51522 -> 10.2.104.130:80
 debug tcp: selecting http dissector on flow
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug external: /404notfoud.html
 debug conn: dropping connection 10.2.96.128:51522 -> 10.2.104.130:80
 debug lua: closing state

@@ -1,3 +1,7 @@
+debug core: rejected policy tcp
+debug core: rejected policy tcp
+debug core: rejected policy tcp
+debug core: rejected policy tcp
 alert: id = = <>
 	severity = high
 	confidence = medium
@@ -12,4 +16,10 @@ alert: id = = <>
 	sources = {
 		address: 192.168.20.1
 	}
+debug core: rejected policy tcp
+debug core: rejected policy tcp
+debug core: rejected policy tcp
+debug core: rejected policy tcp
+debug core: rejected policy tcp
+debug core: rejected policy tcp
 debug lua: closing state

@@ -1,6 +1,20 @@
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
 debug tcp: selecting smtp dissector on flow
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {
@@ -11,11 +25,17 @@ class Result {
     }
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: rejected policy tcp
+debug core: rejected policy tcp
+debug core: applying policy tcp for ipv4 next dissector
 SMTP COMMAND
 class Result {
   command : "HELO"
   parameter : "some_domain"
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {
@@ -26,11 +46,14 @@ class Result {
     }
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 SMTP COMMAND
 class Result {
   command : "MAIL"
   parameter : "FROM: hacker@suspicious.org"
 }
+debug core: applying policy tcp for ipv4 next dissector
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {
@@ -41,11 +64,14 @@ class Result {
     }
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 SMTP COMMAND
 class Result {
   command : "RCPT"
   parameter : "TO: backup"
 }
+debug core: applying policy tcp for ipv4 next dissector
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {
@@ -56,10 +82,13 @@ class Result {
     }
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 SMTP COMMAND
 class Result {
   command : "DATA"
 }
+debug core: applying policy tcp for ipv4 next dissector
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {
@@ -70,7 +99,15 @@ class Result {
     }
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: closing connection 192.168.10.10:56704 -> 192.168.20.1:80
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {
@@ -81,10 +118,13 @@ class Result {
     }
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 SMTP COMMAND
 class Result {
   command : "QUIT"
 }
+debug core: applying policy tcp for ipv4 next dissector
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {
@@ -95,5 +135,9 @@ class Result {
     }
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug lua: closing state
 debug conn: <cleanup> connection

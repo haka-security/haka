@@ -1,5 +1,17 @@
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 127.0.0.1:42076 -> 127.0.0.1:80
 debug tcp: selecting http dissector on flow
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 HTTP REQUEST
 class HttpRequestResult {
   headers : class HeaderResult {
@@ -14,6 +26,8 @@ class HttpRequestResult {
     path : "/"
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 HTTP RESPONSE
 class HttpResponseResult {
   headers : class HeaderResult {
@@ -30,5 +44,9 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug lua: closing state
 debug conn: <cleanup> connection

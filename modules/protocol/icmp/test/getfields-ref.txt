@@ -1,18 +1,22 @@
+debug core: applying policy icmp for ipv4 next dissector
 Internet Control Message Protocol
     Type: 8 (Echo (ping) request)
     Code: 0
     Checksum: 0xad98 [correct]
 
+debug core: applying policy icmp for ipv4 next dissector
 Internet Control Message Protocol
     Type: 0 (Echo (ping) reply)
     Code: 8
     Checksum: 0xb590 [correct]
 
+debug core: applying policy icmp for ipv4 next dissector
 Internet Control Message Protocol
     Type: 8 (Echo (ping) request)
     Code: 0
     Checksum: 0x2b92 [correct]
 
+debug core: applying policy icmp for ipv4 next dissector
 Internet Control Message Protocol
     Type: 0 (Echo (ping) reply)
     Code: 8

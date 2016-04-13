@@ -1,5 +1,9 @@
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.10:56353 -> 192.168.20.1:80
 debug tcp: selecting http dissector on flow
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 HTTP REQUEST
 class HttpRequestResult {
   headers : class HeaderResult {
@@ -17,6 +21,8 @@ class HttpRequestResult {
     path : "/twiki/bin/view"
   }
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 HTTP RESPONSE
 class HttpResponseResult {
   headers : class HeaderResult {
@@ -49,5 +55,24 @@ class HttpResponseResult {
   status : "200"
   version : "2.0"
 }
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug lua: closing state
 debug conn: <cleanup> connection

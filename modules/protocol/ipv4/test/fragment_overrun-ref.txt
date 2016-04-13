@@ -39,5 +39,6 @@ info external: received ip packet data=1480
 info external: received ip packet data=1480
 info external: received ip packet data=1480
 info external: received ip packet data=808
+debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet data=60004
 debug lua: closing state

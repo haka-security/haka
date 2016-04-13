@@ -10,5 +10,6 @@ alert: id = = <>
 	targets = {
 		address: 127.0.0.1
 	}
+debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet data=28
 debug lua: closing state

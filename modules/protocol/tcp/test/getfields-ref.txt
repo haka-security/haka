@@ -1,3 +1,4 @@
+debug core: applying policy tcp for ipv4 next dissector
 ----------TCP HEADER ---------
 TCP Source Port: 4444
 TCP Destination Port: 34003

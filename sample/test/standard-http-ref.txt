@@ -1,9 +1,23 @@
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
 debug core: rejected policy authorizing ssh traffic (no available dissector)
 debug core: applying policy authorizing http traffic for new connection
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
 debug core: rejected policy authorizing ssh traffic (no available dissector)
 debug core: applying policy authorizing http traffic for new connection
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = non authorized http method 'WRONG'
 	sources = {
@@ -14,9 +28,20 @@ alert: id = = <>
 		service: tcp/80, http
 	}
 debug conn: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
 debug core: rejected policy authorizing ssh traffic (no available dissector)
 debug core: applying policy authorizing http traffic for new connection
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = unsupported http version '2.1'
 	sources = {
@@ -27,9 +52,21 @@ alert: id = = <>
 		service: tcp/80, http
 	}
 debug conn: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
 debug core: rejected policy authorizing ssh traffic (no available dissector)
 debug core: applying policy authorizing http traffic for new connection
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = forbidden http method 'TRACE'
 	sources = {
@@ -39,9 +76,22 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/80, http
 	}
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
 debug core: rejected policy authorizing ssh traffic (no available dissector)
 debug core: applying policy authorizing http traffic for new connection
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	severity = high
 	description = 'sqlmap' scan detected
@@ -53,6 +103,14 @@ alert: id = = <>
 		service: tcp/80, http
 	}
 debug conn: dropping connection 192.168.10.1:50696 -> 192.168.20.1:80
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp for ipv4 next dissector
 debug lua: closing state
 debug conn: <cleanup> connection
 debug conn: <cleanup> connection

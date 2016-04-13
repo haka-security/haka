@@ -1,39 +1,74 @@
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:33901 -> 192.168.20.1:80
 srcport:33901 - dstport:80
+debug core: applying policy tcp for ipv4 next dissector
 srcport:80 - dstport:33901
+debug core: applying policy tcp for ipv4 next dissector
 srcport:33901 - dstport:80
+debug core: applying policy tcp for ipv4 next dissector
 srcport:33901 - dstport:80
+debug core: applying policy tcp for ipv4 next dissector
 srcport:80 - dstport:33901
+debug core: applying policy tcp for ipv4 next dissector
 srcport:80 - dstport:33901
+debug core: applying policy tcp for ipv4 next dissector
 srcport:33901 - dstport:80
+debug core: applying policy tcp for ipv4 next dissector
 srcport:33901 - dstport:80
+debug core: applying policy tcp for ipv4 next dissector
 srcport:80 - dstport:33901
+debug core: applying policy tcp for ipv4 next dissector
 srcport:33901 - dstport:80
+debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:41811 -> 192.168.20.1:22
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
+debug core: applying policy tcp for ipv4 next dissector
 srcport:22 - dstport:41811
+debug core: applying policy tcp for ipv4 next dissector
 srcport:41811 - dstport:22
 debug lua: closing state
 debug conn: <cleanup> connection
