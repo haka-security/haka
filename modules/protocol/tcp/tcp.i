@@ -150,6 +150,8 @@ struct tcp {
 		unsigned int checksum;
 		unsigned int urgent_pointer;
 
+		struct lua_ref _next_dissector;
+
 		%immutable;
 		struct tcp_flags *flags { TCP_CHECK($self, NULL); return (struct tcp_flags *)$self; }
 		struct vbuffer *payload { TCP_CHECK($self, NULL); return &$self->payload; }
@@ -218,6 +220,17 @@ TCP_FLAGS_GETSET(cwr);
 unsigned int tcp_flags_all_get(struct tcp_flags *flags) { return tcp_get_flags((struct tcp *)flags); }
 void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set_flags((struct tcp *)flags, v); }
 
+struct lua_ref tcp__next_dissector_get(struct tcp *tcp)
+{
+	return tcp->next_dissector;
+}
+
+void tcp__next_dissector_set(struct tcp *tcp, struct lua_ref ref)
+{
+	lua_ref_clear(&tcp->next_dissector);
+	tcp->next_dissector = ref;
+}
+
 %}
 
 %luacode {
@@ -235,7 +248,14 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 	function tcp_dissector.method:receive()
 		haka.context:signal(self, tcp_dissector.events['receive_packet'])
 
-		local next_dissector = tcp_dissector.next_dissector
+		tcp_dissector.policies.install:apply{
+			values = {
+				dstport = self.dstport,
+			},
+			ctx = self,
+		}
+
+		local next_dissector = self._next_dissector
 		if next_dissector then
 			return next_dissector:receive(self)
 		else
@@ -271,6 +291,7 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 	swig.getclassmetatable('tcp')['.fn'].inject = tcp_dissector.method.inject
 	swig.getclassmetatable('tcp')['.fn'].continue = haka.helper.Dissector.method.continue
 	swig.getclassmetatable('tcp')['.fn'].error = swig.getclassmetatable('tcp')['.fn'].drop
+	swig.getclassmetatable('tcp')['.fn'].select_next_dissector = tcp_dissector.method.select_next_dissector
 
 	local ipv4 = require("protocol/ipv4")
 	haka.policy {
@@ -281,12 +302,9 @@ void tcp_flags_all_set(struct tcp_flags *flags, unsigned int v) { return tcp_set
 	}
 
 	this.events = tcp_dissector.events
+        this.policies = tcp_dissector.policies
 
 	function this.create(ip)
 		return tcp_dissector:create(ip)
-	end
-
-	function this.select_next_dissector(dissector)
-		tcp_dissector.next_dissector = dissector
 	end
 }

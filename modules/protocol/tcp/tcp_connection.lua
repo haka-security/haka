@@ -685,7 +685,11 @@ function tcp_connection_dissector.method:halfreset()
 	self:drop()
 end
 
-tcp.select_next_dissector(tcp_connection_dissector)
+haka.policy {
+	name = "tcp connection",
+	on = tcp.policies.install,
+	action = haka.policy.select_next_dissector(tcp_connection_dissector)
+}
 
 haka.rule {
 	on = tcp_connection_dissector.events.new_connection,
