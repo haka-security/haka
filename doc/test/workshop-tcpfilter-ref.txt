@@ -1,157 +1,293 @@
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53684 -> 192.168.20.1:80
 info external: Authorizing trafic on port 80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53685 -> 192.168.20.1:80
 info external: Authorizing trafic on port 80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53686 -> 192.168.20.1:80
 info external: Authorizing trafic on port 80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53687 -> 192.168.20.1:80
 info external: Authorizing trafic on port 80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53688 -> 192.168.20.1:80
 info external: Authorizing trafic on port 80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:58446 -> 192.168.20.1:21
 info external: Trafic not authorized on port 21
 debug conn: dropping connection 192.168.10.1:58446 -> 192.168.20.1:21
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:58447 -> 192.168.20.1:21
 info external: Trafic not authorized on port 21
 debug conn: dropping connection 192.168.10.1:58447 -> 192.168.20.1:21
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:36780 -> 192.168.20.1:22
 info external: Authorizing trafic on port 22
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state
 debug conn: <cleanup> connection
 debug conn: <cleanup> connection

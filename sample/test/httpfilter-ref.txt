@@ -1,28 +1,48 @@
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.20.99:48225 -> 192.168.20.1:80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 info external: User-Agent Mozilla detected
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.20.99:48226 -> 192.168.20.1:80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 info external: Only Mozilla User-Agent authorized
 debug conn: dropping connection 192.168.20.99:48226 -> 192.168.20.1:80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state
 debug conn: <cleanup> connection
 debug conn: <cleanup> connection

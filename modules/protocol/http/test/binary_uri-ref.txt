@@ -1,9 +1,13 @@
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 127.0.0.1:42072 -> 127.0.0.1:80
 debug tcp: selecting http dissector on flow
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug grammar: parse error at byte 5 for field 4 in request_line: token /[[:blank:]]+/ doesn't match
 debug grammar: parse error context: \x04\x8e\x99\xff\x00\x11\xed\xde\xad\xbe\xef HTTP/1.1\x0d\x0aHost: 127.0.0.1\x0d\x0a\x0d\x0a...
 alert: id = = <>
@@ -11,10 +15,16 @@ alert: id = = <>
 	description = invalid http request_line
 debug conn: dropping connection 127.0.0.1:42072 -> 127.0.0.1:80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state
 debug conn: <cleanup> connection
