@@ -183,9 +183,9 @@ function udp_connection_dissector.method:can_continue()
 end
 
 haka.policy {
-       name = "udp connection",
-       on = udp.policies.install,
-       action = haka.policy.select_next_dissector(udp_connection_dissector)
+	name = "udp connection",
+	on = udp.policies.install,
+	action = haka.policy.select_next_dissector(udp_connection_dissector)
 }
 
 module.events = udp_connection_dissector.events

@@ -34,6 +34,10 @@ function type.Dissector.__class_init(self, cls)
 	cls.policies.install = haka.policy.new(string.format("%s next dissector", cls.name))
 end
 
+function type.Dissector.method:install_criterion()
+	return {}
+end
+
 function type.Dissector.register_event(cls, name, continue, signal, options)
 	continue = continue or function (self) return self:continue() end
 	cls.events[name] = haka.event.Event:new(string.format('%s:%s', cls.name, name), continue, signal, options)
@@ -237,10 +241,6 @@ end
 
 function type.EncapsulatedPacketDissector.method:forge_payload(pkt, payload)
 	error("not implemented")
-end
-
-function type.EncapsulatedPacketDissector.method:install_criterion()
-	return {}
 end
 
 function type.EncapsulatedPacketDissector.method:can_continue()

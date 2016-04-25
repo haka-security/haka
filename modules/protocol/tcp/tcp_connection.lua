@@ -24,11 +24,12 @@ tcp_connection_dissector:register_event('receive_packet')
 tcp_connection_dissector:register_streamed_event('receive_data')
 tcp_connection_dissector:register_event('end_connection')
 
-module.policies = {}
-module.policies.no_connection_found = haka.policy.new("no connection found for tcp packet")
-module.policies.unexpected_packet = haka.policy.new("unexpected tcp packet")
-module.policies.invalid_handshake = haka.policy.new("invalid tcp handshake")
-module.policies.new_connection = haka.policy.new("new connection")
+tcp_connection_dissector.policies = {}
+tcp_connection_dissector.policies.no_connection_found = haka.policy.new("no connection found for tcp packet")
+tcp_connection_dissector.policies.unexpected_packet = haka.policy.new("unexpected tcp packet")
+tcp_connection_dissector.policies.invalid_handshake = haka.policy.new("invalid tcp handshake")
+tcp_connection_dissector.policies.new_connection = haka.policy.new("new connection")
+module.policies = tcp_connection_dissector.policies
 
 haka.policy {
 	on = module.policies.no_connection_found,
@@ -51,6 +52,11 @@ function tcp_connection_dissector:receive(pkt)
 			local ret, err = xpcall(function ()
 					haka.context:exec(connection.data, function ()
 						self:trigger('new_connection', pkt)
+						class.classof(self).policies.install:apply{
+							values = self:install_criterion(),
+							ctx = self,
+						}
+						self:activate_next_dissector()
 					end)
 				end, debug.format_error)
 
@@ -124,6 +130,11 @@ function tcp_connection_dissector:receive(pkt)
 		end
 	end
 end
+
+function tcp_connection_dissector.method:install_criterion()
+	return { port = self.dstport }
+end
+
 
 haka.policy {
 	on = module.policies.unexpected_packet,
@@ -728,19 +739,6 @@ module.helper.TcpFlowDissector = class.class('TcpFlowDissector', haka.helper.Flo
 
 function module.helper.TcpFlowDissector.dissect(cls, flow)
 	flow:select_next_dissector(cls:new(flow))
-end
-
-function module.helper.TcpFlowDissector.install_tcp_rule(cls, port)
-	haka.rule{
-		name = string.format("install %s dissector", cls.name),
-		hook = tcp_connection_dissector.events.new_connection,
-		eval = function (flow, pkt)
-			if pkt.dstport == port then
-				log.debug("selecting %s dissector on flow", cls.name)
-				flow:select_next_dissector(cls:new(flow))
-			end
-		end
-	}
 end
 
 module.helper.TcpFlowDissector.property.connection = {

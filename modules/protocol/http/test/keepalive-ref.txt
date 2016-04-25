@@ -1,7 +1,7 @@
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 10.2.96.127:57838 -> 10.2.104.129:80
-debug tcp: selecting http dissector on flow
+debug core: applying policy http for tcp_connection next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector

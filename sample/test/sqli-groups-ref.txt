@@ -1,6 +1,6 @@
 debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:32838 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
+debug core: applying policy http for tcp_connection next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
@@ -14,7 +14,7 @@ debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:32839 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
+debug core: applying policy http for tcp_connection next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
@@ -40,7 +40,7 @@ debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:32840 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
+debug core: applying policy http for tcp_connection next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
@@ -66,7 +66,7 @@ debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:32841 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
+debug core: applying policy http for tcp_connection next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
@@ -93,7 +93,7 @@ debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:32842 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
+debug core: applying policy http for tcp_connection next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
@@ -119,7 +119,7 @@ debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug conn: opening connection 192.168.10.1:32843 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
+debug core: applying policy http for tcp_connection next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp for ipv4 next dissector

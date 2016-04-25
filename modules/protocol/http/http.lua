@@ -105,7 +105,12 @@ function module.dissect(flow)
 end
 
 function module.install_tcp_rule(port)
-	http_dissector:install_tcp_rule(port)
+	haka.policy{
+		name = "http",
+		on = tcp_connection.policies.install,
+		port = port,
+		action = haka.policy.select_next_dissector(http_dissector)
+	}
 end
 
 
