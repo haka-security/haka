@@ -32,6 +32,12 @@ function type.Dissector.__class_init(self, cls)
 	cls.connections = haka.event.StaticEventConnections:new()
 	cls.policies = {}
 	cls.policies.install = haka.policy.new(string.format("%s next dissector", cls.name))
+	haka.dissectors[cls.name] = {}
+	haka.dissectors[cls.name].policies = cls.policies
+	haka.dissectors[cls.name].events = cls.events
+	haka.dissectors[cls.name].select = function(policy, ctx, values, desc)
+		return ctx:select_next_dissector(cls)
+	end
 end
 
 function type.Dissector.method:install_criterion()

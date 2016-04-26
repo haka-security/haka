@@ -2,10 +2,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-local http = require("protocol/http")
+require("protocol/http")
 local rem = require("regexp/pcre")
-
-http.install_tcp_rule(80)
 
 --
 -- Testing regex from modsecurity rule set
@@ -33,7 +31,7 @@ local modsec_regex = "(/%*!?|%*/|[';]--|--[%s%r%n%v%f]|(?:--[^-]*?-)|([^%-&])#.*
 local re = rem.re:compile(modsec_regex)
 
 haka.rule {
-	hook = http.events.request,
+	hook = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		local uri = request.uri
 		if re:match(uri) then

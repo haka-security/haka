@@ -1,20 +1,35 @@
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
+debug core: rejected policy <unnamed>
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
-debug tcp: selecting smtp dissector on flow
+debug core: applying policy for tcp_connection next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug grammar: parse error at byte 0 for field <unknown> in <unknown>: incomplete grammar
 debug grammar: parse error context: 220 metasploitable.localdomain ESMTP Postfix (Ubuntu)\x0d\x0a...
 alert: id = = <>
@@ -22,26 +37,43 @@ alert: id = = <>
 	description = invalid smtp response parse error at byte 0 for field <unknown> in <unknown>: incomplete grammar
 debug conn: dropping connection 192.168.10.10:41155 -> 192.168.20.1:25
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: rejected policy tcp
 debug core: rejected policy tcp
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: closing connection 192.168.10.10:56704 -> 192.168.20.1:80
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug conn: closing connection 192.168.10.10:41155 -> 192.168.20.1:25
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -55,6 +87,7 @@ alert: id = = <>
 		service: tcp/25
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -68,6 +101,7 @@ alert: id = = <>
 		service: tcp/41155
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -81,6 +115,7 @@ alert: id = = <>
 		service: tcp/25
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -94,6 +129,7 @@ alert: id = = <>
 		service: tcp/41155
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -107,6 +143,7 @@ alert: id = = <>
 		service: tcp/41155
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -120,6 +157,7 @@ alert: id = = <>
 		service: tcp/25
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -133,6 +171,7 @@ alert: id = = <>
 		service: tcp/25
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -146,6 +185,7 @@ alert: id = = <>
 		service: tcp/41155
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -159,6 +199,7 @@ alert: id = = <>
 		service: tcp/41155
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -172,6 +213,7 @@ alert: id = = <>
 		service: tcp/25
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -185,6 +227,7 @@ alert: id = = <>
 		service: tcp/25
 	}
 debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low

@@ -59,9 +59,9 @@ end
 
 haka.policy {
 	name = "icmp",
-	on = ipv4.policies.install,
+	on = haka.dissectors.ipv4.policies.install,
 	proto = 1,
-	action = haka.policy.select_next_dissector(icmp_dissector)
+	action = haka.dissectors.icmp.select
 }
 
 return {

@@ -36,9 +36,11 @@ function module.dissect(flow)
 	SmtpDissector:dissect(flow)
 end
 
-function module.install_tcp_rule(port)
-	SmtpDissector:install_tcp_rule(port)
-end
+haka.policy {
+	on = haka.dissectors.tcp_connection.policies.install,
+	port = 25,
+	action = haka.dissectors.smtp.select
+}
 
 function SmtpDissector.method:push_data(sub, last)
 	assert(self.mail)
@@ -321,7 +323,5 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	initial(session_initiation)
 end)
-
-module.events = SmtpDissector.events
 
 return module

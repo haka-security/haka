@@ -3,7 +3,7 @@
 ------------------------------------
 require('protocol/ipv4')
 require('protocol/tcp')
-local http = require('protocol/http')
+require('protocol/http')
 
 local last_firefox_version = 24.0
 local firefox_web_site = 'http://www.mozilla.org'
@@ -16,14 +16,11 @@ local update_domains = {
 	-- You can extend this list with other domains
 }
 
--- Forward all traffic on port 80 to the HTTP dissector
-http.install_tcp_rule(80)
-
 -------------------------------------
 -- Rule group definition
 -------------------------------------
 safe_update = haka.rule_group{
-	hook = http.events.response,
+	hook = haka.dissectors.http.events.response,
 
 	-- Initialization
 	init = function (http, response)

@@ -187,12 +187,6 @@ function policy.log(section, level, message, ...)
 	end
 end
 
-function policy.select_next_dissector(dissector)
-	return function(policy, ctx, values, desc)
-		return ctx:select_next_dissector(dissector)
-	end
-end
-
 haka.policy = policy
 
 return {}

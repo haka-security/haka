@@ -2,17 +2,15 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-local smtp = require('smtp')
+require('smtp')
 
 local rem = require('regexp/pcre')
 local email_pattern = rem.re:compile("@.*")
 
 local forbidden_domain = 'packet-level.com'
 
-smtp.install_tcp_rule(25)
-
 haka.rule{
-	hook = smtp.events.command,
+	hook = haka.dissectors.smtp.events.command,
 	eval = function (flow, message)
 		local command = message.command:lower()
 		if command == 'mail' then

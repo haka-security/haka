@@ -95,7 +95,7 @@ haka.policy {
 	name = "udp",
 	on = ipv4.policies.install,
 	proto = 17,
-	action = haka.policy.select_next_dissector(udp_dissector)
+	action = haka.dissectors.udp.select
 }
 
 module.events = udp_dissector.events

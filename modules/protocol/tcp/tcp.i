@@ -298,7 +298,7 @@ void tcp__next_dissector_set(struct tcp *tcp, struct lua_ref ref)
 		name = "tcp",
 		on = ipv4.policies.install,
 		proto = 6,
-		action = haka.policy.select_next_dissector(tcp_dissector)
+		action = haka.dissectors.tcp.select
 	}
 
 	this.events = tcp_dissector.events

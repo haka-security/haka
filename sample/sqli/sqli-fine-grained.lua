@@ -1,6 +1,7 @@
 
 require('httpconfig')
 require('httpdecode')
+local httplib = require('protocol/http')
 
 ------------------------------------
 -- Malicious Patterns
@@ -15,7 +16,7 @@ local keywords = {
 ------------------------------------
 
 haka.rule{
-	hook = httplib.events.request,
+	hook = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		dump_request(request)
 

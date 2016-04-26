@@ -35,6 +35,11 @@ function udp_connection_dissector:receive(pkt)
 
 		haka.context:exec(data, function ()
 			self:trigger('new_connection', pkt)
+			class.classof(self).policies.install:apply{
+				values = self:install_criterion(),
+				ctx = self,
+			}
+			self:activate_next_dissector()
 		end)
 
 		pkt:continue()
@@ -59,6 +64,10 @@ function udp_connection_dissector:receive(pkt)
 			dissector:error()
 		end
 	end
+end
+
+function udp_connection_dissector.method:install_criterion()
+	return { port = self.dstport }
 end
 
 udp_connection_dissector.state_machine = haka.state_machine.new("udp", function ()
@@ -185,7 +194,7 @@ end
 haka.policy {
 	name = "udp connection",
 	on = udp.policies.install,
-	action = haka.policy.select_next_dissector(udp_connection_dissector)
+	action = haka.dissectors.udp_connection.select
 }
 
 module.events = udp_connection_dissector.events
@@ -201,19 +210,6 @@ module.helper.UdpFlowDissector =  class.class('UdpFlowDissector', haka.helper.Fl
 
 function module.helper.UdpFlowDissector.dissect(cls, flow)
 	flow:select_next_dissector(cls)
-end
-
-function module.helper.UdpFlowDissector.install_udp_rule(cls, port)
-	haka.rule{
-		name = string.format("install %s dissector", cls.name),
-		hook = udp_connection_dissector.events.new_connection,
-		eval = function (flow, pkt)
-			if pkt.dstport == port then
-				log.debug("selecting %s dissector on flow", cls.name)
-				flow:select_next_dissector(cls)
-			end
-		end
-	}
 end
 
 module.helper.UdpFlowDissector.property.connection = {

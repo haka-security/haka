@@ -259,17 +259,12 @@ function module.dissect(flow)
 	dns_dissector:dissect(flow)
 end
 
-function module.install_udp_rule(port)
-	dns_dissector:install_udp_rule(port)
-end
-
 haka.policy {
-	name = "icmp",
-	on = udp_connection.policies.install,
+	name = "dns",
+	on = haka.dissectors.udp_connection.policies.install,
 	port = 53,
-	action = haka.policy.select_next_dissector(icmp_dissector)
+	action = haka.dissectors.dns.select
 }
-
 
 --
 -- DNS States

@@ -5,13 +5,7 @@
 
 require('protocol/ipv4')
 require('protocol/tcp')
-httplib = require('protocol/http')
-
-------------------------------------
--- Setting next dissector
-------------------------------------
-
-httplib.install_tcp_rule(80)
+require('protocol/http')
 
 -----------------------------------
 -- Dumping request info

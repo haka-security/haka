@@ -24,7 +24,6 @@ tcp_connection_dissector:register_event('receive_packet')
 tcp_connection_dissector:register_streamed_event('receive_data')
 tcp_connection_dissector:register_event('end_connection')
 
-tcp_connection_dissector.policies = {}
 tcp_connection_dissector.policies.no_connection_found = haka.policy.new("no connection found for tcp packet")
 tcp_connection_dissector.policies.unexpected_packet = haka.policy.new("unexpected tcp packet")
 tcp_connection_dissector.policies.invalid_handshake = haka.policy.new("invalid tcp handshake")
@@ -699,7 +698,7 @@ end
 haka.policy {
 	name = "tcp connection",
 	on = tcp.policies.install,
-	action = haka.policy.select_next_dissector(tcp_connection_dissector)
+	action = haka.dissectors.tcp_connection.select
 }
 
 haka.rule {

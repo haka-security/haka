@@ -1,6 +1,6 @@
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
-debug udp: selecting dns dissector on flow
+debug core: applying policy dns for udp_connection next dissector
 debug conn: opening connection 172.16.3.38:38360 -> 172.16.13.5:53
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
@@ -30,7 +30,7 @@ alert: id = = <>
 	description = PDNS: d0.org.afilias-nst.org. -> 199.19.57.1
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
-debug udp: selecting dns dissector on flow
+debug core: applying policy dns for udp_connection next dissector
 debug conn: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
@@ -48,7 +48,7 @@ alert: id = = <>
 	description = PDNS: d0.org.afilias-nst.org. -> 199.19.57.1
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
-debug udp: selecting dns dissector on flow
+debug core: applying policy dns for udp_connection next dissector
 debug conn: opening connection 172.16.3.38:51292 -> 172.16.13.5:53
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
@@ -58,7 +58,7 @@ alert: id = = <>
 	description = PDNS: ns04.arkoon.net. -> 91.238.220.7
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
-debug udp: selecting dns dissector on flow
+debug core: applying policy dns for udp_connection next dissector
 debug conn: opening connection 172.16.3.38:37869 -> 172.16.13.5:53
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
