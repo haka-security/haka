@@ -19,14 +19,11 @@ debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy tcp for ipv4 next dissector
-<<<<<<< dc6788bb0c4fbd67de2b700a4b61cc249025a52b
-debug core: rejected policy tcp
-debug core: rejected policy tcp
-debug core: rejected policy tcp
-debug core: rejected policy tcp
-=======
 debug core: applying policy tcp connection for tcp next dissector
->>>>>>> Update test references
+debug core: rejected policy tcp
+debug core: rejected policy tcp
+debug core: rejected policy tcp
+debug core: rejected policy tcp
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Bad TCP checksum
