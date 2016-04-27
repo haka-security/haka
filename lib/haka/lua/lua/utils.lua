@@ -57,12 +57,6 @@ function table.append(dst, src)
 	end
 end
 
-function table.append(dst, src)
-	for _,v in ipairs(src) do
-		table.insert(dst, v)
-	end
-end
-
 function table.copy(src)
 	local dst = {}
 	for k,v in pairs(src) do
