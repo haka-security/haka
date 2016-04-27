@@ -5,7 +5,7 @@
 require("protocol/http")
 
 haka.rule {
-	hook = haka.dissectors.http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function(http, request)
 		haka.log.debug("%s", request.uri)
 		if #request.uri > 10 then

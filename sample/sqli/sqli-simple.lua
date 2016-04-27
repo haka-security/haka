@@ -15,7 +15,7 @@ local keywords = {
 
 haka.rule{
 	-- Evaluation applies on upcoming requests
-	hook = haka.dissectors.http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		dump_request(request)
 

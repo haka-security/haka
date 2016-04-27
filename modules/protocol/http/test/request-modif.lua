@@ -5,7 +5,7 @@
 require("protocol/http")
 
 haka.rule {
-	hook = haka.dissectors.http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		print("HTTP REQUEST")
 		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
@@ -27,7 +27,7 @@ haka.rule {
 }
 
 haka.rule {
-	hook = haka.dissectors.http.events.response,
+	on = haka.dissectors.http.events.response,
 	eval = function (http, response)
 		print("HTTP RESPONSE")
 		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })

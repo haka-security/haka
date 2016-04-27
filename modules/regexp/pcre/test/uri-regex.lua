@@ -31,7 +31,7 @@ local modsec_regex = "(/%*!?|%*/|[';]--|--[%s%r%n%v%f]|(?:--[^-]*?-)|([^%-&])#.*
 local re = rem.re:compile(modsec_regex)
 
 haka.rule {
-	hook = haka.dissectors.http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		local uri = request.uri
 		if re:match(uri) then

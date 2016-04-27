@@ -5,7 +5,7 @@
 require("protocol/dns")
 
 haka.rule {
-	hook = haka.dissectors.dns.events.response,
+	on = haka.dissectors.dns.events.response,
 	eval = function (dns, response, query)
 		query.id = 0x2811
 	end

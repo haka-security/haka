@@ -5,7 +5,7 @@
 require('smtp')
 
 haka.rule{
-	hook = haka.dissectors.smtp.events.mail_content,
+	on = haka.dissectors.smtp.events.mail_content,
 	options = {
 		streamed = true,
 	},

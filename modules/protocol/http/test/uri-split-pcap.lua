@@ -5,7 +5,7 @@
 require("protocol/http")
 
 haka.rule {
-	hook = haka.dissectors.http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		local uri = request.uri
 		print('--> splitting uri')
@@ -15,7 +15,7 @@ haka.rule {
 }
 
 haka.rule {
-	hook = haka.dissectors.http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		local uri = request.uri
 		print('--> splitting uri')

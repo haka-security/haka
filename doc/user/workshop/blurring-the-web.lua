@@ -10,7 +10,7 @@ local regexp = rem.re:compile(pattern, rem.re.CASE_INSENSITIVE)
 local css = ' <style type="text/css" media="screen"> * { color: transparent !important; text-shadow: 0 0 3px black !important; } </style> '
 
 haka.rule {
-	hook = haka.dissectors.http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		request.headers['Accept-Encoding'] = nil
 		request.headers['Accept'] = '*/*'
@@ -23,14 +23,14 @@ haka.rule {
 }
 
 haka.rule {
-	hook = haka.dissectors.http.events.response,
+	on = haka.dissectors.http.events.response,
 	eval = function (http, response)
 		http:enable_data_modification()
 	end
 }
 
 haka.rule{
-	hook = haka.dissectors.http.events.response_data,
+	on = haka.dissectors.http.events.response_data,
 	options = {
 		streamed = true,
 	},

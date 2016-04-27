@@ -16,7 +16,7 @@ local stats = tbl.new()
 --------------------------
 
 haka.rule{
-	hook = haka.dissectors.http.events.response,
+	on = haka.dissectors.http.events.response,
 	eval = function (http, response)
 		local request = http.request
 		local split_uri = request.split_uri:normalize()

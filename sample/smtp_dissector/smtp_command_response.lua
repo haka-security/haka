@@ -5,7 +5,7 @@
 require("smtp")
 
 haka.rule {
-	hook = haka.dissectors.smtp.events.command,
+	on = haka.dissectors.smtp.events.command,
 	eval = function (flow, command)
 		print("SMTP COMMAND")
 		debug.pprint(command, nil, nil, { debug.hide_underscore, debug.hide_function })
@@ -13,7 +13,7 @@ haka.rule {
 }
 
 haka.rule {
-	hook = haka.dissectors.smtp.events.response,
+	on = haka.dissectors.smtp.events.response,
 	eval = function (flow, response)
 		print("SMTP RESPONSE")
 		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })

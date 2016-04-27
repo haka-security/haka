@@ -3,7 +3,7 @@ stats = require('stats')
 local color = require('color')
 
 haka.rule{
-	hook = haka.events.exiting,
+	on = haka.events.exiting,
 	eval = function()
 		debug.interactive.enter(color.green .. color.bold .. ">  " .. color.clear,
 			color.green .. color.bold .. ">> " .. color.clear,

@@ -3,14 +3,14 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 haka.rule{
-	hook = haka.events.exiting,
+	on = haka.events.exiting,
 	eval = function ()
 		haka.log.info("exiting")
 	end
 }
 
 haka.rule{
-	hook = haka.events.started,
+	on = haka.events.started,
 	eval = function ()
 		haka.log.info("started")
 	end

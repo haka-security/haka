@@ -3,7 +3,7 @@ local stats = require('stats')
 
 -- Run some stats at exit on collected http info
 haka.rule{
-	hook = haka.events.exiting,
+	on = haka.events.exiting,
 	eval = function ()
 		print("top 10 (by default) of useragent header")
 		stats:top('useragent')

@@ -5,7 +5,7 @@
 require("protocol/http")
 
 haka.rule {
-	hook = haka.dissectors.http.events.response_data,
+	on = haka.dissectors.http.events.response_data,
 	options = {
 		streamed = true,
 	},

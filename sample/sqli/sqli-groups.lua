@@ -27,7 +27,7 @@ local sql_functions = {
 
 -- Define a security rule group related to SQLi attacks
 sqli = haka.rule_group{
-	hook = haka.dissectors.http.events.request,
+	on = haka.dissectors.http.events.request,
 	name = 'sqli',
 	-- Initialize some values before evaluating any security rule
 	init = function (http, request)

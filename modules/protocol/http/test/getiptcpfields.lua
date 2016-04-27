@@ -5,7 +5,7 @@
 require("protocol/http")
 
 haka.rule {
-	hook = haka.dissectors.http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		print(string.format("Ip source %s port source %s", http.flow.srcip, http.flow.srcport))
 	end

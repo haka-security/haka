@@ -20,7 +20,7 @@ local update_domains = {
 -- Rule group definition
 -------------------------------------
 safe_update = haka.rule_group{
-	hook = haka.dissectors.http.events.response,
+	on = haka.dissectors.http.events.response,
 
 	-- Initialization
 	init = function (http, response)

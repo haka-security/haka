@@ -5,14 +5,14 @@
 require("protocol/http")
 
 haka.rule {
-	hook = haka.dissectors.http.events.response,
+	on = haka.dissectors.http.events.response,
 	eval = function (http, response)
 		http:enable_data_modification()
 	end
 }
 
 haka.rule {
-	hook = haka.dissectors.http.events.response_data,
+	on = haka.dissectors.http.events.response_data,
 	options = {
 		streamed = true,
 	},

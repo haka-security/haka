@@ -5,7 +5,7 @@
 require("protocol/dns")
 
 haka.rule {
-	hook = haka.dissectors.dns.events.query,
+	on = haka.dissectors.dns.events.query,
 	eval = function (dns, query)
 		print("DNS QUERY")
 		debug.pprint(query, nil, nil, { debug.hide_underscore, debug.hide_function })
@@ -13,7 +13,7 @@ haka.rule {
 }
 
 haka.rule {
-	hook = haka.dissectors.dns.events.response,
+	on = haka.dissectors.dns.events.response,
 	eval = function (dns, response)
 		print("DNS RESPONSE")
 		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
