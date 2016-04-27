@@ -7,7 +7,7 @@
 local raw = require("protocol/raw")
 
 haka.rule {
-	hook = raw.events.receive_packet,
+	on = haka.dissectors.raw.events.receive_packet,
 	eval = function (pkt)
 		debug.pprint(pkt, nil, nil, { debug.hide_underscore, debug.hide_function })
 	end

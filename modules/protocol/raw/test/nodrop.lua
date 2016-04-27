@@ -7,13 +7,13 @@
 local raw = require("protocol/raw")
 
 haka.policy {
-	on = raw.policies.unknown_dissector,
+	on = haka.dissectors.raw.policies.unknown_dissector,
 	name = "don't drop",
 	action = haka.policy.accept
 }
 
 haka.rule {
-	hook = raw.events.receive_packet,
+	on = haka.dissectors.raw.events.receive_packet,
 	eval = function (pkt)
 		debug.pprint(pkt, nil, nil, { debug.hide_underscore, debug.hide_function })
 	end

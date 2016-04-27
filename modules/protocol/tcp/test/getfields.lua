@@ -27,7 +27,7 @@ require("protocol/ipv4")
 local tcp = require("protocol/tcp")
 
 haka.rule {
-	hook = tcp.events.receive_packet,
+	on = haka.dissectors.tcp.events.receive_packet,
 	eval = function (pkt)
 		local good, bad = checks(pkt)
 		print(string.format( "----------TCP HEADER ---------"))

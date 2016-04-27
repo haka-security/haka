@@ -18,7 +18,7 @@ end
 local icmp = require("protocol/icmp")
 
 haka.rule {
-	hook = icmp.events.receive_packet,
+	on = haka.dissectors.icmp.events.receive_packet,
 	eval = function (pkt)
 		print(string.format("Internet Control Message Protocol"))
 		print(string.format("    Type: %d (%s)", pkt.type, type[pkt.type]))

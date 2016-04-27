@@ -130,7 +130,7 @@ end)
 local context = {}
 
 haka.rule {
-	hook = ipv4.events.receive_packet,
+	on = haka.dissectors.ipv4.events.receive_packet,
 	eval = function (self, pkt)
 		if not context.instance then
 			context.hello = "hello"

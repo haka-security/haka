@@ -7,7 +7,7 @@ local ipv4 = require('protocol/ipv4')
 local testPolicy = haka.policy.new("test_policy")
 
 haka.rule {
-	hook = ipv4.events.receive_packet,
+	on = haka.dissectors.ipv4.events.receive_packet,
 	eval = function (pkt)
 		testPolicy:apply{
 			values = {

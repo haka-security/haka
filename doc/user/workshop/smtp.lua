@@ -5,7 +5,6 @@
 local class = require('class')
 
 local tcp_connection = require("protocol/tcp_connection")
-local module = {}
 
 --
 -- Constants
@@ -31,11 +30,6 @@ local SmtpDissector = haka.dissector.new{
 	type = tcp_connection.helper.TcpFlowDissector,
 	name = 'smtp'
 }
-
-function module.dissect(flow)
-	SmtpDissector:dissect(flow)
-end
-
 
 haka.policy {
 	on = haka.dissectors.tcp_connection.policies.install,
@@ -271,7 +265,3 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	initial(session_initiation)
 end)
-
-module.events = SmtpDissector.events
-
-return module

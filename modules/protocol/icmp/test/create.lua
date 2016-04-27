@@ -11,7 +11,7 @@ local icmp = require("protocol/icmp")
 local counter = 10
 
 haka.rule {
-	hook = icmp.events.receive_packet,
+	on = haka.dissectors.icmp.events.receive_packet,
 	eval = function (pkt)
 		if pkt.type ~= 6 then
 			if counter == 0 then

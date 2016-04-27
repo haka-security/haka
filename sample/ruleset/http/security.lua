@@ -4,7 +4,7 @@
 
 -- detect malicious web scanners
 haka.rule {
-	hook = http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		--user-agent patterns of known web scanners
 		local http_useragent = {

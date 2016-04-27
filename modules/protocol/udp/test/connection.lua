@@ -9,21 +9,21 @@ require("protocol/udp")
 local udp_connection = require("protocol/udp_connection")
 
 haka.rule{
-	hook = udp_connection.events.new_connection,
+	on = haka.dissectors.udp_connection.events.new_connection,
 	eval = function (flow, pkt)
 		print(string.format("New UDP connection: %s:%d -> %s:%d", flow.srcip, flow.srcport, flow.dstip, flow.dstport))
 	end
 }
 
 haka.rule{
-	hook = udp_connection.events.receive_data,
+	on = haka.dissectors.udp_connection.events.receive_data,
 	eval = function (flow, pkt)
 		print(string.format("UDP data: %d", #pkt.payload))
 	end
 }
 
 haka.rule{
-	hook = udp_connection.events.end_connection,
+	on = haka.dissectors.udp_connection.events.end_connection,
 	eval = function (flow)
 		print(string.format("End UDP connection: %s:%d -> %s:%d", flow.srcip, flow.srcport, flow.dstip, flow.dstport))
 	end

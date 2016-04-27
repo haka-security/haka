@@ -52,7 +52,7 @@ function haka.console.rules()
 	for _, rule in pairs(module.rules) do
 		table.insert(ret, {
 			name=rule.name,
-			event=rule.hook.name,
+			event=rule.on.name,
 			location=rule.location,
 			type=rule.type
 		})

@@ -11,7 +11,7 @@ local udp = require("protocol/udp")
 local counter = 10
 
 haka.rule {
-	hook = udp.events.receive_packet,
+	on = haka.dissectors.udp.events.receive_packet,
 	eval = function (pkt)
 		if pkt.srcport ~= 3333 then
 			if counter == 0 then

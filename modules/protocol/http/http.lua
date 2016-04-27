@@ -100,10 +100,6 @@ function http_dissector.method:trigger_event(res, iter, mark)
 	end
 end
 
-function module.dissect(flow)
-	http_dissector:dissect(flow)
-end
-
 haka.policy{
 	name = "http",
 	on = haka.dissectors.tcp_connection.policies.install,
@@ -452,7 +448,5 @@ http_dissector.state_machine = haka.state_machine.new("http", function ()
 
 	initial(request)
 end)
-
-module.events = http_dissector.events
 
 return module

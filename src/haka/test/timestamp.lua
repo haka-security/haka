@@ -5,7 +5,7 @@
 local raw = require('protocol/raw')
 
 haka.rule {
-	hook = raw.events.receive_packet,
+	on = haka.dissectors.raw.events.receive_packet,
 	eval = function (pkt)
 		haka.log("packet timestamp is %ds %dns", pkt.timestamp.secs, pkt.timestamp.nsecs)
 		haka.log("packet timestamp is %s seconds", pkt.timestamp.seconds)

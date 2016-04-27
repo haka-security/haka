@@ -13,7 +13,7 @@ require("protocol/tcp_connection")
 local counter = 10
 
 haka.rule {
-	hook = tcp.events.receive_packet,
+	on = haka.dissectors.tcp.events.receive_packet,
 	eval = function (pkt)
 		if pkt.dstport == 4444 or pkt.srcport == 4444 then
 			if counter == 0 then

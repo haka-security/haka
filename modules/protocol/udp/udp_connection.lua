@@ -193,12 +193,9 @@ end
 
 haka.policy {
 	name = "udp connection",
-	on = udp.policies.install,
+	on = haka.dissectors.udp.policies.install,
 	action = haka.dissectors.udp_connection.select
 }
-
-module.events = udp_connection_dissector.events
-module.policies = udp_connection_dissector.policies
 
 --
 -- Helpers

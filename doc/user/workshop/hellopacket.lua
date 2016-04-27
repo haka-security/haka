@@ -14,7 +14,7 @@ local ipv4 = require('protocol/ipv4')
 -- Log info about incoming ipv4 packets
 haka.rule{
 	-- Rule evaluated whenever a new ipv4 packet is received
-	hook = ipv4.events.receive_packet,
+	on = haka.dissectors.ipv4.events.receive_packet,
 	-- Evauation function taking ipv4 packet structure
 	-- as argument
 	eval = function (pkt)

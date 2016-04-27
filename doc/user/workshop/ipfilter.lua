@@ -11,7 +11,7 @@ local ipv4 = require('protocol/ipv4')
 -- blacklisted network 192.168.10.0/22
 haka.rule{
 	-- This rule is applied on each ip incoming packet
-	hook = ipv4.events.receive_packet,
+	on = haka.dissectors.ipv4.events.receive_packet,
 	eval = function (pkt)
 		-- Create network object
 		local bad_network = ipv4.network("192.168.10.0/27")

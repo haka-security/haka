@@ -7,23 +7,24 @@ local tcp_connection = require('protocol/tcp_connection')
 local http = require('protocol/http')
 
 -- Allow only connections on port 80, close all other connections
--- Forward all accepted connections to the HTTP dissector
-haka.rule{
-	hook = tcp_connection.events.new_connection,
-	eval = function (flow, pkt)
-		if pkt.dstport == 80 then
-			http.dissect(flow)
-		else
-			haka.log("Dropping TCP connection: tcp dstpport=%d",
-				pkt.dstport)
-			pkt:reset() -- Send a TCP RST packet to both sides: client and server
-		end
-	end
+haka.policy {
+	on = haka.dissectors.tcp_connection.policies.new_connection,
+	name = "drop by default",
+	action = haka.policy.drop_with_alert{
+		description = "drop by default"
+	}
+}
+
+haka.policy {
+	on = haka.dissectors.tcp_connection.policies.new_connection,
+	dstport = 80,
+	name = "authorizing http traffic",
+	action = haka.policy.accept
 }
 
 -- Allow only connections from the 'Mozilla' user agent.
 haka.rule{
-	hook = http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		if string.match(request.headers['User-Agent'], 'Mozilla') then
 			haka.log("User-Agent Mozilla detected")

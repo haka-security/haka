@@ -28,10 +28,9 @@ tcp_connection_dissector.policies.no_connection_found = haka.policy.new("no conn
 tcp_connection_dissector.policies.unexpected_packet = haka.policy.new("unexpected tcp packet")
 tcp_connection_dissector.policies.invalid_handshake = haka.policy.new("invalid tcp handshake")
 tcp_connection_dissector.policies.new_connection = haka.policy.new("new connection")
-module.policies = tcp_connection_dissector.policies
 
 haka.policy {
-	on = module.policies.no_connection_found,
+	on = haka.dissectors.tcp_connection.policies.no_connection_found,
 	name = "default action",
 	action = haka.policy.drop_with_alert{ severity = 'low' }
 }
@@ -79,7 +78,7 @@ function tcp_connection_dissector:receive(pkt)
 			connection.data:createnamespace('tcp_connection', self)
 		else
 			if not dropped then
-				module.policies.no_connection_found:apply{
+				tcp_connection_dissector.policies.no_connection_found:apply{
 					ctx = pkt,
 					values = {
 						srcip = pkt.ip.src,
@@ -136,13 +135,13 @@ end
 
 
 haka.policy {
-	on = module.policies.unexpected_packet,
+	on = haka.dissectors.tcp_connection.policies.unexpected_packet,
 	name = "default action",
 	action = haka.policy.drop_with_alert()
 }
 
 haka.policy {
-	on = module.policies.invalid_handshake,
+	on = haka.dissectors.tcp_connection.policies.invalid_handshake,
 	name = "default action",
 	action = haka.policy.drop_with_alert()
 }
@@ -177,7 +176,7 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	timed_wait   = state()
 
 	local function unexpected_packet(self, pkt)
-		module.policies.unexpected_packet:apply{
+		tcp_connection_dissector.policies.unexpected_packet:apply{
 			ctx = pkt,
 			desc = {
 				sources = {
@@ -194,7 +193,7 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 
 	local function invalid_handshake(type)
 		return function (self, pkt)
-			module.policies.unexpected_packet:apply{
+			tcp_connection_dissector.policies.unexpected_packet:apply{
 				ctx = pkt,
 				desc = {
 					description = string.format("invalid tcp %s handshake", type),
@@ -697,14 +696,14 @@ end
 
 haka.policy {
 	name = "tcp connection",
-	on = tcp.policies.install,
+	on = haka.dissectors.tcp.policies.install,
 	action = haka.dissectors.tcp_connection.select
 }
 
 haka.rule {
-	on = tcp_connection_dissector.events.new_connection,
+	on = haka.dissectors.tcp_connection.events.new_connection,
 	eval = function (flow, pkt)
-		module.policies.new_connection:apply{
+		tcp_connection_dissector.policies.new_connection:apply{
 			ctx = flow,
 			values = {
 				srcip = pkt.ip.src,
@@ -725,8 +724,6 @@ haka.rule {
 		}
 	end
 }
-
-module.events = tcp_connection_dissector.events
 
 --
 -- Helpers

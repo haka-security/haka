@@ -19,7 +19,7 @@ end)
 
 haka.rule{
 	-- Intercept tcp packets
-	hook = tcp_connection.events.receive_data,
+	on = haka.dissectors.tcp_connection.events.receive_data,
 	eval = function (flow, input, direction)
 		if direction == 'up' then
 			local ctx = class.class('ctx'):new()

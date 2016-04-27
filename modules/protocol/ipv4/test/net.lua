@@ -5,7 +5,7 @@
 local ipv4 = require("protocol/ipv4");
 
 haka.rule {
-	hook = ipv4.events.receive_packet,
+	on = haka.dissectors.ipv4.events.receive_packet,
 	eval = function (pkt)
 		local addr = ipv4.addr("192.168.10.0");
 		local net10 = ipv4.network(addr, 24);

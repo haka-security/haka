@@ -17,7 +17,7 @@ function rule_group.method:__init(args)
 	self.init = args.init or function () end
 	self.continue = args.continue or function () return true end
 	self.final = args.final or function () end
-	self.event_continue = args.hook.continue
+	self.event_continue = args.on.continue
 	self.options = args.options or {}
 	self.type = 'group'
 end
@@ -60,8 +60,8 @@ function haka.rule_group(args)
 	end
 
 	check.assert(type(args) == 'table', "rule parameter must be a table")
-	check.assert(args.hook, "not hook defined for rule group")
-	check.assert(class.isa(args.hook, haka.event.Event), "rule hook must be an event")
+	check.assert(args.on, "no event defined for rule group")
+	check.assert(class.isa(args.on, haka.event.Event), "rule must bind on an event")
 	check.assert(not args.init or type(args.init) == 'function', "rule group init function expected")
 	check.assert(not args.continue or type(args.continue) == 'function', "rule group continue function expected")
 	check.assert(not args.final or type(args.final) == 'function', "rule group final function expected")
@@ -69,7 +69,7 @@ function haka.rule_group(args)
 
 	local group = rule_group:new(args)
 
-	haka.context.connections:register(args.hook,
+	haka.context.connections:register(args.on,
 		function (...) group:eval(...) end,
 		args.options)
 
