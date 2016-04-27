@@ -147,7 +147,6 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 	end
 
 	haka.console = {}
-	haka.dissectors = {}
 
 	haka.console.threads = haka._threads_info
 	haka._threads_info = nil

@@ -10,6 +10,13 @@ local dissector = {}
 local log = haka.log_section("dissector")
 local log_lua = haka.log_section("lua")
 
+haka.dissectors = {}
+local mt = {
+	__index = function(t, k)
+		log.error("unknown dissector %s", k)
+	end
+}
+setmetatable(haka.dissectors, mt)
 
 --
 -- Dissector base class
