@@ -59,7 +59,7 @@ Geo localization
         local geoip = geoip_module.open('/usr/share/GeoIP/GeoIP.dat')
 
         haka.rule {
-            hook = ipv4.events.receive_packet,
+            on = ipv4.events.receive_packet,
             eval = function (pkt)
                 local dst = pkt.dst
                 haka.log("ip %s from %s",dst, geoip:country(dst))

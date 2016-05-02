@@ -9,7 +9,7 @@ http.install_tcp_rule(80)
 local css = ' <style type="text/css" media="screen"> * { color: transparent !important; text-shadow: 0 0 3px black !important; } </style> '
 
 haka.rule {
-	hook = http.events.request,
+	on = http.events.request,
 	eval = function (http, request)
 		request.headers['Accept-Encoding'] = nil
 		request.headers['Accept'] = '*/*'
@@ -22,14 +22,14 @@ haka.rule {
 }
 
 haka.rule {
-	hook = http.events.response,
+	on = http.events.response,
 	eval = function (http, response)
 		http:enable_data_modification()
 	end
 }
 
 haka.rule{
-	hook = http.events.response_data,
+	on = http.events.response_data,
 	options = {
 		streamed = true,
 	},

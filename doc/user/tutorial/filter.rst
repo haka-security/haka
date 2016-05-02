@@ -101,7 +101,7 @@ To set the debugger to focus on that particular frame, type ``frame 3``. We can 
     :string_escape:
 
     \x1b[32mdebug\x1b[1m>  \x1b[0mlist
-	\x1b[33m  14:  \x1b[0m    hook = haka.event('tcp', 'receive_packet'),
+	\x1b[33m  14:  \x1b[0m    on = haka.event('tcp', 'receive_packet'),
 	\x1b[33m  15:  \x1b[0m    eval = function (pkt)
 	\x1b[33m  16:  \x1b[0m        -- The next line will generate a lua error:
 	\x1b[33m  17:  \x1b[0m        -- there is no 'destport' field. replace 'destport' by 'dstport'
@@ -160,11 +160,14 @@ A rule group has three functions:
 
 * The `init` function is called before any rule from the group is applied
 
-* The `continue` function is called between each rule of the group and can decide to stop processing the group at any point.
+* The `continue` function is called between each rule of the group and can
+  decide to stop processing the group at any point.
 
-* The `final` function is called after all rules have been ran. It is not called if `continue` has forced a cancelation mid-group.
+* The `final` function is called after all rules have been ran. It is not
+  called if `continue` has forced a cancelation mid-group.
 
-The following example uses the concept of group to implement a simple filter that only accepts connections on port 80 and port 22.
+The following example uses the concept of group to implement a simple filter
+that only accepts connections on port 80 and port 22.
 
 .. literalinclude:: ../../../sample/filter/groupfilter.lua
     :language: lua
@@ -175,16 +178,17 @@ Advanced TCP/IP Filtering
 
 Filtering with NFQueue
 ^^^^^^^^^^^^^^^^^^^^^^
+
 All the examples so far have used ``hakapcap`` to test some recorded packets.
 
-Haka can also use nfqueue to capture packets from a live interface. The following
-examples will illustrate how to do that.
+Haka can also use nfqueue to capture packets from a live interface. The
+following examples will illustrate how to do that.
 
-When configured to use nfqueue, Haka will hook itself up to the `raw` nfqueue table in order to
-inspect, modify, create and delete packets in real time.
+When configured to use nfqueue, Haka will attach itself up to the `raw` nfqueue
+table in order to inspect, modify, create and delete packets in real time.
 
-The rest of this tutorial assumes that the Haka package is installed on a host which has a
-network interface named eth0.
+The rest of this tutorial assumes that the Haka package is installed on a host
+which has a network interface named eth0.
 
 The configuration file for the daemon is given below:
 
@@ -192,18 +196,24 @@ The configuration file for the daemon is given below:
    :language: ini
    :tab-width: 4
 
-In order to be able to capture packets, the `haka` daemon needs to be run as root. The ``--no-daemon`` option will prevent `haka` from detaching from the command line and will force `haka` to send its outputs to stdout instead of syslog.
+In order to be able to capture packets, the `haka` daemon needs to be run as
+root. The ``--no-daemon`` option will prevent `haka` from detaching from the
+command line and will force `haka` to send its outputs to stdout instead of
+syslog.
 
 .. code-block:: console
 
    # cd <haka_install_path>/share/haka/sample/filter/
    # haka -c daemon.conf --no-daemon
 
-The Haka script file used here is the one from the first tutorial. This filter will discard all packets coming from `192.168.10.10`
+The Haka script file used here is the one from the first tutorial. This filter
+will discard all packets coming from `192.168.10.10`
 
 HTTP filtering
 ^^^^^^^^^^^^^^
-Haka comes with an HTTP parser. Using that module it is easy to filter packets using specific fields from HTTP headers.
+
+Haka comes with an HTTP parser. Using that module it is easy to filter packets
+using specific fields from HTTP headers.
 
 .. literalinclude:: ../../../sample/filter/httpfilter.lua
    :language: lua

@@ -99,8 +99,9 @@ All the examples so far have used ``hakapcap`` to test some recorded packets.
 Haka can also use nfqueue to capture packets from a live interface. The
 following examples will illustrate how to do that.
 
-When configured to use nfqueue, Haka will hook itself up to the `raw` nfqueue
-table in order to inspect, modify, create and delete packets in real time.
+When configured to use nfqueue, Haka will attached itself up to the `raw`
+nfqueue table in order to inspect, modify, create and delete packets in real
+time.
 
 The rest of this tutorial assumes that the Haka package is installed on a host
 which has a network interface named eth0.
@@ -193,7 +194,7 @@ Interactive rule debugging
         :string_escape:
 
         \x1b[32mdebug\x1b[1m>  \x1b[0mlist
-        \x1b[33m  14:  \x1b[0m    hook = haka.event('tcp', 'receive_packet'),
+        \x1b[33m  14:  \x1b[0m    on = haka.event('tcp', 'receive_packet'),
         \x1b[33m  15:  \x1b[0m    eval = function (pkt)
         \x1b[33m  16:  \x1b[0m        -- The next line will generate a lua error:
         \x1b[33m  17:  \x1b[0m        -- there is no 'destport' field. replace 'destport' by 'dstport'

@@ -48,7 +48,7 @@ react if needed. You can declare these checks and reactions with Haka *rules*.
 
 If we sum up, Haka rules are made of:
 
-    * an event to hook to
+    * an event to attach to
     * a Lua function to check and react
 
 We can declare our first rule by adding the following lines in our ``hellopacket.lua`` script:
@@ -56,15 +56,15 @@ We can declare our first rule by adding the following lines in our ``hellopacket
 .. code-block:: lua
 
     haka.rule{
-        hook = ipv4.events.receive_packet,
+        on = ipv4.events.receive_packet,
         eval = function (pkt)
             -- Do some check on pkt and react if necessary
         end
     }
 
-Each dissector will trigger its own events. The event you hook to determines the
-arguments passed to the ``eval`` function. You can find a full list of the available
-events and their arguments in the documentation.
+Each dissector will trigger its own events. The event you attach to determines
+the arguments passed to the ``eval`` function. You can find a full list of the
+available events and their arguments in the documentation.
 
 .. seealso:: `Ipv4 <../../../modules/protocol/ipv4/doc/ipv4.html>`_ where
     you will find the event list of ipv4 dissector.
@@ -134,7 +134,7 @@ Interactive rule
         local ipv4 = require('protocol/ipv4')
 
         haka.rule{
-            hook = ipv4.events.receive_packet,
+            on = ipv4.events.receive_packet,
             eval = haka.interactive_rule("my_interactive_rule_on_ip")
         }
 
