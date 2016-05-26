@@ -465,7 +465,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 	end
 
 	swig.getclassmetatable('ipv4')['.fn'].receive = ipv4_dissector.method.receive
-        swig.getclassmetatable('ipv4')['.fn'].preceive = ipv4_dissector.method.preceive
+	swig.getclassmetatable('ipv4')['.fn'].preceive = ipv4_dissector.method.preceive
 	swig.getclassmetatable('ipv4')['.fn'].send = ipv4_dissector.method.send
 	swig.getclassmetatable('ipv4')['.fn'].inject = ipv4_dissector.method.inject
 	swig.getclassmetatable('ipv4')['.fn'].continue = haka.helper.Dissector.method.continue
