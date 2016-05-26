@@ -75,7 +75,6 @@ function type.Dissector.method:__init()
 		self.state = cls.state_machine:instanciate(self)
 	end
 	self.scope = nil
-	self._old_scope = nil
 	haka.context:register_connections(self:connections())
 end
 

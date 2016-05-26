@@ -160,7 +160,7 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 
 %luacode {
 	require('context')
-        require('policy')
+	require('policy')
 	require('dissector')
 	require('grammar')
 
