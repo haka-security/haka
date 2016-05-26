@@ -473,9 +473,6 @@ int lua_inet_checksum(struct vbuffer *buf);
 	swig.getclassmetatable('ipv4')['.fn'].select_next_dissector = ipv4_dissector.method.select_next_dissector
 	swig.getclassmetatable('ipv4')['.fn'].activate_next_dissector = ipv4_dissector.method.activate_next_dissector
 
-	this.events = ipv4_dissector.events
-        this.policies = ipv4_dissector.policies
-
 	function this.create(pkt)
 		return ipv4_dissector:create(pkt)
 	end

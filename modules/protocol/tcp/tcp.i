@@ -296,13 +296,10 @@ void tcp__next_dissector_set(struct tcp *tcp, struct lua_ref ref)
 	local ipv4 = require("protocol/ipv4")
 	haka.policy {
 		name = "tcp",
-		on = ipv4.policies.install,
+		on = haka.dissectors.ipv4.policies.install,
 		proto = 6,
 		action = haka.dissectors.tcp.select
 	}
-
-	this.events = tcp_dissector.events
-        this.policies = tcp_dissector.policies
 
 	function this.create(ip)
 		return tcp_dissector:create(ip)

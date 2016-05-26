@@ -102,7 +102,4 @@ const char *packet_dissector(struct packet *pkt);
 	function this.create(size)
 		return raw_dissector:create(size)
 	end
-
-	this.events = raw_dissector.events
-        this.policies = raw_dissector.policies
 }
