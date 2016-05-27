@@ -86,7 +86,7 @@ function udp_dissector:create(pkt, init)
 end
 
 function udp_dissector.method:install_criterion()
-	return { port = self.port }
+	return { srcport = self.srcport, dstport = self.dstport }
 end
 
 haka.policy {
