@@ -30,7 +30,7 @@ tcp_connection_dissector.policies.invalid_handshake = haka.policy.new("invalid t
 tcp_connection_dissector.policies.new_connection = haka.policy.new("new connection")
 
 haka.policy {
-	on = haka.dissectors.tcp_connection.policies.no_connection_found,
+	on = tcp_connection_dissector.policies.no_connection_found,
 	name = "default action",
 	action = haka.policy.drop_with_alert{ severity = 'low' }
 }
@@ -135,13 +135,13 @@ end
 
 
 haka.policy {
-	on = haka.dissectors.tcp_connection.policies.unexpected_packet,
+	on = tcp_connection_dissector.policies.unexpected_packet,
 	name = "default action",
 	action = haka.policy.drop_with_alert()
 }
 
 haka.policy {
-	on = haka.dissectors.tcp_connection.policies.invalid_handshake,
+	on = tcp_connection_dissector.policies.invalid_handshake,
 	name = "default action",
 	action = haka.policy.drop_with_alert()
 }
