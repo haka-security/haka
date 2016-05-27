@@ -56,7 +56,7 @@ safe_update:rule{
 safe_update:rule{
 	eval = function (http, response)
 		-- Uncomment the following line to see the the content of the request
-		-- debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
+		-- debug.pprint(request, { hide = { debug.hide_underscore, debug.hide_function } })
 
 		local UA = http.request.headers["User-Agent"] or "No User-Agent header"
 		haka.log("UA detected: %s", UA)
@@ -77,7 +77,7 @@ safe_update:rule{
 				response.headers["Server"] = "A patchy server"
 				response.headers["Connection"] = "Close"
 				response.headers["Proxy-Connection"] = "Close"
-				debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
+				debug.pprint(response, { hide = { debug.hide_underscore, debug.hide_function } })
 			end
 		else
 			haka.log("Unknown or missing User-Agent")

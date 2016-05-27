@@ -162,7 +162,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 		event = events.down,
 		when = function (self, res) return res.responses[1].code == '220' end,
 		execute = function (self, res)
-			debug.pprint(res, nil, nil, { debug.hide_underscore, debug.hide_function })
+			debug.pprint(res, { hide = { debug.hide_underscore, debug.hide_function } })
 		end,
 		jump = client_initiation,
 	}

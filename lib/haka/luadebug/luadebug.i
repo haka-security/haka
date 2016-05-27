@@ -261,7 +261,9 @@ void lua_luadebug_debugger_break();
 		end
 	end
 
-	function debug.pprint(obj, indent, depth, hide, out)
+	function debug.pprint(obj, opt)
+		opt = opt or {}
+		local hide = opt.hide
 		if not hide then
 			hide = {}
 		elseif type(hide) == "function" then
@@ -269,9 +271,9 @@ void lua_luadebug_debugger_break();
 		end
 
 		if num then
-			__pprint(obj, indent or "", nil, {}, hide, depth or -1, out or print)
+			__pprint(obj, opt.indent or "", nil, {}, hide, opt.depth or -1, opt.out or print)
 		else
-			__pprint(obj, indent or "", nil, {}, hide, depth or -1, out or print)
+			__pprint(obj, opt.indent or "", nil, {}, hide, opt.depth or -1, opt.out or print)
 		end
 	end
 

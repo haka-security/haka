@@ -17,6 +17,6 @@ haka.rule {
 	on = haka.dissectors.dns.events.query,
 	eval = function (dns, query)
 		print("DNS QUERY")
-		debug.pprint(query, nil, nil, { debug.hide_underscore, debug.hide_function })
+		debug.pprint(query, { hide = { debug.hide_underscore, debug.hide_function } })
 	end
 }

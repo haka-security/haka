@@ -15,6 +15,6 @@ haka.policy {
 haka.rule {
 	on = haka.dissectors.raw.events.receive_packet,
 	eval = function (pkt)
-		debug.pprint(pkt, nil, nil, { debug.hide_underscore, debug.hide_function })
+		debug.pprint(pkt, { hide = { debug.hide_underscore, debug.hide_function } })
 	end
 }
