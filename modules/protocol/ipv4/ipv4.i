@@ -437,6 +437,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 				},
 				ctx = pkt,
 			}
+			haka.context:signal(pkt, ipv4_dissector.events['receive_packet_reassembled'])
 
 			local next_dissector = pkt:activate_next_dissector()
 			if next_dissector then
