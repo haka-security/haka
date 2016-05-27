@@ -50,7 +50,7 @@ function tcp_connection_dissector:receive(pkt)
 			local ret, err = xpcall(function ()
 					haka.context:exec(connection.data, function ()
 						self:trigger('new_connection', pkt)
-						class.classof(self).policies.install:apply{
+						class.classof(self).policies.next_dissector:apply{
 							values = self:install_criterion(),
 							ctx = self,
 						}
@@ -696,8 +696,8 @@ end
 
 haka.policy {
 	name = "tcp connection",
-	on = haka.dissectors.tcp.policies.install,
-	action = haka.dissectors.tcp_connection.select
+	on = haka.dissectors.tcp.policies.next_dissector,
+	action = haka.dissectors.tcp_connection.install
 }
 
 haka.rule {

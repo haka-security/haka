@@ -93,9 +93,9 @@ end
 
 haka.policy {
 	name = "udp",
-	on = haka.dissectors.ipv4.policies.install,
+	on = haka.dissectors.ipv4.policies.next_dissector,
 	proto = 17,
-	action = haka.dissectors.udp.select
+	action = haka.dissectors.udp.install
 }
 
 function module.create(pkt, init)

@@ -32,9 +32,9 @@ local SmtpDissector = haka.dissector.new{
 }
 
 haka.policy {
-	on = haka.dissectors.tcp_connection.policies.install,
+	on = haka.dissectors.tcp_connection.policies.next_dissector,
 	port = 25,
-	action = haka.dissectors.smtp.select
+	action = haka.dissectors.smtp.install
 }
 
 function SmtpDissector.method:push_data(sub, last)

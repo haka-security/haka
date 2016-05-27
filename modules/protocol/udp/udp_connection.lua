@@ -35,7 +35,7 @@ function udp_connection_dissector:receive(pkt)
 
 		haka.context:exec(data, function ()
 			self:trigger('new_connection', pkt)
-			class.classof(self).policies.install:apply{
+			class.classof(self).policies.next_dissector:apply{
 				values = self:install_criterion(),
 				ctx = self,
 			}
@@ -193,8 +193,8 @@ end
 
 haka.policy {
 	name = "udp connection",
-	on = haka.dissectors.udp.policies.install,
-	action = haka.dissectors.udp_connection.select
+	on = haka.dissectors.udp.policies.next_dissector,
+	action = haka.dissectors.udp_connection.install
 }
 
 --

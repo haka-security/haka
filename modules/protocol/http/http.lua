@@ -102,9 +102,9 @@ end
 
 haka.policy{
 	name = "http",
-	on = haka.dissectors.tcp_connection.policies.install,
+	on = haka.dissectors.tcp_connection.policies.next_dissector,
 	port = 80,
-	action = haka.dissectors.http.select
+	action = haka.dissectors.http.install
 }
 
 --

@@ -255,9 +255,9 @@ end)
 
 haka.policy {
 	name = "dns",
-	on = haka.dissectors.udp_connection.policies.install,
+	on = haka.dissectors.udp_connection.policies.next_dissector,
 	port = 53,
-	action = haka.dissectors.dns.select
+	action = haka.dissectors.dns.install
 }
 
 --

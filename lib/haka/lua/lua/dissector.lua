@@ -47,11 +47,11 @@ function type.Dissector.__class_init(self, cls)
 	cls.options = {}
 	cls.connections = haka.event.StaticEventConnections:new()
 	cls.policies = {}
-	cls.policies.install = haka.policy.new(string.format("%s next dissector", cls.name))
+	cls.policies.next_dissector = haka.policy.new(string.format("%s next dissector", cls.name))
 	haka.dissectors[cls.name] = {}
 	haka.dissectors[cls.name].policies = cls.policies
 	haka.dissectors[cls.name].events = cls.events
-	haka.dissectors[cls.name].select = function(policy, ctx, values, desc)
+	haka.dissectors[cls.name].install = function(policy, ctx, values, desc)
 		return ctx:select_next_dissector(cls)
 	end
 end
@@ -212,7 +212,7 @@ function type.EncapsulatedPacketDissector.method:receive()
 
 	self:trigger('receive_packet')
 
-	class.classof(self).policies.install:apply{
+	class.classof(self).policies.next_dissector:apply{
 		values = self:install_criterion(),
 		ctx = self,
 	}
@@ -375,7 +375,7 @@ end
 function haka.console.events()
 	local ret = {}
 	local event = {}
-	for _, dissector in pairs(dissectors) do
+	for _, dissector in pairs(haka.dissectors) do
 		for _, event in pairs(dissector.events) do
 			local er = { event=event.name, listener=0 }
 			table.insert(ret, er)

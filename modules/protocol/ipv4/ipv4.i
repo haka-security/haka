@@ -431,7 +431,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 		else pkt = self:reassemble() end
 
 		if pkt then
-			ipv4_dissector.policies.install:apply{
+			ipv4_dissector.policies.next_dissector:apply{
 				values = {
 					proto = pkt.proto,
 				},

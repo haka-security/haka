@@ -248,7 +248,7 @@ void tcp__next_dissector_set(struct tcp *tcp, struct lua_ref ref)
 	function tcp_dissector.method:receive()
 		haka.context:signal(self, tcp_dissector.events['receive_packet'])
 
-		tcp_dissector.policies.install:apply{
+		tcp_dissector.policies.next_dissector:apply{
 			values = {
 				dstport = self.dstport,
 			},
@@ -296,9 +296,9 @@ void tcp__next_dissector_set(struct tcp *tcp, struct lua_ref ref)
 	local ipv4 = require("protocol/ipv4")
 	haka.policy {
 		name = "tcp",
-		on = haka.dissectors.ipv4.policies.install,
+		on = haka.dissectors.ipv4.policies.next_dissector,
 		proto = 6,
-		action = haka.dissectors.tcp.select
+		action = haka.dissectors.tcp.install
 	}
 
 	function this.create(ip)
