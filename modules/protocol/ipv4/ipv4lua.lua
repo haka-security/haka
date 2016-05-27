@@ -6,7 +6,7 @@
 
 local ipv4_dissector = haka.dissector.new{
 	type = haka.helper.PacketDissector,
-	name = 'ipv4'
+	name = 'ipv4lua'
 }
 
 local ipv4_addr_convert = {
@@ -39,7 +39,7 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 		)
 	}
 
-	local header = record{
+	header = record{
 		field('version',     number(4))
 			:validate(function (self) self.version = 4 end),
 		field('hdr_len',     number(4))
@@ -98,8 +98,8 @@ function ipv4_dissector.method:verify_checksum()
 	return ipv4.inet_checksum_compute(self._payload:sub(0, self.hdr_len)) == 0
 end
 
-function ipv4_dissector.method:next_dissector()
-	return ipv4.ipv4_protocol_dissectors[self.proto]
+function ipv4_dissector.method:install_criterion()
+	return { proto = self.proto }
 end
 
 function ipv4_dissector._compute_hdr_len(pkt)
