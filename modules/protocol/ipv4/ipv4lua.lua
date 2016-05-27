@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
---local ipv4 = require('protocol/ipv4')
+local ipv4 = require('protocol/ipv4')
 
 local ipv4_dissector = haka.dissector.new{
 	type = haka.helper.PacketDissector,
@@ -72,11 +72,11 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 				return ctx.iter.meter >= ctx:result(1).hdr_len or
 					(elem and elem.type == 0)
 			end),
-		align(32),
 		verify(function (self, ctx)
 			if ctx.iter.meter ~= self.hdr_len then
 				error(string.format("invalid ipv4 header size, expected %d bytes, got %d bytes", self.hdr_len, ctx.iter.meter))
 			end
+			return true
 		end),
 		field('payload',     bytes())
 	}
@@ -86,12 +86,14 @@ end)
 
 function ipv4_dissector.method:parse_payload(pkt, payload)
 	self.raw = pkt
-	ipv4_dissector.grammar:parse(payload:pos("begin"), self)
+	local res = ipv4_dissector.grammar.header:parse(payload:pos("begin"))
+	table.merge(self, res)
 end
 
 function ipv4_dissector.method:create_payload(pkt, payload, init)
 	self.raw = pkt
-	ipv4_dissector.grammar:create(payload:pos("begin"), self, init)
+	local res = ipv4_dissector.grammar.header:create(payload:pos("begin"), init)
+	table.merge(self, res)
 end
 
 function ipv4_dissector.method:verify_checksum()
@@ -131,5 +133,3 @@ function ipv4_dissector:create(pkt, init)
 
 	return ip
 end
-
-return ipv4
