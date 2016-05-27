@@ -1,3 +1,4 @@
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 debug core: applying policy dns for udp_connection next dissector
@@ -28,17 +29,21 @@ class DnsResult {
   rd : true
   tc : false
 }
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 debug core: applying policy dns for udp_connection next dissector
 debug conn: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 alert: id = = <>
 	severity = low
 	description = dns: mismatching response
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 debug core: applying policy dns for udp_connection next dissector
@@ -69,8 +74,10 @@ class DnsResult {
   rd : true
   tc : false
 }
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 debug core: applying policy dns for udp_connection next dissector
@@ -101,6 +108,7 @@ class DnsResult {
   rd : true
   tc : false
 }
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 debug lua: closing state

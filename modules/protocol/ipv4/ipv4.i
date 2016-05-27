@@ -474,8 +474,13 @@ int lua_inet_checksum(struct vbuffer *buf);
 	swig.getclassmetatable('ipv4')['.fn'].select_next_dissector = ipv4_dissector.method.select_next_dissector
 	swig.getclassmetatable('ipv4')['.fn'].activate_next_dissector = ipv4_dissector.method.activate_next_dissector
 
-	local raw = require('protocol/raw')
-	raw.register('ipv4', ipv4_dissector)
+	require('protocol/raw')
+	haka.policy {
+		name = "ipv4",
+		on = haka.dissectors.raw.policies.next_dissector,
+		proto = "ipv4",
+		action = haka.dissectors.ipv4.install
+	}
 
 	haka.policy.ipv4 = {}
 	haka.policy.ipv4.in_network = haka.policy.new_criterion(

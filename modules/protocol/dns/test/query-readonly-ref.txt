@@ -1,31 +1,39 @@
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 debug core: applying policy dns for udp_connection next dissector
 debug conn: opening connection 172.16.3.38:38360 -> 172.16.13.5:53
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 error udp: read only buffer
 debug conn: dropping connection 172.16.3.38:38360 -> 172.16.13.5:53
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 debug core: applying policy dns for udp_connection next dissector
 debug conn: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 error udp: read only buffer
 debug conn: dropping connection 172.16.3.38:50391 -> 172.16.13.5:53
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 debug core: applying policy dns for udp_connection next dissector
 debug conn: opening connection 172.16.3.38:51292 -> 172.16.13.5:53
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 error udp: read only buffer
 debug conn: dropping connection 172.16.3.38:51292 -> 172.16.13.5:53
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 debug core: applying policy dns for udp_connection next dissector
 debug conn: opening connection 172.16.3.38:37869 -> 172.16.13.5:53
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 debug core: applying policy udp connection for udp next dissector
 error udp: read only buffer

@@ -1,11 +1,15 @@
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.10:56353 -> 192.168.20.1:80
 debug core: applying policy http for tcp_connection next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 HTTP REQUEST
@@ -25,8 +29,10 @@ class HttpRequestResult {
     path : "/twiki/bin/view"
   }
 }
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 HTTP RESPONSE
@@ -61,42 +67,61 @@ class HttpResponseResult {
   status : "200"
   version : "2.0"
 }
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state

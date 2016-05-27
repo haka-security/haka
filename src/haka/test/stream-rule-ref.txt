@@ -1,34 +1,48 @@
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.20.99:55040 -> 192.168.20.1:80
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data received len=15 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data received len=15 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data received len=2 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55040->192.168.20.1:80, dir down, data received len=1086 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55040->192.168.20.1:80, dir down, data: HTTP/1.1 200 OK
@@ -69,51 +83,70 @@ Login with msfadmin/msfadmin to get started
 </html>
 
 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55040->192.168.20.1:80, dir up, data: oo / HTTP/1.0
 Host: serveur
 
 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.20.99:55041 -> 192.168.20.1:80
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=16 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: rejected policy tcp
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=14 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=19 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=2 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir down, data received len=1086 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir down, data: HTTP/1.1 200 OK
@@ -154,6 +187,7 @@ Login with msfadmin/msfadmin to get started
 </html>
 
 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data: GET / HTTP/1.1
@@ -161,6 +195,7 @@ Host:serveur
 Connection: Close
 
 
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state

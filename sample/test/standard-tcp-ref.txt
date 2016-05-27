@@ -1,4 +1,6 @@
+debug core: applying policy ipv4 for raw next dissector
 debug core: rejected policy tcp
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:52110 -> 192.168.20.1:443
@@ -16,6 +18,7 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/443
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
@@ -30,9 +33,13 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/80
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: rejected policy tcp
+debug core: applying policy ipv4 for raw next dissector
 debug core: rejected policy tcp
+debug core: applying policy ipv4 for raw next dissector
 debug core: rejected policy tcp
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -42,6 +49,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -51,6 +59,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -60,6 +69,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -69,6 +79,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -78,6 +89,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -87,6 +99,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -96,6 +109,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -105,6 +119,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -114,6 +129,7 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 alert: id = = <>
 	description = Xmas attack detected
@@ -123,47 +139,41 @@ alert: id = = <>
 	targets = {
 		address: 192.168.20.1
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
 debug core: rejected policy authorizing ssh traffic (no available dissector)
 debug core: applying policy authorizing http traffic for new connection
 debug core: applying policy http for tcp_connection next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug conn: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
-debug core: rejected policy authorizing http traffic
-debug core: rejected policy authorizing ssh traffic (no available dissector)
-debug core: applying policy drop by default for new connection
-debug conn: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
-alert: id = = <>
-	description = drop by default
-	sources = {
-		address: 192.168.10.1
-		service: tcp/51584
-	}
-	targets = {
-		address: 192.168.20.255
-		service: tcp/80
-	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
@@ -181,66 +191,113 @@ alert: id = = <>
 		address: 192.168.20.255
 		service: tcp/80
 	}
+debug core: applying policy ipv4 for raw next dissector
+debug core: applying policy tcp for ipv4 next dissector
+debug core: applying policy tcp connection for tcp next dissector
+debug conn: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
+debug core: rejected policy authorizing http traffic
+debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: applying policy drop by default for new connection
+debug conn: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
+alert: id = = <>
+	description = drop by default
+	sources = {
+		address: 192.168.10.1
+		service: tcp/51584
+	}
+	targets = {
+		address: 192.168.20.255
+		service: tcp/80
+	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
 debug core: rejected policy authorizing http traffic
 debug core: applying policy authorizing ssh traffic (no available dissector) for new connection
 debug core: rejected policy http
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
@@ -258,6 +315,7 @@ alert: id = = <>
 		address: 192.168.20.255
 		service: tcp/22
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
@@ -275,16 +333,20 @@ alert: id = = <>
 		address: 192.168.20.255
 		service: tcp/22
 	}
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
 debug core: rejected policy authorizing ssh traffic (no available dissector)
 debug core: applying policy authorizing http traffic for new connection
 debug core: applying policy http for tcp_connection next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 alert: id = = <>
@@ -296,16 +358,22 @@ alert: id = = <>
 		address: 192.168.20.1
 	}
 debug conn: dropping connection 192.168.10.1:50710 -> 192.168.20.1:80
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy tcp for ipv4 next dissector
 debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state

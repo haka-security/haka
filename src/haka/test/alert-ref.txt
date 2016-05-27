@@ -1,3 +1,4 @@
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:43 2014
 	end time = Mon Jan 20 17:44:43 2014
@@ -28,6 +29,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 1 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:43 2014
 	end time = Mon Jan 20 17:44:43 2014
@@ -58,6 +60,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 2 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:43 2014
 	end time = Mon Jan 20 17:44:43 2014
@@ -88,6 +91,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 3 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:47 2014
 	end time = Mon Jan 20 17:44:47 2014
@@ -118,6 +122,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 4 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:47 2014
 	end time = Mon Jan 20 17:44:47 2014
@@ -148,6 +153,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 5 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:47 2014
 	end time = Mon Jan 20 17:44:47 2014
@@ -178,6 +184,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 6 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:47 2014
 	end time = Mon Jan 20 17:44:47 2014
@@ -208,6 +215,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 7 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:50 2014
 	end time = Mon Jan 20 17:44:50 2014
@@ -238,6 +246,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 8 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:50 2014
 	end time = Mon Jan 20 17:44:50 2014
@@ -268,6 +277,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 9 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:50 2014
 	end time = Mon Jan 20 17:44:50 2014
@@ -298,6 +308,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 10 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:50 2014
 	end time = Mon Jan 20 17:44:50 2014
@@ -328,6 +339,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 11 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
@@ -358,6 +370,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 12 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
@@ -388,6 +401,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 13 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
@@ -418,6 +432,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 14 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
@@ -448,6 +463,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 15 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:51 2014
 	end time = Mon Jan 20 17:44:51 2014
@@ -478,6 +494,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 16 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:53 2014
 	end time = Mon Jan 20 17:44:53 2014
@@ -508,6 +525,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 17 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:53 2014
 	end time = Mon Jan 20 17:44:53 2014
@@ -538,6 +556,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 18 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:53 2014
 	end time = Mon Jan 20 17:44:53 2014
@@ -568,6 +587,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 19 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
@@ -598,6 +618,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 20 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
@@ -628,6 +649,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 21 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
@@ -658,6 +680,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 22 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
@@ -688,6 +711,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 23 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:44:56 2014
 	end time = Mon Jan 20 17:44:56 2014
@@ -718,6 +742,7 @@ alert: update id = = <>
 		address: 0.0.0.0
 	}
 	refs = { 24 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:00 2014
 	end time = Mon Jan 20 17:45:00 2014
@@ -748,6 +773,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 25 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:00 2014
 	end time = Mon Jan 20 17:45:00 2014
@@ -778,6 +804,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 26 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
@@ -808,6 +835,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 27 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
@@ -838,6 +866,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 28 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
@@ -868,6 +897,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 29 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
@@ -898,6 +928,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 30 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
@@ -928,6 +959,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 31 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
@@ -958,6 +990,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 32 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
@@ -988,6 +1021,7 @@ alert: update id = = <>
 		address: 192.168.20.1
 	}
 	refs = { 33 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014
@@ -1018,6 +1052,7 @@ alert: update id = = <>
 		address: 192.168.20.99
 	}
 	refs = { 34 }
+debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	start time = Mon Jan 20 17:45:06 2014
 	end time = Mon Jan 20 17:45:06 2014

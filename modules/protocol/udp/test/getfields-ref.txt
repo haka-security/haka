@@ -1,9 +1,11 @@
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 ----------UDP HEADER ---------
 UDP Source Port: 53
 UDP Destination Port: 53
 UDP Checksum: 0xbdda
 UDP Length: 46
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy udp for ipv4 next dissector
 ----------UDP HEADER ---------
 UDP Source Port: 53

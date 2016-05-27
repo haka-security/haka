@@ -27,6 +27,7 @@ bool lua_pushppacket(lua_State *L, struct packet *pkt)
 
 struct packet {
 	%extend {
+		struct lua_ref _next_dissector;
 		%immutable;
 		struct lua_ref data;
 		const struct time *timestamp { return packet_timestamp($self); }
@@ -122,6 +123,17 @@ struct lua_ref _packet_data_get(lua_State *L, struct packet *packet)
 	}
 
 	return packet->userdata;
+}
+
+struct lua_ref packet__next_dissector_get(struct packet *packet)
+{
+	return packet->next_dissector;
+}
+
+void packet__next_dissector_set(struct packet *packet, struct lua_ref ref)
+{
+	lua_ref_clear(&packet->next_dissector);
+	packet->next_dissector = ref;
 }
 
 %}

@@ -1,1 +1,3 @@
+debug core: applying policy ipv4 for raw next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug lua: closing state

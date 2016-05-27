@@ -1,5 +1,8 @@
+debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=8
+debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=8
+debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=24
 alert: id = = <>
 	severity = low

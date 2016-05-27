@@ -1,5 +1,9 @@
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy icmp for ipv4 next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy icmp for ipv4 next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy icmp for ipv4 next dissector
+debug core: applying policy ipv4 for raw next dissector
 debug core: applying policy icmp for ipv4 next dissector
 debug lua: closing state
