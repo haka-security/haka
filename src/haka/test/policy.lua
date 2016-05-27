@@ -30,7 +30,10 @@ haka.policy {
 	name = "test that a policy can be defined and used",
 	ip_src = ipv4.addr('192.168.20.99'),
 	ip_dst = ipv4.addr('192.168.20.1'),
-	action = haka.policy.drop_with_alert{
-		description = "forbidden traffic to dmz",
-	},
+	action = {
+		haka.policy.alert{
+			description = "forbidden traffic to dmz",
+		},
+		haka.policy.drop
+	}
 }

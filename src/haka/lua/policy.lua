@@ -21,13 +21,13 @@ function Policy.method:__init(name, actions)
 	self.policies = {}
 end
 
-function Policy.method:insert(name, criteria, action)
+function Policy.method:insert(name, criteria, actions)
 	if name then
 		log.info("register policy '%s' on '%s'", name, self.name)
 	else
 		log.info("register policy on '%s'", self.name)
 	end
-	table.insert(self.policies, {name = name, criteria = criteria, action = action})
+	table.insert(self.policies, {name = name, criteria = criteria, actions = actions})
 end
 
 function policy.new_criterion(create, compare)
@@ -81,8 +81,8 @@ function Policy.method:apply(p)
 		p.desc = {}
 	end
 
-	local qualified_policy
 	-- Evaluate in given order and take action on the *last* eligible policy
+	local qualified_policy
 	for _, policy in pairs(self.policies) do
 		local eligible = true
 		for index, criterion in pairs(policy.criteria) do
@@ -108,7 +108,10 @@ function Policy.method:apply(p)
 		else
 			log.debug("applying policy for %s", self.name)
 		end
-		qualified_policy.action(self, p.ctx, p.values, p.desc)
+
+		for _,action in ipairs(qualified_policy.actions) do
+			action(self, p.ctx, p.values, p.desc)
+		end
 	end
 end
 
@@ -117,15 +120,27 @@ local mt = {
 		check.assert(type(p) == 'table', "policy parameter must be a table")
 		check.assert(p.on, "no on defined for policy")
 		check.assert(class.isa(p.on, Policy), "policy on must be a Policy")
-		check.assert(type(p.action) == 'function', "policy action must be a function")
+
+		local actions = p.action
+
+		if type(p.action) == 'table' then
+			for _, func in ipairs(p.action) do
+				check.assert(type(func) == 'function',
+					"policy action must be a function or a list of functions")
+			end
+		else
+			check.assert(type(p.action) == 'function',
+				"policy action must be a function or a list of functions")
+
+			actions = { p.action }
+		end
 
 		local policy = p.on
 		p.on = nil
 		local name = p.name
 		p.name = nil
-		local action = p['action']
 		p.action = nil
-		policy:insert(name, p, action)
+		policy:insert(name, p, actions)
 	end
 }
 
@@ -137,25 +152,6 @@ end
 
 function policy.drop(policy, ctx, values, desc)
 	ctx:drop()
-end
-
-function policy.drop_with_alert(_alert)
-	return function(policy, ctx, values, desc)
-		local alert = {}
-		for k, v in pairs(_alert) do
-			alert[k] = v
-		end
-		for k, v in pairs(desc) do
-			if not alert[k] then
-				alert[k] = v
-			end
-		end
-		if not alert.description then
-			alert.description = policy.name
-		end
-		ctx:drop()
-		haka.alert(alert)
-	end
 end
 
 function policy.alert(_alert)

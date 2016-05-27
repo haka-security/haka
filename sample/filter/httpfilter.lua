@@ -10,8 +10,11 @@ local http = require('protocol/http')
 haka.policy {
 	on = haka.dissectors.tcp_connection.policies.new_connection,
 	name = "drop by default",
-	action = haka.policy.drop_with_alert{
-		description = "drop by default"
+	action = {
+		haka.policy.alert{
+			description = "drop by default"
+		},
+		haka.policy.drop
 	}
 }
 

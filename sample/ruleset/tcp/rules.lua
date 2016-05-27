@@ -8,8 +8,11 @@ local server_network = ipv4.network("192.168.20.0/25");
 haka.policy {
 	on = haka.dissectors.tcp_connection.policies.new_connection,
 	name = "drop by default",
-	action = haka.policy.drop_with_alert{
-		description = "drop by default"
+	action = {
+		haka.policy.alert{
+			description = "drop by default"
+		},
+		haka.policy.drop
 	}
 }
 

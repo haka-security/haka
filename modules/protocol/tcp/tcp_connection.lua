@@ -32,7 +32,10 @@ tcp_connection_dissector.policies.new_connection = haka.policy.new("new connecti
 haka.policy {
 	on = tcp_connection_dissector.policies.no_connection_found,
 	name = "default action",
-	action = haka.policy.drop_with_alert{ severity = 'low' }
+	action = {
+		haka.policy.alert{ severity = 'low' },
+		haka.policy.drop
+	}
 }
 
 local function tcp_get_key(pkt)
@@ -137,13 +140,19 @@ end
 haka.policy {
 	on = tcp_connection_dissector.policies.unexpected_packet,
 	name = "default action",
-	action = haka.policy.drop_with_alert()
+	action = {
+		haka.policy.alert(),
+		haka.policy.drop
+	}
 }
 
 haka.policy {
 	on = tcp_connection_dissector.policies.invalid_handshake,
 	name = "default action",
-	action = haka.policy.drop_with_alert()
+	action = {
+		haka.policy.alert(),
+		haka.policy.drop
+	}
 }
 
 tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function ()
