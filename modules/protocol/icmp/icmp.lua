@@ -63,10 +63,3 @@ haka.policy {
 	proto = 1,
 	action = haka.dissectors.icmp.install
 }
-
-return {
-	events = icmp_dissector.events,
-	create = function (ip, init)
-		return icmp_dissector:create(ip, init)
-	end
-}

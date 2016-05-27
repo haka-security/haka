@@ -5,7 +5,7 @@
 local class = require("class")
 local check = require("check")
 
-local raw = require("protocol/raw")
+require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 local tcp = require("protocol/tcp")
 
@@ -639,8 +639,8 @@ function tcp_connection_dissector.method:drop()
 end
 
 function tcp_connection_dissector.method:_forgereset(direction)
-	local tcprst = raw.create()
-	tcprst = ipv4.create(tcprst)
+	local tcprst = haka.dissectors.raw.create()
+	tcprst = haka.dissectors.ipv4.create(tcprst)
 
 	if direction == 'up' then
 		tcprst.src = self.srcip
@@ -652,7 +652,7 @@ function tcp_connection_dissector.method:_forgereset(direction)
 
 	tcprst.ttl = 64
 
-	tcprst = tcp.create(tcprst)
+	tcprst = haka.dissectors.tcp.create(tcprst)
 
 	if direction == 'up' then
 		tcprst.srcport = self.srcport

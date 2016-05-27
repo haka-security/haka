@@ -51,7 +51,8 @@ function type.Dissector.__class_init(self, cls)
 	haka.dissectors[cls.name] = {}
 	haka.dissectors[cls.name].policies = cls.policies
 	haka.dissectors[cls.name].events = cls.events
-	haka.dissectors[cls.name].install = function(policy, ctx, values, desc)
+	haka.dissectors[cls.name].create = function (...) return cls:create(...) end
+	haka.dissectors[cls.name].install = function (policy, ctx, values, desc)
 		return ctx:select_next_dissector(cls)
 	end
 end

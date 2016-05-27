@@ -474,10 +474,6 @@ int lua_inet_checksum(struct vbuffer *buf);
 	swig.getclassmetatable('ipv4')['.fn'].select_next_dissector = ipv4_dissector.method.select_next_dissector
 	swig.getclassmetatable('ipv4')['.fn'].activate_next_dissector = ipv4_dissector.method.activate_next_dissector
 
-	function this.create(pkt)
-		return ipv4_dissector:create(pkt)
-	end
-
 	local raw = require('protocol/raw')
 	raw.register('ipv4', ipv4_dissector)
 

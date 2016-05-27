@@ -4,9 +4,9 @@
 
 -- Test that will duplicate a tcp connection
 
-local raw = require("protocol/raw")
+require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
-local tcp = require("protocol/tcp")
+require("protocol/tcp")
 require("protocol/tcp_connection")
 
 -- just to be safe, to avoid the test to run in an infinite loop
@@ -21,12 +21,12 @@ haka.rule {
 			end
 			counter = counter-1
 
-			local npkt = raw.create()
-			npkt = ipv4.create(npkt)
+			local npkt = haka.dissectors.raw.create()
+			npkt = haka.dissectors.ipv4.create(npkt)
 			npkt.ttl = pkt.ip.ttl
 			npkt.dst = pkt.ip.dst
 			npkt.src = pkt.ip.src
-			npkt = tcp.create(npkt)
+			npkt = haka.dissectors.tcp.create(npkt)
 			npkt.window_size = pkt.window_size
 			npkt.seq = pkt.seq+1000
 			if pkt.ack_seq ~= 0 then

@@ -300,8 +300,4 @@ void tcp__next_dissector_set(struct tcp *tcp, struct lua_ref ref)
 		proto = 6,
 		action = haka.dissectors.tcp.install
 	}
-
-	function this.create(ip)
-		return tcp_dissector:create(ip)
-	end
 }

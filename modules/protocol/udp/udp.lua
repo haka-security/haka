@@ -4,8 +4,6 @@
 
 local ipv4 = require("protocol/ipv4")
 
-local module = {}
-
 local function compute_checksum(pkt)
 	local checksum = ipv4.inet_checksum()
 
@@ -97,9 +95,3 @@ haka.policy {
 	proto = 17,
 	action = haka.dissectors.udp.install
 }
-
-function module.create(pkt, init)
-	return udp_dissector:create(pkt, init)
-end
-
-return module
