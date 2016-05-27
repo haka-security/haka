@@ -32,6 +32,15 @@ local event_mt = {
 
 function type.Dissector.__class_init(self, cls)
 	self.super:__class_init(cls)
+
+	if haka.mode ~= 'console' then
+		log.info("register new dissector '%s'", cls.name)
+	end
+
+	if rawget(haka.dissectors, cls.name) ~= nil then
+		error(string.format("dissector '%s' already defined", cls.name))
+	end
+
 	cls.events = {}
 	setmetatable(cls.events, event_mt)
 	self.inherit_events(cls)
@@ -347,18 +356,11 @@ end
 --
 -- Utility functions
 --
-local dissectors = {}
 
 function dissector.new(args)
 	check.assert(args.type, string.format("no type defined for dissector '%s'", args.name))
 
-	if haka.mode ~= 'console' then
-		log("register new dissector '%s'", args.name)
-	end
-
-	local d = class.class(args.name, args.type)
-	table.insert(dissectors, d)
-	return d
+	return class.class(args.name, args.type)
 end
 
 local other_direction = {
