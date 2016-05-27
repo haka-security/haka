@@ -61,9 +61,31 @@ function type.Dissector.method:install_criterion()
 	return {}
 end
 
+function type.Dissector.stream_wrapper(f, options, self, stream, current, ...)
+	if options and options.streamed then
+		self:streamed(stream, f, self, current, ...)
+	else
+		if (not current or not current:check_available(1)) and
+		   not stream.isfinished then
+			return
+		end
+
+		if current then
+			local sub = current:copy():sub('available')
+			if sub then
+				f(self, sub, ...)
+			end
+		end
+	end
+end
+
 function type.Dissector.register_event(cls, name, continue, signal, options)
 	continue = continue or function (self) return self:continue() end
 	cls.events[name] = haka.event.Event:new(string.format('%s:%s', cls.name, name), continue, signal, options)
+end
+
+function type.Dissector.register_streamed_event(cls, name, continue, options)
+	type.Dissector.register_event(cls, name, continue, type.Dissector.stream_wrapper, options)
 end
 
 function type.Dissector.inherit_events(cls)
@@ -147,6 +169,40 @@ end
 
 function type.Dissector.method:error()
 	self:drop()
+end
+
+function type.Dissector.method:streamed(stream, f, this, current, ...)
+	if (not current or not current:check_available(1)) and
+	   not stream.isfinished then
+		return
+	end
+
+	local cur
+	if current then cur = current:copy() end
+
+	local comanager = self:get_comanager(stream, ...)
+
+	-- unique id for the function to execute
+	local id = comanager.hash(f, this)
+
+	if not comanager:has(id) then
+		local args = {...}
+		comanager:start(id, function (iter) return f(this, iter, unpack(args)) end)
+	end
+
+	comanager:process(id, cur)
+end
+
+function type.Dissector.method:get_comanager(stream)
+	if not self._costream then
+		self._costream = {}
+	end
+
+	if not self._costream[stream] then
+		self._costream[stream] = haka.vbuffer_stream_comanager:new(stream)
+	end
+
+	return self._costream[stream]
 end
 
 function dissector.pcall(self, f)
@@ -289,66 +345,6 @@ end
 --
 
 type.FlowDissector = class.class('FlowDissector', type.Dissector)
-
-function type.FlowDissector.stream_wrapper(f, options, self, stream, current, ...)
-	if options and options.streamed then
-		self:streamed(stream, f, self, current, ...)
-	else
-		if (not current or not current:check_available(1)) and
-		   not stream.isfinished then
-			return
-		end
-
-		if current then
-			local sub = current:copy():sub('available')
-			if sub then
-				f(self, sub, ...)
-			end
-		end
-	end
-end
-
-function type.FlowDissector.register_streamed_event(cls, name, continue, options)
-	type.Dissector.register_event(cls, name, continue, type.FlowDissector.stream_wrapper, options)
-end
-
-function type.FlowDissector.method:send(pkt)
-	pkt:send()
-end
-
-function type.FlowDissector.method:streamed(stream, f, this, current, ...)
-	if (not current or not current:check_available(1)) and
-	   not stream.isfinished then
-		return
-	end
-
-	local cur
-	if current then cur = current:copy() end
-
-	local comanager = self:get_comanager(stream, ...)
-
-	-- unique id for the function to execute
-	local id = comanager.hash(f, this)
-
-	if not comanager:has(id) then
-		local args = {...}
-		comanager:start(id, function (iter) return f(this, iter, unpack(args)) end)
-	end
-
-	comanager:process(id, cur)
-end
-
-function type.FlowDissector.method:get_comanager(stream)
-	if not self._costream then
-		self._costream = {}
-	end
-
-	if not self._costream[stream] then
-		self._costream[stream] = haka.vbuffer_stream_comanager:new(stream)
-	end
-
-	return self._costream[stream]
-end
 
 --
 -- Utility functions
