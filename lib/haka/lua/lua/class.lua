@@ -214,6 +214,7 @@ function module.class(name, super)
 	cls.name = name
 	cls.super = super
 	cls.__view = BaseClass.view(cls)
+	cls.__class_init = function (self, cls) self.super:__class_init(cls) end
 	cls.__tostring = function (self)
 		local convert = self.__tostring
 		if convert then
