@@ -126,12 +126,10 @@ end
 
 function type.Dissector.activate(cls, parent)
 	-- Default create a new instance for each receive
-	-- Could create a scope here
 	return cls:new(parent)
 end
 
 function type.Dissector.method:activate_next_dissector()
-	-- Should change scope if next dissector has one
 	if self._next_dissector then
 		if class.isclass(self._next_dissector) then
 			self._next_dissector = self._next_dissector:activate(self)
@@ -152,8 +150,6 @@ end
 
 function dissector.pcall(self, f)
 	local ret, err = xpcall(f, debug.format_error)
-
-	-- Should restore scope if next dissector has scope
 
 	if not ret then
 		if err then
