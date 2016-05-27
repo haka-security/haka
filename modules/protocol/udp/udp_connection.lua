@@ -12,7 +12,7 @@ local module = {}
 local log = haka.log_section("udp")
 
 local udp_connection_dissector = haka.dissector.new{
-	type = haka.helper.FlowDissector,
+	type = haka.helper.PacketDissector,
 	name = 'udp_connection'
 }
 

@@ -29,7 +29,7 @@ local function compute_checksum(pkt)
 end
 
 local udp_dissector = haka.dissector.new{
-	type = haka.helper.EncapsulatedPacketDissector,
+	type = haka.helper.PacketDissector,
 	name = 'udp'
 }
 

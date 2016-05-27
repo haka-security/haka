@@ -242,25 +242,6 @@ function type.PacketDissector.method:preceive()
 end
 
 function type.PacketDissector.method:receive()
-	error("not implemented")
-end
-
-function type.PacketDissector.method:send()
-	error("not implemented")
-end
-
-function type.PacketDissector.method:inject()
-	error("not implemented")
-end
-
-function type.PacketDissector.method:drop()
-	error("not implemented")
-end
-
-
-type.EncapsulatedPacketDissector = class.class('EncapsulatedPacketDissector', type.PacketDissector)
-
-function type.EncapsulatedPacketDissector.method:receive()
 	self:parse(self._parent)
 
 	self:trigger('receive_packet')
@@ -283,49 +264,49 @@ function type.EncapsulatedPacketDissector.method:receive()
 	end
 end
 
-function type.EncapsulatedPacketDissector.method:__init(parent)
-	class.super(type.EncapsulatedPacketDissector).__init(self)
+function type.PacketDissector.method:__init(parent)
+	class.super(type.PacketDissector).__init(self)
 	self._parent = parent
 end
 
-function type.EncapsulatedPacketDissector.method:parse(pkt)
+function type.PacketDissector.method:parse(pkt)
 	self._select, self._payload = pkt.payload:sub(0, 'all'):select()
 	self:parse_payload(pkt, self._payload)
 end
 
-function type.EncapsulatedPacketDissector.method:parse_payload(pkt, payload)
+function type.PacketDissector.method:parse_payload(pkt, payload)
 	error("not implemented")
 end
 
-function type.EncapsulatedPacketDissector.method:create(init, pkt)
+function type.PacketDissector.method:create(init, pkt)
 	self._select, self._payload = pkt.payload:sub(0, 'all'):select()
 	self:create_payload(pkt, self._payload, init)
 end
 
-function type.EncapsulatedPacketDissector.method:create_payload(pkt, payload, init)
+function type.PacketDissector.method:create_payload(pkt, payload, init)
 	error("not implemented")
 end
 
-function type.EncapsulatedPacketDissector.method:forge(pkt)
+function type.PacketDissector.method:forge(pkt)
 	self:forge_payload(pkt, self._payload)
 	self._select:restore(self._payload)
 	self._payload = nil
 	self._select = nil
 end
 
-function type.EncapsulatedPacketDissector.method:forge_payload(pkt, payload)
+function type.PacketDissector.method:forge_payload(pkt, payload)
 	error("not implemented")
 end
 
-function type.EncapsulatedPacketDissector.method:can_continue()
+function type.PacketDissector.method:can_continue()
 	return self._parent:can_continue()
 end
 
-function type.EncapsulatedPacketDissector.method:drop()
+function type.PacketDissector.method:drop()
 	return self._parent:drop()
 end
 
-function type.EncapsulatedPacketDissector.method:send()
+function type.PacketDissector.method:send()
 	self:trigger('send_packet')
 
 	self:forge(self._parent)
@@ -333,12 +314,11 @@ function type.EncapsulatedPacketDissector.method:send()
 	self._parent = nil
 end
 
-function type.EncapsulatedPacketDissector.method:inject()
+function type.PacketDissector.method:inject()
 	self:forge(self._parent)
 	self._parent:inject()
 	self._parent = nil
 end
-
 
 --
 -- Flow based dissector

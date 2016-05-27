@@ -13,7 +13,7 @@ local module = {}
 local log = haka.log_section("tcp")
 
 local tcp_connection_dissector = haka.dissector.new{
-	type = haka.helper.FlowDissector,
+	type = haka.helper.PacketDissector,
 	name = 'tcp_connection'
 }
 
