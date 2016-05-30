@@ -110,6 +110,8 @@ struct packet {
 	}
 };
 
+STRUCT_UNKNOWN_KEY_ERROR(packet);
+
 %{
 
 #define packet_data_get(pkt) _packet_data_get(L, pkt)

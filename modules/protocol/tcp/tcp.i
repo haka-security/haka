@@ -156,6 +156,7 @@ struct tcp {
 		struct tcp_flags *flags { TCP_CHECK($self, NULL); return (struct tcp_flags *)$self; }
 		struct vbuffer *payload { TCP_CHECK($self, NULL); return &$self->payload; }
 		struct ipv4 *ip { TCP_CHECK($self, NULL); return $self->packet; }
+		struct ipv4 *_parent { TCP_CHECK($self, NULL); return $self->packet; }
 		const char *name { return "tcp"; }
 
 		bool verify_checksum();
@@ -173,8 +174,6 @@ struct tcp {
 		}
 	}
 };
-
-STRUCT_UNKNOWN_KEY_ERROR(tcp);
 
 %rename(_dissect) tcp_dissect;
 %newobject tcp_dissect;
@@ -292,6 +291,7 @@ void tcp__next_dissector_set(struct tcp *tcp, struct lua_ref ref)
 	swig.getclassmetatable('tcp')['.fn'].continue = haka.helper.Dissector.method.continue
 	swig.getclassmetatable('tcp')['.fn'].error = swig.getclassmetatable('tcp')['.fn'].drop
 	swig.getclassmetatable('tcp')['.fn'].select_next_dissector = tcp_dissector.method.select_next_dissector
+	swig.getclassmetatable('tcp')['__getitem'] = tcp_dissector.method.__index
 
 	local ipv4 = require("protocol/ipv4")
 	haka.policy {

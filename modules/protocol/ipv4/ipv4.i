@@ -302,6 +302,7 @@ struct ipv4 {
 		%immutable;
 		const char *name { return "ipv4"; }
 		struct packet *raw { IPV4_CHECK($self, NULL); return $self->packet; }
+		struct packet *_parent { IPV4_CHECK($self, NULL); return $self->packet; }
 		struct ipv4_flags *flags { IPV4_CHECK($self, NULL); return (struct ipv4_flags *)$self; }
 		struct vbuffer *payload { IPV4_CHECK($self, NULL); return $self->payload;}
 
@@ -318,8 +319,6 @@ struct ipv4 {
 		}
 	}
 };
-
-STRUCT_UNKNOWN_KEY_ERROR(ipv4);
 
 %rename(_dissect) ipv4_dissect;
 %newobject ipv4_dissect;
@@ -473,6 +472,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 	swig.getclassmetatable('ipv4')['.fn'].error = swig.getclassmetatable('ipv4')['.fn'].drop
 	swig.getclassmetatable('ipv4')['.fn'].select_next_dissector = ipv4_dissector.method.select_next_dissector
 	swig.getclassmetatable('ipv4')['.fn'].activate_next_dissector = ipv4_dissector.method.activate_next_dissector
+	swig.getclassmetatable('ipv4')['__getitem'] = ipv4_dissector.method.__index
 
 	require('protocol/raw')
 	haka.policy {

@@ -39,7 +39,7 @@ haka.policy {
 }
 
 local function tcp_get_key(pkt)
-	return pkt.ip.src, pkt.ip.dst, pkt.srcport, pkt.dstport
+	return pkt.src, pkt.dst, pkt.srcport, pkt.dstport
 end
 
 function tcp_connection_dissector:receive(pkt)
@@ -73,7 +73,7 @@ function tcp_connection_dissector:receive(pkt)
 				haka.abort()
 			end
 
-			if not self.stream then
+			if not rawget(self, 'stream') then
 				pkt:drop()
 				haka.abort()
 			end
@@ -547,7 +547,7 @@ function tcp_connection_dissector.method:__init(connection, pkt)
 end
 
 function tcp_connection_dissector.method:clearstream()
-	if self.stream then
+	if rawget(self, 'stream') then
 		self.stream.up:clear()
 		self.stream.down:clear()
 		self.stream = nil
@@ -567,7 +567,7 @@ end
 
 function tcp_connection_dissector.method:_close()
 	self:clearstream()
-	if self.connection then
+	if rawget(self, 'connection') then
 		self.connection:close()
 		self.connection = nil
 	end
@@ -602,7 +602,7 @@ function tcp_connection_dissector.method:finish(direction)
 end
 
 function tcp_connection_dissector.method:can_continue()
-	return self.stream ~= nil
+	return rawget(self, 'stream') ~= nil
 end
 
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
@@ -761,24 +761,28 @@ function module.helper.TcpFlowDissector.method:__init(flow)
 end
 
 function module.helper.TcpFlowDissector.method:can_continue()
-	return self.flow ~= nil
+	return rawget(self, 'flow') ~= nil
 end
 
 function module.helper.TcpFlowDissector.method:drop()
-	self.flow:drop()
-	self.flow = nil
+	if rawget(self, 'flow') then
+		self.flow:drop()
+		self.flow = nil
+	end
 end
 
 function module.helper.TcpFlowDissector.method:reset()
-	self.flow:reset()
-	self.flow = nil
+	if rawget(self, 'flow') then
+		self.flow:reset()
+		self.flow = nil
+	end
 end
 
 function module.helper.TcpFlowDissector.method:receive(stream, current, direction)
 	return haka.dissector.pcall(self, function ()
 		self.flow:streamed(stream, self.receive_streamed, self, current, direction)
 
-		if self.flow then
+		if rawget(self, 'flow') then
 			self.flow:send(direction)
 		end
 	end)

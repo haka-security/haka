@@ -14,6 +14,11 @@
 	/* Clang raise some warning on the swig generated code */
 	#pragma GCC diagnostic ignored "-Wself-assign"
 #endif
+
+/* This hack allows to override swig function with Lua to mix both more easily.
+ * It does not create any problem as no swig code tries to get the function
+ * pointer directly to do something with it. */
+#define lua_iscfunction lua_isfunction
 %}
 
 %{

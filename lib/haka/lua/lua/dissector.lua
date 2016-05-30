@@ -101,18 +101,44 @@ end
 
 type.Dissector.auto_state_machine = true
 
-function type.Dissector.method:__init()
+function type.Dissector.method:__init(parent)
 	local cls = class.classof(self)
+
 	if cls.state_machine and cls.auto_state_machine then
 		self.state = cls.state_machine:instanciate(self)
 	end
+
 	self.scope = nil
 	haka.context:register_connections(self:connections())
+
+	self._parent = parent
 end
 
 type.Dissector.property.name = {
 	get = function (self) return class.classof(self).name end
 }
+
+function type.Dissector.method:get(name)
+	local iter = self
+	while iter do
+		if iter.name == name then
+			return iter
+		end
+
+		iter = iter._parent
+	end
+end
+
+function type.Dissector.method:__index(name)
+	if name:sub(1, 1) ~= '_' then
+		parent = self._parent
+		if parent then
+			return parent[name]
+		else
+			error("unknown field '%s' on dissector '%s'", name, self.name)
+		end
+	end
+end
 
 function type.Dissector.method:trigger(signal, ...)
 	haka.context:signal(self, class.classof(self).events[signal], ...)
@@ -265,8 +291,7 @@ function type.PacketDissector.method:receive()
 end
 
 function type.PacketDissector.method:__init(parent)
-	class.super(type.PacketDissector).__init(self)
-	self._parent = parent
+	class.super(type.PacketDissector).__init(self, parent)
 end
 
 function type.PacketDissector.method:parse(pkt)
