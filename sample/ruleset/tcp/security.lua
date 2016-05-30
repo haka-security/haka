@@ -11,8 +11,8 @@ haka.rule {
 		if pkt.flags.psh and pkt.flags.fin and pkt.flags.urg then
 			haka.alert{
 				description = "Xmas attack detected",
-				sources = haka.alert.address(pkt.ip.src),
-				targets = haka.alert.address(pkt.ip.dst)
+				sources = haka.alert.address(pkt.src),
+				targets = haka.alert.address(pkt.dst)
 			}
 			pkt:drop()
 		end

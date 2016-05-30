@@ -28,8 +28,8 @@ haka.rule{
 	-- Rule evaluated at connection establishment attempt
 	eval = function (flow, tcp)
 		-- Fields from previous layer are accessible too
-		haka.log("TCP connection from %s:%d to %s:%d", tcp.ip.src,
-			tcp.srcport, tcp.ip.dst, tcp.dstport)
+		haka.log("TCP connection from %s:%d to %s:%d", tcp.src,
+			tcp.srcport, tcp.dst, tcp.dstport)
 		-- Raise a simple alert for testing purpose
 		haka.alert{
 			description = "A simple alert",

@@ -12,8 +12,8 @@ local tcp_connection = require("protocol/tcp_connection")
 haka.rule{
 	on = haka.dissectors.tcp_connection.events.new_connection,
 	eval = function (flow, pkt)
-		haka.log("new tcp connection %s:%i -> %s:%i", pkt.ip.src, pkt.srcport,
-			pkt.ip.dst, pkt.dstport)
+		haka.log("new tcp connection %s:%i -> %s:%i", pkt.src, pkt.srcport,
+			pkt.dst, pkt.dstport)
 	end
 }
 

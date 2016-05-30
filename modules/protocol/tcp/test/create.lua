@@ -23,9 +23,9 @@ haka.rule {
 
 			local npkt = haka.dissectors.raw.create()
 			npkt = haka.dissectors.ipv4.create(npkt)
-			npkt.ttl = pkt.ip.ttl
-			npkt.dst = pkt.ip.dst
-			npkt.src = pkt.ip.src
+			npkt.ttl = pkt.ttl
+			npkt.dst = pkt.dst
+			npkt.src = pkt.src
 			npkt = haka.dissectors.tcp.create(npkt)
 			npkt.window_size = pkt.window_size
 			npkt.seq = pkt.seq+1000

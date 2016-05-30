@@ -25,13 +25,11 @@ icmp_dissector.grammar = haka.grammar.new("icmp", function ()
 end)
 
 function icmp_dissector.method:parse_payload(pkt, payload)
-	self.ip = pkt
 	local res = icmp_dissector.grammar.packet:parse(payload:pos("begin"))
 	table.merge(self, res)
 end
 
 function icmp_dissector.method:create_payload(pkt, payload, init)
-	self.ip = pkt
 	local res = icmp_dissector.grammar.packet:create(payload:pos("begin"), init)
 	table.merge(self, res)
 end

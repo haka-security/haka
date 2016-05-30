@@ -24,7 +24,7 @@ udp_connection_dissector:register_event('receive_data')
 udp_connection_dissector:register_event('end_connection')
 
 local function udp_get_cnx_key(pkt)
-	return pkt.ip.src, pkt.ip.dst, pkt.srcport, pkt.dstport
+	return pkt.src, pkt.dst, pkt.srcport, pkt.dstport
 end
 
 function udp_connection_dissector:receive(pkt)
@@ -156,8 +156,8 @@ udp_connection_dissector.auto_state_machine = false
 
 function udp_connection_dissector.method:__init(pkt)
 	self.dropped = false
-	self.srcip = pkt.ip.src
-	self.dstip = pkt.ip.dst
+	self.srcip = pkt.src
+	self.dstip = pkt.dst
 	self.srcport = pkt.srcport
 	self.dstport = pkt.dstport
 end
@@ -168,7 +168,7 @@ function udp_connection_dissector.method:init(connection)
 end
 
 function udp_connection_dissector.method:emit(direction, pkt)
-	self.connection:update_stat(direction, pkt.ip.len)
+	self.connection:update_stat(direction, pkt.len)
 	self:trigger('receive_packet', pkt, direction)
 
 	self.state:update(direction, pkt)

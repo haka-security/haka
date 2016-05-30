@@ -14,8 +14,8 @@ local function compute_checksum(pkt)
 	-- size of the udp pseudo-header
 	local pseudo_header = haka.vbuffer_allocate(12)
 	-- source and destination ipv4 addresses
-	pseudo_header:sub(0,4):setnumber(pkt.ip.src.packed)
-	pseudo_header:sub(4,4):setnumber(pkt.ip.dst.packed)
+	pseudo_header:sub(0,4):setnumber(pkt.src.packed)
+	pseudo_header:sub(4,4):setnumber(pkt.dst.packed)
 	-- padding (null byte)
 	pseudo_header:sub(8,1):setnumber(0)
 	-- UDP protocol number
@@ -51,13 +51,11 @@ udp_dissector.grammar = haka.grammar.new("udp", function ()
 end)
 
 function udp_dissector.method:parse_payload(pkt, payload)
-	self.ip = pkt
 	local res = udp_dissector.grammar.packet:parse(payload:pos("begin"))
 	table.merge(self, res)
 end
 
 function udp_dissector.method:create_payload(pkt, payload, init)
-	self.ip = pkt
 	local res = udp_dissector.grammar.packet:create(payload:pos("begin"), init)
 	table.merge(self, res)
 end

@@ -155,7 +155,6 @@ struct tcp {
 		%immutable;
 		struct tcp_flags *flags { TCP_CHECK($self, NULL); return (struct tcp_flags *)$self; }
 		struct vbuffer *payload { TCP_CHECK($self, NULL); return &$self->payload; }
-		struct ipv4 *ip { TCP_CHECK($self, NULL); return $self->packet; }
 		struct ipv4 *_parent { TCP_CHECK($self, NULL); return $self->packet; }
 		const char *name { return "tcp"; }
 

@@ -33,8 +33,8 @@ haka.rule{
 	on = haka.dissectors.tcp_connection.events.new_connection, --hook on new tcp connections.
 	eval = function (flow, tcp)
 		local web_server = ipv4.addr("192.168.20.1")
-		if tcp.ip.dst == web_server and tcp.dstport == 80 then
-			haka.log.debug("Traffic on HTTP port from %s", tcp.ip.src)
+		if tcp.dst == web_server and tcp.dstport == 80 then
+			haka.log.debug("Traffic on HTTP port from %s", tcp.src)
 		end
 	end
 }

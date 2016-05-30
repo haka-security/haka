@@ -84,18 +84,18 @@ function tcp_connection_dissector:receive(pkt)
 				tcp_connection_dissector.policies.no_connection_found:apply{
 					ctx = pkt,
 					values = {
-						srcip = pkt.ip.src,
+						srcip = pkt.src,
 						srcport = pkt.srcport,
-						dstip = pkt.ip.dst,
+						dstip = pkt.dst,
 						dstport = pkt.dstport
 					},
 					desc = {
 						sources = {
-							haka.alert.address(pkt.ip.src),
+							haka.alert.address(pkt.src),
 							haka.alert.service(string.format("tcp/%d", pkt.srcport))
 						},
 						targets = {
-							haka.alert.address(pkt.ip.dst),
+							haka.alert.address(pkt.dst),
 							haka.alert.service(string.format("tcp/%d", pkt.dstport))
 						}
 					}
@@ -189,11 +189,11 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 			ctx = pkt,
 			desc = {
 				sources = {
-					haka.alert.address(pkt.ip.src),
+					haka.alert.address(pkt.src),
 					haka.alert.service(string.format("tcp/%d", pkt.srcport))
 				},
 				targets = {
-					haka.alert.address(pkt.ip.dst),
+					haka.alert.address(pkt.dst),
 					haka.alert.service(string.format("tcp/%d", pkt.dstport))
 				}
 			}
@@ -207,11 +207,11 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 				desc = {
 					description = string.format("invalid tcp %s handshake", type),
 					sources = {
-						haka.alert.address(pkt.ip.src),
+						haka.alert.address(pkt.src),
 						haka.alert.service(string.format("tcp/%d", pkt.srcport))
 					},
 					targets = {
-						haka.alert.address(pkt.ip.dst),
+						haka.alert.address(pkt.dst),
 						haka.alert.service(string.format("tcp/%d", pkt.dstport))
 					}
 				}
@@ -535,8 +535,8 @@ function tcp_connection_dissector.method:__init(connection, pkt)
 	self.stream = {}
 	self._restart = false
 
-	self.srcip = pkt.ip.src
-	self.dstip = pkt.ip.dst
+	self.srcip = pkt.src
+	self.dstip = pkt.dst
 	self.srcport = pkt.srcport
 	self.dstport = pkt.dstport
 
@@ -559,7 +559,7 @@ function tcp_connection_dissector.method:restart()
 end
 
 function tcp_connection_dissector.method:emit(pkt, direction)
-	self.connection:update_stat(direction, pkt.ip.len)
+	self.connection:update_stat(direction, pkt.len)
 	self:trigger('receive_packet', pkt, direction)
 
 	self.state:update(direction, pkt)
@@ -715,18 +715,18 @@ haka.rule {
 		tcp_connection_dissector.policies.new_connection:apply{
 			ctx = flow,
 			values = {
-				srcip = pkt.ip.src,
+				srcip = pkt.src,
 				srcport = pkt.srcport,
-				dstip = pkt.ip.dst,
+				dstip = pkt.dst,
 				dstport = pkt.dstport
 			},
 			desc = {
 				sources = {
-					haka.alert.address(pkt.ip.src),
+					haka.alert.address(pkt.src),
 					haka.alert.service(string.format("tcp/%d", pkt.srcport))
 				},
 				targets = {
-					haka.alert.address(pkt.ip.dst),
+					haka.alert.address(pkt.dst),
 					haka.alert.service(string.format("tcp/%d", pkt.dstport))
 				}
 			}

@@ -78,13 +78,6 @@ Dissector
 
         Payload of the packet.
 
-    .. haka:attribute:: TcpDissector:ip
-        :readonly:
-
-        :type: :haka:class:`Ipv4Dissector` |nbsp|
-
-        IPv4 packet.
-
     .. haka:method:: TcpDissector:verify_checksum() -> correct
 
         :return correct: ``true`` if the checksum is correct.
