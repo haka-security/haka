@@ -33,6 +33,8 @@ struct packet {
 		const struct time *timestamp { return packet_timestamp($self); }
 		struct vbuffer *payload { return packet_payload($self); }
 		int id { return packet_id($self); }
+		void *_parent { return NULL; }
+		const char *name { return "raw"; }
 
 		packet(int size = 0)
 		{
