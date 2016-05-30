@@ -1,6 +1,6 @@
 
 haka.alert{
-	start_time = pkt.raw.timestamp,
+	start_time = pkt.timestamp,
 	description = "packet received",
 	severity = 'medium',
 	confidence = 'high',

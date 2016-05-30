@@ -301,7 +301,6 @@ struct ipv4 {
 
 		%immutable;
 		const char *name { return "ipv4"; }
-		struct packet *raw { IPV4_CHECK($self, NULL); return $self->packet; }
 		struct packet *_parent { IPV4_CHECK($self, NULL); return $self->packet; }
 		struct ipv4_flags *flags { IPV4_CHECK($self, NULL); return (struct ipv4_flags *)$self; }
 		struct vbuffer *payload { IPV4_CHECK($self, NULL); return $self->payload;}

@@ -13,7 +13,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -42,7 +41,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -71,7 +69,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -100,7 +97,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -129,7 +125,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -158,7 +153,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -187,7 +181,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -216,7 +209,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -245,7 +237,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -274,7 +265,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -303,7 +293,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -332,7 +321,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -361,7 +349,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -390,7 +377,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -419,7 +405,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -448,7 +433,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -477,7 +461,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -506,7 +489,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -535,7 +517,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -564,7 +545,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -593,7 +573,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -622,7 +601,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -651,7 +629,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -681,7 +658,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -710,7 +686,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -739,7 +714,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -768,7 +742,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -797,7 +770,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -826,7 +798,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -855,7 +826,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -884,7 +854,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -913,7 +882,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
@@ -942,7 +910,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.99
   tos : 16
   ttl : 64
@@ -971,7 +938,6 @@ userdata ipv4 {
   name : "ipv4"
   payload : userdata vbuffer
   proto : 6
-  raw : userdata packet
   src : userdata addr 192.168.20.1
   tos : 0
   ttl : 64
