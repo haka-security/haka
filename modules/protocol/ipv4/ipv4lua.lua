@@ -122,3 +122,10 @@ function ipv4_dissector:create(pkt, init)
 
 	return ip
 end
+
+haka.policy {
+	name = "ipv4",
+	on = haka.dissectors.raw.policies.next_dissector,
+	proto = "ipv4",
+	action = haka.dissectors.ipv4lua.install
+}
