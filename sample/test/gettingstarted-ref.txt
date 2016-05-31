@@ -1,9 +1,5 @@
 debug conn: opening connection 192.168.10.1:50683 -> 192.168.20.1:80
 debug external: Traffic on HTTP port from 192.168.10.1
-debug core: rejected policy tcp
-debug core: rejected policy tcp
-debug core: rejected policy tcp
-debug core: rejected policy tcp
 alert: id = = <>
 	description = Bad TCP checksum
 alert: id = = <>

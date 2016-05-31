@@ -642,7 +642,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:56 2014
 }
-debug core: rejected policy tcp
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet

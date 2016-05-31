@@ -99,7 +99,7 @@ function Policy.method:apply(p)
 		if eligible then
 			qualified_policy = policy
 		else
-			log.debug("rejected policy %s", policy.name or "<unnamed>")
+			log.debug("rejected policy %s for %s", policy.name or "<unnamed>", self.name)
 		end
 	end
 	if qualified_policy then

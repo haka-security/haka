@@ -47,7 +47,6 @@ Host: serveur
 
 debug conn: opening connection 192.168.20.99:55041 -> 192.168.20.1:80
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=16 
-debug core: rejected policy tcp
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=14 
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=19 
 info external: connection=192.168.20.99:55041->192.168.20.1:80, dir up, data received len=2 

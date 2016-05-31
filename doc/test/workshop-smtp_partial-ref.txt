@@ -1,5 +1,4 @@
 debug conn: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
-debug core: rejected policy <unnamed>
 debug conn: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
 debug grammar: parse error at byte 0 for field <unknown> in <unknown>: incomplete grammar
 debug grammar: parse error context: 220 metasploitable.localdomain ESMTP Postfix (Ubuntu)\x0d\x0a...
@@ -7,8 +6,6 @@ alert: id = = <>
 	severity = high
 	description = invalid smtp response parse error at byte 0 for field <unknown> in <unknown>: incomplete grammar
 debug conn: dropping connection 192.168.10.10:41155 -> 192.168.20.1:25
-debug core: rejected policy tcp
-debug core: rejected policy tcp
 debug conn: closing connection 192.168.10.10:56704 -> 192.168.20.1:80
 debug conn: closing connection 192.168.10.10:41155 -> 192.168.20.1:25
 debug core: applying policy default action for no connection found for tcp packet

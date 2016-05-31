@@ -1,8 +1,8 @@
 debug conn: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy authorizing http traffic for new connection
 debug conn: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy authorizing http traffic for new connection
 alert: id = = <>
 	description = non authorized http method 'WRONG'
@@ -15,7 +15,7 @@ alert: id = = <>
 	}
 debug conn: dropping connection 192.168.10.1:50693 -> 192.168.20.1:80
 debug conn: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy authorizing http traffic for new connection
 alert: id = = <>
 	description = unsupported http version '2.1'
@@ -28,7 +28,7 @@ alert: id = = <>
 	}
 debug conn: dropping connection 192.168.10.1:50694 -> 192.168.20.1:80
 debug conn: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy authorizing http traffic for new connection
 alert: id = = <>
 	description = forbidden http method 'TRACE'
@@ -40,7 +40,7 @@ alert: id = = <>
 		service: tcp/80, http
 	}
 debug conn: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy authorizing http traffic for new connection
 alert: id = = <>
 	severity = high

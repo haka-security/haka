@@ -1,8 +1,5 @@
 debug conn: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
-debug core: rejected policy <unnamed>
 debug conn: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
-debug core: rejected policy tcp
-debug core: rejected policy tcp
 alert: id = = <>
 	severity = low
 	description = forbidden mail domain

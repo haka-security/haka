@@ -1,5 +1,4 @@
 debug conn: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
-debug core: rejected policy <unnamed>
 debug conn: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
 SMTP RESPONSE
 class Result {
@@ -11,8 +10,6 @@ class Result {
     }
   }
 }
-debug core: rejected policy tcp
-debug core: rejected policy tcp
 SMTP COMMAND
 class Result {
   command : "HELO"

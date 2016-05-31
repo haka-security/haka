@@ -1,7 +1,6 @@
-debug core: rejected policy tcp
 debug conn: opening connection 192.168.10.1:52110 -> 192.168.20.1:443
-debug core: rejected policy authorizing http traffic
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy drop by default for new connection
 alert: id = = <>
 	description = drop by default
@@ -26,9 +25,6 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/80
 	}
-debug core: rejected policy tcp
-debug core: rejected policy tcp
-debug core: rejected policy tcp
 alert: id = = <>
 	description = Xmas attack detected
 	sources = {
@@ -110,11 +106,11 @@ alert: id = = <>
 		address: 192.168.20.1
 	}
 debug conn: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy authorizing http traffic for new connection
 debug conn: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
-debug core: rejected policy authorizing http traffic
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy drop by default for new connection
 alert: id = = <>
 	description = drop by default
@@ -128,8 +124,8 @@ alert: id = = <>
 	}
 debug conn: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug conn: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
-debug core: rejected policy authorizing http traffic
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy drop by default for new connection
 alert: id = = <>
 	description = drop by default
@@ -143,12 +139,11 @@ alert: id = = <>
 	}
 debug conn: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug conn: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
-debug core: rejected policy authorizing http traffic
+debug core: rejected policy authorizing http traffic for new connection
 debug core: applying policy authorizing ssh traffic (no available dissector) for new connection
-debug core: rejected policy http
 debug conn: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
-debug core: rejected policy authorizing http traffic
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy drop by default for new connection
 alert: id = = <>
 	description = drop by default
@@ -162,8 +157,8 @@ alert: id = = <>
 	}
 debug conn: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug conn: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
-debug core: rejected policy authorizing http traffic
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy drop by default for new connection
 alert: id = = <>
 	description = drop by default
@@ -177,7 +172,7 @@ alert: id = = <>
 	}
 debug conn: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug conn: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
-debug core: rejected policy authorizing ssh traffic (no available dissector)
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
 debug core: applying policy authorizing http traffic for new connection
 alert: id = = <>
 	description = /bin/sh shellcode detected

@@ -1,4 +1,3 @@
-debug core: rejected policy tcp
 debug conn: opening connection 10.2.96.127:45034 -> 10.2.104.129:4444
 error tcp: read only buffer
 debug conn: closing connection 10.2.96.127:45034 -> 10.2.104.129:4444
