@@ -290,7 +290,7 @@ void tcp__next_dissector_set(struct tcp *tcp, struct lua_ref ref)
 	swig.getclassmetatable('tcp')['.fn'].continue = haka.helper.Dissector.method.continue
 	swig.getclassmetatable('tcp')['.fn'].error = swig.getclassmetatable('tcp')['.fn'].drop
 	swig.getclassmetatable('tcp')['.fn'].select_next_dissector = tcp_dissector.method.select_next_dissector
-	swig.getclassmetatable('tcp')['.fn'].get = tcp_dissector.method.get
+	swig.getclassmetatable('tcp')['.fn'].parent = tcp_dissector.method.parent
 	swig.getclassmetatable('tcp')['__getitem'] = tcp_dissector.method.__index
 
 	local ipv4 = require("protocol/ipv4")

@@ -471,7 +471,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 	swig.getclassmetatable('ipv4')['.fn'].error = swig.getclassmetatable('ipv4')['.fn'].drop
 	swig.getclassmetatable('ipv4')['.fn'].select_next_dissector = ipv4_dissector.method.select_next_dissector
 	swig.getclassmetatable('ipv4')['.fn'].activate_next_dissector = ipv4_dissector.method.activate_next_dissector
-	swig.getclassmetatable('ipv4')['.fn'].get = ipv4_dissector.method.get
+	swig.getclassmetatable('ipv4')['.fn'].parent = ipv4_dissector.method.parent
 	swig.getclassmetatable('ipv4')['__getitem'] = ipv4_dissector.method.__index
 
 	require('protocol/raw')

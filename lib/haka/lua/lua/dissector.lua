@@ -5,7 +5,7 @@
 local class = require('class')
 local check = require('check')
 
-local type = {}
+local types = {}
 local dissector = {}
 local log = haka.log_section("dissector")
 local log_lua = haka.log_section("lua")
@@ -22,7 +22,7 @@ setmetatable(haka.dissectors, mt)
 -- Dissector base class
 --
 
-type.Dissector = class.class('Dissector')
+types.Dissector = class.class('Dissector')
 
 local event_mt = {
 	__index = function (self, name)
@@ -30,7 +30,7 @@ local event_mt = {
 	end
 }
 
-function type.Dissector.__class_init(self, cls)
+function types.Dissector.__class_init(self, cls)
 	self.super:__class_init(cls)
 
 	if haka.mode ~= 'console' then
@@ -57,11 +57,11 @@ function type.Dissector.__class_init(self, cls)
 	end
 end
 
-function type.Dissector.method:install_criterion()
+function types.Dissector.method:install_criterion()
 	return {}
 end
 
-function type.Dissector.stream_wrapper(f, options, self, stream, current, ...)
+function types.Dissector.stream_wrapper(f, options, self, stream, current, ...)
 	if options and options.streamed then
 		self:streamed(stream, f, self, current, ...)
 	else
@@ -79,16 +79,16 @@ function type.Dissector.stream_wrapper(f, options, self, stream, current, ...)
 	end
 end
 
-function type.Dissector.register_event(cls, name, continue, signal, options)
+function types.Dissector.register_event(cls, name, continue, signal, options)
 	continue = continue or function (self) return self:continue() end
 	cls.events[name] = haka.event.Event:new(string.format('%s:%s', cls.name, name), continue, signal, options)
 end
 
-function type.Dissector.register_streamed_event(cls, name, continue, options)
-	type.Dissector.register_event(cls, name, continue, type.Dissector.stream_wrapper, options)
+function types.Dissector.register_streamed_event(cls, name, continue, options)
+	types.Dissector.register_event(cls, name, continue, types.Dissector.stream_wrapper, options)
 end
 
-function type.Dissector.inherit_events(cls)
+function types.Dissector.inherit_events(cls)
 	local parent_events = cls.super.events
 	if parent_events then
 		local events = cls.events
@@ -99,9 +99,9 @@ function type.Dissector.inherit_events(cls)
 	end
 end
 
-type.Dissector.auto_state_machine = true
+types.Dissector.auto_state_machine = true
 
-function type.Dissector.method:__init(parent)
+function types.Dissector.method:__init(parent)
 	local cls = class.classof(self)
 
 	if cls.state_machine and cls.auto_state_machine then
@@ -114,22 +114,36 @@ function type.Dissector.method:__init(parent)
 	self._parent = parent
 end
 
-type.Dissector.property.name = {
+types.Dissector.property.name = {
 	get = function (self) return class.classof(self).name end
 }
 
-function type.Dissector.method:get(name)
-	local iter = self
-	while iter do
-		if iter.name == name then
-			return iter
-		end
+function types.Dissector.method:parent(arg)
+	if arg == nil then
+		return self._parent
+	elseif type(arg) == 'number' then
+		local iter = self
+		while iter do
+			if arg == 0 then
+				return iter
+			end
 
-		iter = iter._parent
+			iter = iter._parent
+			arg = arg-1
+		end
+	else
+		local iter = self
+		while iter do
+			if iter.name == arg then
+				return iter
+			end
+
+			iter = iter._parent
+		end
 	end
 end
 
-function type.Dissector.method:__index(name)
+function types.Dissector.method:__index(name)
 	if name:sub(1, 1) ~= '_' then
 		parent = self._parent
 		if parent then
@@ -140,45 +154,45 @@ function type.Dissector.method:__index(name)
 	end
 end
 
-function type.Dissector.method:trigger(signal, ...)
+function types.Dissector.method:trigger(signal, ...)
 	haka.context:signal(self, class.classof(self).events[signal], ...)
 end
 
-function type.Dissector.method:send()
+function types.Dissector.method:send()
 	error("not implemented")
 end
 
-function type.Dissector.method:drop()
+function types.Dissector.method:drop()
 	error("not implemented")
 end
 
-function type.Dissector.method:alert(alert)
+function types.Dissector.method:alert(alert)
 	haka.alert(alert)
 end
 
-function type.Dissector.method:can_continue()
+function types.Dissector.method:can_continue()
 	error("not implemented")
 end
 
-function type.Dissector.method:continue()
+function types.Dissector.method:continue()
 	if not self:can_continue() then
 		haka.abort()
 	end
 end
 
-function type.Dissector.method:connections()
+function types.Dissector.method:connections()
 	local connections = class.classof(self).connections
 	if #connections > 0 then
 		return haka.event.ObjectEventConnections:new(self, connections)
 	end
 end
 
-function type.Dissector.activate(cls, parent)
+function types.Dissector.activate(cls, parent)
 	-- Default create a new instance for each receive
 	return cls:new(parent)
 end
 
-function type.Dissector.method:activate_next_dissector()
+function types.Dissector.method:activate_next_dissector()
 	if self._next_dissector then
 		if class.isclass(self._next_dissector) then
 			self._next_dissector = self._next_dissector:activate(self)
@@ -189,15 +203,15 @@ function type.Dissector.method:activate_next_dissector()
 	end
 end
 
-function type.Dissector.method:select_next_dissector(dissector)
+function types.Dissector.method:select_next_dissector(dissector)
 	self._next_dissector = dissector
 end
 
-function type.Dissector.method:error()
+function types.Dissector.method:error()
 	self:drop()
 end
 
-function type.Dissector.method:streamed(stream, f, this, current, ...)
+function types.Dissector.method:streamed(stream, f, this, current, ...)
 	if (not current or not current:check_available(1)) and
 	   not stream.isfinished then
 		return
@@ -219,7 +233,7 @@ function type.Dissector.method:streamed(stream, f, this, current, ...)
 	comanager:process(id, cur)
 end
 
-function type.Dissector.method:get_comanager(stream)
+function types.Dissector.method:get_comanager(stream)
 	if not self._costream then
 		self._costream = {}
 	end
@@ -250,10 +264,10 @@ end
 -- Packet based type
 --
 
-type.PacketDissector = class.class('PacketDissector', type.Dissector)
+types.PacketDissector = class.class('PacketDissector', types.Dissector)
 
-type.PacketDissector:register_event('receive_packet')
-type.PacketDissector:register_event('send_packet')
+types.PacketDissector:register_event('receive_packet')
+types.PacketDissector:register_event('send_packet')
 
 local npkt
 
@@ -261,13 +275,13 @@ local function preceive()
 	npkt:receive()
 end
 
-function type.PacketDissector.method:preceive()
+function types.PacketDissector.method:preceive()
 	-- JIT optim
 	npkt = self
 	return dissector.pcall(npkt, preceive)
 end
 
-function type.PacketDissector.method:receive()
+function types.PacketDissector.method:receive()
 	self:parse(self._parent)
 
 	self:trigger('receive_packet')
@@ -290,48 +304,48 @@ function type.PacketDissector.method:receive()
 	end
 end
 
-function type.PacketDissector.method:__init(parent)
-	class.super(type.PacketDissector).__init(self, parent)
+function types.PacketDissector.method:__init(parent)
+	class.super(types.PacketDissector).__init(self, parent)
 end
 
-function type.PacketDissector.method:parse(pkt)
+function types.PacketDissector.method:parse(pkt)
 	self._select, self._payload = pkt.payload:sub(0, 'all'):select()
 	self:parse_payload(pkt, self._payload)
 end
 
-function type.PacketDissector.method:parse_payload(pkt, payload)
+function types.PacketDissector.method:parse_payload(pkt, payload)
 	error("not implemented")
 end
 
-function type.PacketDissector.method:create(init, pkt)
+function types.PacketDissector.method:create(init, pkt)
 	self._select, self._payload = pkt.payload:sub(0, 'all'):select()
 	self:create_payload(pkt, self._payload, init)
 end
 
-function type.PacketDissector.method:create_payload(pkt, payload, init)
+function types.PacketDissector.method:create_payload(pkt, payload, init)
 	error("not implemented")
 end
 
-function type.PacketDissector.method:forge(pkt)
+function types.PacketDissector.method:forge(pkt)
 	self:forge_payload(pkt, self._payload)
 	self._select:restore(self._payload)
 	self._payload = nil
 	self._select = nil
 end
 
-function type.PacketDissector.method:forge_payload(pkt, payload)
+function types.PacketDissector.method:forge_payload(pkt, payload)
 	error("not implemented")
 end
 
-function type.PacketDissector.method:can_continue()
+function types.PacketDissector.method:can_continue()
 	return self._parent:can_continue()
 end
 
-function type.PacketDissector.method:drop()
+function types.PacketDissector.method:drop()
 	return self._parent:drop()
 end
 
-function type.PacketDissector.method:send()
+function types.PacketDissector.method:send()
 	self:trigger('send_packet')
 
 	self:forge(self._parent)
@@ -339,7 +353,7 @@ function type.PacketDissector.method:send()
 	self._parent = nil
 end
 
-function type.PacketDissector.method:inject()
+function types.PacketDissector.method:inject()
 	self:forge(self._parent)
 	self._parent:inject()
 	self._parent = nil
@@ -349,7 +363,7 @@ end
 -- Flow based dissector
 --
 
-type.FlowDissector = class.class('FlowDissector', type.Dissector)
+types.FlowDissector = class.class('FlowDissector', types.Dissector)
 
 --
 -- Utility functions
@@ -388,4 +402,4 @@ end
 
 
 haka.dissector = dissector
-table.merge(haka.helper, type)
+table.merge(haka.helper, types)
