@@ -645,8 +645,8 @@ end
 
 function grammar_int.align(size)
 	return grammar_int.Bits:new(function (self, ctx)
-		local rem = (ctx.iter.meter * 8 + ctx._bitoffset) % align
-		if rem > 0 then return size -rem
+		local rem = (ctx.iter.meter * 8 + ctx._bitoffset) % size
+		if rem > 0 then return size - rem
 		else return 0 end
 	end)
 end
