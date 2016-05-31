@@ -1,6 +1,3 @@
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:43557 -> 192.168.20.1:8000
 debug external: Entering packet filtering rules : 43557 --> 8000
 alert: id = = <>
@@ -9,9 +6,6 @@ alert: id = = <>
 		service: tcp, 8000
 	}
 debug conn: dropping connection 192.168.10.1:43557 -> 192.168.20.1:8000
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:43557 -> 192.168.20.1:8000
 debug external: Entering packet filtering rules : 43557 --> 8000
 alert: id = = <>
@@ -20,46 +14,11 @@ alert: id = = <>
 		service: tcp, 8000
 	}
 debug conn: dropping connection 192.168.10.1:43557 -> 192.168.20.1:8000
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53459 -> 192.168.20.1:80
 debug external: Entering packet filtering rules : 53459 --> 80
 info external: Authorizing traffic on port 80
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
 debug core: rejected policy tcp
-debug core: applying policy ipv4 for raw next dissector
 debug core: rejected policy tcp
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:51666 -> 192.168.20.1:31337
 debug external: Entering packet filtering rules : 51666 --> 31337
 alert: id = = <>
@@ -68,9 +27,6 @@ alert: id = = <>
 		service: tcp, 31337
 	}
 debug conn: dropping connection 192.168.10.1:51666 -> 192.168.20.1:31337
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:51666 -> 192.168.20.1:31337
 debug external: Entering packet filtering rules : 51666 --> 31337
 alert: id = = <>

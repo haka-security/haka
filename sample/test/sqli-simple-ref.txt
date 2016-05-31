@@ -1,51 +1,7 @@
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:32838 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: receiving http request
 info external: uri: /index.php
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:32839 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: receiving http request
 info external: uri: /index.php?id=-1%20union%20all%20select%201,2,3
 alert: id = = <>
@@ -53,141 +9,17 @@ alert: id = = <>
 	confidence = low
 	description = SQLi attack detected with score 8
 debug conn: dropping connection 192.168.10.1:32839 -> 192.168.20.1:80
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:32840 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: receiving http request
 info external: uri: /index.php?id=-1%20uni/*somehting*/on%20all%20select%201,2,3
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:32841 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: receiving http request
 info external: uri: http://192.168.20.1/index.php
 info external: cookies: session=active;id=-1%20union%20all%20select%201,2
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:32842 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: receiving http request
 info external: uri: /index.php?id='this%20o/*something*/r%202=2%23
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:32843 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: receiving http request
 info external: uri: /action.php?group=o'brian%25union&action=select
 alert: id = = <>
@@ -195,24 +27,6 @@ alert: id = = <>
 	confidence = low
 	description = SQLi attack detected with score 8
 debug conn: dropping connection 192.168.10.1:32843 -> 192.168.20.1:80
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state
 debug conn: <cleanup> connection
 debug conn: <cleanup> connection

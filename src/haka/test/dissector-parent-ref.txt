@@ -1,5 +1,3 @@
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -28,8 +26,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:43 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -58,8 +54,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:43 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -88,8 +82,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:43 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -118,8 +110,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:47 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -148,8 +138,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:47 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -178,8 +166,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:47 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -208,8 +194,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:47 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -238,8 +222,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:50 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -268,8 +250,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:50 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -298,8 +278,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:50 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -328,8 +306,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:50 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -358,8 +334,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:51 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -388,8 +362,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:51 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -418,8 +390,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:51 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -448,8 +418,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:51 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -478,8 +446,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:51 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -508,8 +474,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:53 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -538,8 +502,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:53 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -568,8 +530,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:53 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -598,8 +558,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:56 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -628,8 +586,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:56 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -658,8 +614,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:56 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -688,10 +642,7 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:44:56 2014
 }
-debug core: applying policy ipv4 for raw next dissector
 debug core: rejected policy tcp
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -720,8 +671,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:00 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -750,8 +699,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:00 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -780,8 +727,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:06 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -810,8 +755,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:06 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -840,8 +783,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:06 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -870,8 +811,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:06 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -900,8 +839,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:06 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -930,8 +867,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:06 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -960,8 +895,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:06 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet
@@ -990,8 +923,6 @@ userdata packet {
   payload : userdata vbuffer
   timestamp : userdata time Mon Jan 20 17:45:06 2014
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 userdata ipv4 {
   _next_dissector : userdata tcp
   _parent : userdata packet

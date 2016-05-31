@@ -1,23 +1,7 @@
-debug core: applying policy ipv4 for raw next dissector
 debug core: rejected policy tcp
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 10.2.96.127:45034 -> 10.2.104.129:4444
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 error tcp: read only buffer
 debug conn: closing connection 10.2.96.127:45034 -> 10.2.104.129:4444
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -30,9 +14,6 @@ alert: id = = <>
 		address: 10.2.96.127
 		service: tcp/45034
 	}
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -45,9 +26,6 @@ alert: id = = <>
 		address: 10.2.104.129
 		service: tcp/4444
 	}
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -60,9 +38,6 @@ alert: id = = <>
 		address: 10.2.96.127
 		service: tcp/45034
 	}
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -75,9 +50,6 @@ alert: id = = <>
 		address: 10.2.104.129
 		service: tcp/4444
 	}
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -90,9 +62,6 @@ alert: id = = <>
 		address: 10.2.96.127
 		service: tcp/45034
 	}
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -105,9 +74,6 @@ alert: id = = <>
 		address: 10.2.104.129
 		service: tcp/4444
 	}
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
@@ -120,9 +86,6 @@ alert: id = = <>
 		address: 10.2.96.127
 		service: tcp/45034
 	}
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low

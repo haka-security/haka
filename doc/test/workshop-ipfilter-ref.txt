@@ -1,15 +1,6 @@
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	severity = low
 	description = Filtering IP 192.168.10.30
-debug core: applying policy ipv4 for raw next dissector
 alert: id = = <>
 	severity = low
 	description = Filtering IP 192.168.10.30

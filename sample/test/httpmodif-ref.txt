@@ -1,23 +1,4 @@
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53440 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox/12.0
 alert: id = = <>
@@ -41,67 +22,11 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: dropping connection 192.168.10.1:53440 -> 192.168.20.1:80
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53441 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox/28.0
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53442 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox/plop
 alert: id = = <>
@@ -125,33 +50,8 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: dropping connection 192.168.10.1:53442 -> 192.168.20.1:80
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53443 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox/
 alert: id = = <>
@@ -175,137 +75,19 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: dropping connection 192.168.10.1:53443 -> 192.168.20.1:80
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53444 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox
 info external: Unknown or missing User-Agent
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53445 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: Domain requested: server
 info external: UA detected: No User-Agent header
 info external: Unknown or missing User-Agent
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53446 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: UA detected: No User-Agent header
 info external: Unknown or missing User-Agent
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53447 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: UA detected: Mozilla Firefox/18.0
 alert: id = = <>
 	severity = medium
@@ -326,85 +108,11 @@ class HttpResponseResult {
   split_cookies : class HttpCookiesSplit {
   }
 }
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53448 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: UA detected: Mozilla Firefox/28.0
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:53449 -> 192.168.20.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 info external: Domain requested: mozilla.org
 info external: Update domain: go for it
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state
 debug conn: <cleanup> connection
 debug conn: <cleanup> connection

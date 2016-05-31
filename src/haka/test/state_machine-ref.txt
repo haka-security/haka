@@ -1,43 +1,19 @@
-debug core: applying policy ipv4 for raw next dissector
 enter state1
 initialize state1
 0 state1 received: hello from state 'state1'
 leave state1
 enter state4
-debug core: applying policy ipv4 for raw next dissector
 1 state4 received: hello from state 'state4'
 leave state4
 enter state1
-debug core: applying policy ipv4 for raw next dissector
 timeout from state1
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
 timeout from state1
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
 timeout from state1
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
 timeout from state1
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
 timeout from state1
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
 timeout from state1
 leave state1
 enter state3
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
 timeout from state3
 go to state1
 leave state3
@@ -45,15 +21,4 @@ enter state2
 fail on state2
 leave state2
 finished hello
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
 debug lua: closing state

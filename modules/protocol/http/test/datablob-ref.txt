@@ -1,43 +1,9 @@
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 127.0.0.1:42069 -> 127.0.0.1:80
-debug core: applying policy http for tcp_connection next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug grammar: parse error at byte 12 for field 2 in request_line: token /[[:blank:]]+/ doesn't match
 debug grammar: parse error context: (\x90\xfd4<)\xa3\x9aM$?\xf7\x01\x9c\xa0\x95\xeb\xda\xe6\xeav\xa9q0\xf6\xc9\x0a\x98\x08\xb4-\xa6\xa90~:\xcb\xda\x9c&N5\x9a\xab\x1d\xc5\xec^\xf8\xfdXy\x13>\x8b\xbe\x03\xf2D\xe2Bd#\xe0\x98wr\xadnf\x09VeFJ,j\x08T\xbc\xd1\xd2\x1a\x84\x874\xf0\xe5r\xe66Y\x14\xc5`\xc3\x9a\xeb\x08\xdc...
 alert: id = = <>
 	severity = low
 	description = invalid http request_line
 debug conn: dropping connection 127.0.0.1:42069 -> 127.0.0.1:80
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state
 debug conn: <cleanup> connection

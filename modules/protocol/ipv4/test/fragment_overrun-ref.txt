@@ -1,85 +1,43 @@
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=1480
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=808
-debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet data=60004
 debug lua: closing state

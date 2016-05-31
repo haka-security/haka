@@ -1,116 +1,35 @@
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 New UDP connection: 192.168.10.10:56691 -> 192.168.20.1:69
 debug conn: opening connection 192.168.10.10:56691 -> 192.168.20.1:69
 UDP data: 14
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 New UDP connection: 192.168.20.1:40479 -> 192.168.10.10:56691
 debug conn: opening connection 192.168.20.1:40479 -> 192.168.10.10:56691
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 516
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 UDP data: 4
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 New UDP connection: 192.168.10.10:57381 -> 192.168.20.1:69
 debug conn: opening connection 192.168.10.10:57381 -> 192.168.20.1:69
 UDP data: 14
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy udp for ipv4 next dissector
-debug core: applying policy udp connection for udp next dissector
 New UDP connection: 192.168.20.1:34292 -> 192.168.10.10:57381
 debug conn: opening connection 192.168.20.1:34292 -> 192.168.10.10:57381
 UDP data: 22

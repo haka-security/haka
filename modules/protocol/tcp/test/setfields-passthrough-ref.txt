@@ -1,5 +1,3 @@
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy tcp for ipv4 next dissector
 false read only buffer
 false read only buffer
 false read only buffer

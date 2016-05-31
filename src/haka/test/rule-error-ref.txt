@@ -1,71 +1,36 @@
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
-debug core: applying policy ipv4 for raw next dissector
 error lua: ipv4: unknown field 'none'
 debug lua: closing state

@@ -1,9 +1,5 @@
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=16
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=8
-debug core: applying policy ipv4 for raw next dissector
 info external: received ip packet data=8
-debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet data=20
 debug lua: closing state

@@ -24,6 +24,8 @@ $0 ~ /^debug packet:/ { next; }
 $0 ~ /^debug pcre:/ { next; }
 $0 ~ /^debug states:/ { next; }
 $0 ~ /^debug event: signal/ { next; }
+$0 ~ /^debug core: rejected policy .* next dissector$/ { next; }
+$0 ~ /^debug core: applying policy .* next dissector$/ { next; }
 $0 ~ /^debug time: / { next; }
 $0 ~ /^info pcap: progress/ { next; }
 $0 ~ /^debug core: memory report/ { next; }

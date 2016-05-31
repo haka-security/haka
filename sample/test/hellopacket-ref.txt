@@ -1,39 +1,15 @@
-debug core: applying policy ipv4 for raw next dissector
 info external: packet from 192.168.10.1 to 192.168.10.99
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug conn: opening connection 192.168.10.1:47161 -> 192.168.10.99:3000
 info external: TCP connection from 192.168.10.1:47161 to 192.168.10.99:3000
 alert: id = = <>
 	severity = low
 	description = A simple alert
-debug core: applying policy ipv4 for raw next dissector
 info external: packet from 192.168.10.99 to 192.168.10.1
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
 info external: packet from 192.168.10.1 to 192.168.10.99
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
 info external: packet from 192.168.10.1 to 192.168.10.99
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
 info external: packet from 192.168.10.99 to 192.168.10.1
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
 info external: packet from 192.168.10.1 to 192.168.10.99
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
 info external: packet from 192.168.10.99 to 192.168.10.1
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
-debug core: applying policy ipv4 for raw next dissector
 info external: packet from 192.168.10.1 to 192.168.10.99
-debug core: applying policy tcp for ipv4 next dissector
-debug core: applying policy tcp connection for tcp next dissector
 debug lua: closing state
 debug conn: <cleanup> connection

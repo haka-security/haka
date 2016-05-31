@@ -1,41 +1,21 @@
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.99 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.1 - DST:192.168.20.99
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.99 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.99 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.1 - DST:192.168.20.99
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.1 - DST:192.168.20.99
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.99 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.99 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.1 - DST:192.168.20.99
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.99 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.10.1 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.1 - DST:192.168.10.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.10.1 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.10.1 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.1 - DST:192.168.10.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.1 - DST:192.168.10.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.10.1 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.10.1 - DST:192.168.20.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.20.1 - DST:192.168.10.1
-debug core: applying policy ipv4 for raw next dissector
 SRC:192.168.10.1 - DST:192.168.20.1
 debug lua: closing state

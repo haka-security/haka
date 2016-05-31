@@ -1,29 +1,15 @@
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
-debug core: applying policy ipv4 for raw next dissector
 info external: myfunc
 debug lua: closing state

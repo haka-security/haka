@@ -1,25 +1,21 @@
-debug core: applying policy ipv4 for raw next dissector
 V= 0123456789abcdeABCDE0123456789abcdeABCDE01234567 !
 V= 0123456789abcdefghijklmnopqrstuvwxyz0123456789AB !
 V= 456789AB !"#$%&'
 V=  !"#$%&'()*+,-./01234567
 V=  !"#$%&'
 V=  !"#$%&'()*+,-./01234567
-debug core: applying policy ipv4 for raw next dissector
 V= 0123456789abcdeABCDE0123456789abcdeABCDE01234567 !
 V= 0123456789abcdefghijklmnopqrstuvwxyz0123456789AB !
 V= 456789AB !"#$%&'
 V=  !"#$%&'()*+,-./01234567
 V=  !"#$%&'
 V=  !"#$%&'()*+,-./01234567
-debug core: applying policy ipv4 for raw next dissector
 V= 0123456789abcdeABCDE0123456789abcdeABCDE01234567 !
 V= 0123456789abcdefghijklmnopqrstuvwxyz0123456789AB !
 V= 456789AB !"#$%&'
 V=  !"#$%&'()*+,-./01234567
 V=  !"#$%&'
 V=  !"#$%&'()*+,-./01234567
-debug core: applying policy ipv4 for raw next dissector
 V= 0123456789abcdeABCDE0123456789abcdeABCDE01234567 !
 V= 0123456789abcdefghijklmnopqrstuvwxyz0123456789AB !
 V= 456789AB !"#$%&'

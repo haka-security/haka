@@ -1,27 +1,7 @@
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet size=5304
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet size=5304
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet size=60
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet size=60
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet size=1604
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy ipv4 for raw next dissector
-debug core: applying policy icmp for ipv4 next dissector
 info external: received icmp packet size=1604
 debug lua: closing state
