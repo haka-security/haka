@@ -2,15 +2,13 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-local http = require("protocol/http")
-
-http.install_tcp_rule(80)
+require("protocol/http")
 
 haka.rule {
-	hook = http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		print("HTTP REQUEST")
-		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
+		debug.pprint(request, { hide = { debug.hide_underscore, debug.hide_function } })
 		-- We change a part of the request
 		request.version = "2.0"
 		-- We change an existing header
@@ -24,14 +22,14 @@ haka.rule {
 		request.headers["Haka2"] = nil
 
 		print("HTTP MODIFIED REQUEST")
-		debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
+		debug.pprint(request, { hide = { debug.hide_underscore, debug.hide_function } })
 	end
 }
 
 haka.rule {
-	hook = http.events.response,
+	on = haka.dissectors.http.events.response,
 	eval = function (http, response)
 		print("HTTP RESPONSE")
-		debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
+		debug.pprint(response, { hide = { debug.hide_underscore, debug.hide_function } })
 	end
 }

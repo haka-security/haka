@@ -10,7 +10,7 @@ local tcp_connection = require("protocol/tcp_connection")
 
 -- security rule to discard packets with bad tcp checksums
 haka.rule{
-	hook = tcp.events.receive_packet, -- hook on new tcp packets capture
+	on = haka.dissectors.tcp.events.receive_packet, -- hook on new tcp packets capture
 	eval = function (pkt)
 		-- check for bad ip checksum
 		if not pkt:verify_checksum() then
@@ -30,11 +30,11 @@ haka.rule{
 
 -- securty rule to add a log entry on http connections to a web server
 haka.rule{
-	hook = tcp_connection.events.new_connection, --hook on new tcp connections.
+	on = haka.dissectors.tcp_connection.events.new_connection, --hook on new tcp connections.
 	eval = function (flow, tcp)
 		local web_server = ipv4.addr("192.168.20.1")
-		if tcp.ip.dst == web_server and tcp.dstport == 80 then
-			haka.log.debug("Traffic on HTTP port from %s", tcp.ip.src)
+		if tcp.dst == web_server and tcp.dstport == 80 then
+			haka.log.debug("Traffic on HTTP port from %s", tcp.src)
 		end
 	end
 }

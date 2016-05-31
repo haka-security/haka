@@ -114,9 +114,9 @@ An object in Lua is basically a table containing functions and properties. Every
 Event
 -----
 
-Haka uses events that allow security rules to be hooked to dissectors for instance.
-An event is triggered by an emitter and received by a listener. It is described as
-follow:
+Haka uses events that allow security rules to be attached to dissectors for
+instance. An event is triggered by an emitter and received by a listener. It
+is described as follow:
 
 .. haka:function:: test.events.myevent(param1, param2, ...)
     :module:

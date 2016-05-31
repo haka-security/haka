@@ -2,11 +2,11 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
---local ipv4 = require('protocol/ipv4')
+local ipv4 = require('protocol/ipv4')
 
 local ipv4_dissector = haka.dissector.new{
-	type = haka.helper.EncapsulatedPacketDissector,
-	name = 'ipv4'
+	type = haka.helper.PacketDissector,
+	name = 'ipv4lua'
 }
 
 local ipv4_addr_convert = {
@@ -20,7 +20,7 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 		field('class',       number(2)),
 		field('number',      number(5)),
 	}
-	
+
 	local option_data = record{
 		field('len',         number(8))
 			:validate(function (self) self.len = #self.data+2 end),
@@ -28,7 +28,7 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 			:count(function (self) return self.len-2 end)
 		)
 	}
-	
+
 	local option = record{
 		union{
 			option_header,
@@ -38,8 +38,8 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 			function (self) return self.type ~= 0 and self.type ~= 1 end
 		)
 	}
-	
-	local header = record{
+
+	header = record{
 		field('version',     number(4))
 			:validate(function (self) self.version = 4 end),
 		field('hdr_len',     number(4))
@@ -77,6 +77,7 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 			if ctx.iter.meter ~= self.hdr_len then
 				error(string.format("invalid ipv4 header size, expected %d bytes, got %d bytes", self.hdr_len, ctx.iter.meter))
 			end
+			return true
 		end),
 		field('payload',     bytes())
 	}
@@ -84,22 +85,12 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 	export(header)
 end)
 
-function ipv4_dissector.method:parse_payload(pkt, payload)
-	self.raw = pkt
-	ipv4_dissector.grammar:parse(payload:pos("begin"), self)
-end
-
-function ipv4_dissector.method:create_payload(pkt, payload, init)
-	self.raw = pkt
-	ipv4_dissector.grammar:create(payload:pos("begin"), self, init)
-end
-
 function ipv4_dissector.method:verify_checksum()
 	return ipv4.inet_checksum_compute(self._payload:sub(0, self.hdr_len)) == 0
 end
 
-function ipv4_dissector.method:next_dissector()
-	return ipv4.ipv4_protocol_dissectors[self.proto]
+function ipv4_dissector.method:install_criterion()
+	return { proto = self.proto }
 end
 
 function ipv4_dissector._compute_hdr_len(pkt)
@@ -132,4 +123,9 @@ function ipv4_dissector:create(pkt, init)
 	return ip
 end
 
-return ipv4
+haka.policy {
+	name = "ipv4",
+	on = haka.dissectors.raw.policies.next_dissector,
+	proto = "ipv4",
+	action = haka.dissectors.ipv4lua.install
+}

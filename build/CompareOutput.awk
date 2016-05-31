@@ -20,6 +20,17 @@ $0 ~ /^[^ \t]/ {
 	alert = 0;
 }
 
+$0 ~ /^debug packet:/ { next; }
+$0 ~ /^debug pcre:/ { next; }
+$0 ~ /^debug states:/ { next; }
+$0 ~ /^debug event: signal/ { next; }
+$0 ~ /^debug core: rejected policy .* next dissector$/ { next; }
+$0 ~ /^debug core: applying policy .* next dissector$/ { next; }
+$0 ~ /^debug time: / { next; }
+$0 ~ /^info pcap: progress/ { next; }
+$0 ~ /^debug core: memory report/ { next; }
+$0 ~ /^warn core: rule .*at .* uses 'hook' keyword which deprecated and should be replaced by 'on'$/ { next; }
+
 $0 ~ /warn core:/ {
 	print;
 }
@@ -33,14 +44,6 @@ $0 ~ /info core: unload module/ {
 	show = 0;
 	next;
 }
-
-$0 ~ /^debug packet:/ { next; }
-$0 ~ /^debug pcre:/ { next; }
-$0 ~ /^debug states:/ { next; }
-$0 ~ /^debug event: signal/ { next; }
-$0 ~ /^debug time: / { next; }
-$0 ~ /^info pcap: progress/ { next; }
-$0 ~ /^debug core: memory report/ { next; }
 
 $0 ~ /^debug grammar: in rule / {
 	trace = 1;

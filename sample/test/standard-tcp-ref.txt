@@ -1,14 +1,19 @@
 debug conn: opening connection 192.168.10.1:52110 -> 192.168.20.1:443
-debug external: entering packet filtering rules : 52110 --> 443
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
+debug core: applying policy drop by default for new connection
 alert: id = = <>
-	description = Packet dropped : drop by default
+	description = drop by default
 	sources = {
-		address: 192.168.10.1, 52110
+		address: 192.168.10.1
+		service: tcp/52110
 	}
 	targets = {
-		address: 192.168.20.1, 443
+		address: 192.168.20.1
+		service: tcp/443
 	}
 debug conn: dropping connection 192.168.10.1:52110 -> 192.168.20.1:443
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -101,59 +106,74 @@ alert: id = = <>
 		address: 192.168.20.1
 	}
 debug conn: opening connection 192.168.10.1:50706 -> 192.168.20.1:80
-debug external: entering packet filtering rules : 50706 --> 80
-warn external: authorizing http traffic
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
+debug core: applying policy authorizing http traffic for new connection
 debug conn: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
-debug external: entering packet filtering rules : 51584 --> 80
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
+debug core: applying policy drop by default for new connection
 alert: id = = <>
-	description = Packet dropped : drop by default
+	description = drop by default
 	sources = {
-		address: 192.168.10.1, 51584
+		address: 192.168.10.1
+		service: tcp/51584
 	}
 	targets = {
-		address: 192.168.20.255, 80
+		address: 192.168.20.255
+		service: tcp/80
 	}
 debug conn: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug conn: opening connection 192.168.10.1:51584 -> 192.168.20.255:80
-debug external: entering packet filtering rules : 51584 --> 80
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
+debug core: applying policy drop by default for new connection
 alert: id = = <>
-	description = Packet dropped : drop by default
+	description = drop by default
 	sources = {
-		address: 192.168.10.1, 51584
+		address: 192.168.10.1
+		service: tcp/51584
 	}
 	targets = {
-		address: 192.168.20.255, 80
+		address: 192.168.20.255
+		service: tcp/80
 	}
 debug conn: dropping connection 192.168.10.1:51584 -> 192.168.20.255:80
 debug conn: opening connection 192.168.10.1:37017 -> 192.168.20.1:22
-debug external: entering packet filtering rules : 37017 --> 22
-warn external: authorizing ssh traffic
-warn external: no available dissector for ssh
+debug core: rejected policy authorizing http traffic for new connection
+debug core: applying policy authorizing ssh traffic (no available dissector) for new connection
 debug conn: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
-debug external: entering packet filtering rules : 34191 --> 22
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
+debug core: applying policy drop by default for new connection
 alert: id = = <>
-	description = Packet dropped : drop by default
+	description = drop by default
 	sources = {
-		address: 192.168.10.1, 34191
+		address: 192.168.10.1
+		service: tcp/34191
 	}
 	targets = {
-		address: 192.168.20.255, 22
+		address: 192.168.20.255
+		service: tcp/22
 	}
 debug conn: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug conn: opening connection 192.168.10.1:34191 -> 192.168.20.255:22
-debug external: entering packet filtering rules : 34191 --> 22
+debug core: rejected policy authorizing http traffic for new connection
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
+debug core: applying policy drop by default for new connection
 alert: id = = <>
-	description = Packet dropped : drop by default
+	description = drop by default
 	sources = {
-		address: 192.168.10.1, 34191
+		address: 192.168.10.1
+		service: tcp/34191
 	}
 	targets = {
-		address: 192.168.20.255, 22
+		address: 192.168.20.255
+		service: tcp/22
 	}
 debug conn: dropping connection 192.168.10.1:34191 -> 192.168.20.255:22
 debug conn: opening connection 192.168.10.1:50710 -> 192.168.20.1:80
-debug external: entering packet filtering rules : 50710 --> 80
-warn external: authorizing http traffic
+debug core: rejected policy authorizing ssh traffic (no available dissector) for new connection
+debug core: applying policy authorizing http traffic for new connection
 alert: id = = <>
 	description = /bin/sh shellcode detected
 	sources = {

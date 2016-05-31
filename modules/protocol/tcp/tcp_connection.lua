@@ -5,7 +5,7 @@
 local class = require("class")
 local check = require("check")
 
-local raw = require("protocol/raw")
+require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 local tcp = require("protocol/tcp")
 
@@ -13,7 +13,7 @@ local module = {}
 local log = haka.log_section("tcp")
 
 local tcp_connection_dissector = haka.dissector.new{
-	type = haka.helper.FlowDissector,
+	type = haka.helper.PacketDissector,
 	name = 'tcp_connection'
 }
 
@@ -24,8 +24,22 @@ tcp_connection_dissector:register_event('receive_packet')
 tcp_connection_dissector:register_streamed_event('receive_data')
 tcp_connection_dissector:register_event('end_connection')
 
+tcp_connection_dissector.policies.no_connection_found = haka.policy.new("no connection found for tcp packet")
+tcp_connection_dissector.policies.unexpected_packet = haka.policy.new("unexpected tcp packet")
+tcp_connection_dissector.policies.invalid_handshake = haka.policy.new("invalid tcp handshake")
+tcp_connection_dissector.policies.new_connection = haka.policy.new("new connection")
+
+haka.policy {
+	on = tcp_connection_dissector.policies.no_connection_found,
+	name = "default action",
+	action = {
+		haka.policy.alert{ severity = 'low' },
+		haka.policy.drop
+	}
+}
+
 local function tcp_get_key(pkt)
-	return pkt.ip.src, pkt.ip.dst, pkt.srcport, pkt.dstport
+	return pkt.src, pkt.dst, pkt.srcport, pkt.dstport
 end
 
 function tcp_connection_dissector:receive(pkt)
@@ -39,6 +53,11 @@ function tcp_connection_dissector:receive(pkt)
 			local ret, err = xpcall(function ()
 					haka.context:exec(connection.data, function ()
 						self:trigger('new_connection', pkt)
+						class.classof(self).policies.next_dissector:apply{
+							values = self:install_criterion(),
+							ctx = self,
+						}
+						self:activate_next_dissector()
 					end)
 				end, debug.format_error)
 
@@ -54,7 +73,7 @@ function tcp_connection_dissector:receive(pkt)
 				haka.abort()
 			end
 
-			if not self.stream then
+			if not rawget(self, 'stream') then
 				pkt:drop()
 				haka.abort()
 			end
@@ -62,20 +81,34 @@ function tcp_connection_dissector:receive(pkt)
 			connection.data:createnamespace('tcp_connection', self)
 		else
 			if not dropped then
-				haka.alert{
-					severity = 'low',
-					description = "no connection found for tcp packet",
-					sources = {
-						haka.alert.address(pkt.ip.src),
-						haka.alert.service(string.format("tcp/%d", pkt.srcport))
+				tcp_connection_dissector.policies.no_connection_found:apply{
+					ctx = pkt,
+					values = {
+						srcip = pkt.src,
+						srcport = pkt.srcport,
+						dstip = pkt.dst,
+						dstport = pkt.dstport
 					},
-					targets = {
-						haka.alert.address(pkt.ip.dst),
-						haka.alert.service(string.format("tcp/%d", pkt.dstport))
+					desc = {
+						sources = {
+							haka.alert.address(pkt.src),
+							haka.alert.service(string.format("tcp/%d", pkt.srcport))
+						},
+						targets = {
+							haka.alert.address(pkt.dst),
+							haka.alert.service(string.format("tcp/%d", pkt.dstport))
+						}
 					}
 				}
+				if not pkt:can_continue() then
+					-- packet was dropped by policy
+					return
+				else
+					pkt:send()
+				end
+			else
+				return pkt:drop()
 			end
-			return pkt:drop()
 		end
 	end
 
@@ -98,6 +131,29 @@ function tcp_connection_dissector:receive(pkt)
 		end
 	end
 end
+
+function tcp_connection_dissector.method:install_criterion()
+	return { port = self.dstport }
+end
+
+
+haka.policy {
+	on = tcp_connection_dissector.policies.unexpected_packet,
+	name = "default action",
+	action = {
+		haka.policy.alert(),
+		haka.policy.drop
+	}
+}
+
+haka.policy {
+	on = tcp_connection_dissector.policies.invalid_handshake,
+	name = "default action",
+	action = {
+		haka.policy.alert(),
+		haka.policy.drop
+	}
+}
 
 tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function ()
 	state_type{
@@ -129,14 +185,37 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 	timed_wait   = state()
 
 	local function unexpected_packet(self, pkt)
-		log.error("unexpected tcp packet")
-		pkt:drop()
+		tcp_connection_dissector.policies.unexpected_packet:apply{
+			ctx = pkt,
+			desc = {
+				sources = {
+					haka.alert.address(pkt.src),
+					haka.alert.service(string.format("tcp/%d", pkt.srcport))
+				},
+				targets = {
+					haka.alert.address(pkt.dst),
+					haka.alert.service(string.format("tcp/%d", pkt.dstport))
+				}
+			}
+		}
 	end
 
 	local function invalid_handshake(type)
 		return function (self, pkt)
-			log.error("invalid tcp %s handshake", type)
-			pkt:drop()
+			tcp_connection_dissector.policies.unexpected_packet:apply{
+				ctx = pkt,
+				desc = {
+					description = string.format("invalid tcp %s handshake", type),
+					sources = {
+						haka.alert.address(pkt.src),
+						haka.alert.service(string.format("tcp/%d", pkt.srcport))
+					},
+					targets = {
+						haka.alert.address(pkt.dst),
+						haka.alert.service(string.format("tcp/%d", pkt.dstport))
+					}
+				}
+			}
 		end
 	end
 
@@ -456,8 +535,8 @@ function tcp_connection_dissector.method:__init(connection, pkt)
 	self.stream = {}
 	self._restart = false
 
-	self.srcip = pkt.ip.src
-	self.dstip = pkt.ip.dst
+	self.srcip = pkt.src
+	self.dstip = pkt.dst
 	self.srcport = pkt.srcport
 	self.dstport = pkt.dstport
 
@@ -468,7 +547,7 @@ function tcp_connection_dissector.method:__init(connection, pkt)
 end
 
 function tcp_connection_dissector.method:clearstream()
-	if self.stream then
+	if rawget(self, 'stream') then
 		self.stream.up:clear()
 		self.stream.down:clear()
 		self.stream = nil
@@ -480,7 +559,7 @@ function tcp_connection_dissector.method:restart()
 end
 
 function tcp_connection_dissector.method:emit(pkt, direction)
-	self.connection:update_stat(direction, pkt.ip.len)
+	self.connection:update_stat(direction, pkt.len)
 	self:trigger('receive_packet', pkt, direction)
 
 	self.state:update(direction, pkt)
@@ -488,7 +567,7 @@ end
 
 function tcp_connection_dissector.method:_close()
 	self:clearstream()
-	if self.connection then
+	if rawget(self, 'connection') then
 		self.connection:close()
 		self.connection = nil
 	end
@@ -498,7 +577,7 @@ end
 function tcp_connection_dissector.method:_trigger_receive(direction, stream, current)
 	self:trigger('receive_data', stream.stream, current, direction)
 
-	local next_dissector = self:next_dissector()
+	local next_dissector = self._next_dissector
 	if next_dissector then
 		return next_dissector:receive(stream.stream, current, direction)
 	else
@@ -523,7 +602,7 @@ function tcp_connection_dissector.method:finish(direction)
 end
 
 function tcp_connection_dissector.method:can_continue()
-	return self.stream ~= nil
+	return rawget(self, 'stream') ~= nil
 end
 
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
@@ -569,8 +648,8 @@ function tcp_connection_dissector.method:drop()
 end
 
 function tcp_connection_dissector.method:_forgereset(direction)
-	local tcprst = raw.create()
-	tcprst = ipv4.create(tcprst)
+	local tcprst = haka.dissectors.raw.create()
+	tcprst = haka.dissectors.ipv4.create(tcprst)
 
 	if direction == 'up' then
 		tcprst.src = self.srcip
@@ -582,7 +661,7 @@ function tcp_connection_dissector.method:_forgereset(direction)
 
 	tcprst.ttl = 64
 
-	tcprst = tcp.create(tcprst)
+	tcprst = haka.dissectors.tcp.create(tcprst)
 
 	if direction == 'up' then
 		tcprst.srcport = self.srcport
@@ -624,9 +703,36 @@ function tcp_connection_dissector.method:halfreset()
 	self:drop()
 end
 
-tcp.select_next_dissector(tcp_connection_dissector)
+haka.policy {
+	name = "tcp connection",
+	on = haka.dissectors.tcp.policies.next_dissector,
+	action = haka.dissectors.tcp_connection.install
+}
 
-module.events = tcp_connection_dissector.events
+haka.rule {
+	on = haka.dissectors.tcp_connection.events.new_connection,
+	eval = function (flow, pkt)
+		tcp_connection_dissector.policies.new_connection:apply{
+			ctx = flow,
+			values = {
+				srcip = pkt.src,
+				srcport = pkt.srcport,
+				dstip = pkt.dst,
+				dstport = pkt.dstport
+			},
+			desc = {
+				sources = {
+					haka.alert.address(pkt.src),
+					haka.alert.service(string.format("tcp/%d", pkt.srcport))
+				},
+				targets = {
+					haka.alert.address(pkt.dst),
+					haka.alert.service(string.format("tcp/%d", pkt.dstport))
+				}
+			}
+		}
+	end
+}
 
 --
 -- Helpers
@@ -638,19 +744,6 @@ module.helper.TcpFlowDissector = class.class('TcpFlowDissector', haka.helper.Flo
 
 function module.helper.TcpFlowDissector.dissect(cls, flow)
 	flow:select_next_dissector(cls:new(flow))
-end
-
-function module.helper.TcpFlowDissector.install_tcp_rule(cls, port)
-	haka.rule{
-		name = string.format("install %s dissector", cls.name),
-		hook = tcp_connection_dissector.events.new_connection,
-		eval = function (flow, pkt)
-			if pkt.dstport == port then
-				log.debug("selecting %s dissector on flow", cls.name)
-				flow:select_next_dissector(cls:new(flow))
-			end
-		end
-	}
 end
 
 module.helper.TcpFlowDissector.property.connection = {
@@ -668,24 +761,28 @@ function module.helper.TcpFlowDissector.method:__init(flow)
 end
 
 function module.helper.TcpFlowDissector.method:can_continue()
-	return self.flow ~= nil
+	return rawget(self, 'flow') ~= nil
 end
 
 function module.helper.TcpFlowDissector.method:drop()
-	self.flow:drop()
-	self.flow = nil
+	if rawget(self, 'flow') then
+		self.flow:drop()
+		self.flow = nil
+	end
 end
 
 function module.helper.TcpFlowDissector.method:reset()
-	self.flow:reset()
-	self.flow = nil
+	if rawget(self, 'flow') then
+		self.flow:reset()
+		self.flow = nil
+	end
 end
 
 function module.helper.TcpFlowDissector.method:receive(stream, current, direction)
 	return haka.dissector.pcall(self, function ()
 		self.flow:streamed(stream, self.receive_streamed, self, current, direction)
 
-		if self.flow then
+		if rawget(self, 'flow') then
 			self.flow:send(direction)
 		end
 	end)

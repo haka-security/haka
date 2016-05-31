@@ -1,5 +1,4 @@
 debug conn: opening connection 127.0.0.1:42077 -> 127.0.0.1:80
-debug tcp: selecting http dissector on flow
 debug grammar: parse error at byte 9021 for field 1 in header: token /[^:[:blank:]]+/ doesn't match
 debug grammar: parse error context: ...
 alert: id = = <>

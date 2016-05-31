@@ -7,7 +7,7 @@ local ipv4 = require('protocol/ipv4')
 -- blacklisted address 192.168.10.10
 haka.rule{
 	-- This rule is applied on each ip incoming packet
-	hook = ipv4.events.receive_packet,
+	on = haka.dissectors.ipv4.events.receive_packet,
 	eval = function (pkt)
 		-- Parse the IP address and assign it to a variable
 		local bad_ip = ipv4.addr('192.168.10.10')

@@ -295,9 +295,13 @@ struct ipv4 {
 		struct ipv4_addr *src;
 		struct ipv4_addr *dst;
 
+		bool dont_reassemble;
+
+		struct lua_ref _next_dissector;
+
 		%immutable;
 		const char *name { return "ipv4"; }
-		struct packet *raw { IPV4_CHECK($self, NULL); return $self->packet; }
+		struct packet *_parent { IPV4_CHECK($self, NULL); return $self->packet; }
 		struct ipv4_flags *flags { IPV4_CHECK($self, NULL); return (struct ipv4_flags *)$self; }
 		struct vbuffer *payload { IPV4_CHECK($self, NULL); return $self->payload;}
 
@@ -314,8 +318,6 @@ struct ipv4 {
 		}
 	}
 };
-
-STRUCT_UNKNOWN_KEY_ERROR(ipv4);
 
 %rename(_dissect) ipv4_dissect;
 %newobject ipv4_dissect;
@@ -369,6 +371,20 @@ int lua_inet_checksum(struct vbuffer *buf);
 	struct ipv4_addr *ipv4_network_net_get(struct ipv4_network *network) { return ipv4_addr_new(network->net.net); }
 
 	unsigned char ipv4_network_mask_get(struct ipv4_network *network) { return network->net.mask; }
+
+	bool ipv4_dont_reassemble_get(struct ipv4 *ip) { return ip->dont_reassemble; }
+	void ipv4_dont_reassemble_set(struct ipv4 *ip, bool v) { ip->dont_reassemble = v; }
+
+	struct lua_ref ipv4__next_dissector_get(struct ipv4 *ip)
+	{
+		return ip->next_dissector;
+	}
+
+	void ipv4__next_dissector_set(struct ipv4 *ip, struct lua_ref ref)
+	{
+		lua_ref_clear(&ip->next_dissector);
+		ip->next_dissector = ref;
+	}
 %}
 
 %luacode {
@@ -381,8 +397,6 @@ int lua_inet_checksum(struct vbuffer *buf);
 			return ipv4.addr(data)
 		end
 	end
-
-	local ipv4_protocol_dissectors = {}
 
 	function this.register_protocol(proto, dissector)
 		if ipv4_protocol_dissectors[proto] then
@@ -397,7 +411,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 		name = 'ipv4'
 	}
 
-	ipv4_dissector.options.enable_reassembly = true
+	ipv4_dissector:register_event('receive_packet_reassembled')
 
 	function ipv4_dissector:new(pkt)
 		return this._dissect(pkt)
@@ -409,16 +423,23 @@ int lua_inet_checksum(struct vbuffer *buf);
 
 	function ipv4_dissector.method:receive()
 		local pkt
-
 		haka.context:signal(self, ipv4_dissector.events['receive_packet'])
 
-		if ipv4_dissector.options.enable_reassembly then pkt = self:reassemble()
-		else pkt = self end
+		if self.dont_reassemble then pkt = self
+		else pkt = self:reassemble() end
 
 		if pkt then
-			local next_dissector = ipv4_protocol_dissectors[pkt.proto]
+			ipv4_dissector.policies.next_dissector:apply{
+				values = {
+					proto = pkt.proto,
+				},
+				ctx = pkt,
+			}
+			haka.context:signal(pkt, ipv4_dissector.events['receive_packet_reassembled'])
+
+			local next_dissector = pkt:activate_next_dissector()
 			if next_dissector then
-				return next_dissector:receive(pkt)
+				return next_dissector:preceive(pkt)
 			else
 				return pkt:send()
 			end
@@ -427,7 +448,6 @@ int lua_inet_checksum(struct vbuffer *buf);
 
 	function ipv4_dissector.method:send()
 		haka.context:signal(self, ipv4_dissector.events['send_packet'])
-
 		local pkt = this._forge(self)
 		while pkt do
 			pkt:send()
@@ -444,25 +464,29 @@ int lua_inet_checksum(struct vbuffer *buf);
 	end
 
 	swig.getclassmetatable('ipv4')['.fn'].receive = ipv4_dissector.method.receive
+	swig.getclassmetatable('ipv4')['.fn'].preceive = ipv4_dissector.method.preceive
 	swig.getclassmetatable('ipv4')['.fn'].send = ipv4_dissector.method.send
 	swig.getclassmetatable('ipv4')['.fn'].inject = ipv4_dissector.method.inject
 	swig.getclassmetatable('ipv4')['.fn'].continue = haka.helper.Dissector.method.continue
 	swig.getclassmetatable('ipv4')['.fn'].error = swig.getclassmetatable('ipv4')['.fn'].drop
+	swig.getclassmetatable('ipv4')['.fn'].select_next_dissector = ipv4_dissector.method.select_next_dissector
+	swig.getclassmetatable('ipv4')['.fn'].activate_next_dissector = ipv4_dissector.method.activate_next_dissector
+	swig.getclassmetatable('ipv4')['.fn'].parent = ipv4_dissector.method.parent
+	swig.getclassmetatable('ipv4')['__getitem'] = ipv4_dissector.method.__index
 
-	this.events = ipv4_dissector.events
-	this.options = ipv4_dissector.options
+	require('protocol/raw')
+	haka.policy {
+		name = "ipv4",
+		on = haka.dissectors.raw.policies.next_dissector,
+		proto = "ipv4",
+		action = haka.dissectors.ipv4.install
+	}
 
-	function this.create(pkt)
-		return ipv4_dissector:create(pkt)
-	end
-
-	local raw = require('protocol/raw')
-	raw.register('ipv4', ipv4_dissector)
-
-	-- ipv4 Lua full dissector, uncomment to enable
-	--[[ipv4 = this
-	ipv4.ipv4_protocol_dissectors = ipv4_protocol_dissectors
-	require('protocol/ipv4lua')]]
+	haka.policy.ipv4 = {}
+	haka.policy.ipv4.in_network = haka.policy.new_criterion(
+		function (net) return { network=net } end,
+		function (self, value) return self.network:contains(value) end
+	)
 }
 
 %include "cnx.si"

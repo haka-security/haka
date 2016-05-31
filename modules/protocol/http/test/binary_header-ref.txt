@@ -1,5 +1,4 @@
 debug conn: opening connection 127.0.0.1:42073 -> 127.0.0.1:80
-debug tcp: selecting http dissector on flow
 HTTP REQUEST
 class HttpRequestResult {
   headers : class HeaderResult {

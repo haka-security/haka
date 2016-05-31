@@ -1,5 +1,4 @@
 debug conn: opening connection 192.168.10.10:56748 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: received request for / on server
 info external: bluring response attempt
 info external: received request for /twiki/ on server

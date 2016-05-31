@@ -10,7 +10,7 @@ local tcp = require("protocol/tcp")
 require("protocol/tcp_connection")
 
 haka.rule {
-	hook = tcp.events.send_packet,
+	on = haka.dissectors.tcp.events.send_packet,
 	eval = function (pkt)
 		print(string.format("srcport:%s - dstport:%s", pkt.srcport, pkt.dstport))
 	end

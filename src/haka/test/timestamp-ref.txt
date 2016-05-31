@@ -7,75 +7,123 @@ info external: packet timestamp is Mon Jan 20 17:44:43 2014
 info external: packet timestamp is 1390236283s 2503000ns
 info external: packet timestamp is 1390236283.0025 seconds
 info external: packet timestamp is Mon Jan 20 17:44:43 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236283s 3094000ns
 info external: packet timestamp is 1390236283.0031 seconds
 info external: packet timestamp is Mon Jan 20 17:44:43 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236283s 3171000ns
 info external: packet timestamp is 1390236283.0032 seconds
 info external: packet timestamp is Mon Jan 20 17:44:43 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236287s 392974000ns
 info external: packet timestamp is 1390236287.393 seconds
 info external: packet timestamp is Mon Jan 20 17:44:47 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236287s 393006000ns
 info external: packet timestamp is 1390236287.393 seconds
 info external: packet timestamp is Mon Jan 20 17:44:47 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236287s 838251000ns
 info external: packet timestamp is 1390236287.8383 seconds
 info external: packet timestamp is Mon Jan 20 17:44:47 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236287s 838679000ns
 info external: packet timestamp is 1390236287.8387 seconds
 info external: packet timestamp is Mon Jan 20 17:44:47 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236290s 606444000ns
 info external: packet timestamp is 1390236290.6064 seconds
 info external: packet timestamp is Mon Jan 20 17:44:50 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236290s 607142000ns
 info external: packet timestamp is 1390236290.6071 seconds
 info external: packet timestamp is Mon Jan 20 17:44:50 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236290s 981875000ns
 info external: packet timestamp is 1390236290.9819 seconds
 info external: packet timestamp is Mon Jan 20 17:44:50 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236290s 982467000ns
 info external: packet timestamp is 1390236290.9825 seconds
 info external: packet timestamp is Mon Jan 20 17:44:50 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236291s 4326000ns
 info external: packet timestamp is 1390236291.0043 seconds
 info external: packet timestamp is Mon Jan 20 17:44:51 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236291s 4379000ns
 info external: packet timestamp is 1390236291.0044 seconds
 info external: packet timestamp is Mon Jan 20 17:44:51 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236291s 4453000ns
 info external: packet timestamp is 1390236291.0045 seconds
 info external: packet timestamp is Mon Jan 20 17:44:51 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236291s 4958000ns
 info external: packet timestamp is 1390236291.005 seconds
 info external: packet timestamp is Mon Jan 20 17:44:51 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236291s 5515000ns
 info external: packet timestamp is 1390236291.0055 seconds
 info external: packet timestamp is Mon Jan 20 17:44:51 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236293s 202445000ns
 info external: packet timestamp is 1390236293.2024 seconds
 info external: packet timestamp is Mon Jan 20 17:44:53 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236293s 203124000ns
 info external: packet timestamp is 1390236293.2031 seconds
 info external: packet timestamp is Mon Jan 20 17:44:53 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236293s 203160000ns
 info external: packet timestamp is 1390236293.2032 seconds
 info external: packet timestamp is Mon Jan 20 17:44:53 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236296s 401251000ns
 info external: packet timestamp is 1390236296.4013 seconds
 info external: packet timestamp is Mon Jan 20 17:44:56 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236296s 401295000ns
 info external: packet timestamp is 1390236296.4013 seconds
 info external: packet timestamp is Mon Jan 20 17:44:56 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236296s 437665000ns
 info external: packet timestamp is 1390236296.4377 seconds
 info external: packet timestamp is Mon Jan 20 17:44:56 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236296s 438109000ns
 info external: packet timestamp is 1390236296.4381 seconds
 info external: packet timestamp is Mon Jan 20 17:44:56 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236296s 841562000ns
 info external: packet timestamp is 1390236296.8416 seconds
 info external: packet timestamp is Mon Jan 20 17:44:56 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236296s 841584000ns
 info external: packet timestamp is 1390236296.8416 seconds
 info external: packet timestamp is Mon Jan 20 17:44:56 2014
@@ -88,34 +136,56 @@ info external: packet timestamp is Mon Jan 20 17:44:57 2014
 info external: packet timestamp is 1390236300s 126429000ns
 info external: packet timestamp is 1390236300.1264 seconds
 info external: packet timestamp is Mon Jan 20 17:45:00 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236300s 127019000ns
 info external: packet timestamp is 1390236300.127 seconds
 info external: packet timestamp is Mon Jan 20 17:45:00 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236306s 375320000ns
 info external: packet timestamp is 1390236306.3753 seconds
 info external: packet timestamp is Mon Jan 20 17:45:06 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236306s 375959000ns
 info external: packet timestamp is 1390236306.376 seconds
 info external: packet timestamp is Mon Jan 20 17:45:06 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236306s 726897000ns
 info external: packet timestamp is 1390236306.7269 seconds
 info external: packet timestamp is Mon Jan 20 17:45:06 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236306s 727568000ns
 info external: packet timestamp is 1390236306.7276 seconds
 info external: packet timestamp is Mon Jan 20 17:45:06 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236306s 749230000ns
 info external: packet timestamp is 1390236306.7492 seconds
 info external: packet timestamp is Mon Jan 20 17:45:06 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236306s 749278000ns
 info external: packet timestamp is 1390236306.7493 seconds
 info external: packet timestamp is Mon Jan 20 17:45:06 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236306s 749367000ns
 info external: packet timestamp is 1390236306.7494 seconds
 info external: packet timestamp is Mon Jan 20 17:45:06 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236306s 749637000ns
 info external: packet timestamp is 1390236306.7496 seconds
 info external: packet timestamp is Mon Jan 20 17:45:06 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 info external: packet timestamp is 1390236306s 750070000ns
 info external: packet timestamp is 1390236306.7501 seconds
 info external: packet timestamp is Mon Jan 20 17:45:06 2014
+alert: id = = <>
+	description = dropping unknown dissector 'ipv4'
 debug lua: closing state

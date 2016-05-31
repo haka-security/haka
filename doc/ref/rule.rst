@@ -23,7 +23,9 @@ Single Rule
 
 .. haka:function:: rule{...}
 
-    :param hook: Event to listen to.
+    :param on: Event to listen to.
+    :paramtype on: Event
+    :param hook: Synonym of on *(deprecated since version 0.4)*.
     :paramtype hook: Event
     :param eval: Function to call when the event is triggered.
     :paramtype eval: function
@@ -32,7 +34,8 @@ Single Rule
 
     Register a new rule on the given event.
 
-    .. note:: Options are specific to the events you are hooking to. See :doc:`hakadissector` for more information.
+    .. note:: Options are specific to the events you are attaching to. See
+        :doc:`hakadissector` for more information.
 
 Example:
 ^^^^^^^^
@@ -63,7 +66,7 @@ Interactive rule
     ::
 
         haka.rule{
-            hook = ipv4.events.receive_packet,
+            on = ipv4.events.receive_packet,
             eval = haka.interactive_rule("interactive")
         }
 
@@ -78,7 +81,9 @@ Rule Group
 
     .. haka:function:: rule_group{...} -> group
 
-        :param hook: Event to listen to.
+        :param on: Event to listen to.
+        :paramtype on: event
+        :param hook: Synonym of on *(deprecated since version 0.4)*.
         :paramtype hook: event
         :param init: Function that is called whenever the event is triggered and before any rule evaluation.
         :paramtype init: function

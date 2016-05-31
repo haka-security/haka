@@ -2,12 +2,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-local dns = require("protocol/dns")
-
-dns.install_udp_rule(53)
+require("protocol/dns")
 
 haka.rule {
-	hook = dns.events.query,
+	on = haka.dissectors.dns.events.query,
 	eval = function (dns, query)
 		if query.id == 60714 then
 			query:drop()
@@ -16,9 +14,9 @@ haka.rule {
 }
 
 haka.rule {
-	hook = dns.events.query,
+	on = haka.dissectors.dns.events.query,
 	eval = function (dns, query)
 		print("DNS QUERY")
-		debug.pprint(query, nil, nil, { debug.hide_underscore, debug.hide_function })
+		debug.pprint(query, { hide = { debug.hide_underscore, debug.hide_function } })
 	end
 }

@@ -1,4 +1,3 @@
-debug udp: selecting dns dissector on flow
 debug conn: opening connection 172.16.3.38:38360 -> 172.16.13.5:53
 DNS QUERY
 class DnsResult {
@@ -26,12 +25,10 @@ class DnsResult {
   rd : true
   tc : false
 }
-debug udp: selecting dns dissector on flow
 debug conn: opening connection 172.16.3.38:50391 -> 172.16.13.5:53
 alert: id = = <>
 	severity = low
 	description = dns: mismatching response
-debug udp: selecting dns dissector on flow
 debug conn: opening connection 172.16.3.38:51292 -> 172.16.13.5:53
 DNS QUERY
 class DnsResult {
@@ -59,7 +56,6 @@ class DnsResult {
   rd : true
   tc : false
 }
-debug udp: selecting dns dissector on flow
 debug conn: opening connection 172.16.3.38:37869 -> 172.16.13.5:53
 DNS QUERY
 class DnsResult {

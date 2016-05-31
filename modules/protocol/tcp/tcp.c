@@ -134,6 +134,7 @@ struct tcp *tcp_dissect(struct ipv4 *packet)
 	}
 
 	tcp->lua_object = lua_object_init;
+	lua_ref_init(&tcp->next_dissector);
 	return tcp;
 }
 
@@ -185,6 +186,7 @@ struct tcp *tcp_create(struct ipv4 *packet)
 	}
 
 	tcp->lua_object = lua_object_init;
+	lua_ref_init(&tcp->next_dissector);
 
 	ipv4_set_proto(packet, TCP_PROTO);
 	tcp_set_checksum(tcp, 0);
@@ -340,6 +342,7 @@ static void tcp_flush(struct tcp *tcp)
 void tcp_release(struct tcp *tcp)
 {
 	lua_object_release(tcp, &tcp->lua_object);
+	lua_ref_clear(&tcp->next_dissector);
 	tcp_flush(tcp);
 	vbuffer_release(&tcp->payload);
 	free(tcp);

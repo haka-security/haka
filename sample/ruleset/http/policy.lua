@@ -15,7 +15,7 @@ local rem = require("regexp/pcre")
 
 -- add custom user-agent
 haka.rule {
-	hook = http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		request.headers["User-Agent"] = "Haka User-Agent"
 	end
@@ -23,7 +23,7 @@ haka.rule {
 
 -- report and alert if method is different than get and post
 haka.rule {
-	hook = http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		local method = request.method
 		if not rem.re:match('^get$|^post$', method, rem.re.CASE_INSENSITIVE) then

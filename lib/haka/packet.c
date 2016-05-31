@@ -122,6 +122,7 @@ int packet_receive(struct engine_thread *engine, struct packet **pkt)
 	if (!ret && *pkt) {
 		(*pkt)->lua_object = lua_object_init;
 		lua_ref_init(&(*pkt)->userdata);
+		lua_ref_init(&(*pkt)->next_dissector);
 		atomic_set(&(*pkt)->ref, 1);
 		assert(vbuffer_isvalid(&(*pkt)->payload));
 		LOG_DEBUG(packet, "received packet id=%lli",
@@ -193,6 +194,7 @@ bool packet_release(struct packet *pkt)
 	assert(pkt);
 	if (atomic_dec(&pkt->ref) == 0) {
 		lua_ref_clear(&pkt->userdata);
+		lua_ref_clear(&pkt->next_dissector);
 		lua_object_release(pkt, &pkt->lua_object);
 		packet_module->release_packet(pkt);
 		return true;
@@ -216,6 +218,7 @@ struct packet *packet_new(size_t size)
 
 	pkt->lua_object = lua_object_init;
 	lua_ref_init(&pkt->userdata);
+	lua_ref_init(&pkt->next_dissector);
 	atomic_set(&pkt->ref, 1);
 	assert(vbuffer_isvalid(&pkt->payload));
 

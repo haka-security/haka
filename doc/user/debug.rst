@@ -16,7 +16,7 @@ For instance:
 .. code-block:: lua
 
     haka.rule{
-        hook = ipv4.events.receive_packet,
+        on = ipv4.events.receive_packet,
         eval = haka.interactive_rule("interactive")
     }
 

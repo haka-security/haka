@@ -24,13 +24,13 @@ HTTP dissector.
 
 .. admonition:: Exercise
 
-    By going to the documentation of the HTTP dissector we can see that it provides
-    an interesting event called ``http.events.request``. This event will pass the
-    HTTP connection and the HTTP request to the eval function.
+    By going to the documentation of the HTTP dissector we can see that it
+    provides an interesting event called ``http.events.request``. This event
+    will pass the HTTP connection and the HTTP request to the eval function.
 
-    Create a rule hooked on ``http.events.request``. Check it work correctly by
-    logging some part of the request object. You can use haka on real traffic or
-    download the following pcap file: :download:`http.pcap`.
+    Create a rule attached on ``http.events.request``. Check it work correctly
+    by logging some part of the request object. You can use haka on real
+    traffic or download the following pcap file: :download:`http.pcap`.
 
 Modifying http request
 ----------------------
@@ -54,11 +54,13 @@ page.
         * remove ``Accept-Encoding``
         * set ``Accept`` to ``'*/*'``
 
-    Write a rule hooked on ``http.events.request`` that do the required change.
+    Write a rule attached on ``http.events.request`` that do the required
+    change.
 
 .. admonition:: Exercise
 
-    Also to avoid cache issues, it is easy to remove some cache control headers:
+    Also to avoid cache issues, it is easy to remove some cache control
+    headers:
 
         * remove ``If-Modified-Since``
         * and remove ``If-None-Match``

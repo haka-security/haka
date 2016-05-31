@@ -9,7 +9,7 @@ local ipv4 = require("protocol/ipv4")
 local icmp = require("protocol/icmp")
 
 haka.rule {
-	hook = icmp.events.receive_packet,
+	on = haka.dissectors.icmp.events.receive_packet,
 	eval = function (pkt)
 		haka.log("received icmp packet size=%d", #pkt.payload)
 

@@ -7,11 +7,11 @@
 
 local ipv4 = require("protocol/ipv4")
 
-ipv4.options.enable_reassembly = false
-
 haka.rule {
-	hook = ipv4.events.receive_packet,
+	on = haka.dissectors.ipv4.events.receive_packet,
 	eval = function (pkt)
+		pkt.dont_reassemble = true
+
 		pkt.version = 4
 		pkt.hdr_len = 20
 		pkt.len = 84

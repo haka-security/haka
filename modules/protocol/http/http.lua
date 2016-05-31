@@ -100,14 +100,12 @@ function http_dissector.method:trigger_event(res, iter, mark)
 	end
 end
 
-function module.dissect(flow)
-	http_dissector:dissect(flow)
-end
-
-function module.install_tcp_rule(port)
-	http_dissector:install_tcp_rule(port)
-end
-
+haka.policy{
+	name = "http",
+	on = haka.dissectors.tcp_connection.policies.next_dissector,
+	port = 80,
+	action = haka.dissectors.http.install
+}
 
 --
 -- HTTP parse results
@@ -450,7 +448,5 @@ http_dissector.state_machine = haka.state_machine.new("http", function ()
 
 	initial(request)
 end)
-
-module.events = http_dissector.events
 
 return module

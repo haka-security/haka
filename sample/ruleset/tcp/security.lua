@@ -5,14 +5,14 @@ local rem = require("regexp/pcre")
 ------------------------------------
 
 haka.rule {
-	hook = tcp.events.receive_packet,
+	on = haka.dissectors.tcp.events.receive_packet,
 	eval = function (pkt)
 		--Xmas scan, as made by nmap -sX <IP>
 		if pkt.flags.psh and pkt.flags.fin and pkt.flags.urg then
 			haka.alert{
 				description = "Xmas attack detected",
-				sources = haka.alert.address(pkt.ip.src),
-				targets = haka.alert.address(pkt.ip.dst)
+				sources = haka.alert.address(pkt.src),
+				targets = haka.alert.address(pkt.dst)
 			}
 			pkt:drop()
 		end
@@ -28,7 +28,7 @@ local shellcode = "%xeb %x1f %x5e %x89 %x76 %x08 %x31 %xc0" ..
 local re = rem.re:compile(shellcode, rem.re.EXTENDED)
 
 haka.rule {
-	hook = tcp_connection.events.receive_data,
+	on = haka.dissectors.tcp_connection.events.receive_data,
 	options = {
 		streamed = true,
 	},

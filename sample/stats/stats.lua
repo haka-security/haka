@@ -2,9 +2,7 @@
 -- Loading dissectors
 --------------------------
 
-require('protocol/ipv4')
-require('protocol/tcp')
-local http = require('protocol/http')
+require('protocol/http')
 
 local tbl = require('stats_utils')
 
@@ -14,17 +12,11 @@ local tbl = require('stats_utils')
 local stats = tbl.new()
 
 --------------------------
--- Setting next dissector
---------------------------
-
-http.install_tcp_rule(80)
-
---------------------------
 -- Recording http info
 --------------------------
 
 haka.rule{
-	hook = http.events.response,
+	on = haka.dissectors.http.events.response,
 	eval = function (http, response)
 		local request = http.request
 		local split_uri = request.split_uri:normalize()

@@ -93,7 +93,7 @@ protcol using Haka grammar.
 Events
 ------
 Events are the glue between dissectors and security rules. Dissectors create
-events and then trigger them. As a result, all security rules hooking to that
+events and then trigger them. As a result, all security rules attached to that
 events will be evaluated.
 
 

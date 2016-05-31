@@ -7,7 +7,7 @@ require("protocol/tcp")
 local tcp_connection = require("protocol/tcp_connection")
 
 haka.rule {
-	hook = tcp_connection.events.receive_data,
+	on = haka.dissectors.tcp_connection.events.receive_data,
 	eval = function (flow, data)
 		data:pos('begin'):sub(10, true):erase()
 	end

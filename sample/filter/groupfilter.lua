@@ -14,7 +14,7 @@ local tcp_connection = require('protocol/tcp_connection')
 -- to add rules to the group
 local my_group = haka.rule_group{
 	name = "my_group",
-	hook = tcp_connection.events.new_connection,
+	on = haka.dissectors.tcp_connection.events.new_connection,
 	init = function (flow, pkt)
 		haka.log.debug("Entering packet filtering rules : %d --> %d",
 			pkt.srcport, pkt.dstport)

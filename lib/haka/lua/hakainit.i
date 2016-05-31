@@ -86,4 +86,8 @@ bool stdout_support_colors();
 
 	package.cpath = addpath(package.cpath, hakainit.module_path(true), { hakainit.module_prefix .. '?' .. hakainit.module_suffix })
 	package.path = addpath(package.path, hakainit.module_path(false), { '?.bc', '?.lua', '?/init.lua' })
+
+	-- Must be loaded before debug as there is dependencies between utils and class
+	require('utils')
+	require('class')
 }

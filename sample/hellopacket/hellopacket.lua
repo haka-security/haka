@@ -11,7 +11,7 @@ local tcp_connection = require('protocol/tcp_connection')
 -- Log info about incoming ipv4 packets
 haka.rule{
 	-- Rule evaluated whenever a new ipv4 packet is received
-	hook = ipv4.events.receive_packet,
+	on = haka.dissectors.ipv4.events.receive_packet,
 	-- Evauation function taking ipv4 packet structure
 	-- as argument
 	eval = function (pkt)
@@ -24,12 +24,12 @@ haka.rule{
 -- Log info about connection establsihments
 haka.rule{
 	-- Rule evaluated at connection establishment attempt
-	hook = tcp_connection.events.new_connection,
+	on = haka.dissectors.tcp_connection.events.new_connection,
 	-- Rule evaluated at connection establishment attempt
 	eval = function (flow, tcp)
 		-- Fields from previous layer are accessible too
-		haka.log("TCP connection from %s:%d to %s:%d", tcp.ip.src,
-			tcp.srcport, tcp.ip.dst, tcp.dstport)
+		haka.log("TCP connection from %s:%d to %s:%d", tcp.src,
+			tcp.srcport, tcp.dst, tcp.dstport)
 		-- Raise a simple alert for testing purpose
 		haka.alert{
 			description = "A simple alert",

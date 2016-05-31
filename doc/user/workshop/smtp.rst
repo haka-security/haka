@@ -96,7 +96,7 @@ Smtp server may respond with a sequence of response messages. You can rely on th
 Events
 ------
 Events are the glue between dissectors and security rules. Dissectors create
-events and then trigger them. As a result, all security rules hooking to that
+events and then trigger them. As a result, all security rules attached to that
 events will be evaluated. Non stream-based events are created by invoking
 ``register_event()`` method which takes an event name as first argument.
 
@@ -226,9 +226,10 @@ extracted from parsing results.
 
 Filtering spam
 ^^^^^^^^^^^^^^
-In order to filter spam we create a security rule that hooks to the ``command``
-event in order to filter the banned domain 'suspicious.org'. We can react to this
-by raising an alert and by dropping the connection.
+
+In order to filter spam we create a security rule that is attach to the
+``command`` event in order to filter the banned domain 'suspicious.org'. We can
+react to this by raising an alert and by dropping the connection.
 
 .. admonition:: Exercise
 
@@ -245,13 +246,14 @@ You can get the full code here :download:`spam_filter.lua`.
 
 Dump mail content
 ^^^^^^^^^^^^^^^^^
+
 It is also possible to dump the content of the mail. To do so, we create a
-second security rule that hooks to the ``mail_content`` event.
+second security rule that is attach to the ``mail_content`` event.
 
 .. code-block:: lua
 
     haka.rule{
-        hook = ...,
+        on = ...,
         options = {
             streamed = true,
         },

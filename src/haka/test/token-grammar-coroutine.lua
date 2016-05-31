@@ -27,7 +27,7 @@ end)
 
 haka.rule{
 	-- Intercept tcp packets
-	hook = tcp_connection.events.receive_data,
+	on = haka.dissectors.tcp_connection.events.receive_data,
 	options = {
 		streamed = true,
 	},

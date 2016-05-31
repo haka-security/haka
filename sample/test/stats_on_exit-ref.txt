@@ -1,18 +1,13 @@
 debug conn: opening connection 192.168.10.1:50692 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 debug conn: opening connection 192.168.10.1:50693 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 warn tcp: retransmit packet (ignored)
 warn tcp: retransmit packet (ignored)
 warn tcp: retransmit packet (ignored)
 debug conn: opening connection 192.168.10.1:50694 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 warn tcp: retransmit packet (ignored)
 warn tcp: retransmit packet (ignored)
 debug conn: opening connection 192.168.10.1:50695 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 debug conn: opening connection 192.168.10.1:50696 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 warn tcp: retransmit packet (ignored)
 warn tcp: retransmit packet (ignored)
 warn tcp: retransmit packet (ignored)

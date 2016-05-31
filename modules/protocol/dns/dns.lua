@@ -7,8 +7,6 @@ local class = require('class')
 local udp_connection = require("protocol/udp_connection")
 local ipv4 = require('protocol/ipv4')
 
-local module = {}
-
 local NO_COMPRESSION      = 0
 local POINTER_COMPRESSION = 3
 
@@ -255,13 +253,12 @@ dns_dissector.grammar = haka.grammar.new("dns", function ()
 	export(message)
 end)
 
-function module.dissect(flow)
-	dns_dissector:dissect(flow)
-end
-
-function module.install_udp_rule(port)
-	dns_dissector:install_udp_rule(port)
-end
+haka.policy {
+	name = "dns",
+	on = haka.dissectors.udp_connection.policies.next_dissector,
+	port = 53,
+	action = haka.dissectors.dns.install
+}
 
 --
 -- DNS States
@@ -316,7 +313,3 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 
 	initial(message)
 end)
-
-module.events = dns_dissector.events
-
-return module

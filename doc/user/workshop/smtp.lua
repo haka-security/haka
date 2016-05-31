@@ -5,7 +5,6 @@
 local class = require('class')
 
 local tcp_connection = require("protocol/tcp_connection")
-local module = {}
 
 --
 -- Constants
@@ -32,13 +31,11 @@ local SmtpDissector = haka.dissector.new{
 	name = 'smtp'
 }
 
-function module.dissect(flow)
-	SmtpDissector:dissect(flow)
-end
-
-function module.install_tcp_rule(port)
-	SmtpDissector:install_tcp_rule(port)
-end
+haka.policy {
+	on = haka.dissectors.tcp_connection.policies.next_dissector,
+	port = 25,
+	action = haka.dissectors.smtp.install
+}
 
 function SmtpDissector.method:push_data(sub, last)
 	assert(self.mail)
@@ -165,7 +162,7 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 		event = events.down,
 		when = function (self, res) return res.responses[1].code == '220' end,
 		execute = function (self, res)
-			debug.pprint(res, nil, nil, { debug.hide_underscore, debug.hide_function })
+			debug.pprint(res, { hide = { debug.hide_underscore, debug.hide_function } })
 		end,
 		jump = client_initiation,
 	}
@@ -268,7 +265,3 @@ SmtpDissector.state_machine = haka.state_machine.new("smtp", function ()
 
 	initial(session_initiation)
 end)
-
-module.events = SmtpDissector.events
-
-return module

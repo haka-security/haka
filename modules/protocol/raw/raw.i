@@ -27,32 +27,41 @@ const char *packet_dissector(struct packet *pkt);
 		name = 'raw'
 	}
 
-	local dissectors = {}
+	haka.policy {
+		on = raw_dissector.policies.next_dissector,
+		name = "unknown dissector",
+		action = function (policy, ctx, values, desc)
+			haka.alert{
+				description = string.format("dropping unknown dissector '%s'", values.proto)
+			}
+			return ctx:drop()
+		end
+	}
 
-	function this.register(name, dissector)
-		dissectors[name] = dissector
-	end
-
-	raw_dissector.options.drop_unknown_dissector = false
+	haka.policy {
+		on = raw_dissector.policies.next_dissector,
+		name = "unknown protocol",
+		proto = "unknown",
+		action = haka.policy.accept
+	}
 
 	function raw_dissector.method:receive()
 		haka.context:signal(self, raw_dissector.events.receive_packet)
 
-		local dissector = this.packet_dissector(self)
-		if dissector then
-			local next_dissector = dissectors[dissector]
-			if next_dissector then
-				return next_dissector:receive(self)
-			else
-				if raw_dissector.options.drop_unknown_dissector then
-					haka.log.error("dissector '%s' is unknown", dissector)
-					return self:drop()
-				else
-					return self:send()
-				end
-			end
+		local protocol = this.packet_dissector(self)
+		raw_dissector.policies.next_dissector:apply{
+			values = {
+				proto = protocol or 'unknown'
+			},
+			ctx = self,
+		}
+		local next_dissector = self:activate_next_dissector()
+		if next_dissector then
+			return next_dissector:preceive()
 		else
-			return self:send()
+			if self:can_continue() then
+				return self:send()
+			end
 		end
 	end
 
@@ -60,7 +69,7 @@ const char *packet_dissector(struct packet *pkt);
 		return pkt
 	end
 
-	function raw_dissector:create(size)
+	function raw_dissector:create(pkt, size)
 		return haka.packet(size or 0)
 	end
 
@@ -80,15 +89,10 @@ const char *packet_dissector(struct packet *pkt);
 	swig.getclassmetatable('packet')['.fn'].continue = haka.helper.Dissector.method.continue
 	swig.getclassmetatable('packet')['.fn'].can_continue = raw_dissector.method.can_continue
 	swig.getclassmetatable('packet')['.fn'].error = swig.getclassmetatable('packet')['.fn'].drop
+	swig.getclassmetatable('packet')['.fn'].select_next_dissector = raw_dissector.method.select_next_dissector
+	swig.getclassmetatable('packet')['.fn'].activate_next_dissector = raw_dissector.method.activate_next_dissector
 
 	function haka.filter(pkt)
-		raw_dissector:receive(pkt)
+		pkt:receive()
 	end
-
-	function this.create(size)
-		return raw_dissector:create(size)
-	end
-
-	this.events = raw_dissector.events
-	this.options = raw_dissector.options
 }

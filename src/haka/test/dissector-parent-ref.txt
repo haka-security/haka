@@ -1,0 +1,953 @@
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 50211
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 52435
+  len : 60
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 3
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:43 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 37127
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 0
+  len : 60
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 4
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:43 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 50218
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 52436
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 5
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:43 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 37127
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 0
+  len : 60
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 6
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:47 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 50217
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 52437
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 7
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:47 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 50201
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 52438
+  len : 67
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 8
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:47 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 26995
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 10140
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 9
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:47 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 50200
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 52439
+  len : 67
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 10
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:50 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 26994
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 10141
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 11
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:50 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 50212
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 52440
+  len : 54
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 12
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:50 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 26993
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 10142
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 13
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:50 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 25906
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 10143
+  len : 1138
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 14
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:51 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 50213
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 52441
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 15
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:51 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 26991
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 10144
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 16
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:51 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 50212
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 52442
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 17
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:51 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 26990
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 10145
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 18
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:51 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 1392
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 35719
+  len : 60
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 19
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:53 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 37127
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 0
+  len : 60
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 20
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:53 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 1399
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 35720
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 21
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:53 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 37127
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 0
+  len : 60
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 22
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:56 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 1398
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 35721
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 23
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:56 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 1381
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 35722
+  len : 68
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 24
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:56 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 27831
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 9304
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 25
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:44:56 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 1382
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 35723
+  len : 66
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 30
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:00 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 27830
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 9305
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 31
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:00 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 1376
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 35724
+  len : 71
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 32
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:06 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 27829
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 9306
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 33
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:06 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 1392
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 35725
+  len : 54
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 34
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:06 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 27828
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 9307
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 35
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:06 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 26741
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 9308
+  len : 1138
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 36
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:06 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 1393
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 35726
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 37
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:06 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 27826
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 9309
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 38
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:06 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 1392
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.1
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 35727
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.99
+  tos : 16
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 39
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:06 2014
+}
+userdata ipv4 {
+  _next_dissector : userdata tcp
+  _parent : userdata packet
+  checksum : 27825
+  dont_reassemble : false
+  dst : userdata addr 192.168.20.99
+  flags : userdata ipv4_flags
+  frag_offset : 0
+  hdr_len : 20
+  id : 9310
+  len : 52
+  name : "ipv4"
+  payload : userdata vbuffer
+  proto : 6
+  src : userdata addr 192.168.20.1
+  tos : 0
+  ttl : 64
+  version : 4
+}
+userdata packet {
+  _next_dissector : userdata ipv4
+  _parent : nil
+  data : table
+  id : 40
+  name : "raw"
+  payload : userdata vbuffer
+  timestamp : userdata time Mon Jan 20 17:45:06 2014
+}
+debug lua: closing state

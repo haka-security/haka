@@ -24,6 +24,7 @@ TEST_UNIT_LUA(MODULE libhaka NAME grammar-sequence FILES grammar-sequence.lua)
 TEST_UNIT_LUA(MODULE libhaka NAME grammar-empty FILES grammar-empty.lua)
 TEST_UNIT_LUA(MODULE libhaka NAME grammar-bytes FILES grammar-bytes.lua)
 TEST_UNIT_LUA(MODULE libhaka NAME state-machine FILES state-machine.lua)
+TEST_UNIT_LUA(MODULE libhaka NAME dissector-register FILES dissector-register.lua)
 
 get_property(module-regexp GLOBAL PROPERTY module-regexp)
 foreach(module IN LISTS module-regexp)

@@ -14,7 +14,7 @@ local http_methods = '^get$|^post$|^head$|^put$|^trace$|^delete$|^options$'
 local re = rem.re:compile(http_methods, rem.re.CASE_INSENSITIVE)
 
 haka.rule {
-	hook = http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		local method = request.method
 		local ret = re:match(method)
@@ -36,7 +36,7 @@ haka.rule {
 local http_versions = '^0.9$|^1.0$|^1.1$'
 local re = rem.re:compile(http_versions)
 haka.rule {
-	hook = http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		local version = request.version
 		local ret = re:match(version)
@@ -56,7 +56,7 @@ haka.rule {
 
 -- check content length value
 haka.rule {
-	hook = http.events.request,
+	on = haka.dissectors.http.events.request,
 	eval = function (http, request)
 		local content_length = request.headers["Content-Length"] or 0
 		content_length = tonumber(content_length)

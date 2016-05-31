@@ -2,6 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require("class")
 local ipv4 = require("protocol/ipv4")
 
 local function compute_checksum(pkt)
@@ -14,8 +15,8 @@ local function compute_checksum(pkt)
 	-- size of the udp pseudo-header
 	local pseudo_header = haka.vbuffer_allocate(12)
 	-- source and destination ipv4 addresses
-	pseudo_header:sub(0,4):setnumber(pkt.ip.src.packed)
-	pseudo_header:sub(4,4):setnumber(pkt.ip.dst.packed)
+	pseudo_header:sub(0,4):setnumber(pkt.src.packed)
+	pseudo_header:sub(4,4):setnumber(pkt.dst.packed)
 	-- padding (null byte)
 	pseudo_header:sub(8,1):setnumber(0)
 	-- UDP protocol number
@@ -29,7 +30,7 @@ local function compute_checksum(pkt)
 end
 
 local udp_dissector = haka.dissector.new{
-	type = haka.helper.EncapsulatedPacketDissector,
+	type = haka.helper.PacketDissector,
 	name = 'udp'
 }
 
@@ -50,22 +51,6 @@ udp_dissector.grammar = haka.grammar.new("udp", function ()
 	export(packet)
 end)
 
-function udp_dissector.method:next_dissector()
-	return udp_dissector.next_dissector
-end
-
-function udp_dissector.method:parse_payload(pkt, payload)
-	self.ip = pkt
-	local res = udp_dissector.grammar.packet:parse(payload:pos("begin"))
-	table.merge(self, res)
-end
-
-function udp_dissector.method:create_payload(pkt, payload, init)
-	self.ip = pkt
-	local res = udp_dissector.grammar.packet:create(payload:pos("begin"), init)
-	table.merge(self, res)
-end
-
 function udp_dissector.method:forge_payload(pkt, payload)
 	if payload.modified then
 		self.checksum = nil
@@ -78,25 +63,21 @@ function udp_dissector.method:verify_checksum()
 	return compute_checksum(self) == 0
 end
 
-function udp_dissector:create(pkt, init)
+function udp_dissector.method:create(pkt, init)
 	if not init then init = {} end
 	if not init.length then init.length = 8 end
-	pkt.payload:pos(0):insert(haka.vbuffer_allocate(init.length))
 	pkt.proto = 17
 
-	local udp = udp_dissector:new(pkt)
-	udp:create(init, pkt)
-	return udp
+	class.super(udp_dissector).create(self, pkt, init, init.length)
 end
 
-ipv4.register_protocol(17, udp_dissector)
+function udp_dissector.method:install_criterion()
+	return { srcport = self.srcport, dstport = self.dstport }
+end
 
-return {
-	events = udp_dissector.events,
-	create = function (pkt, init)
-		return udp_dissector:create(pkt, init)
-	end,
-	select_next_dissector = function (dissector)
-		udp_dissector.next_dissector = dissector
-	end
+haka.policy {
+	name = "udp",
+	on = haka.dissectors.ipv4.policies.next_dissector,
+	proto = 17,
+	action = haka.dissectors.udp.install
 }

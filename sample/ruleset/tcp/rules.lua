@@ -5,46 +5,31 @@
 local client_network = ipv4.network("192.168.10.0/25");
 local server_network = ipv4.network("192.168.20.0/25");
 
-local group = haka.rule_group {
-	hook = tcp_connection.events.new_connection,
-	init = function (flow, pkt)
-		haka.log.debug("entering packet filtering rules : %d --> %d",
-			pkt.srcport, pkt.dstport)
-	end,
-	final = function (flow, pkt)
-		haka.alert{
-			description = "Packet dropped : drop by default",
-			sources = haka.alert.address(pkt.ip.src, pkt.srcport),
-			targets = haka.alert.address(pkt.ip.dst, pkt.dstport)
-		}
-		pkt:drop()
-	end,
-	continue = function (ret, flow, pkt)
-		return not ret
-	end
+haka.policy {
+	on = haka.dissectors.tcp_connection.policies.new_connection,
+	name = "drop by default",
+	action = {
+		haka.policy.alert{
+			description = "drop by default"
+		},
+		haka.policy.drop
+	}
 }
 
-
-group:rule{
-	eval = function (flow, tcp)
-		if client_network:contains(tcp.ip.src) and
-		    server_network:contains(tcp.ip.dst) and
-		    tcp.dstport == 80 then
-			haka.log.warning("authorizing http traffic")
-			http.dissect(flow)
-			return true
-		end
-	end
+haka.policy {
+	on = haka.dissectors.tcp_connection.policies.new_connection,
+	srcip = haka.policy.ipv4.in_network(client_network),
+	dstip = haka.policy.ipv4.in_network(server_network),
+	dstport = 80,
+	name = "authorizing http traffic",
+	action = haka.policy.accept
 }
 
-group:rule{
-	eval = function (flow, tcp)
-		if client_network:contains(tcp.ip.src) and
-		    server_network:contains(tcp.ip.dst) and
-		    tcp.dstport == 22 then
-			haka.log.warning("authorizing ssh traffic")
-			haka.log.warning("no available dissector for ssh")
-			return true
-		end
-	end
+haka.policy {
+	on = haka.dissectors.tcp_connection.policies.new_connection,
+	srcip = haka.policy.ipv4.in_network(client_network),
+	dstip = haka.policy.ipv4.in_network(server_network),
+	dstport = 22,
+	name = "authorizing ssh traffic (no available dissector)",
+	action = haka.policy.accept
 }

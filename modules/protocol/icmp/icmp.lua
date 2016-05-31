@@ -2,10 +2,11 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require("class")
 local ipv4 = require("protocol/ipv4")
 
 local icmp_dissector = haka.dissector.new{
-	type = haka.helper.EncapsulatedPacketDissector,
+	type = haka.helper.PacketDissector,
 	name = 'icmp'
 }
 
@@ -24,18 +25,6 @@ icmp_dissector.grammar = haka.grammar.new("icmp", function ()
 	export(packet)
 end)
 
-function icmp_dissector.method:parse_payload(pkt, payload)
-	self.ip = pkt
-	local res = icmp_dissector.grammar.packet:parse(payload:pos("begin"))
-	table.merge(self, res)
-end
-
-function icmp_dissector.method:create_payload(pkt, payload, init)
-	self.ip = pkt
-	local res = icmp_dissector.grammar.packet:create(payload:pos("begin"), init)
-	table.merge(self, res)
-end
-
 function icmp_dissector.method:verify_checksum()
 	return ipv4.inet_checksum_compute(self._payload) == 0
 end
@@ -48,20 +37,14 @@ function icmp_dissector.method:forge_payload(pkt, payload)
 	self:validate()
 end
 
-function icmp_dissector:create(pkt, init)
-	pkt.payload:pos(0):insert(haka.vbuffer_allocate(8))
+function icmp_dissector.method:create(pkt, init)
 	pkt.proto = 1
-
-	local icmp = icmp_dissector:new(pkt)
-	icmp:create(init, pkt)
-	return icmp
+	class.super(icmp_dissector).create(self, pkt, init, 8)
 end
 
-ipv4.register_protocol(1, icmp_dissector)
-
-return {
-	events = icmp_dissector.events,
-	create = function (ip, init)
-		return icmp_dissector:create(ip, init)
-	end
+haka.policy {
+	name = "icmp",
+	on = haka.dissectors.ipv4.policies.next_dissector,
+	proto = 1,
+	action = haka.dissectors.icmp.install
 }

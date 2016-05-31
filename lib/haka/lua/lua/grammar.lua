@@ -645,8 +645,8 @@ end
 
 function grammar_int.align(size)
 	return grammar_int.Bits:new(function (self, ctx)
-		local rem = (ctx.iter.meter * 8 + ctx._bitoffset) % align
-		if rem > 0 then return size -rem
+		local rem = (ctx.iter.meter * 8 + ctx._bitoffset) % size
+		if rem > 0 then return size - rem
 		else return 0 end
 	end)
 end
@@ -804,7 +804,7 @@ function grammar.new(name, def)
 	setmetatable(env, nil)
 
 	-- Compile exported entities
-	local no_export = true
+	local count = 0
 
 	for name, _  in pairs(g._exports) do
 		local value = g._rules[name]
@@ -814,12 +814,17 @@ function grammar.new(name, def)
 
 		local genv = GrammarEnv:new(g)
 		g._exports[name] = value:compile(genv)
+		rawset(g, 'unique_export', g._exports[name])
 
-		no_export = false
+		count = count + 1
 	end
 
-	if no_export then
+	if count == 0 then
 		log.warning("grammar '%s' does not have any exported element", g._name)
+	end
+
+	if count ~= 1 then
+		rawset(g, 'unique_export', nil)
 	end
 
 	if grammar.debug then

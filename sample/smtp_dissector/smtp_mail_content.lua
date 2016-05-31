@@ -2,12 +2,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-local smtp = require('smtp')
-
-smtp.install_tcp_rule(25)
+require('smtp')
 
 haka.rule{
-	hook = smtp.events.mail_content,
+	on = haka.dissectors.smtp.events.mail_content,
 	options = {
 		streamed = true,
 	},

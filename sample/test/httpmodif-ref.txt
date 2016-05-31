@@ -1,5 +1,4 @@
 debug conn: opening connection 192.168.10.1:53440 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox/12.0
 alert: id = = <>
@@ -25,11 +24,9 @@ class HttpResponseResult {
 }
 debug conn: dropping connection 192.168.10.1:53440 -> 192.168.20.1:80
 debug conn: opening connection 192.168.10.1:53441 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox/28.0
 debug conn: opening connection 192.168.10.1:53442 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox/plop
 alert: id = = <>
@@ -55,7 +52,6 @@ class HttpResponseResult {
 }
 debug conn: dropping connection 192.168.10.1:53442 -> 192.168.20.1:80
 debug conn: opening connection 192.168.10.1:53443 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox/
 alert: id = = <>
@@ -81,21 +77,17 @@ class HttpResponseResult {
 }
 debug conn: dropping connection 192.168.10.1:53443 -> 192.168.20.1:80
 debug conn: opening connection 192.168.10.1:53444 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: Domain requested: server
 info external: UA detected: Mozilla Firefox
 info external: Unknown or missing User-Agent
 debug conn: opening connection 192.168.10.1:53445 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: Domain requested: server
 info external: UA detected: No User-Agent header
 info external: Unknown or missing User-Agent
 debug conn: opening connection 192.168.10.1:53446 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: UA detected: No User-Agent header
 info external: Unknown or missing User-Agent
 debug conn: opening connection 192.168.10.1:53447 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: UA detected: Mozilla Firefox/18.0
 alert: id = = <>
 	severity = medium
@@ -117,10 +109,8 @@ class HttpResponseResult {
   }
 }
 debug conn: opening connection 192.168.10.1:53448 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: UA detected: Mozilla Firefox/28.0
 debug conn: opening connection 192.168.10.1:53449 -> 192.168.20.1:80
-debug tcp: selecting http dissector on flow
 info external: Domain requested: mozilla.org
 info external: Update domain: go for it
 debug lua: closing state

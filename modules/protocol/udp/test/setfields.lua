@@ -7,7 +7,7 @@
 local udp = require("protocol/udp")
 
 haka.rule {
-	hook = udp.events.receive_packet,
+	on = haka.dissectors.udp.events.receive_packet,
 	eval = function (pkt)
 		pkt.srcport = 5555
 		pkt.dstport = 53

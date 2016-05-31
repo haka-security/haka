@@ -1,6 +1,5 @@
 debug conn: opening connection 192.168.10.10:56704 -> 192.168.20.1:80
 debug conn: opening connection 192.168.10.10:41155 -> 192.168.20.1:25
-debug tcp: selecting smtp dissector on flow
 SMTP RESPONSE
 class Result {
   responses : class ArrayResult {

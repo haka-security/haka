@@ -319,6 +319,7 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 
 	ip->packet = packet;
 	ip->invalid_checksum = false;
+	ip->dont_reassemble = false;
 	ip->reassembled = false;
 	list2_elem_init(&ip->frag_list);
 
@@ -361,12 +362,17 @@ struct ipv4 *ipv4_dissect(struct packet *packet)
 	}
 
 	ip->lua_object = lua_object_init;
+	lua_ref_init(&ip->next_dissector);
 
 	return ip;
 }
 
 struct ipv4 *ipv4_reassemble(struct ipv4 *ip)
 {
+	if (ip->dont_reassemble) {
+		return ip;
+	}
+
 	if (!ipv4_get_flags_mf(ip) && ipv4_get_frag_offset(ip) == 0) {
 		return ip;
 	}
@@ -448,6 +454,7 @@ struct ipv4 *ipv4_create(struct packet *packet)
 
 	ip->packet = packet;
 	ip->invalid_checksum = true;
+	ip->dont_reassemble = false;
 	ip->reassembled = false;
 	list2_elem_init(&ip->frag_list);
 
@@ -479,6 +486,7 @@ struct ipv4 *ipv4_create(struct packet *packet)
 	ipv4_set_hdr_len(ip, hdrlen);
 
 	ip->lua_object = lua_object_init;
+	lua_ref_init(&ip->next_dissector);
 	return ip;
 }
 
@@ -586,6 +594,7 @@ static void ipv4_flush(struct ipv4 *ip)
 void ipv4_release(struct ipv4 *ip)
 {
 	lua_object_release(ip, &ip->lua_object);
+	lua_ref_clear(&ip->next_dissector);
 	ipv4_flush(ip);
 
 	if (ip->reassembled) {

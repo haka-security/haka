@@ -1,6 +1,8 @@
 debug conn: opening connection 192.168.20.99:48225 -> 192.168.20.1:80
+debug core: applying policy authorizing http traffic for new connection
 info external: User-Agent Mozilla detected
 debug conn: opening connection 192.168.20.99:48226 -> 192.168.20.1:80
+debug core: applying policy authorizing http traffic for new connection
 info external: Only Mozilla User-Agent authorized
 debug conn: dropping connection 192.168.20.99:48226 -> 192.168.20.1:80
 debug lua: closing state

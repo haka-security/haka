@@ -3,7 +3,7 @@
 ------------------------------------
 require('protocol/ipv4')
 require('protocol/tcp')
-local http = require('protocol/http')
+require('protocol/http')
 
 local last_firefox_version = 24.0
 local firefox_web_site = 'http://www.mozilla.org'
@@ -16,14 +16,11 @@ local update_domains = {
 	-- You can extend this list with other domains
 }
 
--- Forward all traffic on port 80 to the HTTP dissector
-http.install_tcp_rule(80)
-
 -------------------------------------
 -- Rule group definition
 -------------------------------------
 safe_update = haka.rule_group{
-	hook = http.events.response,
+	on = haka.dissectors.http.events.response,
 
 	-- Initialization
 	init = function (http, response)
@@ -59,7 +56,7 @@ safe_update:rule{
 safe_update:rule{
 	eval = function (http, response)
 		-- Uncomment the following line to see the the content of the request
-		-- debug.pprint(request, nil, nil, { debug.hide_underscore, debug.hide_function })
+		-- debug.pprint(request, { hide = { debug.hide_underscore, debug.hide_function } })
 
 		local UA = http.request.headers["User-Agent"] or "No User-Agent header"
 		haka.log("UA detected: %s", UA)
@@ -80,7 +77,7 @@ safe_update:rule{
 				response.headers["Server"] = "A patchy server"
 				response.headers["Connection"] = "Close"
 				response.headers["Proxy-Connection"] = "Close"
-				debug.pprint(response, nil, nil, { debug.hide_underscore, debug.hide_function })
+				debug.pprint(response, { hide = { debug.hide_underscore, debug.hide_function } })
 			end
 		else
 			haka.log("Unknown or missing User-Agent")

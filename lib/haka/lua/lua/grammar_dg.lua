@@ -1014,7 +1014,7 @@ end
 dg.Empty = class.class('DGEmpty', dg.Control)
 
 function dg.Empty.method:__init(rule, id)
-	class.super(dg.Empty):__init(rule, id)
+	class.super(dg.Empty).__init(self, rule, id)
 end
 
 function dg.Token.method:_init(res, input, ctx, init)

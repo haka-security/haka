@@ -4,6 +4,7 @@ alert: id = = <>
 	description = Bad TCP checksum
 alert: id = = <>
 	description = Bad TCP checksum
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet
@@ -15,6 +16,7 @@ alert: id = = <>
 		address: 192.168.20.1
 		service: tcp/0
 	}
+debug core: applying policy default action for no connection found for tcp packet
 alert: id = = <>
 	severity = low
 	description = no connection found for tcp packet

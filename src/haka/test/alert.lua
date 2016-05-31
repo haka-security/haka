@@ -5,11 +5,11 @@
 local ipv4 = require('protocol/ipv4')
 
 haka.rule {
-	hook = ipv4.events.receive_packet,
+	on = haka.dissectors.ipv4.events.receive_packet,
 	eval = function (pkt)
 		local myalert = haka.alert{
-			start_time = pkt.raw.timestamp,
-			end_time = pkt.raw.timestamp,
+			start_time = pkt.timestamp,
+			end_time = pkt.timestamp,
 			description = string.format("filtering IP %s", pkt.src),
 			severity = 'medium',
 			confidence = 7,

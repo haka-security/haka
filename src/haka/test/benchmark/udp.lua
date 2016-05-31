@@ -6,7 +6,7 @@ local ipv4 = require('protocol/ipv4')
 local udp = require('protocol/udp')
 
 haka.rule{
-	hook = udp.events.receive_packet,
+	on = haka.dissectors.udp.events.receive_packet,
 	eval = function (pkt)
 	end
 }
