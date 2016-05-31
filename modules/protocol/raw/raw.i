@@ -76,7 +76,7 @@ const char *packet_dissector(struct packet *pkt);
 		return pkt
 	end
 
-	function raw_dissector:create(size)
+	function raw_dissector:create(pkt, size)
 		return haka.packet(size or 0)
 	end
 

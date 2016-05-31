@@ -84,6 +84,12 @@ function types.Dissector.inherit_events(cls)
 	end
 end
 
+function types.Dissector.create(cls, parent, ...)
+	local obj = cls:new(parent)
+	obj:create(parent, ...)
+	return obj
+end
+
 types.Dissector.auto_state_machine = true
 
 function types.Dissector.method:__init(parent)
@@ -308,7 +314,10 @@ function types.PacketDissector.method:parse_payload(pkt, payload)
 	table.merge(self, res)
 end
 
-function types.PacketDissector.method:create(init, pkt)
+function types.PacketDissector.method:create(pkt, init, size)
+	if size then
+		pkt.payload:pos(0):insert(haka.vbuffer_allocate(size))
+	end
 	self._select, self._payload = pkt.payload:sub(0, 'all'):select()
 	self:create_payload(pkt, self._payload, init)
 end

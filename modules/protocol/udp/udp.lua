@@ -2,6 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require("class")
 local ipv4 = require("protocol/ipv4")
 
 local function compute_checksum(pkt)
@@ -62,15 +63,12 @@ function udp_dissector.method:verify_checksum()
 	return compute_checksum(self) == 0
 end
 
-function udp_dissector:create(pkt, init)
+function udp_dissector.method:create(pkt, init)
 	if not init then init = {} end
 	if not init.length then init.length = 8 end
-	pkt.payload:pos(0):insert(haka.vbuffer_allocate(init.length))
 	pkt.proto = 17
 
-	local udp = udp_dissector:new(pkt)
-	udp:create(init, pkt)
-	return udp
+	class.super(udp_dissector).create(self, pkt, init, init.length)
 end
 
 function udp_dissector.method:install_criterion()

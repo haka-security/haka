@@ -2,6 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+local class = require("class")
 local ipv4 = require("protocol/ipv4")
 
 local icmp_dissector = haka.dissector.new{
@@ -36,13 +37,9 @@ function icmp_dissector.method:forge_payload(pkt, payload)
 	self:validate()
 end
 
-function icmp_dissector:create(pkt, init)
-	pkt.payload:pos(0):insert(haka.vbuffer_allocate(8))
+function icmp_dissector.method:create(pkt, init)
 	pkt.proto = 1
-
-	local icmp = icmp_dissector:new(pkt)
-	icmp:create(init, pkt)
-	return icmp
+	class.super(icmp_dissector).create(self, pkt, init, 8)
 end
 
 haka.policy {
