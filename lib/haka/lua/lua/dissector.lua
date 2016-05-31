@@ -33,14 +33,6 @@ local event_mt = {
 function types.Dissector.__class_init(self, cls)
 	self.super:__class_init(cls)
 
-	if haka.mode ~= 'console' then
-		log.info("register new dissector '%s'", cls.name)
-	end
-
-	if rawget(haka.dissectors, cls.name) ~= nil then
-		error(string.format("dissector '%s' already defined", cls.name))
-	end
-
 	cls.events = {}
 	setmetatable(cls.events, event_mt)
 	self.inherit_events(cls)
@@ -48,13 +40,6 @@ function types.Dissector.__class_init(self, cls)
 	cls.connections = haka.event.StaticEventConnections:new()
 	cls.policies = {}
 	cls.policies.next_dissector = haka.policy.new(string.format("%s next dissector", cls.name))
-	haka.dissectors[cls.name] = {}
-	haka.dissectors[cls.name].policies = cls.policies
-	haka.dissectors[cls.name].events = cls.events
-	haka.dissectors[cls.name].create = function (...) return cls:create(...) end
-	haka.dissectors[cls.name].install = function (policy, ctx, values, desc)
-		return ctx:select_next_dissector(cls)
-	end
 end
 
 function types.Dissector.method:install_criterion()
@@ -384,7 +369,27 @@ types.FlowDissector = class.class('FlowDissector', types.Dissector)
 function dissector.new(args)
 	check.assert(args.type, string.format("no type defined for dissector '%s'", args.name))
 
-	return class.class(args.name, args.type)
+	local cls = class.class(args.name, args.type)
+
+	if haka.mode ~= 'console' then
+		log.info("register new dissector '%s'", cls.name)
+	end
+
+	if rawget(haka.dissectors, cls.name) ~= nil then
+		error(string.format("dissector '%s' already defined", cls.name))
+	end
+
+	local public = {
+		policies = cls.policies,
+		events = cls.events,
+		create = function (...) return cls:create(...) end,
+		install = function (policy, ctx, values, desc)
+			return ctx:select_next_dissector(cls)
+		end
+	}
+
+	haka.dissectors[cls.name] = public
+	return cls
 end
 
 local other_direction = {
