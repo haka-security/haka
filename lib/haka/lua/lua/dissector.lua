@@ -30,6 +30,12 @@ local event_mt = {
 	end
 }
 
+local policies_mt = {
+	__index = function (self, name)
+		check.error(string.format("unkown policy '%s'", name))
+	end
+}
+
 function types.Dissector.__class_init(self, cls)
 	self.super:__class_init(cls)
 
@@ -39,6 +45,7 @@ function types.Dissector.__class_init(self, cls)
 	cls.options = {}
 	cls.connections = haka.event.StaticEventConnections:new()
 	cls.policies = {}
+	setmetatable(cls.policies, policies_mt)
 	cls.policies.next_dissector = haka.policy.new(string.format("%s next dissector", cls.name))
 end
 
