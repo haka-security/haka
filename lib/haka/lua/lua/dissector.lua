@@ -314,7 +314,13 @@ function types.PacketDissector.method:parse(pkt)
 end
 
 function types.PacketDissector.method:parse_payload(pkt, payload)
-	error("not implemented")
+	local unique_export = class.classof(self).grammar.unique_export
+	if unique_export == nil then
+		error("not implemented for grammar exporting more than 1 element")
+	end
+
+	local res = unique_export:parse(payload:pos("begin"))
+	table.merge(self, res)
 end
 
 function types.PacketDissector.method:create(init, pkt)
@@ -323,7 +329,13 @@ function types.PacketDissector.method:create(init, pkt)
 end
 
 function types.PacketDissector.method:create_payload(pkt, payload, init)
-	error("not implemented")
+	local unique_export = class.classof(self).grammar.unique_export
+	if unique_export == nil then
+		error("not implemented for grammar exporting more than 1 element")
+	end
+
+	local res = unique_export:create(payload:pos("begin"), init)
+	table.merge(self, res)
 end
 
 function types.PacketDissector.method:forge(pkt)

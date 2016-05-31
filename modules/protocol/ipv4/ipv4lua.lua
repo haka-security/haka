@@ -84,18 +84,6 @@ ipv4_dissector.grammar = haka.grammar.new("ipv4", function ()
 	export(header)
 end)
 
-function ipv4_dissector.method:parse_payload(pkt, payload)
-	self.raw = pkt
-	local res = ipv4_dissector.grammar.header:parse(payload:pos("begin"))
-	table.merge(self, res)
-end
-
-function ipv4_dissector.method:create_payload(pkt, payload, init)
-	self.raw = pkt
-	local res = ipv4_dissector.grammar.header:create(payload:pos("begin"), init)
-	table.merge(self, res)
-end
-
 function ipv4_dissector.method:verify_checksum()
 	return ipv4.inet_checksum_compute(self._payload:sub(0, self.hdr_len)) == 0
 end

@@ -50,16 +50,6 @@ udp_dissector.grammar = haka.grammar.new("udp", function ()
 	export(packet)
 end)
 
-function udp_dissector.method:parse_payload(pkt, payload)
-	local res = udp_dissector.grammar.packet:parse(payload:pos("begin"))
-	table.merge(self, res)
-end
-
-function udp_dissector.method:create_payload(pkt, payload, init)
-	local res = udp_dissector.grammar.packet:create(payload:pos("begin"), init)
-	table.merge(self, res)
-end
-
 function udp_dissector.method:forge_payload(pkt, payload)
 	if payload.modified then
 		self.checksum = nil

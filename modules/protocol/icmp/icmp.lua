@@ -24,16 +24,6 @@ icmp_dissector.grammar = haka.grammar.new("icmp", function ()
 	export(packet)
 end)
 
-function icmp_dissector.method:parse_payload(pkt, payload)
-	local res = icmp_dissector.grammar.packet:parse(payload:pos("begin"))
-	table.merge(self, res)
-end
-
-function icmp_dissector.method:create_payload(pkt, payload, init)
-	local res = icmp_dissector.grammar.packet:create(payload:pos("begin"), init)
-	table.merge(self, res)
-end
-
 function icmp_dissector.method:verify_checksum()
 	return ipv4.inet_checksum_compute(self._payload) == 0
 end
