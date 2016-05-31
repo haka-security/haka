@@ -7,7 +7,7 @@
 local raw = require("protocol/raw")
 
 haka.policy {
-	on = haka.dissectors.raw.policies.unknown_dissector,
+	on = haka.dissectors.raw.policies.next_dissector,
 	name = "don't drop",
 	action = haka.policy.accept
 }

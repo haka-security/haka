@@ -1,107 +1,72 @@
 info external: started
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
-debug core: applying policy default action for unknown dissector
 alert: id = = <>
 	description = dropping unknown dissector 'ipv4'
 debug lua: closing state

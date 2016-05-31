@@ -27,48 +27,41 @@ const char *packet_dissector(struct packet *pkt);
 		name = 'raw'
 	}
 
-	local dissectors = {}
-
-	raw_dissector.policies.unknown_dissector = haka.policy.new('unknown dissector')
-
 	haka.policy {
-		on = raw_dissector.policies.unknown_dissector,
-		name = "default action",
+		on = raw_dissector.policies.next_dissector,
+		name = "unknown dissector",
 		action = function (policy, ctx, values, desc)
 			haka.alert{
-				description = string.format("dropping unknown dissector '%s'", values.name)
+				description = string.format("dropping unknown dissector '%s'", values.proto)
 			}
 			return ctx:drop()
 		end
+	}
+
+	haka.policy {
+		on = raw_dissector.policies.next_dissector,
+		name = "unknown protocol",
+		proto = "unknown",
+		action = haka.policy.accept
 	}
 
 	function raw_dissector.method:receive()
 		haka.context:signal(self, raw_dissector.events.receive_packet)
 
 		local protocol = this.packet_dissector(self)
-		if protocol then
-			raw_dissector.policies.next_dissector:apply{
-				values = {
-					proto = protocol
-				},
-				ctx = self,
-			}
-			local next_dissector = self:activate_next_dissector()
-			if next_dissector then
-				return next_dissector:preceive()
-			else
-				raw_dissector.policies.unknown_dissector:apply{
-					ctx = self,
-					values = {
-						name = protocol
-					}
-				}
-				if self:can_continue() then
-					return self:send()
-				end
-			end
+		raw_dissector.policies.next_dissector:apply{
+			values = {
+				proto = protocol or 'unknown'
+			},
+			ctx = self,
+		}
+		local next_dissector = self:activate_next_dissector()
+		if next_dissector then
+			return next_dissector:preceive()
 		else
-			return self:send()
+			if self:can_continue() then
+				return self:send()
+			end
 		end
 	end
 
