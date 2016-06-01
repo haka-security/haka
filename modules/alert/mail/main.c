@@ -57,11 +57,17 @@ static size_t payload_source(void *ptr, size_t size, size_t nmemb, void *instrea
 
 static int init(struct parameters *args)
 {
+	curl = curl_easy_init();
 	return 0;
 }
 
 static void cleanup()
 {
+	/* Free the list of recipients */
+	curl_slist_free_all(recipients);
+
+	/* Always cleanup */
+	curl_easy_cleanup(curl);
 }
 
 static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *time, const struct alert *alert, bool update)
@@ -69,7 +75,6 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 	char *recipient;
 
 	/* https://curl.haxx.se/libcurl/c/smtp-ssl.html */
-	curl = curl_easy_init();
 	if (curl) {
 		/* Set username and password */
 		curl_easy_setopt(curl, CURLOPT_USERNAME, state->username);
@@ -120,12 +125,6 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 				curl_easy_strerror(res));
 			return false;
 		}
-
-		/* Free the list of recipients */
-		curl_slist_free_all(recipients);
-
-		/* Always cleanup */
-		curl_easy_cleanup(curl);
 	}
 	return true;
 }
@@ -173,10 +172,6 @@ struct alerter_module *init_alerter(struct parameters *args)
 		free(mail_alerter);
 		return NULL;
 	}
-
-	/* Optional field: Minimal alert level */
-	int severity = parameters_get_integer(args, "alert_level", HAKA_ALERT_HIGH);
-	mail_alerter->severity = severity;
 
 	return &mail_alerter->module;
 }
