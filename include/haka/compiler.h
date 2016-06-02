@@ -16,8 +16,6 @@
 #define FINI __attribute__((destructor(32767)))
 #define FINI_P(p) __attribute__((destructor(p)))
 
-#define MIN(a, b)     ((a) < (b) ? (a) : (b))
-
 #define UNUSED __attribute__((unused))
 
 #define STATIC_ASSERT(COND, MSG) typedef char static_assertion_##MSG[(COND)?1:-1]
