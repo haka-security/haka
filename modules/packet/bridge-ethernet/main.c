@@ -129,7 +129,6 @@ static void ethernet_close(struct packet_module_state *state, int i)
 	// Get IFF flags
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_ifrn.ifrn_name, interfaces[i], IFNAMSIZ);
-
 	ret = ioctl(state->if_fd[i], SIOCGIFFLAGS, &ifr);
 	if (ret < 0) {
 	    LOG_WARNING(bridge_ethernet, "failed to get IFF Flags on %s: %s", interfaces[i], errno_error(errno));
@@ -152,32 +151,31 @@ end:
 static int init(struct parameters *args)
 {
 	const char *if_s;
+	char *save;
+	char *in;
 
 	assert(args);
 
 	if_s = parameters_get_string(args, "interfaces", NULL); // Get devices list
-
-	// Inputs
 	if (if_s == NULL) {
-	    LOG_ERROR(bridge_ethernet, "please specify 'interfaces' parameter in configuration file");
-	    cleanup();
-	    return 1;
+		LOG_ERROR(bridge_ethernet, "please specify 'interfaces' parameter in configuration file");
+		cleanup();
+		return 1;
 	}
 
-	char *save = NULL;
-	char *in = (char *)if_s;
+	in = (char *)if_s;
 	while (nb_inputs < 2) {
-	    char *token = strtok_r(in, ", \t", &save);
-	    if (token == NULL) break;
-	    interfaces[nb_inputs++] = strdup(token);
-	    LOG_INFO(bridge_ethernet, "using ethernet interface %s", token);
-	    in = NULL;
+		char *token = strtok_r(in, ", \t", &save);
+		if (token == NULL) break;
+		interfaces[nb_inputs++] = strdup(token);
+		LOG_INFO(bridge_ethernet, "using ethernet interface %s", token);
+		in = NULL;
 	}
 
 	if (nb_inputs == 0) {
-	    LOG_ERROR(bridge_ethernet, "please specifiy one or two ethernet interfaces (e.g: eth0)");
-	    cleanup();
-	    return 1;
+		LOG_ERROR(bridge_ethernet, "please specifiy one or two ethernet interfaces (e.g: eth0)");
+		cleanup();
+		return 1;
 	}
 
 	return 0;
@@ -211,8 +209,8 @@ static struct packet_module_state *init_state(int thread_id)
 
 	state = malloc(sizeof(struct packet_module_state));
 	if (!state) {
-	    error("memory error");
-	    return NULL;
+		error("memory error");
+		return NULL;
 	}
 
 	memset(state, 0, sizeof(struct packet_module_state));
@@ -221,13 +219,13 @@ static struct packet_module_state *init_state(int thread_id)
 	state->if_fd[0] = -1;
 	state->if_fd[1] = -1;
 
-	for (i=0; i<nb_inputs; ++i) {
-	    int fd = ethernet_open(interfaces[i], &mtu[i]);
-	    if (fd < 0) {
-	        cleanup_state(state);
-	        return NULL;
-	    }
-	    state->if_fd[i] = fd;
+	for (i=0; i < nb_inputs; ++i) {
+		int fd = ethernet_open(interfaces[i], &mtu[i]);
+		if (fd < 0) {
+			cleanup_state(state);
+			return NULL;
+		}
+		state->if_fd[i] = fd;
 	}
 
 	state->id = 0;
@@ -238,7 +236,13 @@ static struct packet_module_state *init_state(int thread_id)
 		LOG_WARNING(bridge_ethernet, "MTU values don't match between interfaces: %d != %d", mtu[0], mtu[1]);
 	}
 	LOG_INFO(bridge_ethernet, "max frame size: %d bytes", state->mtu);
+
 	state->buffer = (unsigned char *)malloc(state->mtu);
+	if (!state->buffer) {
+		cleanup_state(state);
+		error("memory error");
+		return NULL;
+	}
 
 	return state;
 }
@@ -254,15 +258,10 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	FD_ZERO(&read_set);
 
 	for (i=0; i < nb_inputs; ++i) {
-	    const int fd = state->if_fd[i];
-	    if (fd < 0) {
-	        LOG_ERROR(bridge_ethernet, "invalid descriptor");
-	        return 1;
-	    }
-	    else {
-	        FD_SET(fd, &read_set);
-	        if (fd > max_fd) max_fd = fd;
-	    }
+		const int fd = state->if_fd[i];
+		assert(fd >= 0);
+		FD_SET(fd, &read_set);
+		if (fd > max_fd) max_fd = fd;
 	}
 	FD_SET(engine_thread_interrupt_fd(), &read_set);
 	if (engine_thread_interrupt_fd() > max_fd) max_fd = engine_thread_interrupt_fd();
@@ -271,104 +270,105 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	if (ret < 0) {
 		if (errno == EINTR) {
 			return 0;
-		}
-		else {
+		} else {
 			LOG_ERROR(bridge_ethernet, "select: %s", errno_error(errno));
 			return 1;
 		}
-	} else {
-		// Check for interrupt
-		if (FD_ISSET(engine_thread_interrupt_fd(), &read_set))
-			return 0;
+	}
 
-		// Check bypass first
-		if (state->bypass && nb_inputs == 2) {
-			for (i = 0; i < nb_inputs; i++) {
-				if (FD_ISSET(state->if_fd[i], &read_set)) {
-					int length;
-					// Read from one IF
-					length = recvfrom(state->if_fd[i], &state->buffer[0], state->mtu, 0, NULL, NULL);
-					if (length < 0) {
-						LOG_ERROR(bridge_ethernet, "recvfrom: %s", errno_error(errno));
-						return 1;
-					}
-					// Forward to the other (only 2)
-					if (sendto(state->if_fd[i^1], &state->buffer[0], length, 0, NULL, 0) < 0) {
-						LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
-						return 1;
-					}
+	// Check for interrupt
+	if (FD_ISSET(engine_thread_interrupt_fd(), &read_set))
+		return 0;
+
+	// Check bypass first
+	if (state->bypass) {
+		assert(nb_inputs == 2);
+		for (i = 0; i < nb_inputs; i++) {
+			if (FD_ISSET(state->if_fd[i], &read_set)) {
+				int length;
+				// Read from one IF
+				length = recvfrom(state->if_fd[i], state->buffer, state->mtu, 0, NULL, NULL);
+				if (length < 0) {
+					LOG_ERROR(bridge_ethernet, "recvfrom: %s", errno_error(errno));
+					return 1;
+				}
+				// Forward to the other (only 2)
+				if (sendto(state->if_fd[i^1], state->buffer, length, 0, NULL, 0) < 0) {
+					LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
+					return 1;
 				}
 			}
 		}
-		else {
-			// Check inputs
-			for (i = 0; i < nb_inputs; i++) {
-				if (FD_ISSET(state->if_fd[i], &read_set)) {
-					int length;
+	} else {
+		// Check inputs
+		for (i = 0; i < nb_inputs; i++) {
+			if (FD_ISSET(state->if_fd[i], &read_set)) {
+				int length;
 
-					// Read ETH packet
-					length = recvfrom(state->if_fd[i], &state->buffer[0], state->mtu, 0, NULL, NULL);
-					if (length < 0) {
-						LOG_ERROR(bridge_ethernet, "recvfrom: %s", errno_error(errno));
-						return 1;
-					}
-
-					// Create packet
-					struct ethernet_packet *packet = malloc(sizeof(struct ethernet_packet));
-					if (!packet) {
-						return ENOMEM;
-					}
-
-					memset(packet, 0, sizeof(struct ethernet_packet));
-
-					time_gettimestamp(&packet->timestamp);
-
-					if (!vbuffer_create_from(&packet->core_packet.payload, (char *)state->buffer, length)) {
-						free(packet);
-						return ENOMEM;
-					}
-
-					packet->state     = state;
-					packet->orig      = i; // Remember where we came from
-					packet->id        = state->id++;
-
-					*pkt = (struct packet *)packet;
-					return 0;
+				// Read ETH packet
+				length = recvfrom(state->if_fd[i], state->buffer, state->mtu, 0, NULL, NULL);
+				if (length < 0) {
+					LOG_ERROR(bridge_ethernet, "recvfrom: %s", errno_error(errno));
+					return 1;
 				}
-			} // end for
-		} // end else
-	} // end while
+
+				// Create packet
+				struct ethernet_packet *packet = malloc(sizeof(struct ethernet_packet));
+				if (!packet) {
+					return ENOMEM;
+				}
+
+				memset(packet, 0, sizeof(struct ethernet_packet));
+
+				time_gettimestamp(&packet->timestamp);
+
+				if (!vbuffer_create_from(&packet->core_packet.payload, (char *)state->buffer, length)) {
+					free(packet);
+					return ENOMEM;
+				}
+
+				packet->state = state;
+				packet->orig  = i; // Remember where we came from
+				packet->id    = state->id++;
+
+				*pkt = (struct packet *)packet;
+				return 0;
+			}
+		}
+	}
 
 	return 0;
 }
 
 static void packet_verdict(struct packet *orig_pkt, filter_result result)
 {
-	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
+	struct ethernet_packet *pkt = (struct ethernet_packet *)orig_pkt;
 
 	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
-	    // If packet accepted and we need to forward to the other port
-	    if (nb_inputs > 1 && result == FILTER_ACCEPT && pkt->orig != -1) {
-	        const uint8 *data;
-	        size_t len;
-	        int out;
+		// If packet accepted and we need to forward to the other port
+		if (nb_inputs > 1 && result == FILTER_ACCEPT) {
+			const uint8 *data;
+			size_t len;
+			int out;
 
-	        data = vbuffer_flatten(&pkt->core_packet.payload, &len);
-	        if (!data) {
-	            assert(check_error());
-	            vbuffer_clear(&pkt->core_packet.payload);
-	            return;
-	        }
+			data = vbuffer_flatten(&pkt->core_packet.payload, &len);
+			if (!data) {
+				assert(check_error());
+				vbuffer_clear(&pkt->core_packet.payload);
+				return;
+			}
 
-	        if (pkt->orig == 0) out = pkt->state->if_fd[1];
-	        else                out = pkt->state->if_fd[0];
+			assert(pkt->orig != -1);
 
-	        if (sendto(out, data, len, 0, NULL, 0) < 0) {
-	            LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
-	        }
-	    }
+			if (pkt->orig == 0) out = pkt->state->if_fd[1];
+			else                out = pkt->state->if_fd[0];
 
-	    vbuffer_clear(&pkt->core_packet.payload);
+			if (sendto(out, data, len, 0, NULL, 0) < 0) {
+				LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
+			}
+		}
+
+		vbuffer_clear(&pkt->core_packet.payload);
 	}
 }
 
@@ -379,15 +379,15 @@ static const char *packet_get_dissector(struct packet *orig_pkt)
 
 static uint64 packet_get_id(struct packet *orig_pkt)
 {
-	return ((struct ethernet_packet*)orig_pkt)->id;
+	return ((struct ethernet_packet *)orig_pkt)->id;
 }
 
 static void packet_do_release(struct packet *orig_pkt)
 {
-	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
+	struct ethernet_packet *pkt = (struct ethernet_packet *)orig_pkt;
 
 	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
-	    packet_verdict(orig_pkt, FILTER_DROP);
+		packet_verdict(orig_pkt, FILTER_DROP);
 	}
 
 	vbuffer_release(&pkt->core_packet.payload);
@@ -399,13 +399,10 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
 
 	if (vbuffer_isvalid(&pkt->core_packet.payload)) {
-	    if (pkt->id == -1) {
-		return STATUS_FORGED;
-	    } else {
-		return STATUS_NORMAL;
-	    }
+		if (pkt->orig == -1) return STATUS_FORGED;
+		else                 return STATUS_NORMAL;
 	} else {
-	    return STATUS_SENT;
+		return STATUS_SENT;
 	}
 }
 
@@ -413,8 +410,8 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 {
 	struct ethernet_packet *packet = malloc(sizeof(struct ethernet_packet));
 	if (!packet) {
-	    error("Memory error");
-	    return NULL;
+		error("Memory error");
+		return NULL;
 	}
 
 	memset(packet, 0, sizeof(struct ethernet_packet));
@@ -425,9 +422,9 @@ static struct packet *new_packet(struct packet_module_state *state, size_t size)
 	time_gettimestamp(&packet->timestamp);
 
 	if (!vbuffer_create_new(&packet->core_packet.payload, size, true)) {
-	    assert(check_error());
-	    free(packet);
-	    return NULL;
+		assert(check_error());
+		free(packet);
+		return NULL;
 	}
 
 	return (struct packet *)packet;
@@ -442,6 +439,7 @@ static bool send_packet(struct packet *orig_pkt)
 		// level to specify where to send the forged packet.
 		const uint8 *data;
 		size_t len;
+		int ret;
 
 		data = vbuffer_flatten(&pkt->core_packet.payload, &len);
 		if (!data) {
@@ -450,16 +448,22 @@ static bool send_packet(struct packet *orig_pkt)
 			return false;
 		}
 
-		if (sendto(pkt->state->if_fd[0], data, len, 0, NULL, 0) < 0) {
-			LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
+		ret = sendto(pkt->state->if_fd[0], data, len, 0, NULL, 0);
+		if (ret < 0) {
+			LOG_ERROR(bridge_ethernet, "sendto %s: %s", interfaces[0], errno_error(errno));
+		}
+
+		if (nb_inputs > 1) {
+			if (sendto(pkt->state->if_fd[1], data, len, 0, NULL, 0) < 0) {
+				LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
+				ret = -1;
+			}
+		}
+
+		if (ret < 0) {
 			return false;
 		}
 
-		if (nb_inputs > 1 &&
-		    sendto(pkt->state->if_fd[1], data, len, 0, NULL, 0) < 0) {
-			LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
-			return false;
-		}
 		vbuffer_clear(&pkt->core_packet.payload);
 		return true;
 	}
@@ -471,10 +475,9 @@ static size_t get_mtu(struct packet *pkt)
 	return ((struct ethernet_packet *)pkt)->state->mtu;
 }
 
-static const struct time *get_timestamp(struct packet *orig_pkt)
+static const struct time *get_timestamp(struct packet *pkt)
 {
-	struct ethernet_packet *pkt = (struct ethernet_packet*)orig_pkt;
-	return &pkt->timestamp;
+	return &((struct ethernet_packet *)pkt)->timestamp;
 }
 
 static bool is_realtime()
