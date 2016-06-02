@@ -73,7 +73,7 @@ function tcp_connection_dissector:receive(pkt)
 				haka.abort()
 			end
 
-			if not rawget(self, 'stream') then
+			if not self._stream then
 				pkt:drop()
 				haka.abort()
 			end
@@ -221,7 +221,7 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 
 	local function send(dir)
 		return function(self, pkt)
-			self.stream[self[dir]]:init(pkt.seq+1)
+			self._stream[self[dir]]:init(pkt.seq+1)
 			pkt:send()
 		end
 	end
@@ -532,7 +532,7 @@ tcp_connection_dissector.auto_state_machine = false
 
 function tcp_connection_dissector.method:__init(connection, pkt)
 	class.super(tcp_connection_dissector).__init(self)
-	self.stream = {}
+	self._stream = {}
 	self._restart = false
 
 	self.srcip = pkt.src
@@ -541,16 +541,16 @@ function tcp_connection_dissector.method:__init(connection, pkt)
 	self.dstport = pkt.dstport
 
 	self.connection = connection
-	self.stream['up'] = tcp.tcp_stream()
-	self.stream['down'] = tcp.tcp_stream()
+	self._stream['up'] = tcp.tcp_stream()
+	self._stream['down'] = tcp.tcp_stream()
 	self.state = tcp_connection_dissector.state_machine:instanciate(self)
 end
 
 function tcp_connection_dissector.method:clearstream()
-	if rawget(self, 'stream') then
-		self.stream.up:clear()
-		self.stream.down:clear()
-		self.stream = nil
+	if self._stream then
+		self._stream.up:clear()
+		self._stream.down:clear()
+		self._stream = nil
 	end
 end
 
@@ -586,7 +586,7 @@ function tcp_connection_dissector.method:_trigger_receive(direction, stream, cur
 end
 
 function tcp_connection_dissector.method:push(pkt, direction, finish)
-	local stream = self.stream[direction]
+	local stream = self._stream[direction]
 
 	local current = stream:push(pkt)
 	if finish then stream.stream:finish() end
@@ -595,28 +595,28 @@ function tcp_connection_dissector.method:push(pkt, direction, finish)
 end
 
 function tcp_connection_dissector.method:finish(direction)
-	local stream = self.stream[direction]
+	local stream = self._stream[direction]
 
 	stream.stream:finish()
 	self:_trigger_receive(direction, stream, nil)
 end
 
 function tcp_connection_dissector.method:can_continue()
-	return rawget(self, 'stream') ~= nil
+	return self._stream ~= nil
 end
 
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
 	self:send(direction)
 
-	self.stream[direction]:seq(pkt)
-	self.stream[haka.dissector.opposite_direction(direction)]:ack(pkt)
+	self._stream[direction]:seq(pkt)
+	self._stream[haka.dissector.opposite_direction(direction)]:ack(pkt)
 	pkt:send()
 end
 
 function tcp_connection_dissector.method:_send(direction)
-	if self.stream then
-		local stream = self.stream[direction]
-		local other_stream = self.stream[haka.dissector.opposite_direction(direction)]
+	if self._stream then
+		local stream = self._stream[direction]
+		local other_stream = self._stream[haka.dissector.opposite_direction(direction)]
 
 		local pkt = stream:pop()
 		while pkt do
@@ -671,7 +671,7 @@ function tcp_connection_dissector.method:_forgereset(direction)
 		tcprst.dstport = self.srcport
 	end
 
-	tcprst.seq = self.stream[direction].lastseq
+	tcprst.seq = self._stream[direction].lastseq
 
 	tcprst.flags.rst = true
 
