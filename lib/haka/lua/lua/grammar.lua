@@ -625,8 +625,8 @@ function grammar_int.array(entity)
 	return grammar_int.Array:new(entity)
 end
 
-function grammar_int.number(bits)
-	return grammar_int.Number:new(bits)
+function grammar_int.number(bits, endian)
+	return grammar_int.Number:new(bits, endian)
 end
 
 function grammar_int.token(pattern)
