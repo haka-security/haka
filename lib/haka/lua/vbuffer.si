@@ -15,6 +15,8 @@
 %include "haka/lua/object.si"
 %include "haka/lua/vbuffer.si"
 
+%include "haka/lua/ref.si"
+
 %nodefaultctor;
 %nodefaultdtor;
 
@@ -819,11 +821,25 @@ struct vbuffer_stream {
 			return buf;
 		}
 
+		struct lua_ref _comanager;
+
 		%immutable;
 		struct vbuffer *data { return vbuffer_stream_data($self); }
 		bool isfinished { return vbuffer_stream_isfinished($self); }
 	}
 };
+
+%{
+	struct lua_ref vbuffer_stream__comanager_get(struct vbuffer_stream *stream)
+	{
+		return stream->comanager;
+	}
+
+	void vbuffer_stream__comanager_set(struct vbuffer_stream *stream, struct lua_ref ref)
+	{
+		stream->comanager = ref;
+	}
+%}
 
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_stream);
 
@@ -903,12 +919,25 @@ struct vbuffer_sub_stream {
 		{
 			vbuffer_stream_finish(&$self->stream);
 		}
+		struct lua_ref _comanager;
 
 		%immutable;
 		struct vbuffer *data { return vbuffer_stream_data(&$self->stream); }
 		bool isfinished { return vbuffer_stream_isfinished(&$self->stream); }
 	}
 };
+
+%{
+	struct lua_ref vbuffer_sub_stream__comanager_get(struct vbuffer_sub_stream *stream)
+	{
+		return stream->stream.comanager;
+	}
+
+	void vbuffer_sub_stream__comanager_set(struct vbuffer_sub_stream *stream, struct lua_ref ref)
+	{
+		stream->stream.comanager = ref;
+	}
+%}
 
 STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 
@@ -930,11 +959,27 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 %luacode {
 	local class = require('class')
 
+	function getcomanager(self)
+		if not self._comanager then
+			self._comanager = haka.vbuffer_stream_comanager:new(self)
+		end
+		return self._comanager
+	end
+
+	swig.getclassmetatable('vbuffer_stream')['.fn'].getcomanager = getcomanager
+	swig.getclassmetatable('vbuffer_sub_stream')['.fn'].getcomanager = getcomanager
+
 	haka.vbuffer_stream_comanager = class.class('VbufferStreamCoManager')
 
 	function haka.vbuffer_stream_comanager.method:__init(stream)
 		self._co = {}
-		self._stream = stream
+
+		-- Set stream a weak ref to avoid circular references
+		local mt = {}
+		mt.__mode = "v"
+		self._stream = {}
+		setmetatable(self._stream, mt)
+		self._stream.stream = stream
 	end
 
 	local function wrapper(manager, f)
@@ -956,7 +1001,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 	end
 
 	local function process_one(self, id, co, current)
-		coroutine.resume(co, current or self._stream.data:pos('end'))
+		coroutine.resume(co, current or self._stream.stream.data:pos('end'))
 		if self._error then
 			error(self._error)
 		end

@@ -11,6 +11,7 @@
 #define HAKA_VBUFFER_STREAM_H
 
 #include <haka/vbuffer.h>
+#include <haka/lua/ref.h>
 
 
 struct vbuffer_stream_chunk;
@@ -25,6 +26,7 @@ struct vbuffer_stream {
 	struct vbuffer               data;        /**< \private */
 	struct list2                 chunks;      /**< \private */
 	struct list2                 read_chunks; /**< \private */
+	struct lua_ref               comanager;   /**< \private */
 	void                       (*userdata_cleanup)(void *); /**< \private */
 };
 
