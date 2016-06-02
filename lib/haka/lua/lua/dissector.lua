@@ -147,7 +147,7 @@ function types.Dissector.method:__index(name)
 		if parent then
 			return parent[name]
 		else
-			error("unknown field '%s' on dissector '%s'", name, self.name)
+			error(string.format("unknown field '%s' on dissector '%s'", name, self.name))
 		end
 	end
 end
