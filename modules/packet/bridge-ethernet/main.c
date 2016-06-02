@@ -44,13 +44,13 @@ struct packet_module_state {
 	int                if_fd[2];
 	uint64             id;
 	unsigned char     *buffer; // Generic buffer for reading
+	int                mtu;
+	int                bypass; // If 1 everything received is immediately sent to other end. Implies two interfaces
 };
 
 /* Init parameters */
 static int       nb_inputs = 0;
 static char     *interfaces[2] = { NULL, NULL }; // At most two interfaces
-static int       max_size = 0;
-static int       bypass = 0; // If 1 everything received is immediately sent to other end. Implies two interfaces
 
 static void cleanup()
 {
@@ -58,11 +58,11 @@ static void cleanup()
 	free(interfaces[1]);
 }
 
-static int ethernet_open(const char *interface)
+static int ethernet_open(const char *interface, int *mtu)
 {
+	int ret;
 	int fd;
 	struct ifreq ifr;
-	int ret;
 	struct sockaddr_ll sock_address;
 
 	fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
@@ -73,7 +73,6 @@ static int ethernet_open(const char *interface)
 
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_ifrn.ifrn_name, interface, IFNAMSIZ);
-
 	ret = ioctl(fd, SIOCGIFINDEX, &ifr);
 	if (ret < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to retrieve interface index for %s. %s", interface, errno_error(errno));
@@ -84,7 +83,6 @@ static int ethernet_open(const char *interface)
 	sock_address.sll_family = AF_PACKET;
 	sock_address.sll_protocol = htons(ETH_P_ALL);
 	sock_address.sll_ifindex = ifr.ifr_ifindex;
-
 	ret = bind(fd, (struct sockaddr *)&sock_address, sizeof(sock_address));
 	if (ret < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to bind to interface (%s). %s", interface, errno_error(errno));
@@ -96,29 +94,21 @@ static int ethernet_open(const char *interface)
 
 	// Promiscuous mode
 	ifr.ifr_flags |= IFF_PROMISC;
-	ret = ioctl (fd, SIOCSIFFLAGS, &ifr);
+	ret = ioctl(fd, SIOCSIFFLAGS, &ifr);
 	if (ret < 0) {
-	    LOG_ERROR(bridge_ethernet, "Failed to set ethernet interface (%s) to promiscuous mode. %s", interface, errno_error(errno));
+	    LOG_ERROR(bridge_ethernet, "failed to set ethernet interface %s to promiscuous mode: %s", interface, errno_error(errno));
 	    goto bailout;
 	}
 
 	// Retrieve MTU
 	ret = ioctl(fd, SIOCGIFMTU, &ifr);
 	if (ret < 0) {
-	    LOG_ERROR(bridge_ethernet, "Failed to get MTU on (%s). %s", interface, errno_error(errno));
+	    LOG_ERROR(bridge_ethernet, "failed to get MTU on %s: %s", interface, errno_error(errno));
 	    goto bailout;
 	}
 
-	if (max_size) {
-		// Check if MTU matches the one from the other interface, if any
-		if (max_size != ifr.ifr_mtu + ETHER_HEADERSIZE) {
-			// It is just a warning, it may cause unexpected packet structured if sent packet is larger than output MTU
-			LOG_WARNING(bridge_ethernet, "MTU values don't match between interfaces.");
-		}
-	} else {
-		max_size = ifr.ifr_mtu + ETHER_HEADERSIZE;
-		LOG_INFO(bridge_ethernet, "Max frame size: %d bytes", max_size);
-	}
+	assert(mtu);
+	*mtu = ifr.ifr_mtu + ETHER_HEADERSIZE;
 
 	return fd;
 
@@ -215,6 +205,7 @@ static struct packet_module_state *init_state(int thread_id)
 {
 	struct packet_module_state *state;
 	int i;
+	int mtu[] = { 0, 0 };
 
 	assert(nb_inputs > 0);
 
@@ -231,7 +222,7 @@ static struct packet_module_state *init_state(int thread_id)
 	state->if_fd[1] = -1;
 
 	for (i=0; i<nb_inputs; ++i) {
-	    int fd = ethernet_open(interfaces[i]);
+	    int fd = ethernet_open(interfaces[i], &mtu[i]);
 	    if (fd < 0) {
 	        cleanup_state(state);
 	        return NULL;
@@ -240,8 +231,14 @@ static struct packet_module_state *init_state(int thread_id)
 	}
 
 	state->id = 0;
-
-	state->buffer = (unsigned char *)malloc(max_size);
+	state->mtu = MAX(mtu[0], mtu[1]);
+	// Check if MTU matches the one from the other interface, if any
+	if (nb_inputs == 2 && mtu[0] != mtu[1]) {
+		// It is just a warning, it may cause unexpected packet structured if sent packet is larger than output MTU
+		LOG_WARNING(bridge_ethernet, "MTU values don't match between interfaces: %d != %d", mtu[0], mtu[1]);
+	}
+	LOG_INFO(bridge_ethernet, "max frame size: %d bytes", state->mtu);
+	state->buffer = (unsigned char *)malloc(state->mtu);
 
 	return state;
 }
@@ -285,12 +282,12 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			return 0;
 
 		// Check bypass first
-		if (bypass && nb_inputs == 2) {
+		if (state->bypass && nb_inputs == 2) {
 			for (i = 0; i < nb_inputs; i++) {
 				if (FD_ISSET(state->if_fd[i], &read_set)) {
 					int length;
 					// Read from one IF
-					length = recvfrom(state->if_fd[i], &state->buffer[0], max_size, 0, NULL, NULL);
+					length = recvfrom(state->if_fd[i], &state->buffer[0], state->mtu, 0, NULL, NULL);
 					if (length < 0) {
 						LOG_ERROR(bridge_ethernet, "recvfrom: %s", errno_error(errno));
 						return 1;
@@ -310,7 +307,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 					int length;
 
 					// Read ETH packet
-					length = recvfrom(state->if_fd[i], &state->buffer[0], max_size, 0, NULL, NULL);
+					length = recvfrom(state->if_fd[i], &state->buffer[0], state->mtu, 0, NULL, NULL);
 					if (length < 0) {
 						LOG_ERROR(bridge_ethernet, "recvfrom: %s", errno_error(errno));
 						return 1;
@@ -471,7 +468,7 @@ static bool send_packet(struct packet *orig_pkt)
 
 static size_t get_mtu(struct packet *pkt)
 {
-	return max_size;
+	return ((struct ethernet_packet *)pkt)->state->mtu;
 }
 
 static const struct time *get_timestamp(struct packet *orig_pkt)
