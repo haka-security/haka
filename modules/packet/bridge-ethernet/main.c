@@ -67,7 +67,7 @@ static int ethernet_open(const char *interface, int *mtu)
 
 	fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 	if (fd < 0) {
-	    LOG_ERROR(bridge_ethernet, "Failed to create socket for interface '%s'. %s", interface, errno_error(errno));
+	    LOG_ERROR(bridge_ethernet, "failed to create socket for interface %s: %s", interface, errno_error(errno));
 	    return -1;
 	}
 
@@ -75,7 +75,7 @@ static int ethernet_open(const char *interface, int *mtu)
 	strncpy(ifr.ifr_ifrn.ifrn_name, interface, IFNAMSIZ);
 	ret = ioctl(fd, SIOCGIFINDEX, &ifr);
 	if (ret < 0) {
-	    LOG_ERROR(bridge_ethernet, "Failed to retrieve interface index for %s. %s", interface, errno_error(errno));
+	    LOG_ERROR(bridge_ethernet, "failed to retrieve interface index for %s: %s", interface, errno_error(errno));
 	    goto bailout;
 	}
 
@@ -85,7 +85,7 @@ static int ethernet_open(const char *interface, int *mtu)
 	sock_address.sll_ifindex = ifr.ifr_ifindex;
 	ret = bind(fd, (struct sockaddr *)&sock_address, sizeof(sock_address));
 	if (ret < 0) {
-	    LOG_ERROR(bridge_ethernet, "Failed to bind to interface (%s). %s", interface, errno_error(errno));
+	    LOG_ERROR(bridge_ethernet, "failed to bind to interface %s: %s", interface, errno_error(errno));
 	    goto bailout;
 	}
 
@@ -132,7 +132,7 @@ static void ethernet_close(struct packet_module_state *state, int i)
 
 	ret = ioctl(state->if_fd[i], SIOCGIFFLAGS, &ifr);
 	if (ret < 0) {
-	    LOG_WARNING(bridge_ethernet, "Failed to get IFF Flags on %s. %s", interfaces[i], errno_error(errno));
+	    LOG_WARNING(bridge_ethernet, "failed to get IFF Flags on %s: %s", interfaces[i], errno_error(errno));
 	    goto end;
 	}
 
@@ -140,7 +140,7 @@ static void ethernet_close(struct packet_module_state *state, int i)
 	ifr.ifr_flags &= ~IFF_PROMISC;
 	ret = ioctl(state->if_fd[i], SIOCSIFFLAGS, &ifr);
 	if (ret < 0) {
-	    LOG_WARNING(bridge_ethernet, "Failed to reset promiscuous mode on %s. %s", interfaces[i], errno_error(errno));
+	    LOG_WARNING(bridge_ethernet, "failed to reset promiscuous mode on %s: %s", interfaces[i], errno_error(errno));
 	    goto end;
 	}
 
@@ -159,7 +159,7 @@ static int init(struct parameters *args)
 
 	// Inputs
 	if (if_s == NULL) {
-	    LOG_ERROR(bridge_ethernet, "Please specify 'interfaces' parameter in configuration file.");
+	    LOG_ERROR(bridge_ethernet, "please specify 'interfaces' parameter in configuration file");
 	    cleanup();
 	    return 1;
 	}
@@ -170,12 +170,12 @@ static int init(struct parameters *args)
 	    char *token = strtok_r(in, ", \t", &save);
 	    if (token == NULL) break;
 	    interfaces[nb_inputs++] = strdup(token);
-	    LOG_INFO(bridge_ethernet, "Using ethernet interface %s", token);
+	    LOG_INFO(bridge_ethernet, "using ethernet interface %s", token);
 	    in = NULL;
 	}
 
 	if (nb_inputs == 0) {
-	    LOG_ERROR(bridge_ethernet, "Please specifiy one or two ethernet interfaces (e.g: eth0)");
+	    LOG_ERROR(bridge_ethernet, "please specifiy one or two ethernet interfaces (e.g: eth0)");
 	    cleanup();
 	    return 1;
 	}
@@ -256,7 +256,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 	for (i=0; i < nb_inputs; ++i) {
 	    const int fd = state->if_fd[i];
 	    if (fd < 0) {
-	        LOG_ERROR(bridge_ethernet, "Invalid descriptor.");
+	        LOG_ERROR(bridge_ethernet, "invalid descriptor");
 	        return 1;
 	    }
 	    else {
@@ -273,7 +273,7 @@ static int packet_do_receive(struct packet_module_state *state, struct packet **
 			return 0;
 		}
 		else {
-			LOG_ERROR(bridge_ethernet, "select: %s (%d)", errno_error(errno), errno);
+			LOG_ERROR(bridge_ethernet, "select: %s", errno_error(errno));
 			return 1;
 		}
 	} else {
@@ -451,13 +451,13 @@ static bool send_packet(struct packet *orig_pkt)
 		}
 
 		if (sendto(pkt->state->if_fd[0], data, len, 0, NULL, 0) < 0) {
-			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+			LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
 			return false;
 		}
 
 		if (nb_inputs > 1 &&
 		    sendto(pkt->state->if_fd[1], data, len, 0, NULL, 0) < 0) {
-			LOG_ERROR(bridge_ethernet, "%s", errno_error(errno));
+			LOG_ERROR(bridge_ethernet, "sendto: %s", errno_error(errno));
 			return false;
 		}
 		vbuffer_clear(&pkt->core_packet.payload);
@@ -486,7 +486,7 @@ struct packet_module HAKA_MODULE = {
 	module: {
 	    type:        MODULE_PACKET,
 	    name:        "Ethernet Module",
-	    description: "Ethernet packet module",
+	    description: "Ethernet bridge packet module",
 	    api_version: HAKA_API_VERSION,
 	    init:        init,
 	    cleanup:     cleanup
