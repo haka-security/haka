@@ -27,6 +27,9 @@
 #include <haka/error.h>
 #include <haka/engine.h>
 
+// Ethernet header is not included in MTU size. 22 = Max that VLan can accept
+#define ETHER_HEADERSIZE 22
+
 static REGISTER_LOG_SECTION(bridge_ethernet);
 
 struct ethernet_packet {
@@ -58,37 +61,31 @@ static void cleanup()
 static int ethernet_open(const char *interface)
 {
 	int fd;
+	struct ifreq ifr;
+	int ret;
+	struct sockaddr_ll sock_address;
 
 	fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-
 	if (fd < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to create socket for interface '%s'. %s", interface, errno_error(errno));
 	    return -1;
 	}
 
-	struct ifreq ifr;
-
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_ifrn.ifrn_name, interface, IFNAMSIZ);
 
-	int ret;
-
 	ret = ioctl(fd, SIOCGIFINDEX, &ifr);
-
 	if (ret < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to retrieve interface index for %s. %s", interface, errno_error(errno));
 	    goto bailout;
 	}
-
-	struct sockaddr_ll sock_address;
 
 	memset(&sock_address, 0, sizeof(sock_address));
 	sock_address.sll_family = AF_PACKET;
 	sock_address.sll_protocol = htons(ETH_P_ALL);
 	sock_address.sll_ifindex = ifr.ifr_ifindex;
 
-	ret = bind(fd, (struct sockaddr*) &sock_address, sizeof(sock_address));
-
+	ret = bind(fd, (struct sockaddr *)&sock_address, sizeof(sock_address));
 	if (ret < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to bind to interface (%s). %s", interface, errno_error(errno));
 	    goto bailout;
@@ -100,7 +97,6 @@ static int ethernet_open(const char *interface)
 	// Promiscuous mode
 	ifr.ifr_flags |= IFF_PROMISC;
 	ret = ioctl (fd, SIOCSIFFLAGS, &ifr);
-
 	if (ret < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to set ethernet interface (%s) to promiscuous mode. %s", interface, errno_error(errno));
 	    goto bailout;
@@ -108,14 +104,10 @@ static int ethernet_open(const char *interface)
 
 	// Retrieve MTU
 	ret = ioctl(fd, SIOCGIFMTU, &ifr);
-
 	if (ret < 0) {
 	    LOG_ERROR(bridge_ethernet, "Failed to get MTU on (%s). %s", interface, errno_error(errno));
 	    goto bailout;
 	}
-
-// Ethernet header is not included in MTU size. 22 = Max that VLan can accept
-#define ETHER_HEADERSIZE 22
 
 	if (max_size) {
 		// Check if MTU matches the one from the other interface, if any
@@ -149,7 +141,6 @@ static void ethernet_close(struct packet_module_state *state, int i)
 	strncpy(ifr.ifr_ifrn.ifrn_name, interfaces[i], IFNAMSIZ);
 
 	ret = ioctl(state->if_fd[i], SIOCGIFFLAGS, &ifr);
-
 	if (ret < 0) {
 	    LOG_WARNING(bridge_ethernet, "Failed to get IFF Flags on %s. %s", interfaces[i], errno_error(errno));
 	    goto end;
@@ -158,7 +149,6 @@ static void ethernet_close(struct packet_module_state *state, int i)
 	// Reset promiscuous mode
 	ifr.ifr_flags &= ~IFF_PROMISC;
 	ret = ioctl(state->if_fd[i], SIOCSIFFLAGS, &ifr);
-
 	if (ret < 0) {
 	    LOG_WARNING(bridge_ethernet, "Failed to reset promiscuous mode on %s. %s", interfaces[i], errno_error(errno));
 	    goto end;

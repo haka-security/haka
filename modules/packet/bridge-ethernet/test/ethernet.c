@@ -17,7 +17,7 @@ START_TEST(module_load_should_be_successful)
 {
 	// Given
 	struct parameters *params = parameters_create();
-	parameters_set_string(params, "interfaces","eth0");
+	parameters_set_string(params, "interfaces", "eth0");
 	module_set_default_path();
 	clear_error();
 
