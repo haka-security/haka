@@ -21,7 +21,7 @@ haka.rule{
 		local request = http.request
 		local split_uri = request.split_uri:normalize()
 		local entry = {}
-		entry.ip = tostring(http.flow.srcip)
+		entry.ip = tostring(http.srcip)
 		entry.method = request.method
 		entry.resource = split_uri.path or ''
 		entry.host = split_uri.host or ''

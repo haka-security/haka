@@ -29,10 +29,10 @@ haka.rule {
 		if not rem.re:match('^get$|^post$', method, rem.re.CASE_INSENSITIVE) then
 			haka.alert{
 				description = string.format("forbidden http method '%s'", method),
-				sources = haka.alert.address(http.flow.srcip),
+				sources = haka.alert.address(http.srcip),
 				targets = {
-					haka.alert.address(http.flow.dstip),
-					haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
+					haka.alert.address(http.dstip),
+					haka.alert.service(string.format("tcp/%d", http.dstport), "http")
 				},
 			}
 		end

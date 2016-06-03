@@ -113,10 +113,10 @@ local function check_sqli(patterns, score, trans)
 								description = "SQL Injection Attack",
 								ref = "cwe-89"
 							},
-							sources = haka.alert.address(http.flow.srcip),
+							sources = haka.alert.address(http.srcip),
 							targets = {
-								haka.alert.address(http.flow.dstip),
-								haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
+								haka.alert.address(http.dstip),
+								haka.alert.service(string.format("tcp/%d", http.dstport), "http")
 							},
 						}
 						http:drop()
