@@ -95,7 +95,7 @@ udp_connection_dissector.state_machine = haka.state_machine.new("udp", function 
 		event = events.finish,
 		execute = function (self)
 			self:trigger('end_connection')
-			self.connection:close()
+			self._parent:close()
 		end,
 	}
 
@@ -103,8 +103,8 @@ udp_connection_dissector.state_machine = haka.state_machine.new("udp", function 
 		event = events.enter,
 		execute = function (self)
 			self:trigger('end_connection')
-			self.dropped = true
-			self.connection:drop()
+			self._dropped = true
+			self._parent:drop()
 		end,
 	}
 
@@ -123,7 +123,7 @@ udp_connection_dissector.state_machine = haka.state_machine.new("udp", function 
 	drop:on{
 		event = events.finish,
 		execute = function (self)
-			self.connection:close()
+			self._parent:close()
 		end
 	}
 
@@ -155,7 +155,9 @@ end)
 udp_connection_dissector.auto_state_machine = false
 
 function udp_connection_dissector.method:__init(pkt)
-	self.dropped = false
+	class.super(udp_connection_dissector).__init(self)
+
+	self._dropped = false
 	self.srcip = pkt.src
 	self.dstip = pkt.dst
 	self.srcport = pkt.srcport
@@ -163,12 +165,12 @@ function udp_connection_dissector.method:__init(pkt)
 end
 
 function udp_connection_dissector.method:init(connection)
-	self.connection = connection
+	self._parent = connection
 	self.state = udp_connection_dissector.state_machine:instanciate(self)
 end
 
 function udp_connection_dissector.method:emit(direction, pkt)
-	self.connection:update_stat(direction, pkt.len)
+	self._parent:update_stat(direction, pkt.len)
 	self:trigger('receive_packet', pkt, direction)
 
 	self.state:update(direction, pkt)
@@ -188,7 +190,7 @@ function udp_connection_dissector.method:drop(pkt)
 end
 
 function udp_connection_dissector.method:can_continue()
-	return not self.dropped
+	return not self._dropped
 end
 
 haka.policy {
@@ -205,26 +207,14 @@ module.helper = {}
 
 module.helper.UdpFlowDissector =  class.class('UdpFlowDissector', haka.helper.FlowDissector)
 
-function module.helper.UdpFlowDissector.dissect(cls, flow)
-	flow:select_next_dissector(cls)
-end
-
-module.helper.UdpFlowDissector.property.connection = {
-	get = function (self)
-		self.connection = self.flow.connection
-		return self.connection
-	end
-}
-
 function module.helper.UdpFlowDissector.method:__init(flow)
 	check.assert(class.isa(flow, udp_connection_dissector), "invalid flow parameter")
 
-	class.super(module.helper.UdpFlowDissector).__init(self)
-	self.flow = flow
+	class.super(module.helper.UdpFlowDissector).__init(self, flow)
 end
 
 function module.helper.UdpFlowDissector.method:can_continue()
-	return self.flow:can_continue()
+	return self._parent:can_continue()
 end
 
 function module.helper.UdpFlowDissector.method:receive(pkt, payload, direction)
@@ -247,17 +237,17 @@ function module.console.list_connections(show_dropped)
 
 			table.insert(ret, {
 				_thread = haka.current_thread(),
-				_id = udp_data.connection.id,
-				id = string.format("%d-%d", haka.current_thread(), udp_data.connection.id),
+				_id = udp_data.id,
+				id = string.format("%d-%d", haka.current_thread(), udp_data.id),
 				srcip = udp_data.srcip,
 				srcport = udp_data.srcport,
 				dstip = udp_data.dstip,
 				dstport = udp_data.dstport,
 				state = udp_data.state.current,
-				in_pkts = udp_data.connection.in_pkts,
-				in_bytes = udp_data.connection.in_bytes,
-				out_pkts = udp_data.connection.out_pkts,
-				out_bytes = udp_data.connection.out_bytes
+				in_pkts = udp_data.in_pkts,
+				in_bytes = udp_data.in_bytes,
+				out_pkts = udp_data.out_pkts,
+				out_bytes = udp_data.out_bytes
 			})
 		end
 	end

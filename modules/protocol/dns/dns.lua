@@ -70,7 +70,7 @@ local dn_converter = {
 local DnsResult = class.class('DnsResult')
 
 function DnsResult.method:drop()
-	self._dissector.flow:drop(self._pkt)
+	self._dissector._parent:drop(self._pkt)
 end
 
 --
@@ -91,7 +91,7 @@ dns_dissector:register_event('response', continue)
 
 function dns_dissector.method:__init(flow)
 	class.super(dns_dissector).__init(self, flow)
-	self.dns_pending_queries = {}
+	self._dns_pending_queries = {}
 end
 
 dns_dissector.grammar = haka.grammar.new("dns", function ()
@@ -272,7 +272,7 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 	any:on{
 		event = events.error,
 		execute = function (self)
-			self.flow:drop()
+			self._parent:drop()
 		end,
 	}
 
@@ -283,8 +283,8 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 			res._pkt = pkt
 			res._dissector = self
 			self:trigger("query", res)
-			self.dns_pending_queries[res.id] = res
-			self.flow:send(pkt, payload, true)
+			self._dns_pending_queries[res.id] = res
+			self._parent:send(pkt, payload, true)
 			res._data = payload
 		end,
 	}
@@ -296,17 +296,17 @@ dns_dissector.state_machine = haka.state_machine.new("dns", function ()
 			res._pkt = pkt
 			res._dissector = self
 			local id = res.id
-			local query = self.dns_pending_queries[id]
+			local query = self._dns_pending_queries[id]
 			if not query then
 				haka.alert{
 					description = "dns: mismatching response",
 					severity = 'low'
 				}
-				self.flow:drop(pkt)
+				self._parent:drop(pkt)
 			else
 				self:trigger("response", res, query)
-				self.dns_pending_queries[id] = nil
-				self.flow:send(pkt, payload)
+				self._dns_pending_queries[id] = nil
+				self._parent:send(pkt, payload)
 			end
 		end,
 	}
