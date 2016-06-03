@@ -608,9 +608,13 @@ end
 function tcp_connection_dissector.method:_sendpkt(pkt, direction)
 	self:send(direction)
 
-	self._stream[direction]:seq(pkt)
-	self._stream[haka.dissector.opposite_direction(direction)]:ack(pkt)
-	pkt:send()
+	if self._stream then
+		self._stream[direction]:seq(pkt)
+		self._stream[haka.dissector.opposite_direction(direction)]:ack(pkt)
+		pkt:send()
+	else
+		haka.log.warning("tcp_connection: invalid stream")
+	end
 end
 
 function tcp_connection_dissector.method:_send(direction)
@@ -625,6 +629,8 @@ function tcp_connection_dissector.method:_send(direction)
 
 			pkt = stream:pop()
 		end
+	else
+		haka.log.warning("tcp_connection: invalid stream")
 	end
 end
 
