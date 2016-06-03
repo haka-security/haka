@@ -3,7 +3,7 @@ seqdiag {
 	span_height = 20;
 
 	haka;
-	dissector [label = "raw dissector"];
+	dissector [label = "packet dissector"];
 	next [label = "next dissector"];
 	rules;
 
