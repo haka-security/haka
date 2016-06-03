@@ -166,14 +166,14 @@ end
 
 function udp_connection_dissector.method:init(connection)
 	self._parent = connection
-	self.state = udp_connection_dissector.state_machine:instanciate(self)
+	self._state = udp_connection_dissector.state_machine:instanciate(self)
 end
 
 function udp_connection_dissector.method:emit(direction, pkt)
 	self._parent:update_stat(direction, pkt.len)
 	self:trigger('receive_packet', pkt, direction)
 
-	self.state:update(direction, pkt)
+	self._state:update(direction, pkt)
 end
 
 function udp_connection_dissector.method:send(pkt, payload, clone)
@@ -185,7 +185,7 @@ function udp_connection_dissector.method:drop(pkt)
 	if pkt then
 		return pkt:drop()
 	else
-		return self.state:trigger('drop')
+		return self._state:trigger('drop')
 	end
 end
 
@@ -218,9 +218,9 @@ function module.helper.UdpFlowDissector.method:can_continue()
 end
 
 function module.helper.UdpFlowDissector.method:receive(pkt, payload, direction)
-	assert(self.state, "no state machine defined")
+	assert(self._state, "no state machine defined")
 
-	self.state:update(payload:pos('begin'), direction, pkt, payload)
+	self._state:update(payload:pos('begin'), direction, pkt, payload)
 end
 
 --
@@ -243,7 +243,7 @@ function module.console.list_connections(show_dropped)
 				srcport = udp_data.srcport,
 				dstip = udp_data.dstip,
 				dstport = udp_data.dstport,
-				state = udp_data.state.current,
+				state = udp_data.state,
 				in_pkts = udp_data.in_pkts,
 				in_bytes = udp_data.in_bytes,
 				out_pkts = udp_data.out_pkts,

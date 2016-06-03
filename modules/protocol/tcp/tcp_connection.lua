@@ -542,7 +542,7 @@ function tcp_connection_dissector.method:__init(connection, pkt)
 
 	self._stream['up'] = tcp.tcp_stream()
 	self._stream['down'] = tcp.tcp_stream()
-	self.state = tcp_connection_dissector.state_machine:instanciate(self)
+	self._state = tcp_connection_dissector.state_machine:instanciate(self)
 end
 
 function tcp_connection_dissector.method:clearstream()
@@ -561,7 +561,7 @@ function tcp_connection_dissector.method:emit(pkt, direction)
 	self._parent:update_stat(direction, pkt.len)
 	self:trigger('receive_packet', pkt, direction)
 
-	self.state:update(direction, pkt)
+	self._state:update(direction, pkt)
 end
 
 function tcp_connection_dissector.method:_close()
@@ -570,7 +570,7 @@ function tcp_connection_dissector.method:_close()
 		self._parent:close()
 		self._parent = nil
 	end
-	self.state = nil
+	self._state = nil
 end
 
 function tcp_connection_dissector.method:_trigger_receive(direction, stream, current)
@@ -647,9 +647,9 @@ function tcp_connection_dissector.method:error()
 end
 
 function tcp_connection_dissector.method:drop()
-	check.assert(self.state, "connection already dropped")
+	check.assert(self._state, "connection already dropped")
 
-	self.state:trigger('reset')
+	self._state:trigger('reset')
 end
 
 function tcp_connection_dissector.method:_forgereset(direction)
@@ -782,10 +782,10 @@ function module.helper.TcpFlowDissector.method:receive(stream, current, directio
 end
 
 function module.helper.TcpFlowDissector.method:receive_streamed(iter, direction)
-	assert(self.state, "no state machine defined")
+	assert(self._state, "no state machine defined")
 
 	while iter:wait() do
-		self.state:update(iter, direction)
+		self._state:update(iter, direction)
 		self:continue()
 	end
 end
@@ -811,7 +811,7 @@ function module.console.list_connections(show_dropped)
 				srcport = tcp_data.srcport,
 				dstip = tcp_data.dstip,
 				dstport = tcp_data.dstport,
-				state = tcp_data.state.current,
+				state = tcp_data.state,
 				in_pkts = tcp_data.in_pkts,
 				in_bytes = tcp_data.in_bytes,
 				out_pkts = tcp_data.out_pkts,
