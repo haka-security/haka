@@ -9,7 +9,7 @@
 #include <haka/config.h>
 
 
-#define HAKA_API_VERSION    1
+#define HAKA_API_VERSION    2
 
 #define HAKA_VERSION        HAKA_VERSION_MAJOR "." HAKA_VERSION_MINOR "." HAKA_VERSION_PATCH HAKA_VERSION_BUILD
 
