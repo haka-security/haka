@@ -106,7 +106,6 @@ function types.Dissector.method:__init(parent)
 		self._state = cls.state_machine:instanciate(self)
 	end
 
-	self.scope = nil
 	haka.context:register_connections(self:connections())
 
 	self._parent = parent
