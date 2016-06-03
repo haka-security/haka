@@ -13,7 +13,7 @@
 #include <errno.h>
 
 #include <haka/log.h>
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/error.h>
 #include <haka/thread.h>
 #include <haka/engine.h>
@@ -37,17 +37,17 @@ enum {
 };
 
 struct thread_state {
-	int                         thread_id;
-	int                         state;
-	struct packet_module       *packet_module;
-	struct packet_module_state *capture;
-	struct lua_state           *lua;
-	int                         lua_function;
-	thread_t                    thread;
-	bool                        canceled;
-	int32                       attach_debugger;
-	struct thread_pool         *pool;
-	struct engine_thread       *engine;
+	int                          thread_id;
+	int                          state;
+	struct capture_module       *packet_module;
+	struct capture_module_state *capture;
+	struct lua_state            *lua;
+	int                          lua_function;
+	thread_t                     thread;
+	bool                         canceled;
+	int32                        attach_debugger;
+	struct thread_pool          *pool;
+	struct engine_thread        *engine;
 };
 
 struct thread_pool {
@@ -129,7 +129,7 @@ static void cleanup_thread_state(struct thread_state *state)
 	free(state);
 }
 
-static struct thread_state *init_thread_state(struct packet_module *packet_module,
+static struct thread_state *init_thread_state(struct capture_module *packet_module,
 		int thread_id, bool dissector_graph)
 {
 	struct thread_state *state;
@@ -348,7 +348,7 @@ static void *thread_main_loop(void *_state)
 	return NULL;
 }
 
-struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module,
+struct thread_pool *thread_pool_create(int count, struct capture_module *packet_module,
 		bool attach_debugger, bool dissector_graph)
 {
 	int i;

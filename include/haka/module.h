@@ -21,7 +21,7 @@
  */
 enum module_type {
 	MODULE_UNKNOWN,   /**< Invalid module type. */
-	MODULE_PACKET,    /**< Packet capture module. */
+	MODULE_CAPTURE,   /**< Packet capture module. */
 	MODULE_LOG,       /**< Logging module type. */
 	MODULE_ALERT,     /**< Alert backend module type. */
 	MODULE_REGEXP,    /**< Regular expression module type. */

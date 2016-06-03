@@ -5,7 +5,7 @@
 Modules
 =======
 
-.. _packet_module_section:
+.. _capture_module_section:
 
 Packet capture modules
 ----------------------
@@ -14,7 +14,7 @@ Packet capture modules
     :maxdepth: 1
     :glob:
 
-    ../../modules/packet/*/doc/module*
+    ../../modules/capture/*/doc/module*
 
 .. _alert_module_section:
 

@@ -4,13 +4,11 @@
 
 find_package(PCAP REQUIRED)
 if(PCAP_FOUND)
-	INCLUDE_MODULE(pcap packet)
-
-	add_library(benchmark MODULE main.c)
+	add_library(capture-pcap SHARED main.c pcap.c)
+	set_target_properties(capture-pcap PROPERTIES OUTPUT_NAME pcap)
 
 	include_directories(${PCAP_INCLUDE_DIR})
-	target_link_libraries(benchmark LINK_PRIVATE ${PCAP_LIBRARY})
+	target_link_libraries(capture-pcap LINK_PRIVATE ${PCAP_LIBRARY})
 
-	DEPENDS_MODULE(benchmark packet-pcap packet)
-	INSTALL_MODULE(benchmark packet)
+	INSTALL_MODULE(capture-pcap capture)
 endif()

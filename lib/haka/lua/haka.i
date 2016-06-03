@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/thread.h>
 #include <haka/module.h>
 #include <haka/alert.h>

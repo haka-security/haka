@@ -233,7 +233,7 @@ struct regexp_module {
 			return self:_match(input)
 		end
 
-		readonly = readonly or (haka.packet_mode() == 'passthrough')
+		readonly = readonly or (haka.capture_mode() == 'passthrough')
 
 		local sink = self:create_sink()
 		local begin, mark

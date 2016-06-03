@@ -19,7 +19,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/log.h>
 #include <haka/types.h>
 #include <haka/parameters.h>
@@ -33,14 +33,14 @@
 static REGISTER_LOG_SECTION(bridge_ethernet);
 
 struct ethernet_packet {
-	struct packet               core_packet;
-	struct time                 timestamp;
-	uint64                      id;
-	struct packet_module_state *state;
-	int                         orig;
+	struct packet                core_packet;
+	struct time                  timestamp;
+	uint64                       id;
+	struct capture_module_state *state;
+	int                          orig;
 };
 
-struct packet_module_state {
+struct capture_module_state {
 	int                if_fd[2];
 	uint64             id;
 	unsigned char     *buffer; // Generic buffer for reading
@@ -117,7 +117,7 @@ bailout:
 	return -1;
 }
 
-static void ethernet_close(struct packet_module_state *state, int i)
+static void ethernet_close(struct capture_module_state *state, int i)
 {
 	struct ifreq ifr;
 	int ret;
@@ -191,7 +191,7 @@ static bool pass_through()
 	return nb_inputs < 2;
 }
 
-static void cleanup_state(struct packet_module_state *state)
+static void cleanup_state(struct capture_module_state *state)
 {
 	free(state->buffer);
 	ethernet_close(state, 0);
@@ -199,21 +199,21 @@ static void cleanup_state(struct packet_module_state *state)
 	free(state);
 }
 
-static struct packet_module_state *init_state(int thread_id)
+static struct capture_module_state *init_state(int thread_id)
 {
-	struct packet_module_state *state;
+	struct capture_module_state *state;
 	int i;
 	int mtu[] = { 0, 0 };
 
 	assert(nb_inputs > 0);
 
-	state = malloc(sizeof(struct packet_module_state));
+	state = malloc(sizeof(struct capture_module_state));
 	if (!state) {
 		error("memory error");
 		return NULL;
 	}
 
-	memset(state, 0, sizeof(struct packet_module_state));
+	memset(state, 0, sizeof(struct capture_module_state));
 
 	// Invalid descriptors at init
 	state->if_fd[0] = -1;
@@ -247,7 +247,7 @@ static struct packet_module_state *init_state(int thread_id)
 	return state;
 }
 
-static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
+static int packet_do_receive(struct capture_module_state *state, struct packet **pkt)
 {
 	int i;
 	int ret;
@@ -406,7 +406,7 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 	}
 }
 
-static struct packet *new_packet(struct packet_module_state *state, size_t size)
+static struct packet *new_packet(struct capture_module_state *state, size_t size)
 {
 	struct ethernet_packet *packet = malloc(sizeof(struct ethernet_packet));
 	if (!packet) {
@@ -485,11 +485,11 @@ static bool is_realtime()
 	return true;
 }
 
-struct packet_module HAKA_MODULE = {
+struct capture_module HAKA_MODULE = {
 	module: {
-	    type:        MODULE_PACKET,
+	    type:        MODULE_CAPTURE,
 	    name:        "Ethernet Module",
-	    description: "Ethernet bridge packet module",
+	    description: "Ethernet bridge packet capture module",
 	    api_version: HAKA_API_VERSION,
 	    init:        init,
 	    cleanup:     cleanup

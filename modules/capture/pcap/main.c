@@ -12,7 +12,7 @@
 #include <linux/if_ether.h>
 #include <arpa/inet.h>
 
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/log.h>
 #include <haka/types.h>
 #include <haka/parameters.h>
@@ -27,19 +27,19 @@ static REGISTER_LOG_SECTION(pcap);
 #define PROGRESS_DELAY      5 /* 5 seconds */
 
 struct pcap_packet {
-	struct packet               core_packet;
-	struct list                 list;
-	struct time                 timestamp;
-	struct packet_module_state *state;
-	struct pcap_pkthdr          header;
-	struct vbuffer              data;
-	struct vbuffer_iterator     select;
-	uint64                      id;
-	int                         link_type;
-	bool                        captured;
+	struct packet                core_packet;
+	struct list                  list;
+	struct time                  timestamp;
+	struct capture_module_state *state;
+	struct pcap_pkthdr           header;
+	struct vbuffer               data;
+	struct vbuffer_iterator      select;
+	uint64                       id;
+	int                          link_type;
+	bool                         captured;
 };
 
-struct packet_module_state {
+struct capture_module_state {
 	uint32                      pd_count;
 	struct pcap_capture        *pd;
 	pcap_dumper_t              *pin;
@@ -168,7 +168,7 @@ static bool pass_through()
 	return passthrough;
 }
 
-static void cleanup_state(struct packet_module_state *state)
+static void cleanup_state(struct capture_module_state *state)
 {
 	int i;
 
@@ -258,7 +258,7 @@ static bool open_pcap(struct pcap_capture *pd, const char *input, bool isiface)
 	return true;
 }
 
-static pcap_dumper_t *open_dump_file(struct packet_module_state *state, const char *filename)
+static pcap_dumper_t *open_dump_file(struct capture_module_state *state, const char *filename)
 {
 	pcap_dumper_t *dump;
 
@@ -274,20 +274,20 @@ static pcap_dumper_t *open_dump_file(struct packet_module_state *state, const ch
 	return dump;
 }
 
-static struct packet_module_state *init_state(int thread_id)
+static struct capture_module_state *init_state(int thread_id)
 {
-	struct packet_module_state *state;
+	struct capture_module_state *state;
 	int i;
 
 	assert(input_count > 0);
 
-	state = malloc(sizeof(struct packet_module_state));
+	state = malloc(sizeof(struct capture_module_state));
 	if (!state) {
 		error("memory error");
 		return NULL;
 	}
 
-	bzero(state, sizeof(struct packet_module_state));
+	bzero(state, sizeof(struct capture_module_state));
 
 	state->pd = malloc(sizeof(struct pcap_capture)*input_count);
 	if (!state->pd) {
@@ -329,7 +329,7 @@ static bool packet_build_payload(struct pcap_packet *packet)
 	return vbuffer_select(&sub, &packet->core_packet.payload, &packet->select);
 }
 
-static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
+static int packet_do_receive(struct capture_module_state *state, struct packet **pkt)
 {
 	/* first check if a packet is waiting in the sent queue */
 	if (state->sent_head) {
@@ -564,7 +564,7 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 	}
 }
 
-static struct packet *new_packet(struct packet_module_state *state, size_t size)
+static struct packet *new_packet(struct capture_module_state *state, size_t size)
 {
 	uint8 *data;
 	size_t data_offset, len;
@@ -673,11 +673,11 @@ static bool is_realtime()
 	return input_is_iface;
 }
 
-struct packet_module HAKA_MODULE = {
+struct capture_module HAKA_MODULE = {
 	module: {
-		type:        MODULE_PACKET,
+		type:        MODULE_CAPTURE,
 		name:        "Pcap Module",
-		description: "Pcap packet module",
+		description: "Pcap packet capture module",
 		api_version: HAKA_API_VERSION,
 		init:        init,
 		cleanup:     cleanup

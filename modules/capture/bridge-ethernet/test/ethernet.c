@@ -22,7 +22,7 @@ START_TEST(module_load_should_be_successful)
 	clear_error();
 
 	// When
-	struct module *module = module_load("packet/bridge-ethernet", params);
+	struct module *module = module_load("capture/bridge-ethernet", params);
 
 	// Then
 	ck_check_error;
@@ -42,7 +42,7 @@ START_TEST(module_load_should_fail_with_missing_interfaces_parameter)
 	clear_error();
 
 	// When
-	struct module *module = module_load("packet/bridge-ethernet", params);
+	struct module *module = module_load("capture/bridge-ethernet", params);
 
 	// Then
 	ck_check_error_not;

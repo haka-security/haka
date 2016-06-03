@@ -11,7 +11,7 @@
 #include <libgen.h>
 #include <unistd.h>
 
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/thread.h>
 #include <haka/system.h>
 #include <haka/error.h>
@@ -24,7 +24,7 @@
 static struct thread_pool *thread_states;
 static char *configuration_file;
 static int ret_rc = 0;
-extern void packet_set_mode(enum packet_mode mode);
+extern void capture_set_mode(enum capture_mode mode);
 
 
 void basic_clean_exit()
@@ -36,7 +36,7 @@ void basic_clean_exit()
 		thread_states = NULL;
 	}
 
-	set_packet_module(NULL);
+	set_capture_module(NULL);
 	remove_all_logger();
 }
 
@@ -116,19 +116,19 @@ void initialize()
 
 void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 {
-	struct packet_module *packet_module = get_packet_module();
-	assert(packet_module);
+	struct capture_module *capture_module = get_capture_module();
+	assert(capture_module);
 
 	if (threadcount == -1) {
 		threadcount = thread_get_packet_capture_cpu_count();
-		if (!packet_module->multi_threaded()) {
+		if (!capture_module->multi_threaded()) {
 			threadcount = 1;
 		}
 	}
 
-	if (packet_module->pass_through()) {
-		LOG_INFO(core, "setting packet mode to pass-through\n");
-		packet_set_mode(MODE_PASSTHROUGH);
+	if (capture_module->pass_through()) {
+		LOG_INFO(core, "setting packet capture mode to pass-through\n");
+		capture_set_mode(MODE_PASSTHROUGH);
 	}
 
 	LOG_INFO(core, "loading rule file '%s'", configuration_file);
@@ -161,7 +161,7 @@ void prepare(int threadcount, bool attach_debugger, bool dissector_graph)
 		module_path = NULL;
 	}
 
-	thread_states = thread_pool_create(threadcount, packet_module,
+	thread_states = thread_pool_create(threadcount, capture_module,
 			attach_debugger, dissector_graph);
 	if (!thread_states) {
 		assert(check_error());

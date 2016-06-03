@@ -15,7 +15,7 @@ Module types
 .. toctree::
     :numbered:
 
-    packet_module
+    capture_module
     log_module
     alert_module
     regexp_module

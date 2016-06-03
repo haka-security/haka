@@ -5,12 +5,12 @@
 #ifndef THREAD_H
 #define THREAD_H
 
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 
 
 struct thread_pool;
 
-struct thread_pool *thread_pool_create(int count, struct packet_module *packet_module,
+struct thread_pool *thread_pool_create(int count, struct capture_module *capture_module,
 		bool attach_debugger, bool dissector_graph);
 int  thread_pool_count(struct thread_pool *pool);
 void thread_pool_cleanup(struct thread_pool *pool);

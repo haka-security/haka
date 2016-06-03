@@ -207,7 +207,7 @@ end
 function grammar_int.Record.method:do_compile(env, rule, id)
 	local iter, ret
 
-	ret = grammar_dg.Retain:new(haka.packet_mode() == 'passthrough')
+	ret = grammar_dg.Retain:new(haka.capture_mode() == 'passthrough')
 
 	iter = grammar_dg.RecordStart:new(rule, id, self.named, self.resultclass)
 	self:property_setup(iter)
