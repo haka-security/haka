@@ -209,7 +209,7 @@ struct ipv4 *_tcp_forge(struct tcp *tcp, bool split)
 	if (packet) {
 		const size_t mtu = packet_mtu(packet->packet) - ipv4_get_hdr_len(packet) - tcp_get_hdr_len(tcp);
 
-		if (split && packet_mode() != MODE_PASSTHROUGH && vbuffer_check_size(&tcp->payload, mtu+1, NULL)) {
+		if (split && capture_mode() != MODE_PASSTHROUGH && vbuffer_check_size(&tcp->payload, mtu+1, NULL)) {
 			struct vbuffer rem_payload;
 			struct packet *rem_pkt;
 			struct ipv4 *rem_ip;

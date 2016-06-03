@@ -397,25 +397,25 @@ int read_configuration(const char *file)
 		}
 	}
 
-	/* Packet module */
+	/* Packet capture module */
 	{
 		const char *module;
 
-		parameters_open_section(config, "packet");
+		parameters_open_section(config, "capture");
 		module = parameters_get_string(config, "module", NULL);
 		if (module) {
-			struct module *packet = module_load(module, config);
-			if (!packet) {
-				LOG_FATAL(core, "cannot load packet module: %s", clear_error());
+			struct module *capture = module_load(module, config);
+			if (!capture) {
+				LOG_FATAL(core, "cannot load packet capture module: %s", clear_error());
 				clean_exit();
 				return 1;
 			}
 
-			set_packet_module(packet);
-			module_release(packet);
+			set_capture_module(capture);
+			module_release(capture);
 		}
 		else {
-			LOG_FATAL(core, "no packet module specified");
+			LOG_FATAL(core, "no packet capture module specified");
 			clean_exit();
 			return 1;
 		}

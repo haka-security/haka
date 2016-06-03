@@ -10,7 +10,7 @@
 
 %{
 #include <haka/packet.h>
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/error.h>
 %}
 

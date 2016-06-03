@@ -8,7 +8,7 @@
 
 %{
 #include <haka/packet.h>
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/error.h>
 #include <haka/timer.h>
 
@@ -142,13 +142,13 @@ void packet__next_dissector_set(struct packet *packet, struct lua_ref ref)
 
 %}
 
-%rename(packet_mode) _packet_mode;
-const char *_packet_mode();
+%rename(capture_mode) _capture_mode;
+const char *_capture_mode();
 
 %{
-	static const char *_packet_mode()
+	static const char *_capture_mode()
 	{
-		enum packet_mode mode = packet_mode();
+		enum capture_mode mode = capture_mode();
 		switch (mode) {
 		case MODE_NORMAL:      return "normal";
 		case MODE_PASSTHROUGH: return "passthrough";

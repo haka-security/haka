@@ -89,7 +89,7 @@ Packet directives
 
     .. seealso::
 
-        :ref:`packet_module_section` contains a list of all available modules and
+        :ref:`capture_module_section` contains a list of all available modules and
         their options
 
 Alert directives

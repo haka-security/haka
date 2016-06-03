@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <getopt.h>
 
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/thread.h>
 #include <haka/alert.h>
 #include <haka/alert_module.h>
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
 		parameters_set_boolean(args, "pass-through", pass_through);
 
-		pcap = module_load("packet/pcap", args);
+		pcap = module_load("capture/pcap", args);
 
 		free(output);
 		output = NULL;
@@ -188,12 +188,12 @@ int main(int argc, char *argv[])
 		args = NULL;
 
 		if (!pcap) {
-			LOG_FATAL(core, "cannot load packet module: %s", clear_error());
+			LOG_FATAL(core, "cannot load packet capture module: %s", clear_error());
 			clean_exit();
 			return 1;
 		}
 
-		set_packet_module(pcap);
+		set_capture_module(pcap);
 		module_release(pcap);
 		free(output);
 	}

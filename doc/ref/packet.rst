@@ -55,10 +55,10 @@ Packet
 
         Get the state of the packet.
 
-.. haka:function:: packet_mode() -> mode
+.. haka:function:: capture_mode() -> mode
 
-    :return mode: Current packet mode (``'normal'`` or ``'passthrough'``).
+    :return mode: Current packet capture mode (``'normal'`` or ``'passthrough'``).
     :rtype mode: string
 
-    Get the current packet mode for Haka. In *passthrough* mode, the packet cannot
+    Get the current packet capture mode for Haka. In *passthrough* mode, the packet cannot
     be modified nor dropped.

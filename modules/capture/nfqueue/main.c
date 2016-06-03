@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/log.h>
 #include <haka/error.h>
 #include <haka/system.h>
@@ -48,7 +48,7 @@ struct pcap_sinks {
 	struct pcap_dump   out;
 };
 
-struct packet_module_state {
+struct capture_module_state {
 	struct nfq_handle          *handle;
 	struct nfq_q_handle        *queue;
 	int                         fd;
@@ -63,10 +63,10 @@ struct packet_module_state {
 static struct pcap_sinks       *pcap = NULL;
 
 struct nfqueue_packet {
-	struct packet               core_packet;
-	struct packet_module_state *state;
-	int                         id; /* nfq identifier */
-	struct time                 timestamp;
+	struct packet                core_packet;
+	struct capture_module_state *state;
+	int                          id; /* nfq identifier */
+	struct time                  timestamp;
 };
 
 bool use_multithreading = true;
@@ -213,7 +213,7 @@ static bool iptables_save_need_flush = true;
 static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 		struct nfq_data *nfad, void *data)
 {
-	struct packet_module_state *state = data;
+	struct capture_module_state *state = data;
 	struct nfqnl_msg_packet_hdr* packet_hdr;
 
 #if NFQ_GET_PAYLOAD_UNSIGNED_CHAR
@@ -263,7 +263,7 @@ static int packet_callback(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 	return 0;
 }
 
-static void cleanup_state(struct packet_module_state *state)
+static void cleanup_state(struct capture_module_state *state)
 {
 	if (state->queue)
 		nfq_destroy_queue(state->queue);
@@ -325,11 +325,11 @@ static bool socket_send_packet(int fd, const void *pkt, size_t size)
 	return true;
 }
 
-static struct packet_module_state *init_state(int thread_id)
+static struct capture_module_state *init_state(int thread_id)
 {
 	static const u_int16_t proto_family[] = { AF_INET, AF_INET6 };
 	int i;
-	struct packet_module_state *state = malloc(sizeof(struct packet_module_state));
+	struct capture_module_state *state = malloc(sizeof(struct capture_module_state));
 	if (!state) {
 		return NULL;
 	}
@@ -632,7 +632,7 @@ static void dump_pcap(struct pcap_dump *pcap, struct nfqueue_packet *pkt,
 	}
 }
 
-static int packet_do_receive(struct packet_module_state *state, struct packet **pkt)
+static int packet_do_receive(struct capture_module_state *state, struct packet **pkt)
 {
 	int rv;
 	fd_set read_set;
@@ -792,7 +792,7 @@ static enum packet_status packet_getstate(struct packet *orig_pkt)
 	}
 }
 
-static struct packet *new_packet(struct packet_module_state *state, size_t size)
+static struct packet *new_packet(struct capture_module_state *state, size_t size)
 {
 	struct nfqueue_packet *packet = malloc(sizeof(struct nfqueue_packet));
 	if (!packet) {
@@ -853,11 +853,11 @@ static bool is_realtime()
 }
 
 
-struct packet_module HAKA_MODULE = {
+struct capture_module HAKA_MODULE = {
 	module: {
-		type:        MODULE_PACKET,
+		type:        MODULE_CAPTURE,
 		name:        "nfqueue",
-		description: "Netfilter queue packet module",
+		description: "Netfilter queue packet capture module",
 		api_version: HAKA_API_VERSION,
 		init:		 init,
 		cleanup:	 cleanup

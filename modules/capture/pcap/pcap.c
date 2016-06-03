@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/log.h>
 #include <haka/error.h>
 #include <haka/time.h>

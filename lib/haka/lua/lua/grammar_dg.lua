@@ -840,7 +840,7 @@ function dg.Bytes.method:_parse(res, iter, ctx)
 	local sink
 	if self.untilre then
 		sink = self.untilre:create_sink()
-		begin:mark(haka.packet_mode() == 'passthrough')
+		begin:mark(haka.capture_mode() == 'passthrough')
 	end
 
 	while size == 'all' or size > 0 do
@@ -938,7 +938,7 @@ function dg.Token.method:_parse(res, iter, ctx)
 
 		if not begin then
 			begin = iter:copy()
-			begin:mark(haka.packet_mode() == 'passthrough')
+			begin:mark(haka.capture_mode() == 'passthrough')
 		end
 
 		local sub = iter:sub('available')

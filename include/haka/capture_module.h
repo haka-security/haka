@@ -7,8 +7,8 @@
  * Packet capture module.
  */
 
-#ifndef HAKA_PACKET_MODULE_H
-#define HAKA_PACKET_MODULE_H
+#ifndef HAKA_CAPTURE_MODULE_H
+#define HAKA_CAPTURE_MODULE_H
 
 #include <haka/module.h>
 #include <haka/packet.h>
@@ -23,14 +23,14 @@ typedef enum {
 	FILTER_DROP    /**< Drop packet result. */
 } filter_result;
 
-struct packet_module_state; /**< Opaque state structure. */
+struct capture_module_state; /**< Opaque state structure. */
 
 /**
- * Packet module used to interact with the low-level packets. The module
+ * Packet capture module used to interact with the low-level packets. The module
  * will be used to receive packets and set a verdict on them. It also define
  * an interface to access the packet fields.
  */
-struct packet_module {
+struct capture_module {
 	struct module    module; /**< Module structure. */
 
 	/**
@@ -49,15 +49,16 @@ struct packet_module {
 	bool           (*is_realtime)();
 
 	/**
-	 * Initialize the packet module state. This function will be called to create
-	 * multiple states if the module supports multi-threading.
+	 * Initialize the packet capture module state. This function will be
+	 * called to create multiple states if the module supports
+	 * multi-threading.
 	 */
-	struct packet_module_state *(*init_state)(int thread_id);
+	struct capture_module_state *(*init_state)(int thread_id);
 
 	/**
-	 * Cleanup the packet module state.
+	 * Cleanup the packet capture module state.
 	 */
-	void           (*cleanup_state)(struct packet_module_state *state);
+	void           (*cleanup_state)(struct capture_module_state *state);
 
 	/**
 	 * Callback used to receive a new packet. This function should block until
@@ -65,7 +66,7 @@ struct packet_module {
 	 *
 	 * \returns Non zero in case of error.
 	 */
-	int            (*receive)(struct packet_module_state *state, struct packet **pkt);
+	int            (*receive)(struct capture_module_state *state, struct packet **pkt);
 
 	/**
 	 * Apply a verdict on a received packet. The module should then apply this
@@ -100,7 +101,7 @@ struct packet_module {
 	/**
 	 * Create a new packet.
 	 */
-	struct packet *(*new_packet)(struct packet_module_state *state, size_t size);
+	struct packet *(*new_packet)(struct capture_module_state *state, size_t size);
 
 	/**
 	 * Send a forged packet. This packet will be received again by Haka as
@@ -119,4 +120,4 @@ struct packet_module {
 	const struct time *(*get_timestamp)(struct packet *pkt);
 };
 
-#endif /* HAKA_PACKET_MODULE_H */
+#endif /* HAKA_CAPTURE_MODULE_H */

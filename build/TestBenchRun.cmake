@@ -9,7 +9,7 @@ set(ENV{LUA_PATH} ${PROJECT_SOURCE_DIR}/src/lua/?.lua)
 set(ENV{HAKA} ${HAKA})
 set(ENV{HAKA_PATH} ${HAKA_PATH})
 set(ENV{PATH} $ENV{PATH}:${HAKA_PATH}/sbin:${HAKA_PATH}/bin)
-set(ENV{LD_LIBRARY_PATH} ${HAKA_PATH}/lib:${HAKA_PATH}/lib/haka/modules/protocol:${HAKA_PATH}/lib/haka/modules/packet)
+set(ENV{LD_LIBRARY_PATH} ${HAKA_PATH}/lib:${HAKA_PATH}/lib/haka/modules/protocol:${HAKA_PATH}/lib/haka/modules/capture)
 set(ENV{TZ} Europe/Paris)
 
 set(CMAKE_MODULE_PATH ${CTEST_MODULE_DIR} ${CMAKE_MODULE_PATH})

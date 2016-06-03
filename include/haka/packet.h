@@ -30,7 +30,7 @@ struct packet {
 };
 
 /** \cond */
-struct packet_module_state;
+struct capture_module_state;
 struct engine_thread;
 /** \endcond */
 
@@ -46,7 +46,7 @@ enum packet_status {
 /**
  * Initialize packet internals for a given thread.
  */
-bool               packet_init(struct packet_module_state *state);
+bool               packet_init(struct capture_module_state *state);
 
 /**
  * Increment packet ref count.
@@ -117,7 +117,7 @@ enum packet_status packet_state(struct packet *pkt);
 /**
  * Packet capture mode.
  */
-enum packet_mode {
+enum capture_mode {
 	MODE_NORMAL,      /**< Normal mode (read/write). */
 	MODE_PASSTHROUGH, /**< Listen mode (read-only). */
 };
@@ -125,7 +125,7 @@ enum packet_mode {
 /**
  * Current packet capture mode.
  */
-enum packet_mode   packet_mode();
+enum capture_mode   capture_mode();
 
 extern struct time_realm network_time;
 

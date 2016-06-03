@@ -5,7 +5,7 @@
 #ifndef APP_H
 #define APP_H
 
-#include <haka/packet_module.h>
+#include <haka/capture_module.h>
 #include <haka/log_module.h>
 #include "thread.h"
 
@@ -21,8 +21,8 @@ const char *haka_path();
 
 struct module;
 
-extern int set_packet_module(struct module *module);
-extern struct packet_module *get_packet_module();
+extern int set_capture_module(struct module *module);
+extern struct capture_module *get_capture_module();
 extern int set_log_module(struct module *module);
 extern int has_log_module();
 

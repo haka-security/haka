@@ -7,4 +7,4 @@
 Packet module
 =============
 
-.. doxygenfile:: include/haka/packet_module.h
+.. doxygenfile:: include/haka/capture_module.h
