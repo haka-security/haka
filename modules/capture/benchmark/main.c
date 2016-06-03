@@ -22,7 +22,7 @@
 #include <haka/container/list.h>
 #include <haka/pcap.h>
 
-static REGISTER_LOG_SECTION(benchmark);
+static REGISTER_LOG_SECTION(capture);
 
 #define PROGRESS_DELAY      5 /* 5 seconds */
 #define PROGRESS_FREQ       10000
@@ -75,7 +75,7 @@ static void cleanup()
 	bandwidth = size * 8 / duration / MEBI;
 	packets_per_s = packet_count / duration;
 
-	LOG_INFO(benchmark,
+	LOG_INFO(capture,
 			"processing %zd bytes in %llu packets took %lld.%.9u seconds being %02f Mib/s and %02f packets/s",
 			size, packet_count, (int64)difftime.secs, difftime.nsecs, bandwidth, packets_per_s);
 
@@ -90,7 +90,7 @@ static int init(struct parameters *args)
 		input_file = strdup(input);
 	}
 	else {
-		LOG_ERROR(benchmark, "missing input parameter");
+		LOG_ERROR(capture, "missing input parameter");
 		cleanup();
 		return 1;
 	}
@@ -140,7 +140,7 @@ static bool load_packet(struct capture_module_state *state)
 
 	ret = pcap_next_ex(state->pd.pd, &header, &p);
 	if (ret == -1) {
-		LOG_ERROR(benchmark, "%s", pcap_geterr(state->pd.pd));
+		LOG_ERROR(capture, "%s", pcap_geterr(state->pd.pd));
 		return 1;
 	}
 	else if (ret == -2) {
@@ -153,7 +153,7 @@ static bool load_packet(struct capture_module_state *state)
 	}
 	else if (header->caplen == 0 ||
 			header->len < header->caplen) {
-		LOG_ERROR(benchmark, "skipping malformed packet %llu", ++state->packet_id);
+		LOG_ERROR(capture, "skipping malformed packet %llu", ++state->packet_id);
 		return 0;
 	}
 	else {
@@ -179,7 +179,7 @@ static bool load_packet(struct capture_module_state *state)
 		packet->timestamp.nsecs = header->ts.tv_usec*1000;
 
 		if (header->caplen < header->len)
-			LOG_WARNING(benchmark, "packet truncated");
+			LOG_WARNING(capture, "packet truncated");
 
 		packet->protocol = get_protocol(state->pd.link_type, &data, &data_offset);
 
@@ -187,7 +187,7 @@ static bool load_packet(struct capture_module_state *state)
 		ret = vbuffer_select(&sub, &packet->core_packet.payload, NULL);
 		vbuffer_release(&data);
 		if (!ret) {
-			LOG_ERROR(benchmark, "malformed packet %llu", packet->id);
+			LOG_ERROR(capture, "malformed packet %llu", packet->id);
 			free(packet);
 			return ENOMEM;
 		}
@@ -217,12 +217,12 @@ static bool load_pcap(struct capture_module_state *state, const char *input)
 
 	assert(input);
 
-	LOG_INFO(benchmark, "opening file '%s'", input);
+	LOG_INFO(capture, "opening file '%s'", input);
 
 	state->pd.pd = pcap_open_offline(input, errbuf);
 
 	if (!state->pd.pd) {
-		LOG_ERROR(benchmark, "%s", errbuf);
+		LOG_ERROR(capture, "%s", errbuf);
 		return false;
 	}
 
@@ -237,7 +237,7 @@ static bool load_pcap(struct capture_module_state *state, const char *input)
 	/* Determine the datalink layer type. */
 	if ((state->pd.link_type = pcap_datalink(state->pd.pd)) < 0)
 	{
-		LOG_ERROR(benchmark, "%s", pcap_geterr(state->pd.pd));
+		LOG_ERROR(capture, "%s", pcap_geterr(state->pd.pd));
 		pcap_close(state->pd.pd);
 		return false;
 	}
@@ -255,14 +255,14 @@ static bool load_pcap(struct capture_module_state *state, const char *input)
 	case DLT_SLIP:
 	case DLT_PPP:
 	default:
-		LOG_ERROR(benchmark, "%s", "unsupported data link");
+		LOG_ERROR(capture, "%s", "unsupported data link");
 		pcap_close(state->pd.pd);
 		return false;
 	}
 
-	LOG_INFO(benchmark, "loading packet in memory from '%s'", input);
+	LOG_INFO(capture, "loading packet in memory from '%s'", input);
 	while(load_packet(state) == 0);
-	LOG_INFO(benchmark, "loaded %zd bytes in memory", state->size);
+	LOG_INFO(capture, "loaded %zd bytes in memory", state->size);
 
 	pcap_close(state->pd.pd);
 
@@ -317,7 +317,7 @@ static int packet_do_receive(struct capture_module_state *state, struct packet *
 					if (difftime.secs >= PROGRESS_DELAY) {
 						state->pd.last_progress = time;
 						if (percent > 0) {
-							LOG_INFO(benchmark, "progress %.2f %%", percent);
+							LOG_INFO(capture, "progress %.2f %%", percent);
 						}
 					}
 				} else {
@@ -358,7 +358,7 @@ static const char *packet_get_dissector(struct packet *orig_pkt)
 		return "ipv4";
 
 	case -1:
-		LOG_ERROR(benchmark, "malformed packet %llu", pkt->id);
+		LOG_ERROR(capture, "malformed packet %llu", pkt->id);
 
 	default:
 		return NULL;
