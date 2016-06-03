@@ -6,7 +6,7 @@ TestVBufferStream = {}
 
 function TestVBufferStream:gen_stream(f)
 	local stream = haka.vbuffer_stream()
-	local manager = haka.vbuffer_stream_comanager:new(stream)
+	local manager = haka.vbuffer_stream_comanager:new()
 	manager:start(0, f)
 
 	for i=10,1,-1 do

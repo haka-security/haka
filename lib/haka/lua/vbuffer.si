@@ -961,7 +961,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 
 	function getcomanager(self)
 		if not self._comanager then
-			self._comanager = haka.vbuffer_stream_comanager:new(self)
+			self._comanager = haka.vbuffer_stream_comanager:new()
 		end
 		return self._comanager
 	end
@@ -971,15 +971,8 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 
 	haka.vbuffer_stream_comanager = class.class('VbufferStreamCoManager')
 
-	function haka.vbuffer_stream_comanager.method:__init(stream)
+	function haka.vbuffer_stream_comanager.method:__init()
 		self._co = {}
-
-		-- Set stream a weak ref to avoid circular references
-		local mt = {}
-		mt.__mode = "v"
-		self._stream = {}
-		setmetatable(self._stream, mt)
-		self._stream.stream = stream
 	end
 
 	local function wrapper(manager, f)
@@ -1001,7 +994,7 @@ STRUCT_UNKNOWN_KEY_ERROR(vbuffer_sub_stream);
 	end
 
 	local function process_one(self, id, co, current)
-		coroutine.resume(co, current or self._stream.stream.data:pos('end'))
+		coroutine.resume(co, current)
 		if self._error then
 			error(self._error)
 		end

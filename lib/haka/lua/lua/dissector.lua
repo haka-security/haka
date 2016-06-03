@@ -216,7 +216,11 @@ function types.Dissector.method:streamed(stream, f, this, current, ...)
 	end
 
 	local cur
-	if current then cur = current:copy() end
+	if current then
+		cur = current:copy()
+	else
+		cur = stream.data:pos('end')
+	end
 
 	local comanager = stream:getcomanager()
 	-- unique id for the function to execute
