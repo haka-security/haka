@@ -652,7 +652,7 @@ function tcp_connection_dissector.method:drop()
 end
 
 function tcp_connection_dissector.method:_forgereset(direction)
-	local tcprst = haka.dissectors.raw.create()
+	local tcprst = haka.dissectors.packet.create()
 	tcprst = haka.dissectors.ipv4.create(tcprst)
 
 	if direction == 'up' then

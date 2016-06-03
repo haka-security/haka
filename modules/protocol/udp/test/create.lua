@@ -18,7 +18,7 @@ haka.rule {
 			end
 			counter = counter-1
 
-			local npkt = haka.dissectors.raw.create()
+			local npkt = haka.dissectors.packet.create()
 			npkt = haka.dissectors.ipv4.create(npkt)
 			npkt.src = ipv4.addr(192, 168, 0, 1)
 			npkt.dst = ipv4.addr("192.168.0.2")

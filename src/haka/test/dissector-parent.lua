@@ -9,9 +9,9 @@ haka.rule {
 	eval = function (pkt)
 		check.assert(pkt:parent('ipv4') == pkt:parent())
 		check.assert(pkt:parent() == pkt:parent(1))
-		check.assert(pkt:parent('raw') == pkt:parent(2))
+		check.assert(pkt:parent('packet') == pkt:parent(2))
 
 		debug.pprint(pkt:parent('ipv4'), { depth = 1 })
-		debug.pprint(pkt:parent('raw'), { depth = 1 })
+		debug.pprint(pkt:parent('packet'), { depth = 1 })
 	end
 }
