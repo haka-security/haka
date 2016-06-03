@@ -5,7 +5,6 @@
 local class = require("class")
 local check = require("check")
 
-require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 local tcp = require("protocol/tcp")
 

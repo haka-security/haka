@@ -3,7 +3,6 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 -- Basic test that will create a new packet from scratch
-require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 require("protocol/icmp")
 

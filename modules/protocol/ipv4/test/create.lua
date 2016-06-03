@@ -4,7 +4,6 @@
 
 -- Basic test that will create a new packet for scratch
 
-require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 
 -- just to be safe, to avoid the test to run in an infinite loop

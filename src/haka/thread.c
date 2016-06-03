@@ -173,7 +173,6 @@ static struct thread_state *init_thread_state(struct capture_module *packet_modu
 	lua_state_require(state->lua, "rule");
 	lua_state_require(state->lua, "rule_group");
 	lua_state_require(state->lua, "interactive");
-	lua_state_require(state->lua, "protocol/raw");
 
 	state->capture = packet_module->init_state(thread_id);
 	if (!state->capture) {

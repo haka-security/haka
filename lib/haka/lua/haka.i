@@ -150,15 +150,7 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 
 	haka.console.threads = haka._threads_info
 	haka._threads_info = nil
-}
 
-%include "lua/vbuffer.si"
-%include "lua/regexp.si"
-%include "lua/packet.si"
-%include "lua/alert.si"
-%include "lua/state_machine.si"
-
-%luacode {
 	require('context')
 	require('policy')
 	require('dissector')
@@ -166,3 +158,9 @@ STRUCT_UNKNOWN_KEY_ERROR(time);
 
 	haka.mode = 'normal'
 }
+
+%include "lua/vbuffer.si"
+%include "lua/regexp.si"
+%include "lua/packet.si"
+%include "lua/alert.si"
+%include "lua/state_machine.si"

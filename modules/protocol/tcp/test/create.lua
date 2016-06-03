@@ -4,7 +4,6 @@
 
 -- Test that will duplicate a tcp connection
 
-require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 require("protocol/tcp")
 require("protocol/tcp_connection")
