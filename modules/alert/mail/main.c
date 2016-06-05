@@ -13,6 +13,12 @@
 
 #define FROM     "<haka@alert.com>"
 
+typedef enum {
+	NONE,
+	SSL,
+	STARTTLS
+} AUTH;
+
 struct email {
 	char *body;
 	size_t size;
@@ -23,9 +29,9 @@ struct mail_alerter {
 	char *server;
 	char *username;
 	char *password;
+	AUTH auth;
 	char *recipients;
 };
-
 
 CURL *curl;
 CURLcode res = CURLE_OK;
@@ -74,24 +80,37 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 {
 	char *recipient;
 
-	/* https://curl.haxx.se/libcurl/c/smtp-ssl.html */
+	/*************************************************
+	 * https://curl.haxx.se/libcurl/c/smtp-mail.html *
+	 * https://curl.haxx.se/libcurl/c/smtp-ssl.html  *
+	 * https://curl.haxx.se/libcurl/c/smtp-tls.html  *
+	 *************************************************/
 	if (curl) {
-		/* Set username and password */
-		curl_easy_setopt(curl, CURLOPT_USERNAME, state->username);
-		curl_easy_setopt(curl, CURLOPT_PASSWORD, state->password);
+		/* SSL/TLS or STARTTLS based connection */
+		if (state->auth) {
+			/* Set username and password */
+			curl_easy_setopt(curl, CURLOPT_USERNAME, state->username);
+			curl_easy_setopt(curl, CURLOPT_PASSWORD, state->password);
+		}
 
-		/* SSL based connection */
 		char server[128];
-		sprintf(server, "smtps://%s", state->server);
+		sprintf(server, "smtp%s://%s", state->auth == SSL ? "s" : "", state->server);
+
 		curl_easy_setopt(curl, CURLOPT_URL, server);
 
+		if (state->auth) {
 #ifdef SKIP_PEER_VERIFICATION
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
 
 #ifdef SKIP_HOSTNAME_VERIFICATION
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 #endif
+		}
+
+		if (state->auth == STARTTLS) {
+			curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
+		}
 
 		/* Mail sender */
 		curl_easy_setopt(curl, CURLOPT_MAIL_FROM, FROM);
@@ -150,24 +169,38 @@ struct alerter_module *init_alerter(struct parameters *args)
 	mail_alerter->module.alerter.alert = do_alert;
 	mail_alerter->module.alerter.update = do_alert_update;
 
-	/* Mandatory fields: SMTP server, credentials and mail recipient */
-	const char *server = parameters_get_string(args, "mail_server", NULL);
-	const char *username = parameters_get_string(args, "mail_username", NULL);
-	const char *password = parameters_get_string(args, "mail_password", NULL);
-	const char *recipients = parameters_get_string(args, "mail_recipient", NULL);
-	if (!server || !username || !password || !recipients) {
-	        error("missing mandatory field");
+	/* Mandatory fields: SMTP server, credentials and mail recipients */
+	const char *server = parameters_get_string(args, "smtp_server", NULL);
+	const char *username = parameters_get_string(args, "username", NULL);
+	const char *password = parameters_get_string(args, "password", NULL);
+	const char *auth = parameters_get_string(args, "authentication", "NULL");
+	const char *recipients = parameters_get_string(args, "recipients", NULL);
+	if (!server || !recipients) {
+		error("missing mandatory field");
 		free(mail_alerter);
-	        return NULL;
+		return NULL;
 	}
 
 	mail_alerter->server = strdup(server);
-	mail_alerter->username = strdup(username);
-	mail_alerter->password = strdup(password);
+
+	mail_alerter->auth = NONE;
+	if (username && password) {
+		mail_alerter->username = strdup(username);
+		mail_alerter->password = strdup(password);
+		mail_alerter->auth = SSL; // default
+		if (strcmp(auth, "STARTTLS") == 0)
+			mail_alerter->auth = STARTTLS;
+
+	        if (!(mail_alerter->username && mail_alerter->password)) {
+			error("memory error");
+			free(mail_alerter);
+			return NULL;
+		}
+	}
+
 	mail_alerter->recipients = strdup(recipients);
 
-	if (!mail_alerter->server || !mail_alerter->username ||
-	    !mail_alerter->password || !mail_alerter->recipients) {
+	if (!mail_alerter->server || !mail_alerter->recipients) {
 		error("memory error");
 		free(mail_alerter);
 		return NULL;
