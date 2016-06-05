@@ -4,6 +4,8 @@
 
 find_package(LibCurl)
 
+option(LIB_CURL_SKIP_VERIFICATION "Skip SSL certificat verification" OFF)
+
 if(LIBCURL_FOUND)
 	add_library(alert-mail MODULE main.c)
 	include_directories(${LIBCURL_INCLUDE_DIR})
@@ -12,4 +14,9 @@ if(LIBCURL_FOUND)
 
 	set_target_properties(alert-mail PROPERTIES OUTPUT_NAME mail)
 	INSTALL_MODULE(alert-mail alert)
+
+	if (SKIP_VERIFICATION)
+	    add_definitions(-DSKIP_PEER_VERIFICATION)
+	    add_definitions(-DSKIP_HOSTNAME_VERIFICATION)
+	endif ()
 endif()
