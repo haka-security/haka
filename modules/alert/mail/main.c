@@ -11,7 +11,8 @@
 #include <string.h>
 #include <curl/curl.h>
 
-#define FROM     "<haka@alert.com>"
+#define FROM		"<haka@alert.com>"
+#define BODY_SIZE	2048
 
 typedef enum {
 	NONE,
@@ -121,7 +122,7 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 		curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
 
 		/* Message body */
-		char body[2048];
+		char body[BODY_SIZE];
 		sprintf(body, "Subject: [Haka] alert: %s%s\r\n",
 			update ? "update " : "", alert_tostring(id, time, alert, "", " ", false));
 
