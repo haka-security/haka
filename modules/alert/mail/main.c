@@ -141,8 +141,8 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 
 		/* Check for errors */
 		if (res != CURLE_OK) {
-			error("curl_easy_perform() failed: %s\n",
-				curl_easy_strerror(res));
+			haka.log.error("curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
 			return false;
 		}
 	}
