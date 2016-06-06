@@ -77,6 +77,7 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 		packet_drop(pkt);
 	}
 	lua_getfield(state->lua->L, -1, "receive");
+	assert(!lua_isnil(state->lua->L, -1));
 	lua_pushvalue(state->lua->L, -2);
 
 	if (lua_pcall(state->lua->L, 1, 0, h)) {
