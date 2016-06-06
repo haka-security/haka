@@ -4,7 +4,6 @@
 
 -- Test ipv4 reassembly
 
-local raw = require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 local icmp = require("protocol/icmp")
 

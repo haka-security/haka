@@ -15,8 +15,8 @@ haka.rule {
 				ip_dst = pkt.dst
 			},
 			description = {
-				start_time = pkt.raw.timestamp,
-				end_time = pkt.raw.timestamp,
+				start_time = pkt.timestamp,
+				end_time = pkt.timestamp,
 				sources = { haka.alert.address(pkt.src) },
 				targets = { haka.alert.address(pkt.dst) },
 			},

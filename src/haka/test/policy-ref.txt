@@ -1,0 +1,70 @@
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug core: applying policy test that a policy can be defined and used for test_policy
+alert: id = = <>
+	description = forbidden traffic to dmz
+debug core: rejected policy test that a policy can be defined and used for test_policy
+debug lua: closing state

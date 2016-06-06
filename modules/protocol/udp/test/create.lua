@@ -3,7 +3,6 @@
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 -- Basic test that will create a new packet from scratch
-require("protocol/raw")
 local ipv4 = require("protocol/ipv4")
 require("protocol/udp")
 
@@ -19,7 +18,7 @@ haka.rule {
 			end
 			counter = counter-1
 
-			local npkt = haka.dissectors.raw.create()
+			local npkt = haka.dissectors.packet.create()
 			npkt = haka.dissectors.ipv4.create(npkt)
 			npkt.src = ipv4.addr(192, 168, 0, 1)
 			npkt.dst = ipv4.addr("192.168.0.2")

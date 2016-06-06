@@ -72,23 +72,16 @@ static void filter_wrapper(struct thread_state *state, struct packet *pkt)
 	lua_pushcfunction(state->lua->L, lua_state_error_formater);
 	h = lua_gettop(state->lua->L);
 
-	lua_getglobal(state->lua->L, "haka");
-	lua_getfield(state->lua->L, -1, "filter");
-
-	if (!lua_isnil(state->lua->L, -1)) {
-		if (!lua_pushppacket(state->lua->L, pkt)) {
-			LOG_ERROR(core, "packet internal error");
-			packet_drop(pkt);
-		}
-		else {
-			if (lua_pcall(state->lua->L, 1, 0, h)) {
-				lua_state_print_error(state->lua->L, "filter");
-				packet_drop(pkt);
-			}
-		}
+	if (!lua_pushppacket(state->lua->L, pkt)) {
+		LOG_ERROR(core, "packet internal error");
+		packet_drop(pkt);
 	}
-	else {
-		lua_pop(state->lua->L, 1);
+	lua_getfield(state->lua->L, -1, "receive");
+	assert(!lua_isnil(state->lua->L, -1));
+	lua_pushvalue(state->lua->L, -2);
+
+	if (lua_pcall(state->lua->L, 1, 0, h)) {
+		lua_state_print_error(state->lua->L, "receive");
 		packet_drop(pkt);
 	}
 
@@ -173,7 +166,6 @@ static struct thread_state *init_thread_state(struct capture_module *packet_modu
 	lua_state_require(state->lua, "rule");
 	lua_state_require(state->lua, "rule_group");
 	lua_state_require(state->lua, "interactive");
-	lua_state_require(state->lua, "protocol/raw");
 
 	state->capture = packet_module->init_state(thread_id);
 	if (!state->capture) {

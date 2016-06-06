@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include(TestPcap)
 include(TestUnit)
 include(TestUnitLua)
 
@@ -33,3 +34,5 @@ foreach(module IN LISTS module-regexp)
 	TEST_UNIT_LUA(MODULE libhaka NAME regexp-${module} FILES regexp-lua ENV "HAKA_MODULE=${module}")
 endforeach(module)
 
+TEST_PCAP(libhaka basic)
+TEST_PCAP(libhaka nodrop)

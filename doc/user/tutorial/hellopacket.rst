@@ -34,7 +34,7 @@ and destination, connection establishment, etc.):
 
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mloading rule file 'hellopacket.lua'
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0minitializing thread 0
-        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'raw'
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'packet'
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mpcap:\x1b[0m      \x1b[0mopening file 'hellopacket.pcap'
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'ipv4'
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'tcp'

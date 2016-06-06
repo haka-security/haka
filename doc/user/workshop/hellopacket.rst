@@ -151,7 +151,7 @@ Interactive rule
 
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0mloading rule file 'sample.lua'
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0minitializing thread 0
-        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'raw'
+        \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'packet'
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mpcap:\x1b[0m \x1b[0m     opening file '/usr/share/haka/sample/smtp_dissector/smtp.pcap'
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mdissector:\x1b[0m \x1b[0mregister new dissector 'ipv4'
         \x1b[0m\x1b[1minfo\x1b[0m  \x1b[36mcore:\x1b[0m \x1b[0m      1 rule(s) on event 'ipv4:receive_packet'

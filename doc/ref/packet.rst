@@ -11,18 +11,22 @@ Packet
 
 .. haka:class:: packet
     :module:
+    :objtype: dissector
 
-    Object that represents a raw data packet. I.e a blob of binary data coming from the capture module.
+    :Name: ``'packet'``
+    :Extend: :haka:class:`haka.helper.PacketDissector`
+
+    Object that represents a data packet. I.e a blob of binary data coming from the capture module.
     Nothing is known about its content.
 
-    .. haka:function:: packet(size = 0) -> pkt
+    .. haka:function:: create(size = 0) -> pkt
 
         :param size: Size of the new packet.
         :paramtype size: number
-        :return pkt: New packet.
+        :return pkt: packet dissector.
         :rtype pkt: :haka:class:`packet`
 
-        Create a new packet of the given size.
+        Create a new packet.
 
     .. haka:attribute:: packet.payload
         :readonly:
@@ -62,3 +66,34 @@ Packet
 
     Get the current packet capture mode for Haka. In *passthrough* mode, the packet cannot
     be modified nor dropped.
+
+
+Events
+------
+
+.. haka:function:: packet.events.receive_packet(pkt)
+    :module:
+    :objtype: event
+
+    :param pkt: packet.
+    :paramtype pkt: :haka:class:`packet`
+
+    Event that is triggered whenever a new packet is received.
+
+.. haka:function:: packet.events.send_packet(pkt)
+    :module:
+    :objtype: event
+
+    :param pkt: packet.
+    :paramtype pkt: :haka:class:`packet`
+
+    Event that is triggered just before sending a packet on the network.
+
+Example
+-------
+
+::
+
+    local pkt = haka.dissector.packet.create(150)
+    print(#pkt.payload)
+    pkt:send()

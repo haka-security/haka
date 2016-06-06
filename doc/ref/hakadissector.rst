@@ -9,7 +9,6 @@ Haka dissectors
 
 .. toctree::
 
-    ../../../modules/protocol/raw/doc/raw.rst
     ../../../modules/protocol/ipv4/doc/ipv4.rst
     ../../../modules/protocol/icmp/doc/icmp.rst
     ../../../modules/protocol/tcp/doc/tcp.rst
