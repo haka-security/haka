@@ -241,8 +241,4 @@ const char *packet_dissector(struct packet *pkt);
 	swig.getclassmetatable('packet')['.fn'].error = swig.getclassmetatable('packet')['.fn'].drop
 	swig.getclassmetatable('packet')['.fn'].select_next_dissector = packet_dissector.method.select_next_dissector
 	swig.getclassmetatable('packet')['.fn'].activate_next_dissector = packet_dissector.method.activate_next_dissector
-
-	function haka.filter(pkt)
-		pkt:receive()
-	end
 }
