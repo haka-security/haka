@@ -115,7 +115,7 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 
 		/* Message body */
 		char body[BODY_SIZE];
-		sprintf(body, "Subject: [Haka] alert: %s%s\r\n",
+		snprintf(body, BODY_SIZE, "Subject: [Haka] alert: %s%s\r\n",
 			update ? "update " : "", alert_tostring(id, time, alert, "", " ", false));
 
 		email_ctx.body = body;
