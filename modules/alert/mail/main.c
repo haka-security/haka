@@ -133,9 +133,9 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 		curl_easy_setopt(curl, CURLOPT_READDATA, &email_ctx);
 		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
-#ifdef HAKA_DEBUG
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-#endif
+		if (getlevel(log) == HAKA_LOG_DEBUG)
+			curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
 		/* Send the message */
 		res = curl_easy_perform(curl);
 
