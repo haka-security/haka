@@ -80,63 +80,66 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 	 * https://curl.haxx.se/libcurl/c/smtp-ssl.html  *
 	 * https://curl.haxx.se/libcurl/c/smtp-tls.html  *
 	 *************************************************/
-	if (curl) {
-		/* SSL/TLS or STARTTLS based connection */
-		if (state->auth) {
-			/* Set username and password */
-			curl_easy_setopt(curl, CURLOPT_USERNAME, state->username);
-			curl_easy_setopt(curl, CURLOPT_PASSWORD, state->password);
-		}
+	if (!curl) {
+		haka.log.error("curl_easy_init() failed\n");
+		return false;
+	}
 
-		char server[128];
-		sprintf(server, "smtp%s://%s", state->auth == SSL ? "s" : "", state->server);
+	/* SSL/TLS or STARTTLS based connection */
+	if (state->auth) {
+		/* Set username and password */
+		curl_easy_setopt(curl, CURLOPT_USERNAME, state->username);
+		curl_easy_setopt(curl, CURLOPT_PASSWORD, state->password);
+	}
 
-		curl_easy_setopt(curl, CURLOPT_URL, server);
+	char server[128];
+	sprintf(server, "smtp%s://%s", state->auth == SSL ? "s" : "", state->server);
 
-		if (state->auth) {
+	curl_easy_setopt(curl, CURLOPT_URL, server);
+
+	if (state->auth) {
 #ifdef SKIP_PEER_VERIFICATION
-			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
 
 #ifdef SKIP_HOSTNAME_VERIFICATION
-			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 #endif
-		}
+	}
 
-		if (state->auth == STARTTLS) {
-			curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
-		}
+	if (state->auth == STARTTLS) {
+		curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
+	}
 
-		/* Mail sender */
-		curl_easy_setopt(curl, CURLOPT_MAIL_FROM, FROM);
+	/* Mail sender */
+	curl_easy_setopt(curl, CURLOPT_MAIL_FROM, FROM);
 
-		/* Mail recipients */
-		curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, state->recipients);
+	/* Mail recipients */
+	curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, state->recipients);
 
-		/* Message body */
-		char body[BODY_SIZE];
-		snprintf(body, BODY_SIZE, "Subject: [Haka] alert: %s%s\r\n",
-			update ? "update " : "", alert_tostring(id, time, alert, "", " ", false));
+	/* Message body */
+	char body[BODY_SIZE];
+	snprintf(body, BODY_SIZE, "Subject: [Haka] alert: %s%s\r\n",
+		update ? "update " : "", alert_tostring(id, time, alert, "", " ", false));
 
-		email_ctx.body = body;
-		email_ctx.size = strlen(body);
+	email_ctx.body = body;
+	email_ctx.size = strlen(body);
 
-		curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source);
-		curl_easy_setopt(curl, CURLOPT_READDATA, &email_ctx);
-		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+	curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source);
+	curl_easy_setopt(curl, CURLOPT_READDATA, &email_ctx);
+	curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
-		if (getlevel(log) == HAKA_LOG_DEBUG)
-			curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	if (getlevel(log) == HAKA_LOG_DEBUG)
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
-		/* Send the message */
-		res = curl_easy_perform(curl);
+	/* Send the message */
+	res = curl_easy_perform(curl);
 
-		/* Check for errors */
-		if (res != CURLE_OK) {
-			haka.log.error("curl_easy_perform() failed: %s\n",
-					curl_easy_strerror(res));
-			return false;
-		}
+	/* Check for errors */
+	if (res != CURLE_OK) {
+		haka.log.error("curl_easy_perform() failed: %s\n",
+				curl_easy_strerror(res));
+		return false;
 	}
 	return true;
 }
