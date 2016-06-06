@@ -31,12 +31,11 @@ struct mail_alerter {
 	char *username;
 	char *password;
 	AUTH auth;
-	char *recipients;
+	curl_slist *recipients;
 };
 
 CURL *curl;
 CURLcode res = CURLE_OK;
-struct curl_slist *recipients = NULL;
 struct email email_ctx;
 
 static size_t payload_source(void *ptr, size_t size, size_t nmemb, void *instream)
@@ -70,17 +69,12 @@ static int init(struct parameters *args)
 
 static void cleanup()
 {
-	/* Free the list of recipients */
-	curl_slist_free_all(recipients);
-
 	/* Always cleanup */
 	curl_easy_cleanup(curl);
 }
 
 static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *time, const struct alert *alert, bool update)
 {
-	char *recipient;
-
 	/*************************************************
 	 * https://curl.haxx.se/libcurl/c/smtp-mail.html *
 	 * https://curl.haxx.se/libcurl/c/smtp-ssl.html  *
@@ -117,9 +111,7 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 		curl_easy_setopt(curl, CURLOPT_MAIL_FROM, FROM);
 
 		/* Mail recipients */
-		while ((recipient = strsep(&state->recipients, ",")) != NULL)
-			recipients = curl_slist_append(recipients, recipient);
-		curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
+		curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, state->recipients);
 
 		/* Message body */
 		char body[BODY_SIZE];
@@ -176,6 +168,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 	const char *password = parameters_get_string(args, "password", NULL);
 	const char *auth = parameters_get_string(args, "authentication", "NULL");
 	const char *recipients = parameters_get_string(args, "recipients", NULL);
+
 	if (!server || !recipients) {
 		error("missing mandatory field");
 		free(mail_alerter);
@@ -199,7 +192,9 @@ struct alerter_module *init_alerter(struct parameters *args)
 		}
 	}
 
-	mail_alerter->recipients = strdup(recipients);
+	while ((recipient = strtok(recipients, ",")) != NULL)
+		mail_alerter->recipients = curl_slist_append(mail_alerter->recipients,
+			recipient);
 
 	if (!mail_alerter->server || !mail_alerter->recipients) {
 		error("memory error");
