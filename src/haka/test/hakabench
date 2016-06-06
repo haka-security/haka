@@ -58,7 +58,7 @@ configuration = "$2"
 
 thread = $4
 
-[packet]
+[capture]
 module = "capture/benchmark"
 file = "$3"
 repeat = $5
