@@ -23,10 +23,10 @@ haka.rule {
 					haka.alert{
 						description = string.format("'%s' scan detected", scanner),
 						severity = 'high',
-						sources = haka.alert.address(http.flow.srcip),
+						sources = haka.alert.address(http.srcip),
 						targets = {
-							haka.alert.address(http.flow.dstip),
-							haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
+							haka.alert.address(http.dstip),
+							haka.alert.service(string.format("tcp/%d", http.dstport), "http")
 						},
 					}
 					http:drop()

@@ -21,10 +21,10 @@ haka.rule {
 		if not ret then
 			haka.alert{
 				description = string.format("non authorized http method '%s'", method),
-				sources = haka.alert.address(http.flow.srcip),
+				sources = haka.alert.address(http.srcip),
 				targets = {
-					haka.alert.address(http.flow.dstip),
-					haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
+					haka.alert.address(http.dstip),
+					haka.alert.service(string.format("tcp/%d", http.dstport), "http")
 				},
 			}
 			http:drop()
@@ -43,10 +43,10 @@ haka.rule {
 		if not ret then
 			haka.alert{
 				description = string.format("unsupported http version '%s'", version),
-				sources = haka.alert.address(http.flow.srcip),
+				sources = haka.alert.address(http.srcip),
 				targets = {
-					haka.alert.address(http.flow.dstip),
-					haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
+					haka.alert.address(http.dstip),
+					haka.alert.service(string.format("tcp/%d", http.dstport), "http")
 				},
 			}
 			http:drop()
@@ -63,10 +63,10 @@ haka.rule {
 		if content_length == nil or content_length < 0 then
 			haka.alert{
 				description = "corrupted content-length header value",
-				sources = haka.alert.address(http.flow.srcip),
+				sources = haka.alert.address(http.srcip),
 				targets = {
-					haka.alert.address(http.flow.dstip),
-					haka.alert.service(string.format("tcp/%d", http.flow.dstport), "http")
+					haka.alert.address(http.dstip),
+					haka.alert.service(string.format("tcp/%d", http.dstport), "http")
 				},
 			}
 			http:drop()

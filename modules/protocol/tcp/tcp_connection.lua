@@ -250,7 +250,7 @@ tcp_connection_dissector.state_machine = haka.state_machine.new("tcp", function 
 		execute = function (self)
 			self:trigger('end_connection')
 			self:clearstream()
-			self.connection:drop()
+			self._parent:drop()
 		end,
 	}
 
@@ -531,7 +531,7 @@ end)
 tcp_connection_dissector.auto_state_machine = false
 
 function tcp_connection_dissector.method:__init(connection, pkt)
-	class.super(tcp_connection_dissector).__init(self)
+	class.super(tcp_connection_dissector).__init(self, connection)
 	self._stream = {}
 	self._restart = false
 
@@ -540,10 +540,9 @@ function tcp_connection_dissector.method:__init(connection, pkt)
 	self.srcport = pkt.srcport
 	self.dstport = pkt.dstport
 
-	self.connection = connection
 	self._stream['up'] = tcp.tcp_stream()
 	self._stream['down'] = tcp.tcp_stream()
-	self.state = tcp_connection_dissector.state_machine:instanciate(self)
+	self._state = tcp_connection_dissector.state_machine:instanciate(self)
 end
 
 function tcp_connection_dissector.method:clearstream()
@@ -559,19 +558,19 @@ function tcp_connection_dissector.method:restart()
 end
 
 function tcp_connection_dissector.method:emit(pkt, direction)
-	self.connection:update_stat(direction, pkt.len)
+	self._parent:update_stat(direction, pkt.len)
 	self:trigger('receive_packet', pkt, direction)
 
-	self.state:update(direction, pkt)
+	self._state:update(direction, pkt)
 end
 
 function tcp_connection_dissector.method:_close()
 	self:clearstream()
-	if rawget(self, 'connection') then
-		self.connection:close()
-		self.connection = nil
+	if self._parent then
+		self._parent:close()
+		self._parent = nil
 	end
-	self.state = nil
+	self._state = nil
 end
 
 function tcp_connection_dissector.method:_trigger_receive(direction, stream, current)
@@ -648,9 +647,9 @@ function tcp_connection_dissector.method:error()
 end
 
 function tcp_connection_dissector.method:drop()
-	check.assert(self.state, "connection already dropped")
+	check.assert(self._state, "connection already dropped")
 
-	self.state:trigger('reset')
+	self._state:trigger('reset')
 end
 
 function tcp_connection_dissector.method:_forgereset(direction)
@@ -748,57 +747,45 @@ module.helper = {}
 
 module.helper.TcpFlowDissector = class.class('TcpFlowDissector', haka.helper.FlowDissector)
 
-function module.helper.TcpFlowDissector.dissect(cls, flow)
-	flow:select_next_dissector(cls:new(flow))
-end
-
-module.helper.TcpFlowDissector.property.connection = {
-	get = function (self)
-		self.connection = self.flow.connection
-		return self.connection
-	end
-}
-
 function module.helper.TcpFlowDissector.method:__init(flow)
-	check.assert(class.isa(flow, tcp_connection_dissector), "invalid flow parameter")
+	check.assert(class.isa(flow, tcp_connection_dissector), "invalid parent dissector, must be a tcp flow")
 
-	class.super(module.helper.TcpFlowDissector).__init(self)
-	self.flow = flow
+	class.super(module.helper.TcpFlowDissector).__init(self, flow)
 end
 
 function module.helper.TcpFlowDissector.method:can_continue()
-	return rawget(self, 'flow') ~= nil
+	return self._parent ~= nil
 end
 
 function module.helper.TcpFlowDissector.method:drop()
-	if rawget(self, 'flow') then
-		self.flow:drop()
-		self.flow = nil
+	if self._parent then
+		self._parent:drop()
+		self._parent = nil
 	end
 end
 
 function module.helper.TcpFlowDissector.method:reset()
-	if rawget(self, 'flow') then
-		self.flow:reset()
-		self.flow = nil
+	if self._parent then
+		self._parent:reset()
+		self._parent = nil
 	end
 end
 
 function module.helper.TcpFlowDissector.method:receive(stream, current, direction)
 	return haka.dissector.pcall(self, function ()
-		self.flow:streamed(stream, self.receive_streamed, self, current, direction)
+		self._parent:streamed(stream, self.receive_streamed, self, current, direction)
 
-		if rawget(self, 'flow') then
-			self.flow:send(direction)
+		if self._parent then
+			self._parent:send(direction)
 		end
 	end)
 end
 
 function module.helper.TcpFlowDissector.method:receive_streamed(iter, direction)
-	assert(self.state, "no state machine defined")
+	assert(self._state, "no state machine defined")
 
 	while iter:wait() do
-		self.state:update(iter, direction)
+		self._state:update(iter, direction)
 		self:continue()
 	end
 end
@@ -818,17 +805,17 @@ function module.console.list_connections(show_dropped)
 
 			table.insert(ret, {
 				_thread = haka.current_thread(),
-				_id = tcp_data.connection.id,
-				id = string.format("%d-%d", haka.current_thread(), tcp_data.connection.id),
+				_id = tcp_data.id,
+				id = string.format("%d-%d", haka.current_thread(), tcp_data.id),
 				srcip = tcp_data.srcip,
 				srcport = tcp_data.srcport,
 				dstip = tcp_data.dstip,
 				dstport = tcp_data.dstport,
-				state = tcp_data.state.current,
-				in_pkts = tcp_data.connection.in_pkts,
-				in_bytes = tcp_data.connection.in_bytes,
-				out_pkts = tcp_data.connection.out_pkts,
-				out_bytes = tcp_data.connection.out_bytes
+				state = tcp_data.state,
+				in_pkts = tcp_data.in_pkts,
+				in_bytes = tcp_data.in_bytes,
+				out_pkts = tcp_data.out_pkts,
+				out_bytes = tcp_data.out_bytes
 			})
 		end
 	end

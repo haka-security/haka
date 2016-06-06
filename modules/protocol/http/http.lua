@@ -87,7 +87,7 @@ function http_dissector.method:push_data(current, data, iter, last, state, chunk
 end
 
 function http_dissector.method:trigger_event(res, iter, mark)
-	local state = self.state.current
+	local state = self.state
 
 	self:trigger(state, res)
 
@@ -306,7 +306,7 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 			:count(function (self, ctx) return ctx.chunk_size end)
 			:chunked(function (self, sub, last, ctx)
 				ctx.user:push_data(ctx:result(1), sub, ctx.iter, ctx.chunk_size == 0,
-					ctx.user.state.current, true)
+					ctx.user.state, true)
 			end),
 		optional(chunk_end_crlf,
 			function (self, context) return self.chunk_size > 0 end)
@@ -324,7 +324,7 @@ http_dissector.grammar = haka.grammar.new("http", function ()
 				:count(function (self, ctx) return ctx.content_length or 0 end)
 				:chunked(function (self, sub, last, ctx)
 					ctx.user:push_data(ctx:result(1), sub, ctx.iter, last,
-						ctx.user.state.current)
+						ctx.user.state)
 				end),
 			chunked = chunks,
 			default = 'continue'

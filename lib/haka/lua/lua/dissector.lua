@@ -103,10 +103,9 @@ function types.Dissector.method:__init(parent)
 	local cls = class.classof(self)
 
 	if cls.state_machine and cls.auto_state_machine then
-		self.state = cls.state_machine:instanciate(self)
+		self._state = cls.state_machine:instanciate(self)
 	end
 
-	self.scope = nil
 	haka.context:register_connections(self:connections())
 
 	self._parent = parent
@@ -114,6 +113,14 @@ end
 
 types.Dissector.property.name = {
 	get = function (self) return class.classof(self).name end
+}
+
+types.Dissector.property.state = {
+	get = function (self)
+		if self._state then
+			return self._state.current
+		end
+	end
 }
 
 function types.Dissector.method:parent(arg)

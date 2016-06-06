@@ -40,7 +40,7 @@ haka.rule {
 				method = {
 					description = string.format("SQLi comment sequences detected in %s", uri)
 				},
-				sources = { haka.alert.address(http.flow.srcip) },
+				sources = { haka.alert.address(http.srcip) },
 			}
 		end
 	end
