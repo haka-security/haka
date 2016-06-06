@@ -61,13 +61,10 @@ release = '@HAKA_VERSION_MAJOR@.@HAKA_VERSION_MINOR@.@HAKA_VERSION_PATCH@@HAKA_V
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
-
-# List of directory to ignore
-exclude_trees = [
-	'make',
-	'workspace',
-	'external'
+exclude_patterns = [
+	'make/*',
+	'workspace/*',
+	'external/*'
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
