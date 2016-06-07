@@ -27,7 +27,12 @@ function Policy.method:insert(name, criteria, actions)
 	else
 		log.info("register policy on '%s'", self.name)
 	end
-	table.insert(self.policies, {name = name, criteria = criteria, actions = actions})
+	-- JIT Optim
+	local linear_criteria = {}
+	for index, criterion in pairs(criteria) do
+		table.insert(linear_criteria, {name = index, value = criterion})
+	end
+	table.insert(self.policies, {name = name, criteria = linear_criteria, actions = actions})
 end
 
 function policy.new_criterion(create, compare)
@@ -83,12 +88,11 @@ function Policy.method:apply(p)
 
 	-- Evaluate in given order and take action on the *last* eligible policy
 	local qualified_policy
-	local i, j
-	local policies_count = #self.policies
-	for i=1,policies_count do
-		local policy = self.policies[i]
+	for _, policy in ipairs(self.policies) do
 		local eligible = true
-		for index, criterion in pairs(policy.criteria) do
+		for _, criterion in ipairs(policy.criteria) do
+			local index = criterion.name
+			local criterion = criterion.value
 			if type(criterion) == 'table' then
 				if not criterion(p.values[index]) then
 					eligible = false
