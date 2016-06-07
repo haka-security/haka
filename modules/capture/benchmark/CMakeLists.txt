@@ -4,11 +4,13 @@
 
 find_package(PCAP REQUIRED)
 if(PCAP_FOUND)
+	INCLUDE_MODULE(pcap capture)
+
 	add_library(benchmark MODULE main.c)
 
 	include_directories(${PCAP_INCLUDE_DIR})
 	target_link_libraries(benchmark LINK_PRIVATE ${PCAP_LIBRARY})
 
-	DEPENDS_MODULE(benchmark pcap capture)
+	DEPENDS_MODULE(benchmark capture-pcap capture)
 	INSTALL_MODULE(benchmark capture)
 endif()
