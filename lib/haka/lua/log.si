@@ -70,7 +70,9 @@ void setlevel(log_level level, const char *section);
 		for k,v in pairs(loglevel) do
 			if k ~= 'default' then
 				logf[k] = function (fmt, ...)
-					message(v, section, string.format(fmt, ...))
+					if check(section, v) then
+						message(v, section, string.format(fmt, ...))
+					end
 				end
 			end
 		end
