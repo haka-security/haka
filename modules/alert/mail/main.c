@@ -14,6 +14,8 @@
 #define FROM		"<haka@alert.com>"
 #define BODY_SIZE	2048
 
+static REGISTER_LOG_SECTION(mail);
+
 typedef enum {
 	NONE,
 	SSL,
@@ -31,7 +33,7 @@ struct mail_alerter {
 	char *username;
 	char *password;
 	AUTH auth;
-	curl_slist *recipients;
+	struct curl_slist *recipients;
 };
 
 CURL *curl;
@@ -81,7 +83,7 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 	 * https://curl.haxx.se/libcurl/c/smtp-tls.html  *
 	 *************************************************/
 	if (!curl) {
-		haka.log.error("curl_easy_init() failed\n");
+		LOG_ERROR(mail, "curl_easy_init() failed\n");
 		return false;
 	}
 
@@ -129,7 +131,7 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 	curl_easy_setopt(curl, CURLOPT_READDATA, &email_ctx);
 	curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
-	if (getlevel(log) == HAKA_LOG_DEBUG)
+	if (getlevel("mail") == HAKA_LOG_DEBUG)
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
 	/* Send the message */
@@ -137,7 +139,7 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 
 	/* Check for errors */
 	if (res != CURLE_OK) {
-		haka.log.error("curl_easy_perform() failed: %s\n",
+		LOG_ERROR(mail, "curl_easy_perform() failed: %s\n",
 				curl_easy_strerror(res));
 		return false;
 	}
@@ -195,7 +197,8 @@ struct alerter_module *init_alerter(struct parameters *args)
 		}
 	}
 
-	while ((recipient = strtok(recipients, ",")) != NULL)
+	char *recipient;
+	while ((recipient = strtok((char *)recipients, ",")) != NULL)
 		mail_alerter->recipients = curl_slist_append(mail_alerter->recipients,
 			recipient);
 
