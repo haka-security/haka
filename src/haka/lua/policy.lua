@@ -83,7 +83,10 @@ function Policy.method:apply(p)
 
 	-- Evaluate in given order and take action on the *last* eligible policy
 	local qualified_policy
-	for _, policy in pairs(self.policies) do
+	local i, j
+	local policies_count = #self.policies
+	for i=1,policies_count do
+		local policy = self.policies[i]
 		local eligible = true
 		for index, criterion in pairs(policy.criteria) do
 			if type(criterion) == 'table' then
