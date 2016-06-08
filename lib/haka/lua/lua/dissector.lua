@@ -345,7 +345,6 @@ function types.PacketDissector.method:forge(pkt)
 end
 
 function types.PacketDissector.method:forge_payload(pkt, payload)
-	error("not implemented")
 end
 
 function types.PacketDissector.method:can_continue()
