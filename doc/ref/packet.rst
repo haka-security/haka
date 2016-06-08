@@ -89,6 +89,15 @@ Events
 
     Event that is triggered just before sending a packet on the network.
 
+.. haka:function:: packet.events.protocol_error(pkt)
+    :module:
+    :objtype: event
+
+    :param pkt: packet.
+    :paramtype pkt: :haka:class:`packet`
+
+    Event that is triggered whenever a protocol error is raised.
+
 Example
 -------
 

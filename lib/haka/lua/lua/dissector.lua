@@ -264,6 +264,7 @@ types.PacketDissector = class.class('PacketDissector', types.Dissector)
 
 types.PacketDissector:register_event('receive_packet')
 types.PacketDissector:register_event('send_packet')
+types.PacketDissector:register_event('protocol_error')
 
 local npkt
 
@@ -315,8 +316,12 @@ function types.PacketDissector.method:parse_payload(pkt, payload)
 		error("not implemented for grammar exporting more than 1 element")
 	end
 
-	local res = unique_export:parse(payload:pos("begin"))
-	table.merge(self, res)
+	local res, err = unique_export:parse(payload:pos("begin"))
+	if err then
+		self:trigger('protocol_error')
+	else
+		table.merge(self, res)
+	end
 end
 
 function types.PacketDissector.method:create(pkt, init, size)
