@@ -55,7 +55,7 @@ function haka.rule_group(args)
 	args.location = string.format("%s:%d", loc.short_src, loc.currentline)
 
 	if args.hook then
-		log.warning("rule groupe at %s uses 'hook' keyword which deprecated and should be replaced by 'on'", args.location)
+		log.warning("rule groupe at %s uses 'hook' keyword which is deprecated and should be replaced by 'on'", args.location)
 		args.on = args.hook
 	end
 

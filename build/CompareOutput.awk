@@ -29,7 +29,7 @@ $0 ~ /^debug core: applying policy .* next dissector$/ { next; }
 $0 ~ /^debug time: / { next; }
 $0 ~ /^info pcap: progress/ { next; }
 $0 ~ /^debug core: memory report/ { next; }
-$0 ~ /^warn core: rule .*at .* uses 'hook' keyword which deprecated and should be replaced by 'on'$/ { next; }
+$0 ~ /^warn core: rule .*at .* uses 'hook' keyword which is deprecated and should be replaced by 'on'$/ { next; }
 
 $0 ~ /warn core:/ {
 	print;

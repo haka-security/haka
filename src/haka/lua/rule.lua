@@ -30,7 +30,7 @@ function haka.rule(r)
 	r.location = string.format("%s:%d", loc.short_src, loc.currentline)
 
 	if r.hook then
-		log.warning("rule at %s uses 'hook' keyword which deprecated and should be replaced by 'on'", r.location)
+		log.warning("rule at %s uses 'hook' keyword which is deprecated and should be replaced by 'on'", r.location)
 		r.on = r.hook
 	end
 
