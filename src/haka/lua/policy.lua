@@ -54,6 +54,9 @@ policy.set = policy.new_criterion(
 		return set
 	end,
 	function (self, value)
+		if value == nil then
+			return false
+		end
 		return self[value] == true
 	end
 )
@@ -63,7 +66,12 @@ policy.range = policy.new_criterion(
 		check.assert(min <= max, "invalid bounds")
 		return { min=min, max=max }
 	end,
-	function (self, value) return value >= self.min and value <= self.max end
+	function (self, value)
+		if value == nil then
+			return false
+		end
+		return value >= self.min and value <= self.max
+	end
 )
 
 policy.outofrange = policy.new_criterion(
@@ -71,7 +79,28 @@ policy.outofrange = policy.new_criterion(
 		check.assert(min <= max, "invalid bounds")
 		return { min=min, max=max }
 	end,
-	function (self, value) return value < self.min or value > self.max end
+	function (self, value)
+		if value == nil then
+			return false
+		end
+		return value < self.min or value > self.max
+	end
+)
+
+policy.present = policy.new_criterion(
+	function ()
+	end,
+	function (self, value)
+		return value ~= nil
+	end
+)
+
+policy.absent = policy.new_criterion(
+	function ()
+	end,
+	function (self, value)
+		return value == nil
+	end
 )
 
 function Policy.method:apply(p)
