@@ -142,7 +142,7 @@ function Policy.method:apply(p)
 		if qualified_policy.name then
 			log.debug("applying policy %s for %s", qualified_policy.name, self.name)
 		else
-			log.debug("applying policy for %s", self.name)
+			log.debug("applying anonymous policy for %s", self.name)
 		end
 
 		for _,action in ipairs(qualified_policy.actions) do
