@@ -316,7 +316,7 @@ function types.PacketDissector.method:parse_payload(pkt, payload)
 		error("not implemented for grammar exporting more than 1 element")
 	end
 
-	local res, err = unique_export:parse(payload:pos("begin"))
+	local res, err = unique_export:parse(payload:pos("begin"), self)
 	if err then
 		self:trigger('protocol_error')
 	else
