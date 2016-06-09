@@ -343,6 +343,12 @@ function grammar_int.Branch.method:do_compile(env, rule, id)
 
 	for key, entity in pairs(self.cases) do
 		if key ~= 'default' then
+			if self.named then
+				if entity.named then
+					error(string.format("named element '%s' are not supported in named branch", entity.named))
+				end
+				entity = entity:_as(self.named)
+			end
 			local next = entity:compile(env, self.rule or rule, key)
 			ret:case(key, next)
 		end
