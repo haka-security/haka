@@ -150,6 +150,12 @@ end
 
 function types.Dissector.method:__index(name)
 	if name:sub(1, 1) ~= '_' then
+		-- Check if required field should be here
+		local grammar = class.classof(self).grammar
+		if  grammar and grammar._fields[name] then
+			return nil
+		end
+
 		parent = self._parent
 		if parent then
 			return parent[name]
