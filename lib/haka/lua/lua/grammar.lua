@@ -22,6 +22,9 @@ local GrammarEnv = class.class("GrammarEnv")
 function GrammarEnv.method:__init(grammar)
 	self._grammar = grammar
 	self._compiled = {}
+	self._fields = {}
+	self._fields_stack = { self._fields }
+	self._current_field = 1
 end
 
 function GrammarEnv.method:get(entity)
@@ -34,6 +37,17 @@ end
 
 function GrammarEnv.method:unregister(entity, dg)
 	self._compiled[entity] = nil
+end
+
+function GrammarEnv.method:push_field(field_name)
+	local current_field = {}
+	self._fields_stack[self._current_field][field_name] = current_field
+	self._current_field = self._current_field + 1
+	self._fields_stack[self._current_field] = current_field
+end
+
+function GrammarEnv.method:pop_field()
+	self._current_field = self._current_field - 1
 end
 
 --
@@ -92,6 +106,10 @@ function grammar_int.Entity.method:_as(name)
 end
 
 function grammar_int.Entity.method:compile(env, rule, id)
+	if self.named ~= nil then
+		env:push_field(self.named)
+		env:pop_field()
+	end
 	return self:do_compile(env, rule, id)
 end
 
@@ -174,6 +192,10 @@ function grammar_int.Compound.method:compile(env, rule, id)
 		return grammar_dg.Recurs:new(rule, id, compiled)
 	end
 
+	if self.named ~= nil then
+		env:push_field(self.named)
+	end
+
 	-- Create a DGCompound in order to use it for recursive case
 	local compound = grammar_dg.CompoundStart:new(rule, id, self.resultclass)
 	env:register(self, compound)
@@ -181,6 +203,11 @@ function grammar_int.Compound.method:compile(env, rule, id)
 	env:unregister(self)
 	compound:add(ret)
 	compound:add(grammar_dg.CompoundFinish:new(rule, id))
+
+	if self.named ~= nil then
+		env:pop_field()
+	end
+
 	return compound
 end
 
@@ -694,6 +721,7 @@ function Grammar.method:__init(name)
 	rawset(self, '_name', name)
 	rawset(self, '_rules', {})
 	rawset(self, '_exports', {})
+	rawset(self, '_fields', {})
 end
 
 function Grammar.method:dump_graph(file)
@@ -821,6 +849,7 @@ function grammar.new(name, def)
 		local genv = GrammarEnv:new(g)
 		g._exports[name] = value:compile(genv)
 		rawset(g, 'unique_export', g._exports[name])
+		table.merge(g._fields, genv._fields)
 
 		count = count + 1
 	end

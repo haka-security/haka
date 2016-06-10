@@ -39,6 +39,8 @@ local policies_mt = {
 function types.Dissector.__class_init(self, cls)
 	self.super:__class_init(cls)
 
+	cls._prepared = false
+	cls._fields = {}
 	cls.events = {}
 	setmetatable(cls.events, event_mt)
 	self.inherit_events(cls)
@@ -47,6 +49,17 @@ function types.Dissector.__class_init(self, cls)
 	cls.policies = {}
 	setmetatable(cls.policies, policies_mt)
 	cls.policies.next_dissector = haka.policy.new(string.format("%s next dissector", cls.name))
+end
+
+function types.Dissector:_prepare()
+end
+
+function types.Dissector:available_fields(_fields)
+	local fields = {}
+	for _, value in ipairs(_fields) do
+		fields[value] = {}
+	end
+	table.merge(self._fields, fields)
 end
 
 function types.Dissector.method:install_criterion()
@@ -101,6 +114,10 @@ types.Dissector.auto_state_machine = true
 
 function types.Dissector.method:__init(parent)
 	local cls = class.classof(self)
+	if not self._prepared then
+		cls:_prepare()
+		self._prepared = true
+	end
 
 	if cls.state_machine and cls.auto_state_machine then
 		self._state = cls.state_machine:instanciate(self)
@@ -150,6 +167,12 @@ end
 
 function types.Dissector.method:__index(name)
 	if name:sub(1, 1) ~= '_' then
+		-- Check if required field should be here
+		local fields = class.classof(self)._fields
+		if fields and fields[name] then
+			return nil
+		end
+
 		parent = self._parent
 		if parent then
 			return parent[name]
@@ -303,6 +326,18 @@ end
 
 function types.PacketDissector.method:__init(parent)
 	class.super(types.PacketDissector).__init(self, parent)
+end
+
+function types.PacketDissector:_prepare()
+	self.super:_prepare()
+	local grammar = self.grammar
+	if grammar and rawget(grammar, 'unique_export') ~= nil then
+		local fields = {}
+		for index, _ in pairs(grammar._fields) do
+			table.insert(fields, index)
+		end
+		self:available_fields(fields)
+	end
 end
 
 function types.PacketDissector.method:parse(pkt)
