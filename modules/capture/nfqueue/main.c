@@ -35,7 +35,7 @@
 #define MAX_INTERFACE 8
 
 
-static REGISTER_LOG_SECTION(capture);
+REGISTER_LOG_SECTION(capture);
 
 struct pcap_dump {
 	pcap_t        *pd;

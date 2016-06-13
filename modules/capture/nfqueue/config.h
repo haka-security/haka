@@ -7,6 +7,6 @@
 
 #include <haka/log.h>
 
-extern DECLARE_LOG_SECTION(nfqueue);
+extern DECLARE_LOG_SECTION(capture);
 
 #endif /* CONFIG_H */
