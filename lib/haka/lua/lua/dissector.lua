@@ -353,7 +353,7 @@ function types.PacketDissector.method:parse_payload(pkt, payload)
 
 	local res, err = unique_export:parse(payload:pos("begin"), self)
 	if err then
-		self:trigger('protocol_error')
+		self:trigger('protocol_error', err)
 	else
 		table.merge(self, res)
 	end
