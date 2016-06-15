@@ -227,7 +227,7 @@ end
 local state_machine = {}
 
 state_machine.State = state.State
-state_machine.BidirectionnalState = state.BidirectionnalState
+state_machine.BidirectionalState = state.BidirectionalState
 state_machine.new_state_type = state.new
 
 function state_machine.new(name, def)

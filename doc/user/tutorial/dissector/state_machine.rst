@@ -15,7 +15,7 @@ select the initial state.
 
     SmtpDissector.states = haka.state_machine.new("smtp", function ()
         -- setting the type of the states
-        state_type(BidirectionnalState)
+        state_type(BidirectionalState)
 
         -- creating new states
         state_1 = state(...)

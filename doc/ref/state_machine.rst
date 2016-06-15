@@ -53,7 +53,7 @@ choose this type :
 
     ::
 
-        state_type(BidirectionnalState)
+        state_type(BidirectionalState)
 
         state_type{
             events = { 'receive', 'drop' },
@@ -171,9 +171,9 @@ Haka provides two kind of states type :
         :param event: Event to be triggered on the state machine.
         :ptype event: String
 
-.. haka:class:: BidirectionnalState
+.. haka:class:: BidirectionalState
 
-    Bidirectionnal state is a more advanced state. It can handle bidirectionnal
+    Bidirectional state is a more advanced state. It can handle bidirectionnal
     connection and will handle data parsing. For this purpose it defines some more events :
 
     .. haka:data:: up
