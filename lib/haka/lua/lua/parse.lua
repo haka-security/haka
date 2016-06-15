@@ -190,6 +190,14 @@ function parse.Context.method:_traverse(entity, f, all)
 			if not iter then break end
 		end
 	end
+
+	if self._error then
+		local count = #self._retain_mark
+		for i=1,count do
+			self:unmark()
+		end
+	end
+
 	return self._results[1], self._error
 end
 
