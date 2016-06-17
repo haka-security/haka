@@ -212,10 +212,10 @@ function policy.accept(policy, ctx, values, desc)
 	-- Nothing to do
 end
 
-function policy.log(section, level, message, ...)
+function policy.log(logf, message, ...)
 	local args = {...}
 	return function (policy, ctx, values, desc)
-		section[level](message, unpack(args))
+		logf(message, unpack(args))
 	end
 end
 
