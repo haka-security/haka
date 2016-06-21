@@ -30,6 +30,9 @@ function Policy.method:insert(name, criteria, actions)
 	-- JIT Optim
 	local linear_criteria = {}
 	for index, criterion in pairs(criteria) do
+		if not class.isa(criterion, module.Criterion) then
+			criterion = module.value(criterion)
+		end
 		table.insert(linear_criteria, {name = index, value = criterion})
 	end
 	table.insert(self.policies, {name = name, criteria = linear_criteria, actions = actions})
@@ -61,6 +64,19 @@ end
 
 function module.Criterion.method:learn()
 	error("not implemented")
+end
+
+local ValueCriterion = class.class('value', module.Criterion)
+
+function ValueCriterion.method:init(value)
+	self._value = value
+end
+
+function ValueCriterion.method:compare(value)
+	if value == nil then
+		return false
+	end
+	return self._value == value
 end
 
 local SetCriterion = class.class('set', module.Criterion)
@@ -169,33 +185,35 @@ function Policy.method:apply(p)
 	local qualified_policy
 	for _, policy in ipairs(self.policies) do
 		local eligible = true
-		local learning = false
+		local learning_policy = false
 		for _, criterion in ipairs(policy.criteria) do
 			local index = criterion.name
 			local criterion = criterion.value
-			if class.isa(criterion, module.Criterion) then
-				if module.learning and criterion._learn then
-					learning = true
-					eligible = false
-					criterion:learn(p.values[index])
-				elseif not criterion:compare(p.values[index]) then
-					eligible = false
-					break
-				end
-			elseif p.values[index] ~= criterion then
+			if module.learning and criterion._learn then
+				learning_policy = true
+			elseif not criterion:compare(p.values[index]) then
 				eligible = false
 				break
 			end
 		end
 
-		if learning then
-			log.debug("learning policy %s for %s", policy.name or "<unnamed>", self.name)
-		elseif eligible then
+		if eligible then
+			if learning_policy then
+				log.debug("learning policy %s for %s", policy.name or "<unnamed>", self.name)
+				for _, criterion in ipairs(policy.criteria) do
+					local index = criterion.name
+					local criterion = criterion.value
+					if criterion._learn then
+						criterion:learn(p.values[index])
+					end
+				end
+			end
 			qualified_policy = policy
 		else
 			log.debug("rejected policy %s for %s", policy.name or "<unnamed>", self.name)
 		end
 	end
+
 	if qualified_policy then
 		if qualified_policy.name then
 			log.debug("applying policy %s for %s", qualified_policy.name, self.name)
