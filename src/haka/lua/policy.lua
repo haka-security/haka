@@ -42,6 +42,7 @@ function module.Criterion.__class_init(self, cls)
 
 	module[cls.name] = {}
 	setmetatable(module[cls.name], {
+		__class = cls,
 		__call = function (table, ...)
 			local self = cls:new()
 			self:init(...)
@@ -64,8 +65,11 @@ end
 
 local SetCriterion = class.class('set', module.Criterion)
 
-function SetCriterion.method:init(list)
+function SetCriterion.method:__init(list)
 	self._set = {}
+end
+
+function SetCriterion.method:init(list)
 	for _, m in pairs(list) do
 		self._set[m] = true
 	end
@@ -78,6 +82,14 @@ function SetCriterion.method:compare(value)
 	return self._set[value] == true
 end
 
+function SetCriterion.method:learn(value)
+	if value == nil then
+		return
+	end
+
+	self._set[value] = true
+end
+
 local RangeCriterion = class.class('range', module.Criterion)
 
 function RangeCriterion.method:init(min, max)
@@ -87,10 +99,24 @@ function RangeCriterion.method:init(min, max)
 end
 
 function RangeCriterion.method:compare(value)
-	if value == nil then
+	if value == nil or self._min == nil or self._max == nil then
 		return false
 	end
 	return value >= self._min and value <= self._max
+end
+
+function RangeCriterion.method:learn(value)
+	if value == nil then
+		return
+	end
+
+	if self._min == nil or value < self._min then
+		self._min = value
+	end
+
+	if self._max == nil or value > self._max then
+		self._max = value
+	end
 end
 
 local OutofrangeCriterion = class.class('outofrange', RangeCriterion)
@@ -115,8 +141,14 @@ function AbsentCriterion.method:compare(value)
 end
 
 function module.learn(criterion)
-	check.assert(class.isa(criterion, module.Criterion), "can only learn on haka.policy.Criterion")
-	criterion._learn = true
+	local mt = getmetatable(criterion)
+	check.assert(mt and class.isaclass(mt.__class, module.Criterion), "can only learn on haka.policy.Criterion")
+	local cls = mt.__class
+	check.assert(cls.__method.learn, "cannot learn on haka.policy." .. cls.name .. " criterion")
+
+	local instance = cls:new()
+	instance._learn = true
+	return instance
 end
 
 module.learning = false
@@ -137,11 +169,16 @@ function Policy.method:apply(p)
 	local qualified_policy
 	for _, policy in ipairs(self.policies) do
 		local eligible = true
+		local learning = false
 		for _, criterion in ipairs(policy.criteria) do
 			local index = criterion.name
 			local criterion = criterion.value
 			if class.isa(criterion, module.Criterion) then
-				if not criterion:compare(p.values[index]) then
+				if module.learning and criterion._learn then
+					learning = true
+					eligible = false
+					criterion:learn(p.values[index])
+				elseif not criterion:compare(p.values[index]) then
 					eligible = false
 					break
 				end
@@ -150,7 +187,10 @@ function Policy.method:apply(p)
 				break
 			end
 		end
-		if eligible then
+
+		if learning then
+			log.debug("learning policy %s for %s", policy.name or "<unnamed>", self.name)
+		elseif eligible then
 			qualified_policy = policy
 		else
 			log.debug("rejected policy %s for %s", policy.name or "<unnamed>", self.name)

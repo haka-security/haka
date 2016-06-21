@@ -51,3 +51,4 @@ TEST_PCAP(core policy-ipv4)
 TEST_PCAP(core dissector-parent)
 
 TEST_UNIT_LUA(MODULE core NAME policy-criteria FILES policy-criteria.lua)
+TEST_UNIT_LUA(MODULE core NAME policy-learning FILES policy-learning.lua)
