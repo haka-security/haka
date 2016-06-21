@@ -62,7 +62,7 @@ function module.Criterion.method:learn()
 	error("not implemented")
 end
 
-local SetCriterion = class.class('set', Criterion)
+local SetCriterion = class.class('set', module.Criterion)
 
 function SetCriterion.method:init(list)
 	self._set = {}
@@ -78,7 +78,7 @@ function SetCriterion.method:compare(value)
 	return self._set[value] == true
 end
 
-local RangeCriterion = class.class('range', Criterion)
+local RangeCriterion = class.class('range', module.Criterion)
 
 function RangeCriterion.method:init(min, max)
 	check.assert(min <= max, "invalid bounds")
@@ -93,7 +93,7 @@ function RangeCriterion.method:compare(value)
 	return value >= self._min and value <= self._max
 end
 
-local OutofrangeCriterion = class.class('outofrange', Range)
+local OutofrangeCriterion = class.class('outofrange', RangeCriterion)
 
 function OutofrangeCriterion.method:compare(value)
 	if value == nil then
@@ -102,17 +102,24 @@ function OutofrangeCriterion.method:compare(value)
 	return value < self._min or value > self._max
 end
 
-local PresentCriterion = class.class('present', Criterion)
+local PresentCriterion = class.class('present', module.Criterion)
 
 function PresentCriterion.method:compare(value)
 	return value ~= nil
 end
 
-local AbsentCriterion = class.class('absent', Criterion)
+local AbsentCriterion = class.class('absent', module.Criterion)
 
 function AbsentCriterion.method:compare(value)
 	return value == nil
 end
+
+function module.learn(criterion)
+	check.assert(class.isa(criterion, module.Criterion), "can only learn on haka.policy.Criterion")
+	criterion._learn = true
+end
+
+module.learning = false
 
 function Policy.method:apply(p)
 	check.assert(type(p) == 'table', "policy parameter must be a table")
