@@ -211,7 +211,7 @@ function Policy.method:apply(p)
 
 		if eligible then
 			if learning_policy then
-				log.debug("learning policy %s for %s", policy.name or "<unnamed>", self.name)
+				log.debug("learning policy %s for %s", policy.name, self.name)
 				for _, criterion in ipairs(policy.criteria) do
 					local index = criterion.name
 					local criterion = criterion.value
@@ -222,16 +222,12 @@ function Policy.method:apply(p)
 			end
 			qualified_policy = policy
 		else
-			log.debug("rejected policy %s for %s", policy.name or "<unnamed>", self.name)
+			log.debug("rejected policy %s for %s", policy.name, self.name)
 		end
 	end
 
 	if qualified_policy then
-		if qualified_policy.name then
-			log.debug("applying policy %s for %s", qualified_policy.name, self.name)
-		else
-			log.debug("applying anonymous policy for %s", self.name)
-		end
+		log.debug("applying policy %s for %s", qualified_policy.name, self.name)
 
 		for _,action in ipairs(qualified_policy.actions) do
 			action(self, p.ctx, p.values, p.desc)
@@ -261,7 +257,7 @@ local mt = {
 
 		local policy = p.on
 		p.on = nil
-		local name = p.name
+		local name = p.name or "<unnamed>"
 		p.name = nil
 		p.action = nil
 		policy:insert(name, p, actions)
