@@ -54,8 +54,12 @@ function module.Criterion.__class_init(self, cls)
 	})
 end
 
+function module.Criterion.method:__init()
+	self._learn = false
+end
+
 function module.Criterion.method:init()
-	self._learn = nil
+	-- Nothing to do
 end
 
 function module.Criterion.method:compare()
@@ -81,7 +85,8 @@ end
 
 local SetCriterion = class.class('set', module.Criterion)
 
-function SetCriterion.method:__init(list)
+function SetCriterion.method:__init()
+	class.super(SetCriterion).__init(self, parent)
 	self._set = {}
 end
 
