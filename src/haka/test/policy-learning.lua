@@ -18,16 +18,16 @@ function TestPolicyLearning:test_range_learning()
 
 	-- When
 	haka.policy.learning = true
-	test_policy:apply{ values = { value = 2, }, ctx = {}, desc = {} }
-	test_policy:apply{ values = { value = 5, }, ctx = {}, desc = {} }
-	test_policy:apply{ values = { value = 10, }, ctx = {}, desc = {} }
+	test_policy:apply{ values = { value = 2, }, ctx = {} }
+	test_policy:apply{ values = { value = 5, }, ctx = {} }
+	test_policy:apply{ values = { value = 10, }, ctx = {} }
 
 	-- Then
 	assertEquals(action_triggered, false)
 
 	-- and When
 	haka.policy.learning = false
-	test_policy:apply{ values = { value = 3, }, ctx = {}, desc = {} }
+	test_policy:apply{ values = { value = 3, }, ctx = {} }
 
 	-- Then
 	assertEquals(action_triggered, true)
@@ -35,7 +35,7 @@ function TestPolicyLearning:test_range_learning()
 	-- and When
 	haka.policy.learning = false
 	action_triggered = false
-	test_policy:apply{ values = { value = 11, }, ctx = {}, desc = {} }
+	test_policy:apply{ values = { value = 11, }, ctx = {} }
 
 	-- Then
 	assertEquals(action_triggered, false)
@@ -55,16 +55,16 @@ function TestPolicyLearning:test_set_learning()
 
 	-- When
 	haka.policy.learning = true
-	test_policy:apply{ values = { value = 2, }, ctx = {}, desc = {} }
-	test_policy:apply{ values = { value = 5, }, ctx = {}, desc = {} }
-	test_policy:apply{ values = { value = 10, }, ctx = {}, desc = {} }
+	test_policy:apply{ values = { value = 2, }, ctx = {} }
+	test_policy:apply{ values = { value = 5, }, ctx = {} }
+	test_policy:apply{ values = { value = 10, }, ctx = {} }
 
 	-- Then
 	assertEquals(action_triggered, false)
 
 	-- and When
 	haka.policy.learning = false
-	test_policy:apply{ values = { value = 5, }, ctx = {}, desc = {} }
+	test_policy:apply{ values = { value = 5, }, ctx = {} }
 
 	-- Then
 	assertEquals(action_triggered, true)
@@ -72,7 +72,7 @@ function TestPolicyLearning:test_set_learning()
 	-- and When
 	haka.policy.learning = false
 	action_triggered = false
-	test_policy:apply{ values = { value = 3, }, ctx = {}, desc = {} }
+	test_policy:apply{ values = { value = 3, }, ctx = {} }
 
 	-- Then
 	assertEquals(action_triggered, false)
