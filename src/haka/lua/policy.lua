@@ -165,7 +165,7 @@ function module.learn(criterion)
 	local mt = getmetatable(criterion)
 	check.assert(mt and class.isaclass(mt.__class, module.Criterion), "can only learn on haka.policy.Criterion")
 	local cls = mt.__class
-	check.assert(cls.__method.learn, "cannot learn on haka.policy." .. cls.name .. " criterion")
+	check.assert(cls.method.learn ~= module.Criterion.method.learn, "cannot learn on haka.policy." .. cls.name .. " criterion")
 
 	local instance = cls:new()
 	instance._learn = true
