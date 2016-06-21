@@ -115,7 +115,10 @@ end
 local RangeCriterion = class.class('range', module.Criterion)
 
 function RangeCriterion.method:init(min, max)
+	check.assert(min ~= nil, "invalid min")
+	check.assert(max ~= nil, "invalid max")
 	check.assert(min <= max, "invalid bounds")
+
 	self._min = min
 	self._max = max
 end
@@ -144,7 +147,10 @@ end
 local OutOfRangeCriterion = class.class('outofrange', module.Criterion)
 
 function OutOfRangeCriterion.method:init(min, max)
+	check.assert(min ~= nil, "invalid min")
+	check.assert(max ~= nil, "invalid max")
 	check.assert(min <= max, "invalid bounds")
+
 	self._min = min
 	self._max = max
 end
