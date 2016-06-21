@@ -68,7 +68,7 @@ function module.Criterion.method:compare()
 end
 
 function module.Criterion.method:learn()
-	error("not implemented")
+	-- Learning not supported
 end
 
 local ValueCriterion = class.class('value', module.Criterion)
