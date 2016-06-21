@@ -43,6 +43,7 @@ module.Criterion = class.class('PolicyCriterion')
 function module.Criterion.__class_init(self, cls)
 	self.super:__class_init(cls)
 
+	check.assert(module[cls.name] == nil, "reserved name or already existing policy criterion")
 	module[cls.name] = {}
 	setmetatable(module[cls.name], {
 		__class = cls,
