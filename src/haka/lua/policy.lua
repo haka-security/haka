@@ -140,9 +140,15 @@ function RangeCriterion.method:learn(value)
 	end
 end
 
-local OutofrangeCriterion = class.class('outofrange', RangeCriterion)
+local OutOfRangeCriterion = class.class('outofrange', module.Criterion)
 
-function OutofrangeCriterion.method:compare(value)
+function OutOfRangeCriterion.method:init(min, max)
+	check.assert(min <= max, "invalid bounds")
+	self._min = min
+	self._max = max
+end
+
+function OutOfRangeCriterion.method:compare(value)
 	if value == nil then
 		return false
 	end
