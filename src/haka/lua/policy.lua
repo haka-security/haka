@@ -38,7 +38,7 @@ function Policy.method:insert(name, criteria, actions)
 	table.insert(self.policies, {name = name, criteria = linear_criteria, actions = actions})
 end
 
-module.Criterion = class.class('Criterion')
+module.Criterion = class.class('PolicyCriterion')
 
 function module.Criterion.__class_init(self, cls)
 	self.super:__class_init(cls)
