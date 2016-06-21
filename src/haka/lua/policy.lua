@@ -7,7 +7,7 @@ local check = require('check')
 
 local log = haka.log_section("core")
 
-local policy = {}
+local module = {}
 
 local Policy = class.class('Policy')
 
@@ -30,78 +30,162 @@ function Policy.method:insert(name, criteria, actions)
 	-- JIT Optim
 	local linear_criteria = {}
 	for index, criterion in pairs(criteria) do
+		if not class.isa(criterion, module.Criterion) then
+			criterion = module.value(criterion)
+		end
 		table.insert(linear_criteria, {name = index, value = criterion})
 	end
 	table.insert(self.policies, {name = name, criteria = linear_criteria, actions = actions})
 end
 
-function policy.new_criterion(create, compare)
-	local mt = {
-		__call = compare
-	}
+module.Criterion = class.class('PolicyCriterion')
 
-	return function (...)
-		return setmetatable(create(...), mt)
+function module.Criterion.__class_init(self, cls)
+	self.super:__class_init(cls)
+
+	check.assert(module[cls.name] == nil, "reserved name or already existing policy criterion")
+	module[cls.name] = {}
+	setmetatable(module[cls.name], {
+		__class = cls,
+		__call = function (table, ...)
+			local self = cls:new()
+			self:init(...)
+			return self
+		end
+	})
+end
+
+function module.Criterion.method:__init()
+	self._learn = false
+end
+
+function module.Criterion.method:init()
+	-- Nothing to do
+end
+
+function module.Criterion.method:compare()
+	error("not implemented")
+end
+
+function module.Criterion.method:learn()
+	-- Learning not supported
+end
+
+local ValueCriterion = class.class('value', module.Criterion)
+
+function ValueCriterion.method:init(value)
+	self._value = value
+end
+
+function ValueCriterion.method:compare(value)
+	if value == nil then
+		return false
+	end
+	return self._value == value
+end
+
+local SetCriterion = class.class('set', module.Criterion)
+
+function SetCriterion.method:__init()
+	class.super(SetCriterion).__init(self, parent)
+	self._set = {}
+end
+
+function SetCriterion.method:init(list)
+	for _, m in pairs(list) do
+		self._set[m] = true
 	end
 end
 
-policy.set = policy.new_criterion(
-	function (list)
-		local set = {}
-		for _, m in pairs(list) do
-			set[m] = true
-		end
-		return set
-	end,
-	function (self, value)
-		if value == nil then
-			return false
-		end
-		return self[value] == true
+function SetCriterion.method:compare(value)
+	if value == nil then
+		return false
 	end
-)
+	return self._set[value] == true
+end
 
-policy.range = policy.new_criterion(
-	function (min, max)
-		check.assert(min <= max, "invalid bounds")
-		return { min=min, max=max }
-	end,
-	function (self, value)
-		if value == nil then
-			return false
-		end
-		return value >= self.min and value <= self.max
+function SetCriterion.method:learn(value)
+	if value == nil then
+		return
 	end
-)
 
-policy.outofrange = policy.new_criterion(
-	function (min, max)
-		check.assert(min <= max, "invalid bounds")
-		return { min=min, max=max }
-	end,
-	function (self, value)
-		if value == nil then
-			return false
-		end
-		return value < self.min or value > self.max
-	end
-)
+	self._set[value] = true
+end
 
-policy.present = policy.new_criterion(
-	function ()
-	end,
-	function (self, value)
-		return value ~= nil
-	end
-)
+local RangeCriterion = class.class('range', module.Criterion)
 
-policy.absent = policy.new_criterion(
-	function ()
-	end,
-	function (self, value)
-		return value == nil
+function RangeCriterion.method:init(min, max)
+	check.assert(min ~= nil, "invalid min")
+	check.assert(max ~= nil, "invalid max")
+	check.assert(min <= max, "invalid bounds")
+
+	self._min = min
+	self._max = max
+end
+
+function RangeCriterion.method:compare(value)
+	if value == nil or self._min == nil or self._max == nil then
+		return false
 	end
-)
+	return value >= self._min and value <= self._max
+end
+
+function RangeCriterion.method:learn(value)
+	if value == nil then
+		return
+	end
+
+	if self._min == nil or value < self._min then
+		self._min = value
+	end
+
+	if self._max == nil or value > self._max then
+		self._max = value
+	end
+end
+
+local OutOfRangeCriterion = class.class('outofrange', module.Criterion)
+
+function OutOfRangeCriterion.method:init(min, max)
+	check.assert(min ~= nil, "invalid min")
+	check.assert(max ~= nil, "invalid max")
+	check.assert(min <= max, "invalid bounds")
+
+	self._min = min
+	self._max = max
+end
+
+function OutOfRangeCriterion.method:compare(value)
+	if value == nil then
+		return false
+	end
+	return value < self._min or value > self._max
+end
+
+local PresentCriterion = class.class('present', module.Criterion)
+
+function PresentCriterion.method:compare(value)
+	return value ~= nil
+end
+
+local AbsentCriterion = class.class('absent', module.Criterion)
+
+function AbsentCriterion.method:compare(value)
+	return value == nil
+end
+
+function module.learn(criterion)
+	local mt = getmetatable(criterion)
+	check.assert(mt and class.isaclass(mt.__class, module.Criterion), "can only learn on haka.policy.Criterion")
+	local cls = mt.__class
+	check.assert(cls.method.learn ~= module.Criterion.method.learn, "cannot learn on haka.policy." .. cls.name .. " criterion")
+
+	local instance = cls:new()
+	instance._learn = true
+	return instance
+end
+
+module.learning = false
 
 function Policy.method:apply(p)
 	check.assert(type(p) == 'table', "policy parameter must be a table")
@@ -119,31 +203,37 @@ function Policy.method:apply(p)
 	local qualified_policy
 	for _, policy in ipairs(self.policies) do
 		local eligible = true
+		local learning_policy = false
 		for _, criterion in ipairs(policy.criteria) do
 			local index = criterion.name
 			local criterion = criterion.value
-			if type(criterion) == 'table' then
-				if not criterion(p.values[index]) then
-					eligible = false
-					break
-				end
-			elseif p.values[index] ~= criterion then
+			if module.learning and criterion._learn then
+				learning_policy = true
+			elseif not criterion:compare(p.values[index]) then
 				eligible = false
 				break
 			end
 		end
+
 		if eligible then
+			if learning_policy then
+				log.debug("learning policy %s for %s", policy.name, self.name)
+				for _, criterion in ipairs(policy.criteria) do
+					local index = criterion.name
+					local criterion = criterion.value
+					if criterion._learn then
+						criterion:learn(p.values[index])
+					end
+				end
+			end
 			qualified_policy = policy
 		else
-			log.debug("rejected policy %s for %s", policy.name or "<unnamed>", self.name)
+			log.debug("rejected policy %s for %s", policy.name, self.name)
 		end
 	end
+
 	if qualified_policy then
-		if qualified_policy.name then
-			log.debug("applying policy %s for %s", qualified_policy.name, self.name)
-		else
-			log.debug("applying anonymous policy for %s", self.name)
-		end
+		log.debug("applying policy %s for %s", qualified_policy.name, self.name)
 
 		for _,action in ipairs(qualified_policy.actions) do
 			action(self, p.ctx, p.values, p.desc)
@@ -173,24 +263,24 @@ local mt = {
 
 		local policy = p.on
 		p.on = nil
-		local name = p.name
+		local name = p.name or "<unnamed>"
 		p.name = nil
 		p.action = nil
 		policy:insert(name, p, actions)
 	end
 }
 
-setmetatable(policy, mt)
+setmetatable(module, mt)
 
-function policy.new(...)
+function module.new(...)
 	return Policy:new(...)
 end
 
-function policy.drop(policy, ctx, values, desc)
+function module.drop(policy, ctx, values, desc)
 	ctx:drop()
 end
 
-function policy.alert(_alert)
+function module.alert(_alert)
 	return function(policy, ctx, values, desc)
 		local alert = {}
 		for k, v in pairs(_alert) do
@@ -208,17 +298,17 @@ function policy.alert(_alert)
 	end
 end
 
-function policy.accept(policy, ctx, values, desc)
+function module.accept(policy, ctx, values, desc)
 	-- Nothing to do
 end
 
-function policy.log(logf, message, ...)
+function module.log(logf, message, ...)
 	local args = {...}
 	return function (policy, ctx, values, desc)
 		logf(message, unpack(args))
 	end
 end
 
-haka.policy = policy
+haka.policy = module
 
 return {}

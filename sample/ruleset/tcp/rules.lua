@@ -18,8 +18,8 @@ haka.policy {
 
 haka.policy {
 	on = haka.dissectors.tcp_connection.policies.new_connection,
-	srcip = haka.policy.ipv4.in_network(client_network),
-	dstip = haka.policy.ipv4.in_network(server_network),
+	srcip = haka.policy.ipv4_in_network(client_network),
+	dstip = haka.policy.ipv4_in_network(server_network),
 	dstport = 80,
 	name = "authorizing http traffic",
 	action = haka.policy.accept
@@ -27,8 +27,8 @@ haka.policy {
 
 haka.policy {
 	on = haka.dissectors.tcp_connection.policies.new_connection,
-	srcip = haka.policy.ipv4.in_network(client_network),
-	dstip = haka.policy.ipv4.in_network(server_network),
+	srcip = haka.policy.ipv4_in_network(client_network),
+	dstip = haka.policy.ipv4_in_network(server_network),
 	dstport = 22,
 	name = "authorizing ssh traffic (no available dissector)",
 	action = haka.policy.accept
