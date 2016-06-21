@@ -7,7 +7,7 @@ local check = require('check')
 
 local log = haka.log_section("core")
 
-local policy = {}
+local module = {}
 
 local Policy = class.class('Policy')
 
@@ -35,73 +35,84 @@ function Policy.method:insert(name, criteria, actions)
 	table.insert(self.policies, {name = name, criteria = linear_criteria, actions = actions})
 end
 
-function policy.new_criterion(create, compare)
-	local mt = {
-		__call = compare
-	}
+module.Criterion = class.class('Criterion')
 
-	return function (...)
-		return setmetatable(create(...), mt)
+function module.Criterion.__class_init(self, cls)
+	self.super:__class_init(cls)
+
+	module[cls.name] = {}
+	setmetatable(module[cls.name], {
+		__call = function (table, ...)
+			local self = cls:new()
+			self:init(...)
+			return self
+		end
+	})
+end
+
+function module.Criterion.method:init()
+	self._learn = nil
+end
+
+function module.Criterion.method:compare()
+	error("not implemented")
+end
+
+function module.Criterion.method:learn()
+	error("not implemented")
+end
+
+local SetCriterion = class.class('set', Criterion)
+
+function SetCriterion.method:init(list)
+	self._set = {}
+	for _, m in pairs(list) do
+		self._set[m] = true
 	end
 end
 
-policy.set = policy.new_criterion(
-	function (list)
-		local set = {}
-		for _, m in pairs(list) do
-			set[m] = true
-		end
-		return set
-	end,
-	function (self, value)
-		if value == nil then
-			return false
-		end
-		return self[value] == true
+function SetCriterion.method:compare(value)
+	if value == nil then
+		return false
 	end
-)
+	return self._set[value] == true
+end
 
-policy.range = policy.new_criterion(
-	function (min, max)
-		check.assert(min <= max, "invalid bounds")
-		return { min=min, max=max }
-	end,
-	function (self, value)
-		if value == nil then
-			return false
-		end
-		return value >= self.min and value <= self.max
-	end
-)
+local RangeCriterion = class.class('range', Criterion)
 
-policy.outofrange = policy.new_criterion(
-	function (min, max)
-		check.assert(min <= max, "invalid bounds")
-		return { min=min, max=max }
-	end,
-	function (self, value)
-		if value == nil then
-			return false
-		end
-		return value < self.min or value > self.max
-	end
-)
+function RangeCriterion.method:init(min, max)
+	check.assert(min <= max, "invalid bounds")
+	self._min = min
+	self._max = max
+end
 
-policy.present = policy.new_criterion(
-	function ()
-	end,
-	function (self, value)
-		return value ~= nil
+function RangeCriterion.method:compare(value)
+	if value == nil then
+		return false
 	end
-)
+	return value >= self._min and value <= self._max
+end
 
-policy.absent = policy.new_criterion(
-	function ()
-	end,
-	function (self, value)
-		return value == nil
+local OutofrangeCriterion = class.class('outofrange', Range)
+
+function OutofrangeCriterion.method:compare(value)
+	if value == nil then
+		return false
 	end
-)
+	return value < self._min or value > self._max
+end
+
+local PresentCriterion = class.class('present', Criterion)
+
+function PresentCriterion.method:compare(value)
+	return value ~= nil
+end
+
+local AbsentCriterion = class.class('absent', Criterion)
+
+function AbsentCriterion.method:compare(value)
+	return value == nil
+end
 
 function Policy.method:apply(p)
 	check.assert(type(p) == 'table', "policy parameter must be a table")
@@ -122,8 +133,8 @@ function Policy.method:apply(p)
 		for _, criterion in ipairs(policy.criteria) do
 			local index = criterion.name
 			local criterion = criterion.value
-			if type(criterion) == 'table' then
-				if not criterion(p.values[index]) then
+			if class.isa(criterion, module.Criterion) then
+				if not criterion:compare(p.values[index]) then
 					eligible = false
 					break
 				end
@@ -180,17 +191,17 @@ local mt = {
 	end
 }
 
-setmetatable(policy, mt)
+setmetatable(module, mt)
 
-function policy.new(...)
+function module.new(...)
 	return Policy:new(...)
 end
 
-function policy.drop(policy, ctx, values, desc)
+function module.drop(policy, ctx, values, desc)
 	ctx:drop()
 end
 
-function policy.alert(_alert)
+function module.alert(_alert)
 	return function(policy, ctx, values, desc)
 		local alert = {}
 		for k, v in pairs(_alert) do
@@ -208,17 +219,17 @@ function policy.alert(_alert)
 	end
 end
 
-function policy.accept(policy, ctx, values, desc)
+function module.accept(policy, ctx, values, desc)
 	-- Nothing to do
 end
 
-function policy.log(logf, message, ...)
+function module.log(logf, message, ...)
 	local args = {...}
 	return function (policy, ctx, values, desc)
 		logf(message, unpack(args))
 	end
 end
 
-haka.policy = policy
+haka.policy = module
 
 return {}

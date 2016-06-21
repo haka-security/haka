@@ -389,6 +389,7 @@ int lua_inet_checksum(struct vbuffer *buf);
 
 %luacode {
 	local this = unpack({...})
+	local class = require('class')
 
 	swig.getclassmetatable('addr').__persist = function (self)
 		local data = self.packed
@@ -481,11 +482,15 @@ int lua_inet_checksum(struct vbuffer *buf);
 		action = haka.dissectors.ipv4.install
 	}
 
-	haka.policy.ipv4 = {}
-	haka.policy.ipv4.in_network = haka.policy.new_criterion(
-		function (net) return { network=net } end,
-		function (self, value) return self.network:contains(value) end
-	)
+	local InNetworkCriterion = class.class('ipv4_in_network', haka.policy.Criterion)
+
+	function InNetworkCriterion.method:init(net)
+		self._network = net
+	end
+
+	function InNetworkCriterion.method:compare(value)
+		return self._network:contains(value)
+	end
 }
 
 %include "cnx.si"
