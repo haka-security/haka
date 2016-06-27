@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/haka-security/haka.svg?branch=develop)](https://travis-ci.org/haka-security/haka)
+[![ToolsWatch Best Tools](https://www.toolswatch.org/badges/toptools/2015.svg)](http://www.toolswatch.org/2016/02/2015-top-security-tools-as-voted-by-toolswatch-org-readers/)
 
 HAKA Runtime
 ============
