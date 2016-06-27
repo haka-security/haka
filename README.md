@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/haka-security/haka.svg?branch=develop)](https://travis-ci.org/haka-security/haka)
+[![Black Hat Arsenal](https://www.toolswatch.org/badges/arsenal/2015.svg)](https://www.blackhat.com/eu-15/arsenal.html#haka-an-open-source-security-oriented-language)
 [![ToolsWatch Best Tools](https://www.toolswatch.org/badges/toptools/2015.svg)](http://www.toolswatch.org/2016/02/2015-top-security-tools-as-voted-by-toolswatch-org-readers/)
 
 HAKA Runtime
