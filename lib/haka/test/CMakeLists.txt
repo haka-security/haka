@@ -10,8 +10,7 @@ TEST_UNIT(MODULE libhaka NAME vbuffer FILES vbuffer.c LIBS libhaka)
 
 TEST_UNIT(MODULE libhaka NAME vbuffer-stream FILES vbuffer_stream.c LIBS libhaka)
 
-TEST_UNIT(MODULE libhaka NAME bitfield FILES bitfield.c)
-target_link_libraries(libhaka-bitfield libhaka)
+TEST_UNIT(MODULE libhaka NAME bitfield FILES bitfield.c LIBS libhaka)
 
 TEST_UNIT_LUA(MODULE libhaka NAME vbuffer FILES vbuffer.lua)
 TEST_UNIT_LUA(MODULE libhaka NAME vbuffer_stream_blocking FILES vbuffer_stream_blocking.lua)
