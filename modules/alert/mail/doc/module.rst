@@ -27,6 +27,10 @@ Parameters
 
     SMTP account password, if authentication is used.
 
+.. describe:: sender
+
+    Sender of alert email.
+
 .. describe:: recipients
 
     Recipients of alert email. [Mandatory]

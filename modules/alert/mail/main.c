@@ -10,8 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <unistd.h>
 
-#define FROM		"<haka@alert.com>"
+#define MAXHOSTNAMELEN	1024
 #define BODY_SIZE	2048
 
 static REGISTER_LOG_SECTION(mail);
@@ -33,6 +34,7 @@ struct mail_alerter {
 	char *username;
 	char *password;
 	AUTH auth;
+	char *sender;
 	struct curl_slist *recipients;
 };
 
@@ -114,7 +116,7 @@ static bool send_mail(struct mail_alerter *state, uint64 id, const struct time *
 	}
 
 	/* Mail sender */
-	curl_easy_setopt(curl, CURLOPT_MAIL_FROM, FROM);
+	curl_easy_setopt(curl, CURLOPT_MAIL_FROM, state->sender);
 
 	/* Mail recipients */
 	curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, state->recipients);
@@ -172,6 +174,7 @@ struct alerter_module *init_alerter(struct parameters *args)
 	const char *username = parameters_get_string(args, "username", NULL);
 	const char *password = parameters_get_string(args, "password", NULL);
 	const char *auth = parameters_get_string(args, "authentication", "NULL");
+	const char *sender = parameters_get_string(args, "sender", NULL);
 	const char *recipients = parameters_get_string(args, "recipients", NULL);
 
 	if (!server || !recipients) {
@@ -195,6 +198,18 @@ struct alerter_module *init_alerter(struct parameters *args)
 			free(mail_alerter);
 			return NULL;
 		}
+	}
+
+	if (!sender) {
+		char hostname[MAXHOSTNAMELEN+1];
+
+		if (gethostname(hostname, MAXHOSTNAMELEN)) {
+			LOG_ERROR(mail, "Couldn't get hostname\n");
+		        strcpy(hostname, "localhost@localdomain.com");
+		}
+		mail_alerter->sender = strdup(hostname);
+	} else {
+		mail_alerter->sender = strdup(sender);
 	}
 
 	char *recipient;
