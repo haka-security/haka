@@ -16,9 +16,9 @@ static bool readline_initialized = false;
 static mutex_t active_readline_session_mutex = MUTEX_INIT;
 static struct luadebug_user *current = NULL;
 
-static int empty_generator(const char *text, int state)
+static char *empty_generator(const char *text, int state)
 {
-	return 0;
+	return NULL;
 }
 
 static char **complete(const char *text, int start, int end)
