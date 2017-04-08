@@ -4,7 +4,7 @@ compiler:
   - gcc
 
 install:
-  - wget http://heanet.dl.sourceforge.net/project/swig/swig/swig-2.0.11/swig-2.0.11.tar.gz
+  - wget https://sourceforge.net/projects/swig/files/swig/swig-2.0.11/swig-2.0.11.tar.gz
   - tar xzf swig-2.0.11.tar.gz
   - cd swig-2.0.11/ && ./configure --prefix=/usr && make && sudo make install
   - cd ../
