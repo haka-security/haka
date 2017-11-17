@@ -162,8 +162,8 @@ static void json_create_mapping(struct elasticsearch_connector *connector, const
 {
 	json_t *mapping = json_pack("{s{s{s{s{s{s{ssss}s{ssss}}}}}}}",
 		"mappings", "alert", "properties", "method", "properties",
-		"ref", "type", "string", "index", "not_analyzed", "description",
-		"type", "string", "index", "not_analyzed"
+		"ref", "type", "text", "index", "not_analyzed", "description",
+		"type", "text", "index", "not_analyzed"
 	);
 	if (!mapping) {
 		error("json mapping creation error");
