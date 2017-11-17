@@ -280,7 +280,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 	resdata.string = NULL;
 	resdata.rem = 0;
 
-	curl_easy_setopt(connector->curl, CURLOPT_POST, 1L);
+	curl_easy_setopt(connector->curl, CURLOPT_PUT, 1L);
 
 	if (json_res) {
 		curl_easy_setopt(connector->curl, CURLOPT_WRITEFUNCTION, &write_callback_string);
