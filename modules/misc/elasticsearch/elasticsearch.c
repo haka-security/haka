@@ -274,6 +274,9 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 	struct callback_sting_data reqdata, resdata;
 	long ret_code;
 
+	struct curl_slist *headers=NULL;
+	headers = curl_slist_append(headers, "Content-Type: application/json");
+
 	reqdata.string = (char *)data;
 	reqdata.rem = strlen(reqdata.string);
 
@@ -281,6 +284,7 @@ static int elasticsearch_post(struct elasticsearch_connector *connector, const c
 	resdata.rem = 0;
 
 	curl_easy_setopt(connector->curl, CURLOPT_PUT, 1L);
+	curl_easy_setopt(connector->curl, CURLOPT_HTTPHEADER, headers);
 
 	if (json_res) {
 		curl_easy_setopt(connector->curl, CURLOPT_WRITEFUNCTION, &write_callback_string);
